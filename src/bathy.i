@@ -424,7 +424,7 @@ func bathy_detect_bottom(wf, first, last, thresh, &bottom_peak, &msg) {
     msg = "Waveform too short after removing noisy tail";
     return;
   }
-  peaks = extract_peaks_first_deriv(wf_decay(first:last_new), thresh=thresh);
+  peaks = extract_peaks_first_deriv(wf(first:last_new), thresh=thresh);
 
   if(!numberof(peaks)) {
     msg = "No significant inflection in backscattered waveform after decay";
@@ -438,8 +438,8 @@ func bathy_validate_bottom(wf, bottom, first, last, thresh, graph, &msg) {
   msg = [];
 
   // pulse wings
-  lwing_idx = bottom_peak - 1;
-  rwing_idx = bottom_peak + 3;
+  lwing_idx = bottom - 1;
+  rwing_idx = bottom + 3;
 
   // test pw with 9-6-01:17673:50
   // first, just check to see if anything is above thresh
@@ -465,7 +465,7 @@ func bathy_validate_bottom(wf, bottom, first, last, thresh, graph, &msg) {
   if((wf(lwing_idx) > lwing_thresh) || (wf(rwing_idx) > rwing_thresh)) {
     msg = "Bad pulse shape";
     if(graph) {
-      plmk, wf(bottom_peak)+1.5, bottom_peak+1,
+      plmk, wf(bottom)+1.5, bottom+1,
         msize=1.0, marker=6, color="red", width=10;
     }
   }
