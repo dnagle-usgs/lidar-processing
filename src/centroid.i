@@ -102,18 +102,24 @@ func pcr(rast, pulse) {
   return result;
 }
 
-func cent(raw_wf) {
-/* DOCUMENT cent(raw_wf)
-  Compute the centroid of "raw_wf" using the no more than the first 12 points.
-  This function considers the entire pulse and is probably only good for solid
-  first-return targets or bottom pulses.
+func cent(wf, lim=) {
+/* DOCUMENT cent(wf, lim=)
+  Compute the centroid of "wf" using the first LIM points. If wf is an
+    array of type char, it will first be converted to type short and the
+    bias will be removed using the first point method. Otherwise, the wf
+    will be used as is.
+
+  lim= Limit number of points considered. If omitted, only the first 12
+     points are considered. Must be a non-negative integer if provided.
 
   Return result is array(double, 3):
     result(1) = centroid range
     result(2) = peak range
     result(3) = peak power
 */
-  if(numberof(raw_wf) < 2)
+  default, lim, 12;
+
+  if(numberof(wf) < 2)
     return [0., 0., 0.];
 
   // flip it over and convert to signed short
@@ -121,10 +127,13 @@ func cent(raw_wf) {
   // remove bias using first point of wf
   wf -= wf(1);
 
+  if (lim < numberof(wf))
+    wf = wf(:lim);
+
   // Find maximum value & associated index
   max_index = wf(mxx);
   max_intensity = wf(max_index);
 
-  centroid = min(wf_centroid(wf, lim=12), 10000.);
+  centroid = min(wf_centroid(wf, lim=lim), 10000.);
   return [centroid, max_index, max_intensity];
 }
