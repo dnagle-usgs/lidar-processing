@@ -69,10 +69,9 @@ func kml_fp(fp, shapefile=, outfile=, color=, name=) {
     }
     desc = "<![CDATA["+desc+"]]>";
     lines(i) = kml_Placemark(
-      kml_Style(kml_LineStyle(color=kml_color(128,128,128,25), width=2)),
       kml_LineString([lon1(i),lon2(i)],[lat1(i),lat2(i)], tessellate=1),
       name=swrite(format="Flightline %d", i), description=desc,
-      visibility=1
+      visibility=1, styleUrl="#flightline"
     );
   }
 
@@ -92,6 +91,11 @@ func kml_fp(fp, shapefile=, outfile=, color=, name=) {
   desc = strjoin(strsplit(desc, "\n"), "<br />");
   desc = "<![CDATA["+desc+"]]>";
 
+  style = kml_Style(
+    kml_LineStyle(color=kml_color(128,128,128,25), width=2),
+    id="flightline"
+  );
+
   lines = kml_Folder(
     lines,
     name=name+" Flightlines", description=desc
@@ -110,10 +114,10 @@ func kml_fp(fp, shapefile=, outfile=, color=, name=) {
 
   if(strcase(0, file_extension(outfile)) == ".kmz") {
     kml = file_join(file_dirname(outfile), "doc.kml");
-    kml_save, kml, lines, region, name=name;
+    kml_save, kml, style, lines, region, name=name, Open=1, visibility=1;
     kmz_create, outfile, kml;
     remove, kml;
   } else {
-    kml_save, outfile, lines, region, name=name;
+    kml_save, outfile, style, lines, region, name=name, Open=1, visibility=1;
   }
 }
