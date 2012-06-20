@@ -122,10 +122,9 @@ func cent(wf, lim=) {
   if(numberof(wf) < 2)
     return [0., 0., 0.];
 
-  // flip it over and convert to signed short
-  wf = -short(raw_wf);
-  // remove bias using first point of wf
-  wf -= wf(1);
+  // convert to short and remove bias, if necessary
+  if (typeof(wf) == "char")
+    wf = wf_filter_bias(short(~wf), method="first");
 
   if (lim < numberof(wf))
     wf = wf(:lim);
