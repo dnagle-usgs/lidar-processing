@@ -62,9 +62,9 @@ func kml_fp(fp, shapefile=, outfile=, color=, name=) {
     total_km += km;
     longest_km = max(longest_km, km);
     desc = swrite(format="Line length: %.2f km\n", km);
-    if(!is_void(msec) && !is_void(ssturn)) {
-      secs = (km*1000.)/msec;
-      total_secs += secs + ssturn;
+    if(fp.msec) {
+      secs = (km*1000.)/fp.msec;
+      total_secs += secs + fp.ssturn;
       desc += swrite(format="Estimated time: %.2f minutes\n", secs/60.);
     }
     desc = "<![CDATA["+desc+"]]>";
@@ -80,10 +80,10 @@ func kml_fp(fp, shapefile=, outfile=, color=, name=) {
   desc += swrite(format="Total length: %.2f km\n", total_km);
   desc += swrite(format="Number of lines: %d\n", count);
   desc += swrite(format="Longest line: %.2f km\n", longest_km);
-  if(!is_void(msec) && !is_void(ssturn)) {
+  if(fp.msec) {
     desc += swrite(format="Total estimated time: %.2f minutes\n", total_secs/60.);
-    desc += swrite(format="msec=%.3f\n", msec);
-    desc += swrite(format="ssturn=%.3f\n", ssturn);
+    desc += swrite(format="msec=%.3f\n", fp.msec);
+    desc += swrite(format="ssturn=%.3f\n", fp.ssturn);
   }
   if(!is_void(fp)) {
     desc += swrite(format="aw=%.6f\n", fp.aw);
