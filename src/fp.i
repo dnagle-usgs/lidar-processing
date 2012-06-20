@@ -927,10 +927,7 @@ func fp_export(fp, shapefile=, name=, base=, color=, outdir=, kml=, gm_lines=, g
       swrite(format="BORDER_COLOR=RGB(%d,%d,%d)\n", color(1), color(2), color(3))+
       "BORDER_WIDTH=3\n"+
       "BORDER_STYLE=Solid\n"+
-      "CLOSED=YES\n"+
-      "FONT_SIZE=12\n"+
-      "FONT_COLOR=RGB(0,0,0)\n"+
-      "FONT_CHARSET=0\n";
+      "CLOSED=YES\n";
     shp = *fp.region;
     if(dimsof(shp)(2) == 2)
       shp = transpose(grow(transpose(shp), -999999));
@@ -996,10 +993,7 @@ color=, out_utm=) {
       swrite(format="BORDER_COLOR=RGB(%d,%d,%d)\n", color(1), color(2), color(3))+
       "BORDER_WIDTH=1\n"+
       "BORDER_STYLE=Solid\n"+
-      swrite(format="LABEL_POS=%g,%g\n", ply(1,avg), ply(2,avg))+
-      "FONT_SIZE=12\n"+
-      "FONT_COLOR=RGB(0,0,0)\n"+
-      "FONT_CHARSET=0\n";
+      swrite(format="LABEL_POS=%g,%g\n", ply(1,avg), ply(2,avg));
   }
   write_ascii_shapefile, shp, outfile, meta=meta;
 }
