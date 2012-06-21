@@ -65,7 +65,7 @@ func kml_fp(fp, shapefile=, outfile=, color=, name=) {
     if(fp.msec) {
       secs = (km*1000.)/fp.msec;
       total_secs += secs + fp.ssturn;
-      desc += swrite(format="Estimated time: %s\n", seconds2clocktime(secs));
+      desc += swrite(format="Estimated time: %s (%.2f minutes)\n", seconds2clocktime(secs), secs/60.);
     }
     desc = "<![CDATA["+desc+"]]>";
     lines(i) = kml_Placemark(
@@ -80,7 +80,7 @@ func kml_fp(fp, shapefile=, outfile=, color=, name=) {
   desc += swrite(format="Number of lines: %d\n", count);
   desc += swrite(format="Longest line: %.2f km\n", longest_km);
   if(fp.msec) {
-    desc += swrite(format="Total estimated time: %s\n", seconds2clocktime(total_secs));
+    desc += swrite(format="Total estimated time: %s (%.2f minutes)\n", seconds2clocktime(total_secs), total_secs/60.);
     desc += swrite(format="msec=%.3f\n", fp.msec);
     desc += swrite(format="ssturn=%.3f\n", fp.ssturn);
   }
