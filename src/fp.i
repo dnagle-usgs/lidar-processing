@@ -989,7 +989,7 @@ color=, out_utm=) {
       swrite(format="NAME=Flightline %d\n", i)+
       swrite(format="DESCRIPTION=%s\n", name)+
       swrite(format="FLIGHTLINE_NUMBER=%d\n", i)+
-      swrite(format="FLIGHTLINE_LENGTH=%.2f km\n", lldist(ply(*)(:4))*NMI2KM)+
+      swrite(format="FLIGHTLINE_LENGTH=%.2f km\n", lldist(ply([1,2,4,5]))*NMI2KM)+
       swrite(format="BORDER_COLOR=RGB(%d,%d,%d)\n", color(1), color(2), color(3))+
       "BORDER_WIDTH=1\n"+
       "BORDER_STYLE=Solid\n"+
