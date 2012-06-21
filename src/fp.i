@@ -992,8 +992,7 @@ color=, out_utm=) {
       swrite(format="FLIGHTLINE_LENGTH=%.2f km\n", lldist(ply([1,2,4,5]))*NMI2KM)+
       swrite(format="BORDER_COLOR=RGB(%d,%d,%d)\n", color(1), color(2), color(3))+
       "BORDER_WIDTH=1\n"+
-      "BORDER_STYLE=Solid\n"+
-      swrite(format="LABEL_POS=%g,%g\n", ply(1,avg), ply(2,avg));
+      "BORDER_STYLE=Solid\n";
   }
   write_ascii_shapefile, shp, outfile, meta=meta;
 }
