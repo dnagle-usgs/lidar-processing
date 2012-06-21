@@ -114,18 +114,28 @@ func compute_depth(data, sample_interval=) {
   fs = reform(fs, [2, numberof(fs)/3, 3]);
   dist = dist(*);
 
-  be = ba = array(double, dimsof(fs));
+  ba = array(double, dimsof(fs));
 
-  valid = fs(..,3) <= ref(..,3);
-  if(anyof(valid)) {
-    w = where(valid);
-    be(w,) = point_project(ref(w,), fs(w,), dist(w), tp=1);
-    ba(w,) = snell_be_to_bathy(fs(w,), be(w,));
+  notequal =
+    (fs(..,1) != ref(..,2)) &
+    (fs(..,2) != ref(..,2)) &
+    (fs(..,3) != ref(..,3));
+
+  w = where((fs(..,3) <= ref(..,3)) & notequal);
+  if(numberof(w)) {
+    be = point_project(ref(w,), fs(w,), dist(w), tp=1);
+    ba(w,) = snell_be_to_bathy(fs(w,), be);
+    be = [];
   }
-  if(nallof(valid)) {
-    w = where(!valid);
-    be(w,) = point_project(ref(w,), fs(w,), -dist(w), tp=1);
-    ba(w,) = snell_be_to_bathy(fs(w,), be(w,));
+  w = where((fs(..,3) > ref(..,3)) & notequal);
+  if(numberof(w)) {
+    be = point_project(ref(w,), fs(w,), -dist(w), tp=1);
+    ba(w,) = snell_be_to_bathy(fs(w,), be);
+    be = [];
+  }
+  w = where(!notequal);
+  if(numberof(w)) {
+    ba(w,) = fs(w,);
   }
 
   fs = reform(fs, dims);
