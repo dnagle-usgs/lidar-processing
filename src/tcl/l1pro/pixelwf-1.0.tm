@@ -111,7 +111,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
                     selection raster
                     ex_veg last
                 }
-                {1 120} {selection pulse}
+                {1 240} {selection pulse}
                 {0 5} {fit_gauss add_peak}
                 {0 63} {
                     fit_gauss win
