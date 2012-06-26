@@ -484,6 +484,7 @@ namespace eval ::l1pro::pixelwf::gui {
         ttk::frame $f.fraBottom
         lower $f.fraBottom
         grid $f.chkVerbose $f.fraBtns -in $f.fraBottom
+        grid columnconfigure $f.fraBottom 0 -weight 1
 
         grid $f.lblWindow $f.spnWindow
         grid $f.cboAction $f.entVariable
