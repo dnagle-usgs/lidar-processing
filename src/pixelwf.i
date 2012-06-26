@@ -8,6 +8,7 @@ if(is_void(pixelwfvars)) {
       loaded_when=-50
     ),
     selection=h_new(
+      background=0,
       raster=1,
       pulse=1,
       missionday="",

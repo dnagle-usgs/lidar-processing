@@ -18,6 +18,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
     namespace eval ::l1pro::pixelwf {
         namespace eval vars {
             namespace eval selection {
+                variable background 1
                 variable raster 1
                 variable pulse 1
                 variable missionday {}
@@ -134,7 +135,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
             # applied.
             variable valid_values {
                 {0 1} {
-                    selection {extended sfsync missionload}
+                    selection {background extended sfsync missionload}
                     fit_gauss {enabled verbose}
                     ex_bath {enabled verbose}
                     ex_veg {enabled verbose use_be_peak use_be_centroid \
@@ -223,6 +224,14 @@ namespace eval ::l1pro::pixelwf::util {
 }
 
 namespace eval ::l1pro::pixelwf::gui {
+    proc yorcmd {args} {
+        if {$::l1pro::pixelwf::vars::selection::background} {
+            ybkg {*}$args
+        } else {
+            exp_send "$args;\r"
+        }
+    }
+
     proc helper_output_dest {cboAction entVariable ns} {
         set vals [list]
         foreach item $::l1pro::pixelwf::constants::output_possibilities {
@@ -371,6 +380,8 @@ namespace eval ::l1pro::pixelwf::gui {
                 -variable ${ns}::extended
         ttk::checkbutton $f.chkLoad -text "Auto load mission data" \
                 -variable ${ns}::missionload
+        ttk::checkbutton $f.chkBg -text "Send commands in background" \
+                -variable ${ns}::background
 
         ::tooltip::tooltip $f.chkLoad \
                 "When this is enabled, the mission day will automatically be\
@@ -379,12 +390,25 @@ namespace eval ::l1pro::pixelwf::gui {
                 \nyour data contains multiple mission days, this should\
                 \nprobably be enabled.\
                 \n\
-                \nWhen this is disbled, the mission data is used as currently\
+                \nWhen this is disabled, the mission data is used as currently\
                 \nexists in memory. This is useful for fine-tuning ops_conf\
                 \nand bathy configuration settings, but should only be used if\
                 \nyou are only working with a single mission day."
+        ::tooltip::tooltip $f.chkBg \
+                "When this is enabled, commands will be sent to Yorick in the\
+                \nbackground. This prevents the Pixel Analysis GUI from\
+                \nspamming your Yorick console. Unfortunately, if errors are\
+                \nencountered, it prevents you from seeing them.\
+                \n\
+                \nWhen this is disabled, commands will be sent to Yorick via\
+                \nthe command line. This will allow you to see errors if they\
+                \noccur. However, all of the configuration for Pixel Analysis\
+                \nwill still be performed in the background, so the commands\
+                \nyou see on the command line won't be that useful to call on\
+                \ntheir own outside of the GUI."
 
-        ttk::button $f.btnGraph -text "Plot" -command [list ybkg pixelwf_plot]
+        ttk::button $f.btnGraph -text "Plot" \
+            -command [list [namespace current]::yorcmd pixelwf_plot]
 
         ttk::button $f.btnMouse -text "Interactive" \
                 -command [list exp_send "pixelwf_enter_interactive;\r"]
@@ -395,6 +419,7 @@ namespace eval ::l1pro::pixelwf::gui {
         grid $f.lblWindow $f.spnWindow $f.chkSf -
         grid $f.lblRadius $f.spnRadius $f.chkExt -
         grid $f.chkLoad - - -
+        grid $f.chkBg - - -
         grid $f.btnMouse - $f.btnGraph -
 
         default_sticky \
@@ -402,7 +427,7 @@ namespace eval ::l1pro::pixelwf::gui {
                 $f.lblRaster $f.spnRaster $f.lblPulse $f.spnPulse \
                 $f.lblWindow $f.spnWindow $f.lblVar $f.cboVar $f.chkSf \
                 $f.lblRadius $f.spnRadius $f.btnMouse $f.btnGraph \
-                $f.chkExt $f.chkLoad
+                $f.chkExt $f.chkLoad $f.chkBg
 
         grid configure $f.btnMouse -sticky w
 
@@ -423,7 +448,7 @@ namespace eval ::l1pro::pixelwf::gui {
 
         ttk::checkbutton $f.chkVerbose -text Verbose -variable ${ns}::verbose
         ttk::button $f.btnGraph -text Plot \
-                -command [list ybkg pixelwf_fit_gauss]
+                -command [list [namespace current]::yorcmd pixelwf_fit_gauss]
 
         grid $f.lblWindow $f.spnWindow $f.lblAddPeak $f.spnAddPeak
         grid $f.cboAction - $f.entVariable -
@@ -448,7 +473,8 @@ namespace eval ::l1pro::pixelwf::gui {
 
         ttk::checkbutton $f.chkVerbose -text Verbose -variable ${ns}::verbose
         ttk::button $f.btnBathctl -text Settings -command bathctl::gui
-        ttk::button $f.btnGraph -text Plot -command [list ybkg pixelwf_ex_bath]
+        ttk::button $f.btnGraph -text Plot \
+                -command [list [namespace current]::yorcmd pixelwf_ex_bath]
 
         ttk::frame $f.fraBtns
         lower $f.fraBtns
@@ -491,7 +517,8 @@ namespace eval ::l1pro::pixelwf::gui {
         ttk::checkbutton $f.chkHardSf -text "Hard Surface" \
                 -variable ${ns}::hard_surface
 
-        ttk::button $f.btnGraph -text Plot -command [list ybkg pixelwf_ex_veg]
+        ttk::button $f.btnGraph -text Plot \
+                -command [list [namespace current]::yorcmd pixelwf_ex_veg]
 
         ttk::checkbutton $f.chkVerbose -text Verbose -variable ${ns}::verbose
 
@@ -526,7 +553,8 @@ namespace eval ::l1pro::pixelwf::gui {
         ttk::checkbutton $f.chkC3 -text c3 -variable ${ns}::c3
         ttk::checkbutton $f.chkC4 -text c4 -variable ${ns}::c4
 
-        ttk::button $f.btnGraph -text Plot -command [list ybkg pixelwf_show_wf]
+        ttk::button $f.btnGraph -text Plot \
+                -command [list [namespace current]::yorcmd pixelwf_show_wf]
 
         ttk::frame $f.fraC
         lower $f.fraC
@@ -549,7 +577,8 @@ namespace eval ::l1pro::pixelwf::gui {
         ttk::label $f.lblWindow -text Window:
         helper_spinbox $f.spnWindow ${ns}::win
 
-        ttk::button $f.btnGraph -text Plot -command [list ybkg pixelwf_show_wf_transmit]
+        ttk::button $f.btnGraph -text Plot \
+                -command [list [namespace current]::yorcmd pixelwf_show_wf_transmit]
 
         grid $f.lblWindow $f.spnWindow
         grid x $f.btnGraph
@@ -571,7 +600,7 @@ namespace eval ::l1pro::pixelwf::gui {
         helper_spinbox $f.spnEOff ${ns}::eoffset
 
         ttk::button $f.btnGraph -text Plot \
-                -command [list ybkg pixelwf_geo_rast]
+                -command [list [namespace current]::yorcmd pixelwf_geo_rast]
 
         ttk::checkbutton $f.chkVerbose -text Verbose -variable ${ns}::verbose
 
@@ -597,7 +626,8 @@ namespace eval ::l1pro::pixelwf::gui {
 
         helper_output_dest $f.cboAction $f.entVariable $ns
 
-        ttk::button $f.btnGraph -text Plot -command [list ybkg pixelwf_ndrast]
+        ttk::button $f.btnGraph -text Plot \
+                -command [list [namespace current]::yorcmd pixelwf_ndrast]
 
         grid $f.lblWindow $f.spnWindow $f.lblUnits $f.cboUnits
         grid $f.cboAction - $f.entVariable -
