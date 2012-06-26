@@ -359,6 +359,7 @@ namespace eval ::l1pro::pixelwf::gui {
 
         ttk::label $f.lblRaster -text Raster:
         helper_spinbox $f.spnRaster ${ns}::raster
+        $f.spnRaster configure -width 7
 
         ttk::label $f.lblPulse -text Pulse:
         helper_spinbox $f.spnPulse ${ns}::pulse
