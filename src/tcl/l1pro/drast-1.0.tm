@@ -34,6 +34,7 @@ if {![namespace exists ::l1pro::drast]} {
             variable wfchan1 1
             variable wfchan2 1
             variable wfchan3 1
+            variable wfchan4 0
             variable wfgeo 0
             variable wfwin 9
             variable wfwinbath 4
@@ -330,18 +331,20 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
     ::mixin::combobox $f.src -state readonly -width 0 \
             -textvariable ${ns}::v::wfsrc \
             -values {rast geo}
-    ttk::checkbutton $f.use1 -text "90% channel (black)" \
+    ttk::checkbutton $f.use1 -text "Channel 1 (black)" \
             -variable ${ns}::v::wfchan1
-    ttk::checkbutton $f.use2 -text "10% channel (red)" \
+    ttk::checkbutton $f.use2 -text "Channel 2 (red)" \
             -variable ${ns}::v::wfchan2
-    ttk::checkbutton $f.use3 -text "1% channel (blue)" \
+    ttk::checkbutton $f.use3 -text "Channel 3 (blue)" \
             -variable ${ns}::v::wfchan3
+    ttk::checkbutton $f.use4 -text "Channel 4 (magenta)" \
+            -variable ${ns}::v::wfchan4
     ttk::checkbutton $f.geo -text "Georeference" \
             -variable ${ns}::v::wfgeo
     apply $labelgrid $f.winwf "WF window:" $f.use1 -
     apply $labelgrid $f.winbath "ex_bath window:" $f.use2 -
     apply $labelgrid $f.src "Select from:" $f.use3 -
-    apply $labelgrid $f.geo -
+    apply $labelgrid $f.geo - $f.use4 -
 }
 
 proc ::l1pro::drast::gui_opts_sline {f labelgrid} {
@@ -569,7 +572,7 @@ proc ::l1pro::drast::jump pos {
 }
 
 proc ::l1pro::drast::examine_waveforms {} {
-    set cb [expr {$v::wfchan1 + 2*$v::wfchan2 + 4*$v::wfchan3}]
+    set cb [expr {$v::wfchan1 + 2*$v::wfchan2 + 4*$v::wfchan3 + 8*$v::wfchan4}]
     set src [dict get [list geo $v::geowin rast $v::rastwin] $v::wfsrc]
     set cmd "rn=$v::rn; msel_wf, ndrast(rn=rn, graph=0), cb=$cb"
     appendif cmd \
