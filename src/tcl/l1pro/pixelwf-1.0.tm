@@ -152,35 +152,6 @@ if {![namespace exists ::l1pro::pixelwf]} {
                 }
                 {meters ns feet} {ndrast units}
             }
-            # valid_classes is a dict. It is used to restrict a variable's value to
-            # the given string class.
-            #
-            # Keys into valid_classes are the class names.  Values are themselves
-            # dicts, whose keys are namespaces and whose values are lists of
-            # variables in those namespaces that need the constraint applied.
-            variable valid_classes {
-                integer {
-                    selection {raster pulse}
-                    fit_gauss {win add_peak}
-                    ex_bath win
-                    ex_veg {last win}
-                    show_wf win
-                    show_wf_transmit win
-                    geo_rast win
-                    ndrast win
-                }
-                double {
-                    selection radius
-                    geo_rast eoffset
-                }
-            }
-            #
-            variable valid_variables {
-                fit_gauss dest_variable
-                ex_bath dest_variable
-                ex_veg dest_variable
-                ndrast dest_variable
-            }
             # output_possibilities is a list specifying the options that can be
             # used for the output of various panels
             variable output_possibilities {
@@ -194,66 +165,6 @@ if {![namespace exists ::l1pro::pixelwf]} {
 ################################################################################
 #                               Variable Traces                                #
 ################################################################################
-
-    # Enforce string classes
-    namespace eval ::l1pro::pixelwf {
-        dict for {class data} $constants::valid_classes {
-            dict for {ns vars} $data {
-                foreach var $vars {
-                validation_trace append vars::${ns}::$var \
-                        [list string is $class %V]
-                }
-                unset var
-            }
-            unset ns vars
-        }
-        unset class data
-    }
-
-    # Enforce valid Yorick variable names
-    namespace eval ::l1pro::pixelwf {
-        dict for {ns vars} $constants::valid_variables {
-            foreach var $vars {
-                validation_trace append vars::${ns}::$var \
-                    {regexp {^([[:alpha:]_]\w*|)$} %V}
-            }
-            unset var
-        }
-        unset ns vars
-    }
-
-    # Enforce constrained values
-    namespace eval ::l1pro::pixelwf {
-        dict for {values data} $constants::valid_values {
-            dict for {ns vars} $data {
-                foreach var $vars {
-                validation_trace append vars::${ns}::$var \
-                        [list ::struct::set contains [concat {""} $values] %V]
-                }
-                unset var
-            }
-            unset ns vars
-        }
-        unset values data
-    }
-
-    # Enforce constrained ranges
-    namespace eval ::l1pro::pixelwf {
-        dict for {range data} $constants::valid_ranges {
-            lassign $range range_min range_max
-            dict for {ns vars} $data {
-                foreach var $vars {
-                validation_trace append vars::${ns}::$var \
-                        {expr {"%V" eq ""}} \
-                        -invalidcmd [list constrain %v between $range_min \
-                                and $range_max]
-                }
-                unset var
-            }
-            unset ns vars
-        }
-        unset range data
-    }
 
     # Keep Yorick updated for all variables in the specified namespaces
     namespace eval ::l1pro::pixelwf::vars {
@@ -303,7 +214,6 @@ namespace eval ::l1pro::pixelwf::util {
 
     proc valid_range var {helper_valid ranges $var}
     proc valid_values var {helper_valid values $var}
-    proc valid_class var {helper_valid classes $var}
 
     proc restore_defaults {} {
         dict for {vname value} $::l1pro::pixelwf::vars::defaults {
