@@ -196,65 +196,12 @@ func eaarla_fs(args) {
     // Pick the channel for each triplet
     eaarla_wf_filter_channel, wf, lim=12, max_intensity=251,
       max_saturated=ops_conf.max_sfc_sat;
-
-    working = eaarla_init_pointcloud(wf, rn_start=args.rn_start);
-
-    for(i = 1; i <= wf.count; i++) {
-      tx_pos = [];
-      tx = wf_filter_bias(short(*wf.tx(i)), method="first");
-      wf_centroid, tx, tx_pos, lim=12;
-      tx = [];
-
-      rx_pos = rx_pow = [];
-      rx = wf_filter_bias(short(*wf.rx(i)), method="first");
-      wf_centroid, rx, rx_pos, lim=12;
-      wf_peak, rx, , rx_pow;
-      rx = [];
-
-      if(abs(rx_pos) < 1e1000 && abs(tx_pos) < 1e1000) {
-        dist = (rx_pos - tx_pos) * sample2m;
-        xyz = point_project(wf(raw_xyz0,i,), wf(raw_xyz1,i,), dist, tp=1);
-      } else {
-        xyz = array(1e1000, 3);
-      }
-
-      working.fx(i) = working.lx(i) = xyz(1);
-      working.fy(i) = working.ly(i) = xyz(2);
-      working.fz(i) = working.lz(i) = xyz(3);
-      working.fint(i) = working.lint(i) = rx_pow;
-      working.ftx(i) = working.ltx(i) = tx_pos;
-      working.frx(i) = working.lrx(i) = rx_pos;
-    }
   } else {
     // Take first of each triplet
     wf, index, 1:wf.count:3;
-
-    working = eaarla_init_pointcloud(wf, rn_start=args.rn_start);
-
-    working.fx = working.lx = wf(raw_xyz1, , 1);
-    working.fy = working.ly = wf(raw_xyz1, , 2);
-    working.fz = working.lz = wf(raw_xyz1, , 3);
-    working.fint = working.lint = 0;
-    working.ftx = working.ltx = 1;
-    working.frx = working.lrx = 1;
   }
 
-  // Blank out invalid points
-  w = where(abs(working.fz) == 1e1000);
-  if(numberof(w)) {
-    working.fx(w) = working.fy(w) = working.fz(w) =
-      working.lx(w) = working.ly(w) = working.lz(w) = 0;
-  }
-
-  // This provides support equivalent to ext_bad_att=1 when
-  // altitude_thresh=20
-  if(!is_void(args.altitude_thresh)) {
-    w = where(working.mz - working.fz < args.altitude_thresh);
-    if(numberof(w)) {
-      working.fx(w) = working.fy(w) = working.fz(w) =
-        working.lx(w) = working.ly(w) = working.lz(w) = 0;
-    }
-  }
+  working = process_fs(args=args, keepbad=1);
 
   // Eliminate points flagged as rx/tx dropouts in the raw data
   w = where(wf(flag_irange_bit14,) | wf(flag_irange_bit15,));
