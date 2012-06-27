@@ -60,12 +60,11 @@ func process_fs(args) {
       gaps in raster number. The points will have then have rn defined in the
       return result.
     keepbad= By default, certain kinds of bad points are eliminated from the
-      resulting point cloud: points with invalid coordinates (inf), points
-      within a certain range of the mirror (when altitude_thresh is provided),
-      and points flagged as dropouts in the raw data (using the flags in bits
-      14 and 15 of the irange field). Using keepbad=1 will mean that these
-      points are kept instead of removed, but their xyz fields will all be set
-      to 0 to make them easier to remove later.
+      resulting point cloud: points with invalid coordinates (inf), and points
+      within a certain range of the mirror (when altitude_thresh is provided).
+      Using keepbad=1 will mean that these points are kept instead of removed,
+      but their xyz fields will all be set to 0 to make them easier to remove
+      later.
 */
   wrap_args_passed, args;
   keydefault, args, usecentroid=1, altitude_thresh=[], rn_start=1, keepbad=0;
