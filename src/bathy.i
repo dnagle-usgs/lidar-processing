@@ -310,7 +310,7 @@ func ex_bath_message(graph, verbose, msg) {
   if(verbose) write, "Rejected: "+msg+"\n";
 }
 
-func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &raw_wf, &wf, &scan_angle, &channel, &saturated) {
+func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &raw_wf, &wf, &scan_angle, &channel, &saturated, &maxint) {
   extern ex_bath_rn, ex_bath_rp;
   default, ex_bath_rn, -1;
   // simple cache for raster data
@@ -336,7 +336,9 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &raw_wf, &wf
     numsat = numberof(saturated);
   } while(numsat > maxsat && channel < 3);
 
-  wf = float(~raw_wf) - ~raw_wf(1);
+  wf = float(~raw_wf);
+  maxint = 255 - long(wf(1));
+  wf = wf - wf(1);
 }
 
 func bathy_detect_surface(wf, raw_wf, saturated, thresh, &surface, &surface_intensity, &escale) {
