@@ -13,9 +13,11 @@ if {![namespace exists ::l1pro::drast]} {
             variable maxrn 100
             variable playint 1
             variable stepinc 1
+            variable pulse 60
             variable show_geo 1
             variable show_rast 0
             variable show_sline 0
+            variable show_wf 0
             variable sfsync 0
             variable autolidar 0
             variable autopt 0
@@ -229,12 +231,16 @@ proc ::l1pro::drast::gui_opts_play {f labelgrid} {
             -textvariable ${ns}::v::playint
     ttk::spinbox $f.stepinc -from 1 -to 10000 -increment 1 -width 0 \
             -textvariable ${ns}::v::stepinc
+    ttk::spinbox $f.pulse -from 1 -to 240 -increment 1 -width 0 \
+            -textvariable ${ns}::v::pulse
     ttk::checkbutton $f.rast -text "Show rast" \
             -variable ${ns}::v::show_rast
     ttk::checkbutton $f.geo -text "Show geo" \
             -variable ${ns}::v::show_geo
     ttk::checkbutton $f.sline -text "Show scan line" \
             -variable ${ns}::v::show_sline
+    ttk::checkbutton $f.wf -text "Show waveform" \
+            -variable ${ns}::v::show_wf
     ttk::checkbutton $f.sfsync -text "Sync with SF" \
             -variable ${ns}::v::sfsync
     ttk::checkbutton $f.autolidar -text "Auto Plot Lidar (Process EAARL Data)" \
@@ -248,6 +254,7 @@ proc ::l1pro::drast::gui_opts_play {f labelgrid} {
     apply $labelgrid $f.rast - $f.sfsync -
     apply $labelgrid $f.geo -
     apply $labelgrid $f.sline -
+    apply $labelgrid $f.wf - $f.pulse "Pulse:"
     apply $labelgrid $f.autolidar -
     apply $labelgrid $f.autopt -
     apply $labelgrid $f.autoptc -
@@ -419,7 +426,7 @@ proc ::l1pro::drast::show_auto {} {
     if {$v::autoptc} {
         ::plot::replot_all
     }
-    foreach name {rast geo sline} {
+    foreach name {rast geo sline wf} {
         if {[set v::show_$name]} {
             show_$name
         }
@@ -488,6 +495,16 @@ proc ::l1pro::drast::show_sline {} {
         }
     }
 
+    exp_send "$cmd\r"
+}
+
+proc ::l1pro::drast::show_wf {} {
+    set cmd "window, $v::wfwin; show_wf, $v::rn, $v::pulse"
+    appendif cmd \
+            $v::wfchan1     ", c1=1" \
+            $v::wfchan2     ", c2=1" \
+            $v::wfchan3     ", c3=1" \
+            $v::wfchan4     ", c4=1"
     exp_send "$cmd\r"
 }
 
