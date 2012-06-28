@@ -310,7 +310,13 @@ func ex_bath_message(graph, verbose, msg) {
   if(verbose) write, "Rejected: "+msg+"\n";
 }
 
-func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf, &scan_angle, &channel, &saturated, &maxint) {
+func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
+&scan_angle, &channel, &saturated, &maxint) {
+/* DOCUMENT bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
+ * &scan_angle, &channel, &saturated, &maxint)
+  Part of bathy algorithm. Selects the appropriate channel and returns the
+  waveform, with bias removed.
+*/
   extern ex_bath_rn, ex_bath_rp;
   default, ex_bath_rn, -1;
   // simple cache for raster data
@@ -341,7 +347,14 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf, &scan_a
   wf = wf - wf(1);
 }
 
-func bathy_detect_surface(wf, maxint, saturated, thresh, &surface, &surface_intensity, &escale) {
+func bathy_detect_surface(wf, maxint, saturated, thresh, &surface,
+&surface_intensity, &escale) {
+/* DOCUMENT bathy_detect_surface(wf, maxint, saturated, thresh, &surface,
+ * &surface_intensity, &escale)
+  Part of bathy algorithm. Detects the surface. However, this is not a -true-
+  surface, since for saturated returns the sample of saturation is returned
+  instead of a point in the middle of the saturated region.
+*/
   numsat = numberof(saturated);
   // For EAARL, first return saturation should always start in first 12 samples.
   // If a saturated first return is found...
@@ -382,7 +395,13 @@ func bathy_detect_surface(wf, maxint, saturated, thresh, &surface, &surface_inte
   }
 }
 
-func bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=, agc_coeff=, max_intensity=, sample_interval=, graph=, win=) {
+func bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=,
+agc_coeff=, max_intensity=, sample_interval=, graph=, win=) {
+/* DOCUMENT bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=,
+ * agc_coeff=, max_intensity=, sample_interval=, graph=, win=)
+  Returns an adjusted waveform WF_DECAY that compensates for attenuation of
+  light in water.
+*/
   default, sample_interval, 1.0;
   wflen = numberof(wf);
   attdepth = indgen(0:wflen-1) * sample_interval * CNSH2O2X;
@@ -418,6 +437,9 @@ func bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=, agc_coe
 }
 
 func bathy_detect_bottom(wf, first, last, thresh, &bottom_peak, &msg) {
+/* DOCUMENT bathy_detect_bottom(wf, first, last, thresh, &bottom_peak, &msg)
+  Detects a bottom return in a waveform.
+*/
   bottom_peak = msg = [];
   offset = first - 1;
 
@@ -438,6 +460,9 @@ func bathy_detect_bottom(wf, first, last, thresh, &bottom_peak, &msg) {
 }
 
 func bathy_validate_bottom(wf, bottom, first, last, thresh, graph, &msg) {
+/* DOCUMENT bathy_validate_bottom(wf, bottom, first, last, thresh, graph, &msg)
+  Performs some analysis on a detected bottom to see if it seems legitimate.
+*/
   msg = [];
 
   // pulse wings
