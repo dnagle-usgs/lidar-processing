@@ -965,7 +965,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     //do not use centroid or trailing edge
     mvx = wf(xr(0):xr(0)+5)(mxx);
     // find bottom peak now
-    mx0 = irange+wf(xr(0):xr(0)+5)(mxx) + xr(0) - 1;
+    mx0 = irange + mvx + xr(0) - 1;
     mv0 = wf(mvx);
   }
 
