@@ -715,7 +715,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
       it defines which algorithm mode to use.  This options works alongside
       the other options (use_be-centroid, use_be_peak, hard_surface), so that if any
       old code uses those options, they will still work.
-      "cent" : use centroid algorithm, see func xcent
+      "cent" : use centroid algorithm, see func wf_centroid
       "peak" : use peak algorithm, see func xpeak
       "gauss": use gaussian decomposition algorithm, see func xgauss
     pse= Time (in milliseconds) to pause between each waveform plot.
@@ -772,17 +772,17 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
    tx_wf = wf_filter_bias(short(~pulse.transmit_wf), method="first");
 
   if (alg_mode=="cent") {
-    ctx = xcent(tx_wf);
+    ctx = wf_centroid(tx_wf);
   } else if (alg_mode=="peak") {
     ctx = xpeak(tx_wf);
   } else if (alg_mode=="gauss") {
     ctx = xgauss(tx_wf);
   } else if (is_void(alg_mode)) {
-    ctx = cent(pulse.transmit_wf);
+    ctx = wf_centroid(tx_wf, lim=12);
   }
 
   // if transmit pulse does not exist, return
-  if ((ctx(1) == 0)  || (ctx(1) == 10000))
+  if ((ctx(1) == 0)  || (ctx(1) == 1e1000))
     return rv;
 
   // Try 1st channel
@@ -906,7 +906,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
       }
       if (wf_tail(sum) != 0) {
         if (alg_mode=="cent") {
-          wf_tail_peak = xcent(wf_tail);
+          wf_tail_peak = wf_centroid(wf_tail);
         } else if (alg_mode=="peak") {
           wf_tail_peak = xpeak(wf_tail);
         } else if (alg_mode=="gauss") {
@@ -951,7 +951,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
 
       // compute centroid
       if (wf_tail(sum) != 0) {
-        wf_tail_peak = xcent(wf_tail)(1);
+        wf_tail_peak = wf_centroid(wf_tail);
         if (wf_tail_peak <= 0) return rv;
         if (int(xr(0)+wf_tail_peak) <= wflen) {
           mx0 = irange + xr(0) + wf_tail_peak - ctx(1) + range_bias;
