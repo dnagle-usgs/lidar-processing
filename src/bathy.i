@@ -224,13 +224,13 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   result = BATHPIX();
   result.rastpix = raster_number + (pulse_number<<24);
 
-  local wf, scan_angle, channel, saturated;
+  local wf, scan_angle, channel;
   bathy_lookup_raster_pulse, raster_number, pulse_number, bath_ctl.maxsat,
-      wf, scan_angle, channel, saturated, maxint;
+      wf, scan_angle, channel, maxint;
 
   result.sa = scan_angle;
   wflen = numberof(wf);
-  numsat = numberof(saturated);
+  numsat = numberof(where(wf == maxint));
 
   if(!wflen)
     return result;
@@ -247,7 +247,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   }
 
   local surface_sat_end, surface_intensity, escale;
-  bathy_detect_surface, wf, maxint, saturated, bath_ctl.thresh,
+  bathy_detect_surface, wf, maxint, bath_ctl.thresh,
       surface_sat_end, surface_intensity, escale;
   result.first_peak = surface_intensity;
 
@@ -311,9 +311,9 @@ func ex_bath_message(graph, verbose, msg) {
 }
 
 func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
-&scan_angle, &channel, &saturated, &maxint) {
+&scan_angle, &channel, &maxint) {
 /* DOCUMENT bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
- * &scan_angle, &channel, &saturated, &maxint)
+ * &scan_angle, &channel, &maxint)
   Part of bathy algorithm. Selects the appropriate channel and returns the
   waveform, with bias removed.
 */
@@ -347,14 +347,15 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
   wf = wf - wf(1);
 }
 
-func bathy_detect_surface(wf, maxint, saturated, thresh, &surface,
-&surface_intensity, &escale) {
-/* DOCUMENT bathy_detect_surface(wf, maxint, saturated, thresh, &surface,
+func bathy_detect_surface(wf, maxint, thresh, &surface, &surface_intensity,
+&escale) {
+/* DOCUMENT bathy_detect_surface(wf, maxint, thresh, &surface,
  * &surface_intensity, &escale)
   Part of bathy algorithm. Detects the surface. However, this is not a -true-
   surface, since for saturated returns the sample of saturation is returned
   instead of a point in the middle of the saturated region.
 */
+  saturated = where(wf == maxint);
   numsat = numberof(saturated);
   // For EAARL, first return saturation should always start in first 12 samples.
   // If a saturated first return is found...
