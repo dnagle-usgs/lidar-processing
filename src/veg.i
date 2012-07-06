@@ -1284,7 +1284,7 @@ func plot_veg_wf(wf, channel, mx00, mx=, mv=, diff=) {
   winbkp = current_window();
   window, win;
   fma;
-  xaxis = span(mx00+1,mx00+numberof(wf), numberof(wf));
+  xaxis = span(mx00, mx00+numberof(wf)-1, numberof(wf));
   limits, xaxis(1), xaxis(0), 0, 250;
 
   if (diff) {		// plot gradients
