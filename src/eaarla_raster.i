@@ -323,12 +323,12 @@ func eaarla_decode_rasters(raw, wfs=) {
       transmit_length = channel1_bias = channel2_bias = channel3_bias =
       channel4_bias = array(char, count, 120);
   shaft_angle = integer_range = raw_irange = data_length = channel1_length =
-      channel2_length = channel3_length = channel4_lenght =
+      channel2_length = channel3_length = channel4_length =
       array(short, count, 120);
   transmit_offset = channel1_offset = channel2_offset = channel3_offset =
       channel4_offset = array(long, count, 120);
   if(wfs) {
-    transmit_wf = channel1_wf = channel2_wf = channel3_wf = channel3_wf =
+    transmit_wf = channel1_wf = channel2_wf = channel3_wf = channel4_wf =
         array(pointer, count, 120);
   }
 
