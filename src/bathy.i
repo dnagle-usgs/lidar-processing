@@ -355,6 +355,7 @@ func bathy_detect_surface(wf, maxint, thresh, &surface, &surface_intensity,
   surface, since for saturated returns the sample of saturation is returned
   instead of a point in the middle of the saturated region.
 */
+  wflen = numberof(wf);
   saturated = where(wf == maxint);
   numsat = numberof(saturated);
   // For EAARL, first return saturation should always start in first 12 samples.
