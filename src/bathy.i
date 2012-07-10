@@ -57,25 +57,24 @@ func bath_winpix(m) {
   rn;
 }
 
-func run_bath(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, msg=) {
+func run_bath(nil, start=, stop=, center=, delta=, last=, graph=, pse=, msg=) {
   extern bath_ctl;
   default, last, 250;
   default, graph, 0;
   default, pse, 0;
   default, msg, "Processing bathymetry...";
 
-  if(is_void(rn) || is_void(len)) {
-    if(!is_void(center) && !is_void(delta)) {
-      rn = center - delta;
-      len = 2 * delta;
-    } else if (!is_void(start) && !is_void(stop)) {
-      rn = start-1;
-      len = stop - start;
-    } else {
-      write, "Input parameters not correctly defined.  "+
-        "See help, run_bath.  Please start again.";
-      return 0;
-    }
+  if(!is_void(center)) {
+    default, delta, 100;
+    start = center - delta;
+    stop = center + delta;
+  } else {
+    if(is_void(start))
+      error, "Must provide start= or center=";
+    if(!is_void(delta))
+      stop = start + delta;
+    else if(is_void(stop))
+      error, "When using start=, you must provide delta= or stop=";
   }
 
   if(is_void(bath_ctl) || bath_ctl.laser == 0.0) {
@@ -83,15 +82,16 @@ func run_bath(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, ms
     return 0;
   }
 
-  depths = array(BATHPIX, 120, len);
+  count = stop - start + 1;
+  depths = array(BATHPIX, 120, count);
 
   status, start, msg=msg;
-  for(j=1; j<=len; j++) {
-    for(pulse=1; pulse<119; pulse++) {
-      depths(pulse,j) = ex_bath(rn+j, pulse, last=last, graph=graph);
+  for(j=1, rn=start; rn <= stop; j++, rn++) {
+    for(pulse=1; pulse<=120; pulse++) {
+      depths(pulse,j) = ex_bath(rn, pulse, last=last, graph=graph);
       pause, pse;
     }
-    status, progress, j, len;
+    status, progress, j, count;
   }
   status, finished;
   return depths;
