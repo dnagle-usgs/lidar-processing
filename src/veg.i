@@ -720,7 +720,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
       "gauss": use gaussian decomposition algorithm, see func xgauss
     pse= Time (in milliseconds) to pause between each waveform plot.
 */
-  extern veg_conf, ops_conf, n_all3sat, irg_a, _errno;
+  extern veg_conf, ops_conf, n_all3sat, _errno;
   define_veg_conf;
 
   default, win, 4;
@@ -736,19 +736,13 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     return;
   }
 
-  // check if global variable irg_a contains the current raster number (rn)
-  if (is_void(irg_a) || !is_array(where(irg_a.raster == rn))) {
-    irg_a = irg(rn, rn, usecentroid=1, msg=0);
-  }
-  this_irg = irg_a(where(rn == irg_a.raster));
-  irange = this_irg.irange(pulse_number);
-
   raw = get_erast(rn=rn);
   if (is_void(header)) {
     pulse = eaarla_decode_pulse(raw, pulse_number, wfs=1);
   } else {
     pulse = eaarla_decode_pulse(raw, pulse_number, header=header, wfs=1);
   }
+  irange = pulse.raw_irange;
 
   // setup the return struct
   rv = VEGPIX();
@@ -853,20 +847,22 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     range_bias = ops_conf.chn3_range_bias;
 
   // stuff below is for mx1 (first surface in veg).
+  np = min(pulse.channel1_length, 12); // use no more than 12
+  if (numberof(where((pulse.channel1_wf(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
+    crx = cent(pulse.channel1_wf);
+    crx(1) += ops_conf.chn1_range_bias;
+  } else if (numberof(where((pulse.channel2_wf(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
+    crx = cent(pulse.channel2_wf);
+    crx(1) += ops_conf.chn2_range_bias;
+    crx(3) += 300;
+  } else {
+    crx = cent(pulse.channel3_wf);
+    crx(1) += ops_conf.chn3_range_bias;
+    crx(3) += 600;
+  }
+  irange = float(pulse.raw_irange - ctx(1) + crx(1));
+
   if (use_be_centroid || use_be_peak || !is_void(alg_mode)) {
-    np = min(pulse.channel1_length, 12); // use no more than 12
-    if (numberof(where((pulse.channel1_wf(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
-      crx = cent(pulse.channel1_wf);
-      crx(1) += ops_conf.chn1_range_bias;
-    } else if (numberof(where((pulse.channel2_wf(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
-      crx = cent(pulse.channel2_wf);
-      crx(1) += ops_conf.chn2_range_bias;
-      crx(3) += 300;
-    } else {
-      crx = cent(pulse.channel3_wf);
-      crx(1) += ops_conf.chn3_range_bias;
-      crx(3) += 600;
-    }
     mx1 = (crx(1) >= 10000) ? -10 : irange + crx(1) - ctx(1);
     mv1 = crx(3);
   } else {
