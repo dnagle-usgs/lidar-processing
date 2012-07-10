@@ -190,8 +190,6 @@ func eaarla_fs(args) {
 
   wf = args(1);
 
-  sample2m = wf.sample_interval * NS2MAIR;
-
   if(args.usecentroid) {
     // Pick the channel for each triplet
     eaarla_wf_filter_channel, wf, lim=12, max_intensity=251,
