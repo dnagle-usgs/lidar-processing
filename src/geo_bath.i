@@ -117,7 +117,7 @@ func compute_depth(data, sample_interval=) {
   ba = array(double, dimsof(fs));
 
   notequal =
-    (fs(..,1) != ref(..,2)) &
+    (fs(..,1) != ref(..,1)) &
     (fs(..,2) != ref(..,2)) &
     (fs(..,3) != ref(..,3));
 
