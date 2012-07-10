@@ -28,7 +28,7 @@ require, "general.i";
 */
 
 struct BATHPIX {
-  int rastpix;         // raster + pulse << 24
+  long rastpix;        // raster + pulse << 24
   short sa;            // scan angle
   short idx;           // bottom index
   short bottom_peak;   // peak amplitude of bottom signal
