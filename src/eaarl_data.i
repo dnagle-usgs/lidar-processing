@@ -927,9 +927,9 @@ func struct_cast(&data, dest, verbose=, special=) {
       if(has_member(result, "intensity"))
         result.intensity = data.fint + 300 * (data.channel-1);
       if(has_member(result, "first_peak"))
-        result.first_peak = data.fint + 300 * (data.channel-1);
+        result.first_peak = data.fint;
       if(has_member(result, "bottom_peak"))
-        result.bottom_peak = data.lint + 300 * (data.channel-1);
+        result.bottom_peak = data.lint;
 
       if(structeq(dst, GEO)) {
         result.east = data.lx * 100;
