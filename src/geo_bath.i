@@ -71,6 +71,8 @@ func make_fs_bath(d, rrr, avg_surf=, sample_interval=) {
     indx = where((d(,i).idx > 0) & (abs(offset) < 100));
     if (is_array(indx)) {
       fs_rtn_cent = rrr(i).fs_rtn_centroid(indx)+offset(indx);
+      // NOTE: This depth value will be ignored and clobbered by compute_depth
+      // if it is used.
       geodepth(i).depth(indx) = int((-d(,i).idx(indx) + fs_rtn_cent ) * CNSH2O2X *100.-0.5);
       geodepth(i).sr2(indx) =int((d(,i).idx(indx) - fs_rtn_cent)*10);
     }
