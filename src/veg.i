@@ -860,9 +860,9 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     crx(1) += ops_conf.chn3_range_bias;
     crx(3) += 600;
   }
-  irange = float(pulse.raw_irange - ctx(1) + crx(1));
 
   if (use_be_centroid || use_be_peak || !is_void(alg_mode)) {
+    // set mx1 to range walk corrected fs range
     mx1 = (crx(1) >= 10000) ? -10 : irange + crx(1) - ctx(1);
     mv1 = crx(3);
   } else {
