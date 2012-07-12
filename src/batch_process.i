@@ -434,7 +434,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
     if (typ == 2) {
       if ((get_typ && !only_bathy) || (!get_typ)) {
         write, format = "Processing Region %d of %d for Vegetation\n",i,n;
-        veg_all = make_veg(latutm = 1, q = q, ext_bad_veg=1, ext_bad_att=1, use_centroid=1);
+        veg_all = make_veg(latutm = 1, q = q, ext_bad_att=1, use_centroid=1);
         if (is_array(veg_all))  {
           test_and_clean, veg_all;
           if (is_array(veg_all)) {
@@ -490,7 +490,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
     }
     if ((get_typ && !only_bathy) || (!get_typ)) {
       write, format = "Processing Region %d of %d for Vegetation\n",i,n;
-      veg_all = make_veg(latutm = 1, q = q, ext_bad_veg=1, ext_bad_att=1, use_centroid=1);
+      veg_all = make_veg(latutm = 1, q = q, ext_bad_att=1, use_centroid=1);
       if (is_array(veg_all))  {
         test_and_clean, veg_all;
         if (is_array(veg_all)) {

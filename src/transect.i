@@ -511,7 +511,7 @@ func reprocess_data_along_transect(new_pnav, outdir=, ofname_tag=, rtn=, w= ) {
   }
 
   if (rtn == 1) {
-    data_re = make_veg(latutm=1, q=q, ext_bad_att=1, ext_bad_veg=1, use_centroid=1);
+    data_re = make_veg(latutm=1, q=q, ext_bad_att=1, use_centroid=1);
   }
 
   data_re = test_and_clean(data_re);
