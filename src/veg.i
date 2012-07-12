@@ -757,7 +757,8 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     return rv;
 
   // If transmit or return pulse is missing, return
-  if (pulse.transmit_length == 0 || pulse.channel1_length < 2) {
+  if (pulse.flag_irange_bit14 || pulse.flag_irange_bit15 ||
+   pulse.transmit_length == 0 || pulse.channel1_length < 2) {
     _errno = -1;
     return rv;
   }
@@ -775,7 +776,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     ctx = wf_centroid(tx_wf, lim=12);
   }
 
-  // if transmit pulse does not exist, return
+  // if out-of-range centroid, return
   if ((ctx(1) == 0)  || (ctx(1) == 1e1000))
     return rv;
 
@@ -860,7 +861,6 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     crx(1) += ops_conf.chn3_range_bias;
     crx(3) += 600;
   }
-
   if (use_be_centroid || use_be_peak || !is_void(alg_mode)) {
     // set mx1 to range walk corrected fs range
     mx1 = (crx(1) >= 10000) ? -10 : irange + crx(1) - ctx(1);
