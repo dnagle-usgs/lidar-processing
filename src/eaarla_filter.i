@@ -49,7 +49,7 @@ func eaarla_wf_filter_channel(wf, lim=, max_intensity=, max_saturated=) {
     do {
       j++;
       rx = *wf(rx,i+j);
-      np = min(lim, numberof(rx))
+      np = long(min(lim, numberof(rx)));
       saturated = numberof(where(rx(1:np) >= max_intensity));
       if(saturated <= max_saturated) {
         keep(i+j) = 1;
