@@ -127,7 +127,7 @@ func quartiles(x) {
 func midhinge(x) {
 /* DOCUMENT midhinge(x)
   Returns the midhinge for X. The midhinge is the average of the first and
-  thirt quartiles.
+  third quartiles.
 */
   q = quartiles(x);
   return q([1,3])(avg);
