@@ -782,15 +782,16 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
 
   // Try 1st channel
   channel = 1;
+  np = min(pulse.channel1_length, 12);		// use no more than 12
   wf = wf_filter_bias(short(~pulse.channel1_wf), method="first");
-  saturated = where(pulse.channel1_wf < 5);    // Create a list of saturated samples
+  saturated = where(pulse.channel1_wf(1:np) < 5);  // Create a list of saturated samples
   numsat = numberof(saturated);     // Count how many are saturated
 
   if (numsat > veg_conf.max_sat(channel)) {
     // Try 2nd channel
     channel = 2;
     wf = wf_filter_bias(short(~pulse.channel2_wf), method="first");
-    saturated = where(pulse.channel2_wf == 0);
+    saturated = where(pulse.channel2_wf(1:np) < 5);
     numsat = numberof(saturated);
 
     if (numsat > veg_conf.max_sat(channel)) {
@@ -848,22 +849,10 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     range_bias = ops_conf.chn3_range_bias;
 
   // stuff below is for mx1 (first surface in veg).
-  np = min(pulse.channel1_length, 12); // use no more than 12
-  if (numberof(where((pulse.channel1_wf(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
-    crx = cent(pulse.channel1_wf);
-    crx(1) += ops_conf.chn1_range_bias;
-  } else if (numberof(where((pulse.channel2_wf(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
-    crx = cent(pulse.channel2_wf);
-    crx(1) += ops_conf.chn2_range_bias;
-    crx(3) += 300;
-  } else {
-    crx = cent(pulse.channel3_wf);
-    crx(1) += ops_conf.chn3_range_bias;
-    crx(3) += 600;
-  }
+  crx = cent(wf);
   if (use_be_centroid || use_be_peak || !is_void(alg_mode)) {
     // set mx1 to range walk corrected fs range
-    mx1 = (crx(1) >= 10000) ? -10 : irange + crx(1) - ctx(1);
+    mx1 = (crx(1) >= 10000) ? -10 : irange + crx(1) - ctx(1) + range_bias;
     mv1 = crx(3);
   } else {
     // find surface peak now
