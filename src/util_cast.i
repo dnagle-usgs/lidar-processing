@@ -385,6 +385,82 @@ func struct2obj(data) {
   return obj;
 }
 
+func obj2struct(data, name=, ary=) {
+/* DOCUMENT obj2struct(data, name=, ary=)
+  Converts an oxy group object to a struct instance.
+
+  Parameter:
+    data: An oxy group object
+
+  Options:
+    name= The name to use for the temporary struct created to initialize the
+      result. This defaults to "temp_struct". This must be a valid Yorick
+      variable name.
+    ary= By default, a scalar result is returned. Use ary=1 if all members are
+      arrays with the same dimensionality to return an array of struct
+      instances with the same dimensionality.
+
+  SEE ALSO: hash2struct struct2hash struct2obj
+*/
+  default, name, "temp_struct";
+  default, ary, 0;
+
+  if(!data(*))
+    return [];
+
+  bkp = [];
+  if(symbol_exists(name))
+    bkp = symbol_def(name);
+
+  keys = data(*,);
+  if(noneof(keys))
+    error, "no keys found";
+  // have to eliminate anonymous members
+  keys = keys(where(keys));
+
+  count = numberof(keys);
+  sdef = "struct "+name+" {";
+  for(i = 1; i <= count; i++) {
+    key = keys(i);
+    val = data(noop(key));
+    sdef += typeof(val) + " " + key;
+    if(!ary && !is_scalar(val)) {
+      dims = dimsof(val);
+      ndims = numberof(dims);
+      sdef += "(";
+      for(j = 2; j <= ndims; j++) {
+        sdef += swrite(format="%d", dims(j));
+        if(j < ndims)
+          sdef += ",";
+      }
+      sdef += ")";
+    }
+    sdef += ";";
+  }
+  sdef += "}\n";
+  include, [sdef], 1;
+
+  if(ary)
+    result = array(symbol_def(name), dimsof(val));
+  else
+    result = symbol_def(name)();
+
+  for(i = 1; i <= count; i++) {
+    get_member(result, keys(i)) = data(keys(i));
+  }
+
+  symbol_set, name, bkp;
+  return result;
+}
+
+func hash2struct(data, name=, ary=) {
+/* DOCUMENT hash2struct(data, name=, ary=)
+  Converts a Yeti hash to a struct instance. See obj2struct for details.
+  SEE ALSO: obj2struct struct2hash struct2obj
+*/
+  return obj2struct(hash2obj(data), name=name, ary=ary);
+}
+
 func list2obj(data) {
 /* DOCUMENT list2obj(data)
   Converts a Yorick list DATA into a Yorick oxy group object.
