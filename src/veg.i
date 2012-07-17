@@ -849,11 +849,12 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     range_bias = ops_conf.chn3_range_bias;
 
   // stuff below is for mx1 (first surface in veg).
-  crx = cent(wf);
+  local crx, mv1;
+  wf_centroid, wf, crx, mv1, lim=12;
   if (use_be_centroid || use_be_peak || !is_void(alg_mode)) {
     // set mx1 to range walk corrected fs range
-    mx1 = (crx(1) >= 10000) ? -10 : irange + crx(1) - ctx(1) + range_bias;
-    mv1 = crx(3);
+    mx1 = (crx == 1e1000) ? -10 : irange + crx - ctx(1) + range_bias;
+    mv1 = (mv1 == 1e1000) ? -10 : mv1 + (channel-1) * 300;
   } else {
     // find surface peak now
     mx1 = wf(xr(1):xr(1)+5)(mxx) + xr(1) - 1;
