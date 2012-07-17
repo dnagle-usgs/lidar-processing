@@ -2,6 +2,14 @@ This file documents the changes made to the ALPS installer package. These
 installer packages are typically available on lidar.net under
 /mnt/alps/install/.
 
+2012-07-17
+    - Added NAVD88 GEOID12 data files
+    - Upgraded cctools to 3.5.1
+    - Upgraded GDAL to 1.9.1
+    - Yorick changes:
+        - Upgraded Yorick to Git revision 2012-07-17
+    - Updated ALPS repository clone to tip 2a6d1f62d5d8a
+
 2011-12-13
     - Added cctools 3.4.1
     - Revised Makefile
