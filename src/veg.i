@@ -1219,7 +1219,7 @@ func cveg_all2veg_all_ (cveg, d, rrr) {
   geoveg.meast = rrr.meast;
   geoveg.melevation = rrr.melevation;
   geoveg.soe = rrr.soe;
-  geoveg.fint = rrr.intensity;
+  geoveg.fint = d.mv1;
   geoveg.lint = d.mv0;
   geoveg.nx = d.nx;
   geoveg.lnorth = cveg(2,,).north;
