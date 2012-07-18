@@ -154,7 +154,7 @@ installer packages are typically available on lidar.net under
     - Upgraded Yorick imutil to 0.5.6
     - Upgraded Yorick yutils to CVS revision as of 2010-06-21
     - Upgraded Yorick-Z to CVS revision as of 2010-06-21
-    - Updated static copy of ALPS repository
+    - Updated static copy of ALPS repository to revision 616a6805ccbe
 
 2010-05-05
     - Upgraded rlwrap to 0.37
@@ -165,7 +165,7 @@ installer packages are typically available on lidar.net under
     - Upgraded Yorick to CVS revision as of 2010-04-19
     - Upgraded Yorick yutils to CVS revision as of 2010-04-19
     - Upgraded Yorick-Z to CVS revision as of 2010-04-19
-    - Updated static copy of ALPS repository
+    - Updated static copy of ALPS repository to revision 0dc17c2b5bd8
 
 2010-04-16
     - Revised Makefile
@@ -176,11 +176,11 @@ installer packages are typically available on lidar.net under
         - tar
         - tcllib85 (replaced tcllib)
         - uuid
-    - Updated static copy of ALPS repository
+    - Updated static copy of ALPS repository to revision fd4850eb308f
 
 2010-04-02
     - Revised Makefile
-    - Updated static copy of ALPS repository
+    - Updated static copy of ALPS repository to revision 11f270c1a493
 
 2010-04-01
     First installer. Contained:
@@ -192,7 +192,7 @@ installer packages are typically available on lidar.net under
     - yorick-imutil 0.5.4
     - yorick-yutils 1.4.0
     - yorick-z 1.2
-    - a static export of the ALPS repository
+    - a static export of the ALPS repository at revision 79646b71bb9f
     - stub directory contents for share
     Also had support for installing ActiveTcl, which had to be downloaded
     separately. Tcl was configured to have these packages:
