@@ -41,7 +41,7 @@ func keydefault(args) {
   For a given object OBJ, if the given keys are not present, then they are set
   with the corresponding given values.
 
-  SEE ALSO: keyrequire default save
+  SEE ALSO: key_default_and_cast keyrequire default save
 */
 // Original David Nagle 2010-08-09
   if(!(args(0) % 2))
@@ -60,6 +60,35 @@ func keydefault(args) {
   }
 }
 wrap_args, keydefault;
+
+func key_default_and_cast(args) {
+/* DOCUMENT key_default_and_cast, obj, key1, val1, key2, val2, ...
+  key_default_and_cast, obj, key1=val1, key2=val2, ...
+
+  For a given object OBJ, if the given keys are not present, then they are set
+  with the corresponding given values. If the given keys are present, then
+  their values are cast to the same type as the value given.
+
+  SEE ALSO: keydefault keyrequire default save
+*/
+  if(!(args(0) % 2))
+    error, "invalid call to key_default_and_cast";
+  obj = args(1);
+  for(i = 2; i <= args(0); i += 2) {
+    key = args(0,i) ? args(i) : args(-,i);
+    if(!obj(*,key))
+      save, obj, noop(key), args(i+1);
+    save, obj, noop(key), structof(args(i+1))(obj(noop(key)));
+  }
+  keys = args(-);
+  for(i = 1; i <= numberof(keys); i++) {
+    key = keys(i);
+    if(!obj(*,key))
+      save, obj, noop(key), args(key);
+    save, obj, noop(key), structof(args(key))(obj(noop(key)));
+  }
+}
+wrap_args, key_default_and_cast;
 
 func keyrequire(args) {
 /* DOCUMENT keyrequire, obj, key1, key2, ...
