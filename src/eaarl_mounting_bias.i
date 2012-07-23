@@ -9,24 +9,74 @@
   range_biasM is the measured range bias in Meters
 ***********************************************************************/
 
-// Mission configuration data structure.
-struct mission_constants {
-  string name;		// The name of the settings
-  string varname;	// The name of this variable
-  float y_offset;    // Aircraft relative + fwd along fuselage
-  float x_offset;    // Aircraft relative + out the right wing
-  float z_offset;    // Aircraft relative + up
-  float roll_bias;   // Instrument roll mounting bias
-  float pitch_bias;  // Instrument pitch mounting bias
-  float yaw_bias;    // Instrument yaw (heading) mounting bias
-  float scan_bias;   // Scan encoder mechanical offset from zero
-  float range_biasM; //  Laser range measurement bias.
-  float range_biasNS; //  Laser range measurement bias in NS
-  float chn1_range_bias; // range bias for channel 1
-  float chn2_range_bias; // range bias for channel 2
-  float chn3_range_bias; // range bias for channel 3
-  int max_sfc_sat;	// maximum saturation allowed for first return
+func mission_constants(args) {
+/* DOCUMENT mission_constants(key1=val1, key2=val2, key3=val3, ...)
+
+  Creates a struct instance with mission constants. The struct will be
+  dynamically constructed using whatever key-value pairs are given.
+
+  By default, the struct will come out with a structure similar to the
+  following. That is, all of the following struct fields will be present
+  whether they are present or not. Additionally, the type of each of those
+  fields will be coerced to what is listed below.
+
+  struct mission_constants {
+    string type;            // Type of mission settings
+    string name;            // The name of the settings
+    string varname;         // The name of this variable
+    float y_offset;         // Aircraft relative + fwd along fuselage
+    float x_offset;         // Aircraft relative + out the right wing
+    float z_offset;         // Aircraft relative + up
+    float roll_bias;        // Instrument roll mounting bias
+    float pitch_bias;       // Instrument pitch mounting bias
+    float yaw_bias;         // Instrument yaw (heading) mounting bias
+    float scan_bias;        // Scan encoder mechanical offset from zero
+    float range_biasM;      // Laser range measurement bias.
+    float range_biasNS;     // Laser range measurement bias in NS
+    float chn1_range_bias;  // range bias for channel 1
+    float chn2_range_bias;  // range bias for channel 2
+    float chn3_range_bias;  // range bias for channel 3
+    int max_sfc_sat;        // Maximum saturation allowed for first return
+  }
+
+  conf.type should be "EAARL-A" for EAARL-A surveys; this is the default value
+  for that field if not specified.
+*/
+  conf = args2obj(args);
+  key_default_and_cast, conf,
+    type="EAARL-A",
+    name=string(0),
+    varname=string(0),
+    x_offset=0.f,
+    y_offset=0.f,
+    z_offset=0.f,
+    roll_bias=0.f,
+    pitch_bias=0.f,
+    yaw_bias=0.f,
+    scan_bias=0.f,
+    range_biasM=0.f,
+    range_biasNS=0.f,
+    chn1_range_bias=0.f,
+    chn2_range_bias=0.f,
+    chn3_range_bias=0.f,
+    max_sfc_sat=0n;
+
+  if(strpart(conf.type, :7) == "EAARL-B") {
+    // TODO
+  }
+
+  if(noneof([conf.chn1_range_bias, conf.chn2_range_bias, conf.chn3_range_bias])) {
+    write,
+       "============================================================\n" +
+      " WARNING: Your ops_conf does not have valid values for\n" +
+      " chn1_range_bias, chn2_range_bias, and chn3_range_bias. You\n" +
+      " may also need to verify the value for max_sfc_sat.\n" +
+      " ============================================================";
+  }
+
+  return obj2struct(conf, name="mission_constants_tmp");
 }
+wrap_args, mission_constants;
 
 /*************************************************************
  Default operations constants.  These should not be modified
@@ -65,14 +115,13 @@ for the angle biases and the x,y and z offsets.
 
 
 *************************************************************/
- ops_default = array(mission_constants);
+ ops_default = mission_constants();
  ops_default.range_biasM =   0.7962;         // Laser range measurement bias.
  ops_default.chn1_range_bias = 0.;
  ops_default.chn2_range_bias = 0.36;
  ops_default.chn3_range_bias = 0.23;
  ops_default.max_sfc_sat = 2;
 
- ops_tans = array(mission_constants);
  ops_tans = ops_default;
  ops_tans.varname    = "ops_tans"
  ops_tans.name       = "Tans Default Values"
