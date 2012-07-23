@@ -90,6 +90,48 @@ func key_default_and_cast(args) {
 }
 wrap_args, key_default_and_cast;
 
+func keycast(args) {
+/* DOCUMENT keycast, obj, key=type, key=type, ...
+  -or- keycast, obj, cast
+
+  Casts the keys in OBJ according to the given key-value pairs, or according to
+  the key-value pairs in CAST. Only keys that are present in OBJ are processed.
+  Castings must be valid; attempting to perform an impossible cast (such as
+  string to double) will result in an error. The types may be given as actual
+  types (such as "short" or "double") or by giving values of the given type
+  (such as "1s" or "0.").
+*/
+  if(args(0) < 1)
+    error, "invalid call to keycast";
+  obj = args(1);
+
+  if(args(0) != 2 || !is_obj(args(2))) {
+    cast = save();
+    for(i = 2; i <= args(0); i += 2) {
+      key = args(0,i) ? args(i) : args(-,i);
+      save, cast, noop(key), args(i+1);
+    }
+    keys = args(-);
+    for(i = 1; i <= numberof(keys); i++) {
+      save, cast, keys(i), args(keys(i));
+    }
+    keycast, obj, cast;
+    return;
+  }
+
+  cast = args(2);
+  keys = cast(*,);
+  for(i = 1; i <= numberof(keys); i++) {
+    if(!obj(*,keys(i)))
+      continue;
+    type = cast(keys(i));
+    if(!is_struct(type))
+      type = structof(type);
+    save, obj, keys(i), type(obj(keys(i)));
+  }
+}
+wrap_args, keycast;
+
 func keyrequire(args) {
 /* DOCUMENT keyrequire, obj, key1, key2, ...
   -or- keyrequire, obj, key1=, key2=, ...
