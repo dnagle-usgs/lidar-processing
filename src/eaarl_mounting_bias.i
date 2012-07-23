@@ -77,7 +77,7 @@ func mission_constants(args) {
       " ============================================================";
   }
 
-  return obj2struct(conf, name="mission_constants_tmp");
+  return obj2struct(conf, name="mission_constants");
 }
 wrap_args, mission_constants;
 
