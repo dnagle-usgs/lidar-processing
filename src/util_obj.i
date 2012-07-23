@@ -35,8 +35,7 @@ func bless(obj, cls) {
 }
 
 func keydefault(args) {
-/* DOCUMENT keydefault, obj, key1, val1, key2, val2, ...
-  keydefault, obj, key1=val1, key2=val2, ...
+/* DOCUMENT keydefault, obj, key1=val1, key2=val2, ...
 
   For a given object OBJ, if the given keys are not present, then they are set
   with the corresponding given values.
@@ -62,8 +61,7 @@ func keydefault(args) {
 wrap_args, keydefault;
 
 func key_default_and_cast(args) {
-/* DOCUMENT key_default_and_cast, obj, key1, val1, key2, val2, ...
-  key_default_and_cast, obj, key1=val1, key2=val2, ...
+/* DOCUMENT key_default_and_cast, obj, key1=val1, key2=val2, ...
 
   For a given object OBJ, if the given keys are not present, then they are set
   with the corresponding given values. If the given keys are present, then
