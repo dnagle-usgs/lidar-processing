@@ -28,7 +28,6 @@ struct mission_constants {
   int max_sfc_sat;	// maximum saturation allowed for first return
 }
 
-
 /*************************************************************
  Default operations constants.  These should not be modified
  in this file. To "customize" these on a mission to mission
@@ -89,22 +88,6 @@ for the angle biases and the x,y and z offsets.
 
 // Now, copy the default values to the operating values.
  ops_conf = ops_tans;
-
- func opscpy( d, s ) {
-/* DOCUMENT opscpy( d, s )
-
-  Documentation goes here.
-*/
-  tmp1 = d.varname;
-   tmp2 = d.name;
-   tmp1;
-   tmp2;
-   d = s;
-   d.varname = tmp1;
-   d.name    = tmp2;
-   d;
-   return(d);
- }
 
 /**************************************************************
  Now configure a default for the EAARL #1 IMU
