@@ -419,26 +419,27 @@ func obj2struct(data, name=, ary=) {
   keys = keys(where(keys));
 
   count = numberof(keys);
-  sdef = "struct "+name+" {";
+  sdef = ["struct "+name+" {\n"];
   for(i = 1; i <= count; i++) {
     key = keys(i);
     val = data(noop(key));
-    sdef += typeof(val) + " " + key;
+    tmp = typeof(val) + " " + key;
     if(!ary && !is_scalar(val)) {
       dims = dimsof(val);
       ndims = numberof(dims);
-      sdef += "(";
+      tmp += "(";
       for(j = 2; j <= ndims; j++) {
-        sdef += swrite(format="%d", dims(j));
+        tmp += swrite(format="%d", dims(j));
         if(j < ndims)
-          sdef += ",";
+          tmp += ",";
       }
-      sdef += ")";
+      tmp += ")";
     }
-    sdef += ";";
+    tmp += ";\n";
+    grow, sdef, tmp;
   }
-  sdef += "}\n";
-  include, [sdef], 1;
+  grow, sdef, "};\n";
+  include, sdef, 1;
 
   if(ary)
     result = array(symbol_def(name), dimsof(val));
