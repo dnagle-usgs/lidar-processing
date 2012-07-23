@@ -24,18 +24,18 @@ func mission_constants(args) {
     string type;            // Type of mission settings
     string name;            // The name of the settings
     string varname;         // The name of this variable
-    float y_offset;         // Aircraft relative + fwd along fuselage
-    float x_offset;         // Aircraft relative + out the right wing
-    float z_offset;         // Aircraft relative + up
-    float roll_bias;        // Instrument roll mounting bias
-    float pitch_bias;       // Instrument pitch mounting bias
-    float yaw_bias;         // Instrument yaw (heading) mounting bias
-    float scan_bias;        // Scan encoder mechanical offset from zero
-    float range_biasM;      // Laser range measurement bias.
-    float range_biasNS;     // Laser range measurement bias in NS
-    float chn1_range_bias;  // range bias for channel 1
-    float chn2_range_bias;  // range bias for channel 2
-    float chn3_range_bias;  // range bias for channel 3
+    double y_offset;        // Aircraft relative + fwd along fuselage
+    double x_offset;        // Aircraft relative + out the right wing
+    double z_offset;        // Aircraft relative + up
+    double roll_bias;       // Instrument roll mounting bias
+    double pitch_bias;      // Instrument pitch mounting bias
+    double yaw_bias;        // Instrument yaw (heading) mounting bias
+    double scan_bias;       // Scan encoder mechanical offset from zero
+    double range_biasM;     // Laser range measurement bias.
+    double range_biasNS;    // Laser range measurement bias in NS
+    double chn1_range_bias; // range bias for channel 1
+    double chn2_range_bias; // range bias for channel 2
+    double chn3_range_bias; // range bias for channel 3
     int max_sfc_sat;        // Maximum saturation allowed for first return
   }
 
@@ -47,18 +47,18 @@ func mission_constants(args) {
     type="EAARL-A",
     name=string(0),
     varname=string(0),
-    x_offset=0.f,
-    y_offset=0.f,
-    z_offset=0.f,
-    roll_bias=0.f,
-    pitch_bias=0.f,
-    yaw_bias=0.f,
-    scan_bias=0.f,
-    range_biasM=0.f,
-    range_biasNS=0.f,
-    chn1_range_bias=0.f,
-    chn2_range_bias=0.f,
-    chn3_range_bias=0.f,
+    x_offset=0.,
+    y_offset=0.,
+    z_offset=0.,
+    roll_bias=0.,
+    pitch_bias=0.,
+    yaw_bias=0.,
+    scan_bias=0.,
+    range_biasM=0.,
+    range_biasNS=0.,
+    chn1_range_bias=0.,
+    chn2_range_bias=0.,
+    chn3_range_bias=0.,
     max_sfc_sat=0n;
 
   if(strpart(conf.type, :7) == "EAARL-B") {
