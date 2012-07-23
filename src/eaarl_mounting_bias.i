@@ -43,7 +43,7 @@ func mission_constants(args) {
   for that field if not specified.
 */
   conf = args2obj(args);
-  key_default_and_cast, conf,
+  defaults = save(
     type="EAARL-A",
     name=string(0),
     varname=string(0),
@@ -59,7 +59,10 @@ func mission_constants(args) {
     chn1_range_bias=0.,
     chn2_range_bias=0.,
     chn3_range_bias=0.,
-    max_sfc_sat=0n;
+    max_sfc_sat=0n
+  );
+  conf = obj_merge(defaults, conf);
+  keycast, conf, defaults;
 
   if(strpart(conf.type, :7) == "EAARL-B") {
     // TODO
