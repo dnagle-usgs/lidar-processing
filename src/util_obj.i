@@ -35,33 +35,35 @@ func bless(obj, cls) {
 }
 
 func keydefault(args) {
-/* DOCUMENT keydefault, obj, key1=val1, key2=val2, ...
+/* DOCUMENT keydefault, obj, key=val, key=val, ...
+  -or- keydefault, obj, defaults
 
   For a given object OBJ, if the given keys are not present, then they are set
   with the corresponding given values.
 
   SEE ALSO: key_default_and_cast keyrequire default save
 */
-// Original David Nagle 2010-08-09
-  if(!(args(0) % 2))
-    error, "invalid call to keydefault";
+  if(args(0) < 1)
+    error, "invalid call to keycast";
   obj = args(1);
-  for(i = 2; i <= args(0); i += 2) {
-    key = args(0,i) ? args(i) : args(-,i);
-    if(!obj(*,key))
-      save, obj, noop(key), args(i+1);
+
+  if(args(0) == 2 && is_obj(args(2))) {
+    defaults = args(2);
+  } else {
+    defaults = args2obj(args)(2:);
   }
-  keys = args(-);
+
+  keys = defaults(*,);
   for(i = 1; i <= numberof(keys); i++) {
-    key = keys(i);
-    if(!obj(*,key))
-      save, obj, noop(key), args(key);
+    if(!obj(*,keys(i)))
+      save, obj, keys(i), defaults(keys(i));
   }
 }
 wrap_args, keydefault;
 
 func key_default_and_cast(args) {
-/* DOCUMENT key_default_and_cast, obj, key1=val1, key2=val2, ...
+/* DOCUMENT key_default_and_cast, obj, key=val, key=val, ...
+  -or- key_default_and_cast, obj, defaults
 
   For a given object OBJ, if the given keys are not present, then they are set
   with the corresponding given values. If the given keys are present, then
@@ -69,22 +71,18 @@ func key_default_and_cast(args) {
 
   SEE ALSO: keydefault keyrequire default save
 */
-  if(!(args(0) % 2))
-    error, "invalid call to key_default_and_cast";
+  if(args(0) < 1)
+    error, "invalid call to keycast";
   obj = args(1);
-  for(i = 2; i <= args(0); i += 2) {
-    key = args(0,i) ? args(i) : args(-,i);
-    if(!obj(*,key))
-      save, obj, noop(key), args(i+1);
-    save, obj, noop(key), structof(args(i+1))(obj(noop(key)));
+
+  if(args(0) == 2 && is_obj(args(2))) {
+    defaults = args(2):
+  } else {
+    defaults = args2obj(args)(2:);
   }
-  keys = args(-);
-  for(i = 1; i <= numberof(keys); i++) {
-    key = keys(i);
-    if(!obj(*,key))
-      save, obj, noop(key), args(key);
-    save, obj, noop(key), structof(args(key))(obj(noop(key)));
-  }
+
+  keydefault, obj, defaults;
+  keycast, obj, defaults;
 }
 wrap_args, key_default_and_cast;
 
@@ -103,21 +101,12 @@ func keycast(args) {
     error, "invalid call to keycast";
   obj = args(1);
 
-  if(args(0) != 2 || !is_obj(args(2))) {
-    cast = save();
-    for(i = 2; i <= args(0); i += 2) {
-      key = args(0,i) ? args(i) : args(-,i);
-      save, cast, noop(key), args(i+1);
-    }
-    keys = args(-);
-    for(i = 1; i <= numberof(keys); i++) {
-      save, cast, keys(i), args(keys(i));
-    }
-    keycast, obj, cast;
-    return;
+  if(args(0) == 2 && is_obj(args(2))) {
+    cast = args(2);
+  } else {
+    cast = args2obj(args)(2:);
   }
 
-  cast = args(2);
   keys = cast(*,);
   for(i = 1; i <= numberof(keys); i++) {
     if(!obj(*,keys(i)))
