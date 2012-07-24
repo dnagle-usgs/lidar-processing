@@ -65,8 +65,6 @@ proc ::l1pro::settings::ops_conf::gui {} {
     set f $w.f
     set v::fieldframe $f
 
-    ::l1pro::settings::ops_conf::gui_init [dict keys $v::settings]
-
     grid columnconfigure $w.f 1 -weight 1
 
     grid $w.f -sticky news
@@ -75,12 +73,18 @@ proc ::l1pro::settings::ops_conf::gui {} {
 
     bind $f <Enter> [namespace which -command gui_refresh]
     bind $f <Visibility> [namespace which -command gui_refresh]
+
+    ybkg l1pro_ops_conf_gui_init
 }
 
 proc ::l1pro::settings::ops_conf::gui_init {fields} {
     set var [namespace which -variable v::ops_conf]
     foreach key $fields {
-        set val [dict get $v::settings $key]
+        if {[dict exists $v::settings $key]} {
+            set val [dict get $v::settings $key]
+        } else {
+            set val [list gui_entry]
+        }
         tky_tie add sync ${var}($key) with "ops_conf.$key" -initialize 1
         {*}[linsert $val 1 $v::fieldframe $key]
     }

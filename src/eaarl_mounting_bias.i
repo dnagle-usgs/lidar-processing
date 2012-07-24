@@ -263,3 +263,13 @@ func ops_conf_validate(&conf) {
       " ============================================================";
   }
 }
+
+func l1pro_ops_conf_gui_init(nil) {
+/* DOCUMENT l1pro_ops_conf_gui_init
+  Glue for ::l1pro::settings::ops_conf::gui.
+*/
+  extern ops_conf;
+  fields = get_members(ops_conf);
+  fields = strjoin(fields, " ");
+  tkcmd, swrite(format="::l1pro::settings::ops_conf::gui_init {%s}", fields);
+}
