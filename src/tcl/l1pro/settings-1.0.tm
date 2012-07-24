@@ -4,6 +4,7 @@ package provide l1pro::settings 1.0
 
 namespace eval ::l1pro::settings::ops_conf::v {
     variable top .l1wid.opsconf
+    variable fieldframe
     variable ops_conf
 
     variable settings {
@@ -62,13 +63,9 @@ proc ::l1pro::settings::ops_conf::gui {} {
 
     ttk::frame $w.f
     set f $w.f
+    set v::fieldframe $f
 
-    set var [namespace which -variable v::ops_conf]
-
-    dict for {key val} $v::settings {
-        tky_tie add sync ${var}($key) with "ops_conf.$key" -initialize 1
-        {*}[linsert $val 1 $f $key]
-    }
+    ::l1pro::settings::ops_conf::gui_init [dict keys $v::settings]
 
     grid columnconfigure $w.f 1 -weight 1
 
@@ -78,6 +75,15 @@ proc ::l1pro::settings::ops_conf::gui {} {
 
     bind $f <Enter> [namespace which -command gui_refresh]
     bind $f <Visibility> [namespace which -command gui_refresh]
+}
+
+proc ::l1pro::settings::ops_conf::gui_init {fields} {
+    set var [namespace which -variable v::ops_conf]
+    foreach key $fields {
+        set val [dict get $v::settings $key]
+        tky_tie add sync ${var}($key) with "ops_conf.$key" -initialize 1
+        {*}[linsert $val 1 $v::fieldframe $key]
+    }
 }
 
 proc ::l1pro::settings::ops_conf::gui_dead {} {
