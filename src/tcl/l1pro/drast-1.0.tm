@@ -22,10 +22,24 @@ if {![namespace exists ::l1pro::drast]} {
             variable autolidar 0
             variable autopt 0
             variable autoptc 0
-            variable rastwin 0
+            variable rastchan1 1
+            variable rastchan2 0
+            variable rastchan3 0
+            variable rastchan4 0
+            variable rastwin1 0
+            variable rastwin2 12
+            variable rastwin3 13
+            variable rastwin4 14
             variable rastunits meters
             variable eoffset 0
-            variable geowin 2
+            variable geochan1 1
+            variable geochan2 0
+            variable geochan3 0
+            variable geochan4 0
+            variable geowin1 2
+            variable geowin2 22
+            variable geowin3 23
+            variable geowin4 24
             variable geoymin -100
             variable geoymax 300
             variable geoyuse 0
@@ -40,7 +54,7 @@ if {![namespace exists ::l1pro::drast]} {
             variable wfgeo 0
             variable wfwin 9
             variable wfwinbath 4
-            variable wfsrc geo
+            variable wfsrc geo-1
             variable slinewin 6
             variable slinestyle average
             variable slinecolor black
@@ -160,10 +174,30 @@ proc ::l1pro::drast::gui_opts f {
     set labels_left {}
     set labels_right {}
 
+    # apply $labelgrid $w1 $text1 [$w2 [$text2]]
+    #   $w1 - required, a window path
+    #   $text1 - required, the label for $w1; may be - to omit
+    #   $w2 - optional, a window path
+    #   $text2 - optional, the label for $w2, may be - to omit
+    # $w1/$text1 will be on the left, $w2/$text2 will be on the right
+    #
+    # $text1/$text2 may also be a widget path, which will be used as-is as the
+    # label
+    #
+    # This creates a label (if necessary) for the widget. It also sets up the
+    # cells in multiple panes so that they get sized the same, allowing for a
+    # nice layout across panes.
+    #
+    # Automatically created labels are named after their corresponding window,
+    # as a sibling with the name prefixed by "lbl". Thus, .path.to.example
+    # would get a label .path.to.lblexample.
     set labelgrid {{w1 text1 {w2 {}} {text2 {}}} {
         set lvl 1
         while {![uplevel $lvl info exists labels_left]} {incr lvl}
-        if {$text1 ne "-"} {
+        if {[winfo exists $text1]} {
+            set lbl1 $text1
+            uplevel $lvl lappend labels_left $lbl1
+        } elseif {$text1 ne "-"} {
             set lbl1 [winfo parent $w1].lbl[winfo name $w1]
             ttk::label $lbl1 -text $text1
             uplevel $lvl lappend labels_left $lbl1
@@ -172,7 +206,10 @@ proc ::l1pro::drast::gui_opts f {
             set w1 -
         }
         if {$text2 ne ""} {
-            if {$text2 ne "-"} {
+            if {[winfo exists $text2]} {
+                set lbl2 $text2
+                uplevel $lvl lappend labels_right $lbl2
+            } elseif {$text2 ne "-"} {
                 set lbl2 [winfo parent $w2].lbl[winfo name $w2]
                 ttk::label $lbl2 -text $text2
                 uplevel $lvl lappend labels_right $lbl2
@@ -264,8 +301,12 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
     set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Rast: Unreferenced raster"
     set f [$f interior]
-    ttk::spinbox $f.winrast -from 0 -to 63 -increment 1 -width 0 \
-            -textvariable ${ns}::v::rastwin
+    foreach channel {1 2 3 4} {
+        ttk::checkbutton $f.userast${channel} -text "Show channel ${channel}" \
+            -variable ${ns}::v::rastchan${channel}
+        ttk::spinbox $f.winrast${channel} -from 0 -to 63 -increment 1 -width 0 \
+                -textvariable ${ns}::v::rastwin${channel}
+    }
     ::mixin::combobox::mapping $f.units -state readonly -width 0 \
             -modifycmd ${ns}::send_rastunits \
             -altvariable ${ns}::v::rastunits \
@@ -274,17 +315,25 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
                 Feet           feet
                 Nanoseconds    ns
             }
-    apply $labelgrid $f.winrast "Window:" $f.units "Units:"
+    apply $labelgrid $f.userast1 - $f.winrast1 "Chan 1 win:"
+    apply $labelgrid $f.userast2 - $f.winrast2 "Chan 2 win:"
+    apply $labelgrid $f.userast3 - $f.winrast3 "Chan 3 win:"
+    apply $labelgrid $f.userast4 - $f.winrast4 "Chan 4 win:"
+    apply $labelgrid $f.units "Units:"
 }
 
 proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
     set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Geo: Georeferenced raster"
     set f [$f interior]
+    foreach channel {1 2 3 4} {
+        ttk::checkbutton $f.usegeo${channel} -text "Show channel ${channel}" \
+            -variable ${ns}::v::geochan${channel}
+        ttk::spinbox $f.wingeo${channel} -from 0 -to 63 -increment 1 -width 0 \
+                -textvariable ${ns}::v::geowin${channel}
+    }
     ttk::spinbox $f.eoffset -from -1000 -to 1000 -increment 0.01 -width 0 \
             -textvariable ${ns}::v::eoffset
-    ttk::spinbox $f.wingeo -from 0 -to 63 -increment 1 -width 0 \
-            -textvariable ${ns}::v::geowin
     ttk::checkbutton $f.yuse -text "Constrain y axis" \
             -variable ${ns}::v::geoyuse
     ttk::spinbox $f.ymax -from -1000 -to 1000 -increment 0.01 -width 0 \
@@ -303,15 +352,19 @@ proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
 
     ttk::frame $f.styles
     ttk::button $f.styles.work -text "Work" \
-            -command [list ${ns}::apply_style v::geowin work]
+            -command [list ${ns}::apply_style_geo work]
     ttk::button $f.styles.nobox -text "No Box" \
-            -command [list ${ns}::apply_style v::geowin nobox]
+            -command [list ${ns}::apply_style_geo nobox]
     grid $f.styles.work $f.styles.nobox -sticky news
     grid columnconfigure $f.styles 100 -weight 1
 
-    apply $labelgrid $f.wingeo "Window:" $f.style "Style:"
-    apply $labelgrid $f.eoffset "Elev. offset:" $f.rcfw "RCF win:"
-    apply $labelgrid $f.titles - $f.bg "Background:"
+    apply $labelgrid $f.usegeo1 - $f.wingeo1 "Chan 1 win:"
+    apply $labelgrid $f.usegeo2 - $f.wingeo2 "Chan 2 win:"
+    apply $labelgrid $f.usegeo3 - $f.wingeo3 "Chan 3 win:"
+    apply $labelgrid $f.usegeo4 - $f.wingeo4 "Chan 4 win:"
+    apply $labelgrid $f.eoffset "Elev. offset:" $f.style "Style:"
+    apply $labelgrid $f.rcfw "RCF win:" $f.bg "Background:"
+    apply $labelgrid $f.titles -
     apply $labelgrid $f.yuse -
     apply $labelgrid $f.ymin "Y min:" $f.ymax "Y max:"
     apply $labelgrid $f.styles "Plot style:"
@@ -337,7 +390,7 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
             -textvariable ${ns}::v::wfwinbath
     ::mixin::combobox $f.src -state readonly -width 0 \
             -textvariable ${ns}::v::wfsrc \
-            -values {rast geo}
+            -values {rast-1 rast-2 rast-3 rast-4 geo-1 geo-2 geo-3 geo-4}
     ttk::checkbutton $f.use1 -text "Channel 1 (black)" \
             -variable ${ns}::v::wfchan1
     ttk::checkbutton $f.use2 -text "Channel 2 (red)" \
@@ -352,6 +405,15 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
     apply $labelgrid $f.winbath "ex_bath window:" $f.use2 -
     apply $labelgrid $f.src "Select from:" $f.use3 -
     apply $labelgrid $f.geo - $f.use4 -
+
+    foreach w [list $f.src $f.lblsrc] {
+        ::tooltip::tooltip $w \
+            "Specifies which raster should be clicked on to select a waveform.\
+            \nThe options starting with \"geo\" are for the georeferenced\
+            \nraster and the options starting with \"rast\" are for the\
+            \nunreferenced raster. The numbers specify which channel. So\
+            \nrast-3 is for unreferenced raster, channel 3."
+    }
 }
 
 proc ::l1pro::drast::gui_opts_sline {f labelgrid} {
@@ -434,46 +496,59 @@ proc ::l1pro::drast::show_auto {} {
 }
 
 proc ::l1pro::drast::show_rast {} {
-    set cmd "wfa = ndrast("
-    appendif cmd \
-            1                          "rn=$v::rn" \
-            1                          ", win=$v::rastwin" \
-            {$v::rastunits ne "ns"}    ", units=\"$v::rastunits\"" \
-            1                          ", sfsync=0" \
-            1                          ")"
+    foreach channel {1 2 3 4} {
+        if {![set v::rastchan${channel}]} continue
+        set cmd "wfa = ndrast("
+        appendif cmd \
+                1                          "rn=$v::rn" \
+                {$channel ne 1}            ", channel=$channel" \
+                1                          ", win=[set v::rastwin${channel}]" \
+                {$v::rastunits ne "ns"}    ", units=\"$v::rastunits\"" \
+                1                          ", sfsync=0" \
+                1                          ")"
 
-    exp_send "$cmd\r"
+        exp_send "$cmd\r"
+    }
 }
 
 proc ::l1pro::drast::show_geo {} {
-    set cmd "window, $v::geowin"
-    appendif cmd \
-            1                          "; geo_rast" \
-            1                          ", $v::rn" \
-            {$v::geowin != 2}          ", win=$v::geowin" \
-            {$v::eoffset != 0}         ", eoffset=$v::eoffset" \
-            1                          ", verbose=0" \
-            {!$v::geotitles}           ", titles=0" \
-            $v::georcfw                ", rcfw=$v::georcfw" \
-            {$v::geobg != 7}           ", bg=$v::geobg" \
-            {$v::geostyle ne "pli"}    ", style=\"$v::geostyle\""
+    foreach channel {1 2 3 4} {
+        if {![set v::geochan${channel}]} continue
 
-    if {$v::geoyuse} {
-        append cmd "; range, $v::geoymin, $v::geoymax"
-    }
+        set win [set v::geowin${channel}]
 
-    if {$v::export && $v::exportgeo} {
-        if {![file isdirectory $v::exportdir]} {
-            error "Your export directory does not exist."
+        set cmd "window, $win"
+        appendif cmd \
+                1                          "; geo_rast" \
+                1                          ", $v::rn" \
+                {$channel ne 1}            ", channel=$channel" \
+                {$win != 2}                ", win=$win" \
+                {$v::eoffset != 0}         ", eoffset=$v::eoffset" \
+                1                          ", verbose=0" \
+                {!$v::geotitles}           ", titles=0" \
+                $v::georcfw                ", rcfw=$v::georcfw" \
+                {$v::geobg != 7}           ", bg=$v::geobg" \
+                {$v::geostyle ne "pli"}    ", style=\"$v::geostyle\""
+
+        if {$v::geoyuse} {
+            append cmd "; range, $v::geoymin, $v::geoymax"
         }
-        set fn [file nativename [file join $v::exportdir ${v::rn}_georast.png]]
-        append cmd "; png, \"$fn\""
-        if {$v::exportres != 72} {
-            append cmd ", dpi=$v::exportres"
-        }
-    }
 
-    exp_send "$cmd\r"
+        if {$v::export && $v::exportgeo} {
+            if {![file isdirectory $v::exportdir]} {
+                error "Your export directory does not exist."
+            }
+            set fn [file nativename [file join $v::exportdir \
+                    ${v::rn}_ch${channel}_georast.png]]
+            append cmd "; png, \"$fn\""
+            if {$v::exportres != 72} {
+                append cmd ", dpi=$v::exportres"
+            }
+            set needexport 0
+        }
+
+        exp_send "$cmd\r"
+    }
 }
 
 proc ::l1pro::drast::show_sline {} {
@@ -506,6 +581,13 @@ proc ::l1pro::drast::show_wf {} {
             $v::wfchan3     ", c3=1" \
             $v::wfchan4     ", c4=1"
     exp_send "$cmd\r"
+}
+
+proc ::l1pro::drast::apply_style_geo {style} {
+    foreach channel {1 2 3 4} {
+        if {![set v::geochan${channel}]} continue
+        ::l1pro::drast::apply_style v::geowin${channel} $style
+    }
 }
 
 proc ::l1pro::drast::apply_style {winvar style} {
@@ -590,14 +672,15 @@ proc ::l1pro::drast::jump pos {
 
 proc ::l1pro::drast::examine_waveforms {} {
     set cb [expr {$v::wfchan1 + 2*$v::wfchan2 + 4*$v::wfchan3 + 8*$v::wfchan4}]
-    set src [dict get [list geo $v::geowin rast $v::rastwin] $v::wfsrc]
+    set wfsrc [split $v::wfsrc -]
+    set src [set v::[lindex $wfsrc 0]win[lindex $wfsrc 1]]
     set cmd "rn=$v::rn; msel_wf, ndrast(rn=rn, graph=0), cb=$cb"
     appendif cmd \
             $v::wfgeo      ", geo=1" \
             1              ", winsel=$src" \
             1              ", winplot=$v::wfwin" \
             1              ", winbath=$v::wfwinbath" \
-            1              ", seltype=\"$v::wfsrc\""
+            1              ", seltype=\"[lindex $wfsrc 0]\""
     exp_send "$cmd\r"
 }
 
