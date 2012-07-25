@@ -462,14 +462,18 @@ func rast_scanline(rn, win=, style=, color=) {
   window_select, wbkp;
 }
 
-func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=, bg=) {
-/* DOCUMENT geo_rast, rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=, bg=
+func geo_rast(rn, channel=, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=,
+style=, bg=) {
+/* DOCUMENT geo_rast, rn, channel=, fsmarks=, eoffset=, win=, verbose=,
+   titles=, rcfw=, style=, bg=
 
   Plot a geo-referenced false color waveform image.
 
   Parameters:
     rn - The raster number to display.
   Options:
+    channel= The channel to use.
+      channel=1   Default, channel 1.
     fsmarks= If fsmarks=1, will plot first surface range values over the
       waveform.
     eoffset= The mount to offset the vertical scale, in meters. Default is 0.
@@ -488,6 +492,7 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=, bg
     bg= The value to use for the background. Default is 9.
 */
   extern xm, fs;
+  default, channel, 1;
   default, fsmarks, 0;
   default, eoffset, 0.;
   default, win, 2;
@@ -544,7 +549,7 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=, bg
   for(i = 1; i <= 120; i++) {
     if(skip(i))
       continue;
-    z = 254 - *rst.rx(i,1);
+    z = 254 - *rst.rx(i,channel);
     n = numberof(z);
 
     if(style == "plcm") {
