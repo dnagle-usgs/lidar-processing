@@ -128,8 +128,8 @@ func ndrast_graph(r, aa, somd, channel=, units=, win=) {
 
   pli, -transpose(aa(,,channel)), 1, 4 * settings(units).scale, 121,
     -244 * settings(units).scale;
-  xytitles, swrite(format="somd:%d hms:%s rn:%d   Pixel #",
-    somd, sod2hms(somd, str=1), rn), settings(units).title;
+  xytitles, swrite(format="somd:%d hms:%s rn:%d chn:%d  Pixel #",
+    somd, sod2hms(somd, str=1), rn, channel), settings(units).title;
   pltitle, regsub("_", data_path, "!_", all=1);
 
   limits;
@@ -577,7 +577,7 @@ style=, bg=) {
 
   if(titles) {
     xytitles, "Relative distance across raster (m)", "Height (m)";
-    pltitle, swrite(format="Raster %d", rn);
+    pltitle, swrite(format="Raster %d Channel %d", rn, channel);
   }
   window_select, prev_win;
 }
