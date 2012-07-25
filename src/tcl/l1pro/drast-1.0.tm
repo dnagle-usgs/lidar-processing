@@ -65,6 +65,7 @@ if {![namespace exists ::l1pro::drast]} {
             variable exportdir ""
             variable playcancel {}
             variable playmode 0
+            variable playwait 0
         }
     }
 }
@@ -493,6 +494,7 @@ proc ::l1pro::drast::show_auto {} {
             show_$name
         }
     }
+    exp_send "tkcmd, \"set ::l1pro::drast::v::playwait 0\";\r"
 }
 
 proc ::l1pro::drast::show_rast {} {
@@ -617,6 +619,7 @@ proc ::l1pro::drast::step dir {
 
 
 proc ::l1pro::drast::play opt {
+    set v::playwait 0
     switch -exact -- $opt {
         forward {
             set v::playmode 1
@@ -649,8 +652,13 @@ proc ::l1pro::drast::play_tick {} {
             if {$v::maxrn == $v::rn} {
                 ::misc::idle [list ${ns}::play stop]
             } else {
-                step forward
-                ::misc::safeafter ${ns}::v::playcancel $delay ${ns}::play_tick
+                if {$v::playwait} {
+                    ::misc::safeafter ${ns}::v::playcancel 1 ${ns}::play_tick
+                } else {
+                    step forward
+                    set v::playwait 1
+                    ::misc::safeafter ${ns}::v::playcancel $delay ${ns}::play_tick
+                }
             }
             return
         }
@@ -658,8 +666,13 @@ proc ::l1pro::drast::play_tick {} {
             if {1 == $v::rn} {
                 ::misc::idle [list ${ns}::play stop]
             } else {
-                step backward
-                ::misc::safeafter ${ns}::v::playcancel $delay ${ns}::play_tick
+                if {$v::playwait} {
+                    ::misc::safeafter ${ns}::v::playcancel 1 ${ns}::play_tick
+                } else {
+                    step backward
+                    set v::playwait 1
+                    ::misc::safeafter ${ns}::v::playcancel $delay ${ns}::play_tick
+                }
             }
             return
         }
