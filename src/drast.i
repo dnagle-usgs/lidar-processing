@@ -549,7 +549,10 @@ style=, bg=) {
   for(i = 1; i <= 120; i++) {
     if(skip(i))
       continue;
-    z = 254 - *rst.rx(i,channel);
+    wf = *rst.rx(i,channel);
+    if(is_void(wf))
+      continue;
+    z = 254 - wf;
     n = numberof(z);
 
     if(style == "plcm") {
