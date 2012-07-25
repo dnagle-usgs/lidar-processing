@@ -45,8 +45,8 @@ func ytk_rast(rn) {
   }
 }
 
-func ndrast(r, rn=, units=, win=, graph=, sfsync=) {
-/* DOCUMENT drast(r, rn=, units=, win=, graph=, sfsync=)
+func ndrast(r, rn=, channel=, units=, win=, graph=, sfsync=) {
+/* DOCUMENT drast(r, rn=, channel=, units=, win=, graph=, sfsync=)
   Displays raster waveform data for the given raster. Try this:
 
     > rn = 1000
@@ -69,6 +69,9 @@ func ndrast(r, rn=, units=, win=, graph=, sfsync=) {
   raster.
 
   Be sure to load a database file with load_edb first.
+
+  The channel= option specifies which channel should be plotted (if graph=1)
+  and defaults to channel=1.
 
   By default, this will sync with SF. Set sfsync=0 to disable that behavior.
 */
@@ -99,18 +102,19 @@ func ndrast(r, rn=, units=, win=, graph=, sfsync=) {
     }
   }
 
-  if(graph) ndrast_graph, r, aa, somd, units=units, win=win;
+  if(graph) ndrast_graph, r, aa, somd, channel=channel, units=units, win=win;
 
   return &aa;
 }
 
-func ndrast_graph(r, aa, somd, units=, win=) {
-/* DOCUMENT ndrast_graph, r, aa, somd, units=, win=
+func ndrast_graph(r, aa, somd, channel=, units=, win=) {
+/* DOCUMENT ndrast_graph, r, aa, somd, channel=, units=, win=
   Called by ndrast to handle its plotting.
 */
   extern rn, data_path;
   default, units, "ns";
   default, win, max(0, current_window());
+  default, channel, 1;
 
   settings = h_new(
     ns=h_new(scale=1, title="Nanoseconds"),
@@ -122,7 +126,7 @@ func ndrast_graph(r, aa, somd, units=, win=) {
   win_bkp = current_window();
   window, win;
 
-  pli, -transpose(aa(,,1)), 1, 4 * settings(units).scale, 121,
+  pli, -transpose(aa(,,channel)), 1, 4 * settings(units).scale, 121,
     -244 * settings(units).scale;
   xytitles, swrite(format="somd:%d hms:%s rn:%d   Pixel #",
     somd, sod2hms(somd, str=1), rn), settings(units).title;
