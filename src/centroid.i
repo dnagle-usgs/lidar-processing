@@ -1,8 +1,8 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
-func pcr(rast, pulse) {
-/* DOCUMENT pcr(rast, pulse)
+func pcr(rast, pulse, forcechannel=) {
+/* DOCUMENT pcr(rast, pulse, forcechannel=)
 
   Computes the centroid of the transmit and return pulses, then derives a
   range value that corrects for signal level range walk. The most sensitive
@@ -73,24 +73,31 @@ func pcr(rast, pulse) {
 
   rx = rast.rx(pulse,);
 
-  if((numberof(where((*rx(1))(1:np) < 5))) <= ops_conf.max_sfc_sat) {
-    rx_centroid = cent(*rx(1));
-    // Must be water column only return.
-    if(rx_centroid(3) < -90) {
-      slope = 0.029625;
-      x = rx_centroid(3) - 90;
-      y = slope * x;
-      rx_centroid(1) += y;
-    }
-    rx_centroid(1:2) += ops_conf.chn1_range_bias;
-  } else if(numberof(where((*rx(2))(1:np) < 5)) <= ops_conf.max_sfc_sat) {
-    rx_centroid = cent(*rx(2));
-    rx_centroid(1:2) += ops_conf.chn2_range_bias;
-    rx_centroid(3) += 300;
+  if(!is_void(forcechannel)) {
+    rx_centroid = cent(*rx(forcechannel));
+    rx_centroid(1:2) += get_member(ops_conf,
+        swrite(format="chn%d_range_bias", forcechannel));
+    rx_centroid(3) += 300 * (forcechannel - 1);
   } else {
-    rx_centroid = cent(*rx(3));
-    rx_centroid(1:2) += ops_conf.chn3_range_bias;
-    rx_centroid(3) += 600;
+    if((numberof(where((*rx(1))(1:np) < 5))) <= ops_conf.max_sfc_sat) {
+      rx_centroid = cent(*rx(1));
+      // Must be water column only return.
+      if(rx_centroid(3) < -90) {
+        slope = 0.029625;
+        x = rx_centroid(3) - 90;
+        y = slope * x;
+        rx_centroid(1) += y;
+      }
+      rx_centroid(1:2) += ops_conf.chn1_range_bias;
+    } else if(numberof(where((*rx(2))(1:np) < 5)) <= ops_conf.max_sfc_sat) {
+      rx_centroid = cent(*rx(2));
+      rx_centroid(1:2) += ops_conf.chn2_range_bias;
+      rx_centroid(3) += 300;
+    } else {
+      rx_centroid = cent(*rx(3));
+      rx_centroid(1:2) += ops_conf.chn3_range_bias;
+      rx_centroid(3) += 600;
+    }
   }
 
   // Now compute the actual range value in sample counts

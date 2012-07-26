@@ -149,8 +149,8 @@ func compute_depth(data, sample_interval=) {
   return data;
 }
 
-func make_bathy(latutm=, q=, avg_surf=) {
-/* DOCUMENT make_bathy(latutm=, q=, avg_surf=)
+func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
+/* DOCUMENT make_bathy(latutm=, q=, avg_surf=, forcechannel=)
   This function allows a user to define a region on the gga plot of flightlines
   (usually window 6) to write out a 'level 1' file and plot a depth image
   defined in that region.
@@ -203,7 +203,8 @@ func make_bathy(latutm=, q=, avg_surf=) {
       msg = msg_prefix + "Step 1/3: Processing bathymetry...";
       write, format="Processing segment %d of %d for bathymetry\n", i, count;
       status, start, msg=msg;
-      depth = run_bath(start=raster_starts(i), stop=raster_stops(i), msg=msg);
+      depth = run_bath(start=raster_starts(i), stop=raster_stops(i),
+        forcechannel=forcechannel, msg=msg);
       if(depth == 0) {
         status, finished;
         return 0;
@@ -213,7 +214,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
       write, "Processing for first_surface...";
       status, start, msg=msg;
       surface = first_surface(start=raster_starts(i), stop=raster_stops(i),
-        usecentroid=1, msg=msg);
+        usecentroid=1, forcechannel=forcechannel, msg=msg);
 
       msg = msg_prefix + "Step 3/3: Merging and correcting depths...";
       status, start, msg=msg;

@@ -57,7 +57,8 @@ func bath_winpix(m) {
   rn;
 }
 
-func run_bath(nil, start=, stop=, center=, delta=, last=, graph=, pse=, msg=) {
+func run_bath(nil, start=, stop=, center=, delta=, last=, forcechannel=,
+graph=, pse=, msg=) {
   extern bath_ctl;
   default, last, 250;
   default, graph, 0;
@@ -88,7 +89,7 @@ func run_bath(nil, start=, stop=, center=, delta=, last=, graph=, pse=, msg=) {
   status, start, msg=msg;
   for(j=1, rn=start; rn <= stop; j++, rn++) {
     for(pulse=1; pulse<=120; pulse++) {
-      depths(pulse,j) = ex_bath(rn, pulse, last=last, graph=graph);
+      depths(pulse,j) = ex_bath(rn, pulse, last=last, forcechannel=, graph=graph);
       pause, pse;
     }
     status, progress, j, count;
@@ -151,7 +152,8 @@ func show_bath_constants {
   }
 }
 
-func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) {
+func ex_bath(raster_number, pulse_number, last=, forcechannel=, graph=, win=,
+xfma=, verbose=) {
 /* DOCUMENT ex_bath(raster_number, pulse_number)
   See run_bath for details on usage.
 
@@ -226,7 +228,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
 
   local wf, scan_angle, channel;
   bathy_lookup_raster_pulse, raster_number, pulse_number, bath_ctl.maxsat,
-      wf, scan_angle, channel, maxint;
+      wf, scan_angle, channel, maxint, forcechannel=forcechannel;
 
   result.sa = scan_angle;
   wflen = numberof(wf);
@@ -311,9 +313,9 @@ func ex_bath_message(graph, verbose, msg) {
 }
 
 func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
-&scan_angle, &channel, &maxint) {
+&scan_angle, &channel, &maxint, forcechannel=) {
 /* DOCUMENT bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
- * &scan_angle, &channel, &maxint)
+ * &scan_angle, &channel, &maxint, forcechannel=)
   Part of bathy algorithm. Selects the appropriate channel and returns the
   waveform, with bias removed.
 */
@@ -329,7 +331,7 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
   }
   scan_angle = raster.sa(pulse_number);
 
-  channel = 0;
+  channel = is_void(forcechannel) ? 0 : forcechannel-1;
   do {
     channel++;
     raw_wf = *raster.rx(pulse_number, channel);
@@ -340,7 +342,7 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
     saturated = where(raw_wf == 0);
     // saturated sample count
     numsat = numberof(saturated);
-  } while(numsat > maxsat && channel < 3);
+  } while(numsat > maxsat && channel < 3 && is_void(forcechannel));
 
   wf = float(~raw_wf);
   maxint = 255 - long(wf(1));

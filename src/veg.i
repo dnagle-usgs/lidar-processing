@@ -62,10 +62,12 @@ func veg_winpix(m) {
   rn;
 }
 
-func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, 
-  use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=, multi_peaks=, msg=) {
-/* DOCUMENT depths = run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=,
-     pse=, use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=, multi_peaks=, msg=)
+func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=,
+use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=, multi_peaks=,
+forcechannel=, msg=) {
+/* DOCUMENT depths = run_vegx(rn=, len=, start=, stop=, center=, delta=, last=,
+  graph=, pse=, use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=,
+  multi_peaks=, forcechannel=, msg=)
 
   This returns an array of VEGPIX or VEGPIXS.
 
@@ -140,7 +142,8 @@ func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=,
       } else {
         depths(i,j) = ex_veg(rn+j, i, last=last, graph=graph, 
         use_be_centroid=use_be_centroid, use_be_peak=use_be_peak,
-        hard_surface=hard_surface, alg_mode=alg_mode, header=header);
+        hard_surface=hard_surface, alg_mode=alg_mode,
+        forcechannel=forcechannel, header=header);
       }
       if (pse) pause, pse;
     }
@@ -234,8 +237,8 @@ func make_fs_veg(d, rrr) {
   return geoveg;
 }
 
-func make_veg(latutm=, q=, ext_bad_att=, use_centroid=, use_highelv_echo=, multi_peaks=, alg_mode=) {
-/* DOCUMENT make_veg(latutm=, q=, ext_bad_att=, use_centroid=, use_highelv_echo=, multi_peaks=, alg_mode=)
+func make_veg(latutm=, q=, ext_bad_att=, use_centroid=, use_highelv_echo=, multi_peaks=, alg_mode=, forcechannel=) {
+/* DOCUMENT make_veg(latutm=, q=, ext_bad_att=, use_centroid=, use_highelv_echo=, multi_peaks=, alg_mode=, forcechannel=)
  This function allows a user to define a region on the gga plot of
  flightlines (usually window 6) to  process data using the vegetation
  algorithm.
@@ -297,17 +300,19 @@ Returns:
       msg = "Processing for first_surface...";
       write, msg;
       status, start, msg=msg;
-      rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid, use_highelv_echo=use_highelv_echo, msg=msg);
+      rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid, use_highelv_echo=use_highelv_echo, forcechannel=forcechannel, msg=msg);
       msg = swrite(format="Processing segment %d of %d for vegetation", i, no_t);
       write, msg;
       status, start, msg=msg;
       if (multi_peaks) {
-        d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i), multi_peaks=1,msg=msg);
+        d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i), multi_peaks=1, msg=msg);
         write, "Using make_fs_veg_all (multi_peaks=1) for vegetation...";
         veg = make_fs_veg_all(d, rrr);
       } else {
-        d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, 
-          use_be_peak=use_be_peak, hard_surface=hard_surface, alg_mode=alg_mode,msg=msg);
+        d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),
+          use_be_centroid=use_be_centroid, use_be_peak=use_be_peak,
+          hard_surface=hard_surface, alg_mode=alg_mode,
+          forcechannel=forcechannel, msg=msg);
         write, "Using make_fs_veg_all (multi_peaks=0) for vegetation...";
         dm = vegpix2vegpixs(d);
         cveg = make_fs_veg_all(dm, rrr, multi_peaks=0);
@@ -374,7 +379,6 @@ Returns:
   status, finished;
   return veg_all;
 }
-
 
 func test_veg(veg_all,  fname=, pse=, graph=) {
   // this function can be used to process for vegetation for only those pulses that are in data array veg_all or  those that are in file fname.
@@ -671,10 +675,12 @@ func clean_cveg_all(vegall, rcf_width=) {
 }
 
 
-func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak=, 
-  hard_surface=, alg_mode=, pse=, verbose=, add_peak=, header=) {
-/* DOCUMENT rv = ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=,
-  use_be_peak=, hard_surface=, alg_mode=, pse=, verbose=, header=)
+func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=,
+use_be_peak=, hard_surface=, alg_mode=, pse=, verbose=, add_peak=,
+forcechannel=, header=) {
+/* DOCUMENT rv = ex_veg(rn, pulse_number, last=, graph=, win=,
+ use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=, pse=, verbose=,
+ forcechannel=, header=)
 
   This function returns an array of VEGPIX structures.
 
@@ -780,31 +786,37 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   if ((ctx(1) == 0)  || (ctx(1) == 1e1000))
     return rv;
 
-  // Try 1st channel
-  channel = 1;
-  np = min(pulse.channel1_length, 12);		// use no more than 12
-  wf = wf_filter_bias(short(~pulse.channel1_wf), method="first");
-  saturated = where(pulse.channel1_wf(1:np) < 5);  // Create a list of saturated samples
-  numsat = numberof(saturated);     // Count how many are saturated
-
-  if (numsat > veg_conf.max_sat(channel)) {
-    // Try 2nd channel
-    channel = 2;
-    wf = wf_filter_bias(short(~pulse.channel2_wf), method="first");
-    saturated = where(pulse.channel2_wf(1:np) < 5);
-    numsat = numberof(saturated);
+  if(!is_void(forcechannel)) {
+    channel = forcechannel;
+    wf = pulse(swrite(format="channel%d_wf", channel));
+    wf = wf_filter_bias(short(~wf), method="first");
+  } else {
+    // Try 1st channel
+    channel = 1;
+    np = min(pulse.channel1_length, 12);		// use no more than 12
+    wf = wf_filter_bias(short(~pulse.channel1_wf), method="first");
+    saturated = where(pulse.channel1_wf(1:np) < 5);  // Create a list of saturated samples
+    numsat = numberof(saturated);     // Count how many are saturated
 
     if (numsat > veg_conf.max_sat(channel)) {
-      // Try 3rd channel
-      channel = 3;
-      wf = wf_filter_bias(short(~pulse.channel3_wf), method="first");
-      saturated = where(pulse.channel3_wf == 0);
+      // Try 2nd channel
+      channel = 2;
+      wf = wf_filter_bias(short(~pulse.channel2_wf), method="first");
+      saturated = where(pulse.channel2_wf(1:np) < 5);
       numsat = numberof(saturated);
 
       if (numsat > veg_conf.max_sat(channel)) {
-        // All 3 channels saturated
-        n_all3sat++;
-        return rv;
+        // Try 3rd channel
+        channel = 3;
+        wf = wf_filter_bias(short(~pulse.channel3_wf), method="first");
+        saturated = where(pulse.channel3_wf == 0);
+        numsat = numberof(saturated);
+
+        if (numsat > veg_conf.max_sat(channel)) {
+          // All 3 channels saturated
+          n_all3sat++;
+          return rv;
+        }
       }
     }
   }
@@ -841,12 +853,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   if (pse) pause, pse;
 
   // set range_bias to that of the first unsaturated channel
-  if (channel == 1)
-    range_bias = ops_conf.chn1_range_bias;
-  else if (channel == 2)
-    range_bias = ops_conf.chn2_range_bias;
-  else if (channel == 3)
-    range_bias = ops_conf.chn3_range_bias;
+  range_bias = get_member(ops_conf, swrite(format="chn%d_range_bias", channel));
 
   // stuff below is for mx1 (first surface in veg).
   local crx, mv1;

@@ -32,9 +32,9 @@ struct RTRS {
 };
 
 func irg(start, stop, inc=, delta=, usecentroid=, use_highelv_echo=,
-highelv_thresh=, skip=, verbose=, msg=) {
+highelv_thresh=, forcechannel=, skip=, verbose=, msg=) {
 /* DOCUMENT irg(start, stop, inc=, delta=, usecentroid=, use_highelv_echo=,
-   skip=, verbose=)
+   forcechannel=, skip=, verbose=)
 
   Returns an array of irange values for the specified records, from START to
   STOP.
@@ -126,7 +126,7 @@ highelv_thresh=, skip=, verbose=, msg=) {
           if(wf(max) - wf(min) >= highelv_thresh)
             continue;
         }
-        centroid_values = pcr(raster, pulse);
+        centroid_values = pcr(raster, pulse, forcechannel=forcechannel);
         if(numberof(centroid_values)) {
           rtrs(i).irange(pulse) = centroid_values(1);
           rtrs(i).intensity(pulse) = centroid_values(2);

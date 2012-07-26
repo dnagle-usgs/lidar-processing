@@ -19,9 +19,9 @@ require, "eaarla_vector.i";
 */
 
 func first_surface(nil, start=, stop=, center=, delta=, usecentroid=,
-use_highelv_echo=, verbose=, msg=) {
+use_highelv_echo=, forcechannel=, verbose=, msg=) {
 /* DOCUMENT first_surface(start=, stop=, center=, delta=, usecentroid=,
-   use_highelv_echo=, verbose=)
+   use_highelv_echo=, forcechannel=, verbose=)
 
   Project the EAARL threshold trigger point to the surface.
 
@@ -78,12 +78,12 @@ use_highelv_echo=, verbose=, msg=) {
       j = min(stop, i + maxcount - 1);
       parts(interval) = &first_surface(start=i, stop=j,
         usecentroid=usecentroid, use_highelv_echo=use_highelv_echo,
-        verbose=verbose, msg=msg);
+        forcechannel=forcechannel, verbose=verbose, msg=msg);
     }
     return merge_pointers(parts);
   }
   extern rtrs;
-  rtrs = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo, msg=msg);
+  rtrs = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo, forcechannel=forcechannel, msg=msg);
   if (msg)
     status, start, msg=msg;
   irg_a = rtrs;
@@ -206,8 +206,8 @@ func open_seg_process_status_bar {
   }
 }
 
-func make_fs(latutm=, q=, ext_bad_att=, usecentroid=, verbose=) {
-/* DOCUMENT make_fs(latutm=, q=, ext_bad_att=, usecentroid=, verbose=)
+func make_fs(latutm=, q=, ext_bad_att=, usecentroid=, forcechannel=, verbose=) {
+/* DOCUMENT make_fs(latutm=, q=, ext_bad_att=, usecentroid=, forcechannel=, verbose=)
   This function prepares data to write/plot first surface topography for a
   selected region of flightlines.
 */
@@ -248,7 +248,8 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=, verbose=) {
       if(verbose) write, msg;
       status, start, msg=msg;
       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i),
-          usecentroid=usecentroid, msg=msg, verbose=verbose);
+          usecentroid=usecentroid, forcechannel=forcechannel, msg=msg,
+          verbose=verbose);
       // Must call again since first_surface will clear it:
       status, start, msg=msg;
       fs_all(i) = &rrr;
