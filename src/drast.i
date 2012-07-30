@@ -45,8 +45,8 @@ func ytk_rast(rn) {
   }
 }
 
-func ndrast(r, rn=, channel=, units=, win=, graph=, sfsync=) {
-/* DOCUMENT drast(r, rn=, channel=, units=, win=, graph=, sfsync=)
+func ndrast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=) {
+/* DOCUMENT drast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=)
   Displays raster waveform data for the given raster. Try this:
 
     > rn = 1000
@@ -72,6 +72,10 @@ func ndrast(r, rn=, channel=, units=, win=, graph=, sfsync=) {
 
   The channel= option specifies which channel should be plotted (if graph=1)
   and defaults to channel=1.
+
+  Options cmin= and cmax= will contrain the pulse values to the given ranges.
+  The waveforms are first normalized to the range 0 to 255. This effect is only
+  applied to plotting, not to the returned data.
 
   By default, this will sync with SF. Set sfsync=0 to disable that behavior.
 */
@@ -102,13 +106,15 @@ func ndrast(r, rn=, channel=, units=, win=, graph=, sfsync=) {
     }
   }
 
-  if(graph) ndrast_graph, r, aa, somd, channel=channel, units=units, win=win;
+  if(graph)
+    ndrast_graph, r, aa, somd, channel=channel, units=units, win=win,
+      cmin=cmin, cmax=cmax;
 
   return &aa;
 }
 
-func ndrast_graph(r, aa, somd, channel=, units=, win=) {
-/* DOCUMENT ndrast_graph, r, aa, somd, channel=, units=, win=
+func ndrast_graph(r, aa, somd, channel=, units=, win=, cmin=, cmax=) {
+/* DOCUMENT ndrast_graph, r, aa, somd, channel=, units=, win=, cmin=, cmax=
   Called by ndrast to handle its plotting.
 */
   extern rn, data_path;
@@ -127,7 +133,15 @@ func ndrast_graph(r, aa, somd, channel=, units=, win=) {
   window, win;
   fma;
 
-  pli, -transpose(aa(,,channel)), 1, 4 * settings(units).scale, 121,
+  rast = transpose(aa(,,channel));
+  rast = short(~char(rast));
+
+  default, cmin, rast(*)(min);
+  rast = max(cmin, rast);
+  default, cmax, rast(*)(max);
+  rast = min(cmax, rast);
+
+  pli, rast, 1, 4 * settings(units).scale, 121,
     -244 * settings(units).scale;
   xytitles, swrite(format="somd:%d hms:%s rn:%d chn:%d  Pixel #",
     somd, sod2hms(somd, str=1), rn, channel), settings(units).title;
