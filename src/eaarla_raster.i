@@ -392,6 +392,7 @@ func eaarla_decode_rasters(raw, wfs=) {
   max_pulse = number_of_pulses(max);
   if(max_pulse > 0 && max_pulse < 120) {
     offset_time = offset_time(..,:max_pulse);
+    number_of_waveforms = number_of_waveforms(..,:max_pulse);
     transmit_bias = transmit_bias(..,:max_pulse);
     channel1_bias = channel1_bias(..,:max_pulse);
     channel2_bias = channel2_bias(..,:max_pulse);
