@@ -30,6 +30,10 @@ if {![namespace exists ::l1pro::drast]} {
             variable rastwin2 12
             variable rastwin3 13
             variable rastwin4 14
+            variable rastusecmin 0
+            variable rastcmin 0
+            variable rastusecmax 0
+            variable rastcmax 255
             variable rastunits meters
             variable eoffset 0
             variable geochan1 1
@@ -303,9 +307,17 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
     set f [$f interior]
     foreach channel {1 2 3 4} {
         ttk::checkbutton $f.userast${channel} -text "Show channel ${channel}" \
-            -variable ${ns}::v::rastchan${channel}
+                -variable ${ns}::v::rastchan${channel}
         ttk::spinbox $f.winrast${channel} -from 0 -to 63 -increment 1 -width 0 \
                 -textvariable ${ns}::v::rastwin${channel}
+    }
+    foreach which {min max} {
+        ttk::checkbutton $f.usec${which} -text "Colorbar ${which}" \
+                -variable ${ns}::v::rastusec${which}
+        ttk::spinbox $f.c${which} -from 0 -to 4095 -increment 1 -width 0 \
+                -textvariable ${ns}::v::rastc${which}
+        ::mixin::statevar $f.c${which} -statemap {0 disabled 1 normal} \
+                -statevariable ${ns}::v::rastusec${which}
     }
     ::mixin::combobox::mapping $f.units -state readonly -width 0 \
             -modifycmd ${ns}::send_rastunits \
@@ -319,6 +331,8 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
     apply $labelgrid $f.userast2 - $f.winrast2 "Chan 2 win:"
     apply $labelgrid $f.userast3 - $f.winrast3 "Chan 3 win:"
     apply $labelgrid $f.userast4 - $f.winrast4 "Chan 4 win:"
+    apply $labelgrid $f.cmin $f.usecmin $f.cmax $f.usecmax
+    grid $f.usecmin $f.usecmax -sticky w
     apply $labelgrid $f.units "Units:"
 }
 
@@ -507,6 +521,8 @@ proc ::l1pro::drast::show_rast {} {
                 {$channel ne 1}            ", channel=$channel" \
                 1                          ", win=[set v::rastwin${channel}]" \
                 {$v::rastunits ne "ns"}    ", units=\"$v::rastunits\"" \
+                $v::rastusecmin            ", cmin=$v::rastcmin" \
+                $v::rastusecmax            ", cmax=$v::rastcmax" \
                 1                          ", sfsync=0" \
                 1                          ")"
 
