@@ -521,6 +521,12 @@ func iex2tans( junk ) {
  tans.pitch  = iex_nav.pitch;
  tans.heading= iex_nav.heading;
  tans.somd  =  iex_nav.somd - day_start;
+ // If the survey crosses a GPS week boundary, we'll end up with negative
+ // times. This is fixed by adding one week to those times.
+ if(anyof(tans.somd < 0)) {
+  w = where(tans.somd < 0);
+  tans.somd(w) += 604800;
+ }
 }
 
 func iex_ascii2pbd( fn ) {
