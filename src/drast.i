@@ -125,6 +125,7 @@ func ndrast_graph(r, aa, somd, channel=, units=, win=) {
 
   win_bkp = current_window();
   window, win;
+  fma;
 
   pli, -transpose(aa(,,channel)), 1, 4 * settings(units).scale, 121,
     -244 * settings(units).scale;
