@@ -169,7 +169,6 @@ proc ::l1pro::drast::gui_tools f {
 
 proc ::l1pro::drast::gui_opts f {
     ::mixin::labelframe::collapsible $f -text "Options"
-    $f invoke
     set f [$f interior]
 
     set labels_left {}
@@ -420,6 +419,7 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
 proc ::l1pro::drast::gui_opts_sline {f labelgrid} {
     set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Scanline"
+    $f invoke
     set f [$f interior]
     ttk::spinbox $f.win -from 0 -to 63 -increment 1 -width 0 \
             -textvariable ${ns}::v::slinewin
@@ -445,6 +445,7 @@ proc ::l1pro::drast::gui_opts_sline {f labelgrid} {
 proc ::l1pro::drast::gui_opts_export {f labelgrid} {
     set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Export"
+    $f invoke
     set f [$f interior]
     ttk::checkbutton $f.enable -text "Enable auto-exporting" \
             -variable ${ns}::v::export
