@@ -57,9 +57,11 @@ if {![namespace exists ::l1pro::drast]} {
             variable wfchan2 1
             variable wfchan3 1
             variable wfchan4 0
+            variable wfchan0 0
             variable wfgeo 0
             variable wfwin 9
             variable wfwinbath 4
+            variable wfwintransmit 16
             variable wfsrc geo-1
             variable slinewin 6
             variable slinestyle average
@@ -420,12 +422,17 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
             -variable ${ns}::v::wfchan3
     ttk::checkbutton $f.use4 -text "Channel 4 (magenta)" \
             -variable ${ns}::v::wfchan4
+    ttk::spinbox $f.winwftransmit -from 0 -to 63 -increment 1 -width 0 \
+            -textvariable ${ns}::v::wfwintransmit
+    ttk::checkbutton $f.use0 -text "Transmit" \
+            -variable ${ns}::v::wfchan0
     ttk::checkbutton $f.geo -text "Georeference" \
             -variable ${ns}::v::wfgeo
     apply $labelgrid $f.winwf "WF window:" $f.use1 -
     apply $labelgrid $f.winbath "ex_bath window:" $f.use2 -
     apply $labelgrid $f.src "Select from:" $f.use3 -
     apply $labelgrid $f.geo - $f.use4 -
+    apply $labelgrid $f.winwftransmit "Transmit win:" $f.use0 -
 
     foreach w [list $f.src $f.lblsrc] {
         ::tooltip::tooltip $w \
@@ -600,13 +607,20 @@ proc ::l1pro::drast::show_sline {} {
 }
 
 proc ::l1pro::drast::show_wf {} {
-    set cmd "window, $v::wfwin; show_wf, $v::rn, $v::pulse"
-    appendif cmd \
-            $v::wfchan1     ", c1=1" \
-            $v::wfchan2     ", c2=1" \
-            $v::wfchan3     ", c3=1" \
-            $v::wfchan4     ", c4=1"
-    exp_send "$cmd\r"
+    if {$v::wfchan1 || $v::wfchan2 || $v::wfchan3 || $v::wfchan4} {
+        set cmd "window, $v::wfwin; show_wf, $v::rn, $v::pulse"
+        appendif cmd \
+                $v::wfchan1     ", c1=1" \
+                $v::wfchan2     ", c2=1" \
+                $v::wfchan3     ", c3=1" \
+                $v::wfchan4     ", c4=1"
+        exp_send "$cmd\r"
+    }
+    if {$v::wfchan0} {
+        set cmd "window, $v::wfwintransmit"
+        append cmd "; show_wf_transmit, $v::rn, $v::pulse"
+        exp_send "$cmd\r"
+    }
 }
 
 proc ::l1pro::drast::apply_style_geo {style} {
