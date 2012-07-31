@@ -724,19 +724,23 @@ proc ::l1pro::drast::jump pos {
 proc ::l1pro::drast::examine_waveforms {} {
     set cb [expr {$v::wfchan1 + 2*$v::wfchan2 + 4*$v::wfchan3 + 8*$v::wfchan4}]
     if {$v::wfsrc eq "transmit"} {
-        set cmd "rn=$v::rn; msel_wf_transmit, rn"
+        set cmd "msel_wf_transmit, $v::rn"
         appendif cmd \
                 1               ", winsel=$v::rastwin0" \
-                1               ", winplot=$v::wfwin"
+                1               ", winplot=$v::wfwintransmit" \
+                $cb             ", cb=$cb" \
+                $cb             ", winrx=$v::wfwin"
     } else {
         set wfsrc [split $v::wfsrc -]
         set src [set v::[lindex $wfsrc 0]win[lindex $wfsrc 1]]
-        set cmd "rn=$v::rn; msel_wf, ndrast(rn=rn, graph=0), cb=$cb"
+        set cmd "msel_wf, rn=$v::rn, cb=$cb"
         appendif cmd \
                 $v::wfgeo      ", geo=1" \
                 1              ", winsel=$src" \
                 1              ", winplot=$v::wfwin" \
                 1              ", winbath=$v::wfwinbath" \
+                $v::wfchan0    ", tx=1" \
+                $v::wfchan0    ", wintx=$v::wfwintransmit" \
                 1              ", seltype=\"[lindex $wfsrc 0]\""
     }
     exp_send "$cmd\r"

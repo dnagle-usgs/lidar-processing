@@ -251,11 +251,12 @@ func drast_graph(aa, digitizer, win=) {
   window_select, win_bkp;
 }
 
-func msel_wf(w, cb=, geo=, winsel=, winplot=, winbath=, seltype=) {
+func msel_wf(w, rn=, cb=, tx=, geo=, winsel=, winplot=, wintx=, winbath=, seltype=) {
 /* DOCUMENT msel_wf, w, cb=, geo=
   Use the mouse to select a pixel to display a waveform for.
 
   w - Should be a pointer to an array of waveform data as returned by drast.
+    Alternately it may be a raster number.
 
   cb= Channel bitmask indicating which channels should be displayed. 1 is
     channel 1, 2 is channel 2, 4 is channel 3. Defaults to 7 (all channels).
@@ -263,12 +264,15 @@ func msel_wf(w, cb=, geo=, winsel=, winplot=, winbath=, seltype=) {
     Defaults to 0. If 0, uses show_wf (normal). If 1, uses show_geo_wf
     (georeferenced).
 */
-  extern rn, bath_ctl, xm;
+  extern bath_ctl, xm;
 
   default, cb, 7;
   default, geo, 0;
   default, winplot, 0;
   default, winbath, 4;
+
+  if(!is_void(rn))
+    w = ndrast(rn=rn, graph=0);
 
   win = 1;
   if(geo == 1) win = 2; //use georectified raster
@@ -299,13 +303,15 @@ func msel_wf(w, cb=, geo=, winsel=, winplot=, winbath=, seltype=) {
       if (bath_ctl.laser != 0)
         ex_bath, rn, idx, graph=1, win=winbath, xfma=1;
     }
+    if(tx)
+      show_wf_transmit, rn, idx, win=wintx;
     window, win;
     write, format="Pulse %d\n", idx;
   }
   write, "msel_wf completed";
 }
 
-func msel_wf_transmit(rn, winsel=, winplot=) {
+func msel_wf_transmit(rn, cb=, winsel=, winplot=, winrx=) {
 /* DOCUMENT msel_wf_transmit, rn, winsel=, winplot=
   Use the mouse to select a pixel to display a waveform for.
 */
@@ -330,6 +336,9 @@ func msel_wf_transmit(rn, winsel=, winplot=) {
     write, format="Pulse %d\n", idx;
 
     show_wf_transmit, rn, idx, win=winplot;
+
+    if(cb)
+      show_wf, rn, idx, win=winrx, cb=cb;
 
     window, win;
   }
