@@ -65,13 +65,13 @@ func ndrast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=) {
 
   rn should be a raster number.
 
-  Returns a pointer to a 250x120x4 array of all the decoded waveforms in this
-  raster.
+  Returns a pointer to a 250x120x5 array of all the decoded waveforms in this
+  raster (channels 1 through 4 and the transmit as #5 [or 0]).
 
   Be sure to load a database file with load_edb first.
 
   The channel= option specifies which channel should be plotted (if graph=1)
-  and defaults to channel=1.
+  and defaults to channel=1. Use channel=0 for transmit.
 
   Options cmin= and cmax= will contrain the pulse values to the given ranges.
   The waveforms are first normalized to the range 0 to 255. This effect is only
@@ -86,7 +86,7 @@ func ndrast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=) {
   if(is_void(r) && !is_void(rn))
     r = decode_raster(get_erast(rn=rn));
 
-  aa = array(short(255), 250, 120, 4);
+  aa = array(short(255), 250, 120, 5);
 
   npix = r.npixels(1);
   somd = (r.soe - soe_day_start)(1);
@@ -104,6 +104,8 @@ func ndrast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=) {
       n = numberof(*r.rx(i,j));  // number of samples
       if (n) aa(1:n,i,j) = *r.rx(i,j);
     }
+    n = numberof(*r.tx(i));
+    if (n) aa(1:n,i,0) = *r.tx(i);
   }
 
   if(graph)
