@@ -411,7 +411,7 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
             -textvariable ${ns}::v::wfwinbath
     ::mixin::combobox $f.src -state readonly -width 0 \
             -textvariable ${ns}::v::wfsrc \
-            -values {rast-1 rast-2 rast-3 rast-4 geo-1 geo-2 geo-3 geo-4}
+            -values {rast-1 rast-2 rast-3 rast-4 transmit geo-1 geo-2 geo-3 geo-4}
     ttk::checkbutton $f.use1 -text "Channel 1 (black)" \
             -variable ${ns}::v::wfchan1
     ttk::checkbutton $f.use2 -text "Channel 2 (red)" \
@@ -433,7 +433,8 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
             \nThe options starting with \"geo\" are for the georeferenced\
             \nraster and the options starting with \"rast\" are for the\
             \nunreferenced raster. The numbers specify which channel. So\
-            \nrast-3 is for unreferenced raster, channel 3."
+            \nrast-3 is for unreferenced raster, channel 3. The option\
+            \n\"transmit\" is for the unreference transmit raster."
     }
 }
 
@@ -708,15 +709,22 @@ proc ::l1pro::drast::jump pos {
 
 proc ::l1pro::drast::examine_waveforms {} {
     set cb [expr {$v::wfchan1 + 2*$v::wfchan2 + 4*$v::wfchan3 + 8*$v::wfchan4}]
-    set wfsrc [split $v::wfsrc -]
-    set src [set v::[lindex $wfsrc 0]win[lindex $wfsrc 1]]
-    set cmd "rn=$v::rn; msel_wf, ndrast(rn=rn, graph=0), cb=$cb"
-    appendif cmd \
-            $v::wfgeo      ", geo=1" \
-            1              ", winsel=$src" \
-            1              ", winplot=$v::wfwin" \
-            1              ", winbath=$v::wfwinbath" \
-            1              ", seltype=\"[lindex $wfsrc 0]\""
+    if {$v::wfsrc eq "transmit"} {
+        set cmd "rn=$v::rn; msel_wf_transmit, rn"
+        appendif cmd \
+                1               ", winsel=$v::rastwin0" \
+                1               ", winplot=$v::wfwin"
+    } else {
+        set wfsrc [split $v::wfsrc -]
+        set src [set v::[lindex $wfsrc 0]win[lindex $wfsrc 1]]
+        set cmd "rn=$v::rn; msel_wf, ndrast(rn=rn, graph=0), cb=$cb"
+        appendif cmd \
+                $v::wfgeo      ", geo=1" \
+                1              ", winsel=$src" \
+                1              ", winplot=$v::wfwin" \
+                1              ", winbath=$v::wfwinbath" \
+                1              ", seltype=\"[lindex $wfsrc 0]\""
+    }
     exp_send "$cmd\r"
 }
 
