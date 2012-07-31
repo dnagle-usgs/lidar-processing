@@ -26,10 +26,12 @@ if {![namespace exists ::l1pro::drast]} {
             variable rastchan2 0
             variable rastchan3 0
             variable rastchan4 0
+            variable rastchan0 0
             variable rastwin1 0
             variable rastwin2 12
             variable rastwin3 13
             variable rastwin4 14
+            variable rastwin0 15
             variable rastusecmin 0
             variable rastcmin 0
             variable rastusecmax 0
@@ -311,6 +313,10 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
         ttk::spinbox $f.winrast${channel} -from 0 -to 63 -increment 1 -width 0 \
                 -textvariable ${ns}::v::rastwin${channel}
     }
+    ttk::checkbutton $f.userast0 -text "Show transmit" \
+            -variable ${ns}::v::rastchan0
+    ttk::spinbox $f.winrast0 -from 0 -to 63 -increment 1 -width 0 \
+            -textvariable ${ns}::v::rastwin0
     foreach which {min max} {
         ttk::checkbutton $f.usec${which} -text "Colorbar ${which}" \
                 -variable ${ns}::v::rastusec${which}
@@ -331,6 +337,7 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
     apply $labelgrid $f.userast2 - $f.winrast2 "Chan 2 win:"
     apply $labelgrid $f.userast3 - $f.winrast3 "Chan 3 win:"
     apply $labelgrid $f.userast4 - $f.winrast4 "Chan 4 win:"
+    apply $labelgrid $f.userast0 - $f.winrast0 "Transmit win:"
     apply $labelgrid $f.cmin $f.usecmin $f.cmax $f.usecmax
     grid $f.usecmin $f.usecmax -sticky w
     apply $labelgrid $f.units "Units:"
@@ -513,9 +520,9 @@ proc ::l1pro::drast::show_auto {} {
 }
 
 proc ::l1pro::drast::show_rast {} {
-    foreach channel {1 2 3 4} {
+    foreach channel {1 2 3 4 0} {
         if {![set v::rastchan${channel}]} continue
-        set cmd "wfa = ndrast("
+        set cmd "ndrast, "
         appendif cmd \
                 1                          "rn=$v::rn" \
                 {$channel ne 1}            ", channel=$channel" \
@@ -523,8 +530,7 @@ proc ::l1pro::drast::show_rast {} {
                 {$v::rastunits ne "ns"}    ", units=\"$v::rastunits\"" \
                 $v::rastusecmin            ", cmin=$v::rastcmin" \
                 $v::rastusecmax            ", cmax=$v::rastcmax" \
-                1                          ", sfsync=0" \
-                1                          ")"
+                1                          ", sfsync=0"
 
         exp_send "$cmd\r"
     }
