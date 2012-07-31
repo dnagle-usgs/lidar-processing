@@ -305,6 +305,36 @@ func msel_wf(w, cb=, geo=, winsel=, winplot=, winbath=, seltype=) {
   write, "msel_wf completed";
 }
 
+func msel_wf_transmit(rn, winsel=, winplot=) {
+/* DOCUMENT msel_wf_transmit, rn, winsel=, winplot=
+  Use the mouse to select a pixel to display a waveform for.
+*/
+  default, winplot, 0;
+  default, winbath, 4;
+
+  win = 1;
+  if(!is_void(winsel)) win = winsel;
+  window, win;
+
+  prompt = swrite(format="Window: %d. Left click: Examine Waveform. Middle click: Exit",win);
+  while(1) {
+    b = mouse(1,0,prompt);
+    prompt = "";
+    if (b(1) == 0) {
+      write, "Wrong Window... Try Again.";
+      break;
+    }
+    idx = int(b(1));
+
+    if(mouse_click_is("middle", b)) break;
+    write, format="Pulse %d\n", idx;
+
+    show_wf_transmit, rn, idx, win=winplot;
+
+    window, win;
+  }
+  write, "msel_wf_transmit completed";
+}
 
 func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=) {
 /* DOCUMENT show_wf, r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=
