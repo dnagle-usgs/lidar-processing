@@ -201,6 +201,19 @@ wrap_args, mission_constants;
   ops_IMU2.yaw_bias   =  0.;
 
 func display_mission_constants(conf, ytk=) {
+/* DOCUMENT display_mission_constants, conf, ytk=
+  Displays the mission constants given, either in Yorick or (if ytk=1) in Tcl
+  using a GUI. CONF may be given as a value or as the string name of a
+  variable. Here are some examples of how it can be called:
+
+    display_mission_constants, ops_tans
+    display_mission_constants, ops_tans, ytk=1
+    display_mission_constants, "ops_tans"
+    display_mission_constants, "ops_tans", ytk=1
+
+  If ytk=1, then it is preferred to give the variable as a string name so that
+  its name will be displayed in the GUI's title bar.
+*/
   name = [];
   if(is_string(conf)) {
     name = conf;
