@@ -512,11 +512,17 @@ namespace eval mission {
         foreach day [missionday_list] {
             if {[mission_has "cir dir" $day]} {
                 lappend paths [mission_get "cir dir" $day]
+                set date [mission_get "date" $day]
             }
         }
         if {[llength $paths]} {
+            if {$date < "2012"} {
+                set driver cir::f2004::tarpaths
+            } else {
+                set driver cir::f2010::tarpaths
+            }
             set cir [sf::controller %AUTO%]
-            $cir load cir::f2004::tarpaths -paths $paths
+            $cir load $driver -paths $paths
             ybkg set_sf_bookmarks \"$cir\"
         }
     }
@@ -795,8 +801,14 @@ namespace eval mission {
 
     proc date_cir {day} {
         if {[mission_has "cir dir" $day]} {
+            set path [mission_get "cir dir" $day]
+            if {[mission_get "date" $day] < "2012"} {
+                set driver cir::f2004::tarpath
+            } else {
+                set driver cir::f2010::tarpath
+            }
             set cir [sf::controller %AUTO%]
-            $cir load cir::f2004::tarpath -path [mission_get "cir dir" $day]
+            $cir load $driver -path $path
             ybkg set_sf_bookmark \"$cir\" \"$day\"
         }
     }
