@@ -727,6 +727,19 @@ proc ::l1pro::drast::jump pos {
 proc ::l1pro::drast::examine_waveforms {} {
     set cb [expr {$v::wfchan1 + 2*$v::wfchan2 + 4*$v::wfchan3 + 8*$v::wfchan4}]
     if {$v::wfsrc eq "transmit"} {
+        lassign [list rast 0] type chan
+    } else {
+        lassign [split $v::wfsrc -] type chan
+    }
+    if {![set v::show_$type] || ![set v::${type}chan${chan}]} {
+        tk_messageBox -icon error -type ok -title "Error" -message \
+                "You are trying to use \[WF\] on a window that isn't being\
+                plotted. Please check the \"WF: Examine waveforms\" section\
+                below to ensure that \"Select from:\" is set to a raster\
+                option that is being plotted."
+        return
+    }
+    if {$v::wfsrc eq "transmit"} {
         set cmd "msel_wf_transmit, $v::rn"
         appendif cmd \
                 1               ", winsel=$v::rastwin0" \
@@ -734,8 +747,7 @@ proc ::l1pro::drast::examine_waveforms {} {
                 $cb             ", cb=$cb" \
                 $cb             ", winrx=$v::wfwin"
     } else {
-        set wfsrc [split $v::wfsrc -]
-        set src [set v::[lindex $wfsrc 0]win[lindex $wfsrc 1]]
+        set src [set v::${type}win${chan}]
         set cmd "msel_wf, rn=$v::rn, cb=$cb"
         appendif cmd \
                 $v::wfgeo      ", geo=1" \
@@ -744,7 +756,7 @@ proc ::l1pro::drast::examine_waveforms {} {
                 1              ", winbath=$v::wfwinbath" \
                 $v::wfchan0    ", tx=1" \
                 $v::wfchan0    ", wintx=$v::wfwintransmit" \
-                1              ", seltype=\"[lindex $wfsrc 0]\""
+                1              ", seltype=\"$type\""
     }
     exp_send "$cmd\r"
 }
