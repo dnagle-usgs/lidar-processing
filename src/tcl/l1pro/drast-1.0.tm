@@ -177,8 +177,7 @@ proc ::l1pro::drast::gui_tools f {
 }
 
 proc ::l1pro::drast::gui_opts f {
-    ::mixin::labelframe::collapsible $f -text "Options"
-    set f [$f interior]
+    ::ttk::frame $f
 
     set labels_left {}
     set labels_right {}
