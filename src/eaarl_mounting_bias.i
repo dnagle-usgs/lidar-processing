@@ -1,13 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-/***********************************************************************
-  Range_bias computed from 7-29-02 ground test.  The EAARL data
- was taken from pulses 8716:10810 which was captured from a static
- target at 101.1256 meters measured distance.  The EAARL centroid
- range values were averaged and then the actual slope distance to
- the target subtracted to yield the range_biasM.  The rms noise on
- the range values used to compute the range_biasM was 3.19cm
-  range_biasM is the measured range bias in Meters
-***********************************************************************/
 
 func mission_constants(args) {
 /* DOCUMENT mission_constants(key1=val1, key2=val2, key3=val3, ...)
@@ -122,87 +113,92 @@ func mission_constants(args) {
 }
 wrap_args, mission_constants;
 
-/*************************************************************
- Default operations constants.  These should not be modified
- in this file. To "customize" these on a mission to mission
- basis, create a "*-conf.i" file in the mission root directory
- have that file, for example, first execute:
+  /*****************************************************************************
+  The range bias was computed from the 2002-07-29 ground test. The EAARL data
+  was taken from pulses 8716:10810 which was captured from a static target at
+  101.1256 meters measured distance. The EAARL centroid range values were
+  averaged and then the actual slope distance to the target subtracted to yield
+  the range bias in meters (stored as ops_conf.range_biasM). The RMS noise on
+  the range values used to compute the range bias was 3.19cm.
 
-  tans_config = ops_default;
+  ******************************************************************************
+  Following are default operations constants. These should generally not be
+  modified in this file. To customize them on a mission-to-mission basis,
+  create new ops_conf.i files in the mission directory using write_ops_conf.
 
-which will preload your new config file with the default values
-and then simply set only parameters that need changing in your
-new config structure.
+  So for example, initialize ops_conf using something like:
+    ops_conf = ops_default
+  or
+    ops_conf = mission_constants(type="EAARL-A")
+  or
+    ops_conf = mission_constants(type="EAARL-B v1")
 
-for example, perhaps you need a slightly different roll_bias
-and pitch_bias value for your data set in which case your
-custom file should have:
+  Then modify specific values as you like. Then export to file:
+    write_ops_conf, "/path/to/file"
 
-  tans_config = ops_default;
-  tans_config.roll_bias  = -1.55;
-  tans_config.pitch_bias = -0.1;
+  The active operations constants used throughout ALPS are always in the
+  variable ops_conf.
 
+  The ops_conf settings written using write_ops_conf above are stored in a
+  simple Yorick source file. You can load them back in using #include or by
+  using load_ops_conf:
+    load_ops_conf, "/path/to/file"
+  However, usually you should set the ops_conf file in the Mission
+  Configuration Manager and let it worry about loading your settings.
 
-The intention of this is to permit multiple configurations to
-exist at the same time and to allow easy switching between
-those configurations.  New configurations will exist for the
-Applanix, and for the new Inertial Science DTG unit.  If and
-when the EAARL system is ever installed on an different aircraft
-a new configuration file will need to be created with new values
-for the angle biases and the x,y and z offsets.
+  ******************************************************************************
+  The coordinate system of the plane is as follows:
 
- The body coords. system of the plane is as follows:
+    +X  Out the right wing
+    +Y  Forward along the fuselage
+    +Z  Up.
 
- +X  Out the right wing.
- +Y  Forward along the fuselage
- +Z  Up.
+  *****************************************************************************/
 
+  ops_default = mission_constants(
+    range_biasM = 0.7962,
+    chn1_range_bias = 0.,
+    chn2_range_bias = 0.36,
+    chn3_range_bias = 0.23,
+    max_sfc_sat = 2
+  );
 
-*************************************************************/
-ops_default = mission_constants(
-  range_biasM = 0.7962,
-  chn1_range_bias = 0.,
-  chn2_range_bias = 0.36,
-  chn3_range_bias = 0.23,
-  max_sfc_sat = 2
-);
+  ops_tans = ops_default;
+  ops_tans.name       = "Tans Default Values"
+  ops_tans.roll_bias  = -1.40;    // carefully tweaked on 2003-02-18 data
+  ops_tans.pitch_bias = +0.5;
+  ops_tans.yaw_bias   =  0.0;
+  ops_tans.y_offset   = -1.403;   // From Applanix pospac
+  ops_tans.x_offset   =  -.470;   // From Applanix pospac
+  // z_offset should be -1.708, but need better measurement of IMU to laser
+  // point
+  ops_tans.z_offset   = -1.3;
+  ops_tans.scan_bias  =  0.0;
+  ops_tans.range_biasM = 0.7962;  // Laser range measurement bias
 
- ops_tans = ops_default;
- ops_tans.name       = "Tans Default Values"
- ops_tans.roll_bias  = -1.40;        // carefully tweaked on 2-18-03 data
- ops_tans.pitch_bias = +0.5;
- ops_tans.yaw_bias   =  0.0;
- ops_tans.y_offset   = -1.403;	// From Applanix pospac
- ops_tans.x_offset   =  -.470;       // From Applanix pospac
- ops_tans.z_offset   = -1.3;		// should be -1.708... but need better
-                           // measurement of IMU to laser point
- ops_tans.scan_bias  =  0.0;
- ops_tans.range_biasM = 0.7962;         // Laser range measurement bias.
+  // By default, we use ops_tans for our constants
+  ops_conf = ops_tans;
 
-// Now, copy the default values to the operating values.
- ops_conf = ops_tans;
+  /*****************************************************************************
+  Defaults for the EAARL #1 IMU which is the location directly above the
+  scanner.
 
-/**************************************************************
- Now configure a default for the EAARL #1 IMU
- which is the location directly above the scanner
+  The default numbers below were determined from the 2003-09-16 flight from
+  ksby to kmyr using pospac on 2003-10-02.
+  *****************************************************************************/
+  ops_IMU1 = ops_default;
+  ops_IMU1.name       = "Applanix 510 Defaults"
+  ops_IMU1.x_offset   =  0.470;   // This is Applanix Y Axis +Rt Wing
+  ops_IMU1.y_offset   =  1.403;   // This is Applanix X Axis +nose
+  ops_IMU1.z_offset   = -0.833;   // This is Applanix Z Axis +Down
+  ops_IMU1.roll_bias  = -0.755;   // DMARS roll bias from 2-13-04
+  ops_IMU1.pitch_bias =  0.1;     // DMARS pitch bias from 2-13-04
 
- The default numbers below were determined from the 9-16-03
- flight from ksby to kmyr using pospac on 10-02-2003.
-**************************************************************/
- ops_IMU1 = ops_default;
- ops_IMU1.name       = "Applanix 510 Defaults"
- ops_IMU1.x_offset   =  0.470;    // This is Applanix Y Axis +Rt Wing
- ops_IMU1.y_offset   =  1.403;    // This is Applanix X Axis +nose
- ops_IMU1.z_offset   = -0.833;    // This is Applanix Z Axis +Down
- ops_IMU1.roll_bias  = -0.755;    // DMARS roll bias from 2-13-04
- ops_IMU1.pitch_bias = 0.1;      // DMARS pitch bias from 2-13-04
-
-// Start with existing default values
- ops_IMU2 = ops_default;
- ops_IMU2.name       = "DMARS Defaults"
- ops_IMU2.roll_bias  = -0.8;    // with 03/12 Albert Whitted runway
- ops_IMU2.pitch_bias = 0.1;    // with 03/12 Albert Whitted runway
- ops_IMU2.yaw_bias   = 0;    //
+  ops_IMU2 = ops_default;
+  ops_IMU2.name       = "DMARS Defaults"
+  ops_IMU2.roll_bias  = -0.8;     // with 03/12 Albert Whitted runway
+  ops_IMU2.pitch_bias =  0.1;     // with 03/12 Albert Whitted runway
+  ops_IMU2.yaw_bias   =  0.;
 
 func display_mission_constants(conf, ytk=) {
   name = [];
