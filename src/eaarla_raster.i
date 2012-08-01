@@ -213,8 +213,18 @@ func eaarla_decode_pulse(raw, pulse, offset, header=, wfs=) {
   save, result, transmit_length=raw(offset);
   if(result.transmit_length <= 0)
     return result;
-  if(wfs)
+  if(wfs) {
     save, result, transmit_wf=raw(offset+1:offset+result.transmit_length);
+
+    // See mission_constants for explanation of this code
+    if(has_member(ops_conf, "tx_clean") && ops_conf.tx_clean) {
+      tx = result.transmit_wf;
+      if(numberof(tx) >= ops_conf.tx_clean) {
+        tx(ops_conf.tx_clean:) = tx(1);
+      }
+      save, result, transmit_wf=tx;
+    }
+  }
 
   offset += 1 + result.transmit_length;
   save, result, channel1_offset=offset+2;

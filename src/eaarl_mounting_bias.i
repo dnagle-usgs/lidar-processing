@@ -15,10 +15,16 @@ func mission_constants(args) {
   Creates a struct instance with mission constants. The struct will be
   dynamically constructed using whatever key-value pairs are given.
 
-  By default, the struct will come out with a structure similar to the
-  following. That is, all of the following struct fields will be present
-  whether they are present or not. Additionally, the type of each of those
-  fields will be coerced to what is listed below.
+  The type= field specifies what kind of initialization should occur. The
+  initialization will make sure all fields relative to that type are present
+  (and with default values, when appropriate), and it will type-cast all of the
+  fields to the appropriate data types as well (for example, coercing integers
+  into doubles).
+
+  == EAARL-A ==
+
+  By default, the struct will be set for EAARL-A (conf.type="EAARL-A"). When
+  conf.type="EAARL-A", the struct is initialized with the following structure.
 
   struct mission_constants {
     string type;            // Type of mission settings
@@ -39,8 +45,31 @@ func mission_constants(args) {
     int max_sfc_sat;        // Maximum saturation allowed for first return
   }
 
-  conf.type should be "EAARL-A" for EAARL-A surveys; this is the default value
-  for that field if not specified.
+  == EAARL-B ==
+
+  For EAARL-B surveys, conf.type should be "EAARL-B v1". (Or if more than one
+  version of EAARL-B comes along, perhaps "EAARL-B v2", etc. This allows for
+  the possibility of slightly different ops_conf layouts for different EAARl-B
+  configurations as the system is developed.)
+
+  When conf.type="EAARL-B v1", the struct is initialized as above for EAARL-A,
+  but with the addition of the following new fields.
+
+    double chn4_range_bias; // range bias for channel 4
+    short tx_clean;         // Specifies that transmit wf needs cleaning
+
+  Additionally, tx_clean defaults to 8.
+
+  If conf.type="EAARL-B", then it is changed to conf.type="EAARL-B v1".
+
+  == Further explanation of fields ==
+
+  ops_conf.tx_clean
+    When this field is present, the transmit waveform will be cleaned up. The
+    field should be an index value into the transmit waveform. The transmit
+    waveform will be claned up as such:
+        tx(ops_conf.tx_clean:) = tx(1)
+    This eliminates noise in the transmit due to reflections from the mirrors.
 */
   conf = args2obj(args);
   defaults = save(
@@ -64,8 +93,19 @@ func mission_constants(args) {
   conf = obj_merge(defaults, conf);
   keycast, conf, defaults;
 
-  if(strpart(conf.type, :7) == "EAARL-B") {
-    // TODO
+  if(conf.type == "EAARL-B")
+    save, conf, type="EAARL-B v1";
+
+  if(conf.type == "EAARL-B v1") {
+    defaults = save(
+      chn4_range_bias=0.,
+      tx_clean=8s
+    );
+    // If we do "conf = obj_merge(defaults, conf)", then the stuff in defaults
+    // will come first. By using temp and then later inverting, they come last.
+    temp = obj_merge(defaults, conf);
+    keycast, temp, defaults;
+    conf = obj_merge(conf, temp);
   }
 
   if(noneof([conf.chn1_range_bias, conf.chn2_range_bias, conf.chn3_range_bias])) {
