@@ -43,6 +43,13 @@ func mission_constants(args) {
     int max_sfc_sat;        // Maximum saturation allowed for first return
   }
 
+  Additionally, the following are given defaults as follows.
+
+    chn1_range_bias=0.
+    chn2_range_bias=0.36
+    chn3_range_bias=0.23
+    max_sfc_sat=2
+
   == EAARL-B ==
 
   For EAARL-B surveys, conf.type should be "EAARL-B v1". (Or if more than one
@@ -56,7 +63,14 @@ func mission_constants(args) {
     double chn4_range_bias; // range bias for channel 4
     short tx_clean;         // Specifies that transmit wf needs cleaning
 
-  Additionally, tx_clean defaults to 8.
+  Additionally, the following are given defaults as follows.
+
+    chn1_range_bias=0.
+    chn2_range_bias=0.36
+    chn3_range_bias=0.23
+    chn4_range_bias=0.
+    max_sfc_sat=2
+    tx_clean=8
 
   If conf.type="EAARL-B", then it is changed to conf.type="EAARL-B v1".
 
@@ -82,9 +96,9 @@ func mission_constants(args) {
     scan_bias=0.,
     range_biasM=0.,
     chn1_range_bias=0.,
-    chn2_range_bias=0.,
-    chn3_range_bias=0.,
-    max_sfc_sat=0n
+    chn2_range_bias=0.36,
+    chn3_range_bias=0.23,
+    max_sfc_sat=2n
   );
   conf = obj_merge(defaults, conf);
   keycast, conf, defaults;
@@ -102,15 +116,6 @@ func mission_constants(args) {
     temp = obj_merge(defaults, conf);
     keycast, temp, defaults;
     conf = obj_merge(conf, temp);
-  }
-
-  if(noneof([conf.chn1_range_bias, conf.chn2_range_bias, conf.chn3_range_bias])) {
-    write,
-       "============================================================\n" +
-      " WARNING: Your ops_conf does not have valid values for\n" +
-      " chn1_range_bias, chn2_range_bias, and chn3_range_bias. You\n" +
-      " may also need to verify the value for max_sfc_sat.\n" +
-      " ============================================================";
   }
 
   return obj2struct(conf, name="mission_constants");
