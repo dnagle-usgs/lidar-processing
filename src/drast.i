@@ -45,8 +45,10 @@ func ytk_rast(rn) {
   }
 }
 
-func ndrast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=) {
-/* DOCUMENT drast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=)
+func ndrast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=,
+autolims=) {
+/* DOCUMENT drast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=,
+   cmax=, autolims=)
   Displays raster waveform data for the given raster. Try this:
 
     > rn = 1000
@@ -76,6 +78,10 @@ func ndrast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=) {
   Options cmin= and cmax= will contrain the pulse values to the given ranges.
   The waveforms are first normalized to the range 0 to 255. This effect is only
   applied to plotting, not to the returned data.
+
+  By default, the limits are automatically reset (autolims=1), including
+  inverting the x-axis if necessary based on the digitizer. Use autolims=0 to
+  prevent this behavior.
 
   By default, this will sync with SF. Set sfsync=0 to disable that behavior.
 */
@@ -110,19 +116,20 @@ func ndrast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=) {
 
   if(graph)
     ndrast_graph, r, aa, somd, channel=channel, units=units, win=win,
-      cmin=cmin, cmax=cmax;
+      cmin=cmin, cmax=cmax, autolims=autolims;
 
   return &aa;
 }
 
-func ndrast_graph(r, aa, somd, channel=, units=, win=, cmin=, cmax=) {
-/* DOCUMENT ndrast_graph, r, aa, somd, channel=, units=, win=, cmin=, cmax=
+func ndrast_graph(r, aa, somd, channel=, units=, win=, cmin=, cmax=, autolims=) {
+/* DOCUMENT ndrast_graph, r, aa, somd, channel=, units=, win=, cmin=, cmax=, autolims=
   Called by ndrast to handle its plotting.
 */
   extern rn, data_path;
   default, units, "ns";
   default, win, max(0, current_window());
   default, channel, 1;
+  default, autolims, 1;
 
   settings = h_new(
     ns=h_new(scale=1, title="Nanoseconds"),
@@ -149,11 +156,13 @@ func ndrast_graph(r, aa, somd, channel=, units=, win=, cmin=, cmax=) {
     somd, sod2hms(somd, str=1), rn, channel), settings(units).title;
   pltitle, regsub("_", data_path, "!_", all=1);
 
-  limits;
-  lmts = limits()(1:2);
-  mx = (r.digitizer(1) ? lmts(min) : lmts(max));
-  mn = (r.digitizer(1) ? lmts(max) : lmts(min));
-  limits, mn, mx;
+  if(autolims) {
+    limits;
+    lmts = limits()(1:2);
+    mx = (r.digitizer(1) ? lmts(min) : lmts(max));
+    mn = (r.digitizer(1) ? lmts(max) : lmts(min));
+    limits, mn, mx;
+  }
 
   window_select, win_bkp;
 }

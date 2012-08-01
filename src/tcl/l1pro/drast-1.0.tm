@@ -36,6 +36,7 @@ if {![namespace exists ::l1pro::drast]} {
             variable rastcmin 0
             variable rastusecmax 0
             variable rastcmax 255
+            variable rastautolims 1
             variable rastunits meters
             variable eoffset 0
             variable geochan1 1
@@ -327,6 +328,8 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
         ::mixin::statevar $f.c${which} -statemap {0 disabled 1 normal} \
                 -statevariable ${ns}::v::rastusec${which}
     }
+    ttk::checkbutton $f.autolims -text "Reset Limits" \
+            -variable ${ns}::v::rastautolims
     ::mixin::combobox::mapping $f.units -state readonly -width 0 \
             -modifycmd ${ns}::send_rastunits \
             -altvariable ${ns}::v::rastunits \
@@ -342,7 +345,7 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
     apply $labelgrid $f.userast0 - $f.winrast0 "Transmit win:"
     apply $labelgrid $f.cmin $f.usecmin $f.cmax $f.usecmax
     grid $f.usecmin $f.usecmax -sticky w
-    apply $labelgrid $f.units "Units:"
+    apply $labelgrid $f.autolims - $f.units "Units:"
 }
 
 proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
@@ -428,8 +431,8 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
             -variable ${ns}::v::wfchan0
     ttk::checkbutton $f.geo -text "Georeference" \
             -variable ${ns}::v::wfgeo
-    apply $labelgrid $f.winwf "WF window:" $f.use1 -
-    apply $labelgrid $f.winbath "ex_bath window:" $f.use2 -
+    apply $labelgrid $f.winwf "WF win:" $f.use1 -
+    apply $labelgrid $f.winbath "ex_bath win:" $f.use2 -
     apply $labelgrid $f.src "Select from:" $f.use3 -
     apply $labelgrid $f.geo - $f.use4 -
     apply $labelgrid $f.winwftransmit "Transmit win:" $f.use0 -
@@ -538,6 +541,7 @@ proc ::l1pro::drast::show_rast {} {
                 {$v::rastunits ne "ns"}    ", units=\"$v::rastunits\"" \
                 $v::rastusecmin            ", cmin=$v::rastcmin" \
                 $v::rastusecmax            ", cmax=$v::rastcmax" \
+                {!$v::rastautolims}        ", autolims=0" \
                 1                          ", sfsync=0"
 
         exp_send "$cmd\r"
