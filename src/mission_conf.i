@@ -1072,8 +1072,10 @@ func autoselect_cir_dir(dir) {
   cir_dir = file_join(dir, "cir");
   if(file_isdir(cir_dir))
     return cir_dir;
-  else
-    return string(0);
+  cir_dir = file_join(dir, "nir");
+  if(file_isdir(cir_dir))
+    return cir_dir;
+  return string(0);
 }
 
 func autoselect_rgb_dir(dir) {
