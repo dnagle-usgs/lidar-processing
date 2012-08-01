@@ -107,3 +107,40 @@ proc ::l1pro::settings::ops_conf::save {} {
         exp_send "write_ops_conf, \"$fn\"\r"
     }
 }
+
+proc ::l1pro::settings::ops_conf::view {json {name {}}} {
+    set i 1
+    while {[winfo exists ${v::top}view${i}]} {
+        incr i
+    }
+    set w ${v::top}view${i}
+    destroy $w
+    toplevel $w
+
+    wm resizable $w 1 0
+    if {$name eq ""} {
+        wm title $w "mission_constants"
+    } else {
+        wm title $w "mission_constants: $name"
+    }
+
+    ttk::frame $w.f
+    set f $w.f
+
+    grid columnconfigure $w.f 1 -weight 1
+
+    grid $w.f -sticky news
+    grid columnconfigure $w 0 -weight 1
+    grid rowconfigure $w 0 -weight 1
+
+    set data [::json::json2dict $json]
+    dict for {key val} $data {
+        ttk::entry $f.$key
+        $f.$key insert end $val
+        $f.$key state readonly
+        ttk::label $f.lbl$key -text "${key}: "
+        grid $f.lbl$key $f.$key
+        grid $f.lbl$key -sticky e
+        grid $f.$key -sticky ew
+    }
+}

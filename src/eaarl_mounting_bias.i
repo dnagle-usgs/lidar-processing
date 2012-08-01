@@ -199,42 +199,20 @@ ops_default = mission_constants(
  ops_IMU2.pitch_bias = 0.1;    // with 03/12 Albert Whitted runway
  ops_IMU2.yaw_bias   = 0;    //
 
-func display_mission_constants( m, ytk= ) {
-  if ( ytk ) {
-  cmd = swrite( format="display_mission_constants { Name {%s} Roll %4.2f  Pitch %4.2f Yaw %4.2f Scanner %5.3f {Range M} %5.3f {X offset} %5.2f {Y offset} %5.2f {Z offset} %5.2f {Chn1 range bias} %5.2f {Chn 2 Range bias} %5.2f {Chn3 Range bias} %5.2f {Max sfc sat} %2d }",
-      m.name,
-      m.roll_bias,
-      m.pitch_bias,
-      m.yaw_bias,
-      m.scan_bias,
-      m.range_biasM,
-      m.x_offset,
-      m.y_offset,
-      m.z_offset,
-      m.chn1_range_bias,
-      m.chn2_range_bias,
-      m.chn3_range_bias,
-      m.max_sfc_sat);
-    tkcmd, cmd
+func display_mission_constants(conf, ytk=) {
+  name = [];
+  if(is_string(conf)) {
+    name = conf;
+    conf = symbol_def(name);
+  }
+  if(ytk) {
+    json = json_encode(conf);
+    cmd = swrite(format="::l1pro::settings::ops_conf::view {%s}", json);
+    if(!is_void(name))
+      cmd += swrite(format=" {%s}", name);
+    tkcmd, cmd;
   } else {
-  write,format="\nMounting Bias Values: %s\n", m.name
-  write, "____________________BIAS__________________________   _____Offsets_____"
-  write, "Roll Pitch Heading Scanner  RangeM  Chn1   Chn2   Chn3     X     Y     Z Max_Sfc_Sat"
-  write, format="%4.2f  %4.2f    %4.2f  %5.3f  %5.3f %5.3f %5.3f    %5.2f %5.2f %5.2f   %3d\n",
-      m.roll_bias,
-      m.pitch_bias,
-      m.yaw_bias,
-      m.scan_bias,
-      m.range_biasM,
-      m.chn1_range_bias,
-      m.chn2_range_bias,
-      m.chn3_range_bias,
-      m.x_offset,
-      m.y_offset,
-      m.z_offset,
-      m.max_sfc_sat
-
-  write,""
+    write_ops_conf, conf=conf;
   }
 }
 
@@ -274,8 +252,11 @@ func write_ops_conf(fn, conf=) {
   f = [];
   if(is_string(fn))
     f = open(fn, "w");
-  write, f, format="// Exported from ALPS on %s\n", soe2date(getsoe());
-  write, f, format="ops_conf = mission_constants(\n  %s\n)\n", params;
+  if(f) {
+    write, f, format="// Exported from ALPS on %s\n", soe2date(getsoe());
+    write, f, format="%s", "ops_conf = ";
+  }
+  write, f, format="mission_constants(\n  %s\n)\n", params;
   if(f) close, f;
 }
 

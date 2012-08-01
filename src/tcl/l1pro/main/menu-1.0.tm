@@ -147,13 +147,13 @@ proc menu_mission_settings mb {
 proc menu_mission_settings_ops mb {
     menu $mb
     $mb add command {*}[menulabel "&Current"] \
-            -command {exp_send "display_mission_constants, ops_conf, ytk=1;\r"}
+            -command {exp_send "display_mission_constants, \"ops_conf\", ytk=1;\r"}
     $mb add command {*}[menulabel "&TANS default"] \
-            -command {exp_send "display_mission_constants, ops_tans, ytk=1;\r"}
+            -command {exp_send "display_mission_constants, \"ops_tans\", ytk=1;\r"}
     $mb add command {*}[menulabel "&DMARS default"] \
-            -command {exp_send "display_mission_constants, ops_IMU2, ytk=1;\r"}
+            -command {exp_send "display_mission_constants, \"ops_IMU2\", ytk=1;\r"}
     $mb add command {*}[menulabel "&Applanix 510 default"] \
-            -command {exp_send "display_mission_constants, ops_IMU1, ytk=1;\r"}
+            -command {exp_send "display_mission_constants, \"ops_IMU1\", ytk=1;\r"}
     return $mb
 }
 
