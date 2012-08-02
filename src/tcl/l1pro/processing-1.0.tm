@@ -2,6 +2,11 @@
 
 package provide l1pro::processing 1.0
 
+set forcechannel_1 0
+set forcechannel_2 0
+set forcechannel_3 0
+set forcechannel_4 0
+
 namespace eval ::l1pro::processing {
     namespace import ::misc::appendif
     namespace import ::l1pro::file::prefix
@@ -94,37 +99,78 @@ snit::widget ::l1pro::processing::define_region_rect::gui {
 proc ::l1pro::processing::process {} {
     set ::pro_var $::pro_var_next
 
-    set cmd ""
-    switch -- $::processing_mode {
-        fs {
-            set cmd "$::pro_var = make_fs(latutm=1, q=q, ext_bad_att=1,\
-                    usecentroid=$::usecentroid)"
-        }
-        bathy {
-            set cmd "$::pro_var = make_bathy(latutm = 1, q = q,\
-                    avg_surf=$::avg_surf)"
+    set forced 0
+    foreach channel {1 2 3 4} {
+        if {[set ::forcechannel_$channel]} {
+            if {$::processing_mode ni {fs bathy veg}} {
+                error "Invalid processing mode: $::processing_mode"
             }
-        veg {
-            set cmd "$::pro_var = make_veg(latutm=1, q=q, ext_bad_att=1,\
-                    use_centroid=$::usecentroid)"
-        }
-        cveg {
-            set cmd "$::pro_var = make_veg(latutm=1, q=q,\
-                    use_centroid=$::usecentroid, multi_peaks=1)"
-        }
-        dws {
-            exp_send "require, \"waves.i\"; process_for_dws, q;\r"
-        }
-        default {
-            error "Unknown processing mode: $::processing_mode"
+            if {!$forced} {
+                exp_send "$::pro_var = \[\];\r"
+            }
+            set forced 1
+            ::l1pro::processing::process_channel $channel
         }
     }
 
-    if {$cmd ne ""} {
-        if {$::autoclean_after_process} {
-            append cmd "; test_and_clean, $::pro_var"
+    set cmd ""
+    if {!$forced} {
+        switch -- $::processing_mode {
+            fs {
+                set cmd "$::pro_var = make_fs(latutm=1, q=q, ext_bad_att=1,\
+                        usecentroid=$::usecentroid)"
+            }
+            bathy {
+                set cmd "$::pro_var = make_bathy(latutm = 1, q = q,\
+                        avg_surf=$::avg_surf)"
+                }
+            veg {
+                set cmd "$::pro_var = make_veg(latutm=1, q=q, ext_bad_att=1,\
+                        use_centroid=$::usecentroid)"
+            }
+            cveg {
+                set cmd "$::pro_var = make_veg(latutm=1, q=q,\
+                        use_centroid=$::usecentroid, multi_peaks=1)"
+            }
+            dws {
+                exp_send "require, \"waves.i\"; process_for_dws, q;\r"
+            }
+            default {
+                error "Unknown processing mode: $::processing_mode"
+            }
         }
-        exp_send "$cmd;\r"
     }
+
+    if {$cmd ne "" || $forced} {
+        if {$::autoclean_after_process} {
+            if {$cmd ne ""} {
+                append cmd "; "
+            }
+            append cmd "test_and_clean, $::pro_var"
+        }
+    }
+    exp_send "$cmd;\r"
     append_varlist $::pro_var
+}
+
+proc ::l1pro::processing::process_channel {channel} {
+    set cmd ""
+    switch -- $::processing_mode {
+        fs {
+            set cmd "grow, $::pro_var, make_fs(latutm=1, q=q, ext_bad_att=1,\
+                    usecentroid=$::usecentroid, forcechannel=$channel)"
+        }
+        bathy {
+            set cmd "grow, $::pro_var, make_bathy(latutm = 1, q = q,\
+                    avg_surf=$::avg_surf, forcechannel=$channel)"
+            }
+        veg {
+            set cmd "grow, $::pro_var, make_veg(latutm=1, q=q, ext_bad_att=1,\
+                    use_centroid=$::usecentroid, forcechannel=$channel)"
+        }
+        default {
+            error "Invalid processing mode: $::processing_mode"
+        }
+    }
+    exp_send "$cmd;\r"
 }

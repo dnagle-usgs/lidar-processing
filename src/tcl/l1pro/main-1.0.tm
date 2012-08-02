@@ -57,6 +57,15 @@ proc ::l1pro::main::panel_processing w {
                     (submerged only)"
     $f.optmenu add checkbutton -variable ::autoclean_after_process \
             -label "Automatically test and clean after processing"
+    $f.optmenu add separator
+    $f.optmenu add checkbutton -variable ::forcechannel_1 \
+            -label "Force channel 1"
+    $f.optmenu add checkbutton -variable ::forcechannel_2 \
+            -label "Force channel 2"
+    $f.optmenu add checkbutton -variable ::forcechannel_3 \
+            -label "Force channel 3"
+    $f.optmenu add checkbutton -variable ::forcechannel_4 \
+            -label "Force channel 4"
     ttk::menubutton $f.opt -text "Options" -menu $f.optmenu \
             -style Panel.TMenubutton
 
