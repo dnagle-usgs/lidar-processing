@@ -53,6 +53,7 @@ func mission_constants(args) {
 
     double chn4_range_bias; // range bias for channel 4
     short tx_clean;         // Specifies that transmit wf needs cleaning
+    short dmars_invert;     // if 1, then invert the dmars when loaded
 
   Additionally, the following are given defaults as follows.
 
@@ -62,6 +63,7 @@ func mission_constants(args) {
     chn4_range_bias=0.
     max_sfc_sat=2
     tx_clean=8
+    dmars_invert=1
 
   If conf.type="EAARL-B", then it is changed to conf.type="EAARL-B v1".
 
@@ -73,6 +75,15 @@ func mission_constants(args) {
     waveform will be claned up as such:
         tx(ops_conf.tx_clean:) = tx(1)
     This eliminates noise in the transmit due to reflections from the mirrors.
+
+  ops_conf.dmars_invert
+    If set to 1, then the DMARS INS data will be inverted when loading. This
+    does the following operations:
+      tans.pitch *= -1
+      tans.roll *= -1
+      tans.heading = (tans.heading + 180) % 360
+    This compensates for the INS being mounted in the opposite direction as is
+    traditionally expected.
 */
   conf = args2obj(args);
   defaults = save(
@@ -100,7 +111,8 @@ func mission_constants(args) {
   if(conf.type == "EAARL-B v1") {
     defaults = save(
       chn4_range_bias=0.,
-      tx_clean=8s
+      tx_clean=8s,
+      dmars_invert=1s
     );
     // If we do "conf = obj_merge(defaults, conf)", then the stuff in defaults
     // will come first. By using temp and then later inverting, they come last.

@@ -199,7 +199,7 @@ func load_ins(fn, &head) {
 
   SEE ALSO: load_iexpbd
 */
-  extern gps_time_correction;
+  extern gps_time_correction, ops_conf;
   extern ins_filename; // so we can use it with mbatch_process
 
   if ( !is_void( fn ) ) ins_filename = fn;
@@ -208,6 +208,12 @@ func load_ins(fn, &head) {
   head = f.iex_head;
   nav = f.iex_nav;
   close, f;
+  // See mission_constants documentation for explanation of following
+  if(has_member(ops_conf, "dmars_insert") && ops_conf.dmars_invert) {
+    nav.roll *= -1;
+    nav.pitch *= -1;
+    nav.heading = (nav.heading + 180) % 360.;
+  }
   if(is_void(gps_time_correction))
     determine_gps_time_correction, fn;
   nav.somd += gps_time_correction;
