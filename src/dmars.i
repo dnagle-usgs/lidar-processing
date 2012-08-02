@@ -183,7 +183,6 @@ func load_iexpbd(fn, verbose=) {
   iex_nav = load_ins(fn, iex_head);
 
   iex2tans;
-  ops_conf = ops_IMU2_default;
   if(verbose) {
   write, "Using default DMARS mounting bias and lever arms.(ops_IMU2_default)";
   }
