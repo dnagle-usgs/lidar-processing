@@ -39,6 +39,9 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, _batch=) {
   default, verbose, 1;
   default, _batch, 0;
 
+  wbkp = current_window();
+  window, win;
+
   if(is_void(region)) {
     if(mode == "pip") {
       ply = getPoly();
@@ -64,6 +67,7 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, _batch=) {
   q = testPoly(ply, pnav.lon, pnav.lat);
   if(is_void(q)) {
     if(verbose) write, "No GGA records found, aborting";
+    window_select, wbkp;
     return [];
   }
 
@@ -83,6 +87,7 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, _batch=) {
     }
   }
 
+  window_select, wbkp;
   return q;
 }
 
