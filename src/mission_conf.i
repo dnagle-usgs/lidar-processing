@@ -518,7 +518,7 @@ func missiondata_cache(action, day=) {
     if(!h_has(__mission_cache, day))
       h_set, __mission_cache, day, h_new();
     cache = __mission_cache(day);
-    settings = ["edb", "pnav", "ins", "ops_conf", "bath_ctl"];
+    settings = ["ops_conf", "edb", "pnav", "ins", "bath_ctl"];
     for(i = 1; i <= numberof(settings); i++)
       h_set, cache, settings(i), missiondata_wrap(settings(i));
     write, "Current data (edb, pnav, ins, ops_conf, and bath_ctl) have been";
@@ -535,10 +535,10 @@ func missiondata_wrap(type) {
 
   The type should be one of:
     all - includes all of the others
+    ops_conf
     edb
     pnav
     ins
-    ops_conf
     bath_ctl
 */
   if(is_void(type)) {
@@ -546,10 +546,10 @@ func missiondata_wrap(type) {
   } else if(type == "all") {
     return h_new(
       "__type", "all",
+      "ops_conf", missiondata_wrap("ops_conf"),
       "edb", missiondata_wrap("edb"),
       "pnav", missiondata_wrap("pnav"),
       "ins", missiondata_wrap("ins"),
-      "ops_conf", missiondata_wrap("ops_conf"),
       "bath_ctl", missiondata_wrap("bath_ctl")
     );
   } else if(type == "edb") {
@@ -624,10 +624,10 @@ func missiondata_unwrap(data) {
     error, "Data does not define its type.";
 
   if(type == "all") {
+    missiondata_unwrap, data.ops_conf;
     missiondata_unwrap, data.edb;
     missiondata_unwrap, data.pnav;
     missiondata_unwrap, data.ins;
-    missiondata_unwrap, data.ops_conf;
     missiondata_unwrap, data.bath_ctl;
   } else if(type == "edb") {
     extern edb, edb_filename, edb_files, total_edb_records,
