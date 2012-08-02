@@ -99,6 +99,7 @@ snit::widget ::l1pro::processing::define_region_rect::gui {
 proc ::l1pro::processing::process {} {
     set ::pro_var $::pro_var_next
 
+    set cmd ""
     set forced 0
     foreach channel {1 2 3 4} {
         if {[set ::forcechannel_$channel]} {
@@ -106,14 +107,13 @@ proc ::l1pro::processing::process {} {
                 error "Invalid processing mode: $::processing_mode"
             }
             if {!$forced} {
-                exp_send "$::pro_var = \[\];\r"
+                set cmd "$::pro_var = \[\]"
             }
             set forced 1
-            ::l1pro::processing::process_channel $channel
+            append cmd "; [::l1pro::processing::process_channel $channel]"
         }
     }
 
-    set cmd ""
     if {!$forced} {
         switch -- $::processing_mode {
             fs {
@@ -141,20 +141,16 @@ proc ::l1pro::processing::process {} {
         }
     }
 
-    if {$cmd ne "" || $forced} {
+    if {$cmd ne ""} {
         if {$::autoclean_after_process} {
-            if {$cmd ne ""} {
-                append cmd "; "
-            }
-            append cmd "test_and_clean, $::pro_var"
+            append cmd "; test_and_clean, $::pro_var"
         }
+        exp_send "$cmd;\r"
     }
-    exp_send "$cmd;\r"
     append_varlist $::pro_var
 }
 
 proc ::l1pro::processing::process_channel {channel} {
-    set cmd ""
     switch -- $::processing_mode {
         fs {
             set cmd "grow, $::pro_var, make_fs(latutm=1, q=q, ext_bad_att=1,\
@@ -172,5 +168,5 @@ proc ::l1pro::processing::process_channel {channel} {
             error "Invalid processing mode: $::processing_mode"
         }
     }
-    exp_send "$cmd;\r"
+    return $cmd
 }
