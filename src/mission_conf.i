@@ -692,10 +692,10 @@ func missiondata_load(type, day=, noerror=) {
     error, "Please provide day= or set __mission_day.";
 
   if(type == "all") {
+    missiondata_load, "ops_conf", day=day, noerror=1;
     missiondata_load, "edb", day=day, noerror=1;
     missiondata_load, "pnav", day=day, noerror=1;
     missiondata_load, "ins", day=day, noerror=1;
-    missiondata_load, "ops_conf", day=day, noerror=1;
     missiondata_load, "bath_ctl", day=day, noerror=1;
     return;
   }
