@@ -296,7 +296,7 @@ xfma=, verbose=) {
       marks=0, type=2, color="blue";
     plmk, wf(bottom_peak)+1.5, bottom_peak,
       msize=1.0, marker=7, color="blue", width=10;
-    ex_bath_message, graph, 0, swrite(format="%3dns\n%3.0f sfc\n%3.1f cnts(blue)\n%3.1f cnts(black)\n(~%3.1fm)", bottom_peak, surface_intensity, bottom_intensity, wf(bottom_peak), (bottom_peak-7)*sample_interval*CNSH2O2X);
+    ex_bath_message, graph, 0, swrite(format="%3dns\n%3.0f sfc\n%3.1f cnts(blue)\n%3.1f cnts(black)\n(~%3.1fm)", bottom_peak, double(surface_intensity), bottom_intensity, wf(bottom_peak), (bottom_peak-7)*sample_interval*CNSH2O2X);
   }
 
   result.idx = bottom_peak;
