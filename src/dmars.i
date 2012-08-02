@@ -208,7 +208,7 @@ func load_ins(fn, &head) {
   nav = f.iex_nav;
   close, f;
   // See mission_constants documentation for explanation of following
-  if(has_member(ops_conf, "dmars_insert") && ops_conf.dmars_invert) {
+  if(has_member(ops_conf, "dmars_invert") && ops_conf.dmars_invert) {
     nav.roll *= -1;
     nav.pitch *= -1;
     nav.heading = (nav.heading + 180) % 360.;
