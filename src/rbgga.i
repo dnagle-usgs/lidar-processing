@@ -129,8 +129,9 @@ func mark_time_pos(sod, win=, msize=, marker=, color=) {
   q = where(pnav.sod == sod);
   if(!numberof(q))
     error, "Time not found";
-  x = pnav.lon(q(1));
-  y = pnav.lat(q(1));
+  q = q(1);
+  x = pnav.lon(q);
+  y = pnav.lat(q);
   if(utm)
     ll2utm, noop(y), noop(x), y, x, force_zone=curzone;
 
@@ -167,7 +168,7 @@ func gga_click_start_isod {
   }
 
   distsq = (gga(near).lon-lon)^2 + (gga(near).lat-lat)^2;
-  nearest = distsq(mnx);
+  nearest = near(distsq(mnx));
 
   send_sod_to_sf, long(gga(nearest).sod);
 }
