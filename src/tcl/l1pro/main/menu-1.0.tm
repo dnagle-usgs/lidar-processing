@@ -159,8 +159,8 @@ proc menu_mission_settings_ops mb {
 
 proc menu_mission_eaarlb mb {
     menu $mb
-    $mb add command {*}[menulabel "&Laser Log Explorer"] \
-            -command l1pro::eaarlb::lsr::launch
+    $mb add command {*}[menulabel "&JSON Log Explorer"] \
+            -command l1pro::eaarlb::json_log::launch
     return $mb
 }
 

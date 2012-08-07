@@ -1,6 +1,6 @@
 package provide l1pro::eaarlb 1.0
 
-namespace eval l1pro::eaarlb::lsr {
+namespace eval l1pro::eaarlb::json_log {
 
     proc launch {} {gui .%AUTO%}
 
@@ -29,7 +29,7 @@ namespace eval l1pro::eaarlb::lsr {
             set tree $win.treeMain
             set lbox $win.treeVersus
 
-            wm title $win "Laser Log Explorer"
+            wm title $win "JSON Log Explorer"
 
             ttk::frame $win.fraMaster
             ttk::frame $win.fraMain
@@ -80,7 +80,7 @@ namespace eval l1pro::eaarlb::lsr {
                 ::tooltip::tooltip $item \
                         "The variable you enter here should already exist in\
                         \nYorick and should be the result of a call to\
-                        \nlsr_load_json."
+                        \njson_log_load."
             }
 
             foreach elem {Line Marker} {
@@ -185,7 +185,7 @@ namespace eval l1pro::eaarlb::lsr {
         method SetVname {option value} {
             set options($option) $value
             set cmd [mymethod TreeJson]
-            exp_send "tky_lsr_summary, \"$cmd\", $value;\r"
+            exp_send "tky_json_log_summary, \"$cmd\", $value;\r"
         }
 
         method TreeJson {json} {
@@ -196,12 +196,22 @@ namespace eval l1pro::eaarlb::lsr {
         method TreeBuild {data} {
             $tree delete [$tree children {}]
             dict for {key val} $data {
-                $tree insert {} end -id $key -text $key -tags [list key]
+                $tree insert {} end \
+                        -id $key \
+                        -text $key \
+                        -tags [list key]
                 dict for {subkey subval} $val {
                     $tree insert $key end \
-                        -id "$key.$subkey" -text $subkey \
-                        -tags [list subkey] \
-                        -values [list $subval]
+                            -id "$key.$subkey" \
+                            -text $subkey \
+                            -tags [list key]
+                    dict for {subsubkey subsubval} $subval {
+                        $tree insert "$key.$subkey" end \
+                                -id "$key.$subkey.$subsubkey" \
+                                -text $subsubkey \
+                                -tags [list subkey] \
+                                -values [list $subsubval]
+                    }
                 }
             }
         }
@@ -222,7 +232,7 @@ namespace eval l1pro::eaarlb::lsr {
             # Figure out which group of items is selected in the main tree. If
             # nothing is selected, we abort.
             set selected [lindex [$tree selection] 0]
-            if {$selected eq ""} {
+            if {![$tree tag has subkey $selected]} {
                 return
             }
             if {[$tree parent $selected] ne ""} {
@@ -275,6 +285,7 @@ namespace eval l1pro::eaarlb::lsr {
                 $self Warning "You must select a field in the main item listing (you selected a category)"
                 return
             }
+            set parent [$tree item [$tree parent [$tree parent $main]] -text]
             set cat [$tree item [$tree parent $main] -text]
             set main [$tree item $main -text]
 
@@ -286,7 +297,7 @@ namespace eval l1pro::eaarlb::lsr {
             }
             set versus [lindex [$lbox item $versus -values] 0]
 
-            set cmd "tky_lsr_plot, $options(-vname), \"$cat\", \"$main\", \"$versus\""
+            set cmd "tky_json_log_plot, $options(-vname), \"$parent\", \"$cat\", \"$main\", \"$versus\""
             append cmd ", win=$options(-window), xfma=$options(-xfma)"
             if {$options(-line_type) ne "hide"} {
                 append cmd ", line=\"$options(-line_type) $options(-line_color) $options(-line_width)\""

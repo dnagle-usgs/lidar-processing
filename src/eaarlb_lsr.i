@@ -1,68 +1,82 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-func lsr_load_json(fn) {
-/* DOCUMENT lsr_load_json(fn)
-  Loads a laser log file, which is a text file where each row is a JSON record.
+func json_log_load(fn) {
+/* DOCUMENT json_log_load(fn)
+  Loads a json log file, which is a text file where each row is a JSON record.
   Returns an oxy group that corresponds.
 */
   f = open(fn, "r");
 
   result = save();
   while(line = rdline(f)) {
-    lsr = json_decode(line, objects="");
-    if(!lsr(*,"LSR") || !lsr.LSR(*,"soe"))
+    grp = json_decode(line, objects="");
+
+    if(grp(*) != 1)
       continue;
 
-    lsr = lsr.LSR;
+    parent = grp(*,1);
+    grp = grp(1);
 
-    keys = set_difference(lsr(*,), "soe");
+    if(!result(*,parent))
+      save, result, noop(parent), save();
+    current = result(noop(parent));
+
+    keys = set_difference(grp(*,), "soe");
     for(i = 1; i <= numberof(keys); i++) {
-      grp = lsr(keys(i));
-      save, grp, soe=lsr.soe;
+      tmp = grp(keys(i));
+      save, tmp, soe=grp.soe;
 
-      if(!result(*,keys(i)))
-        save, result, keys(i), save();
-      save, result(keys(i)), string(0), grp;
+      if(!current(*,keys(i)))
+        save, current, keys(i), save();
+      save, current(keys(i)), string(0), tmp;
     }
   }
   close, f;
 
-  for(i = 1; i <= result(*); i++)
-    save, result, noop(i), obj_transpose(result(noop(i)), ary=1);
+  for(i = 1; i <= result(*); i++) {
+    for(j = 1; j <= result(noop(i))(*); j++) {
+      save, result(noop(i)), noop(j), obj_transpose(result(noop(i),noop(j)), ary=1);
+    }
+  }
 
   return result;
 }
 
-func lsr_key_summary(data) {
-/* DOCUMENT lsr_key_summary(data)
-  Returns an oxy group object summarizing the content of the laser data in
+func json_log_key_summary(data) {
+/* DOCUMENT json_log_key_summary(data)
+  Returns an oxy group object summarizing the content of the JSON log data in
   DATA. This is intended to be used primarily by the GUI.
 */
   result = save();
   for(i = 1; i <= data(*); i++) {
-    grp = data(noop(i));
-    res = save();
-    for(j = 1; j <= grp(*); j++) {
-      save, res, grp(*,j), strtrim(info(grp(noop(j)))(sum));
+    parent = data(noop(i));
+    res1 = save();
+    for(j = 1; j <= parent(*); j++) {
+      child = parent(noop(j));
+      res2 = save();
+      for(k = 1; k <= child(*); k++) {
+        save, res2, child(*,k), strtrim(info(child(noop(k)))(sum));
+      }
+      save, res1, parent(*,j), res2;
     }
-    save, result, data(*,i), res;
+    save, result, data(*,i), res1;
   }
   return result;
 }
 
-func tky_lsr_summary(cmd, data) {
-/* DOCUMENT tky_lsr_summary, cmd, data;
-  Glue function for l1pro::eaarlb::lsr::gui that sends summary data for a laser
-  json file to a Laser Log Explorer GUI using the given Tcl command prefix.
+func tky_json_log_summary(cmd, data) {
+/* DOCUMENT tky_json_log_summary, cmd, data;
+  Glue function for l1pro::eaarlb::json_log::gui that sends summary data for a
+  json log file to a Laser Log Explorer GUI using the given Tcl command prefix.
   Data is sent in JSON format.
 */
-  summary = lsr_key_summary(data);
+  summary = json_log_key_summary(data);
   json = json_encode(summary);
   tkcmd, swrite(format="%s {%s}", cmd, json);
 }
 
-func tky_lsr_plot(data, cat, y, x, line=, marker=, win=, xfma=) {
-/* DOCUMENT tky_lsr_plot, y, x, line=, marker=, win=, xfma=
+func tky_json_log_plot(data, key, cat, y, x, line=, marker=, win=, xfma=) {
+/* DOCUMENT tky_json_log_plot, y, x, line=, marker=, win=, xfma=
   Simple wrapper around plg and plmk for use by the Laser Log Explorer GUI.
 */
   local type, color, size;
@@ -71,8 +85,8 @@ func tky_lsr_plot(data, cat, y, x, line=, marker=, win=, xfma=) {
   default, win, 17;
   default, xfma, 1;
 
-  Y = data(noop(cat))(noop(y));
-  X = data(noop(cat))(noop(x));
+  Y = data(noop(key), noop(cat), noop(y));
+  X = data(noop(key), noop(cat), noop(x));
 
   wbkp = current_window();
   window, win;
