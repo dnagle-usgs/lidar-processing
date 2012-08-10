@@ -616,36 +616,45 @@ snit::widgetadaptor ::mixin::frame::transition_size {
     delegate option * to hull
     delegate method * to hull
 
-    option {-xtransition xTransition Transition} -default 0
-    option {-ytransition yTransition Transition} -default 0
-    option {-steps Steps Steps} -default 20 \
-            -configuremethod SetInterval
-    option {-duration Duration Duration} -default 200 \
-            -configuremethod SetInterval
+    option {-xtransition xTransition Transition} -default 1
+    option {-ytransition yTransition Transition} -default 1
+    option {-delta Delta Delta} -default 5 \
+        -configuremethod SetDelta
+    option {-interval Interval Interval} -default 8 \
+        -configuremethod SetInterval
 
     variable state expanded
-    variable step 20
-    variable interval 10
     variable cancel {}
 
     variable width 0
+    variable curwidth 0
     variable height 0
+    variable curheight 0
 
     method expand {} {
+        set width [expr {max($width,[winfo reqwidth $win])}]
+        set height [expr {max($height,[winfo reqheight $win])}]
+        if {$state eq "collapsed"} {
+            set curwidth 0
+            set curheight 0
+        }
+
         set state expanding
         after cancel [mymethod Step]
-        after $interval [mymethod Step]
+        after $options(-interval) [mymethod Step]
     }
 
     method collapse {} {
         if {$state eq "expanded"} {
             set width [winfo reqwidth $win]
             set height [winfo reqheight $win]
+            set curwidth $width
+            set curheight $height
         }
 
         set state collapsing
         after cancel [mymethod Step]
-        after $interval [mymethod Step]
+        after $options(-interval) [mymethod Step]
     }
 
     method fastexpand {} {
@@ -671,19 +680,31 @@ snit::widgetadaptor ::mixin::frame::transition_size {
         }
 
         if {$state eq "expanding"} {
-            incr step
+            incr curheight $options(-delta)
+            incr curwidth $options(-delta)
         } elseif {$state eq "collapsing"} {
-            incr step -1
+            incr curheight -$options(-delta)
+            incr curwidth -$options(-delta)
         }
 
-        if {$state eq "collapsing" && $step <= 0} {
-            set state collapsed
-        } elseif {$state eq "expanding" && $step >= $options(-steps)} {
-            set state expanded
+        set curheight [expr {min($height,max(0,$curheight))}]
+        set curwidth [expr {min($width,max(0,$curwidth))}]
+
+        if {$state eq "collapsing"} {
+            set xdone [expr {$curwidth == 0 && $options(-xtransition)}]
+            set ydone [expr {$curheight == 0 && $options(-ytransition)}]
+            if {$xdone || $ydone} {
+                set state collapsed
+            }
+        } elseif {$state eq "expanding"} {
+            set xdone [expr {$curwidth == $width || !$options(-xtransition)}]
+            set ydone [expr {$curheight == $height || !$options(-ytransition)}]
+            if {$xdone && $ydone} {
+                set state expanded
+            }
         }
 
         if {$state eq "expanded"} {
-            set step $options(-steps)
             grid $win
             grid propagate $win 1
             if {$options(-xtransition)} {
@@ -693,47 +714,35 @@ snit::widgetadaptor ::mixin::frame::transition_size {
                 $win configure -height 0
             }
         } elseif {$state eq "collapsed"} {
-            set step 0
             grid remove $win
             grid propagate $win 1
             if {$options(-xtransition)} {
-                $win configure -width 1
+                $win configure -width 0
             }
             if {$options(-ytransition)} {
-                $win configure -height 1
+                $win configure -height 0
             }
         } elseif {$state eq "expanding" || $state eq "collapsing"} {
             grid $win
             grid propagate $win 0
             if {$options(-xtransition)} {
-                $win configure -width 0
-                set size [expr {int($width * double($step) / $options(-steps))}]
-                $win configure -width $size
+                $win configure -width $curwidth
             }
             if {$options(-ytransition)} {
-                $win configure -height 0
-                set size [expr {int($height * double($step) / $options(-steps))}]
-                $win configure -height $size
+                $win configure -height $curheight
             }
-            after $interval [mymethod Step]
+            after $options(-interval) [mymethod Step]
         } else {
             error "impossible internal state"
         }
     }
 
+    method SetDelta {option value} {
+        set options(-delta) [expr {max(1,int(abs($value)))}]
+    }
+
     method SetInterval {option value} {
-        # If setting -steps, then update current step value so that it is
-        # approximately at the same progress level. Also make sure -steps is
-        # a positive integer.
-        if {$options eq "-steps"} {
-            set value [expr {max(1,int($value))}]
-            set step [expr {int(0.5 + $value * double($step) / $options(-steps))}]
-        }
-        set options($option) $value
-        if {$options(-duration) < 1} {
-            set $options(-duration) 1
-        }
-        set interval [expr {max(1,int(.5+double($options(-duration))/$options(-steps)))}]
+        set options(-interval) [expr {max(1,int(abs($value)))}]
     }
 }
 
@@ -761,8 +770,7 @@ snit::widgetadaptor ::mixin::labelframe::collapsible {
         install interior using ttk::frame $win.interior
         ttk::frame $win.null
 
-        ::mixin::frame::transition_size $win.interior \
-            -xtransition 1 -ytransition 1
+        ::mixin::frame::transition_size $win.interior
 
         # The null frame is to ensure that the labelframe resizes properly. If
         # all contents are removed, it won't resize otherwise.
