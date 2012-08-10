@@ -601,6 +601,142 @@ snit::widgetadaptor ::mixin::treeview::notebook {
 
 }
 
+namespace eval ::mixin::frame {} {}
+
+snit::widgetadaptor ::mixin::frame::transition_size {
+    constructor args {
+        if {[winfo exists $win]} {
+            installhull $win
+        } else {
+            installhull using ttk::frame
+        }
+        $self configure {*}$args
+    }
+
+    delegate option * to hull
+    delegate method * to hull
+
+    option {-xtransition xTransition Transition} -default 0
+    option {-ytransition yTransition Transition} -default 0
+    option {-steps Steps Steps} -default 20 \
+            -configuremethod SetInterval
+    option {-duration Duration Duration} -default 200 \
+            -configuremethod SetInterval
+
+    variable state expanded
+    variable step 20
+    variable interval 10
+    variable cancel {}
+
+    variable width 0
+    variable height 0
+
+    method expand {} {
+        set state expanding
+        after cancel [mymethod Step]
+        after $interval [mymethod Step]
+    }
+
+    method collapse {} {
+        if {$state eq "expanded"} {
+            set width [winfo reqwidth $win]
+            set height [winfo reqheight $win]
+        }
+
+        set state collapsing
+        after cancel [mymethod Step]
+        after $interval [mymethod Step]
+    }
+
+    method fastexpand {} {
+        set state expanded
+        after 0 [mymethod Step]
+    }
+
+    method fastcollapse {} {
+        set state collapsed
+        after 0 [mymethod Step]
+    }
+
+    method Step {} {
+        after cancel [mymethod Step]
+
+        if {!$options(-xtransition) && !$options(-ytransition)} {
+            if {$state eq "expanding"} {
+                set state expanded
+            }
+            if {$state eq "collapsing"} {
+                set state collapsed
+            }
+        }
+
+        if {$state eq "expanding"} {
+            incr step
+        } elseif {$state eq "collapsing"} {
+            incr step -1
+        }
+
+        if {$state eq "collapsing" && $step <= 0} {
+            set state collapsed
+        } elseif {$state eq "expanding" && $step >= $options(-steps)} {
+            set state expanded
+        }
+
+        if {$state eq "expanded"} {
+            set step $options(-steps)
+            grid $win
+            grid propagate $win 1
+            if {$options(-xtransition)} {
+                $win configure -width 0
+            }
+            if {$options(-ytransition)} {
+                $win configure -height 0
+            }
+        } elseif {$state eq "collapsed"} {
+            set step 0
+            grid remove $win
+            grid propagate $win 1
+            if {$options(-xtransition)} {
+                $win configure -width 1
+            }
+            if {$options(-ytransition)} {
+                $win configure -height 1
+            }
+        } elseif {$state eq "expanding" || $state eq "collapsing"} {
+            grid $win
+            grid propagate $win 0
+            if {$options(-xtransition)} {
+                $win configure -width 0
+                set size [expr {int($width * double($step) / $options(-steps))}]
+                $win configure -width $size
+            }
+            if {$options(-ytransition)} {
+                $win configure -height 0
+                set size [expr {int($height * double($step) / $options(-steps))}]
+                $win configure -height $size
+            }
+            after $interval [mymethod Step]
+        } else {
+            error "impossible internal state"
+        }
+    }
+
+    method SetInterval {option value} {
+        # If setting -steps, then update current step value so that it is
+        # approximately at the same progress level. Also make sure -steps is
+        # a positive integer.
+        if {$options eq "-steps"} {
+            set value [expr {max(1,int($value))}]
+            set step [expr {int(0.5 + $value * double($step) / $options(-steps))}]
+        }
+        set options($option) $value
+        if {$options(-duration) < 1} {
+            set $options(-duration) 1
+        }
+        set interval [expr {max(1,int(.5+double($options(-duration))/$options(-steps)))}]
+    }
+}
+
 namespace eval ::mixin::labelframe {}
 
 ttk::style configure Collapsible.TCheckbutton -relief flat
@@ -624,6 +760,9 @@ snit::widgetadaptor ::mixin::labelframe::collapsible {
                 -style Collapsible.TCheckbutton -compound left
         install interior using ttk::frame $win.interior
         ttk::frame $win.null
+
+        ::mixin::frame::transition_size $win.interior \
+            -xtransition 1 -ytransition 1
 
         # The null frame is to ensure that the labelframe resizes properly. If
         # all contents are removed, it won't resize otherwise.
@@ -669,6 +808,26 @@ snit::widgetadaptor ::mixin::labelframe::collapsible {
         }
     }
 
+    method expand {} {
+        set [$toggle cget -variable] [$toggle cget -onvalue]
+        $win.interior expand
+    }
+
+    method collapse {} {
+        set [$toggle cget -variable] [$toggle cget -offvalue]
+        $win.interior collapse
+    }
+
+    method fastexpand {} {
+        set [$toggle cget -variable] [$toggle cget -onvalue]
+        $win.interior fastexpand
+    }
+
+    method fastcollapse {} {
+        set [$toggle cget -variable] [$toggle cget -offvalue]
+        $win.interior fastcollapse
+    }
+
     method SetVar {option value} {
         if {$value eq ""} {
             set value ::$toggle
@@ -689,9 +848,9 @@ snit::widgetadaptor ::mixin::labelframe::collapsible {
 
     method TraceSetVar {name1 name2 op} {
         if {[set [$toggle cget -variable]] == [$toggle cget -onvalue]} {
-            grid $win.interior
+            $win.interior expand
         } else {
-            grid remove $win.interior
+            $win.interior collapse
         }
     }
 }
