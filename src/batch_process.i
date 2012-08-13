@@ -563,7 +563,8 @@ func batch_process {};
 func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
 onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
 only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=, w=, no_rcf=,
-mode=, merge=, clean=, rcfmode=, write_merge=, forcechannel=) {
+mode=, merge=, clean=, rcfmode=, write_merge=, forcechannel=, shapefile=,
+shp_buffer=) {
 /* DOCUMENT mbatch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=,
   n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=,
   only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=,
@@ -737,6 +738,8 @@ Added server/client support (2009-01) Richard Mitchell
     }
     close, cfile;
   }
+  if(!is_void(shapefile))
+    pick = 2;
   if ((auto)&&(pick==1)) {
     window, win;
     rgn = array(float, 4);
@@ -805,7 +808,16 @@ Added server/client support (2009-01) Richard Mitchell
   }
 
   if(pick==2) {
-    ply=getPoly();
+    if(!is_void(shapefile)) {
+      ply = read_ascii_shapefile(shapefile);
+      if(numberof(ply) != 1)
+        error, "shapefile must contain exactly one polygon!";
+      ply = *ply(1);
+      if(shp_buffer)
+        ply = buffer_hull(ply, shp_buffer);
+    } else {
+      ply=getPoly();
+    }
     ply;
     plpoly, ply, marker=4;
     box=boundBox(ply);
@@ -995,13 +1007,15 @@ Added server/client support (2009-01) Richard Mitchell
 
 func batch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
 onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
-only_veg=, update=, avg_surf=,conf_file=, now=, forcechannel=) {
+only_veg=, update=, avg_surf=,conf_file=, now=, forcechannel=, shapefile=,
+shp_buffer=) {
   default, now, 1;
   mbatch_process, typ=typ, save_dir=save_dir, shem=shem, zone=zone,
     dat_tag=dat_tag, cmdfile=cmdfile, n=n, onlyplot=onlyplot, mdate=mdate,
     pbd=pbd, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ,
     only_bathy=only_bathy, only_veg=only_veg, update=update,
-    avg_surf=avg_surv,conf_file=conf_file, now=now, forcechannel=forcechannel;
+    avg_surf=avg_surv,conf_file=conf_file, now=now, forcechannel=forcechannel,
+    shapefile=shapefile, shp_buffer=shp_buffer;
 }
 
 
