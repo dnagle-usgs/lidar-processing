@@ -1066,7 +1066,9 @@ func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=) {
   Returns the unique data in the given array.
 
   By default, uniqueness is determined based on the .soe field. When using the
-  .soe field, points with the same soe value are considered duplicates.
+  .soe field, points with the same soe value are considered duplicates. If the
+  .channel field is present, then uniqueness is determined based on the
+  combination of [.soe, .channel].
 
   If the .soe field is not present, if all soe values are the same, or if
   forcexy=1, then the x and y coordinates of the data are used instead. In
@@ -1142,10 +1144,27 @@ func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=) {
     usesoe = 0;
 
   if(usesoe) {
-    // When using soe to determine uniqueness, duplicate points are
-    // determined by points where the soe value matches.
-    srt = sort(data.soe);
-    dupe = where(!data.soe(srt)(dif));
+    // Determine whether to use the channel to help determine uniqueness. Start
+    // by assuming yes.
+    usechannel = 1;
+    // If there's no channel field, then channel can't be used.
+    if(usechannel && !has_member(data, "channel"))
+      usechannel = 0;
+    // If there's no variation in channel, then there's no point in using it.
+    if(usechannel && allof(data.channel == data.channel(1)))
+      usechannel = 0;
+
+    if(usechannel) {
+      // Use using soe + channel to determine uniqueness, duplicate points are
+      // determined by points where soe and channel both match.
+      srt = msort(data.soe, data.channel);
+      dupe = where(!data.soe(srt)(dif) & !data.channel(srt)(dif));
+    } else {
+      // When using soe to determine uniqueness, duplicate points are
+      // determined by points where the soe value matches.
+      srt = sort(data.soe);
+      dupe = where(!data.soe(srt)(dif));
+    }
     if(numberof(dupe))
       keep(srt(dupe)) = 0;
   } else {
