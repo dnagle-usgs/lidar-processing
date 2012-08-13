@@ -568,11 +568,13 @@ shp_buffer=) {
 /* DOCUMENT mbatch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=,
   n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=,
   only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=,
-  w=, no_rcf=, mode=, merge=, clean=, rcfmode=, write_merge=
+  w=, no_rcf=, mode=, merge=, clean=, rcfmode=, write_merge=, forcechannel=,
+  shapefile=, shp_buffer=
 
   batch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
   onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
-  only_veg=, update=, avg_surf=,conf_file=, now=
+  only_veg=, update=, avg_surf=,conf_file=, now=, forcechannel=, shapefile=,
+  shp_buffer=
 
 This function is used to batch process several regions for a given data set.
 The regions are either defined by a command file or automatically choosen by
@@ -636,6 +638,17 @@ Input:
             be used to process the data.  To run the client on a
             separate computer, "batcher.tcl HOST" where host is the
             name of the server computer.
+
+  forcechannel= : Set to 1, 2, 3, or 4 to force the use of the specified
+            channel. You should also include "_chan1" or similar in your mdate.
+
+  shapefile=    : Set to the path to a UTM ASCII shapefile containing a single
+            polygon. This will be used for the boundary (and disables pick=).
+
+  shp_buffer=   : If using shapefile=, this will place a buffer region around
+          the imported boundary. The value is in meters. Note that this will
+          also use the convex hull, so if your region has concavity, that
+          concavity will be lost.
 
 If using the automatic region creation, the following options
 are REQUIRED:
