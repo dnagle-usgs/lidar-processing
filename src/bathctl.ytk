@@ -48,7 +48,7 @@ namespace eval bathctl {
             laser -2.4 water -1.5 agc -3.0 thresh 4.0
             first 11 last 60 maxsat 2
          }
-         Crappy {
+         Turbid {
             laser -2.4 water -3.5 agc -6.0 thresh 2.0
             first 11 last 60 maxsat 2
          }
