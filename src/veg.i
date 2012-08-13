@@ -177,7 +177,11 @@ func make_fs_veg(d, rrr) {
 
   geoveg = array(VEG_ALL_, len);
 
+  has_channel = has_member(geoveg, "channel") && has_member(rrr, "channel");
+
   for (i=1; i<=len; i=i+1) {
+    if(has_channel)
+      geoveg(i).channel = rrr(i).channel;
     geoveg(i).rn = rrr(i).rn;
     geoveg(i).north = rrr(i).north;
     geoveg(i).east = rrr(i).east;

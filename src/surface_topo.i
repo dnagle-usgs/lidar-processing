@@ -181,6 +181,8 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
   surface.fs_rtn_centroid = rtrs.fs_rtn_centroid;
   surface.rn += (indgen(120)*2^24)(,-);
   surface.soe = rtrs.soe;
+  if(forcechannel)
+    surface.channel = forcechannel;
 
   if(verbose && count >= 100)
     write, format="%5d %8.1f %6.2f %6.2f %6.2f\n",
