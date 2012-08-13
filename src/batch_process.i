@@ -96,6 +96,7 @@ func save_vars (filename, tile=) {
   if ( ! is_void( bath_ctl ) ) {
     save, f, bath_ctl;
   }
+  save, f, forcechannel;
 
   close, f;
   // This makes sure the file is completely written before batcher.tcl has a chance
@@ -180,11 +181,11 @@ func load_vars(fn) {
 
 func call_process_tile( junk=, host= ) {
   // write, format="t_e%6.0f_n%7.0f_%s\n", min_e, max_n, zone_s;
-  uber_process_tile,q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, host=host, rcf_only=rcf_only;
+  uber_process_tile,q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, host=host, rcf_only=rcf_only, forcechannel=forcechannel;
 }
 
 
-func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf_only= ) {
+func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf_only=, forcechannel= ) {
   extern ofn;
   default, rcf_only, 0;
 
@@ -195,7 +196,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
 
     if ( rcf_only == 0 ) {
       // process_tile will return 0 if the tile needs to be updated
-      update = process_tile (q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, update=update, host=host );
+      update = process_tile (q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, update=update, host=host, forcechannel=forcechannel );
     }
 
       mypath = ofn(1);
@@ -232,7 +233,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
   }
 }
 
-func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= ) {
+func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, forcechannel= ) {
   extern ofn, _hgid;
   default, host, "localhost";
     if (get_typ) {
@@ -364,7 +365,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
     if (typ == 0) {
       write, format = "Processing Region %d of %d for First Surface Only\n",i,n;
       // fs_all = make_fs(latutm = 1, q = q,  ext_bad_att=1, use_centroid=1);
-      fs_all = make_fs(latutm = 1, q = q,  ext_bad_att=1 );
+      fs_all = make_fs(latutm = 1, q = q,  ext_bad_att=1, forcechannel=forcechannel );
       if (is_array(fs_all)) {
         test_and_clean, fs_all;
         if (is_array(fs_all)) {
@@ -392,7 +393,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
     if (typ == 1) {
       if ((get_typ && !only_veg) || (!get_typ)) {
         write, format = "Processing Region %d of %d for Bathymetry\n",i,n;
-        depth_all = make_bathy(latutm = 1, q = q,avg_surf=avg_surf);
+        depth_all = make_bathy(latutm = 1, q = q,avg_surf=avg_surf, forcechannel=forcechannel);
         if (is_array(depth_all)){
           test_and_clean, depth_all;
           if (is_array(depth_all)) {
@@ -434,7 +435,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
     if (typ == 2) {
       if ((get_typ && !only_bathy) || (!get_typ)) {
         write, format = "Processing Region %d of %d for Vegetation\n",i,n;
-        veg_all = make_veg(latutm = 1, q = q, ext_bad_att=1, use_centroid=1);
+        veg_all = make_veg(latutm = 1, q = q, ext_bad_att=1, use_centroid=1, forcechannel=forcechannel);
         if (is_array(veg_all))  {
           test_and_clean, veg_all;
           if (is_array(veg_all)) {
@@ -464,7 +465,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
       if ((get_typ && !only_veg) || (!get_typ)) {
       //process for bathy
       write, format = "Processing Region %d of %d for Bathymetry\n",i,n;
-      depth_all = make_bathy(latutm = 1, q = q);
+      depth_all = make_bathy(latutm = 1, q = q, forcechannel=forcechannel);
       if (is_array(depth_all)){
         test_and_clean, depth_all;
         if (is_array(depth_all)) {
@@ -490,7 +491,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
     }
     if ((get_typ && !only_bathy) || (!get_typ)) {
       write, format = "Processing Region %d of %d for Vegetation\n",i,n;
-      veg_all = make_veg(latutm = 1, q = q, ext_bad_att=1, use_centroid=1);
+      veg_all = make_veg(latutm = 1, q = q, ext_bad_att=1, use_centroid=1, forcechannel=forcechannel);
       if (is_array(veg_all))  {
         test_and_clean, veg_all;
         if (is_array(veg_all)) {
@@ -562,7 +563,7 @@ func batch_process {};
 func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
 onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
 only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=, w=, no_rcf=,
-mode=, merge=, clean=, rcfmode=, write_merge=) {
+mode=, merge=, clean=, rcfmode=, write_merge=, forcechannel=) {
 /* DOCUMENT mbatch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=,
   n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=,
   only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=,
@@ -962,7 +963,7 @@ Added server/client support (2009-01) Richard Mitchell
             file_join(alpsrc.batcher_dir, "waiter.pl"));
           package_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i) )
         } else {
-          uber_process_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i), host=host )
+          uber_process_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i), host=host, forcechannel=forcechannel )
         }
       }
     }
