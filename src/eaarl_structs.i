@@ -68,6 +68,7 @@ local FS;
     long elevation;      surface elevation (m)
     short intensity;     surface return intensity
     double soe;          seconds of the epoch
+    char channel;        channel used if forced; 0 if auto chosen
   };
 
   SEE ALSO: R, VEG__, GEO
@@ -79,6 +80,7 @@ struct FS {
   long north, east, elevation;
   short intensity;
   double soe;
+  char channel;
 }
 
 local VEG__, VEG_, VEG;
@@ -102,6 +104,7 @@ local VEG__, VEG_, VEG;
     short fint;       first return pulse peak value
     short lint;       last return pulse peak value
     char nx;          number of return pulses found
+    char channel;     channel used if forced; 0 if auto chosen
     double soe;       seconds of the epoch
   }
 
@@ -139,7 +142,7 @@ struct VEG__ {
   long mnorth, meast, melevation;
   long lnorth, least, lelv;
   short fint, lint;
-  char nx;
+  char nx, channel;
   double soe;
 }
 
@@ -182,6 +185,7 @@ local GEO;
     long bath;           unused?
     short depth;         water depth in cm
     double soe;          seconds of the epoch
+    char channel;        channel used if forced; 0 if auto chosen
   }
 
   SEE ALSO: GEOALL, R, VEG__
@@ -196,6 +200,7 @@ struct GEO {
   long bath;
   short depth;
   double soe;
+  char channel;
 }
 
 local R;
@@ -214,6 +219,7 @@ local R;
     short intensity(120);         surface return intensity
     short fs_rtn_centroid(120);   surface return centroid location w/in waveform
     double soe(120);              seconds of the epoch
+    char channel(120);            channel used if forced; 0 if auto chosen
   };
 
   SEE ALSO: FS, VEG_ALL_, GEOALL
@@ -225,6 +231,7 @@ struct R {
   long north(120), east(120), elevation(120);
   short intensity(120), fs_rtn_centroid(120);
   double soe(120);
+  char channel(120);
 };
 
 local VEG_ALL_, VEG_ALL, VEGALL;
@@ -248,6 +255,7 @@ local VEG_ALL_, VEG_ALL, VEGALL;
     short fint(120);        first pulse peak value
     short lint(120);        last return pulse peak value
     char nx(120);           number of return pulses found
+    char channel(120);      channel used if forced; 0 if auto chosen
     double soe(120);        seconds of the epoch
   };
 
@@ -285,7 +293,7 @@ struct VEG_ALL_ {
   long mnorth(120), meast(120), melevation(120);
   long lnorth(120), least(120), lelv(120);
   short fint(120), lint(120);
-  char nx(120);
+  char nx(120), channel(120);
   double soe(120);
 };
 
@@ -328,6 +336,7 @@ local GEOALL;
     short first_peak(120);     peak amplitude of first surface return signal
     int depth(120);            water depth in cm
     double soe(120);           seconds of the epoch
+    char channel(120);         channel used if forced; 0 if auto chosen
   }
 
   Several changes have been made to this structure over time:
@@ -347,6 +356,7 @@ struct GEOALL {
   short bottom_peak(120), first_peak(120);
   int depth(120);
   double soe(120);
+  char channel(120);
 }
 
 local CVEG_ALL;
