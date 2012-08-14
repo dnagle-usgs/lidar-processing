@@ -18,11 +18,11 @@
 # Do NOT "set -e"
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
-PATH=/opt/eaarl/bin:/opt/eaarl/lidar-processing/bin:/opt/eaarl/packages/ActiveTcl/bin:/sbin:/usr/sbin:/bin:/usr/bin
+PATH=/opt/alps/bin:/opt/alps/lidar-processing/bin:/opt/alps/packages/ActiveTcl/bin:/sbin:/usr/sbin:/bin:/usr/bin
 DESC="ALPS batcher"
 NAME=screen.real
 PNAME=SCREEN.real
-DAEMON="/opt/eaarl/bin/setup_batch"
+DAEMON="/opt/alps/bin/setup_batch"
 DAEMON_ARGS="initd"
 USER=mitchell
 PIDFILE=/var/run/$NAME.pid

@@ -2,7 +2,7 @@
 
 # Prompts for the hostname of the master ALPS server to use and then
 # creates the screenrc files to invoke both a master and slave sessions.
-# By default the files are stored in /opt/eaarl/etc and then be rsynced
+# By default the files are stored in /opt/alps/etc and then be rsynced
 # to other systems.  The number of slave processes to create is determined
 # by checking how many cpus are available.
 #
@@ -31,7 +31,7 @@ use strict;
 # Various constants.  You may need to adjust $EAARL if you chose to install
 # ALPS in some other place.
 
-my $EAARL         = "/opt/eaarl";
+my $EAARL         = "/opt/alps";
 my $ETC           = "$EAARL/etc";
 my $MASTER_file   = "$ETC/ALPS_master";
 my $SCREEN_master = "$ETC/.screenrc-batch-master";
@@ -183,7 +183,7 @@ activity              "activity in %n (%t) [%w:%s]~"
 # bell:         this message *includes* a "beep" with '~'.
 bell                  "bell     in %n (%t) [%w:%s]~"
 
-chdir /opt/eaarl/lidar-processing
+chdir /opt/alps/lidar-processing
 HERE_TARGET
 
 $SERVER = <<HERE_TARGET;

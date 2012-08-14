@@ -1,14 +1,14 @@
-#!/opt/eaarl/bin/yorick -batch
+#!/opt/alps/bin/yorick -batch
 
 // _ytk = 1;
-src_path = "/opt/eaarl/lidar-processing/src";
+src_path = "/opt/alps/lidar-processing/src";
 
 cd(src_path);
 
-#include "/opt/eaarl/lidar-processing/src/general.i"
-#include "/opt/eaarl/lidar-processing/src/l1pro.i"
-#include "/opt/eaarl/lidar-processing/src/veg.i"
-#include "/opt/eaarl/lidar-processing/src/batch_process.i"
+#include "/opt/alps/lidar-processing/src/general.i"
+#include "/opt/alps/lidar-processing/src/l1pro.i"
+#include "/opt/alps/lidar-processing/src/veg.i"
+#include "/opt/alps/lidar-processing/src/batch_process.i"
 
 cmdline = get_argv();  /* strips -batch cmdline.i */
 if (numberof(cmdline) == 3) {

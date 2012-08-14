@@ -1,7 +1,7 @@
 #!/bin/sh
 # \
 exec tclsh "$0" ${1+"$@"}
-# exec /opt/eaarl/bin/tclsh "$0" ${1+"$@"}
+# exec /opt/alps/bin/tclsh "$0" ${1+"$@"}
 # vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
 package require Tclx
@@ -328,7 +328,7 @@ proc client'read sock {
             }
 
             set doall list
-            catch { exec /opt/eaarl/lidar-processing/batcher/cmdline_batch $wdir/$args $host } res
+            catch { exec /opt/alps/lidar-processing/batcher/cmdline_batch $wdir/$args $host } res
             puts "cmdline_batch: completed"
             if { $res > "" } {
                puts "res3: $res"
