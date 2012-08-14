@@ -232,6 +232,8 @@ proc menu_graph_grid mb {
 
 proc menu_utilities mb {
     menu $mb
+    $mb add command {*}[menulabel "Browse &Rasters"] \
+            -command ::l1pro::drast::gui
     $mb add command {*}[menulabel "Examine Pixels Settings"] \
             -command [list ::l1pro::pixelwf::gui::launch_full_panel .pixelwf]
     $mb add command {*}[menulabel "Histogram Elevations Settings"] \
@@ -245,8 +247,6 @@ proc menu_utilities mb {
             -menu [menu_utilities_segments $mb.seg]
     $mb add cascade {*}[menulabel "Launch statistics by..."] \
             -menu [menu_utilities_statistics $mb.stat]
-    $mb add command {*}[menulabel "Browse &Rasters"] \
-            -command ::l1pro::drast::gui
     $mb add separator
     $mb add command {*}[menulabel "Check and correct EDB time"] \
             -command ts_check
