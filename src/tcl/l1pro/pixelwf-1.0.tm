@@ -43,7 +43,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
                 variable dest_variable ""
             }
             namespace eval ex_veg {
-                variable enabled 1
+                variable enabled 0
                 variable last 250
                 variable win 0
                 variable verbose 0
@@ -54,7 +54,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
                 variable dest_variable ""
             }
             namespace eval show_wf {
-                variable enabled 0
+                variable enabled 1
                 variable win 9
                 variable c1 1
                 variable c2 1
@@ -66,7 +66,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
                 variable win 18
             }
             namespace eval geo_rast {
-                variable enabled 1
+                variable enabled 0
                 variable win 2
                 variable verbose 0
                 variable eoffset 0
@@ -277,16 +277,18 @@ namespace eval ::l1pro::pixelwf::gui {
     proc set_default_enabled {} {
         set ns ::l1pro::pixelwf::vars
         set ${ns}::fit_gauss::enabled 0
-        set ${ns}::show_wf::enabled 0
+        set ${ns}::show_wf::enabled 1
         set ${ns}::show_wf_transmit::enabled 0
-        set ${ns}::geo_rast::enabled 1
+        set ${ns}::geo_rast::enabled 0
         set ${ns}::ndrast::enabled 1
+        # We're currently not changing behavior based on data mode, but this
+        # logic is left in place in case we want to again in the future.
         if {$::plot_settings(display_mode) eq "ba"} {
-            set ${ns}::ex_bath::enabled 1
+            set ${ns}::ex_bath::enabled 0
             set ${ns}::ex_veg::enabled 0
         } else {
             set ${ns}::ex_bath::enabled 0
-            set ${ns}::ex_veg::enabled 1
+            set ${ns}::ex_veg::enabled 0
         }
     }
 
