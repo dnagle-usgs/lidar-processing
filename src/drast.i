@@ -401,21 +401,42 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=) {
   }
   if(!nofma) fma;
 
+  vp = viewport();
+  tx = vp(1) + .01;
+  ty = vp(3) + .01;
+  tw = 0.02;
+
+  multichannel = c1 + c2 + c3 + c4 > 1;
+  if(multichannel)
+    plt, "Channels:\n ", tx, ty, justify="LA", height=12, color="black";
+
   if(c1) {
     plg, _depth_scale, r(,pix,1), marker=0, color="black";
     plmk, _depth_scale, r(,pix,1), msize=.2, marker=1, color="black";
+    msg = multichannel ? "1" : "Channel 1";
+    plt, msg, tx, ty, justify="LA", height=12, color="black";
+    tx += tw;
   }
   if(c2) {
     plg, _depth_scale, r(,pix,2), marker=0, color="red";
     plmk, _depth_scale, r(,pix,2), msize=.2, marker=1, color="red";
+    msg = multichannel ? "2" : "Channel 2";
+    plt, msg, tx, ty, justify="LA", height=12, color="red";
+    tx += tw;
   }
   if(c3) {
     plg, _depth_scale, r(,pix,3),  marker=0, color="blue";
     plmk, _depth_scale, r(,pix,3), msize=.2, marker=1, color="blue";
+    msg = multichannel ? "3" : "Channel 3";
+    plt, msg, tx, ty, justify="LA", height=12, color="blue";
+    tx += tw;
   }
   if(c4) {
     plg, _depth_scale, r(,pix,4),  marker=0, color="magenta";
     plmk, _depth_scale, r(,pix,4), msize=.2, marker=1, color="magenta";
+    msg = multichannel ? "4" : "Channel 4";
+    plt, msg, tx, ty, justify="LA", height=12, color="magenta";
+    tx += tw;
   }
 
   xtitle = swrite(format="Pix:%d   Digital Counts", pix);
