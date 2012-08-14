@@ -316,7 +316,7 @@ namespace eval ::l1pro::pixelwf::gui {
             fit_gauss "Gaussian Decomposition"
             ex_bath "Bathy Functionality"
             ex_veg "Topo Under Veg"
-            show_wf "Original Waveform"
+            show_wf "Raw Waveform"
             show_wf_transmit "Transmit Waveform"
             geo_rast "Georeferenced Raster"
             ndrast "Unreferenced Raster"
