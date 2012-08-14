@@ -27,7 +27,7 @@ if {![namespace exists ::l1pro::drast]} {
             variable rastchan3 0
             variable rastchan4 0
             variable rastchan0 0
-            variable rastwin1 0
+            variable rastwin1 11
             variable rastwin2 12
             variable rastwin3 13
             variable rastwin4 14
@@ -43,7 +43,7 @@ if {![namespace exists ::l1pro::drast]} {
             variable geochan2 0
             variable geochan3 0
             variable geochan4 0
-            variable geowin1 2
+            variable geowin1 21
             variable geowin2 22
             variable geowin3 23
             variable geowin4 24

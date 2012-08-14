@@ -67,13 +67,13 @@ if {![namespace exists ::l1pro::pixelwf]} {
             }
             namespace eval geo_rast {
                 variable enabled 0
-                variable win 2
+                variable win 21
                 variable verbose 0
                 variable eoffset 0
             }
             namespace eval ndrast {
                 variable enabled 1
-                variable win 1
+                variable win 11
                 variable units ns
                 variable dest_action 0
                 variable dest_variable ""
