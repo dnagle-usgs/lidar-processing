@@ -14,8 +14,8 @@ if {![namespace exists ::l1pro::drast]} {
             variable playint 1
             variable stepinc 1
             variable pulse 60
-            variable show_geo 1
-            variable show_rast 0
+            variable show_geo 0
+            variable show_rast 1
             variable show_sline 0
             variable show_wf 0
             variable sfsync 0
@@ -350,6 +350,7 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
 proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
     set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Geo: Georeferenced raster"
+    $f fastcollapse
     set f [$f interior]
     foreach channel {1 2 3 4} {
         ttk::checkbutton $f.usegeo${channel} -text "Show channel ${channel}" \
