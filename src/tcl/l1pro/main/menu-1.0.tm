@@ -234,7 +234,7 @@ proc menu_utilities mb {
     menu $mb
     $mb add command {*}[menulabel "Examine Pixels Settings"] \
             -command [list ::l1pro::pixelwf::gui::launch_full_panel .pixelwf]
-    $mb add command {*}[menulabel "Histogram Elevations"] \
+    $mb add command {*}[menulabel "Histogram Elevations Settings"] \
             -command ::l1pro::tools::histelev::gui
     $mb add command {*}[menulabel "Groundtruth Analysis"] \
             -command ::l1pro::groundtruth::gui
