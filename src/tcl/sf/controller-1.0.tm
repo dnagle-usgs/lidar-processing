@@ -117,9 +117,9 @@ snit::type ::sf::controller {
                 }
             }
             soe {
-                if {![string is integer -strict $val]} {
+                if {![string is double -strict $val]} {
                     $gui prompt warning "The soe (seconds of the epoch) value\
-                            must be an integer."
+                            must be a number."
                 } elseif {$val < 0} {
                     $gui prompt warning "The soe (seconds of the epoch) value\
                             must be greater than zero."
