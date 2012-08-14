@@ -508,7 +508,7 @@ proc ::l1pro::drast::gui_refresh {} {
 proc ::l1pro::drast::show_auto {} {
     if {$v::sfsync} {
         exp_send "tkcmd, swrite(format=\"::l1pro::drast::mediator::broadcast_soe\
-                %d\", edb.seconds($v::rn));\r"
+                %.8f\", edb.seconds($v::rn)+edb.fseconds($v::rn)*1.6e-6);\r"
     }
     if {$v::autolidar} {
         ::display_data

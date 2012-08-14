@@ -10,7 +10,7 @@ func sf_mediator_plot(win, soe, msize, marker, color, errcmd) {
     sod = soe - soe_day_start;
     mark_time_pos, sod, win=win, msize=msize, marker=marker, color=color;
   } else {
-    tkcmd, swrite(format="%s {No data found in mission configuration for soe %d}", errcmd, int(soe));
+    tkcmd, swrite(format="%s {No data found in mission configuration for soe %.2f}", errcmd, double(soe));
   }
   missiondata_unwrap, env_bkp;
 }
@@ -21,8 +21,8 @@ func sf_mediator_broadcast_somd(somd) {
   sync to a somd value. Converts the somd to an soe so SF can use it.
 */
   extern soe_day_start;
-  soe = long(soe_day_start + somd);
-  tkcmd, swrite(format="::sf::mediator broadcast soe %d", soe);
+  soe = double(soe_day_start + somd);
+  tkcmd, swrite(format="::sf::mediator broadcast soe %.8f", soe);
 }
 
 func sf_mediator_raster(soe, errcmd) {
@@ -31,9 +31,12 @@ func sf_mediator_raster(soe, errcmd) {
 
   env_bkp = missiondata_wrap("all");
   if(missiondata_soe_load(soe)) {
-    rnarr = where(edb.seconds == soe);
+    rnarr = where(abs(edb.seconds - soe) <= 1);
     if(numberof(rnarr)) {
-      rn = rnarr(1);
+      rnsoes = edb.seconds(rnarr) + edb.fseconds(rnarr)*1.6e-6;
+      closest = abs(rnsoes - soe)(mnx);
+      rn = rnarr(closest);
+
       r = get_erast(rn=rn);
       rr = decode_raster(r);
 

@@ -778,9 +778,11 @@ func drast_set_soe(soe) {
   extern edb;
   found = missiondata_soe_load(soe);
   if(found) {
-    w = where(edb.seconds == long(soe));
+    w = where(abs(edb.seconds - soe) <= 1);
     if(numberof(w)) {
-      rn = w(1);
+      rnsoes = edb.seconds(w) + edb.fseconds(w)*1.6e-6;
+      closest = abs(rnsoes - soe)(mnx);
+      rn = w(closest);
       tksetval, "::l1pro::drast::v::rn", rn;
     }
   }

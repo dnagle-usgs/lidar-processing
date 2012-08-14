@@ -126,8 +126,8 @@ func mark_time_pos(sod, win=, msize=, marker=, color=) {
   default, color, "blue";
   default, msize, 0.6;
 
-  q = where(pnav.sod == sod);
-  if(!numberof(q))
+  q = abs(pnav.sod - sod)(mnx);
+  if(pnav.sod(q) - sod > .5)
     error, "Time not found";
   q = q(1);
   x = pnav.lon(q);

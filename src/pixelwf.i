@@ -83,8 +83,8 @@ func pixelwf_plot(void) {
       funcdef(swrite(format="pixelwf_%s", fns(i)));
   }
 
-  tkcmd, swrite(format="::l1pro::pixelwf::mediator::broadcast_soe %d",
-    edb.seconds(pixelwfvars.selection.raster));
+  tkcmd, swrite(format="::l1pro::pixelwf::mediator::broadcast_soe %.8f",
+    edb.seconds(pixelwfvars.selection.raster)+edb.fseconds(pixelwfvars.selection.raster)*1.6e-6);
 }
 
 func pixelwf_handle_result(vars, result) {
@@ -342,13 +342,11 @@ func pixelwf_set_soe(soe) {
   vars = pixelwfvars.selection;
   found = missiondata_soe_load(soe);
   if(found) {
-    w = where(edb.seconds == long(soe));
+    w = where(abs(edb.seconds - soe) <= 1);
     if(numberof(w)) {
-      rn = w(1);
-      if(vars.raster <= numberof(edb)) {
-        if(edb.seconds(vars.raster) == edb.seconds(rn))
-          return 2;
-      }
+      rnsoes = edb.seconds(w) + edb.fseconds(w)*1.6e-6;
+      closest = abs(rnsoes - soe)(mnx);
+      rn = w(closest);
       tksetval, "::l1pro::pixelwf::vars::selection::raster", rn;
       tksetval, "::l1pro::pixelwf::vars::selection::pulse", 1;
       tksetval, "::l1pro::pixelwf::vars::selection::missionday", missionday_current();
