@@ -232,7 +232,7 @@ proc menu_graph_grid mb {
 
 proc menu_utilities mb {
     menu $mb
-    $mb add command {*}[menulabel "Pixel Analysis"] \
+    $mb add command {*}[menulabel "Examine Pixels Settings"] \
             -command [list ::l1pro::pixelwf::gui::launch_full_panel .pixelwf]
     $mb add command {*}[menulabel "Histogram Elevations"] \
             -command ::l1pro::tools::histelev::gui

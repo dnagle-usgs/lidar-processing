@@ -337,7 +337,7 @@ proc ::l1pro::main::panel_tools w {
     ttk::menubutton $f.sortdata -text " Sort Data " -width 0 \
             -style Panel.TMenubutton -menu $f.srtmenu
 
-    ttk::button $f.pixelwf -text " Pixel \n Analysis " -width 0 \
+    ttk::button $f.pixelwf -text " Examine \n Pixels " -width 0 \
             -style Panel.TButton \
             -command {exp_send "pixelwf_enter_interactive\r"}
     ttk::button $f.histelv -text " Histogram \n Elevations " -width 0 \

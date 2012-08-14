@@ -295,7 +295,7 @@ namespace eval ::l1pro::pixelwf::gui {
 
         if {[winfo exists $w]} {destroy $w}
         toplevel $w
-        wm title $w "Pixel Analysis"
+        wm title $w "Examine Pixels"
 
         set mf $w
 
@@ -411,7 +411,7 @@ namespace eval ::l1pro::pixelwf::gui {
         ttk::button $f.btnGraph -text "Plot" \
             -command [list [namespace current]::yorcmd pixelwf_plot]
 
-        ttk::button $f.btnMouse -text "Interactive" \
+        ttk::button $f.btnMouse -text "Examine Pixels" \
                 -command [list exp_send "pixelwf_enter_interactive;\r"]
 
         grid $f.lblDay $f.cboDay - -
