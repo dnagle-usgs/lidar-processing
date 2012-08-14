@@ -156,22 +156,19 @@ proc ::l1pro::drast::gui_tools f {
     set ns [namespace current]
     ttk::frame $f -relief groove -padding 1 -borderwidth 2
     ttk::entry $f.rn -textvariable ${ns}::v::rn -width 8
+    ttk::button $f.plot -text "Plot" -style Toolbutton \
+            -command ${ns}::show_auto
     ttk::button $f.wf -text "WF" -style Toolbutton \
             -command ${ns}::examine_waveforms
-    ttk::button $f.rast -text "Rast" -style Toolbutton \
-            -command ${ns}::show_rast
-    ttk::button $f.geo -text "Geo" -style Toolbutton \
-            -command ${ns}::show_geo
     ttk::separator $f.spacer -orient vertical
 
-    grid $f.rn $f.spacer $f.wf $f.rast $f.geo
+    grid $f.rn $f.spacer $f.plot $f.wf
     grid configure $f.spacer -sticky ns -padx 2
     grid rowconfigure $f 0 -weight 1
 
     ::tooltip::tooltip $f.rn "Current raster number"
+    ::tooltip::tooltip $f.plot "Display currently selected plots"
     ::tooltip::tooltip $f.wf "Click on raster to examine waveform"
-    ::tooltip::tooltip $f.rast "Display unreferenced raster"
-    ::tooltip::tooltip $f.geo "Display georeference raster"
 
     bind $f.rn <Return> ${ns}::show_auto
 }
