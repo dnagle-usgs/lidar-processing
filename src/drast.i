@@ -260,6 +260,53 @@ func drast_graph(aa, digitizer, win=) {
   window_select, win_bkp;
 }
 
+func drast_msel(rn, type=, cb=, rx=, tx=, bath=, winsel=, winrx=, wintx=, winbath=) {
+  default, type, "rast";
+  default, cb, 7;
+  default, rx, 1;
+  default, tx, 0;
+  default, bath, 0;
+  default, winsel, 11;
+  default, winrx, 9;
+  default, wintx, 16;
+  default, winbath, 4;
+
+  extern xm;
+
+  rast = ndrast(rn=rn, graph=0);
+
+  write, format="Window: %d. Left-click to examine a waveform. Anything else aborts.\n", winsel;
+
+  continue_interactive = 1;
+
+  while(continue_interactive) {
+    window, winsel;
+    click = mouse(1, 1, "");
+
+    if(mouse_click_is("left", click)) {
+      if(type == "rast") {
+        pulse = int(click(1));
+      } else if(type == "geo") {
+        pulse = (abs(click(1)-xm))(mnx);
+      } else {
+        error, "type="+type+" not implemented";
+      }
+
+      write, format=" - Pulse %d\n", pulse;
+      if(rx)
+        show_wf, *rast, pulse, win=winrx, cb=cb;
+      if(bath)
+        ex_bath, rn, pulse, graph=1, win=winbath, xfma=1;
+      if(tx)
+        show_wf_transmit, rn, pulse, win=wintx;
+    } else {
+      continue_interactive = 0;
+    }
+  }
+
+  write, format="%s\n", "Finished examining waveforms.";
+}
+
 func msel_wf(w, rn=, cb=, tx=, winsel=, winplot=, wintx=, winbath=, seltype=) {
 /* DOCUMENT msel_wf, w, cb=
   Use the mouse to select a pixel to display a waveform for.

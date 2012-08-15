@@ -109,23 +109,15 @@ snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
 
     method examine {} {
         set cb [expr {$chan1 + 2*$chan2 + 4*$chan3 + 8*$chan4}]
-        if {$options(-channel) == 0} {
-            set cmd "msel_wf_transmit, $options(-raster)"
-            appendif cmd \
-                    1           ", winsel=$options(-window)" \
-                    1           ", winplot=$txwin" \
-                    $rxshow     ", cb=$cb" \
-                    $rxshow     ", winrx=$rxwin"
-
-        } else {
-            set cmd "msel_wf, rn=$options(-raster), cb=$cb"
-            appendif cmd \
-                    1           ", winsel=$options(-window)" \
-                    1           ", winplot=$rxwin" \
-                    $txshow     ", tx=1" \
-                    $txshow     ", wintx=$txwin" \
-                    1           ", seltype=\"rast\""
-        }
+        set cmd "drast_msel, $options(-raster)"
+        appendif cmd \
+                1           ", type=\"rast\"" \
+                1           ", rx=$rxshow" \
+                $txshow     ", tx=1" \
+                $rxshow     ", cb=$cb" \
+                1           ", winsel=$options(-window)" \
+                $rxshow     ", winrx=$rxwin" \
+                $txshow     ", wintx=$txwin"
         exp_send "$cmd;\r"
     }
 }
