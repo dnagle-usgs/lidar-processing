@@ -79,6 +79,7 @@ snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
         grid rowconfigure $f 0 -weight 1
 
         set f $f.examine
+        ttk::frame $f.rx
         ttk::checkbutton $f.showrx -text "Show channels:" \
                 -variable [myvar rxshow]
         ttk::checkbutton $f.showtx -text "Show transmit" \
@@ -94,11 +95,15 @@ snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
         }
         ttk::button $f.examine -text "Examine\nWaveforms" \
                 -command [mymethod examine]
-        grid $f.showrx $f.chan1 $f.chan2 $f.chan3 $f.chan4 $f.lblwinrx $f.winrx $f.examine \
+
+        grid $f.showrx $f.chan1 $f.chan2 $f.chan3 $f.chan4 -in $f.rx -padx 2
+
+        grid $f.rx     $f.lblwinrx $f.winrx $f.examine \
                 -padx 2 -pady 1
-        grid $f.showtx -        -        -        -        $f.lblwintx $f.wintx ^ \
+        grid $f.showtx $f.lblwintx $f.wintx ^ \
                 -padx 2 -pady 1
-        grid columnconfigure $f 7 -weight 1
+        grid columnconfigure $f 3 -weight 1
+        grid $f.rx -padx 0
         grid $f.showtx -sticky w
         grid $f.examine -sticky news
     }
