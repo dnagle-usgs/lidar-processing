@@ -13,7 +13,7 @@ func window_embed_tk(win, parent, dofma, style, dpi) {
     style="work"
     dpi=75
   This then calls change_window_style as follows:
-    change_window_style, style, dpi, dofma, win=win, parent=parent
+    change_window_style, style, dpi, dofma, win=win, parent=parent, xpos=0, ypos=0
 
   This is primarily intended to be used in Tcl/Tk using the ybkg command, since
   it does not support passing options.
@@ -21,7 +21,7 @@ func window_embed_tk(win, parent, dofma, style, dpi) {
   default, style, "work";
   default, dpi, 75;
   default, dofma, 0;
-  change_window_style, style, dpi, dofma, win=win, parent=parent;
+  change_window_style, style, dpi, dofma, win=win, parent=parent, xpos=0, ypos=0;
 }
 
 func change_window_style(style, win=, dofma=, dpi=, parent=, xpos=, ypos=,
