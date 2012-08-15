@@ -46,7 +46,7 @@ func ytk_rast(rn) {
 }
 
 func ndrast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=,
-autolims=) {
+autolims=, parent=) {
 /* DOCUMENT drast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=,
    cmax=, autolims=)
   Displays raster waveform data for the given raster. Try this:
@@ -125,7 +125,7 @@ func ndrast_graph(r, aa, somd, channel=, units=, win=, cmin=, cmax=, autolims=) 
 /* DOCUMENT ndrast_graph, r, aa, somd, channel=, units=, win=, cmin=, cmax=, autolims=
   Called by ndrast to handle its plotting.
 */
-  extern rn, data_path;
+  extern rn, data_path, __ndrast_graph_tk;
   default, units, "ns";
   default, win, max(0, current_window());
   default, channel, 1;
@@ -139,8 +139,23 @@ func ndrast_graph(r, aa, somd, channel=, units=, win=, cmin=, cmax=, autolims=) 
   units = h_has(settings, units) ? units : "ns";
 
   win_bkp = current_window();
+
+  // Coordinating with Tcl/Tk is tricky. This asks Tcl to launch the GUI for
+  // this window, which asks Yorick to embed its window in Tcl's window
+  // (issuing an FMA in the process). The rest of this function has to wait
+  // until all that's done before continuing, so Tcl also sets
+  // __ndrast_graph_tk when it's finished.
+  __ndrast_graph_tk = 0;
+  tkcmd, swrite(format="::eaarl::rasters::rastplot::launch %d %d %d",
+    win, rn, channel);
+  while(!__ndrast_graph_tk) {
+    pause, 1;
+  }
+
   window, win;
-  fma;
+  // When Tcl asks Yorick to embed its window, Yorick calls limits, square=1
+  // which isn't wanted here.
+  limits, square=0;
 
   rast = transpose(aa(,,channel));
   rast = short(~char(rast));
@@ -152,6 +167,7 @@ func ndrast_graph(r, aa, somd, channel=, units=, win=, cmin=, cmax=, autolims=) 
 
   pli, rast, 1, 4 * settings(units).scale, 121,
     -244 * settings(units).scale;
+
   xytitles, swrite(format="somd:%d hms:%s rn:%d chn:%d  Pixel #",
     somd, sod2hms(somd, str=1), rn, channel), settings(units).title;
   pltitle, regsub("_", data_path, "!_", all=1);

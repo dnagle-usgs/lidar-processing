@@ -11,23 +11,25 @@ if {![namespace exists ::eaarl::rasters::rastplot]} {
     }
 }
 
-proc ::eaarl::rasters::rastplot::dock_plot {args} {
-    set w ${v::top}_[dict get $args -window]
+proc ::eaarl::rasters::rastplot::launch {window raster channel} {
+    set args [list -window $window -raster $raster -channel $channel]
+    set w ${v::top}_$window
     if {[winfo exists $w]} {
         $w configure {*}$args
     } else {
-        ::eaarl::rasters::rastplot::dock_plot_gui $w {*}$args
+        ::eaarl::rasters::rastplot::gui $w {*}$args
     }
+    ::misc::idle [list $w sync]
 }
 
-snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
+snit::widget ::eaarl::rasters::rastplot::gui {
     hulltype toplevel
     delegate option * to hull
     delegate method * to hull
 
-    option -window -default 11
-    option -raster -default 1
-    option -channel -default 1
+    option -window -default 11 -configuremethod SetOpt
+    option -raster -default 1 -configuremethod SetOpt
+    option -channel -default 1 -configuremethod SetOpt
 
     component plot
 
@@ -44,17 +46,8 @@ snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
     variable wintx 16
 
     constructor {args} {
-        $self configure {*}$args
-
         wm resizable $win 0 0
-
-        set title "Window $options(-window) - Raster $options(-raster) "
-        if {$options(-channel) > 0} {
-            append title "Channel $options(-channel)"
-        } else {
-            append title "Transmit"
-        }
-        wm title $win $title
+        wm title $win "Window 11"
 
         ttk::frame $win.f
         grid $win.f -sticky news
@@ -69,9 +62,6 @@ snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
         grid $f.controls -sticky news -pady 3
         grid columnconfigure $f 0 -weight 1
         grid rowconfigure $f 1 -weight 1
-
-        exp_send "change_window_style, \"work\", win=$options(-window),\
-                parent=[winfo id $plot], xpos=0, ypos=0;\r"
 
         set f $f.controls
         ttk::labelframe $f.examine -text "Examine Waveforms"
@@ -114,10 +104,31 @@ snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
         grid $f.rx $f.bath -padx 0
         grid $f.showtx -sticky w
         grid $f.examine -sticky news
+
+        $self configure {*}$args
     }
 
     destructor {
         ybkg "winkill $options(-window)"
+    }
+
+    method SetOpt {option value} {
+        set options($option) $value
+        set title "Window $options(-window) - Raster $options(-raster) "
+        if {$options(-channel) > 0} {
+            append title "Channel $options(-channel)"
+        } else {
+            append title "Transmit"
+        }
+        wm title $win $title
+    }
+
+    method sync {} {
+        # By default, winfo id returns a number in hex format (like 0x200459c).
+        # However this doesn't play nicely with ybkg. Passing it through expr
+        # coerces it into decimal format.
+        ybkg window_embed_tk $options(-window) [expr {[winfo id $plot]}] 1
+        ::misc::idle [list ybkg funcset __ndrast_graph_tk 1]
     }
 
     method examine {} {
