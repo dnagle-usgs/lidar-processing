@@ -260,7 +260,7 @@ func drast_graph(aa, digitizer, win=) {
   window_select, win_bkp;
 }
 
-func drast_msel(rn, type=, cb=, rx=, tx=, bath=, winsel=, winrx=, wintx=, winbath=) {
+func drast_msel(rn, type=, cb=, rx=, tx=, bath=, bathchan=, winsel=, winrx=, wintx=, winbath=) {
   default, type, "rast";
   default, cb, 7;
   default, rx, 1;
@@ -296,7 +296,7 @@ func drast_msel(rn, type=, cb=, rx=, tx=, bath=, winsel=, winrx=, wintx=, winbat
       if(rx)
         show_wf, *rast, pulse, win=winrx, cb=cb;
       if(bath)
-        ex_bath, rn, pulse, graph=1, win=winbath, xfma=1;
+        ex_bath, rn, pulse, graph=1, win=winbath, xfma=1, forcechannel=bathchan;
       if(tx)
         show_wf_transmit, rn, pulse, win=wintx;
     } else {

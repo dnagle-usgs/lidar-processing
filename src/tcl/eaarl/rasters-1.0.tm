@@ -33,11 +33,14 @@ snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
 
     variable showrx 1
     variable showtx 0
+    variable showbath 0
     variable chan1 1
     variable chan2 1
     variable chan3 1
     variable chan4 0
+    variable bathchan 0
     variable winrx 9
+    variable winbath 4
     variable wintx 16
 
     constructor {args} {
@@ -78,15 +81,22 @@ snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
 
         set f $f.examine
         ttk::frame $f.rx
+        ttk::frame $f.bath
         ttk::checkbutton $f.showrx -text "Show channels:" \
                 -variable [myvar showrx]
+        ttk::checkbutton $f.showbath -text "Show bathy using channel:" \
+                -variable [myvar showbath]
         ttk::checkbutton $f.showtx -text "Show transmit" \
                 -variable [myvar showtx]
         foreach channel {1 2 3 4} {
              ttk::checkbutton $f.chan$channel -text "$channel" \
                     -variable [myvar chan$channel]
         }
-        foreach type {rx tx} {
+        ::mixin::combobox::mapping $f.bathchan -width 4 \
+                -state readonly \
+                -altvariable [myvar bathchan] \
+                -mapping {Auto 0 1 1 2 2 3 3 4 4}
+        foreach type {rx bath tx} {
             ttk::label $f.lblwin$type -text " Window:"
             ttk::spinbox $f.win$type -width 3 \
                     -textvariable [myvar win${type}]
@@ -95,13 +105,13 @@ snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
                 -command [mymethod examine]
 
         grid $f.showrx $f.chan1 $f.chan2 $f.chan3 $f.chan4 -in $f.rx -padx 2
+        grid $f.showbath $f.bathchan -in $f.bath -padx 2
 
-        grid $f.rx     $f.lblwinrx $f.winrx $f.examine \
-                -padx 2 -pady 1
-        grid $f.showtx $f.lblwintx $f.wintx ^ \
-                -padx 2 -pady 1
+        grid $f.rx     $f.lblwinrx   $f.winrx   $f.examine -padx 2 -pady 1
+        grid $f.bath   $f.lblwinbath $f.winbath ^          -padx 2 -pady 1
+        grid $f.showtx $f.lblwintx   $f.wintx   ^          -padx 2 -pady 1
         grid columnconfigure $f 3 -weight 1
-        grid $f.rx -padx 0
+        grid $f.rx $f.bath -padx 0
         grid $f.showtx -sticky w
         grid $f.examine -sticky news
     }
@@ -112,15 +122,19 @@ snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
 
     method examine {} {
         set cb [expr {$chan1 + 2*$chan2 + 4*$chan3 + 8*$chan4}]
+        set fc [expr {$showbath && $bathchan}]
         set cmd "drast_msel, $options(-raster)"
         appendif cmd \
                 1           ", type=\"rast\"" \
                 1           ", rx=$showrx" \
                 $showtx     ", tx=1" \
+                $showbath   ", bath=1" \
                 $showrx     ", cb=$cb" \
+                $fc         ", bathchan=$bathchan" \
                 1           ", winsel=$options(-window)" \
                 $showrx     ", winrx=$winrx" \
-                $showtx     ", wintx=$wintx"
+                $showtx     ", wintx=$wintx" \
+                $showbath   ", winbath=$winbath"
         exp_send "$cmd;\r"
     }
 }
