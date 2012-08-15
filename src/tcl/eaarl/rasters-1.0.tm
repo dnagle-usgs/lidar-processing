@@ -30,8 +30,6 @@ snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
     option -channel -default 1
 
     component plot
-    #variable foo ""
-    #typevariable foo {}
 
     variable showrx 1
     variable showtx 0
