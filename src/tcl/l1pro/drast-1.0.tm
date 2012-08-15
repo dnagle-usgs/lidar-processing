@@ -63,7 +63,7 @@ if {![namespace exists ::l1pro::drast]} {
             variable wfwin 9
             variable wfwinbath 4
             variable wfwintransmit 16
-            variable wfsrc geo-1
+            variable wfsrc rast-1
             variable slinewin 6
             variable slinestyle average
             variable slinecolor black
