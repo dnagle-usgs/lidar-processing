@@ -613,6 +613,10 @@ snit::widgetadaptor ::mixin::frame::transition_size {
         $self configure {*}$args
     }
 
+    destructor {
+        after cancel [mymethod Step]
+    }
+
     delegate option * to hull
     delegate method * to hull
 
