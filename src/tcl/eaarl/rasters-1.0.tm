@@ -33,14 +33,14 @@ snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
     #variable foo ""
     #typevariable foo {}
 
-    variable rxshow 1
-    variable txshow 0
+    variable showrx 1
+    variable showtx 0
     variable chan1 1
     variable chan2 1
     variable chan3 1
     variable chan4 0
-    variable rxwin 9
-    variable txwin 16
+    variable winrx 9
+    variable wintx 16
 
     constructor {args} {
         $self configure {*}$args
@@ -81,9 +81,9 @@ snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
         set f $f.examine
         ttk::frame $f.rx
         ttk::checkbutton $f.showrx -text "Show channels:" \
-                -variable [myvar rxshow]
+                -variable [myvar showrx]
         ttk::checkbutton $f.showtx -text "Show transmit" \
-                -variable [myvar txshow]
+                -variable [myvar showtx]
         foreach channel {1 2 3 4} {
              ttk::checkbutton $f.chan$channel -text "$channel" \
                     -variable [myvar chan$channel]
@@ -91,7 +91,7 @@ snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
         foreach type {rx tx} {
             ttk::label $f.lblwin$type -text " Window:"
             ttk::spinbox $f.win$type -width 3 \
-                    -textvariable [myvar ${type}win]
+                    -textvariable [myvar win${type}]
         }
         ttk::button $f.examine -text "Examine\nWaveforms" \
                 -command [mymethod examine]
@@ -117,12 +117,12 @@ snit::widget ::eaarl::rasters::rastplot::dock_plot_gui {
         set cmd "drast_msel, $options(-raster)"
         appendif cmd \
                 1           ", type=\"rast\"" \
-                1           ", rx=$rxshow" \
-                $txshow     ", tx=1" \
-                $rxshow     ", cb=$cb" \
+                1           ", rx=$showrx" \
+                $showtx     ", tx=1" \
+                $showrx     ", cb=$cb" \
                 1           ", winsel=$options(-window)" \
-                $rxshow     ", winrx=$rxwin" \
-                $txshow     ", wintx=$txwin"
+                $showrx     ", winrx=$winrx" \
+                $showtx     ", wintx=$wintx"
         exp_send "$cmd;\r"
     }
 }
