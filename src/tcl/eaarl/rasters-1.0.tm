@@ -2,14 +2,14 @@
 
 package provide eaarl::rasters 1.0
 
-#if {![namespace exists ::eaarl::rasters::rastplot]} {
-#}
+if {![namespace exists ::eaarl::rasters::rastplot]} {
     namespace eval ::eaarl::rasters::rastplot {
         namespace import ::misc::appendif
         namespace eval v {
             variable top .eaarl_rastplot
         }
     }
+}
 
 proc ::eaarl::rasters::rastplot::dock_plot {args} {
     set w ${v::top}_[dict get $args -window]
