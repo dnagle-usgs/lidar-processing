@@ -260,8 +260,8 @@ func drast_graph(aa, digitizer, win=) {
   window_select, win_bkp;
 }
 
-func msel_wf(w, rn=, cb=, tx=, geo=, winsel=, winplot=, wintx=, winbath=, seltype=) {
-/* DOCUMENT msel_wf, w, cb=, geo=
+func msel_wf(w, rn=, cb=, tx=, winsel=, winplot=, wintx=, winbath=, seltype=) {
+/* DOCUMENT msel_wf, w, cb=
   Use the mouse to select a pixel to display a waveform for.
 
   w - Should be a pointer to an array of waveform data as returned by drast.
@@ -269,14 +269,10 @@ func msel_wf(w, rn=, cb=, tx=, geo=, winsel=, winplot=, wintx=, winbath=, seltyp
 
   cb= Channel bitmask indicating which channels should be displayed. 1 is
     channel 1, 2 is channel 2, 4 is channel 3. Defaults to 7 (all channels).
-  geo= Specifies whether to plot a normal raster or a georeferenced raster.
-    Defaults to 0. If 0, uses show_wf (normal). If 1, uses show_geo_wf
-    (georeferenced).
 */
   extern bath_ctl, xm;
 
   default, cb, 7;
-  default, geo, 0;
   default, winplot, 0;
   default, winbath, 4;
 
@@ -284,7 +280,6 @@ func msel_wf(w, rn=, cb=, tx=, geo=, winsel=, winplot=, wintx=, winbath=, seltyp
     w = ndrast(rn=rn, graph=0);
 
   win = 1;
-  if(geo == 1) win = 2; //use georectified raster
   if(!is_void(winsel)) win = winsel;
   default, seltype, (winsel == 2 ? "geo" : "rast");
   window, win;
@@ -304,10 +299,7 @@ func msel_wf(w, rn=, cb=, tx=, geo=, winsel=, winplot=, wintx=, winbath=, seltyp
 
     if(mouse_click_is("middle", b)) break;
 
-    if (geo)
-      show_geo_wf, *w, idx, win=winplot, cb=cb;
-    else
-      show_wf, *w, idx , win=winplot, cb=cb;
+    show_wf, *w, idx , win=winplot, cb=cb;
     if (is_array(bath_ctl)) {
       if (bath_ctl.laser != 0)
         ex_bath, rn, idx, graph=1, win=winbath, xfma=1;

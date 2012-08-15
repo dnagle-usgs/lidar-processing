@@ -59,7 +59,6 @@ if {![namespace exists ::l1pro::drast]} {
             variable wfchan3 1
             variable wfchan4 0
             variable wfchan0 0
-            variable wfgeo 0
             variable wfwin 9
             variable wfwinbath 4
             variable wfwintransmit 16
@@ -426,8 +425,8 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
             -textvariable ${ns}::v::wfwintransmit
     ttk::checkbutton $f.use0 -text "Transmit" \
             -variable ${ns}::v::wfchan0
-    ttk::checkbutton $f.geo -text "Georeference" \
-            -variable ${ns}::v::wfgeo
+    # Placeholder for removed GUI element:
+    ttk::label $f.geo
     apply $labelgrid $f.winwf "WF win:" $f.use1 -
     apply $labelgrid $f.winbath "ex_bath win:" $f.use2 -
     apply $labelgrid $f.src "Select from:" $f.use3 -
@@ -748,7 +747,6 @@ proc ::l1pro::drast::examine_waveforms {} {
         set src [set v::${type}win${chan}]
         set cmd "msel_wf, rn=$v::rn, cb=$cb"
         appendif cmd \
-                $v::wfgeo      ", geo=1" \
                 1              ", winsel=$src" \
                 1              ", winplot=$v::wfwin" \
                 1              ", winbath=$v::wfwinbath" \
