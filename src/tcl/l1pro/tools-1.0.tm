@@ -546,8 +546,7 @@ proc ::l1pro::tools::histelev::cbar_tool_docked {win} {
     grid columnconfigure $f 0 -weight 1
     grid rowconfigure $f 1 -weight 1
 
-    exp_send "change_window_style, \"work\", win=$win,\
-            parent=[winfo id $f.plot], xpos=0, ypos=0;\r"
+    ybkg window_embed_tk $win [expr {[winfo id $f.plot]}]
 
     set f $f.buttons
 
