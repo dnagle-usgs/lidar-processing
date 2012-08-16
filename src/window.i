@@ -1,35 +1,38 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
-func window_embed_tk(win, parent, dofma, style, dpi) {
+func window_embed_tk(win, parent, dofma, style, dpi, sys0) {
 /* DOCUMENT window_embed_tk, win, parent
   -or-  window_embed_tk, win, parent, dofma
   -or-  window_embed_tk, win, parent, dofma, style
   -or-  window_embed_tk, win, parent, dofma, style, dpi
+  -or-  window_embed_tk, win, parent, dofma, style, dpi, sys0
 
   Wrapper around change_window_style. If omitted, the last three parameters
   have these defaults:
     dofma=0
     style="work"
     dpi=75
+    sys0=1
   This then calls change_window_style as follows:
     change_window_style, style, dpi=dpi, dofma=dofma, win=win, parent=parent,
-      xpos=0, ypos=0
+      xpos=0, ypos=0, sys0=sys0
 
   This is primarily intended to be used in Tcl/Tk using the ybkg command, since
-  it does not support passing options.
+  it does not support passing keywords.
 */
   default, style, "work";
   default, dpi, 75;
   default, dofma, 0;
+  default, sys0, 1;
   change_window_style, style, dpi=dpi, dofma=dofma, win=win, parent=parent,
-    xpos=0, ypos=0, wait=0;
+    xpos=0, ypos=0, sys0=sys0;
 }
 
-func change_window_style(style, win=, dofma=, dpi=, parent=, xpos=, ypos=,
-wait=) {
-/* DOCUMENT change_window_style, style, win=, dofma=, dpi=, parent=, xpos=,
-  ypos=, wait=
+func change_window_style(style, win=, dofma=, dpi=, sys0=, parent=, xpos=,
+ypos=, wait=) {
+/* DOCUMENT change_window_style, style, win=, dofma=, dpi=, sys0=, parent=,
+   xpos=, ypos=, wait=
 
   Changes the style of a Yorick window.
   Parameter:
@@ -40,16 +43,19 @@ wait=) {
     dofma= Set to 1 to issue an FMA prior to changing. This avoids the need
       to re-plot the window's contents.
     dpi= The DPI setting to use. Normally either dpi=75 or dpi=100.
+    sys0= Set to 1 to include system 0 (which includes plot and axis titles).
 
   These options are passed to window without modification:
     parent=
     xpos=
     ypos=
+    wait=
 */
   local wdata;
   default, win, current_window();
   default, dofma, 0;
   default, dpi, 75;
+  default, sys0, 0;
 
   if(win < 0)
     win = window();
@@ -82,8 +88,9 @@ wait=) {
 
   // Avoid copying system 0. It contains axis and plot labels, which will
   // render in the wrong spot when changing to/from landscape.
+  systems = (sys0 ? [0,1] : [1]);
   if(!dofma)
-    load_plot, wdata, win, style=0, systems=[1];
+    load_plot, wdata, win, style=0, systems=systems;
 }
 
 func change_window_size(win, winsize, dofma) {
