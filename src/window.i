@@ -90,7 +90,6 @@ ypos=, wait=) {
   window, win, dpi=dpi, style=style+".gs", width=width, height=height,
     parent=parent, xpos=xpos, ypos=ypos, wait=wait;
   window, win, width=0, height=0;
-  limits, square=1;
 
   // Avoid copying system 0. It contains axis and plot labels, which will
   // render in the wrong spot when changing to/from landscape.
