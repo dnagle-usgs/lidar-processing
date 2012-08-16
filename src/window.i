@@ -82,7 +82,8 @@ ypos=, wait=) {
     }
   }
 
-  if(!dofma)
+  wdata = [];
+  if(!dofma && window_exists(win))
     wdata = save_plot(win);
 
   winkill, win;
@@ -94,7 +95,7 @@ ypos=, wait=) {
   // Avoid copying system 0. It contains axis and plot labels, which will
   // render in the wrong spot when changing to/from landscape.
   systems = (sys0 ? [0,1] : [1]);
-  if(!dofma)
+  if(!is_void(wdata))
     load_plot, wdata, win, style=0, systems=systems;
 }
 
