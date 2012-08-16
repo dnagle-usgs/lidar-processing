@@ -72,7 +72,7 @@ wait=) {
   }
 
   if(!dofma)
-    wdata = plot_hash(win);
+    wdata = save_plot(win);
 
   winkill, win;
   window, win, dpi=dpi, style=style+".gs", width=width, height=height,
@@ -80,8 +80,10 @@ wait=) {
   window, win, width=0, height=0;
   limits, square=1;
 
+  // Avoid copying system 0. It contains axis and plot labels, which will
+  // render in the wrong spot when changing to/from landscape.
   if(!dofma)
-    plot_restore, win, wdata, style=0;
+    load_plot, wdata, win, style=0, systems=[1];
 }
 
 func change_window_size(win, winsize, dofma) {
@@ -147,157 +149,4 @@ func window2image(file, win=) {
   system, swrite(format="convert %s %s", xwdfile, file);
   remove, xwdfile;
   rmdir, dir;
-}
-
-func plot_hash(wsrc, pal=) {
-/* DOCUMENT p = plot_hash(wsrc, pal=)
-
-  Save Yorick plot of window wsrc in a Yeti hash. This plot can be restored
-  with plot_restore.
-
-  Use pal=0 if you do not want the palette saved.
-
-  SEE ALSO: plot_restore plot_save plot_load
-
-  Modified from function save_plot in copy_plot.i
-*/
-  local a,b,c,d,x,y,z;
-  local x0,x1,y0,y1,txt;
-  local ireg;
-  local p1,p2,p3,p4,p5;
-  local rp,gp,bp;
-  default, pal, 1;
-
-  p = h_new();
-
-  old_win = current_window();
-  if(old_win >= 0)
-    old_sys = plsys();
-
-  window, wsrc;
-  get_style, a, b, c, d;
-  h_set, p, "getstyle_p1", a;
-  h_set, p, "getstyle_p2", b;
-  h_set, p, "getstyle_p3", c;
-  h_set, p, "getstyle_p4", d;
-
-  palette, rp, gp, bp, query=1;
-  if(!is_void(rp) && pal) {
-    rgb_pal = long(rp) + (long(gp)<<8) + (long(bp)<<16);
-    h_set, p ,"palette", rgb_pal;
-  }
-
-  nbsys = get_nb_sys(wsrc);
-  for(i = 0; i <= nbsys; i++) {
-    plsys, i;
-    lmt = limits();
-    nbobj = numberof(plq());
-    h_set, p, swrite(format="system_%d",i), i;
-    h_set, p, swrite(format="limits_%d",i), lmt;
-    for(j = 1; j <= nbobj; j++) {
-       prop=plq(j);
-       decomp_prop, prop, p1, p2, p3, p4, p5;
-       h_set, p, swrite(format="prop1_%d_%d",i,j), (is_void(p1) ? "dummy" : p1);
-       h_set, p, swrite(format="prop2_%d_%d",i,j), (is_void(p1) ? "dummy" : p2);
-       h_set, p, swrite(format="prop3_%d_%d",i,j), (is_void(p1) ? "dummy" : p3);
-       h_set, p, swrite(format="prop4_%d_%d",i,j), (is_void(p1) ? "dummy" : p4);
-
-       rslt = reshape_prop(prop);
-       h_set, p, swrite(format="prop5_%d_%d",i,j), (is_void(rslt) ? "dummy" : rslt);
-    }
-  }
-
-  if(old_win >= 0) {
-    window, old_win;
-    plsys, old_sys;
-  }
-
-  return p;
-}
-
-func plot_restore(wout, p, style=, clear=, lmt=, pal=) {
-/* DOCUMENT plot_restore, wout, p, style=, clear=, lmt=, pal=
-
-  Restores a plot saved to hash by plot_hash.
-
-  Use lmt=0 to disable restoration of limits.
-  Use clear=0 to disable clearing of window before plotting.
-  Use pal=0 to disable using palette saved (if present).
-  Use style=0 to disable using style saved.
-
-  SEE ALSO: plot_hash plot_save plot_load
-
-  Modified from function load_plot in copy_plot.i
-*/
-  default, style, 1;
-  default, clear, 1;
-  default, lmt, 1;
-  default, pal, 1;
-
-  old_win = current_window();
-  if(old_win >= 0)
-    old_sys = plsys();
-
-  window, wout;
-
-  if(style)
-    set_style, h_get(p, "getstyle_p1"), h_get(p, "getstyle_p2"),
-      h_get(p, "getstyle_p3"), h_get(p, "getstyle_p4");
-
-  if(clear)
-    fma;
-
-  if(pal && h_has(p, "palette")) {
-    rgb = p.palette;
-    palette, char(rgb&0x0000FF), char((rgb&0x00FF00)>>8), char((rgb&0xFF0000)>>16);
-  }
-
-  i = 0;
-  while(h_has(p, swrite(format="system_%d", ++i))) {
-    plsys, p(swrite(format="system_%d", i));
-    limits;
-    if(lmt)
-      limits, p(swrite(format="limits_%d", i));
-    j = 0;
-    while(h_has(p, swrite(format="prop1_%d_%d", i, ++j))) {
-      p1 = h_get(p, swrite(format="prop1_%d_%d", i, j));
-      p2 = h_get(p, swrite(format="prop2_%d_%d", i, j));
-      p3 = h_get(p, swrite(format="prop3_%d_%d", i, j));
-      p4 = h_get(p, swrite(format="prop4_%d_%d", i, j));
-      p5 = h_get(p, swrite(format="prop5_%d_%d", i, j));
-      if(is_void(p1)||is_void(p2)||is_void(p3)||is_void(p4)||is_void(p5))
-        continue;
-      replot, p1, p2, p3, p4, p5;
-    }
-  }
-  redraw;
-
-  if(old_win >= 0) {
-    window, old_win;
-    plsys, old_sys;
-  }
-}
-
-func plot_save(win, pbd) {
-/* DOCUMENT plot_save, win, pbd
-
-  Saves a window's plot to a pbd, which can then later be restored with
-  plot_load.
-
-  SEE ALSO: plot_hash plot_restore plot_load
-*/
-  if(!is_hash(win))
-    win = plot_hash(win);
-  hash2pbd, win, pbd;
-}
-
-func plot_load(win, pbd) {
-/* DOCUMENT plot_load, win, pbd
-
-  Loads a plot to a window that had been saved by plot_save.
-
-  SEE ALSO: plot_hash plot_restore plot_save
-*/
-  hash = pbd2hash(pbd);
-  plot_restore, win, hash, style=0;
 }
