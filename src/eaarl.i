@@ -37,6 +37,9 @@ if(is_void(__eaarl_includes_included__)) {
   require, "ytk.i";
   require, "zlib.i";
 
+  // Patches for the above plugins
+  require, "patches/2012-08-yutils.i";
+
   // Replace built-in median with Yeti's median which is much faster
   if(is_void(ymedian))
     ymedian = median;
