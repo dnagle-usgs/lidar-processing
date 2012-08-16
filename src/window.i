@@ -20,6 +20,11 @@ func window_embed_tk(win, parent, dofma, style, dpi, sys0) {
 
   This is primarily intended to be used in Tcl/Tk using the ybkg command, since
   it does not support passing keywords.
+
+  Note: When using ybkg to call this, make sure the ID is passed as a decimal
+  integer. By default, [winfo id $win] returns a number in hexadecimal form,
+  which doesn't work for some reason. So use [expr {[winfo id $win]}] to cast
+  to a decimal form.
 */
   default, style, "work";
   default, dpi, 75;
