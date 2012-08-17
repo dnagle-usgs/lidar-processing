@@ -529,6 +529,8 @@ proc ::l1pro::drast::show_auto {} {
 proc ::l1pro::drast::show_rast {} {
     foreach channel {1 2 3 4 0} {
         if {![set v::rastchan${channel}]} continue
+        set gui [::eaarl::rasters::rastplot::launch \
+                [set v::rastwin${channel}] $v::rn $channel]
         set cmd "ndrast, "
         appendif cmd \
                 1                          "rn=$v::rn" \
@@ -538,6 +540,7 @@ proc ::l1pro::drast::show_rast {} {
                 $v::rastusecmin            ", cmin=$v::rastcmin" \
                 $v::rastusecmax            ", cmax=$v::rastcmax" \
                 {!$v::rastautolims}        ", autolims=0" \
+                1                          ", parent=[$gui id]" \
                 1                          ", sfsync=0"
 
         exp_send "$cmd\r"
