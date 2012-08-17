@@ -19,7 +19,7 @@ proc ::eaarl::rasters::rastplot::launch {window raster channel} {
     } else {
         ::eaarl::rasters::rastplot::gui $w {*}$args
     }
-    ::misc::idle [list $w sync]
+    return $w
 }
 
 snit::widget ::eaarl::rasters::rastplot::gui {
@@ -123,12 +123,12 @@ snit::widget ::eaarl::rasters::rastplot::gui {
         wm title $win $title
     }
 
-    method sync {} {
-        # By default, winfo id returns a number in hex format (like 0x200459c).
-        # However this doesn't play nicely with ybkg. Passing it through expr
-        # coerces it into decimal format.
-        ybkg window_embed_tk $options(-window) [expr {[winfo id $plot]}] 1
-        ::misc::idle [list ybkg funcset __ndrast_graph_tk 1]
+    method id {} {
+        return [expr {[winfo id $plot]}]
+    }
+
+    method embed {} {
+        ybkg window_embed_tk $options(-window) [expr {[winfo id $plot]}]
     }
 
     method examine {} {

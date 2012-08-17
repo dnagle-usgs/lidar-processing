@@ -48,7 +48,7 @@ func ytk_rast(rn) {
 func ndrast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=,
 autolims=, parent=) {
 /* DOCUMENT drast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=,
-   cmax=, autolims=)
+   cmax=, autolims=, parent=)
   Displays raster waveform data for the given raster. Try this:
 
     > rn = 1000
@@ -116,16 +116,18 @@ autolims=, parent=) {
 
   if(graph)
     ndrast_graph, r, aa, somd, channel=channel, units=units, win=win,
-      cmin=cmin, cmax=cmax, autolims=autolims;
+      cmin=cmin, cmax=cmax, autolims=autolims, parent=parent;
 
   return &aa;
 }
 
-func ndrast_graph(r, aa, somd, channel=, units=, win=, cmin=, cmax=, autolims=) {
-/* DOCUMENT ndrast_graph, r, aa, somd, channel=, units=, win=, cmin=, cmax=, autolims=
+func ndrast_graph(r, aa, somd, channel=, units=, win=, cmin=, cmax=, autolims=,
+parent=) {
+/* DOCUMENT ndrast_graph, r, aa, somd, channel=, units=, win=, cmin=, cmax=,
+   autolims=, parent=
   Called by ndrast to handle its plotting.
 */
-  extern rn, data_path, __ndrast_graph_tk;
+  extern rn, data_path;
   default, units, "ns";
   default, win, max(0, current_window());
   default, channel, 1;
@@ -140,22 +142,10 @@ func ndrast_graph(r, aa, somd, channel=, units=, win=, cmin=, cmax=, autolims=) 
 
   win_bkp = current_window();
 
-  // Coordinating with Tcl/Tk is tricky. This asks Tcl to launch the GUI for
-  // this window, which asks Yorick to embed its window in Tcl's window
-  // (issuing an FMA in the process). The rest of this function has to wait
-  // until all that's done before continuing, so Tcl also sets
-  // __ndrast_graph_tk when it's finished.
-  __ndrast_graph_tk = 0;
-  tkcmd, swrite(format="::eaarl::rasters::rastplot::launch %d %d %d",
-    win, rn, channel);
-  while(!__ndrast_graph_tk) {
-    pause, 1;
-  }
-
   window, win;
-  // When Tcl asks Yorick to embed its window, Yorick calls limits, square=1
-  // which isn't wanted here.
-  limits, square=0;
+  fma;
+  if(!is_void(parent))
+    window_embed_tk, win, parent, 1;
 
   rast = transpose(aa(,,channel));
   rast = short(~char(rast));
