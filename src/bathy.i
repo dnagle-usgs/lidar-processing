@@ -509,9 +509,7 @@ func plot_bath_ctl(channel, wf, thresh=, first=, last=) {
   default, thresh, bath_ctl.thresh;
   default, first, bath_ctl.first;
   default, last, bath_ctl.last;
-  if(channel == 1) pltitle, "Black (90\%) Channel";
-  if(channel == 2) pltitle, "Red (9\%) Channel";
-  if(channel == 3) pltitle, "Blue (1\%) Channel";
+  pltitle, swrite(format="Channel %d", channel);
   if(!is_void(thresh)) {
     plg, [thresh,thresh], [first,last], marks=0, color="red";
     plg, [0,thresh], [first,first], marks=0, color="green", width=7;
