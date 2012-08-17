@@ -244,7 +244,7 @@ func edb_update(time_correction) {
   if(!is_void(edb_filename) && !is_void(edb)) {
     edb.seconds += time_correction;
     f = edb_open(edb_filename, filemode="r+b");
-    f.edb = edb;
+    f.records = edb;
     close, f;
     write, "edb updated";
   }
