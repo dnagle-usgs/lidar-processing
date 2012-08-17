@@ -62,7 +62,6 @@ if {![namespace exists ::l1pro::drast]} {
             variable wfwin 9
             variable wfwinbath 4
             variable wfwintransmit 16
-            variable wfsrc rast-1
             variable slinewin 6
             variable slinestyle average
             variable slinecolor black
@@ -157,17 +156,14 @@ proc ::l1pro::drast::gui_tools f {
     ttk::entry $f.rn -textvariable ${ns}::v::rn -width 8
     ttk::button $f.plot -text "Plot" -style Toolbutton \
             -command ${ns}::show_auto
-    ttk::button $f.wf -text "WF" -style Toolbutton \
-            -command ${ns}::examine_waveforms
     ttk::separator $f.spacer -orient vertical
 
-    grid $f.rn $f.spacer $f.plot $f.wf
+    grid $f.rn $f.spacer $f.plot
     grid configure $f.spacer -sticky ns -padx 2
     grid rowconfigure $f 0 -weight 1
 
     ::tooltip::tooltip $f.rn "Current raster number"
     ::tooltip::tooltip $f.plot "Display currently selected plots"
-    ::tooltip::tooltip $f.wf "Click on raster to examine waveform"
 
     bind $f.rn <Return> ${ns}::show_auto
 }
@@ -272,8 +268,6 @@ proc ::l1pro::drast::gui_opts_play {f labelgrid} {
             -textvariable ${ns}::v::playint
     ttk::spinbox $f.stepinc -from 1 -to 10000 -increment 1 -width 0 \
             -textvariable ${ns}::v::stepinc
-    ttk::spinbox $f.pulse -from 1 -to 240 -increment 1 -width 0 \
-            -textvariable ${ns}::v::pulse
     ttk::checkbutton $f.rast -text "Show rast" \
             -variable ${ns}::v::show_rast
     ttk::checkbutton $f.geo -text "Show geo" \
@@ -295,7 +289,7 @@ proc ::l1pro::drast::gui_opts_play {f labelgrid} {
     apply $labelgrid $f.rast - $f.sfsync -
     apply $labelgrid $f.geo -
     apply $labelgrid $f.sline -
-    apply $labelgrid $f.wf - $f.pulse "Pulse:"
+    apply $labelgrid $f.wf -
     apply $labelgrid $f.autolidar -
     apply $labelgrid $f.autopt -
     apply $labelgrid $f.autoptc -
@@ -404,15 +398,13 @@ proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
 
 proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
     set ns [namespace current]
-    ::mixin::labelframe::collapsible $f -text "WF: Examine waveforms"
+    ::mixin::labelframe::collapsible $f -text "Waveforms"
+    $f fastcollapse
     set f [$f interior]
     ttk::spinbox $f.winwf -from 0 -to 63 -increment 1 -width 0 \
             -textvariable ${ns}::v::wfwin
     ttk::spinbox $f.winbath -from 0 -to 63 -increment 1 -width 0 \
             -textvariable ${ns}::v::wfwinbath
-    ::mixin::combobox $f.src -state readonly -width 0 \
-            -textvariable ${ns}::v::wfsrc \
-            -values {rast-1 rast-2 rast-3 rast-4 transmit geo-1 geo-2 geo-3 geo-4}
     ttk::checkbutton $f.use1 -text "Channel 1 (black)" \
             -variable ${ns}::v::wfchan1
     ttk::checkbutton $f.use2 -text "Channel 2 (red)" \
@@ -421,6 +413,8 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
             -variable ${ns}::v::wfchan3
     ttk::checkbutton $f.use4 -text "Channel 4 (magenta)" \
             -variable ${ns}::v::wfchan4
+    ttk::spinbox $f.pulse -from 1 -to 240 -increment 1 -width 0 \
+            -textvariable ${ns}::v::pulse
     ttk::spinbox $f.winwftransmit -from 0 -to 63 -increment 1 -width 0 \
             -textvariable ${ns}::v::wfwintransmit
     ttk::checkbutton $f.use0 -text "Transmit" \
@@ -429,19 +423,9 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
     ttk::label $f.geo
     apply $labelgrid $f.winwf "WF win:" $f.use1 -
     apply $labelgrid $f.winbath "ex_bath win:" $f.use2 -
-    apply $labelgrid $f.src "Select from:" $f.use3 -
+    apply $labelgrid $f.pulse "Pulse:" $f.use3 -
     apply $labelgrid $f.geo - $f.use4 -
     apply $labelgrid $f.winwftransmit "Transmit win:" $f.use0 -
-
-    foreach w [list $f.src $f.lblsrc] {
-        ::tooltip::tooltip $w \
-            "Specifies which raster should be clicked on to select a waveform.\
-            \nThe options starting with \"geo\" are for the georeferenced\
-            \nraster and the options starting with \"rast\" are for the\
-            \nunreferenced raster. The numbers specify which channel. So\
-            \nrast-3 is for unreferenced raster, channel 3. The option\
-            \n\"transmit\" is for the unreference transmit raster."
-    }
 }
 
 proc ::l1pro::drast::gui_opts_sline {f labelgrid} {
@@ -722,42 +706,6 @@ proc ::l1pro::drast::play_tick {} {
 
 proc ::l1pro::drast::jump pos {
     set v::rn [expr {round($pos)}]
-}
-
-proc ::l1pro::drast::examine_waveforms {} {
-    set cb [expr {$v::wfchan1 + 2*$v::wfchan2 + 4*$v::wfchan3 + 8*$v::wfchan4}]
-    if {$v::wfsrc eq "transmit"} {
-        lassign [list rast 0] type chan
-    } else {
-        lassign [split $v::wfsrc -] type chan
-    }
-    if {![set v::show_$type] || ![set v::${type}chan${chan}]} {
-        tk_messageBox -icon error -type ok -title "Error" -message \
-                "You are trying to use \[WF\] on a window that isn't being\
-                plotted. Please check the \"WF: Examine waveforms\" section\
-                below to ensure that \"Select from:\" is set to a raster\
-                option that is being plotted."
-        return
-    }
-    if {$v::wfsrc eq "transmit"} {
-        set cmd "msel_wf_transmit, $v::rn"
-        appendif cmd \
-                1               ", winsel=$v::rastwin0" \
-                1               ", winplot=$v::wfwintransmit" \
-                $cb             ", cb=$cb" \
-                $cb             ", winrx=$v::wfwin"
-    } else {
-        set src [set v::${type}win${chan}]
-        set cmd "msel_wf, rn=$v::rn, cb=$cb"
-        appendif cmd \
-                1              ", winsel=$src" \
-                1              ", winplot=$v::wfwin" \
-                1              ", winbath=$v::wfwinbath" \
-                $v::wfchan0    ", tx=1" \
-                $v::wfchan0    ", wintx=$v::wfwintransmit" \
-                1              ", seltype=\"$type\""
-    }
-    exp_send "$cmd\r"
 }
 
 namespace eval ::l1pro::drast::mediator {
