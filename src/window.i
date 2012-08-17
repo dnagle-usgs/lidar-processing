@@ -31,7 +31,7 @@ func window_embed_tk(win, parent, dofma, style, dpi, sys0) {
   default, dofma, 0;
   default, sys0, 1;
   change_window_style, style, dpi=dpi, dofma=dofma, win=win, parent=parent,
-    xpos=0, ypos=0, sys0=sys0;
+    xpos=0, ypos=0, sys0=sys0, wait=0;
 }
 
 func change_window_style(style, win=, dofma=, dpi=, sys0=, parent=, xpos=,
