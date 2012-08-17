@@ -299,7 +299,8 @@ func kml_element(args) {
   items = [];
   for(i = 2; i <= args(0); i++)
     grow, items, args(i);
-  if(is_void(items)) items = string(0);
+  if(is_void(items))
+    return [];
 
   attribs = "";
   keys = args(-);
