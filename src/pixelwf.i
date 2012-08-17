@@ -68,7 +68,8 @@ if(is_void(pixelwfvars)) {
       win=1,
       units="ns",
       dest_action=0,
-      dest_variable=""
+      dest_variable="",
+      parent=0
     )
   );
 }
@@ -199,7 +200,8 @@ func pixelwf_ndrast(void) {
   window, vars.win;
   fma;
 
-  result = ndrast(rn=raster, graph=1, win=vars.win, units=vars.units, sfsync=0);
+  result = ndrast(rn=raster, graph=1, win=vars.win, units=vars.units,
+    parent=vars.parent, sfsync=0);
   pixelwf_handle_result, vars, result;
 
   window_select, win;

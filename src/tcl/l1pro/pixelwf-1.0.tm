@@ -77,6 +77,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
                 variable units ns
                 variable dest_action 0
                 variable dest_variable ""
+                variable parent 0
             }
             # Backup all the variables we just created...
             variable defaults {}
@@ -225,6 +226,15 @@ namespace eval ::l1pro::pixelwf::util {
 
 namespace eval ::l1pro::pixelwf::gui {
     proc yorcmd {args} {
+        if {
+            $args eq "pixelwf_ndrast" ||
+            ($args eq "pixelwf_plot" && $::l1pro::pixelwf::vars::ndrast::enabled)
+        } {
+            set gui [::eaarl::rasters::rastplot::launch \
+                    $::l1pro::pixelwf::vars::ndrast::win \
+                    $::l1pro::pixelwf::vars::selection::raster 1]
+            set ::l1pro::pixelwf::vars::ndrast::parent [$gui id]
+        }
         if {$::l1pro::pixelwf::vars::selection::background} {
             ybkg {*}$args
         } else {
