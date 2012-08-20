@@ -187,7 +187,7 @@ parent=) {
 }
 
 func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, autolims=,
-parent=, rcfw=) {
+parent=, rcfw=, showcbar=) {
   extern data_path, soe_day_start;
   default, channel, 1;
   default, units, "ns";
@@ -197,6 +197,7 @@ parent=, rcfw=) {
   default, cmax, 255;
   default, units, "ns";
   default, rcfw, 50.;
+  default, showcbar, 0;
 
   local z;
 
@@ -254,6 +255,8 @@ parent=, rcfw=) {
 
   xytitles, xtitle, ytitle;
   pltitle, regsub("_", data_path, "!_", all=1);
+
+  if(showcbar) colorbar, cmin, cmax;
 
   if(autolims) {
     limits;
