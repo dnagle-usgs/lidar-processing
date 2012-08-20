@@ -377,7 +377,7 @@ wintx=, winbath=) {
   write, format="%s\n", "Finished examining waveforms.";
 }
 
-func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=) {
+func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=, range_bias=) {
 /* DOCUMENT show_wf, r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=
   Display a set of waveforms for a given pulse.
 
@@ -398,8 +398,10 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=) {
     c3= Set to 1 to display channel 3.
     c4= Set to 1 to display channel 4.
     raster= Raster where pulse is located. This is printed if present.
+    range_bias= Set to 1 to adjust the y-axis (depth) to include the range
+      biases defined for each channel in ops_conf.
 */
-  extern _depth_scale, _depth_display_units, data_path;
+  extern _depth_scale, _depth_display_units, data_path, ops_conf;
 
   default, nofma, 0;
   default, cb, 0;
@@ -407,6 +409,7 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=) {
   default, c2, 0;
   default, c3, 0;
   default, c4, 0;
+  default, range_bias, 0;
 
   if(is_scalar(r)) {
     raster = r;
@@ -434,29 +437,45 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=) {
     plt, "Channels:\n ", tx, ty, justify="LA", height=12, color="black";
 
   if(c1) {
-    plg, _depth_scale, r(,pix,1), marker=0, color="black";
-    plmk, _depth_scale, r(,pix,1), msize=.2, marker=1, color="black";
+    scale = span(0, -249, 250);
+    if(range_bias && has_member(ops_conf, "chn1_range_bias"))
+      scale -= ops_conf.chn1_range_bias;
+    scale = apply_depth_scale(scale);
+    plg, scale, r(,pix,1), marker=0, color="black";
+    plmk, scale, r(,pix,1), msize=.2, marker=1, color="black";
     msg = multichannel ? "1" : "Channel 1";
     plt, msg, tx, ty, justify="LA", height=12, color="black";
     tx += tw;
   }
   if(c2) {
-    plg, _depth_scale, r(,pix,2), marker=0, color="red";
-    plmk, _depth_scale, r(,pix,2), msize=.2, marker=1, color="red";
+    scale = span(0, -249, 250);
+    if(range_bias && has_member(ops_conf, "chn2_range_bias"))
+      scale -= ops_conf.chn2_range_bias;
+    scale = apply_depth_scale(scale);
+    plg, scale, r(,pix,2), marker=0, color="red";
+    plmk, scale, r(,pix,2), msize=.2, marker=1, color="red";
     msg = multichannel ? "2" : "Channel 2";
     plt, msg, tx, ty, justify="LA", height=12, color="red";
     tx += tw;
   }
   if(c3) {
-    plg, _depth_scale, r(,pix,3),  marker=0, color="blue";
-    plmk, _depth_scale, r(,pix,3), msize=.2, marker=1, color="blue";
+    scale = span(0, -249, 250);
+    if(range_bias && has_member(ops_conf, "chn3_range_bias"))
+      scale -= ops_conf.chn3_range_bias;
+    scale = apply_depth_scale(scale);
+    plg, scale, r(,pix,3),  marker=0, color="blue";
+    plmk, scale, r(,pix,3), msize=.2, marker=1, color="blue";
     msg = multichannel ? "3" : "Channel 3";
     plt, msg, tx, ty, justify="LA", height=12, color="blue";
     tx += tw;
   }
   if(c4) {
-    plg, _depth_scale, r(,pix,4),  marker=0, color="magenta";
-    plmk, _depth_scale, r(,pix,4), msize=.2, marker=1, color="magenta";
+    scale = span(0, -249, 250);
+    if(range_bias && has_member(ops_conf, "chn4_range_bias"))
+      scale -= ops_conf.chn4_range_bias;
+    scale = apply_depth_scale(scale);
+    plg, scale, r(,pix,4),  marker=0, color="magenta";
+    plmk, scale, r(,pix,4), msize=.2, marker=1, color="magenta";
     msg = multichannel ? "4" : "Channel 4";
     plt, msg, tx, ty, justify="LA", height=12, color="magenta";
     tx += tw;
