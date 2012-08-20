@@ -185,6 +185,84 @@ parent=) {
   window_select, win_bkp;
 }
 
+func show_rast(rn, somd=, channel=, units=, win=, cmin=, cmax=, autolims=,
+parent=) {
+  extern data_path;
+  default, channel, 1;
+  default, units, "ns";
+  default, win, max(0, current_window());
+  default, autolims, 1;
+  default, cmin, 0;
+  default, cmax, 255;
+
+  rast = decode_raster(rn=rn);
+
+  settings = h_new(
+    ns=h_new(scale=1, title="Nanoseconds"),
+    meters=h_new(scale=CNSH2O2X, title="Water depth (meters)"),
+    feet=h_new(scale=CNSH2O2XF, title="Water depth (feet)")
+  );
+  units = h_has(settings, units) ? units : "ns";
+
+  win_bkp = current_window();
+
+  window, win;
+  // Need to save limits here since window_embed_tk will destroy them
+  lims = limits();
+  fma;
+  if(!is_void(parent))
+    window_embed_tk, win, parent, 1;
+
+  for(pulse = 1; pulse <= 120; pulse++) {
+    wf = channel ? *rast.rx(pulse,channel) : *rast.tx(pulse);
+    if(!numberof(wf)) continue;
+    wf = short(~wf);
+    wf = transpose([wf]);
+    scale = apply_depth_scale([0, 1-numberof(wf)], units=units);
+    pli, wf, pulse, scale(1), pulse+1, scale(2), cmin=cmin, cmax=cmax;
+  }
+
+  if(channel)
+    xtitle = swrite(format="rn:%d chn:%d  Pixel #", rn, channel);
+  else
+    xtitle = swrite(format="rn:%d tx  Pixel #", rn, channel);
+  if(!is_void(somd))
+    xtitle = swrite(format="somd:%d hms:%d %s",
+      somd, sod2hms(somd, str=1), xtitle);
+
+  if(units=="ns")
+    ytitle = "Nanoseconds";
+  else
+    ytitle = swrite(format="Water depth (%s)", units);
+
+  xytitles, xtitle, ytitle;
+  pltitle, regsub("_", data_path, "!_", all=1);
+
+  if(autolims) {
+    limits;
+    lims = limits();
+    // Strip off the flags that set the limits to their extreme values
+    lims(5) = long(lims(5)) & ~15;
+  }
+
+  // Digitizer 0 sweeps left-to-right, digitizer 1 sweeps right-to-left. This
+  // checks to make sure the x-axis is left-to-right or right-to-left.
+  if(
+    (rast.digitizer(1) && lims(1) < lims(2)) ||
+    (!rast.digitizer(1) && lims(2) < lims(1))
+  ) {
+    // The x axis ranged from 1 to 121. Subtracting from 122 flips the axis and
+    // makes sure we're still focused on the same region (ie. if we were
+    // looking at the upper left, we'd still be looking at the upper left).
+    // Previously we simply swapped, but that would result in flipping back and
+    // forth on the focus area (ie. upper left and upper right).
+    lims([1,2]) = 122 - lims(1:2);
+  }
+  limits, lims;
+
+  window_select, win_bkp;
+}
+
 func drast_msel(rn, type=, rx=, tx=, bath=, cb=, bathchan=, winsel=, winrx=,
 wintx=, winbath=) {
 /* DOCUMENT drast_msel, rn, type=, rx=, tx=, cb=, bath=, bathchan=, winsel=,
