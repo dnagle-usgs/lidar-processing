@@ -12,15 +12,22 @@ func set_depth_scale(new_units) {
 */
   extern _depth_display_units, _depth_scale;
   _depth_display_units = new_units;
+  _depth_scale = apply_depth_scale(span(0, -249, 250));
+}
+
+func apply_depth_scale(scale) {
+/* DOCUMENT new_scale = apply_depth_scale(scale)
+  Applies the current depth scale to the given input scale. Input scale should
+  be in nanoseconds. Used for waveform scales.
+*/
+  extern _depth_display_units;
+  // If the units are "ns", no action is necessary and is thus omitted here
   if (_depth_display_units == "meters") {
-    _depth_scale = span(5*CNSH2O2X, -245 * CNSH2O2X, 250);
-  } else if (_depth_display_units == "ns") {
-    _depth_scale = span(0, -249, 250);
+    scale = (scale + 5) * CNSH2O2X;
   } else if (_depth_display_units == "feet") {
-    _depth_scale = span(5*CNSH2O2XF, -245 * CNSH2O2XF, 250);
-  } else {
-    _depth_scale = -1;
+    scale = (scale + 5) * CNSH2O2XF;
   }
+  return scale;
 }
 
 local wfa;  // decoded waveform array
