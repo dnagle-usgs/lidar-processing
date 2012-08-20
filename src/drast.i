@@ -53,10 +53,10 @@ func ytk_rast(rn) {
   }
 }
 
-func ndrast(rn, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=,
+func ndrast(rn, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=, tx=,
 autolims=, parent=) {
 /* DOCUMENT drast(rn, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=,
-   autolims=, parent=)
+   tx=, autolims=, parent=)
   Displays raster waveform data for the given raster. Try this:
 
     > rn = 1000
@@ -113,15 +113,15 @@ autolims=, parent=) {
 
   if(graph)
     show_rast, rn, channel=channel, units=units, win=win, cmin=cmin, cmax=cmax,
-      autolims=autolims, parent=parent;
+      tx=tx, autolims=autolims, parent=parent;
 
   return &aa;
 }
 
-func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=,
+func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=, tx=,
 autolims=, showcbar=, sfsync=, parent=) {
 /* DOCUMENT show_rast, rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=,
-   autolims=, showbar=, sfsync=, parent=
+   tx=, autolims=, showbar=, sfsync=, parent=
 
   Displays a raster's waveform data as an 2-dimensional image, where the x axis
   is the pulse number and the y axis is depth, time, or elevation (depending on
@@ -132,6 +132,7 @@ autolims=, showcbar=, sfsync=, parent=) {
   Options:
     channel= Channel to display.
         channel=1         Default
+        channel=0         Display the transmit raster
     units= Units to use for the y axis.
         units="meters"    Default
         units="ns"
@@ -147,6 +148,8 @@ autolims=, showcbar=, sfsync=, parent=) {
     rcfw= RCF window to use to determine which waveforms to display. This is
       applies to the elevation of the first sample of the waveforms.
         rcfw=50.          50 meters, default
+    tx= Show the transmit raster above the return raster. Ignored if channel=0.
+        tx=0              Default
     autolims= Automatically reset the limits.
         autolims=1        Default
     showcbar= Automatically plot the colorbar.
@@ -162,9 +165,13 @@ autolims=, showcbar=, sfsync=, parent=) {
   default, cmax, 255;
   default, geo, 0;
   default, rcfw, 50.;
+  default, tx, 0;
   default, autolims, 1;
   default, showcbar, 0;
   default, sfsync, 0;
+
+  // Ignore tx=1 if channel=0
+  if(channel == 0) tx = 0;
 
   local z;
 
@@ -191,6 +198,8 @@ autolims=, showcbar=, sfsync=, parent=) {
     }
   }
 
+  top = -1e1000;
+
   for(pulse = 1; pulse <= 120; pulse++) {
     if(skip(pulse)) continue;
     wf = channel ? *rast.rx(pulse,channel) : *rast.tx(pulse);
@@ -203,14 +212,47 @@ autolims=, showcbar=, sfsync=, parent=) {
     if(geo) scale += z(pulse);
 
     pli, wf, pulse, scale(1), pulse+1, scale(2), cmin=cmin, cmax=cmax;
+    top = max(top, scale(1));
+  }
+
+  if(tx) {
+    hline = top + apply_depth_scale(2.5, units=units, autoshift=0);
+    plhline, hline, 1, 121, type="dash";
+
+    maxlen = 0;
+    for(pulse = 1; pulse <= 120; pulse++) {
+      if(skip(pulse)) continue;
+      wf = *rast.tx(pulse);
+      maxlen = max(maxlen, numberof(wf));
+    }
+
+    offset = top + apply_depth_scale(5+maxlen, units=units, autoshift=0);
+
+    for(pulse = 1; pulse <= 120; pulse++) {
+      if(skip(pulse)) continue;
+      wf = *rast.tx(pulse);
+      if(!numberof(wf)) continue;
+      wf = short(~wf);
+      wf = transpose([wf]);
+
+      scale = [0, 1-numberof(wf)];
+      scale = apply_depth_scale(scale, units=units, autoshift=0);
+      scale += offset;
+
+      pli, wf, pulse, scale(1), pulse+1, scale(2), cmin=cmin, cmax=cmax;
+    }
   }
 
   somd = (rast.soe - soe_day_start)(1);
   hms = sod2hms(somd, str=1);
-  if(channel)
-    xtitle = swrite(format="rn:%d chn:%d  Pixel #", rn, channel);
-  else
+  if(channel) {
+    if(tx)
+      xtitle = swrite(format="rn:%d tx+chn:%d  Pixel #", rn, channel);
+    else
+      xtitle = swrite(format="rn:%d chn:%d  Pixel #", rn, channel);
+  } else {
     xtitle = swrite(format="rn:%d tx  Pixel #", rn);
+  }
   xtitle = swrite(format="somd:%d hms:%s %s", somd, hms, xtitle);
 
   if(geo)
