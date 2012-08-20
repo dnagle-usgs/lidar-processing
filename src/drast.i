@@ -408,12 +408,17 @@ func show_wf(rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, range_bias=) {
   default, c4, 0;
   default, range_bias, 0;
 
-  r = *ndrast(decode_raster(rn=rn), graph=0, sfsync=0);
+  rast = decode_raster(rn=rn);
 
+  // Sync up cb and c1..c4
   if(cb & 1) c1 = 1;
   if(cb & 2) c2 = 1;
   if(cb & 4) c3 = 1;
   if(cb & 8) c4 = 1;
+  cb |= (1 * (c1 != 0));
+  cb |= (2 * (c2 != 0));
+  cb |= (4 * (c3 != 0));
+  cb |= (8 * (c4 != 0));
 
   if(!is_void(win)) {
     prev_win = current_window();
@@ -430,48 +435,19 @@ func show_wf(rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, range_bias=) {
   if(multichannel)
     plt, "Channels:\n ", tx, ty, justify="LA", height=12, color="black";
 
-  if(c1) {
-    scale = span(0, -249, 250);
-    if(range_bias && has_member(ops_conf, "chn1_range_bias"))
-      scale -= ops_conf.chn1_range_bias;
+  colors = ["black", "red", "blue", "magenta"];
+  for(chan = 1; chan <= 4; chan++) {
+    if(!(cb & (2^(chan-1)))) continue;
+    wf = *rast.rx(pix,chan);
+    scale = double(indgen(0:1-numberof(wf):-1));
+    key = swrite(format="chn%d_range_bias", chan);
+    if(range_bias && has_member(ops_conf, key))
+      scale -= get_member(ops_conf, key);
     scale = apply_depth_scale(scale);
-    plg, scale, r(,pix,1), marker=0, color="black";
-    plmk, scale, r(,pix,1), msize=.2, marker=1, color="black";
-    msg = multichannel ? "1" : "Channel 1";
-    plt, msg, tx, ty, justify="LA", height=12, color="black";
-    tx += tw;
-  }
-  if(c2) {
-    scale = span(0, -249, 250);
-    if(range_bias && has_member(ops_conf, "chn2_range_bias"))
-      scale -= ops_conf.chn2_range_bias;
-    scale = apply_depth_scale(scale);
-    plg, scale, r(,pix,2), marker=0, color="red";
-    plmk, scale, r(,pix,2), msize=.2, marker=1, color="red";
-    msg = multichannel ? "2" : "Channel 2";
-    plt, msg, tx, ty, justify="LA", height=12, color="red";
-    tx += tw;
-  }
-  if(c3) {
-    scale = span(0, -249, 250);
-    if(range_bias && has_member(ops_conf, "chn3_range_bias"))
-      scale -= ops_conf.chn3_range_bias;
-    scale = apply_depth_scale(scale);
-    plg, scale, r(,pix,3),  marker=0, color="blue";
-    plmk, scale, r(,pix,3), msize=.2, marker=1, color="blue";
-    msg = multichannel ? "3" : "Channel 3";
-    plt, msg, tx, ty, justify="LA", height=12, color="blue";
-    tx += tw;
-  }
-  if(c4) {
-    scale = span(0, -249, 250);
-    if(range_bias && has_member(ops_conf, "chn4_range_bias"))
-      scale -= ops_conf.chn4_range_bias;
-    scale = apply_depth_scale(scale);
-    plg, scale, r(,pix,4),  marker=0, color="magenta";
-    plmk, scale, r(,pix,4), msize=.2, marker=1, color="magenta";
-    msg = multichannel ? "4" : "Channel 4";
-    plt, msg, tx, ty, justify="LA", height=12, color="magenta";
+    plg, scale, wf, marker=0, color=colors(chan);
+    plmk, scale, wf, msize=.2, marker=1, color=colors(chan);
+    msg = swrite(format=(multichannel?"%d":"Channel %d"), chan);
+    plt, msg, tx, ty, justify="LA", height=12, color=colors(chan);
     tx += tw;
   }
 
