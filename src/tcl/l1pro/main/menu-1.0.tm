@@ -39,8 +39,6 @@ proc build mb {
             -menu [menu_cmdline $mb.cmd]
     $mb add cascade {*}[menulabel &Ytk] \
             -menu [menu_ytk $mb.ytk]
-    $mb add cascade {*}[menulabel &Deprecated] \
-            -menu [menu_deprecated $mb.dep]
     return $mb
 }
 
@@ -339,56 +337,6 @@ proc menu_ytk mb {
     $mb add separator
     $mb add checkbutton {*}[menulabel "&Help goes in new window"] \
             -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
-    return $mb
-}
-
-proc menu_deprecated mb {
-    menu $mb
-    $mb add cascade {*}[menulabel "Import/Export"] \
-            -menu [menu_deprecated_import $mb.ie]
-    $mb add cascade {*}[menulabel "Visualization"] \
-            -menu [menu_deprecated_visualization $mb.vz]
-    $mb add cascade {*}[menulabel "Editing"] \
-            -menu [menu_deprecated_editing $mb.ed]
-    return $mb
-}
-
-proc menu_deprecated_import mb {
-    menu $mb
-    ### DEPRECATED 2010-01-03 ###
-    # Following entries replaced by file-1.0.tm functionality.
-    $mb add command {*}[menulabel "Read Binary Data file..."] \
-            -command ::l1pro::deprecated::read_binary_data_file
-    $mb add command {*}[menulabel "Write Binary Data File..."] \
-            -command ::l1pro::deprecated::write_binary_data_file
-    $mb add command {*}[menulabel "Read SubSampled Data File..."] \
-            -command ::l1pro::deprecated::read_subsampled_data_file
-    $mb add command {*}[menulabel "Ascii output ..."] \
-            -command ::l1pro::deprecated::ascii_output
-    $mb add separator
-    $mb add command {*}[menulabel "Save Tile"] \
-            -command ::l1pro::deprecated::savetile
-    return $mb
-}
-
-proc menu_deprecated_visualization mb {
-    menu $mb
-    $mb add command {*}[menulabel "Open the Limits Tool"]\
-            -command ::l1pro::deprecated::limits_tool
-
-    ### Deprecated 2009-02-02
-    $mb add command {*}[menulabel "Flight Tracks && Coastlines..."] \
-            -command ::l1pro::deprecated::rbgga_menu
-
-    return $mb
-}
-
-proc menu_deprecated_editing mb {
-    menu $mb
-    $mb add command {*}[menulabel "Test and Clean"] \
-            -command {exp_send "$::pro_var = test_and_clean($::pro_var);\r"}
-    $mb add command {*}[menulabel "Append2Tile"] \
-            -command ::l1pro::deprecated::append2tile
     return $mb
 }
 
