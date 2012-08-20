@@ -15,12 +15,14 @@ func set_depth_scale(new_units) {
   _depth_scale = apply_depth_scale(span(0, -249, 250));
 }
 
-func apply_depth_scale(scale) {
-/* DOCUMENT new_scale = apply_depth_scale(scale)
+func apply_depth_scale(scale, units=) {
+/* DOCUMENT new_scale = apply_depth_scale(scale, units=)
   Applies the current depth scale to the given input scale. Input scale should
-  be in nanoseconds. Used for waveform scales.
+  be in nanoseconds. Used for waveform scales. If units= is given, uses that
+  scale instead of current depth scale.
 */
   extern _depth_display_units;
+  default, units, _depth_display_units;
   // If the units are "ns", no action is necessary and is thus omitted here
   if (_depth_display_units == "meters") {
     scale = (scale + 5) * CNSH2O2X;
