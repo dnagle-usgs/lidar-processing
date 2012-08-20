@@ -387,7 +387,7 @@ bathchan=, winsel=, winrx=, wintx=, winbath=) {
 }
 
 func show_wf(rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, tx=, range_bias=,
-amp_bias=) {
+amp_bias=, units=) {
 /* DOCUMENT show_wf, rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, tx=,
    range_bias=, amp_bias=
   Display a set of waveforms for a given pulse.
@@ -412,7 +412,7 @@ amp_bias=) {
       biases defined for each channel in ops_conf.
     amp_bias= Set to 1 to remove the amplitude bias. Also inverts waveform.
 */
-  extern _depth_scale, _depth_display_units, data_path, ops_conf;
+  extern _depth_display_units, data_path, ops_conf;
 
   default, nofma, 0;
   default, cb, 0;
@@ -422,6 +422,7 @@ amp_bias=) {
   default, c4, 0;
   default, range_bias, 0;
   default, amp_bias, 0;
+  default, units, _depth_display_units;
 
   rast = decode_raster(rn=rn);
 
@@ -472,7 +473,7 @@ amp_bias=) {
     if(range_bias && has_member(ops_conf, key))
       scale -= get_member(ops_conf, key);
     scalemin = max(scalemin, scale(1));
-    scale = apply_depth_scale(scale);
+    scale = apply_depth_scale(scale, units=units);
     plg, scale, wf, marker=0, color=colors(chan);
     plmk, scale, wf, msize=.2, marker=1, color=colors(chan);
     msg = swrite(format=(multichannel?"%d":"Channel %d"), chan);
@@ -490,14 +491,14 @@ amp_bias=) {
       wf -= wf(1);
     }
     scale = double(indgen(numberof(wf):1:-1)) + 3 + long(ceil(scalemin));
-    scale = apply_depth_scale(scale);
+    scale = apply_depth_scale(scale, units=units);
     plg, scale, wf, marker=0, color="cyan";
     plmk, scale, wf, msize=.2, marker=1, color="cyan";
     plt, "tx", pltx, plty, justify=justify, height=12, color="cyan";
   }
 
   xtitle = swrite(format="Raster:%d  Pix:%d   Digital Counts", rn, pix);
-  ytitle = swrite(format="Water depth (%s)", _depth_display_units);
+  ytitle = swrite(format="Water depth (%s)", units);
   xytitles, xtitle, ytitle;
   pltitle, regsub("_", data_path, "!_", all=1);
 
