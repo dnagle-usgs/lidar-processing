@@ -163,6 +163,8 @@ parent=) {
   if(autolims) {
     limits;
     lims = limits();
+    // Strip off the flags that set the limits to their extreme values
+    lims(5) = long(lims(5)) & ~15;
   }
 
   // Digitizer 0 sweeps left-to-right, digitizer 1 sweeps right-to-left. This
