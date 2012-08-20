@@ -375,9 +375,10 @@ wintx=, winbath=) {
   write, format="%s\n", "Finished examining waveforms.";
 }
 
-func show_wf(rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, range_bias=) {
+func show_wf(rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, range_bias=,
+amp_bias=) {
 /* DOCUMENT show_wf, rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=,
-   range_bias=
+   range_bias=, amp_bias=
   Display a set of waveforms for a given pulse.
 
   Parameters:
@@ -397,6 +398,7 @@ func show_wf(rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, range_bias=) {
     c4= Set to 1 to display channel 4.
     range_bias= Set to 1 to adjust the y-axis (depth) to include the range
       biases defined for each channel in ops_conf.
+    amp_bias= Set to 1 to remove the amplitude bias. Also inverts waveform.
 */
   extern _depth_scale, _depth_display_units, data_path, ops_conf;
 
@@ -407,6 +409,7 @@ func show_wf(rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, range_bias=) {
   default, c3, 0;
   default, c4, 0;
   default, range_bias, 0;
+  default, amp_bias, 0;
 
   rast = decode_raster(rn=rn);
 
@@ -426,19 +429,30 @@ func show_wf(rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, range_bias=) {
   }
   if(!nofma) fma;
 
+  justify = amp_bias ? "RA" : "LA";
+
   vp = viewport();
-  tx = vp(1) + .01;
+  if(amp_bias)
+    tx = vp(2) - .01;
+  else
+    tx = vp(1) + .01;
   ty = vp(3) + .01;
   tw = 0.02;
 
   multichannel = c1 + c2 + c3 + c4 > 1;
   if(multichannel)
-    plt, "Channels:\n ", tx, ty, justify="LA", height=12, color="black";
+    plt, "Channels:\n ", tx, ty, justify=justify, height=12, color="black";
 
   colors = ["black", "red", "blue", "magenta"];
-  for(chan = 1; chan <= 4; chan++) {
+  chans = amp_bias ? indgen(4:1:-1) : indgen(1:4);
+  for(i = 1; i <= 4; i++) {
+    chan = chans(i);
     if(!(cb & (2^(chan-1)))) continue;
     wf = *rast.rx(pix,chan);
+    if(amp_bias) {
+      wf = long(~wf);
+      wf -= wf(1);
+    }
     scale = double(indgen(0:1-numberof(wf):-1));
     key = swrite(format="chn%d_range_bias", chan);
     if(range_bias && has_member(ops_conf, key))
@@ -447,8 +461,11 @@ func show_wf(rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, range_bias=) {
     plg, scale, wf, marker=0, color=colors(chan);
     plmk, scale, wf, msize=.2, marker=1, color=colors(chan);
     msg = swrite(format=(multichannel?"%d":"Channel %d"), chan);
-    plt, msg, tx, ty, justify="LA", height=12, color=colors(chan);
-    tx += tw;
+    plt, msg, tx, ty, justify=justify, height=12, color=colors(chan);
+    if(amp_bias)
+      tx -= tw;
+    else
+      tx += tw;
   }
 
   xtitle = swrite(format="Raster:%d  Pix:%d   Digital Counts", rn, pix);
