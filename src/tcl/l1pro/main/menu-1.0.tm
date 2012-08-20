@@ -344,21 +344,12 @@ proc menu_ytk mb {
 
 proc menu_deprecated mb {
     menu $mb
-    $mb add cascade {*}[menulabel Analysis] \
-            -menu [menu_deprecated_analysis $mb.an]
     $mb add cascade {*}[menulabel "Import/Export"] \
             -menu [menu_deprecated_import $mb.ie]
     $mb add cascade {*}[menulabel "Visualization"] \
             -menu [menu_deprecated_visualization $mb.vz]
     $mb add cascade {*}[menulabel "Editing"] \
             -menu [menu_deprecated_editing $mb.ed]
-    return $mb
-}
-
-proc menu_deprecated_analysis mb {
-    menu $mb
-    $mb add command {*}[menulabel "Examine Lidar Rasters..."] \
-            -command [list source [file join $::src_path drast.ytk]]
     return $mb
 }
 
