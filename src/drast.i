@@ -50,27 +50,18 @@ func ytk_rast(rn) {
   }
 }
 
-func ndrast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=,
+func ndrast(rn, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=,
 autolims=, parent=) {
-/* DOCUMENT drast(r, rn=, channel=, units=, win=, graph=, sfsync=, cmin=,
-   cmax=, autolims=, parent=)
+/* DOCUMENT drast(rn, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=,
+   autolims=, parent=)
   Displays raster waveform data for the given raster. Try this:
 
     > rn = 1000
-    > r = get_erast(rn=rn)
-    > rr = decode_raster(r)
-    > fma
-    > w = ndrast(rr)
+    > w = ndrast(rn)
 
-  r should be a decoded raster. units= should be one of "ns", "meters", or
+  rn should be a raster number. units= should be one of "ns", "meters", or
   "feet" and defaults to "ns". win= defaults to the current window. graph=
   defaults to 1; set graph=0 to disable plotting.
-
-  Alternately, try this:
-
-    > w = ndrast(rn=1000)
-
-  rn should be a raster number.
 
   Returns a pointer to a 250x120x5 array of all the decoded waveforms in this
   raster (channels 1 through 4 and the transmit as #5 [or 0]).
@@ -94,13 +85,7 @@ autolims=, parent=) {
   default, graph, 1;
   default, sfsync, 1;
 
-  if(is_void(r) && !is_void(rn)) {
-    r = decode_raster(get_erast(rn=rn));
-  } else if(is_scalar(r)) {
-    rn = r;
-    r = decode_raster(get_erast(rn=rn));
-  }
-
+  r = decode_raster(get_erast(rn=rn));
   aa = array(short(255), 250, 120, 5);
 
   npix = r.npixels(1);
