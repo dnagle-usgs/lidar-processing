@@ -143,6 +143,8 @@ parent=) {
   win_bkp = current_window();
 
   window, win;
+  // Need to save limits here since window_embed_tk will destroy them
+  lims = limits();
   fma;
   if(!is_void(parent))
     window_embed_tk, win, parent, 1;
@@ -164,11 +166,23 @@ parent=) {
 
   if(autolims) {
     limits;
-    lmts = limits()(1:2);
-    mx = (r.digitizer(1) ? lmts(min) : lmts(max));
-    mn = (r.digitizer(1) ? lmts(max) : lmts(min));
-    limits, mn, mx;
+    lims = limits();
   }
+
+  // Digitizer 0 sweeps left-to-right, digitizer 1 sweeps right-to-left. This
+  // checks to make sure the x-axis is left-to-right or right-to-left.
+  if(
+    (r.digitizer(1) && lims(1) < lims(2)) ||
+    (!r.digitizer(1) && lims(2) < lims(1))
+  ) {
+    // The x axis ranged from 1 to 121. Subtracting from 122 flips the axis and
+    // makes sure we're still focused on the same region (ie. if we were
+    // looking at the upper left, we'd still be looking at the upper left).
+    // Previously we simply swapped, but that would result in flipping back and
+    // forth on the focus area (ie. upper left and upper right).
+    lims([1,2]) = 122 - lims(1:2);
+  }
+  limits, lims;
 
   window_select, win_bkp;
 }
