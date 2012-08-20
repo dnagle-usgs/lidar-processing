@@ -281,6 +281,9 @@ parent=, rcfw=, showcbar=) {
   limits, lims;
 
   window_select, win_bkp;
+
+  if(sfsync || !am_subroutine())
+    return ndrast(rn, channel=channel, graph=0, sfsync=sfsync);
 }
 
 func drast_msel(rn, type=, rx=, tx=, bath=, cb=, bathchan=, winsel=, winrx=,
