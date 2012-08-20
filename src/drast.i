@@ -102,7 +102,7 @@ autolims=, parent=) {
       }
     }
   }
-  for (i=1; i< npix; i++) {
+  for (i=1; i<= npix; i++) {
     for (j=1; j<=4; j++) {
       n = numberof(*r.rx(i,j));  // number of samples
       if (n) aa(1:n,i,j) = *r.rx(i,j);
