@@ -280,7 +280,50 @@ func drast_graph(aa, digitizer, win=) {
   window_select, win_bkp;
 }
 
-func drast_msel(rn, type=, cb=, rx=, tx=, bath=, bathchan=, winsel=, winrx=, wintx=, winbath=) {
+func drast_msel(rn, type=, rx=, tx=, bath=, cb=, bathchan=, winsel=, winrx=,
+wintx=, winbath=) {
+/* DOCUMENT drast_msel, rn, type=, rx=, tx=, cb=, bath=, bathchan=, winsel=,
+   winrx=, wintx=, winbath=
+
+  Enters an interactive mode that allows the user to query waveforms on an
+  ndrast plot.
+
+  Parameter:
+    rn: The raster number plotted.
+  Options:
+    type= Type of plot being queried.
+        type="rast"   ndrast plot (default)
+        type="geo"    geo_rast plot
+    rx= Whether or not to plot the return waveform.
+        rx=1          plot return waveform (default)
+        rx=0          don't plot return waveform
+    tx= Whether or not to plot the transmit waveform.
+        tx=1          plot return waveform
+        tx=0          don't plot return waveform (default)
+    bath= Whether or not to plot the bathy waveform.
+        tx=1          plot return waveform
+        tx=0          don't plot return waveform (default)
+    cb= Channel bitmask, indicating which channels to plot (ignored if rx=0).
+      Bit 1 is channel 1, bit 2 is channel 2, bit 3 is channel 3, and bit 4 is
+      channel 4.
+        cb=7          plot channels 1, 2, 3 (default)
+        cb=15         plot channels 1, 2, 3, 4
+    bathchan= Channel to use for bathy plot (ignored if bath=0).
+        bathchan=0    automatically determine channel as for EAARL-A (default)
+        bathchan=1    use channel 1
+        bathchan=4    use channel 4
+    winsel= Window to use for mouse selection (where ndrast is plotted).
+        winsel=11     default
+    winrx= Window to use for plotting return waveform(s).
+        window=9      default
+    wintx= Window to use for plotting transmit waveform.
+        window=16     default
+    winbath= Window to use for plotting bathy waveform.
+        window=4      default
+
+  Extern dependency:
+    xm: Set by geo_rast and used to determine which pixel is clicked on.
+*/
   default, type, "rast";
   default, cb, 7;
   default, rx, 1;
