@@ -210,7 +210,7 @@ autolims=, showcbar=, sfsync=, parent=) {
   if(channel)
     xtitle = swrite(format="rn:%d chn:%d  Pixel #", rn, channel);
   else
-    xtitle = swrite(format="rn:%d tx  Pixel #", rn, channel);
+    xtitle = swrite(format="rn:%d tx  Pixel #", rn);
   xtitle = swrite(format="somd:%d hms:%s %s", somd, hms, xtitle);
 
   if(geo)
