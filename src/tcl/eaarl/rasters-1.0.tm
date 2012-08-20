@@ -105,6 +105,10 @@ snit::widget ::eaarl::rasters::rastplot::gui {
         grid $f.showtx -sticky w
         grid $f.examine -sticky news
 
+        ::tooltip::tooltip $f.bathchan \
+            "Select \"Auto\" for the EAARL-A algorithm that selects channel\
+            based on saturation."
+
         $self configure {*}$args
     }
 
@@ -121,6 +125,7 @@ snit::widget ::eaarl::rasters::rastplot::gui {
             append title "Transmit"
         }
         wm title $win $title
+        set bathchan $options(-channel)
     }
 
     method id {} {
