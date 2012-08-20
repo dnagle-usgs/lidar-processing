@@ -186,17 +186,51 @@ parent=) {
   window_select, win_bkp;
 }
 
-func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, autolims=,
-parent=, rcfw=, showcbar=, sfsync=) {
+func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=,
+autolims=, showcbar=, sfsync=, parent=) {
+/* DOCUMENT show_rast, rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=,
+   autolims=, showbar=, sfsync=, parent=
+
+  Displays a raster's waveform data as an 2-dimensional image, where the x axis
+  is the pulse number and the y axis is depth, time, or elevation (depending on
+  units= and geo=). Intensity is represented by color.
+
+  Parameter:
+    rn: The raster number to display.
+  Options:
+    channel= Channel to display.
+        channel=1         Default
+    units= Units to use for the y axis.
+        units="meters"    Default
+        units="ns"
+        units="feet"
+    win= Window to plot in. (Defaults to current window.)
+    cmin= Constrain colobar to the given minimum value.
+        cmin=0            Default
+    cmax= Constrain colobar to the given maximum value.
+        cmax=255          Default
+    geo= Georeference for the y axis. If selected, units= is forced to
+      "meters".
+        geo=0             Default
+    rcfw= RCF window to use to determine which waveforms to display. This is
+      applies to the elevation of the first sample of the waveforms.
+        rcfw=50.          50 meters, default
+    autolims= Automatically reset the limits.
+        autolims=1        Default
+    showcbar= Automatically plot the colorbar.
+        showcbar=0        Default
+    sfsync= Sync with SF.
+        sfsync=0          Default
+*/
   extern data_path, soe_day_start;
   default, channel, 1;
   default, units, "ns";
   default, win, max(0, current_window());
-  default, autolims, 1;
   default, cmin, 0;
   default, cmax, 255;
-  default, units, "ns";
+  default, geo, 0;
   default, rcfw, 50.;
+  default, autolims, 1;
   default, showcbar, 0;
   default, sfsync, 0;
 
