@@ -15,19 +15,20 @@ func set_depth_scale(new_units) {
   _depth_scale = apply_depth_scale(span(0, -249, 250));
 }
 
-func apply_depth_scale(scale, units=) {
-/* DOCUMENT new_scale = apply_depth_scale(scale, units=)
+func apply_depth_scale(scale, units=, autoshift=) {
+/* DOCUMENT new_scale = apply_depth_scale(scale, units=, autoshift=)
   Applies the current depth scale to the given input scale. Input scale should
   be in nanoseconds. Used for waveform scales. If units= is given, uses that
   scale instead of current depth scale.
 */
   extern _depth_display_units;
   default, units, _depth_display_units;
+  default, autoshift, 1;
   // If the units are "ns", no action is necessary and is thus omitted here
   if (_depth_display_units == "meters") {
-    scale = (scale + 5) * CNSH2O2X;
+    scale = (scale + (autoshift ? 5 : 0)) * CNSH2O2X;
   } else if (_depth_display_units == "feet") {
-    scale = (scale + 5) * CNSH2O2XF;
+    scale = (scale + (autoshift ? 5 : 0)) * CNSH2O2XF;
   }
   return scale;
 }
@@ -185,24 +186,21 @@ parent=) {
   window_select, win_bkp;
 }
 
-func show_rast(rn, somd=, channel=, units=, win=, cmin=, cmax=, autolims=,
-parent=) {
-  extern data_path;
+func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, autolims=,
+parent=, rcfw=) {
+  extern data_path, soe_day_start;
   default, channel, 1;
   default, units, "ns";
   default, win, max(0, current_window());
   default, autolims, 1;
   default, cmin, 0;
   default, cmax, 255;
+  default, units, "ns";
+  default, rcfw, 50.;
+
+  local z;
 
   rast = decode_raster(rn=rn);
-
-  settings = h_new(
-    ns=h_new(scale=1, title="Nanoseconds"),
-    meters=h_new(scale=CNSH2O2X, title="Water depth (meters)"),
-    feet=h_new(scale=CNSH2O2XF, title="Water depth (feet)")
-  );
-  units = h_has(settings, units) ? units : "ns";
 
   win_bkp = current_window();
 
@@ -213,24 +211,43 @@ parent=) {
   if(!is_void(parent))
     window_embed_tk, win, parent, 1;
 
+  skip = array(0, 120);
+  if(geo) {
+    units = "meters";
+    fs = first_surface(start=rn, stop=rn, verbose=0)(1);
+    data2xyz, fs, , , z, mode="fs";
+    if(rcfw) {
+      skip(*) = 1;
+      rcfres = rcf(z, rcfw, mode=2);
+      skip(*rcfres(1)) = 0;
+    }
+  }
+
   for(pulse = 1; pulse <= 120; pulse++) {
+    if(skip(pulse)) continue;
     wf = channel ? *rast.rx(pulse,channel) : *rast.tx(pulse);
     if(!numberof(wf)) continue;
     wf = short(~wf);
     wf = transpose([wf]);
-    scale = apply_depth_scale([0, 1-numberof(wf)], units=units);
+
+    scale = [0, 1-numberof(wf)];
+    scale = apply_depth_scale(scale, units=units, autoshift=!geo);
+    if(geo) scale += z(pulse);
+
     pli, wf, pulse, scale(1), pulse+1, scale(2), cmin=cmin, cmax=cmax;
   }
 
+  somd = (rast.soe - soe_day_start)(1);
+  hms = sod2hms(somd, str=1);
   if(channel)
     xtitle = swrite(format="rn:%d chn:%d  Pixel #", rn, channel);
   else
     xtitle = swrite(format="rn:%d tx  Pixel #", rn, channel);
-  if(!is_void(somd))
-    xtitle = swrite(format="somd:%d hms:%d %s",
-      somd, sod2hms(somd, str=1), xtitle);
+  xtitle = swrite(format="somd:%d hms:%s %s", somd, hms, xtitle);
 
-  if(units=="ns")
+  if(geo)
+    ytitle = "Ellipsoid elevation (meters, WGS84)";
+  else if(units=="ns")
     ytitle = "Nanoseconds";
   else
     ytitle = swrite(format="Water depth (%s)", units);
