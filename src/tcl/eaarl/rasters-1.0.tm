@@ -94,16 +94,22 @@ snit::widget ::eaarl::rasters::rastplot::gui {
         ttk::button $f.examine -text "Examine\nWaveforms" \
                 -command [mymethod examine]
 
+        ttk::separator $f.sep1 -orient horizontal
+        ttk::separator $f.sep2 -orient horizontal
+
         grid $f.showrx $f.chan1 $f.chan2 $f.chan3 $f.chan4 -in $f.rx -padx 2
         grid $f.showbath $f.bathchan -in $f.bath -padx 2
 
         grid $f.rx     $f.lblwinrx   $f.winrx   $f.examine -padx 2 -pady 1
+        grid $f.sep1   -             -          ^          -padx 2 -pady 1
         grid $f.bath   $f.lblwinbath $f.winbath ^          -padx 2 -pady 1
+        grid $f.sep2   -             -          ^          -padx 2 -pady 1
         grid $f.showtx $f.lblwintx   $f.wintx   ^          -padx 2 -pady 1
         grid columnconfigure $f 3 -weight 1
         grid $f.rx $f.bath -padx 0
         grid $f.showtx -sticky w
         grid $f.examine -sticky news
+        grid $f.sep1 $f.sep2 -sticky ew
 
         ::tooltip::tooltip $f.bathchan \
             "Select \"Auto\" for the EAARL-A algorithm that selects channel\
