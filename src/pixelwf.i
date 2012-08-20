@@ -200,7 +200,7 @@ func pixelwf_ndrast(void) {
   window, vars.win;
   fma;
 
-  result = ndrast(rn=raster, graph=1, win=vars.win, units=vars.units,
+  result = ndrast(raster, graph=1, win=vars.win, units=vars.units,
     parent=vars.parent, sfsync=0);
   pixelwf_handle_result, vars, result;
 

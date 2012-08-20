@@ -46,15 +46,13 @@ func bath_winpix(m) {
   // every other raster.
   rn = m(idx(1), idx(2)*2).rastpix;   // get the *real* raster number.
   rn;
-  pix = rn / 2^24;
-  rn &= 0xffffff;
-  r = get_erast(rn= rn);
-  rp = decode_raster(r);
+  local raster, pulse;
+  parse_rn, rn, raster, pulse;
   window, 1;
   fma;
-  aa = ndrast(rp, units=_depth_display_units);
-  pix;
-  rn;
+  aa = ndrast(raster, units=_depth_display_units);
+  pulse;
+  raster;
 }
 
 func run_bath(nil, start=, stop=, center=, delta=, last=, forcechannel=,

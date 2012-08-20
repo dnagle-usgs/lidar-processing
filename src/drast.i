@@ -41,11 +41,9 @@ func ytk_rast(rn) {
   raster.
 */
   extern wfa, _depth_display_units, _ytk_rast;
-  r = get_erast(rn=rn);
-  rr = decode_raster(r);
   window, 1, wait=0;
   fma;
-  wfa = ndrast(rr, units=_depth_display_units);
+  wfa = ndrast(rn, units=_depth_display_units);
   if (is_void(_ytk_rast)) {
     limits;
     _ytk_rast = 1;

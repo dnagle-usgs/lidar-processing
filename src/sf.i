@@ -37,13 +37,10 @@ func sf_mediator_raster(soe, errcmd) {
       closest = abs(rnsoes - soe)(mnx);
       rn = rnarr(closest);
 
-      r = get_erast(rn=rn);
-      rr = decode_raster(r);
-
       win = current_window();
       window, vars.win;
       fma;
-      ndrast, rr, graph=1, win=vars.win, units=vars.units;
+      ndrast, rn, graph=1, win=vars.win, units=vars.units;
       window_select, win;
     } else {
       tkcmd, swrite(format="%s {No rasters found for soe %d}", errcmd, int(soe));

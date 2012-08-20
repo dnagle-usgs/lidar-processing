@@ -515,9 +515,8 @@ proc ::l1pro::drast::show_rast {} {
         if {![set v::rastchan${channel}]} continue
         set gui [::eaarl::rasters::rastplot::launch \
                 [set v::rastwin${channel}] $v::rn $channel]
-        set cmd "ndrast, "
+        set cmd "ndrast, $v::rn"
         appendif cmd \
-                1                          "rn=$v::rn" \
                 {$channel ne 1}            ", channel=$channel" \
                 1                          ", win=[set v::rastwin${channel}]" \
                 {$v::rastunits ne "ns"}    ", units=\"$v::rastunits\"" \
