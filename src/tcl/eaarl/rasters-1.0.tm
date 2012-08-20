@@ -40,6 +40,8 @@ snit::widget ::eaarl::rasters::rastplot::gui {
     variable chan2 1
     variable chan3 1
     variable chan4 0
+    variable amp_bias 0
+    variable range_bias 0
     variable bathchan 0
     variable winrx 9
     variable winbath 4
@@ -70,7 +72,8 @@ snit::widget ::eaarl::rasters::rastplot::gui {
         grid rowconfigure $f 0 -weight 1
 
         set f $f.examine
-        ttk::frame $f.rx
+        ttk::frame $f.rx1
+        ttk::frame $f.rx2
         ttk::frame $f.bath
         ttk::checkbutton $f.showrx -text "Show channels:" \
                 -variable [myvar showrx]
@@ -78,6 +81,10 @@ snit::widget ::eaarl::rasters::rastplot::gui {
                 -variable [myvar showbath]
         ttk::checkbutton $f.showtx -text "Show transmit" \
                 -variable [myvar showtx]
+        ttk::checkbutton $f.ampbias -text "Remove amplitude bias" \
+                -variable [myvar amp_bias]
+        ttk::checkbutton $f.rangebias -text "Remove range bias" \
+                -variable [myvar range_bias]
         foreach channel {1 2 3 4} {
              ttk::checkbutton $f.chan$channel -text "$channel" \
                     -variable [myvar chan$channel]
@@ -97,16 +104,18 @@ snit::widget ::eaarl::rasters::rastplot::gui {
         ttk::separator $f.sep1 -orient horizontal
         ttk::separator $f.sep2 -orient horizontal
 
-        grid $f.showrx $f.chan1 $f.chan2 $f.chan3 $f.chan4 -in $f.rx -padx 2
+        grid $f.showrx $f.chan1 $f.chan2 $f.chan3 $f.chan4 -in $f.rx1 -padx 2
+        grid $f.ampbias $f.rangebias -in $f.rx2 -padx 2
         grid $f.showbath $f.bathchan -in $f.bath -padx 2
 
-        grid $f.rx     $f.lblwinrx   $f.winrx   $f.examine -padx 2 -pady 1
+        grid $f.rx1    $f.lblwinrx   $f.winrx   $f.examine -padx 2 -pady 1
+        grid $f.rx2    -             -          ^          -padx 2 -pady 1
         grid $f.sep1   -             -          ^          -padx 2 -pady 1
         grid $f.bath   $f.lblwinbath $f.winbath ^          -padx 2 -pady 1
         grid $f.sep2   -             -          ^          -padx 2 -pady 1
         grid $f.showtx $f.lblwintx   $f.wintx   ^          -padx 2 -pady 1
         grid columnconfigure $f 3 -weight 1
-        grid $f.rx $f.bath -padx 0
+        grid $f.rx1 $f.rx2 $f.bath -padx 0 -sticky w
         grid $f.showtx -sticky w
         grid $f.examine -sticky news
         grid $f.sep1 $f.sep2 -sticky ew
@@ -152,6 +161,8 @@ snit::widget ::eaarl::rasters::rastplot::gui {
                 $showtx     ", tx=1" \
                 $showbath   ", bath=1" \
                 $showrx     ", cb=$cb" \
+                $amp_bias   ", amp_bias=1" \
+                $range_bias ", range_bias=1" \
                 $fc         ", bathchan=$bathchan" \
                 1           ", winsel=$options(-window)" \
                 $showrx     ", winrx=$winrx" \

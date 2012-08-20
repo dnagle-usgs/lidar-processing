@@ -295,10 +295,10 @@ autolims=, showcbar=, sfsync=, parent=) {
     return ndrast(rn, channel=channel, graph=0, sfsync=sfsync);
 }
 
-func drast_msel(rn, type=, rx=, tx=, bath=, cb=, bathchan=, winsel=, winrx=,
-wintx=, winbath=) {
-/* DOCUMENT drast_msel, rn, type=, rx=, tx=, cb=, bath=, bathchan=, winsel=,
-   winrx=, wintx=, winbath=
+func drast_msel(rn, type=, rx=, tx=, bath=, cb=, amp_bias=, range_bias=,
+bathchan=, winsel=, winrx=, wintx=, winbath=) {
+/* DOCUMENT drast_msel, rn, type=, rx=, tx=, cb=, bath=, amb_bias=,
+   range_bias=, bathchan=, winsel=, winrx=, wintx=, winbath=
 
   Enters an interactive mode that allows the user to query waveforms on an
   ndrast plot.
@@ -323,6 +323,8 @@ wintx=, winbath=) {
       channel 4.
         cb=7          plot channels 1, 2, 3 (default)
         cb=15         plot channels 1, 2, 3, 4
+    amp_bias= Set to 1 to remove amplitude bias (and invert waveform).
+    range_bias= Set to 1 to remove channel range biases.
     bathchan= Channel to use for bathy plot (ignored if bath=0).
         bathchan=0    automatically determine channel as for EAARL-A (default)
         bathchan=1    use channel 1
@@ -370,7 +372,8 @@ wintx=, winbath=) {
 
       write, format=" - Pulse %d\n", pulse;
       if(rx)
-        show_wf, rn, pulse, win=winrx, cb=cb;
+        show_wf, rn, pulse, win=winrx, cb=cb, range_bias=range_bias,
+          amp_bias=amp_bias;
       if(bath)
         ex_bath, rn, pulse, graph=1, win=winbath, xfma=1, forcechannel=bathchan;
       if(tx)
