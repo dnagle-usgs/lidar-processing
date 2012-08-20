@@ -242,66 +242,6 @@ click OK, and then click on the desired window.}
   }
 }
 
-proc restore_eaarl_defaults { } {
-
-} 
-
-proc restore_eaarl_options { fn opt_array } {
-# DOCUMENT restore_eaarl_options fn opt_array
-# 
-# fn		File name to restore options from.
-# opt_array	The name of the option array you want to restore.
-#
-# This procedure is intended to be used by any eaarl module for restoring it's
-# options.
-#
- upvar $opt_array ary
- global $opt_array
- set dir "~/.eaarl";
- set f "$dir/$fn"
- if { [ file exists $f ] == 0 } {
-#      tk_messageBox  -icon warning \
-#	-message "$f Doesn't exist. Click on \"Save Map Options\" to establish the file."  \
-#	-type ok
-    return
- }
- source $f
-
-} 
-
-proc save_eaarl_options { fn opt_array } {
-# DOCUMENT save_eaarl_options fn opt_array
-# 
-# fn		File name to save options to.
-# opt_array	The option array you want to save.
-#
-# This procedure is intended to be used by any eaarl module for saving it's
-# options.
-#
- upvar $opt_array ary
- 
- set dir "~/.eaarl";
- if { [ file exists $dir ] == 0 } {
-      tk_messageBox  -message "Creating $dir subdirectory to store program options"  -type ok
-      file mkdir $dir
- }
-
- set f "$dir/$fn"
- if { [ file exists $f ] == 0 } {
-      tk_messageBox  -message "Creating $f to store eaarl options"  -type ok
- }
- set fd [ open $f "w+" ];
-
- set names [ array names ary ] 
- puts $fd "#   EAARL Settings"
- foreach x $names {
-   set s [ format "set %32s    %-32s"  "$opt_array\($x\)" $ary($x) ];
-   puts $fd "$s"
- }
- close $fd
- tk_messageBox -icon info -message "Options saved to: $f" -type ok
-}
-
 proc load_cmd { start_dir } {
  global _ytk_fn y_codedir ytk_codedir _ytk_mrl _ytk_mrl_idx
   set _ytk_fn [ tk_getOpenFile \
@@ -425,9 +365,6 @@ proc load_edb {} {
 ####   exp_send "#include \"map.i\"\r"
 
    ybkg require \"rbgga.i\"
-
- source "$src_path/map.ytk"
- restore_eaarl_options "map.options" _map
 
 #############
 #   Nav
