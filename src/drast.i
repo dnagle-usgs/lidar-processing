@@ -96,8 +96,12 @@ autolims=, parent=) {
   default, graph, 1;
   default, sfsync, 1;
 
-  if(is_void(r) && !is_void(rn))
+  if(is_void(r) && !is_void(rn)) {
     r = decode_raster(get_erast(rn=rn));
+  } else if(is_scalar(r)) {
+    rn = r;
+    r = decode_raster(get_erast(rn=rn));
+  }
 
   aa = array(short(255), 250, 120, 5);
 
