@@ -375,9 +375,9 @@ wintx=, winbath=) {
   write, format="%s\n", "Finished examining waveforms.";
 }
 
-func show_wf(rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, range_bias=,
+func show_wf(rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, tx=, range_bias=,
 amp_bias=) {
-/* DOCUMENT show_wf, rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=,
+/* DOCUMENT show_wf, rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, tx=,
    range_bias=, amp_bias=
   Display a set of waveforms for a given pulse.
 
@@ -396,6 +396,7 @@ amp_bias=) {
     c2= Set to 1 to display channel 2.
     c3= Set to 1 to display channel 3.
     c4= Set to 1 to display channel 4.
+    tx= Set to 1 to display the transmit above the return waveforms.
     range_bias= Set to 1 to adjust the y-axis (depth) to include the range
       biases defined for each channel in ops_conf.
     amp_bias= Set to 1 to remove the amplitude bias. Also inverts waveform.
@@ -433,15 +434,17 @@ amp_bias=) {
 
   vp = viewport();
   if(amp_bias)
-    tx = vp(2) - .01;
+    pltx = vp(2) - .01;
   else
-    tx = vp(1) + .01;
-  ty = vp(3) + .01;
-  tw = 0.02;
+    pltx = vp(1) + .01;
+  plty = vp(3) + .01;
+  pltw = 0.02;
 
   multichannel = c1 + c2 + c3 + c4 > 1;
   if(multichannel)
-    plt, "Channels:\n ", tx, ty, justify=justify, height=12, color="black";
+    plt, "Channels:\n ", pltx, plty, justify=justify, height=12, color="black";
+
+  scalemin = 0;
 
   colors = ["black", "red", "blue", "magenta"];
   chans = amp_bias ? indgen(4:1:-1) : indgen(1:4);
@@ -457,15 +460,29 @@ amp_bias=) {
     key = swrite(format="chn%d_range_bias", chan);
     if(range_bias && has_member(ops_conf, key))
       scale -= get_member(ops_conf, key);
+    scalemin = max(scalemin, scale(1));
     scale = apply_depth_scale(scale);
     plg, scale, wf, marker=0, color=colors(chan);
     plmk, scale, wf, msize=.2, marker=1, color=colors(chan);
     msg = swrite(format=(multichannel?"%d":"Channel %d"), chan);
-    plt, msg, tx, ty, justify=justify, height=12, color=colors(chan);
+    plt, msg, pltx, plty, justify=justify, height=12, color=colors(chan);
     if(amp_bias)
-      tx -= tw;
+      pltx -= pltw;
     else
-      tx += tw;
+      pltx += pltw;
+  }
+
+  if(tx) {
+    wf = *rast.tx(pix);
+    if(amp_bias) {
+      wf = long(~wf);
+      wf -= wf(1);
+    }
+    scale = double(indgen(numberof(wf):1:-1)) + 3 + long(ceil(scalemin));
+    scale = apply_depth_scale(scale);
+    plg, scale, wf, marker=0, color="cyan";
+    plmk, scale, wf, msize=.2, marker=1, color="cyan";
+    plt, "tx", pltx, plty, justify=justify, height=12, color="cyan";
   }
 
   xtitle = swrite(format="Raster:%d  Pix:%d   Digital Counts", rn, pix);
