@@ -343,8 +343,6 @@ wintx=, winbath=) {
 
   extern xm;
 
-  rast = ndrast(rn=rn, graph=0);
-
   write, format="Window: %d. Left-click to examine a waveform. Anything else aborts.\n", winsel;
 
   continue_interactive = 1;
@@ -364,7 +362,7 @@ wintx=, winbath=) {
 
       write, format=" - Pulse %d\n", pulse;
       if(rx)
-        show_wf, *rast, pulse, win=winrx, cb=cb;
+        show_wf, rn, pulse, win=winrx, cb=cb;
       if(bath)
         ex_bath, rn, pulse, graph=1, win=winbath, xfma=1, forcechannel=bathchan;
       if(tx)
@@ -377,14 +375,14 @@ wintx=, winbath=) {
   write, format="%s\n", "Finished examining waveforms.";
 }
 
-func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=, range_bias=) {
-/* DOCUMENT show_wf, r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=
+func show_wf(rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, range_bias=) {
+/* DOCUMENT show_wf, rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=,
+   range_bias=
   Display a set of waveforms for a given pulse.
 
   Parameters:
-    r - An array of waveform data as returned by drast. Alternately, this may
-      be a scalar raster number (which will then be used for raster=).
-    pix - The pixel index into r to display.
+    rn: Raster number.
+    pix: Pulse number.
 
   Options:
     win= If specified, this window will be used instead of the current window
@@ -397,7 +395,6 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=, range_bias=
     c2= Set to 1 to display channel 2.
     c3= Set to 1 to display channel 3.
     c4= Set to 1 to display channel 4.
-    raster= Raster where pulse is located. This is printed if present.
     range_bias= Set to 1 to adjust the y-axis (depth) to include the range
       biases defined for each channel in ops_conf.
 */
@@ -411,10 +408,7 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=, range_bias=
   default, c4, 0;
   default, range_bias, 0;
 
-  if(is_scalar(r)) {
-    raster = r;
-    r = *ndrast(decode_raster(get_erast(rn=raster)), graph=0, sfsync=0);
-  }
+  r = *ndrast(decode_raster(rn=rn), graph=0, sfsync=0);
 
   if(cb & 1) c1 = 1;
   if(cb & 2) c2 = 1;
@@ -481,8 +475,7 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=, range_bias=
     tx += tw;
   }
 
-  xtitle = swrite(format="Pix:%d   Digital Counts", pix);
-  if(!is_void(raster)) xtitle = swrite(format="Raster:%d %s", raster, xtitle);
+  xtitle = swrite(format="Raster:%d  Pix:%d   Digital Counts", rn, pix);
   ytitle = swrite(format="Water depth (%s)", _depth_display_units);
   xytitles, xtitle, ytitle;
   pltitle, regsub("_", data_path, "!_", all=1);
