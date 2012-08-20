@@ -51,9 +51,6 @@ func colorbar(cmin, cmax, drag=, landscape=, units=, datum=) {
 
   The landscape= option is ignored and exists for historical reasons.
 */
-  // Coercing type to avoid type mismatch in swrites later in function.
-  cmin = is_void(cmin) ? [] : double(cmin);
-  cmax = is_void(cmax) ? [] : double(cmax);
   xoff = 0.0;
   yoff = 0.0;
   if (drag) {
@@ -85,18 +82,20 @@ func colorbar(cmin, cmax, drag=, landscape=, units=, datum=) {
   xx = [x(3), (x(1)-x(3))/4 + x(3)];
   sys = plsys(0);
   dy = yy - y(1);
+  // Allow for handling of integers and doubles
+  fmt = is_integer([cmin,cmax]) ? "%d" : "%.2f";
   if (vert) {
     pli, span(0,1,200)(-,), x(1)+xoff, y(4)+yoff, x(4)+xoff, y(2)+yoff,
       legend="";
     plg, y, x, closed=1, marks=0, color="fg", width=1, type=1, legend="";
     plg, dy/2+y(1), xx, color="fg", width=3, type = 1, legend="";
     if(!is_void(cmin)) {
-      plt, swrite(format="%5.2f", cmax-cmin), x(3)+0.002, y(3)-dpy/2,
+      plt, swrite(format=fmt, cmax-cmin), x(3)+0.002, y(3)-dpy/2,
         justify="CA", orient=3;
       if(is_void(units)) units = "";
-      plt, swrite(format=" %.2f %s", cmin, units), x(1)+xoff-0.03,
+      plt, swrite(format=" "+fmt+" %s", cmin, units), x(1)+xoff-0.03,
         y(1)+yoff, justify="CT";
-      plt, swrite(format=" %.2f %s", cmax, units), x(1)+xoff-0.03,
+      plt, swrite(format=" "+fmt+" %s", cmax, units), x(1)+xoff-0.03,
         y(2)+yoff, justify="CB";
     }
     if (datum) {
@@ -107,9 +106,9 @@ func colorbar(cmin, cmax, drag=, landscape=, units=, datum=) {
     pli, span(0,1,200)(,-), x(1), y(4), x(4), y(2), legend="";
     plg, y, x, closed=1, marks=0, color="fg", width=1, type=1, legend="";
     if (!is_void(cmin)) {
-      plt, swrite(format="%5.2f", cmin), x(1),y(1), justify="CT";
-      plt, swrite(format="%5.2f", cmax), x(3),y(1), justify="CT";
-      plt, swrite(format="%5.2f", cmax-cmin), xx(1)-dpx/2, y(3),
+      plt, swrite(format=fmt, cmin), x(1),y(1), justify="CT";
+      plt, swrite(format=fmt, cmax), x(3),y(1), justify="CT";
+      plt, swrite(format=fmt, cmax-cmin), xx(1)-dpx/2, y(3),
         justify="CB";
     }
   }
