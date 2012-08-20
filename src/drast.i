@@ -187,7 +187,7 @@ parent=) {
 }
 
 func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, autolims=,
-parent=, rcfw=, showcbar=) {
+parent=, rcfw=, showcbar=, sfsync=) {
   extern data_path, soe_day_start;
   default, channel, 1;
   default, units, "ns";
@@ -198,6 +198,7 @@ parent=, rcfw=, showcbar=) {
   default, units, "ns";
   default, rcfw, 50.;
   default, showcbar, 0;
+  default, sfsync, 0;
 
   local z;
 
