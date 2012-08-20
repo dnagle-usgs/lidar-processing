@@ -137,18 +137,12 @@ plg, y, x, width=9.0, color="blue";
   show_track, mindata, utm=1, skip=0, color=clr(col), win=5, msize=.5;
   // show_fstrack,fs(m(minindx)), utm=1, skip=0, color="blue", win=5, msize=.5;
   window, 1, wait=1; fma;
-  // this is getting done by show_wf
-  // ytk_rast, rasterno(1);
-  // show_wf expects rr to be the raster and r to be the raster number
-  rn = rasterno;
-  r = get_erast( rn=rasterno );
-  rr = decode_raster(r);
+  rr = decode_raster(rn=rasterno);
   write, format="soe: %d  rn: %d  dgtz: %d  np: %d\n",
   rr.soe, rr.rasternbr, rr.digitizer, rr.npixels;
 
   // Now lets display the waveform
-  w = ndrast(rr, rn=rasterno);
-  show_wf, *w, pulseno, win=0, cb=7, raster=rasterno;
+  show_wf, rasterno, pulseno, win=0, cb=7;
   limits;
 
   mindata_dump_info, edb, mindata, minindx, last=_last_transrch,
