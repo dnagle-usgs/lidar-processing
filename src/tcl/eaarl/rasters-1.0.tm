@@ -42,6 +42,8 @@ snit::widget ::eaarl::rasters::rastplot::gui {
     variable chan4 0
     variable amp_bias 0
     variable range_bias 0
+    variable rxtx 0
+    variable units meters
     variable bathchan 0
     variable winrx 9
     variable winbath 4
@@ -74,6 +76,7 @@ snit::widget ::eaarl::rasters::rastplot::gui {
         set f $f.examine
         ttk::frame $f.rx1
         ttk::frame $f.rx2
+        ttk::frame $f.rx3
         ttk::frame $f.bath
         ttk::checkbutton $f.showrx -text "Show channels:" \
                 -variable [myvar showrx]
@@ -81,10 +84,17 @@ snit::widget ::eaarl::rasters::rastplot::gui {
                 -variable [myvar showbath]
         ttk::checkbutton $f.showtx -text "Show transmit" \
                 -variable [myvar showtx]
+        ttk::checkbutton $f.rxtx -text "Show transmit above return" \
+                -variable [myvar rxtx]
         ttk::checkbutton $f.ampbias -text "Remove amplitude bias" \
                 -variable [myvar amp_bias]
         ttk::checkbutton $f.rangebias -text "Remove range bias" \
                 -variable [myvar range_bias]
+        ttk::label $f.lblunits -text "Units:"
+        ::mixin::combobox $f.units -width 6 \
+                -state readonly \
+                -values [list ns meters feet] \
+                -textvariable [myvar units]
         foreach channel {1 2 3 4} {
              ttk::checkbutton $f.chan$channel -text "$channel" \
                     -variable [myvar chan$channel]
@@ -105,20 +115,24 @@ snit::widget ::eaarl::rasters::rastplot::gui {
         ttk::separator $f.sep2 -orient horizontal
 
         grid $f.showrx $f.chan1 $f.chan2 $f.chan3 $f.chan4 -in $f.rx1 -padx 2
-        grid $f.ampbias $f.rangebias -in $f.rx2 -padx 2
+        grid $f.rxtx $f.lblunits $f.units -in $f.rx2 -padx 2
+        grid $f.ampbias $f.rangebias -in $f.rx3 -padx 2
         grid $f.showbath $f.bathchan -in $f.bath -padx 2
+
+        grid columnconfigure $f.rx2 0 -weight 1
 
         grid $f.rx1    $f.lblwinrx   $f.winrx   $f.examine -padx 2 -pady 1
         grid $f.rx2    -             -          ^          -padx 2 -pady 1
+        grid $f.rx3    -             -          ^          -padx 2 -pady 1
         grid $f.sep1   -             -          ^          -padx 2 -pady 1
         grid $f.bath   $f.lblwinbath $f.winbath ^          -padx 2 -pady 1
         grid $f.sep2   -             -          ^          -padx 2 -pady 1
         grid $f.showtx $f.lblwintx   $f.wintx   ^          -padx 2 -pady 1
         grid columnconfigure $f 3 -weight 1
-        grid $f.rx1 $f.rx2 $f.bath -padx 0 -sticky w
-        grid $f.showtx -sticky w
+        grid $f.rx1 $f.rx3 $f.bath -padx 0 -sticky w
+        grid $f.rxtx $f.showtx -sticky w
         grid $f.examine -sticky news
-        grid $f.sep1 $f.sep2 -sticky ew
+        grid $f.rx2 $f.sep1 $f.sep2 -sticky ew
 
         ::tooltip::tooltip $f.bathchan \
             "Select \"Auto\" for the EAARL-A algorithm that selects channel\
@@ -163,6 +177,8 @@ snit::widget ::eaarl::rasters::rastplot::gui {
                 $showrx     ", cb=$cb" \
                 $amp_bias   ", amp_bias=1" \
                 $range_bias ", range_bias=1" \
+                $rxtx       ", rxtx=1" \
+                1           ", units=\"$units\"" \
                 $fc         ", bathchan=$bathchan" \
                 1           ", winsel=$options(-window)" \
                 $showrx     ", winrx=$winrx" \
