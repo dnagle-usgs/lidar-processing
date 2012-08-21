@@ -14,7 +14,6 @@ if {![namespace exists ::l1pro::drast]} {
             variable playint 1
             variable stepinc 1
             variable pulse 60
-            variable show_geo 0
             variable show_rast 1
             variable show_sline 0
             variable show_wf 0
@@ -38,22 +37,21 @@ if {![namespace exists ::l1pro::drast]} {
             variable rastcmax 255
             variable rastautolims 1
             variable rastunits meters
+            variable rastrxtx 0
+            variable rastcbar 0
             variable eoffset 0
-            variable geochan1 1
+            variable geochan1 0
             variable geochan2 0
             variable geochan3 0
             variable geochan4 0
+            # geochan0 is not included in the GUI and wouldn't work if it were,
+            # but is included to make code simpler in show_rast
+            variable geochan0 0
             variable geowin1 21
             variable geowin2 22
             variable geowin3 23
             variable geowin4 24
-            variable geoymin -100
-            variable geoymax 300
-            variable geoyuse 0
-            variable geotitles 1
-            variable geostyle pli
-            variable georcfw 0
-            variable geobg 7
+            variable georcfw 50
             variable wfchan1 1
             variable wfchan2 1
             variable wfchan3 1
@@ -235,7 +233,6 @@ proc ::l1pro::drast::gui_opts f {
 
     gui_opts_play $f.play $labelgrid
     gui_opts_rast $f.rast $labelgrid
-    gui_opts_geo $f.geo $labelgrid
     gui_opts_wf $f.wf $labelgrid
     gui_opts_sline $f.sline $labelgrid
     gui_opts_export $f.export $labelgrid
@@ -249,7 +246,7 @@ proc ::l1pro::drast::gui_opts f {
         }
     }
 
-    foreach widget [list $f.play $f.rast $f.geo $f.wf $f.sline $f.export] {
+    foreach widget [list $f.play $f.rast $f.wf $f.sline $f.export] {
         grid $widget -sticky ew
         grid columnconfigure [$widget interior] 0 -minsize $minsize_left
         grid columnconfigure [$widget interior] 3 -minsize $minsize_right
@@ -268,10 +265,8 @@ proc ::l1pro::drast::gui_opts_play {f labelgrid} {
             -textvariable ${ns}::v::playint
     ttk::spinbox $f.stepinc -from 1 -to 10000 -increment 1 -width 0 \
             -textvariable ${ns}::v::stepinc
-    ttk::checkbutton $f.rast -text "Show rast" \
+    ttk::checkbutton $f.rast -text "Show rasters" \
             -variable ${ns}::v::show_rast
-    ttk::checkbutton $f.geo -text "Show geo" \
-            -variable ${ns}::v::show_geo
     ttk::checkbutton $f.sline -text "Show scan line" \
             -variable ${ns}::v::show_sline
     ttk::checkbutton $f.wf -text "Show waveform" \
@@ -287,7 +282,6 @@ proc ::l1pro::drast::gui_opts_play {f labelgrid} {
 
     apply $labelgrid $f.playint "Delay:" $f.stepinc "Step:"
     apply $labelgrid $f.rast - $f.sfsync -
-    apply $labelgrid $f.geo -
     apply $labelgrid $f.sline -
     apply $labelgrid $f.wf -
     apply $labelgrid $f.autolidar -
@@ -297,15 +291,19 @@ proc ::l1pro::drast::gui_opts_play {f labelgrid} {
 
 proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
     set ns [namespace current]
-    ::mixin::labelframe::collapsible $f -text "Rast: Unreferenced raster"
+    ::mixin::labelframe::collapsible $f -text "Raster"
     set f [$f interior]
     foreach channel {1 2 3 4} {
-        ttk::checkbutton $f.userast${channel} -text "Show channel ${channel}" \
+        ttk::checkbutton $f.userast${channel} -text "Chan ${channel} in:" \
                 -variable ${ns}::v::rastchan${channel}
         ttk::spinbox $f.winrast${channel} -from 0 -to 63 -increment 1 -width 0 \
                 -textvariable ${ns}::v::rastwin${channel}
+        ttk::checkbutton $f.usegeo${channel} -text "Georef in:" \
+                -variable ${ns}::v::geochan${channel}
+        ttk::spinbox $f.wingeo${channel} -from 0 -to 63 -increment 1 -width 0 \
+                -textvariable ${ns}::v::geowin${channel}
     }
-    ttk::checkbutton $f.userast0 -text "Show transmit" \
+    ttk::checkbutton $f.userast0 -text "Transmit in:" \
             -variable ${ns}::v::rastchan0
     ttk::spinbox $f.winrast0 -from 0 -to 63 -increment 1 -width 0 \
             -textvariable ${ns}::v::rastwin0
@@ -317,6 +315,14 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
         ::mixin::statevar $f.c${which} -statemap {0 disabled 1 normal} \
                 -statevariable ${ns}::v::rastusec${which}
     }
+    ttk::spinbox $f.eoffset -from -1000 -to 1000 -increment 0.01 -width 0 \
+            -textvariable ${ns}::v::eoffset
+    ttk::spinbox $f.rcfw -from 0 -to 10000 -increment 1 -width 0 \
+            -textvariable ${ns}::v::georcfw
+    ttk::checkbutton $f.rxtx -text "Stack transmit" \
+            -variable ${ns}::v::rastrxtx
+    ttk::checkbutton $f.cbar -text "Show colorbar" \
+            -variable ${ns}::v::rastcbar
     ttk::checkbutton $f.autolims -text "Reset Limits" \
             -variable ${ns}::v::rastautolims
     ::mixin::combobox::mapping $f.units -state readonly -width 0 \
@@ -327,73 +333,16 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
                 Feet           feet
                 Nanoseconds    ns
             }
-    apply $labelgrid $f.userast1 - $f.winrast1 "Chan 1 win:"
-    apply $labelgrid $f.userast2 - $f.winrast2 "Chan 2 win:"
-    apply $labelgrid $f.userast3 - $f.winrast3 "Chan 3 win:"
-    apply $labelgrid $f.userast4 - $f.winrast4 "Chan 4 win:"
-    apply $labelgrid $f.userast0 - $f.winrast0 "Transmit win:"
-    apply $labelgrid $f.cmin $f.usecmin $f.cmax $f.usecmax
-    grid $f.usecmin $f.usecmax -sticky w
-    apply $labelgrid $f.autolims - $f.units "Units:"
-}
-
-proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
-    set ns [namespace current]
-    ::mixin::labelframe::collapsible $f -text "Geo: Georeferenced raster"
-    $f fastcollapse
-    set f [$f interior]
-    foreach channel {1 2 3 4} {
-        ttk::checkbutton $f.usegeo${channel} -text "Show channel ${channel}" \
-            -variable ${ns}::v::geochan${channel}
-        ttk::spinbox $f.wingeo${channel} -from 0 -to 63 -increment 1 -width 0 \
-                -textvariable ${ns}::v::geowin${channel}
+    foreach ch {1 2 3 4} {
+        apply $labelgrid $f.winrast$ch $f.userast$ch $f.wingeo$ch $f.usegeo$ch
+        grid $f.userast$ch $f.usegeo$ch -sticky w
     }
-    ttk::spinbox $f.eoffset -from -1000 -to 1000 -increment 0.01 -width 0 \
-            -textvariable ${ns}::v::eoffset
-    ttk::checkbutton $f.yuse -text "Constrain y axis" \
-            -variable ${ns}::v::geoyuse
-    ttk::spinbox $f.ymax -from -1000 -to 1000 -increment 0.01 -width 0 \
-            -textvariable ${ns}::v::geoymax
-    ttk::spinbox $f.ymin -from -1000 -to 1000 -increment 0.01 -width 0 \
-            -textvariable ${ns}::v::geoymin
-    ::mixin::combobox $f.style -state readonly -width 0 \
-            -textvariable ${ns}::v::geostyle \
-            -values {pli plcm}
-    ttk::spinbox $f.rcfw -from 0 -to 10000 -increment 1 -width 0 \
-            -textvariable ${ns}::v::georcfw
-    ttk::spinbox $f.bg -from 0 -to 255 -increment 1 -width 0 \
-            -textvariable ${ns}::v::geobg
-    ttk::checkbutton $f.titles -text "Show titles" \
-            -variable ${ns}::v::geotitles
-
-    ttk::frame $f.styles
-    ttk::button $f.styles.work -text "Work" \
-            -command [list ${ns}::apply_style_geo work]
-    ttk::button $f.styles.nobox -text "No Box" \
-            -command [list ${ns}::apply_style_geo nobox]
-    grid $f.styles.work $f.styles.nobox -sticky news
-    grid columnconfigure $f.styles 100 -weight 1
-
-    apply $labelgrid $f.usegeo1 - $f.wingeo1 "Chan 1 win:"
-    apply $labelgrid $f.usegeo2 - $f.wingeo2 "Chan 2 win:"
-    apply $labelgrid $f.usegeo3 - $f.wingeo3 "Chan 3 win:"
-    apply $labelgrid $f.usegeo4 - $f.wingeo4 "Chan 4 win:"
-    apply $labelgrid $f.eoffset "Elev. offset:" $f.style "Style:"
-    apply $labelgrid $f.rcfw "RCF win:" $f.bg "Background:"
-    apply $labelgrid $f.titles -
-    apply $labelgrid $f.yuse -
-    apply $labelgrid $f.ymin "Y min:" $f.ymax "Y max:"
-    apply $labelgrid $f.styles "Plot style:"
-
-    ::mixin::statevar $f.ymin -statemap {0 disabled 1 normal} \
-            -statevariable ${ns}::v::geoyuse
-    ::mixin::statevar $f.ymax -statemap {0 disabled 1 normal} \
-            -statevariable ${ns}::v::geoyuse
-
-    ::tooltip::tooltip $f.rcfw \
-            "If specified, the RCF filter will be used to remove outliers,\
-            \nusing this value as a window size. Set this to 0 to disable the\
-            \nRCF filter."
+    apply $labelgrid $f.winrast0 $f.userast0 $f.rcfw "RCF win:"
+    apply $labelgrid $f.units "Units:" $f.eoffset "Elev offset:"
+    apply $labelgrid $f.cmin $f.usecmin $f.cmax $f.usecmax
+    grid $f.userast0 $f.usecmin $f.usecmax -sticky w
+    apply $labelgrid $f.autolims - $f.cbar -
+    apply $labelgrid $f.rxtx -
 }
 
 proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
@@ -502,7 +451,7 @@ proc ::l1pro::drast::show_auto {} {
     if {$v::autoptc} {
         ::plot::replot_all
     }
-    foreach name {rast geo sline wf} {
+    foreach name {rast sline wf} {
         if {[set v::show_$name]} {
             show_$name
         }
@@ -511,62 +460,54 @@ proc ::l1pro::drast::show_auto {} {
 }
 
 proc ::l1pro::drast::show_rast {} {
+    set base "show_rast, $v::rn"
+    appendif base \
+        $v::rastusecmin         ", cmin=$v::rastcmin" \
+        $v::rastusecmax         ", cmax=$v::rastcmax" \
+        $v::rastcbar            ", showcbar=1" \
+        {!$v::rastautolims}     ", autolims=0"
     foreach channel {1 2 3 4 0} {
-        if {![set v::rastchan${channel}]} continue
-        set gui [::eaarl::rasters::rastplot::launch \
-                [set v::rastwin${channel}] $v::rn $channel]
-        set cmd "ndrast, $v::rn"
-        appendif cmd \
-                {$channel ne 1}            ", channel=$channel" \
-                1                          ", win=[set v::rastwin${channel}]" \
-                {$v::rastunits ne "ns"}    ", units=\"$v::rastunits\"" \
-                $v::rastusecmin            ", cmin=$v::rastcmin" \
-                $v::rastusecmax            ", cmax=$v::rastcmax" \
-                {!$v::rastautolims}        ", autolims=0" \
-                1                          ", parent=[$gui id]" \
-                1                          ", sfsync=0"
-
-        exp_send "$cmd\r"
-    }
-}
-
-proc ::l1pro::drast::show_geo {} {
-    foreach channel {1 2 3 4} {
-        if {![set v::geochan${channel}]} continue
-
-        set win [set v::geowin${channel}]
-
-        set cmd "window, $win"
-        appendif cmd \
-                1                          "; geo_rast" \
-                1                          ", $v::rn" \
-                {$channel ne 1}            ", channel=$channel" \
-                {$win != 2}                ", win=$win" \
-                {$v::eoffset != 0}         ", eoffset=$v::eoffset" \
-                1                          ", verbose=0" \
-                {!$v::geotitles}           ", titles=0" \
-                $v::georcfw                ", rcfw=$v::georcfw" \
-                {$v::geobg != 7}           ", bg=$v::geobg" \
-                {$v::geostyle ne "pli"}    ", style=\"$v::geostyle\""
-
-        if {$v::geoyuse} {
-            append cmd "; range, $v::geoymin, $v::geoymax"
+        set chanbase "${base}, channel=$channel"
+        if {$channel > 0 && $v::rastrxtx} {
+            append chanbase ", tx=1"
         }
 
-        if {$v::export && $v::exportgeo} {
-            if {![file isdirectory $v::exportdir]} {
-                error "Your export directory does not exist."
-            }
-            set fn [file nativename [file join $v::exportdir \
-                    ${v::rn}_ch${channel}_georast.png]]
-            append cmd "; png, \"$fn\""
-            if {$v::exportres != 72} {
-                append cmd ", dpi=$v::exportres"
-            }
-            set needexport 0
+        if {[set v::rastchan${channel}]} {
+            set gui [::eaarl::rasters::rastplot::launch \
+                    [set v::rastwin${channel}] $v::rn $channel]
+            set cmd $chanbase
+            appendif cmd \
+                1               ", win=[set v::rastwin${channel}]" \
+                1               ", units=\"$v::rastunits\"" \
+                1               ", parent=[$gui id]"
+            exp_send "$cmd\r"
         }
 
-        exp_send "$cmd\r"
+        if {[set v::geochan${channel}]} {
+            set gui [::eaarl::rasters::rastplot::launch \
+                    [set v::geowin${channel}] $v::rn $channel]
+            set cmd $chanbase
+            appendif cmd \
+                1               ", win=[set v::geowin${channel}]" \
+                1               ", geo=1" \
+                1               ", eoffset=$v::eoffset" \
+                1               ", rcfw=$v::georcfw" \
+                1               ", parent=[$gui id]"
+
+            if {$v::export && $v::exportgeo} {
+                if {![file isdirectory $v::exportdir]} {
+                    error "Your export directory does not exist."
+                }
+                set fn [file nativename [file join $v::exportdir \
+                        ${v::rn}_ch${channel}_georast.png]]
+                append cmd "; png, \"$fn\""
+                if {$v::exportres != 72} {
+                    append cmd ", dpi=$v::exportres"
+                }
+            }
+
+            exp_send "$cmd\r"
+        }
     }
 }
 
