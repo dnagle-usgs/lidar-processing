@@ -485,7 +485,7 @@ proc ::l1pro::drast::show_rast {} {
 
         if {[set v::geochan${channel}]} {
             set gui [::eaarl::rasters::rastplot::launch \
-                    [set v::geowin${channel}] $v::rn $channel]
+                    [set v::geowin${channel}] $v::rn $channel 1]
             set cmd $chanbase
             appendif cmd \
                 1               ", win=[set v::geowin${channel}]" \

@@ -11,8 +11,8 @@ if {![namespace exists ::eaarl::rasters::rastplot]} {
     }
 }
 
-proc ::eaarl::rasters::rastplot::launch {window raster channel} {
-    set args [list -window $window -raster $raster -channel $channel]
+proc ::eaarl::rasters::rastplot::launch {window raster channel {geo 0}} {
+    set args [list -window $window -raster $raster -channel $channel -geo $geo]
     set w ${v::top}_$window
     if {[winfo exists $w]} {
         $w configure {*}$args
@@ -30,6 +30,7 @@ snit::widget ::eaarl::rasters::rastplot::gui {
     option -window -default 11 -configuremethod SetOpt
     option -raster -default 1 -configuremethod SetOpt
     option -channel -default 1 -configuremethod SetOpt
+    option -geo -default 0 -configuremethod SetOpt
 
     component plot
 
@@ -150,6 +151,9 @@ snit::widget ::eaarl::rasters::rastplot::gui {
         set title "Window $options(-window) - Raster $options(-raster) "
         if {$options(-channel) > 0} {
             append title "Channel $options(-channel)"
+            if {$options(-geo)} {
+                append title " (Georeferenced)"
+            }
         } else {
             append title "Transmit"
         }
