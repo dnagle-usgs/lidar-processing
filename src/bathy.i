@@ -38,6 +38,17 @@ struct BATH_CTL {
   int first, last, maxsat;
 };
 
+local bath_ctl, bath_ctl_chn4;
+/* DOCUMENT
+  bath_ctl - settings for channels 1 through 3
+  bath_ctl_chn4 - settings for channel 4
+
+  These two variables are instances of BATH_CTL and store the settings for the
+  bathy algorithms.
+*/
+default, bath_ctl, BATH_CTL();
+default, bath_ctl_ch4, BATH_CTL();
+
 func run_bath(nil, start=, stop=, center=, delta=, last=, forcechannel=,
 graph=, pse=, msg=) {
   extern bath_ctl;
@@ -78,24 +89,6 @@ graph=, pse=, msg=) {
   status, finished;
   return depths;
 }
-
-extern bath_ctl;
-/* DOCUMENT extern struct bath_ctl
-
-  laser water agc   thresh
-  -2.4       -1.5    -3.0 4.0   tampa and keys laser decay
-  -2.4        -0.6    -0.3   4.0   keys
-  -2.4       -7.5    -5.0 4.0   wva
-
-  Do this to set the values:
-
-  bath_ctl.laser = -1.5
-  bath_ctl.water = -0.6
-  bath_ctl.agc   = -5.0
-  bath_ctl.thresh=  4.0
-*/
-
-default, bath_ctl, BATH_CTL();
 
 func define_bath_ctl {
 /* DOCUMENT define_bath_ctl;
