@@ -70,9 +70,14 @@ graph=, pse=, msg=) {
       error, "When using start=, you must provide delta= or stop=";
   }
 
-  if(is_void(bath_ctl) || bath_ctl.laser == 0.0) {
-    define_bath_ctl;
-    return 0;
+  if(forcechannel == 4) {
+    if(bath_ctl.laser == 0) {
+      error, "You must first configure bathy settings (bath_ctl).";
+    }
+  } else {
+    if(bath_ctl_chn4.laser == 0) {
+      error, "You must first configure bathy settings for channel 4 (bath_ctl_chn4).";
+    }
   }
 
   count = stop - start + 1;
@@ -88,22 +93,6 @@ graph=, pse=, msg=) {
   }
   status, finished;
   return depths;
-}
-
-func define_bath_ctl {
-/* DOCUMENT define_bath_ctl;
-  This function defines the structure bath_ctl.
-  amar nayegandhi 06/05/2002
-*/
-  extern bath_ctl;
-  default, bath_ctl, BATH_CTL();
-
-  if(bath_ctl.last == 0) {
-    tkcmd, "bathctl";
-    tk_messageBox("You must first configure "+
-        "the system for the water properties",
-        "ok");
-  }
 }
 
 func show_bath_constants {
@@ -171,7 +160,7 @@ xfma=, verbose=) {
    da                The return waveform with the computed exponentials substracted
    db                The return waveform equalized by agc and tilted by bias.
 */
-  extern bath_ctl;
+  extern bath_ctl, bath_ctl_chn4;
   default, win, 4;
   default, graph, 0;
   default, verbose, graph;
@@ -185,12 +174,18 @@ xfma=, verbose=) {
     if(xfma) fma;
   }
 
+  if(forcechannel == 4) {
+    conf = bath_ctl_chn4;
+  } else {
+    conf = bath_ctl;
+  }
+
   // setup the return struct
   result = BATHPIX();
   result.rastpix = raster_number + (pulse_number<<24);
 
   local wf, scan_angle, channel;
-  bathy_lookup_raster_pulse, raster_number, pulse_number, bath_ctl.maxsat,
+  bathy_lookup_raster_pulse, raster_number, pulse_number, conf.maxsat,
       wf, scan_angle, channel, maxint, forcechannel=forcechannel;
 
   result.sa = scan_angle;
@@ -203,7 +198,7 @@ xfma=, verbose=) {
   // Dont bother processing returns with more than bathctl.maxsat saturated
   // values.
   if(numsat != 0) {
-    if(numsat >= bath_ctl.maxsat) {
+    if(numsat >= conf.maxsat) {
       ex_bath_message, graph, verbose, swrite(format="%d points saturated", numsat);
       if(graph)
         plot_bath_ctl, channel, wf, last=wflen;
@@ -212,11 +207,11 @@ xfma=, verbose=) {
   }
 
   local surface_sat_end, surface_intensity, escale;
-  bathy_detect_surface, wf, maxint, bath_ctl.thresh,
+  bathy_detect_surface, wf, maxint, conf.thresh,
       surface_sat_end, surface_intensity, escale;
   result.first_peak = surface_intensity;
 
-  thresh = bath_ctl.thresh;
+  thresh = conf.thresh;
   if(numsat > 14) {
     thresh = thresh * (numsat-13)*0.65;
   }
@@ -226,12 +221,12 @@ xfma=, verbose=) {
   }
 
   wf_decay = bathy_wf_compensate_decay(wf, surface=surface_sat_end,
-      laser_coeff=bath_ctl.laser, water_coeff=bath_ctl.water,
-      agc_coeff=bath_ctl.agc, max_intensity=escale,
+      laser_coeff=conf.laser, water_coeff=conf.water,
+      agc_coeff=conf.agc, max_intensity=escale,
       sample_interval=sample_interval, graph=graph, win=win);
 
-  first = min(wflen, bath_ctl.first);
-  last = min(wflen, bath_ctl.last);
+  first = min(wflen, conf.first);
+  last = min(wflen, conf.last);
 
   offset = first - 1;
 
@@ -469,9 +464,14 @@ func bathy_validate_bottom(wf, bottom, first, last, thresh, graph, &msg) {
 func plot_bath_ctl(channel, wf, thresh=, first=, last=) {
   extern bath_ctl;
   default, channel, 1;
-  default, thresh, bath_ctl.thresh;
-  default, first, bath_ctl.first;
-  default, last, bath_ctl.last;
+  if(channel == 4) {
+    conf = bath_ctl_chn4;
+  } else {
+    conf = bath_ctl;
+  }
+  default, thresh, conf.thresh;
+  default, first, conf.first;
+  default, last, conf.last;
   pltitle, swrite(format="Channel %d", channel);
   if(!is_void(thresh)) {
     plg, [thresh,thresh], [first,last], marks=0, color="red";
