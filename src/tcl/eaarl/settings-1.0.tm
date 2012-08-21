@@ -144,3 +144,154 @@ proc ::eaarl::settings::ops_conf::view {json {name {}}} {
         grid $f.$key -sticky ew
     }
 }
+
+namespace eval ::eaarl::settings::bath_ctl::v {
+    variable top .l1wid.bctl
+
+    variable presets {
+         Clear {
+            laser -2.4 water -0.6 agc -0.3 thresh 4.0
+            first 11 last 220 maxsat 2
+         }
+         Bays {
+            laser -2.4 water -1.5 agc -3.0 thresh 4.0
+            first 11 last 60 maxsat 2
+         }
+         Turbid {
+            laser -2.4 water -3.5 agc -6.0 thresh 2.0
+            first 11 last 60 maxsat 2
+         }
+         {Super shallow} {
+            laser -2.4 water -2.4 agc -3.0 thresh 4.0
+            first 9 last 30 maxsat 2
+         }
+         {Shallow riverine} {
+            laser -4.7 water -4.8 agc -3.3 thresh 3.0
+            first 11 last 50 maxsat 2
+         }
+    }
+
+    variable guilayout {
+        laser {Laser -5.0 -1.0 0.1}
+        water {Water -10 0.1 0.1}
+        agc {AGC -10 0.1 0.1}
+        thresh {Thresh 0 50.0 0.1}
+        first {First 0 300 1}
+        last {Last 0 300 1}
+        maxsat {"Max Sat" 0 10 1}
+    }
+
+    set ns [namespace current]
+    foreach var {bath_ctl bath_ctl_chn4} {
+        if {![info exists $var]} {
+            variable $var
+            foreach field {laser water agc thresh first last maxsat} {
+                set ${var}($field) 0
+                tky_tie add sync ${ns}::${var}($field) \
+                        with "${var}.$field" -initalize 1
+            }
+        }
+    }
+    unset ns var field
+}
+
+proc ::eaarl::settings::bath_ctl::gui_main {var} {
+    if {$var eq "bath_ctl"} {
+        set w $v::top
+    } else {
+        set w ${v::top}chn4
+    }
+    destroy $w
+    toplevel $w
+
+    wm resizable $w 1 0
+    wm title $w "$var Settings"
+
+    menu $w.mb
+    menu $w.mb.file
+    menu $w.mb.preset
+
+    set ns [namespace current]
+    set nsvar [namespace current]::v::${var}
+
+    $w.mb add cascade -label File -underline 0 -menu $w.mb.file
+    $w.mb.file add command -label "Load Bathy Parameters..." \
+            -command ${ns}::load
+    $w.mb.file add command -label "Save Bathy Parameters..." \
+            -command ${ns}::save
+    $w.mb.file add separator
+    $w.mb.file add command -label "Close" \
+            -command [list destroy $w]
+
+    $w.mb add cascade -label "Presets" -underline 0 -menu $w.mb.preset
+    foreach {preset -} $v::presets {
+        $w.mb.preset add command -label $preset \
+                -command [list ${ns}::preset $nsvar $preset]
+    }
+
+    $w configure -menu $w.mb
+
+    ttk::frame $w.f
+    set f $w.f
+    grid columnconfigure $w.f 1 -weight 1
+
+    foreach {key info} $v::guilayout {
+        lassign $info name rmin rmax rinc fmt
+        ttk::label $f.lbl$key -text "${name}:"
+        ttk::spinbox $f.spn$key \
+            -width 8 \
+            -textvariable ${nsvar}($key) \
+            -from $rmin -to $rmax -increment $rinc
+        grid $f.lbl$key $f.spn$key
+        grid configure $f.lbl$key -sticky e
+        grid configure $f.spn$key -sticky ew
+    }
+
+    grid $w.f -sticky news
+    grid columnconfigure $w 0 -weight 1
+    grid rowconfigure $w 0 -weight 1
+
+    bind $f <Enter> [namespace which -command gui_refresh]
+    bind $f <Visibility> [namespace which -command gui_refresh]
+}
+
+proc ::eaarl::settings::bath_ctl::gui_refresh {} {
+    array set v::bath_ctl [array get v::bath_ctl]
+    array set v::bath_ctl_chn4 [array get v::bath_ctl_chn4]
+}
+
+proc ::eaarl::settings::bath_ctl::save {} {
+    set fn [tk_getSaveFile -initialdir $::data_path \
+            -filetypes {{{json files} {.json}} {{all files} {*}}}]
+    if {$fn ne ""} {
+        if {[file extension $fn] eq ".bctl"} {
+            tk_messageBox -icon error -type ok -message \
+                    "You chose a filename ending with \".bctl\", which is a\
+                    deprecated format no longer used for bath_ctl settings.\
+                    Please choose a filename ending in \".json\"."
+        }
+        if {[file extension $fn] ne ".json"} {
+            append fn .json
+        }
+        exp_send "bath_ctl_save, \"$fn\";\r"
+    }
+}
+
+proc ::eaarl::settings::bath_ctl::load {} {
+    set fn [tk_getOpenFile -initialdir $::data_path \
+            -filetypes {
+                {{json files} {.json}}
+                {{bctl files} {.bctl}}
+                {{all files} {*}}
+            }]
+    if {$fn ne ""} {
+        exp_send "bath_ctl_load, \"$fn\";\r"
+        ::misc::idle [namespace which -command gui_refresh]
+    }
+}
+
+proc ::eaarl::settings::bath_ctl::preset {var preset} {
+    dict for {key val} [dict get $v::presets $preset] {
+        set ${var}($key) $val
+    }
+}
