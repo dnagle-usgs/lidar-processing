@@ -47,7 +47,7 @@ local bath_ctl, bath_ctl_chn4;
   bathy algorithms.
 */
 default, bath_ctl, BATH_CTL();
-default, bath_ctl_ch4, BATH_CTL();
+default, bath_ctl_chn4, BATH_CTL();
 
 func bath_ctl_save(filename) {
 /* DOCUMENT bath_ctl_save, filename
