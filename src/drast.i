@@ -118,8 +118,8 @@ autolims=, parent=) {
   return &aa;
 }
 
-func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=, tx=,
-autolims=, showcbar=, sfsync=, parent=) {
+func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=, eoffset=,
+tx=, autolims=, showcbar=, sfsync=, parent=) {
 /* DOCUMENT show_rast, rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=,
    tx=, autolims=, showbar=, sfsync=, parent=
 
@@ -146,8 +146,12 @@ autolims=, showcbar=, sfsync=, parent=) {
       "meters".
         geo=0             Default
     rcfw= RCF window to use to determine which waveforms to display. This is
-      applies to the elevation of the first sample of the waveforms.
+      applies to the elevation of the first sample of the waveforms. This is
+      only used when geo=1.
         rcfw=50.          50 meters, default
+    eoffset= Elevation offset. This gets added to the y-axis values. This is
+      only used when geo=1.
+        eoffset=0         0 meteers, default
     tx= Show the transmit raster above the return raster. Ignored if channel=0.
         tx=0              Default
     autolims= Automatically reset the limits.
@@ -196,6 +200,7 @@ autolims=, showcbar=, sfsync=, parent=) {
       rcfres = rcf(z, rcfw, mode=2);
       skip(*rcfres(1)) = 0;
     }
+    if(eoffset) z += eoffset;
   }
 
   top = -1e1000;
