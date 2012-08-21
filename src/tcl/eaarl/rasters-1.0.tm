@@ -129,7 +129,7 @@ snit::widget ::eaarl::rasters::rastplot::gui {
         grid $f.sep2   -             -          ^          -padx 2 -pady 1
         grid $f.showtx $f.lblwintx   $f.wintx   ^          -padx 2 -pady 1
         grid columnconfigure $f 3 -weight 1
-        grid $f.rx1 $f.rx3 $f.bath -padx 0 -sticky w
+        grid $f.rx1 $f.rx2 $f.rx3 $f.bath -padx 0 -sticky w
         grid $f.rxtx $f.showtx -sticky w
         grid $f.examine -sticky news
         grid $f.rx2 $f.sep1 $f.sep2 -sticky ew
