@@ -1,31 +1,6 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 require, "general.i";
-/*
-  W. Wright
-
-  10/3/02
-  WW. Changed the algo. so non saturated surface waveforms
-  which contain shallow depths will begin the exponential decay
-  at a fixed 9ns point in the waveform. The previous method
-  would locate the peak of a shallow bottom signal which was
-  within the first 18ns of the waveform and it would improperly
-  begin the decay at that point.  It should properly begin
-  at the threshold crossing of the surface return.
-  which is typically 9ns or so, but it's not certain.
-
-  7-4-02
-  WW Added tk based progress bar.
-
-  5-14-02
-  WW Added bath_ctl structure
-  Changed thresh from fixed for all waveforms to self adjusting
-  based on how many surface pixels are saturated.  This is because
-  the subsurface noise goes up significantly when the surface is
-  driven far into saturation.  The function needs to be carefully
-  evaluated to determine the exact relationship between noise level
-  changes and the required threshold change.
-*/
 
 struct BATHPIX {
   long rastpix;        // raster + pulse << 24
