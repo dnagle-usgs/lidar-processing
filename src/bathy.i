@@ -38,25 +38,6 @@ struct BATH_CTL {
   int first, last, maxsat;
 };
 
-func bath_winpix(m) {
-  extern _depth_display_units;
-  extern rn;
-  window, 3;
-  idx = int(mouse()(1:2));
-  idx;
-  // ******* IMPORTANT! The *2 below is there cuz we usually only look at
-  // every other raster.
-  rn = m(idx(1), idx(2)*2).rastpix;   // get the *real* raster number.
-  rn;
-  local raster, pulse;
-  parse_rn, rn, raster, pulse;
-  window, 1;
-  fma;
-  aa = ndrast(raster, units=_depth_display_units);
-  pulse;
-  raster;
-}
-
 func run_bath(nil, start=, stop=, center=, delta=, last=, forcechannel=,
 graph=, pse=, msg=) {
   extern bath_ctl;
