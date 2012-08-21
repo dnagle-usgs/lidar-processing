@@ -93,10 +93,7 @@ func save_vars (filename, tile=) {
   if ( b_rcf == 1 ) {
     save,  f, b_rcf, buf, w, no_rcf, mode, merge, clean, rcfmode, write_merge;
   }
-  if ( ! is_void( bath_ctl ) ) {
-    save, f, bath_ctl;
-  }
-  save, f, forcechannel;
+  save, f, forcechannel, bath_ctl, bath_ctl_chn4;
 
   close, f;
   // This makes sure the file is completely written before batcher.tcl has a chance
@@ -311,12 +308,13 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
           write, f, format="   using repository revision %s\n", _hgid;
         if (!is_array(conf_file_lines)) write, f, format="PNAV FILE: %s\n",pnav_filename;
         if (typ == 1) {
+          bconf = (forcechannel == 4) ? bath_ctl_chn4 : bath_ctl;
           write, f, "Bathymetry Constants: "
-          write, f, format="Laser: %f\n",bath_ctl.laser;
-          write, f, format="Water: %f\n",bath_ctl.water;
-          write, f, format="AGC  : %f\n",bath_ctl.agc;
-          write, f, format="Threshold: %f\n",bath_ctl.thresh;
-          write, f, format="Last : %d\n",bath_ctl.last;
+          write, f, format="Laser: %f\n",bconf.laser;
+          write, f, format="Water: %f\n",bconf.water;
+          write, f, format="AGC  : %f\n",bconf.agc;
+          write, f, format="Threshold: %f\n",bconf.thresh;
+          write, f, format="Last : %d\n",bconf.last;
         }
         if (is_array(conf_file_lines)) {
           write, f, "Conf File settings\n";
@@ -691,7 +689,7 @@ Ex: curzone=18
 amar nayegandhi started (10/04/02) Lance Mosher
 Added server/client support (2009-01) Richard Mitchell
 */
-  extern pnav_filenam, bath_ctl, _hgid;
+  extern pnav_filenam, bath_ctl, bath_ctl_chn4, _hgid;
 
   // start the timer
   t0 = array(double, 3);
@@ -925,13 +923,14 @@ Added server/client support (2009-01) Richard Mitchell
       write, f, format="PNAV FILE: %s\n",pnav_filename;
       if (typ == 0) write, f, "Processing for First Surface Returns"
       if (typ == 1) {
+        bconf = (forcechannel == 4) ? bath_ctl_chn4 : bath_ctl;
         write, f, "\nProcessing for Bathymetry";
         write, f, "Bathymetry Constants: ";
-        write, f, format="Laser: %f\n",bath_ctl.laser;
-        write, f, format="Water: %f\n",bath_ctl.water;
-        write, f, format="AGC  : %f\n",bath_ctl.agc;
-        write, f, format="Threshold: %f\n",bath_ctl.thresh;
-        write, f, format="Last : %d\n",bath_ctl.last;
+        write, f, format="Laser: %f\n",bconf.laser;
+        write, f, format="Water: %f\n",bconf.water;
+        write, f, format="AGC  : %f\n",bconf.agc;
+        write, f, format="Threshold: %f\n",bconf.thresh;
+        write, f, format="Last : %d\n",bconf.last;
       }
       if (typ == 2) write, f, "Processing for topography under vegetation ie. (Bare Earth)"
       write, f, "\nops_conf constants: ";
