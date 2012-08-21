@@ -131,9 +131,9 @@ proc menu_mission_settings mb {
     $mb add command {*}[menulabel "&Load ops_conf..."] \
             -command load_ops_conf
     $mb add command {*}[menulabel "&Configure ops_conf..."] \
-            -command ::l1pro::settings::ops_conf::gui
+            -command ::eaarl::settings::ops_conf::gui
     $mb add command {*}[menulabel "&Save ops_conf..."] \
-            -command ::l1pro::settings::ops_conf::save
+            -command ::eaarl::settings::ops_conf::save
     $mb add cascade {*}[menulabel "&Display..."] \
             -menu [menu_mission_settings_ops $mb.ops]
     $mb add separator

@@ -5,3 +5,4 @@ package provide eaarl 1.0
 namespace eval ::eaarl {}
 
 package require eaarl::rasters
+package require eaarl::settings

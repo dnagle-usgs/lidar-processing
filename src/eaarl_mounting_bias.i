@@ -233,7 +233,7 @@ func display_mission_constants(conf, ytk=) {
   }
   if(ytk) {
     json = json_encode(conf);
-    cmd = swrite(format="::l1pro::settings::ops_conf::view {%s}", json);
+    cmd = swrite(format="::eaarl::settings::ops_conf::view {%s}", json);
     if(!is_void(name))
       cmd += swrite(format=" {%s}", name);
     tkcmd, cmd;
@@ -303,12 +303,12 @@ func ops_conf_validate(&conf) {
   }
 }
 
-func l1pro_ops_conf_gui_init(nil) {
-/* DOCUMENT l1pro_ops_conf_gui_init
-  Glue for ::l1pro::settings::ops_conf::gui.
+func eaarl_ops_conf_gui_init(nil) {
+/* DOCUMENT eaarl_ops_conf_gui_init
+  Glue for ::eaarl::settings::ops_conf::gui.
 */
   extern ops_conf;
   fields = get_members(ops_conf);
   fields = strjoin(fields, " ");
-  tkcmd, swrite(format="::l1pro::settings::ops_conf::gui_init {%s}", fields);
+  tkcmd, swrite(format="::eaarl::settings::ops_conf::gui_init {%s}", fields);
 }

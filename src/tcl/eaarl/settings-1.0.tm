@@ -1,8 +1,8 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
-package provide l1pro::settings 1.0
+package provide eaarl::settings 1.0
 
-namespace eval ::l1pro::settings::ops_conf::v {
+namespace eval ::eaarl::settings::ops_conf::v {
     variable top .l1wid.opsconf
     variable fieldframe
     variable ops_conf
@@ -26,11 +26,11 @@ namespace eval ::l1pro::settings::ops_conf::v {
     }
 }
 
-proc ::l1pro::settings::ops_conf::gui_refresh {} {
+proc ::eaarl::settings::ops_conf::gui_refresh {} {
     array set v::ops_conf [array get v::ops_conf]
 }
 
-proc ::l1pro::settings::ops_conf::gui_line {w text} {
+proc ::eaarl::settings::ops_conf::gui_line {w text} {
     set lbl [winfo parent $w].lbl[winfo name $w]
     ttk::label $lbl -text $text
     grid $lbl $w
@@ -38,20 +38,20 @@ proc ::l1pro::settings::ops_conf::gui_line {w text} {
     grid $w -sticky ew
 }
 
-proc ::l1pro::settings::ops_conf::gui_entry {w key} {
+proc ::eaarl::settings::ops_conf::gui_entry {w key} {
     set var [namespace which -variable v::ops_conf]
     ttk::entry $w.$key -textvariable ${var}($key)
     gui_line $w.$key "$key: "
 }
 
-proc ::l1pro::settings::ops_conf::gui_spinbox {w key from to inc} {
+proc ::eaarl::settings::ops_conf::gui_spinbox {w key from to inc} {
     set var [namespace which -variable v::ops_conf]
     ttk::spinbox $w.$key -textvariable ${var}($key) \
             -from $from -to $to -increment $inc
     gui_line $w.$key "$key: "
 }
 
-proc ::l1pro::settings::ops_conf::gui {} {
+proc ::eaarl::settings::ops_conf::gui {} {
     set w $v::top
     destroy $w
     toplevel $w
@@ -74,10 +74,10 @@ proc ::l1pro::settings::ops_conf::gui {} {
     bind $f <Enter> [namespace which -command gui_refresh]
     bind $f <Visibility> [namespace which -command gui_refresh]
 
-    ybkg l1pro_ops_conf_gui_init
+    ybkg eaarl_ops_conf_gui_init
 }
 
-proc ::l1pro::settings::ops_conf::gui_init {fields} {
+proc ::eaarl::settings::ops_conf::gui_init {fields} {
     set var [namespace which -variable v::ops_conf]
     foreach key $fields {
         if {[dict exists $v::settings $key]} {
@@ -90,12 +90,12 @@ proc ::l1pro::settings::ops_conf::gui_init {fields} {
     }
 }
 
-proc ::l1pro::settings::ops_conf::gui_dead {} {
+proc ::eaarl::settings::ops_conf::gui_dead {} {
     destroy $v::top
     array unset v::ops_conf
 }
 
-proc ::l1pro::settings::ops_conf::save {} {
+proc ::eaarl::settings::ops_conf::save {} {
     set fn [tk_getSaveFile -parent .l1wid \
             -title "Select destination to save current ops_conf settings" \
             -filetypes {
@@ -108,7 +108,7 @@ proc ::l1pro::settings::ops_conf::save {} {
     }
 }
 
-proc ::l1pro::settings::ops_conf::view {json {name {}}} {
+proc ::eaarl::settings::ops_conf::view {json {name {}}} {
     set i 1
     while {[winfo exists ${v::top}view${i}]} {
         incr i
