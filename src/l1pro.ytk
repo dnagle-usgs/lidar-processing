@@ -89,6 +89,7 @@ if {![info exists l1pro_data]} {
   set pro_var_next fs_all
   array set plot_settings $var_settings($pro_var)
 
+  set _map(window) 6
   set processing_mode fs
 
   # Compatibility: We want to keep the window setting in ::plot_settings(win),
