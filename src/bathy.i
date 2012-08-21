@@ -2,15 +2,42 @@
 require, "eaarl.i";
 require, "general.i";
 
+local BATHPIX;
+/* DOCUMENT BATHPIX
+  Struct used for holding result of ex_bath.
+
+  struct BATHPIX {
+    long rastpix;       // raster + pulse << 24
+    short sa;           // scan angle
+    short idx;          // bottom index
+    short bottom_peak;  // peak amplitude of bottom signal
+    short first_peak;   // peak amplitude of the surface signal
+  };
+*/
 struct BATHPIX {
-  long rastpix;        // raster + pulse << 24
-  short sa;            // scan angle
-  short idx;           // bottom index
-  short bottom_peak;   // peak amplitude of bottom signal
-  short first_peak;    // peak amplitude of the surface signal
+  long rastpix;
+  short sa, idx, bottom_peak, first_peak;
 };
 
-// 94000
+local BATH_CTL;
+/* DOCUMENT BATH_CTL
+  Struct used for holding configuration settings for bathy algorithms.
+
+  struct BATH_CTL {
+    float laser;  // system exponential decay  (-1.5)
+    float water;  // water column exponential decay (-0.3)
+    float agc;    // exponential equalizer (-5)
+    float thresh; // threshold value (3)
+    int first;    // first nanosecond to consider (maxdepth in ns)  (150)
+    int last;     // last nanosecond to consider (maxdepth in ns)  (150)
+    int maxsat;   // Maximum number of saturated points.
+  };
+*/
+struct BATH_CTL {
+  float laser, water, agc, thresh;
+  int first, last, maxsat;
+};
+
 func bath_winpix(m) {
   extern _depth_display_units;
   extern rn;
@@ -70,17 +97,6 @@ graph=, pse=, msg=) {
   status, finished;
   return depths;
 }
-
-struct BATH_CTL{
-  // Settings
-  float laser;   // system exponential decay  (-1.5)
-  float water;   // water column exponential decay (-0.3)
-  float agc;     // exponential equalizer (-5)
-  float thresh;  // threshold value (3)
-  int   first;   // first nanosecond to consider (maxdepth in ns)  (150)
-  int   last;    // last nanosecond to consider (maxdepth in ns)  (150)
-  int   maxsat;  // Maximum number of saturated points.
-};
 
 extern bath_ctl;
 /* DOCUMENT extern struct bath_ctl
