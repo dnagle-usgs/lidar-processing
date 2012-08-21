@@ -603,10 +603,11 @@ func missiondata_wrap(type) {
       "ops_conf_filename", ops_conf_filename
     );
   } else if(type == "bath_ctl") {
-    extern bath_ctl;
+    extern bath_ctl, bath_ctl_chn4;
     return h_new(
       "__type", "bath_ctl",
-      "bath_ctl", bath_ctl
+      "bath_ctl", bath_ctl,
+      "bath_ctl_chn4", bath_ctl_chn4
     );
   } else {
     error, swrite(format="Unknown type provided: %s", type);
@@ -665,8 +666,9 @@ func missiondata_unwrap(data) {
     ops_conf = data.ops_conf;
     ops_conf_filename = data.ops_conf_filename;
   } else if(type == "bath_ctl") {
-    extern bath_ctl;
+    extern bath_ctl, bath_ctl_chn4;
     bath_ctl = data.bath_ctl;
+    bath_ctl_chn4 = data.bath_ctl_chn4;
   } else {
     error, swrite(format="Unknown type provided: %s", type);
   }
@@ -795,18 +797,14 @@ func missiondata_load(type, day=, noerror=) {
     if(cache_enabled && h_has(cache, "bath_ctl")) {
       missiondata_unwrap, cache("bath_ctl");
     } else if(mission_has("bath_ctl file", day=day)) {
-      extern bath_ctl;
-      tkcmd, swrite(format="::bathctl::load_file {%s}",
-        mission_get("bath_ctl file", day=day)), async=0;
+      extern bath_ctl, bath_ctl_chn4;
+      bath_ctl_load, mission_get("bath_ctl file", day=day);
       if(cache_enabled) {
-        // pause briefly just to make sure Yorick has time to process
-        // the updates Tcl gives it in the background
-        pause, 10;
         h_set, cache, "bath_ctl", missiondata_wrap("bath_ctl");
       }
     } else if(noerror) {
-      extern bath_ctl;
-      bath_ctl = BATH_CTL();
+      extern bath_ctl, bath_ctl_chn4;
+      bath_ctl = bath_ctl_chn4 = BATH_CTL();
     } else {
       error, "Could not load bath_ctl: no bath_ctl file defined";
     }
