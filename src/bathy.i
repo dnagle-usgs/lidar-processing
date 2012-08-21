@@ -49,6 +49,74 @@ local bath_ctl, bath_ctl_chn4;
 default, bath_ctl, BATH_CTL();
 default, bath_ctl_ch4, BATH_CTL();
 
+func bath_ctl_save(filename) {
+/* DOCUMENT bath_ctl_save, filename
+  Saves the current bathy configuration settings to the given JSON file.
+
+  By convention, these files should be named *-bctl.json
+*/
+  extern bath_ctl, bath_ctl_ch4n, _hgid;
+  data = save(
+    bath_ctl, bath_ctl_chn4,
+    "save environment", save(
+      "path", mission_path(),
+      "user", get_user(),
+      "host", get_host(),
+      "timestamp", soe2iso8601(getsoe()),
+      "repository", _hgid
+    )
+  );
+  json = json_encode(data, indent=2);
+  f = open(filename, "w");
+  write, f, format="%s\n", json;
+  close, f;
+}
+
+func bath_ctl_load(filename) {
+/* DOCUMENT bath_ctl_load, filename
+  Loads the bathy configuration settings defined in the given filename.
+
+  Filename should be a *.json file as exported by bath_ctl_save. In this case,
+  it will set the variables bath_ctl and bath_ctl_chn4.
+
+  Alternately, the filename can also be a *.bctl file as exported in older
+  versions of ALPS. This is legacy support and will only set bath_ctl;
+  bath_ctl_chn4 will be given all zero values.
+*/
+  extern bath_ctl, bath_ctl_chn4;
+  bath_ctl = bath_ctl_chn4 = BATH_CTL();
+
+  lines = rdfile(filename);
+  // Legacy support for tcl-style .bctl files
+  if(file_extension(filename) == ".bctl") {
+    key = val = [];
+    good = regmatch("set bath_ctl\\((.*)\\) (.*)", lines, , key, val);
+    w = where(good);
+    for(i = 1; i <= numberof(w); i++) {
+      j = w(i);
+      if(has_member(bath_ctl, key(j)))
+        get_member(bath_ctl, key(j)) = atod(val(j));
+    }
+  // Support for current format
+  } else {
+    data = json_decode(lines);
+    if(h_has(data, "bath_ctl")) {
+      keys = get_members(bath_ctl);
+      for(i = 1; i <= numberof(keys); i++) {
+        if(h_has(data.bath_ctl, keys(i)))
+          get_member(bath_ctl, keys(i)) = data.bath_ctl(keys(i));
+      }
+    }
+    if(h_has(data, "bath_ctl_chn4")) {
+      keys = get_members(bath_ctl_chn4);
+      for(i = 1; i <= numberof(keys); i++) {
+        if(h_has(data.bath_ctl_chn4, keys(i)))
+          get_member(bath_ctl_chn4, keys(i)) = data.bath_ctl_chn4(keys(i));
+      }
+    }
+  }
+}
+
 func run_bath(nil, start=, stop=, center=, delta=, last=, forcechannel=,
 graph=, pse=, msg=) {
   extern bath_ctl;
