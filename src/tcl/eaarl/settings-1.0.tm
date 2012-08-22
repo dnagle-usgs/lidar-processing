@@ -152,22 +152,27 @@ namespace eval ::eaarl::settings::bath_ctl::v {
          Clear {
             laser -2.4 water -0.6 agc -0.3 thresh 4.0
             first 11 last 220 maxsat 2
+            lwing_dist 1 rwing_dist 3 lwing_factor 0.9 rwing_factor 0.9
          }
          Bays {
             laser -2.4 water -1.5 agc -3.0 thresh 4.0
             first 11 last 60 maxsat 2
+            lwing_dist 1 rwing_dist 3 lwing_factor 0.9 rwing_factor 0.9
          }
          Turbid {
             laser -2.4 water -3.5 agc -6.0 thresh 2.0
             first 11 last 60 maxsat 2
+            lwing_dist 1 rwing_dist 3 lwing_factor 0.9 rwing_factor 0.9
          }
          {Super shallow} {
             laser -2.4 water -2.4 agc -3.0 thresh 4.0
             first 9 last 30 maxsat 2
+            lwing_dist 1 rwing_dist 3 lwing_factor 0.9 rwing_factor 0.9
          }
          {Shallow riverine} {
             laser -4.7 water -4.8 agc -3.3 thresh 3.0
             first 11 last 50 maxsat 2
+            lwing_dist 1 rwing_dist 3 lwing_factor 0.9 rwing_factor 0.9
          }
     }
 
@@ -179,13 +184,17 @@ namespace eval ::eaarl::settings::bath_ctl::v {
         first {First 0 300 1}
         last {Last 0 300 1}
         maxsat {"Max Sat" 0 10 1}
+        lwing_dist {"Left Wing Dist" 1 100 1}
+        rwing_dist {"Right Wing Dist" 1 100 1}
+        lwing_factor {"Left Wing Factor" 0.0 1.0 0.1}
+        rwing_factor {"Right Wing Factor" 0.0 1.0 0.1}
     }
 
     set ns [namespace current]
     foreach var {bath_ctl bath_ctl_chn4} {
         if {![info exists $var]} {
             variable $var
-            foreach field {laser water agc thresh first last maxsat} {
+            foreach {field -} $guilayout {
                 set ${var}($field) 0
                 tky_tie add sync ${ns}::${var}($field) \
                         with "${var}.$field" -initalize 1
