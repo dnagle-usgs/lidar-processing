@@ -147,6 +147,7 @@ proc ::eaarl::settings::ops_conf::view {json {name {}}} {
 
 namespace eval ::eaarl::settings::bath_ctl::v {
     variable top .l1wid.bctl
+    variable last_refresh 0
 
     variable presets {
          Clear {
@@ -400,8 +401,14 @@ snit::widget ::eaarl::settings::bath_ctl::gui_embed {
 }
 
 proc ::eaarl::settings::bath_ctl::gui_refresh {} {
-    array set v::bath_ctl [array get v::bath_ctl]
-    array set v::bath_ctl_chn4 [array get v::bath_ctl_chn4]
+    # Throttle to every 3/4 second to prevent flooding Yorick in the background
+    # (which can cause issues)
+    set elapsed [expr {[clock milliseconds] - $v::last_refresh}]
+    if {$elapsed > 750} {
+        set v::last_refresh [clock milliseconds]
+        array set v::bath_ctl [array get v::bath_ctl]
+        array set v::bath_ctl_chn4 [array get v::bath_ctl_chn4]
+    }
 }
 
 proc ::eaarl::settings::bath_ctl::save {} {
