@@ -62,7 +62,7 @@ proc ::eaarl::settings::ops_conf::gui {} {
     set w $v::top
     destroy $w
     toplevel $w
-    array unset v::ops_conf
+    array unset v::ops_conf *
 
     wm resizable $w 1 0
     wm title $w "ops_conf Settings"
@@ -99,7 +99,7 @@ proc ::eaarl::settings::ops_conf::gui_init {fields} {
 
 proc ::eaarl::settings::ops_conf::gui_dead {} {
     destroy $v::top
-    array unset v::ops_conf
+    array unset v::ops_conf *
 }
 
 proc ::eaarl::settings::ops_conf::save {} {
