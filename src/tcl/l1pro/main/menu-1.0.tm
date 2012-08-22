@@ -138,7 +138,7 @@ proc menu_mission_settings mb {
             -menu [menu_mission_settings_ops $mb.ops]
     $mb add separator
     $mb add command {*}[menulabel "&Bathymetry Settings..."] \
-            -command bathctl::gui
+            -command ::eaarl::settings::bath_ctl::gui_main
     return $mb
 }
 
