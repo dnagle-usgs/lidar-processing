@@ -677,7 +677,7 @@ namespace eval mission {
             -labeltext "bathy settings file:" \
             -actiontype open \
             -filetypes {
-                {{Bathy settings files} {.bctl}}
+                {{Bathy settings files} {.json .bctl}}
                 {{All files} *}
             } \
             -parent $dlg \
