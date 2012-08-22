@@ -23,7 +23,10 @@ namespace eval ::eaarl::settings::ops_conf::v {
         chn1_range_bias {gui_spinbox -10000 10000 0.01}
         chn2_range_bias {gui_spinbox -10000 10000 0.01}
         chn3_range_bias {gui_spinbox -10000 10000 0.01}
+        chn4_range_bias {gui_spinbox -10000 10000 0.01}
         max_sfc_sat     {gui_spinbox -100 100 1}
+        tx_clean        {gui_spinbox 0 100 1}
+        dmars_invert    {gui_spinbox 0 1 1}
     }
 }
 
