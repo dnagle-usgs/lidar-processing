@@ -30,12 +30,17 @@ local BATH_CTL;
     double thresh;  // threshold value (3)
     int first;      // first nanosecond to consider (maxdepth in ns)  (150)
     int last;       // last nanosecond to consider (maxdepth in ns)  (150)
-    int maxsat;     // Maximum number of saturated points.
+    int maxsat;     // maximum number of saturated points.
+    int lwing_dist; // distance in samples to place the left pulse wing
+    int rwing_dist; // distance in samples to place the right pulse wing
+    double lwing_factor;  // factor to multiply peak by for left pulse wing
+    double rwing_factor;  // factor to multiple peak by for right pulse wing
   };
 */
 struct BATH_CTL {
   double laser, water, agc, thresh;
-  int first, last, maxsat;
+  int first, last, maxsat, lwing_dist, rwing_dist;
+  double lwing_factor, rwing_factor;
 };
 
 local bath_ctl, bath_ctl_chn4;
@@ -97,6 +102,11 @@ func bath_ctl_load(filename) {
       if(has_member(bath_ctl, key(j)))
         get_member(bath_ctl, key(j)) = atod(val(j));
     }
+    // Legacy format didn't have pulse wing values
+    bath_ctl.lwing_dist = 1;
+    bath_ctl.rwing_dist = 3;
+    bath_ctl.lwing_factor = 0.9;
+    bath_ctl.rwing_factor = 0.9;
   // Support for current format
   } else {
     data = json_decode(lines);
@@ -318,7 +328,9 @@ xfma=, parent=, verbose=) {
   result.bottom_peak = wf(bottom_peak);
 
   msg = [];
-  bathy_validate_bottom, wf_decay, bottom_peak, first, last, thresh, graph, msg;
+  bathy_validate_bottom, wf_decay, bottom_peak, first, last, thresh, graph,
+    conf.lwing_dist, conf.rwing_dist, conf.lwing_factor, conf.rwing_factor,
+    msg;
 
   if(!is_void(msg)) {
     ex_bath_message, graph, verbose, msg;
@@ -497,16 +509,13 @@ func bathy_detect_bottom(wf, first, last, thresh, &bottom_peak, &msg) {
   bottom_peak = peaks(0) + offset;
 }
 
-func bathy_validate_bottom(wf, bottom, first, last, thresh, graph, &msg) {
-/* DOCUMENT bathy_validate_bottom(wf, bottom, first, last, thresh, graph, &msg)
+func bathy_validate_bottom(wf, bottom, first, last, thresh, graph, lwing_dist,
+rwing_dist, lwing_factor, rwing_factor, &msg) {
+/* DOCUMENT bathy_validate_bottom(wf, bottom, first, last, thresh, graph,
+   lwing_dist, rwing_dist, lwing_factor, rwing_factor, &msg)
   Performs some analysis on a detected bottom to see if it seems legitimate.
 */
   msg = [];
-
-  lwing_dist = 1;
-  rwing_dist = 3;
-  lwing_factor = 0.9;
-  rwing_factor = 0.9;
 
   // pulse wings
   lwing_idx = bottom - lwing_dist;
