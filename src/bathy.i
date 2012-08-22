@@ -340,8 +340,8 @@ xfma=, parent=, verbose=) {
 func ex_bath_message(graph, verbose, msg) {
   if(graph) {
     port = viewport();
-    plt, strwrap(msg, width=25, paragraph="\n"), port(2), port(3),
-      justify="RB", tosys=0, color="red";
+    plt, strwrap(msg, width=25, paragraph="\n"), port(2), port(4),
+      justify="RT", tosys=0, color="red";
   }
   if(verbose) write, "Rejected: "+msg+"\n";
 }
