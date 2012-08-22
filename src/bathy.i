@@ -503,9 +503,14 @@ func bathy_validate_bottom(wf, bottom, first, last, thresh, graph, &msg) {
 */
   msg = [];
 
+  lwing_dist = 1;
+  rwing_dist = 3;
+  lwing_factor = 0.9;
+  rwing_factor = 0.9;
+
   // pulse wings
-  lwing_idx = bottom - 1;
-  rwing_idx = bottom + 3;
+  lwing_idx = bottom - lwing_dist;
+  rwing_idx = bottom + rwing_dist;
 
   // test pw with 9-6-01:17673:50
   // first, just check to see if anything is above thresh
@@ -520,8 +525,8 @@ func bathy_validate_bottom(wf, bottom, first, last, thresh, graph, &msg) {
   }
 
   // define pulse wings;
-  lwing_thresh = 0.9 * wf(bottom);
-  rwing_thresh = 0.9 * wf(bottom);
+  lwing_thresh = lwing_factor * wf(bottom);
+  rwing_thresh = rwing_factor * wf(bottom);
 
   if(graph) {
     plmk, lwing_thresh, lwing_idx, marker=5, color="magenta", msize=0.4, width=10;
