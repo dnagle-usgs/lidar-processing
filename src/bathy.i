@@ -554,6 +554,6 @@ func plot_bath_ctl(channel, wf, thresh=, first=, last=) {
     plg, [0,thresh], [first,first], marks=0, color="green", width=7;
     plg, [0,thresh], [last,last], marks=0, color="red", width=7;
   }
-  plmk, wf, msize=.2, marker=1, color="black";
+  plmk, wf, msize=.275, marker=1, color="black";
   plg, wf, color=black, width=4;
 }
