@@ -24,17 +24,17 @@ local BATH_CTL;
   Struct used for holding configuration settings for bathy algorithms.
 
   struct BATH_CTL {
-    float laser;  // system exponential decay  (-1.5)
-    float water;  // water column exponential decay (-0.3)
-    float agc;    // exponential equalizer (-5)
-    float thresh; // threshold value (3)
-    int first;    // first nanosecond to consider (maxdepth in ns)  (150)
-    int last;     // last nanosecond to consider (maxdepth in ns)  (150)
-    int maxsat;   // Maximum number of saturated points.
+    double laser;   // system exponential decay  (-1.5)
+    double water;   // water column exponential decay (-0.3)
+    double agc;     // exponential equalizer (-5)
+    double thresh;  // threshold value (3)
+    int first;      // first nanosecond to consider (maxdepth in ns)  (150)
+    int last;       // last nanosecond to consider (maxdepth in ns)  (150)
+    int maxsat;     // Maximum number of saturated points.
   };
 */
 struct BATH_CTL {
-  float laser, water, agc, thresh;
+  double laser, water, agc, thresh;
   int first, last, maxsat;
 };
 
