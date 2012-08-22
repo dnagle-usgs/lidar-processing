@@ -195,24 +195,21 @@ namespace eval ::eaarl::settings::bath_ctl::v {
     unset ns var field
 }
 
-proc ::eaarl::settings::bath_ctl::gui_main {var} {
-    if {$var eq "bath_ctl"} {
-        set w $v::top
-    } else {
-        set w ${v::top}chn4
-    }
+proc ::eaarl::settings::bath_ctl::gui_main {} {
+    set w $v::top
     destroy $w
     toplevel $w
 
     wm resizable $w 1 0
-    wm title $w "$var Settings"
+    wm title $w "Bathy Settings"
 
     menu $w.mb
     menu $w.mb.file
     menu $w.mb.preset
+    menu $w.mb.preset.p1
+    menu $w.mb.preset.p2
 
     set ns [namespace current]
-    set nsvar [namespace current]::v::${var}
 
     $w.mb add cascade -label File -underline 0 -menu $w.mb.file
     $w.mb.file add command -label "Load Bathy Parameters..." \
@@ -224,28 +221,39 @@ proc ::eaarl::settings::bath_ctl::gui_main {var} {
             -command [list destroy $w]
 
     $w.mb add cascade -label "Presets" -underline 0 -menu $w.mb.preset
-    foreach {preset -} $v::presets {
-        $w.mb.preset add command -label $preset \
-                -command [list ${ns}::preset $nsvar $preset]
+    $w.mb.preset add cascade -label "Channels 1, 2, and 3" -menu $w.mb.preset.p1
+    $w.mb.preset add cascade -label "Channel 4" -menu $w.mb.preset.p2
+    foreach {m var} [list p1 ${ns}::v::bath_ctl p2 ${ns}::v::bath_ctl_chn4] {
+        foreach {preset -} $v::presets {
+            $w.mb.preset.$m add command -label $preset \
+                    -command [list ${ns}::preset $var $preset]
+        }
     }
 
     $w configure -menu $w.mb
 
     ttk::frame $w.f
     set f $w.f
-    grid columnconfigure $w.f 1 -weight 1
+    ttk::labelframe $f.bath_ctl -text "Channels 1, 2, and 3"
+    ttk::labelframe $f.bath_ctl_chn4 -text "Channel 4"
 
-    foreach {key info} $v::guilayout {
-        lassign $info name rmin rmax rinc fmt
-        ttk::label $f.lbl$key -text "${name}:"
-        ttk::spinbox $f.spn$key \
-            -width 8 \
-            -textvariable ${nsvar}($key) \
-            -from $rmin -to $rmax -increment $rinc
-        grid $f.lbl$key $f.spn$key
-        grid configure $f.lbl$key -sticky e
-        grid configure $f.spn$key -sticky ew
+    foreach var [list bath_ctl bath_ctl_chn4] {
+        foreach {key info} $v::guilayout {
+            lassign $info name rmin rmax rinc fmt
+            ttk::label $f.$var.lbl$key -text "${name}:"
+            ttk::spinbox $f.$var.spn$key \
+                -width 8 \
+                -textvariable ${ns}::v::${var}($key) \
+                -from $rmin -to $rmax -increment $rinc
+            grid $f.$var.lbl$key $f.$var.spn$key -padx 2 -pady 2
+            grid configure $f.$var.lbl$key -sticky e
+            grid configure $f.$var.spn$key -sticky ew
+        }
+        grid columnconfigure $f.$var 1 -weight 1
     }
+
+    grid $f.bath_ctl $f.bath_ctl_chn4 -sticky news -padx 2 -pady 2
+    grid columnconfigure $f {0 1} -weight 1 -uniform 1
 
     grid $w.f -sticky news
     grid columnconfigure $w 0 -weight 1
