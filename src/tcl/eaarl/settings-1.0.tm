@@ -263,23 +263,25 @@ proc ::eaarl::settings::bath_ctl::gui_main {} {
     bind $f <Visibility> [namespace which -command gui_refresh]
 }
 
-proc ::eaarl::settings::bath_ctl::launch_win {window raster pulse channel {hide 0}} {
+proc ::eaarl::settings::bath_ctl::launch_win {window raster pulse channel {preinit 0}} {
+    # $preinit is intended to allow the GUI to be launched ahead of a possible
+    # call to ex_bath. For instance, when using drast_msel, we don't want the
+    # bathy GUI to launch immediately; it should only display when the user
+    # clicks on the plot. However, if it's already visible, we shouldn't hide
+    # it and we shouldn't change its settings.
+
     set args [list -window $window -raster $raster -pulse $pulse -channel $channel]
     set w ${v::top}_window$window
     if {[winfo exists $w]} {
-        $w configure {*}$args
+        if {!$preinit} {
+            $w configure {*}$args
+            wm deiconify $w
+        }
     } else {
         ::eaarl::settings::bath_ctl::gui_embed $w {*}$args
-    }
-
-    # $hide is intended to allow the GUI to be launched ahead of a possible
-    # call to ex_bath. For instance, when using drast_msel, we don't want the
-    # bathy GUI to launch immediately; it should only display when the user
-    # clicks on the plot.
-    if {$hide} {
-        wm withdraw $w
-    } else {
-        wm deiconify $w
+        if {$preinit} {
+            wm withdraw $w
+        }
     }
 
     return $w
