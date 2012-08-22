@@ -288,6 +288,5 @@ if {![winfo exists .l1wid]} {
 }
 
 source "$src_path/plot.ytk"
-source "$src_path/bathctl.ytk"
 source "$src_path/data_segments.ytk"
 source "$src_path/ts_check.ytk"
