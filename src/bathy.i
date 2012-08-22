@@ -173,7 +173,7 @@ func show_bath_constants {
 }
 
 func ex_bath(raster_number, pulse_number, last=, forcechannel=, graph=, win=,
-xfma=, verbose=) {
+xfma=, parent=, verbose=) {
 /* DOCUMENT ex_bath(raster_number, pulse_number)
   See run_bath for details on usage.
 
@@ -238,8 +238,16 @@ xfma=, verbose=) {
 
   if(graph) {
     window, win;
+    // Embedding in Tk destroys limits, so backup and restore
+    lims = limits();
+    if(!is_void(parent)) {
+      window_embed_tk, win, parent, xfma;
+      tkcmd, swrite(format="::eaarl::settings::bath_ctl::launch_win %d %d %d %d",
+        win, raster_number, pulse_number, forcechannel);
+    }
     gridxy, 2, 2;
     if(xfma) fma;
+    limits, lims;
   }
 
   if(forcechannel == 4) {

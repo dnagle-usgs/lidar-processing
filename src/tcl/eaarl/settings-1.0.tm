@@ -263,6 +263,131 @@ proc ::eaarl::settings::bath_ctl::gui_main {} {
     bind $f <Visibility> [namespace which -command gui_refresh]
 }
 
+proc ::eaarl::settings::bath_ctl::launch_win {window raster pulse channel {hide 0}} {
+    set args [list -window $window -raster $raster -pulse $pulse -channel $channel]
+    set w ${v::top}_window$window
+    if {[winfo exists $w]} {
+        $w configure {*}$args
+    } else {
+        ::eaarl::settings::bath_ctl::gui_embed $w {*}$args
+    }
+
+    # $hide is intended to allow the GUI to be launched ahead of a possible
+    # call to ex_bath. For instance, when using drast_msel, we don't want the
+    # bathy GUI to launch immediately; it should only display when the user
+    # clicks on the plot.
+    if {$hide} {
+        wm withdraw $w
+    } else {
+        wm deiconify $w
+    }
+
+    return $w
+}
+
+snit::widget ::eaarl::settings::bath_ctl::gui_embed {
+    hulltype toplevel
+    delegate option * to hull
+    delegate method * to hull
+
+    option -window -default 4 -configuremethod SetOpt
+    option -raster -default 1 -configuremethod SetOpt
+    option -channel -default 1 -configuremethod SetOpt
+    option -pulse -default 60 -configuremethod SetOpt
+
+    component plot
+    component settings
+
+    constructor {args} {
+        # withdraw immediately to prevent flash in case calling code wants to
+        # withdraw after initialization
+        wm withdraw $win
+
+        set ns [namespace parent]
+
+        wm resizable $win 0 0
+        wm title $win "Window 4"
+
+        ttk::frame $win.f
+        grid $win.f -sticky news
+        grid columnconfigure $win 0 -weight 1
+        grid rowconfigure $win 0 -weight 1
+
+        set f $win.f
+        set plot $f.plot
+        ttk::frame $plot -width 454 -height 477
+        ttk::labelframe $f.settings -text "Bathy Settings"
+        grid $f.plot -sticky news
+        grid $f.settings -sticky news -pady 3 -padx 3
+        grid columnconfigure $f 0 -weight 1
+        grid rowconfigure $f 1 -weight 1
+
+        set settings $f.settings
+        set f $f.settings
+
+        foreach {key info} [set ${ns}::v::guilayout] {
+            lassign $info name rmin rmax rinc fmt
+            ttk::label $f.lbl$key -text "${name}:"
+            ttk::spinbox $f.spn$key -width 8 \
+                -from $rmin -to $rmax -increment $rinc
+        }
+        ttk::button $f.replot -text "Replot" \
+                -command [mymethod replot]
+
+        grid $f.lbllaser $f.spnlaser $f.lblthresh $f.spnthresh $f.lblfirst $f.spnfirst
+        grid $f.lblwater $f.spnwater $f.lblmaxsat $f.spnmaxsat $f.lbllast  $f.spnlast
+        grid $f.lblagc   $f.spnagc   x            x            $f.replot   -
+        grid configure $f.spnlaser $f.spnfirst $f.spnwater $f.spnlast \
+                $f.spnagc $f.spnmaxsat $f.spnthresh $f.replot \
+                -sticky news -padx 2 -pady 2
+        grid configure $f.lbllaser $f.lblfirst $f.lblwater $f.lbllast \
+                $f.lblagc $f.lblmaxsat $f.lblthresh \
+                -sticky e -padx 2 -pady 2
+        grid columnconfigure $f {1 3 5} -weight 1 -uniform 1
+
+        bind $win <Enter> ${ns}::gui_refresh
+        bind $win <Visibility> ${ns}::gui_refresh
+
+        # Force initialization in case no options are given by caller
+        $self configure -channel 1
+        $self configure {*}$args
+
+        wm deiconify $win
+    }
+
+    destructor {
+        ybkg "winkill $options(-window)"
+    }
+
+    method replot {} {
+        exp_send "ex_bath, $options(-raster), $options(-pulse), graph=1,\
+                win=$options(-window), xfma=1, forcechannel=$options(-channel);\r"
+    }
+
+    method SetOpt {option value} {
+        set options($option) $value
+        wm title $win "Window $options(-window) - Raster $options(-raster)\
+                Pulse $options(-pulse) Channel $options(-channel)"
+
+        set f $settings
+        set ns [namespace parent]
+        if {$options(-channel) == 4} {
+            $f configure -text "Bathy Settings for Channel 4"
+            set var ${ns}::v::bath_ctl_chn4
+        } else {
+            $f configure -text "Bathy Settings for Channels 1, 2, and 3"
+            set var ${ns}::v::bath_ctl
+        }
+        foreach {key -} [set ${ns}::v::guilayout] {
+            $f.spn$key configure -textvariable ${var}($key)
+        }
+    }
+
+    method id {} {
+        return [expr {[winfo id $plot]}]
+    }
+}
+
 proc ::eaarl::settings::bath_ctl::gui_refresh {} {
     array set v::bath_ctl [array get v::bath_ctl]
     array set v::bath_ctl_chn4 [array get v::bath_ctl_chn4]

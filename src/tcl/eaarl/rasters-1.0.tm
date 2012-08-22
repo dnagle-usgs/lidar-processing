@@ -172,6 +172,15 @@ snit::widget ::eaarl::rasters::rastplot::gui {
     method examine {} {
         set cb [expr {$chan1 + 2*$chan2 + 4*$chan3 + 8*$chan4}]
         set fc [expr {$showbath && $bathchan}]
+        if {$fc} {
+            # The bath_ctl embedded GUI needs a channel to launch, so we dummy
+            # it to 60.
+            set gui [::eaarl::settings::bath_ctl::launch_win \
+                    $winbath $options(-raster) 60 $bathchan 1]
+            set bathparent [$gui id]
+        } else {
+            set bathparent 0
+        }
         set cmd "drast_msel, $options(-raster)"
         appendif cmd \
                 1           ", type=\"rast\"" \
@@ -184,6 +193,7 @@ snit::widget ::eaarl::rasters::rastplot::gui {
                 $rxtx       ", rxtx=1" \
                 1           ", units=\"$units\"" \
                 $fc         ", bathchan=$bathchan" \
+                $fc         ", bathparent=$bathparent" \
                 1           ", winsel=$options(-window)" \
                 $showrx     ", winrx=$winrx" \
                 $showtx     ", wintx=$wintx" \
