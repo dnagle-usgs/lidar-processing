@@ -6,6 +6,7 @@ namespace eval ::eaarl::settings::ops_conf::v {
     variable top .l1wid.opsconf
     variable fieldframe
     variable ops_conf
+    variable last_refresh 0
 
     variable settings {
         name            {gui_entry}
@@ -27,7 +28,13 @@ namespace eval ::eaarl::settings::ops_conf::v {
 }
 
 proc ::eaarl::settings::ops_conf::gui_refresh {} {
-    array set v::ops_conf [array get v::ops_conf]
+    # Throttle to every 3/4 second to prevent flooding Yorick in the background
+    # (which can cause issues)
+    set elapsed [expr {[clock milliseconds] - $v::last_refresh}]
+    if {$elapsed > 750} {
+        set v::last_refresh [clock milliseconds]
+        array set v::ops_conf [array get v::ops_conf]
+    }
 }
 
 proc ::eaarl::settings::ops_conf::gui_line {w text} {
