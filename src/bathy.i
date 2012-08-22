@@ -277,7 +277,7 @@ xfma=, parent=, verbose=) {
     if(numsat >= conf.maxsat) {
       ex_bath_message, graph, verbose, swrite(format="%d points saturated", numsat);
       if(graph)
-        plot_bath_ctl, channel, wf, last=wflen;
+        plot_bath_ctl, channel, wf, last=wflen, raster=raster_number, pulse=pulse_number;
       return result;
     }
   }
@@ -293,7 +293,7 @@ xfma=, parent=, verbose=) {
   }
 
   if(graph) {
-    plot_bath_ctl, channel, wf, thresh=thresh;
+    plot_bath_ctl, channel, wf, thresh=thresh, raster=raster_number, pulse=pulse_number;
   }
 
   wf_decay = bathy_wf_compensate_decay(wf, surface=surface_sat_end,
@@ -537,7 +537,7 @@ func bathy_validate_bottom(wf, bottom, first, last, thresh, graph, &msg) {
   }
 }
 
-func plot_bath_ctl(channel, wf, thresh=, first=, last=) {
+func plot_bath_ctl(channel, wf, thresh=, first=, last=, raster=, pulse=) {
   extern bath_ctl;
   default, channel, 1;
   if(channel == 4) {
@@ -548,7 +548,10 @@ func plot_bath_ctl(channel, wf, thresh=, first=, last=) {
   default, thresh, conf.thresh;
   default, first, conf.first;
   default, last, conf.last;
-  pltitle, swrite(format="Channel %d", channel);
+  if(!is_void(raster) && !is_void(pulse))
+    pltitle, swrite(format="rn:%d pulse:%d chan:%d", raster, pulse, channel);
+  else
+    pltitle, swrite(format="chan:%d", channel);
   if(!is_void(thresh)) {
     plg, [thresh,thresh], [first,last], marks=0, color="red";
     plg, [0,thresh], [first,first], marks=0, color="green", width=7;
