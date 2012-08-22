@@ -340,22 +340,26 @@ snit::widget ::eaarl::settings::bath_ctl::gui_embed {
         foreach {key info} [set ${ns}::v::guilayout] {
             lassign $info name rmin rmax rinc fmt
             ttk::label $f.lbl$key -text "${name}:"
-            ttk::spinbox $f.spn$key -width 8 \
+            ttk::spinbox $f.spn$key -width 3 \
                 -from $rmin -to $rmax -increment $rinc
         }
         ttk::button $f.replot -text "Replot" \
                 -command [mymethod replot]
 
-        grid $f.lbllaser $f.spnlaser $f.lblthresh $f.spnthresh $f.lblfirst $f.spnfirst
-        grid $f.lblwater $f.spnwater $f.lblmaxsat $f.spnmaxsat $f.lbllast  $f.spnlast
-        grid $f.lblagc   $f.spnagc   x            x            $f.replot   -
+        grid $f.lbllaser $f.spnlaser $f.lbllwing_dist $f.spnlwing_dist $f.lblfirst $f.spnfirst
+        grid $f.lblwater $f.spnwater $f.lblrwing_dist $f.spnrwing_dist $f.lbllast $f.spnlast
+        grid $f.lblagc $f.spnagc $f.lbllwing_factor $f.spnlwing_factor $f.lblthresh $f.spnthresh
+        grid $f.lblmaxsat $f.spnmaxsat $f.lblrwing_factor $f.spnrwing_factor $f.replot -
+
         grid configure $f.spnlaser $f.spnfirst $f.spnwater $f.spnlast \
-                $f.spnagc $f.spnmaxsat $f.spnthresh $f.replot \
-                -sticky news -padx 2 -pady 2
+                $f.spnagc $f.spnmaxsat $f.spnthresh $f.spnlwing_dist \
+                $f.spnlwing_factor $f.spnrwing_dist $f.spnrwing_factor \
+                $f.replot -sticky news -padx 2 -pady 2
         grid configure $f.lbllaser $f.lblfirst $f.lblwater $f.lbllast \
-                $f.lblagc $f.lblmaxsat $f.lblthresh \
+                $f.lblagc $f.lblmaxsat $f.lblthresh $f.lbllwing_dist \
+                $f.lbllwing_factor $f.lblrwing_dist $f.lblrwing_factor \
                 -sticky e -padx 2 -pady 2
-        grid columnconfigure $f {1 3 5} -weight 1 -uniform 1
+        grid columnconfigure $f {1 3 5} -weight 1 -uniform a
 
         bind $win <Enter> ${ns}::gui_refresh
         bind $win <Visibility> ${ns}::gui_refresh
