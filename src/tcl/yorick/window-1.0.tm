@@ -82,6 +82,7 @@ snit::widget ::yorick::window::embedded {
         # Hook to allow the owner the chance to clean up after itself if needed
         if {$owner ne ""} {
             catch [list $owner clear_gui]
+            set owner ""
         }
 
         foreach f [list $bottom $left $right] {
