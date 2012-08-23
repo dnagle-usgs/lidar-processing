@@ -12,27 +12,24 @@ if {![namespace exists ::eaarl::rasters::rastplot]} {
 }
 
 proc ::eaarl::rasters::rastplot::launch {window raster channel {geo 0}} {
-    set args [list -window $window -raster $raster -channel $channel -geo $geo]
-    set w ${v::top}_$window
-    if {[winfo exists $w]} {
-        $w configure {*}$args
+    set args [list -raster $raster -channel $channel -geo $geo]
+    set ns [namespace current]
+    set gui ${ns}::window_$window
+    if {[info commands $gui] ne ""} {
+        $gui configure {*}$args
     } else {
-        ::eaarl::rasters::rastplot::gui $w {*}$args
+        ::eaarl::rasters::rastplot::gui $gui {*}$args -window $window
     }
-    return $w
+    return $gui
 }
 
-snit::widget ::eaarl::rasters::rastplot::gui {
-    hulltype toplevel
-    delegate option * to hull
-    delegate method * to hull
-
-    option -window -default 11 -configuremethod SetOpt
+snit::type ::eaarl::rasters::rastplot::gui {
+    option -window -readonly 1 -default 11 -configuremethod SetOpt
     option -raster -default 1 -configuremethod SetOpt
     option -channel -default 1 -configuremethod SetOpt
     option -geo -default 0 -configuremethod SetOpt
 
-    component plot
+    component window
 
     variable showrx 1
     variable showtx 0
@@ -51,24 +48,16 @@ snit::widget ::eaarl::rasters::rastplot::gui {
     variable wintx 16
 
     constructor {args} {
-        wm resizable $win 0 0
-        wm title $win "Window 11"
+        if {[dict exists $args -window]} {
+            set win [dict get $args -window]
+        } else {
+            set win 11
+        }
+        set window [::yorick::window::path $win]
+        $window clear_gui
+        $window configure -owner $self
 
-        ttk::frame $win.f
-        grid $win.f -sticky news
-        grid columnconfigure $win 0 -weight 1
-        grid rowconfigure $win 0 -weight 1
-
-        set f $win.f
-        set plot $f.plot
-        ttk::frame $plot -width 454 -height 477
-        ttk::frame $f.controls
-        grid $f.plot -sticky news
-        grid $f.controls -sticky news -pady 3
-        grid columnconfigure $f 0 -weight 1
-        grid rowconfigure $f 1 -weight 1
-
-        set f $f.controls
+        set f [$window pane bottom]
         ttk::labelframe $f.examine -text "Examine Waveforms"
         grid $f.examine -sticky news
         grid columnconfigure $f 0 -weight 1
@@ -142,8 +131,8 @@ snit::widget ::eaarl::rasters::rastplot::gui {
         $self configure {*}$args
     }
 
-    destructor {
-        ybkg "winkill $options(-window)"
+    method clear_gui {} {
+        $self destroy
     }
 
     method SetOpt {option value} {
@@ -157,16 +146,8 @@ snit::widget ::eaarl::rasters::rastplot::gui {
         } else {
             append title "Transmit"
         }
-        wm title $win $title
+        wm title $window $title
         set bathchan $options(-channel)
-    }
-
-    method id {} {
-        return [expr {[winfo id $plot]}]
-    }
-
-    method embed {} {
-        ybkg window_embed_tk $options(-window) [expr {[winfo id $plot]}]
     }
 
     method examine {} {

@@ -524,26 +524,20 @@ proc ::l1pro::drast::show_rast {} {
         }
 
         if {[set v::rastchan${channel}]} {
-            set gui [::eaarl::rasters::rastplot::launch \
-                    [set v::rastwin${channel}] $v::rn $channel]
             set cmd $chanbase
             appendif cmd \
                 1               ", win=[set v::rastwin${channel}]" \
-                1               ", units=\"$v::rastunits\"" \
-                1               ", parent=[$gui id]"
+                1               ", units=\"$v::rastunits\""
             exp_send "$cmd\r"
         }
 
         if {[set v::geochan${channel}]} {
-            set gui [::eaarl::rasters::rastplot::launch \
-                    [set v::geowin${channel}] $v::rn $channel 1]
             set cmd $chanbase
             appendif cmd \
                 1               ", win=[set v::geowin${channel}]" \
                 1               ", geo=1" \
                 1               ", eoffset=$v::eoffset" \
-                1               ", rcfw=$v::georcfw" \
-                1               ", parent=[$gui id]"
+                1               ", rcfw=$v::georcfw"
 
             if {$v::export && $v::exportgeo} {
                 if {![file isdirectory $v::exportdir]} {

@@ -54,9 +54,9 @@ func ytk_rast(rn) {
 }
 
 func ndrast(rn, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=, tx=,
-autolims=, parent=) {
+autolims=) {
 /* DOCUMENT drast(rn, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=,
-   tx=, autolims=, parent=)
+   tx=, autolims=)
   Displays raster waveform data for the given raster. Try this:
 
     > rn = 1000
@@ -113,15 +113,15 @@ autolims=, parent=) {
 
   if(graph)
     show_rast, rn, channel=channel, units=units, win=win, cmin=cmin, cmax=cmax,
-      tx=tx, autolims=autolims, parent=parent;
+      tx=tx, autolims=autolims;
 
   return &aa;
 }
 
 func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=, eoffset=,
-tx=, autolims=, showcbar=, sfsync=, parent=) {
+tx=, autolims=, showcbar=, sfsync=) {
 /* DOCUMENT show_rast, rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=,
-   tx=, autolims=, showbar=, sfsync=, parent=
+   tx=, autolims=, showbar=, sfsync=
 
   Displays a raster's waveform data as an 2-dimensional image, where the x axis
   is the pulse number and the y axis is depth, time, or elevation (depending on
@@ -183,12 +183,15 @@ tx=, autolims=, showcbar=, sfsync=, parent=) {
 
   win_bkp = current_window();
 
+  // Attach Tcl GUI
+  tkcmd, swrite(format="::eaarl::rasters::rastplot::launch %d %d %d",
+    win, rn, channel);
+
   window, win;
+  // TODO: Is this necessary now?
   // Need to save limits here since window_embed_tk will destroy them
   lims = limits();
   fma;
-  if(!is_void(parent))
-    window_embed_tk, win, parent, 1;
 
   skip = array(0, 120);
   if(geo) {
