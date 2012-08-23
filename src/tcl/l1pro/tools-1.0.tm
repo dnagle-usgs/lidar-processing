@@ -524,31 +524,10 @@ proc ::l1pro::tools::histelev::cbar_tool {} {
 
 proc ::l1pro::tools::histelev::cbar_tool_docked {win} {
     set ns [namespace current]
-    set w ${v::cbartop}_$win
-    if {[winfo exists $w]} {
-        return
-    }
-    toplevel $w
-    wm resizable $w 0 0
+    set w .yorwin$win
     wm title $w "Window $win - Colorbar Tool"
-    bind $w <Destroy> [list ybkg "winkill $win"]
 
-    ttk::frame $w.f
-    grid $w.f -sticky news
-    grid columnconfigure $w 0 -weight 1
-    grid rowconfigure $w 0 -weight 1
-
-    set f $w.f
-    ttk::frame $f.plot -width 454 -height 477
-    ttk::frame $f.buttons
-    grid $f.plot -sticky news
-    grid $f.buttons -sticky news -pady 3
-    grid columnconfigure $f 0 -weight 1
-    grid rowconfigure $f 1 -weight 1
-
-    ybkg window_embed_tk $win [expr {[winfo id $f.plot]}]
-
-    set f $f.buttons
+    set f [$w pane bottom]
 
     set cmd [list apply [list op "return \"${ns}::cbar_do \$op $win $w\""]]
     ttk::button $f.cmax -text "Cmax" -width 0 -command [{*}$cmd cmax]
@@ -575,15 +554,9 @@ proc ::l1pro::tools::histelev::cbar_do {cmd {win -1} {top null}} {
         both  {exp_send "set_cbar, w=$win, \"both\"\r"}
         cmax  {exp_send "set_cbar, w=$win, \"cmax\"\r"}
         cmin  {exp_send "set_cbar, w=$win, \"cmin\"\r"}
-        dism  {destroy $top}
+        dism  {exp_send "winkill, $win\r"}
         bdis  {
-            set cmd "set_cbar, w=$win, \"both\"; winkill, $win"
-            if {$docked} {
-                append cmd "; tkcmd, \"destroy $top\""
-            } else {
-                ::misc::idle [list destroy $top]
-            }
-            exp_send "$cmd\r"
+            exp_send "set_cbar, w=$win, \"both\"; winkill, $win\r"
         }
     }
 }
