@@ -28,6 +28,7 @@ snit::widget ::yorick::window::embedded {
     option -window -readonly 1 -default 0
     option -style -default "work.gs" -configuremethod SetStyleDpi
     option -dpi -default 75 -configuremethod SetStyleDpi
+    option -owner ""
 
     # plot is the frame where the Yorick window will get embedded
     component plot
@@ -39,8 +40,6 @@ snit::widget ::yorick::window::embedded {
     component bottom
     component left
     component right
-
-    component owner
 
     constructor {args} {
         # Window starts out withdrawn by default. Yorick can deiconify it when
@@ -80,9 +79,9 @@ snit::widget ::yorick::window::embedded {
     # clear_gui first to make sure it's working with a clean slate
     method clear_gui {} {
         # Hook to allow the owner the chance to clean up after itself if needed
-        if {$owner ne ""} {
-            catch [list $owner clear_gui]
-            set owner ""
+        if {$options(-owner) ne ""} {
+            catch [list $options(-owner) clear_gui]
+            set options(-owner) ""
         }
 
         foreach f [list $bottom $left $right] {
