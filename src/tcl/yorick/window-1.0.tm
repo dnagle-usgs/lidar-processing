@@ -21,7 +21,7 @@ snit::widget ::yorick::window::embedded {
     delegate option * to hull
     delegate method * to hull
 
-    option -window -readonly -default 0
+    option -window -readonly 1 -default 0
     option -style -default "work.gs" -configuremethod SetStyleDpi
     option -dpi -default 75 -configuremethod SetStyleDpi
 
@@ -120,4 +120,3 @@ snit::widget ::yorick::window::embedded {
         }
     }
 }
-
