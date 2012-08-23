@@ -76,6 +76,15 @@ snit::widget ::yorick::window::embedded {
         return [expr {[winfo id $plot]}]
     }
 
+    method withdraw {} {
+        wm withdraw $win
+        $self clear_gui
+    }
+
+    method show {} {
+        wm deiconify $win
+    }
+
     # Calling code looking to embed stuff into the window should always call
     # clear_gui first to make sure it's working with a clean slate
     method clear_gui {} {
