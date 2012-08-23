@@ -125,7 +125,6 @@ if {![namespace exists ::l1pro::tools::histelev]} {
             variable normalize 1
             variable win 7
             variable dofma 1
-            variable dock 1
             variable logy 0
 
             variable plot_histline_show 1
@@ -172,11 +171,7 @@ proc ::l1pro::tools::histelev::plot {} {
         kdeline "hide"
     }
 
-    if {$v::dock} {
-        cbar_tool_docked $v::win
-    } else {
-        cbar_tool
-    }
+    cbar_tool_docked $v::win
 
     set cmd "hist_data_plot, $::pro_var"
 
@@ -266,7 +261,6 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
     ttk::labelframe $f -text "General settings"
     ttk::label $f.lblnormalize -text "Y axis: "
     ttk::label $f.lblwin -text "Window: "
-    ttk::label $f.lbldock -text "Dock buttons to window"
     ttk::label $f.lbldofma -text "Clear before plotting"
     ttk::label $f.lbllogy -text "Use logarithmic y axis"
     ttk::label $f.lblautobin -text "Automatically set bin size"
@@ -280,8 +274,6 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
             }
     ttk::spinbox $f.win -from 0 -to 63 -increment 1 \
             -textvariable ${ns}::v::win
-    ttk::checkbutton $f.dock \
-            -variable ${ns}::v::dock
     ttk::checkbutton $f.dofma \
             -variable ${ns}::v::dofma
     ttk::checkbutton $f.logy \
@@ -292,15 +284,14 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
             -textvariable ${ns}::v::binsize
     grid $f.lblnormalize $f.normalize
     grid $f.lblwin $f.win
-    grid $f.dock $f.lbldock
     grid $f.dofma $f.lbldofma
     grid $f.logy $f.lbllogy
     grid $f.autobin $f.lblautobin
     grid $f.lblbinsize $f.binsize
-    grid $f.lblnormalize $f.lblwin $f.dock $f.dofma $f.logy $f.autobin \
+    grid $f.lblnormalize $f.lblwin $f.dofma $f.logy $f.autobin \
             $f.lblbinsize -sticky e
     grid $f.normalize $f.win $f.binsize -sticky ew
-    grid $f.lbldock $f.lbldofma $f.lbllogy $f.lblautobin -sticky w
+    grid $f.lbldofma $f.lbllogy $f.lblautobin -sticky w
     grid columnconfigure $f 1 -weight 1
     lappend labels $f.lblnormalize $f.lblwin $f.lblbinsize
 
@@ -308,7 +299,6 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
             -statemap {0 normal 1 disabled} \
             -statevariable ${ns}::v::auto_binsize
 
-    ::misc::bind::label_to_checkbutton $f.lbldock $f.dock
     ::misc::bind::label_to_checkbutton $f.lbldofma $f.dofma
     ::misc::bind::label_to_checkbutton $f.lbllogy $f.logy
     ::misc::bind::label_to_checkbutton $f.lblautobin $f.autobin
@@ -542,13 +532,8 @@ proc ::l1pro::tools::histelev::cbar_tool_docked {win} {
 }
 
 proc ::l1pro::tools::histelev::cbar_do {cmd {win -1} {top null}} {
-    set docked 1
     if {$win < 0} {
         set win $v::win
-    }
-    if {$top eq "null"} {
-        set top $v::cbartop
-        set docked 0
     }
     switch -- $cmd {
         both  {exp_send "set_cbar, w=$win, \"both\"\r"}
