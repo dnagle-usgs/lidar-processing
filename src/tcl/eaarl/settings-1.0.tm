@@ -24,6 +24,15 @@ namespace eval ::eaarl::settings::ops_conf::v {
         chn2_range_bias {gui_spinbox -10000 10000 0.01}
         chn3_range_bias {gui_spinbox -10000 10000 0.01}
         chn4_range_bias {gui_spinbox -10000 10000 0.01}
+        chn1_dx         {gui_spinbox 0 1000 1}
+        chn1_dy         {gui_spinbox 0 1000 1}
+        chn2_dx         {gui_spinbox 0 1000 1}
+        chn2_dy         {gui_spinbox 0 1000 1}
+        chn3_dx         {gui_spinbox 0 1000 1}
+        chn3_dy         {gui_spinbox 0 1000 1}
+        chn4_dx         {gui_spinbox 0 1000 1}
+        chn4_dy         {gui_spinbox 0 1000 1}
+        delta_ht        {gui_spinbox 0 1000 1}
         max_sfc_sat     {gui_spinbox -100 100 1}
         tx_clean        {gui_spinbox 0 100 1}
         dmars_invert    {gui_spinbox 0 1 1}
