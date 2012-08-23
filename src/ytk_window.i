@@ -5,7 +5,8 @@ if(is_func(window) == 2)
   yor_window = window;
 
 local _ytk_window_parents;
-_ytk_window_parents = array(0, 64);
+if(is_void(_ytk_window_parents))
+  _ytk_window_parents = array(0, 64);
 /* DOCUMENT _ytk_window_parents
   Used internally by ytk_window. Stores the parent IDs for the frames that
   Yorick should embed its windows into (using parent=).
