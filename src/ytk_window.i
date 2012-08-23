@@ -52,8 +52,8 @@ func ytk_window(win, display=, dpi=, wait=, private=, hcp=, dump=, legends=, sty
   }
 
   if(display == "") {
-    write, "wm withdraw";
     tkcmd, swrite(format="wm withdraw .yorwin%d", win);
+    tkcmd, swrite(format=".yorwin%d clear_gui", win);
   } else {
     tkcmd, swrite(format="wm deiconify .yorwin%d", win);
   }
