@@ -45,14 +45,23 @@ func mission_constants(args) {
 
   For EAARL-B surveys, conf.type should be "EAARL-B v1". (Or if more than one
   version of EAARL-B comes along, perhaps "EAARL-B v2", etc. This allows for
-  the possibility of slightly different ops_conf layouts for different EAARl-B
+  the possibility of slightly different ops_conf layouts for different EAARL-B
   configurations as the system is developed.)
 
   When conf.type="EAARL-B v1", the struct is initialized as above for EAARL-A,
   but with the addition of the following new fields.
 
     double chn4_range_bias; // range bias for channel 4
-    short tx_clean;         // Specifies that transmit wf needs cleaning
+    double chn1_dx;         // channel 1 spacing from center in x direction
+    double chn1_dy;         // channel 1 spacing from center in y direction
+    double chn2_dx;         // channel 2 spacing from center in x direction
+    double chn2_dy;         // channel 2 spacing from center in y direction
+    double chn3_dx;         // channel 3 spacing from center in x direction
+    double chn3_dy;         // channel 3 spacing from center in y direction
+    double chn4_dx;         // channel 4 spacing from center in x direction
+    double chn4_dy;         // channel 4 spacing from center in y direction
+    double delta_ht;        // flight height assumed for channel spacing
+    short tx_clean;         // specifies that transmit wf needs cleaning
     short dmars_invert;     // if 1, then invert the dmars when loaded
 
   Additionally, the following are given defaults as follows.
@@ -111,6 +120,15 @@ func mission_constants(args) {
   if(conf.type == "EAARL-B v1") {
     defaults = save(
       chn4_range_bias=0.,
+      chn1_dx=0.,
+      chn1_dy=0.,
+      chn2_dx=0.,
+      chn2_dy=0.,
+      chn3_dx=0.,
+      chn3_dy=0.,
+      chn4_dx=0.,
+      chn4_dy=0.,
+      delta_ht=0.,
       tx_clean=8s,
       dmars_invert=1s
     );
