@@ -37,6 +37,7 @@ snit::widget ::yorick::window::embedded {
         wm withdraw $win
 
         wm resizable $win 0 0
+        wm protocol $win WM_DELETE_WINDOW [list wm withdraw $win]
 
         foreach f {plot bottom left right} {
             set $f $win.$f
