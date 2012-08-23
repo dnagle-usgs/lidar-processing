@@ -35,6 +35,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "yeti_regex.i";
   require, "yeti_yhdf.i";
   require, "ytk.i";
+  require, "ytk_window.i";
   require, "zlib.i";
 
   // Patches for the above plugins
