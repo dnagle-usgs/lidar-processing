@@ -51,16 +51,12 @@ snit::widget ::yorick::window::embedded {
             set $f $win.$f
         }
         ttk::frame $plot
-        $self clear_gui
-
-        grid $left $plot   $right -sticky news
-        grid ^     $bottom ^      -sticky news
 
         # Default configuration based on default option values
         $plot configure -width 450 -height 473
-        
+
         $self configure {*}$args
-        wm title $win "Window $options(-window)"
+        $self clear_gui
     }
 
     method pane {which} {
@@ -85,7 +81,6 @@ snit::widget ::yorick::window::embedded {
         }
 
         foreach f [list $bottom $left $right] {
-            grid forget $f
             destroy $f
             ttk::frame $f
         }
@@ -93,7 +88,7 @@ snit::widget ::yorick::window::embedded {
         grid forget $plot
         grid $left $plot   $right -sticky news
         grid ^     $bottom ^      -sticky news
-
+        wm title $win "Window $options(-window)"
     }
 
     # The width/height used here should be the same as the width/height used in
