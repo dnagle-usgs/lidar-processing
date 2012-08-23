@@ -159,6 +159,28 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
   roll += ops_conf.roll_bias;
   yaw = -heading + ops_conf.yaw_bias;
 
+  // Calculate angles for channel spacing if applicable
+  // Temporarily including verbosity level 2 to show channel spacing angles
+  if(forcechannel && has_member(ops_conf, "delta_ht")) {
+    if(verbose > 1)
+      write, format=" Calculating channel spacing for channel %d...\n", forcechannel;
+    chandx = get_member(ops_conf, swrite(format="chn%d_dx", forcechannel));
+    chandy = get_member(ops_conf, swrite(format="chn%d_dy", forcechannel));
+    chandz = ops_conf.delta_ht;
+    if(chandx && chandz) {
+      chantx = atan(chandx, chandz) * RAD2DEG;
+      if(verbose > 1)
+        write, format="   x theta: %.4f\n", chantx;
+      scan_angles -= chantx;
+    }
+    if(chandy && chandz) {
+      chanty = atan(chandy, chandz) * RAD2DEG;
+      if(verbose > 1)
+        write, format="   y theta: %.4f\n", chanty;
+      lasang -= chanty;
+    }
+  }
+
   local mx, my, mz, px, py, pz;
   eaarla_direct_vector,
     yaw, pitch, roll,
