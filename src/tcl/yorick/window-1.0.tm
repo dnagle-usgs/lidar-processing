@@ -22,6 +22,7 @@ proc ::yorick::window::initialize {} {
 
 snit::widget ::yorick::window::embedded {
     hulltype toplevel
+    widgetclass YorickWindow
     delegate option * to hull
     delegate method * to hull
 
