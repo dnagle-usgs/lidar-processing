@@ -47,7 +47,6 @@ snit::widget ::yorick::window::embedded {
         wm withdraw $win
 
         wm resizable $win 0 0
-        wm protocol $win WM_DELETE_WINDOW [list wm withdraw $win]
 
         set owner ""
         foreach f {plot bottom left right} {
@@ -59,6 +58,7 @@ snit::widget ::yorick::window::embedded {
         $plot configure -width 450 -height 473
 
         $self configure {*}$args
+        wm protocol $win WM_DELETE_WINDOW [list ybkg winkill $options(-window)]
         $self clear_gui
     }
 
