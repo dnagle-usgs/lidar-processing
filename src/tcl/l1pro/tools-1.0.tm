@@ -515,6 +515,7 @@ proc ::l1pro::tools::histelev::cbar_tool {} {
 proc ::l1pro::tools::histelev::cbar_tool_docked {win} {
     set ns [namespace current]
     set w [::yorick::window::path $win]
+    $w clear_gui
     wm title $w "Window $win - Colorbar Tool"
 
     set f [$w pane bottom]
