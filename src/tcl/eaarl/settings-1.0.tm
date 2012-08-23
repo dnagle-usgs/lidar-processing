@@ -292,66 +292,44 @@ proc ::eaarl::settings::bath_ctl::gui_main {} {
     bind $f <Visibility> [namespace which -command gui_refresh]
 }
 
-proc ::eaarl::settings::bath_ctl::launch_win {window raster pulse channel {preinit 0}} {
-    # $preinit is intended to allow the GUI to be launched ahead of a possible
-    # call to ex_bath. For instance, when using drast_msel, we don't want the
-    # bathy GUI to launch immediately; it should only display when the user
-    # clicks on the plot. However, if it's already visible, we shouldn't hide
-    # it and we shouldn't change its settings.
-
-    set args [list -window $window -raster $raster -pulse $pulse -channel $channel]
-    set w ${v::top}_window$window
-    if {[winfo exists $w]} {
-        if {!$preinit} {
-            $w configure {*}$args
-            wm deiconify $w
-        }
+proc ::eaarl::settings::bath_ctl::launch_win {window raster pulse channel} {
+    set args [list -raster $raster -pulse $pulse -channel $channel]
+    set ns [namespace current]
+    set gui ${ns}::window_$window
+    if {[info commands $gui] ne ""} {
+        $gui configure {*}$args
     } else {
-        ::eaarl::settings::bath_ctl::gui_embed $w {*}$args
-        if {$preinit} {
-            wm withdraw $w
-        }
+        ::eaarl::settings::bath_ctl::gui_embed $gui {*}$args -window $window
     }
-
-    return $w
+    return $gui
 }
 
-snit::widget ::eaarl::settings::bath_ctl::gui_embed {
-    hulltype toplevel
-    delegate option * to hull
-    delegate method * to hull
-
-    option -window -default 4 -configuremethod SetOpt
+snit::type ::eaarl::settings::bath_ctl::gui_embed {
+    option -window -readonly 1 -default 4 -configuremethod SetOpt
     option -raster -default 1 -configuremethod SetOpt
     option -channel -default 1 -configuremethod SetOpt
     option -pulse -default 60 -configuremethod SetOpt
 
-    component plot
+    component window
     component settings
 
     constructor {args} {
-        # withdraw immediately to prevent flash in case calling code wants to
-        # withdraw after initialization
-        wm withdraw $win
+        if {[dict exist $args -window]} {
+            set win [dict get $args -window]
+        } else {
+            set win 4
+        }
+        set window [::yorick::window::path $win]
+        $window clear_gui
+        $window configure -owner $self
 
         set ns [namespace parent]
 
-        wm resizable $win 0 0
-        wm title $win "Window 4"
-
-        ttk::frame $win.f
-        grid $win.f -sticky news
-        grid columnconfigure $win 0 -weight 1
-        grid rowconfigure $win 0 -weight 1
-
-        set f $win.f
-        set plot $f.plot
-        ttk::frame $plot -width 454 -height 477
+        set f [$window pane bottom]
         ttk::labelframe $f.settings -text "Bathy Settings"
-        grid $f.plot -sticky news
         grid $f.settings -sticky news -pady 3 -padx 3
         grid columnconfigure $f 0 -weight 1
-        grid rowconfigure $f 1 -weight 1
+        grid rowconfigure $f 0 -weight 1
 
         set settings $f.settings
         set f $f.settings
@@ -380,18 +358,16 @@ snit::widget ::eaarl::settings::bath_ctl::gui_embed {
                 -sticky e -padx 2 -pady 2
         grid columnconfigure $f {1 3 5} -weight 1 -uniform a
 
-        bind $win <Enter> ${ns}::gui_refresh
-        bind $win <Visibility> ${ns}::gui_refresh
+        bind $settings <Enter> ${ns}::gui_refresh
+        bind $settings <Visibility> ${ns}::gui_refresh
 
         # Force initialization in case no options are given by caller
         $self configure -channel 1
         $self configure {*}$args
-
-        wm deiconify $win
     }
 
-    destructor {
-        ybkg "winkill $options(-window)"
+    method clear_gui {} {
+        $self destroy
     }
 
     method replot {} {
@@ -401,7 +377,7 @@ snit::widget ::eaarl::settings::bath_ctl::gui_embed {
 
     method SetOpt {option value} {
         set options($option) $value
-        wm title $win "Window $options(-window) - Raster $options(-raster)\
+        wm title $window "Window $options(-window) - Raster $options(-raster)\
                 Pulse $options(-pulse) Channel $options(-channel)"
 
         set f $settings

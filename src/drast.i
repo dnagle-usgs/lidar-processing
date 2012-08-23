@@ -304,10 +304,9 @@ tx=, autolims=, showcbar=, sfsync=) {
 }
 
 func drast_msel(rn, type=, rx=, tx=, bath=, cb=, amp_bias=, range_bias=, rxtx=,
-units=, bathchan=, bathparent=, winsel=, winrx=, wintx=, winbath=) {
+units=, bathchan=, winsel=, winrx=, wintx=, winbath=) {
 /* DOCUMENT drast_msel, rn, type=, rx=, tx=, cb=, bath=, rxtx=, units=,
-   amp_bias=, range_bias=, bathchan=, bathparent=, winsel=, winrx=, wintx=,
-   winbath=
+   amp_bias=, range_bias=, bathchan=, winsel=, winrx=, wintx=, winbath=
 
   Enters an interactive mode that allows the user to query waveforms on an
   ndrast plot.
@@ -345,8 +344,6 @@ units=, bathchan=, bathparent=, winsel=, winrx=, wintx=, winbath=) {
         bathchan=0    automatically determine channel as for EAARL-A (default)
         bathchan=1    use channel 1
         bathchan=4    use channel 4
-    bathparent= Window ID to pass to ex_bath as parent=. Only intended to be
-      used by Tcl/Tk.
     winsel= Window to use for mouse selection (where ndrast is plotted).
         winsel=11     default
     winrx= Window to use for plotting return waveform(s).
@@ -393,8 +390,8 @@ units=, bathchan=, bathparent=, winsel=, winrx=, wintx=, winbath=) {
         show_wf, rn, pulse, win=winrx, cb=cb, range_bias=range_bias,
           amp_bias=amp_bias, tx=rxtx, units=units;
       if(bath)
-        ex_bath, rn, pulse, graph=1, win=winbath, xfma=1, forcechannel=bathchan,
-          parent=bathparent;
+        ex_bath, rn, pulse, graph=1, win=winbath, xfma=1,
+          forcechannel=bathchan;
       if(tx)
         show_wf_transmit, rn, pulse, win=wintx;
     } else {
