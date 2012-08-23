@@ -11,7 +11,6 @@ proc ::yorick::window::initialize {} {
     set cmd [list grow _ytk_window_parents]
     for {set win 0} {$win < 64} {incr win} {
         ::yorick::window::embedded .yorwin$win -window $win
-        wm withdraw .yorwin$win
         lappend cmd [.yorwin$win id]
     }
     ybkg {*}$cmd
@@ -22,37 +21,46 @@ snit::widget ::yorick::window::embedded {
     delegate option * to hull
     delegate method * to hull
 
-    option -window -default 0 -configuremethod SetWindow
+    option -window -readonly -default 0
     option -style -default "work.gs" -configuremethod SetStyleDpi
     option -dpi -default 75 -configuremethod SetStyleDpi
 
+    # plot is the frame where the Yorick window will get embedded
     component plot
+
+    # bottom, left, and right are frames where calling code can put other
+    # content; calling code should retrieve the window path using a call
+    # similar to:
+    #   set f [.yorwin0 pane bottom]
     component bottom
     component left
     component right
 
+    component owner
+
     constructor {args} {
-        # Withdraw here and deiconify at end so that there's less chance of
-        # flicker if the caller wishes to start with the window withdrawn.
+        # Window starts out withdrawn by default. Yorick can deiconify it when
+        # it comes time to use the window.
         wm withdraw $win
 
         wm resizable $win 0 0
         wm protocol $win WM_DELETE_WINDOW [list wm withdraw $win]
 
+        set owner ""
         foreach f {plot bottom left right} {
             set $f $win.$f
-            ttk::frame $win.$f
         }
+        ttk::frame $plot
+        $self clear_gui
 
         grid $left $plot   $right -sticky news
         grid ^     $bottom ^      -sticky news
 
         # Default configuration based on default option values
-        wm title $win "Window 0"
         $plot configure -width 450 -height 473
         
         $self configure {*}$args
-        wm deiconify $win
+        wm title $win "Window $options(-window)"
     }
 
     method pane {which} {
@@ -68,9 +76,24 @@ snit::widget ::yorick::window::embedded {
         return [expr {[winfo id $plot]}]
     }
 
-    method SetWindow {option value} {
-        set options($option) $value
-        wm title $win "Window $options(-window)"
+    # Calling code looking to embed stuff into the window should always call
+    # clear_gui first to make sure it's working with a clean slate
+    method clear_gui {} {
+        # Hook to allow the owner the chance to clean up after itself if needed
+        if {$owner ne ""} {
+            catch [list $owner clear_gui]
+        }
+
+        foreach f [list $bottom $left $right] {
+            grid forget $f
+            destroy $f
+            ttk::frame $f
+        }
+
+        grid forget $plot
+        grid $left $plot   $right -sticky news
+        grid ^     $bottom ^      -sticky news
+
     }
 
     # The width/height used here should be the same as the width/height used in
