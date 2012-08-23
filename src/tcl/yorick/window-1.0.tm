@@ -6,6 +6,10 @@ package require snit
 
 namespace eval ::yorick::window {}
 
+proc ::yorick::window::path {win} {
+    return .yorwin$win
+}
+
 proc ::yorick::window::initialize {} {
     ybkg funcset _ytk_window_parents
     set cmd [list grow _ytk_window_parents]
