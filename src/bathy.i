@@ -250,8 +250,9 @@ xfma=, verbose=) {
     window, win;
     // Embedding in Tk destroys limits, so backup and restore
     lims = limits();
-    tkcmd, swrite(format="::eaarl::settings::bath_ctl::launch_win %d %d %d %d",
-      win, raster_number, pulse_number, forcechannel);
+    if(forcechannel)
+      tkcmd, swrite(format="::eaarl::settings::bath_ctl::launch_win %d %d %d %d",
+        win, raster_number, pulse_number, forcechannel);
     gridxy, 2, 2;
     if(xfma) fma;
     limits, lims;
