@@ -547,6 +547,8 @@ proc ::plot::replot_all { } {
 }
 
 proc ::plot::plot_all { } {
+   # Make sure squared limits are applied
+   exp_send "limits, square=1\r"
    # Plot images first
    if { $g::enable_plot_images } {
       ::plot::image_plot
