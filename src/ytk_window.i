@@ -54,6 +54,9 @@ func ytk_window(win, display=, dpi=, wait=, private=, hcp=, dump=, legends=, sty
 
   if(display == "") {
     tkcmd, swrite(format=".yorwin%d withdraw", win);
+    // When a window is killed, it reverts to the default style and DPI
+    tkcmd, swrite(format=".yorwin%d configure -style {%s} -dpi %d",
+      win, "work.gs", 75);
   } else {
     tkcmd, swrite(format=".yorwin%d show", win);
   }
