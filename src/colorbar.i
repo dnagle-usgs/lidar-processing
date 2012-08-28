@@ -51,6 +51,12 @@ func colorbar(cmin, cmax, drag=, landscape=, units=, datum=) {
 
   The landscape= option is ignored and exists for historical reasons.
 */
+  // If both are integers, they can remain integers. If either are reals, they
+  // both should become reals.
+  if(is_real([cmin,cmax])) {
+    cmin = double(cmin);
+    cmax = double(cmax);
+  }
   xoff = 0.0;
   yoff = 0.0;
   if (drag) {
