@@ -516,9 +516,13 @@ proc ::l1pro::tools::histelev::cbar_tool_docked {win} {
     set ns [namespace current]
     set w [::yorick::window::path $win]
     $w clear_gui
-    wm title $w "Window $win - Colorbar Tool"
+    wm title $w "Window $win - Histogram Elevations"
 
     set f [$w pane bottom]
+    ttk::labelframe $f.f -text "Update Colorbar"
+    grid $f.f -sticky news
+    grid columnconfigure $f 0 -weight 1
+    set f $f.f
 
     set cmd [list apply [list op "return \"${ns}::cbar_do \$op $win $w\""]]
     ttk::button $f.cmax -text "Cmax" -width 0 -command [{*}$cmd cmax]
