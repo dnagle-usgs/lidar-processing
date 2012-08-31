@@ -638,7 +638,8 @@ Input:
             name of the server computer.
 
   forcechannel= : Set to 1, 2, 3, or 4 to force the use of the specified
-            channel. You should also include "_chan1" or similar in your mdate.
+            channel. The mdate will have _chan1 or similar automatically
+            appended to it if "_chan" is not already present in mdate.
 
   shapefile=    : Set to the path to a UTM ASCII shapefile containing a single
             polygon. This will be used for the boundary (and disables pick=).
@@ -690,6 +691,10 @@ amar nayegandhi started (10/04/02) Lance Mosher
 Added server/client support (2009-01) Richard Mitchell
 */
   extern pnav_filenam, bath_ctl, bath_ctl_chn4, _hgid;
+
+  if(forcechannel && !strglob("*_chan*", mdate)) {
+    mdate += swrite(format="_chan%d", forcechannel);
+  }
 
   // start the timer
   t0 = array(double, 3);
