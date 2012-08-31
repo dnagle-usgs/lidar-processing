@@ -1802,6 +1802,11 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
   // Variable name -- same as input, but add _rcf (or _grcf, etc.)
   // File name -- same as input, but lop off extension and add rcf settings
   vname = [];
+  if(count > 1)
+    sizes = file_size(files)(cum)(2:);
+  else
+    sizes = file_size(files);
+  status, start, msg="Batch RCF...";
   for(i = 1; i <= count; i++) {
     file_in = files(i);
     file_out = file_rootname(file_in);
@@ -1831,7 +1836,9 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
     rcf_filter_eaarl_file, file_in, file_out, mode=mode, clean=clean,
         rcfmode=rcfmode, buf=buf, w=w, n=n, prefilter_min=prefilter_min,
         prefilter_max=prefilter_max, verbose=(verbose > 1);
+    status, progress, sizes(i), sizes(0);
   }
+  status, finished;
 
   if(verbose == 1)
     write, format="%s", "\n";
