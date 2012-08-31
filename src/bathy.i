@@ -149,12 +149,12 @@ graph=, pse=, msg=) {
   }
 
   if(forcechannel == 4) {
-    if(bath_ctl.laser == 0) {
-      error, "You must first configure bathy settings (bath_ctl).";
-    }
-  } else {
     if(bath_ctl_chn4.laser == 0) {
       error, "You must first configure bathy settings for channel 4 (bath_ctl_chn4).";
+    }
+  } else {
+    if(bath_ctl.laser == 0) {
+      error, "You must first configure bathy settings (bath_ctl).";
     }
   }
 
