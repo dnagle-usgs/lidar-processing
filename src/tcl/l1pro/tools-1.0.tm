@@ -527,7 +527,7 @@ proc ::l1pro::tools::histelev::cbar_tool_docked {win} {
     ttk::button $f.dism -text "Close" -width 0 -command [{*}$cmd dism]
     ttk::button $f.bdis -text "Both & Close" -width 0 -command [{*}$cmd bdis]
 
-    grid $f.cmax $f.cmin $f.both $f.bdis $f.dism -sticky ew -padx 1 -pady 1
+    grid $f.cmin $f.cmax $f.both $f.bdis $f.dism -sticky ew -padx 1 -pady 1
     grid columnconfigure $f {0 1 2 4} -weight 1 -uniform 1
     grid columnconfigure $f 3 -weight 2 -uniform 1
 }
