@@ -62,180 +62,6 @@ struct LAS_ALPS {
   char r, g, b;
 }
 
-local las_old;
-/* DOCUMENT las_old
-
-  In December 2009, the parameters and options for pbd2las and batch_pbd2las
-  changed as part of an upgrade of the functions' functionality. This
-  documents how to transition from the old-style function calls to the
-  new-style ones. This documentation focuses on batch_pbd2las, but most of it
-  applies equally to pbd2las.
-
-  The old batch_pbd2las had this list of parameters and options:
-
-    batch_pbd2las, dir, searchstr=, typ=, zone_nbr=, nad83=, wgs84N=,
-    wgs84S=, buffer=, qq=, proj_id=, v_maj=, v_min=, cday=, cyear=
-
-  The new batch_pbd2las has this list of parameters and options (as of
-  December 2009):
-
-    batch_pbd2las, dir_pbd, outdir=, searchstr=, v_maj=, v_min=, zone=,
-    cs_h=, cs_v=, mode=, pdrf=, encode_rn=, include_scan_angle_rank=,
-    buffer=, classification=, header=, verbose=
-
-  Follows is how each of the old parameters and options can get updated for
-  the new syntax.
-
-    dir
-      The "dir" parameter is named "dir_pbd" in the new function, but it still
-      functions exactly the same.
-
-    searchstr=
-      This option has not changed.
-
-    typ=
-      This option has been replaced by mode=. The mode= option takes a
-      string argument specifying the kind of data being converted. Valid
-      values are "fs", "be", and "ba". Here's how the old syntax maps to the
-      new:
-        typ=1  ->  mode="fs"
-        typ=2  ->  mode="be"
-        typ=3  ->  mode="ba"
-
-    zone_nbr=
-      This option has been renamed to zone= but functions the same. Examples
-      of updating it:
-        zone_nbr=16  ->  zone=16
-        zone_nbr=18  ->  zone=18
-
-    nad83=
-    wgs84N=
-    wgs84S=
-      These three options do not exist as separate options in the new
-      function. Instead, the same functionality has been achieved with the
-      cs_h= and cs_v= options. Option cs_h= specifies the horizontal
-      coordinate system used and cs_v= specifies the vertical coordinate
-      system used. Usually, you will use one of three special tokens for
-      cs_h: "wgs84", "navd88", or "nad83". Normally, you'll also omit cs_v
-      because it defaults to match cs_h. In the case of the special tokens
-      mentioned, the function will automatically determine the right datum
-      codes to place in the LAS header. Here's how calls in the old function
-      should be mapped to the new function:
-        nad83=1   ->  cs_h="navd88" (if the vertical system is navd88)
-        nad83=1   ->  cs_h="nad83"  (if the vertical system is actually nad83)
-        wgs84N=1  ->  cs_h="wgs84"
-      The wgs84S= option is not explicitly implemented because we rarely
-      work in the southern hemisphere.
-
-    buffer=
-      This option is largely the same. As with the old version, this
-      specifies a buffer in meters to apply around the tile's boundary
-      (assuming it can be interpreted as a tile). Here's how the syntax compares:
-        buffer=100  ->  buffer=100
-        buffer=25   ->  buffer=25
-        buffer=0    ->  buffer=0
-      In both versions, buffer=0 clips the data to the tile's boundary. The
-      default in both versions is to leave the data alone and not apply any
-      clipping or buffers to it. However, the method of explicitly setting
-      that has changed. You'll probably never explicitly set it, but here's
-      how it maps:
-        buffer=-1   ->  buffer=[]
-
-    qq=
-      This option does not exist in the new function. The new function
-      automatically attempts to interpret the filename as a 2km or 10km data
-      tile. If it cannot, then it attempts to interpret it as a quarter-quad
-      tile. Thus, there is no need for this option any longer.
-
-    proj_id=
-      This option does not exist in the new function and was rarely if ever
-      used in the option function. Moreover, it was incorrectly implemented
-      in the old function. If you actually need to supply a project ID or
-      GUID, you can achieve it through the header= option in the new
-      function. However, this is considered advanced usage and is not
-      detailed further here.
-
-    v_maj=
-    v_min=
-      These options are the same as in the older function. However, the
-      defaults are now v_maj=1 and v_min=2.
-
-    cday=
-    cyear=
-      These options do not exist in the new function. They were used to
-      specify the file's creation day of year and year. Yorick is capable of
-      automatically determining that quite easily, so now it does. You can
-      safely omit these options if they were present in the older version.
-      If you for some reason need to explicitly override them, you can do so
-      with the header= option. However, that is advanced usage and is not
-      detailed further here.
-
-  There are also some new options in the new function that you should be aware
-  of as well.
-
-    outdir=
-      The old version of the function always wrote the LAS file alongside
-      the PBD file. The new version allows you to optionally specify an
-      output directory. If specified, the LAS files will go there instead of
-      alongside the PBD files.
-
-    pdrf=
-      This stands for "Point Data Record Format". Changing this will change
-      what fields get written out for each data point. There are two values
-      that are of interest:
-        pdrf=1    - This is the default. It writes out all of the core data
-                including the GPS time.
-        pdrf=3    - This is like pdrf=1 but adds a red, green, and blue
-                channel.
-      If you are converting the data for publishing purposes or to share
-      with others outside our group, you almost always will want to use the
-      default (pdrf=1). However, if you expect that you will be bringing the
-      data back into ALPS later (for example, you are filtering the data
-      with commercial software), then specifying pdrf=3 will result in the
-      raster and pulse information being stored in the red and green channel
-      fields. When you import that data back into ALPS later, you'll be able
-      to look up waveforms and such, which isn't possible if you used
-      pdrf=1.
-
-    classification=
-      This can be used to specify the classification code to apply to all of
-      the points. This defaults to 0 and is usually not changed. However,
-      the following classification code could be of potential use.
-        classification=2  ->  ground points
-
-    verbose=
-      By default, the function will spew out lots of progress information.
-      You can tone it down by changing the verbosity level.
-        verbose=2  ->  The default. Very chatty.
-        verbose=1  ->  Less info, but still gives progress indication.
-        verbose=0  ->  Stops talking unless it encounters a problem.
-
-  Here's some concrete examples from real data sets:
-
-    ASIS 2008
-
-      OLD:  batch_pbd2las, "/data/1/EAARL/processed/ASIS_08/Index_Tiles/",
-            searchstr="*fs_rcf_mf_qc.pbd", zone_nbr=18, typ=1, buffer=10
-      NEW:  batch_pbd2las, "/data/1/EAARL/processed/ASIS_08/Index_Tiles/",
-            searchstr="*fs_rcf_mf_qc.pbd", zone=18, mode="fs", buffer=10
-
-      OLD:  batch_pbd2las, "/data/1/EAARL/processed/ASIS_08/Index_Tiles/",
-            searchstr="*merged_rcf_mf_qc.pbd", typ=2, buffer=10, zone_nbr=18
-      NEW:  batch_pbd2las, "/data/1/EAARL/processed/ASIS_08/Index_Tiles/",
-            searchstr="*merged_rcf_mf_qc.pbd", mode="be", buffer=10, zone=18
-
-    HR Charley 2004
-
-      OLD:  batch_pbd2las, "/data/0/EAARL/Processed_Data/HR_CHARLEY_04/fs_QQ/",
-            searchstr="*_qc.pbd", typ=1, zone_nbr=17, qq=1, buffer=10
-      NEW:  batch_pbd2las, "/data/0/EAARL/Processed_Data/HR_CHARLEY_04/fs_QQ/",
-            searchstr="*_qc.pbd", mode="fs", zone=17, buffer=10
-
-  The new function is "smarter" about autodetecting stuff than the old
-  function, so mode=, zone=, and cs_h= can often be omitted since that
-  information is often contained within the file's name.
-*/
-
 local las;
 /* DOCUMENT las
 
@@ -284,13 +110,6 @@ header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
 
   Runs pbd2las in a batch mode. This converts individual PBD files into LAS
   files.
-
-  * * * * *
-  NOTE: Major changes were made to this function in December 2009. If you used
-  this function prior to December 2009, please refer to the help listed under
-  las_old:
-    help, las_old
-  * * * * *
 
   Some of the options below note that they will, by default, be determined
   from the file's name. These options work on a file-by-file basis, so it's
@@ -393,7 +212,7 @@ header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
     on a set of files that contains multiple files for the same tile (such as
     a be and fs version of the same tile).
 
-  SEE ALSO: pbd2las batch_las2pbd las_old las
+  SEE ALSO: pbd2las batch_las2pbd las
 */
   default, searchstr, "*.pbd";
   default, verbose, 2;
@@ -472,7 +291,7 @@ verbose=) {
         verbose=1  -  Will display detailed output
         verbose=0  -  Will display no output unless issues are encountered
 
-  SEE ALSO: batch_pbd2las las2pbd las_export_data las_old las
+  SEE ALSO: batch_pbd2las las2pbd las_export_data las
 */
   default, fn_las, file_rootname(fn_pbd) + ".las";
   default, verbose, 1;
