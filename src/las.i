@@ -221,6 +221,7 @@ header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
   default, shorten_fn, 0;
 
   t0 = array(double, 3);
+  timer, t0;
 
   files_pbd = find(dir_pbd, glob=searchstr);
   if(is_void(files_pbd))
