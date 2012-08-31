@@ -86,10 +86,9 @@ ypos=, wait=) {
   if(!dofma && window_exists(win))
     wdata = save_plot(win);
 
-  winkill, win;
+  winkill, win, keeptk=1;
   window, win, dpi=dpi, style=style+".gs", width=width, height=height,
     parent=parent, xpos=xpos, ypos=ypos, wait=wait;
-  window, win, width=0, height=0;
 
   // Avoid copying system 0. It contains axis and plot labels, which will
   // render in the wrong spot when changing to/from landscape.

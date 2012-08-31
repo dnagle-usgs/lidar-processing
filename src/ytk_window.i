@@ -1,8 +1,10 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
 // Back up Yorick's window function. We know it's Yorick's if it's a built-in.
-if(is_func(window) == 2)
+if(is_func(window) == 2) {
   yor_window = window;
+  yor_winkill = winkill;
+}
 
 local _ytk_window_parents;
 if(is_void(_ytk_window_parents))
@@ -14,9 +16,11 @@ if(is_void(_ytk_window_parents))
   SEE ALSO: ytk_window
 */
 
-func ytk_window(win, display=, dpi=, wait=, private=, hcp=, dump=, legends=, style=, width=, height=, rgb=, parent=, xpos=, ypos=) {
+func ytk_window(win, display=, dpi=, wait=, private=, hcp=, dump=, legends=,
+style=, width=, height=, rgb=, parent=, xpos=, ypos=, keeptk=) {
 /* DOCUMENT ytk_window, win, display=, dpi=, wait=, private=, hcp=, dump=,
-   legends=, style=, width=, height=, rgb=, parent=, xpos=, ypos=
+   legends=, style=, width=, height=, rgb=, parent=, xpos=, ypos=,
+   keeptk=
 
   Please use "help, yor_window" for details on how to use the window command.
 
@@ -53,7 +57,9 @@ func ytk_window(win, display=, dpi=, wait=, private=, hcp=, dump=, legends=, sty
   }
 
   if(display == "") {
-    tkcmd, swrite(format=".yorwin%d withdraw", win);
+    if(!keeptk) {
+      tkcmd, swrite(format=".yorwin%d withdraw", win);
+    }
     // When a window is killed, it reverts to the default style and DPI
     tkcmd, swrite(format=".yorwin%d configure -style {%s} -dpi %d",
       win, "work.gs", 75);
@@ -108,7 +114,18 @@ func ytk_window(win, display=, dpi=, wait=, private=, hcp=, dump=, legends=, sty
   return result;
 }
 
+func ytk_winkill(win, keeptk=) {
+/* DOCUMENT ytk_winkill, win, keeptk=
+  Deletes the current graphics window, or window WIN.
+
+  If you intend to immediately re-open the window and do not want it to change
+  position or stacking order, set keeptk=1.
+*/
+  window, win, display="", hcp="", keeptk=keeptk;
+}
+
 tkcmd, "package require yorick::window";
 tkcmd, "::yorick::window::initialize";
 
 window = ytk_window;
+winkill = ytk_winkill;
