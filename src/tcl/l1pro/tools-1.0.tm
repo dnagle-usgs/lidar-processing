@@ -105,6 +105,7 @@ proc ::l1pro::tools::rcf::filter {} {
     append cmd ", buf=$v::buf"
     append cmd ", w=$v::w"
     append cmd ", n=$v::n"
+    append cmd ", progress=1"
     append cmd ")"
 
     exp_send "$cmd\r"

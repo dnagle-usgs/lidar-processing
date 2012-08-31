@@ -206,8 +206,8 @@ func old_gridded_rcf(x, y, z, w, buf, n) {
   return where(keep);
 }
 
-func gridded_rcf(x, y, z, w, buf, n) {
-/* DOCUMENT idx = gridded_rcf(x, y, z, w, buf, n)
+func gridded_rcf(x, y, z, w, buf, n, progress=) {
+/* DOCUMENT idx = gridded_rcf(x, y, z, w, buf, n, progress=)
   Returns an index into the x/y/z data for those points that survive the RCF
   filter with the given parameters.
 
@@ -251,6 +251,9 @@ func gridded_rcf(x, y, z, w, buf, n) {
   // keep is our result... anything set to 1 gets kept
   keep = array(char(0), dimsof(x));
 
+  if(progress)
+    status, start, msg="Running RCF filter...";
+
   // iterate over each x-column
   for(xgi = 1; xgi <= xgrid_count; xgi++) {
     // Extract indices for this column; abort if we mysteriously have none
@@ -272,19 +275,26 @@ func gridded_rcf(x, y, z, w, buf, n) {
 
       // Run RCF on the elevations for this grid square
       result = rcf(z(idx), w, mode=2);
+
+      if(progress)
+        status, progress, xgi - 1 + double(ygi)/ygrid_count, xgrid_count;
+
       if(*result(2) < n)
         continue;
 
       keep(idx(*result(1))) = 1;
     }
   }
+  if(progress)
+    status, finished;
 
   return where(keep);
 }
 
-func rcf_filter_eaarl(eaarl, mode=, clean=, rcfmode=, buf=, w=, n=, idx=) {
+func rcf_filter_eaarl(eaarl, mode=, clean=, rcfmode=, buf=, w=, n=, idx=,
+progress=) {
 /* DOCUMENT filtered = rcf_filter_eaarl(data, mode=, clean=, rcfmode=, buf=,
-  w=, n=, idx=)
+  w=, n=, idx=, progress=)
   Applies an RCF filter to eaarl data.
 
   Parameter:
@@ -321,6 +331,8 @@ func rcf_filter_eaarl(eaarl, mode=, clean=, rcfmode=, buf=, w=, n=, idx=) {
       idx=1 and clean=1 is an error. Settings:
         idx=0    Return the filtered data (default)
         idx=1    Return the index into the data
+
+    progress= Set to 1 to display progress in the status bar.
 */
   local x, y, z;
 
@@ -345,7 +357,7 @@ func rcf_filter_eaarl(eaarl, mode=, clean=, rcfmode=, buf=, w=, n=, idx=) {
   keep = [];
 
   if(rcfmode == "grcf")
-    keep = gridded_rcf(unref(x), unref(y), unref(z), w, buf, n);
+    keep = gridded_rcf(unref(x), unref(y), unref(z), w, buf, n, progress=progress);
   else if(rcfmode == "rcf")
     keep = old_gridded_rcf(unref(x), unref(y), unref(z), w, buf, n);
   else
