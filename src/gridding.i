@@ -220,7 +220,7 @@ func grid_fix_params(x, y, cell, &xmin, &xmax, &ymin, &ymax, &xcount, &ycount) {
 
 func triangle_grid(x, y, z, v, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
 /* DOCUMENT grid = triangle_grid(x, y, z, v, xmin=, xmax=, ymin=, ymax=, cell=,
-  nodata=)
+  nodata=, progress=)
 
   Creates a grid for the data x,y,z using the triangulation defined by v.
 
@@ -262,9 +262,7 @@ func triangle_grid(x, y, z, v, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
   yvmax = yv(,max);
   xv = yv = [];
 
-  t0 = array(double, 3);
-  timer, t0;
-  tp = t0;
+  status, start, msg="Gridding data...";
   step = 50;
   xvi = indgen(numberof(xvmax));
   for(i = 1; i <= dimsof(zgrid)(2); i += step) {
@@ -303,9 +301,9 @@ func triangle_grid(x, y, z, v, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
         continue;
       zgrid(i:ii,j:jj) = triangle_interp(x, y, z, v(w,), xx, yy, nodata=nodata);
     }
-    timer_remaining, t0, ii, dimsof(zgrid)(2), tp, interval=5;
+    status, progress, ii, dimsof(zgrid)(2);
   }
-  timer_finished, t0;
+  status, finished;
 
   // Check to see if we can safely convert to floats. If the float version
   // agrees with the double version to within 0.5mm, then switch to floats.
