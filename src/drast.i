@@ -280,6 +280,8 @@ tx=, autolims=, showcbar=, sfsync=) {
     lims = limits();
     // Strip off the flags that set the limits to their extreme values
     lims(5) = long(lims(5)) & ~15;
+    // Make sure we cover 1 to 121
+    lims(1:2) = [1,121];
   }
 
   // Digitizer 0 sweeps left-to-right, digitizer 1 sweeps right-to-left. This
