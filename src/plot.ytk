@@ -618,9 +618,8 @@ proc ::plot::track_plot { } {
 
 proc ::plot::fma { } {
    ::plot::window_set
-   exp_send "fma\r"
    set size [expr {[lsearch $c::windowSizes $g::windowSize] + 1}]
-   exp_send "change_window_size, $::_map(window), $size, 1\r"
+   exp_send "lims = limits(); change_window_size, $::_map(window), $size, 1; limits, lims;\r"
 }
 
 proc ::plot::jump { } {
