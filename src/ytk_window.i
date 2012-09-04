@@ -1,11 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-// Back up Yorick's window function. We know it's Yorick's if it's a built-in.
-if(is_func(window) == 2) {
-  yor_window = window;
-  yor_winkill = winkill;
-}
-
 local _ytk_window_parents;
 if(is_void(_ytk_window_parents))
   _ytk_window_parents = array(0, 64);
@@ -124,8 +118,15 @@ func ytk_winkill(win, keeptk=) {
   window, win, display="", hcp="", keeptk=keeptk;
 }
 
-tkcmd, "package require yorick::window";
-tkcmd, "::yorick::window::initialize";
+// Yorick's window is built-in, ours is interpreted. If the current "window" is
+// built-in, back it up and initializing YTK windowing.
+if(is_func(window) == 2) {
+  yor_window = window;
+  yor_winkill = winkill;
+
+  tkcmd, "package require yorick::window";
+  tkcmd, "::yorick::window::initialize";
+}
 
 window = ytk_window;
 winkill = ytk_winkill;
