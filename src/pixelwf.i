@@ -227,11 +227,8 @@ func pixelwf_enter_interactive(void) {
       } else {
         pixelwf_set_point, nearest.point;
         pixelwf_highlight_point, nearest.point;
-        // Since the previous line triggers Tk to update Yorick, the
-        // following line is wrapped in tkcmd+idle to ensure it happens
-        // afterwards
-        tkcmd, "::misc::idle {ybkg pixelwf_plot}";
         pixelwf_selected_info, nearest;
+        pixelwf_plot;
       }
     } else {
       continue_interactive = 0;
@@ -308,6 +305,7 @@ func pixelwf_set_point(point) {
   missiondata_soe_load, point.soe;
   h_set, pixelwfvars.working, loaded_day=missionday_current(), loaded_when=getsod();
   rp = parse_rn(point.rn);
+  h_set, pixelwfvars.selection, raster=rp(1), pulse=rp(2);
   tksetval, "::l1pro::pixelwf::vars::selection::raster", rp(1);
   tksetval, "::l1pro::pixelwf::vars::selection::pulse", rp(2);
   tksetval, "::l1pro::pixelwf::vars::selection::missionday", missionday_current();
