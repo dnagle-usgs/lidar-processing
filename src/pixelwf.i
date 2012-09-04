@@ -81,7 +81,7 @@ func pixelwf_plot(void) {
 
   for(i = 1; i <= numberof(fns); i++) {
     if(pixelwfvars(fns(i)).enabled)
-      funcdef(swrite(format="pixelwf_%s", fns(i)));
+      symbol_def(swrite(format="pixelwf_%s", fns(i)));
   }
 
   tkcmd, swrite(format="::l1pro::pixelwf::mediator::broadcast_soe %.8f",
