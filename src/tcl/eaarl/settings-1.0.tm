@@ -107,6 +107,7 @@ proc ::eaarl::settings::ops_conf::gui_init {fields} {
         tky_tie add sync ${var}($key) with "ops_conf.$key" -initialize 1
         {*}[linsert $val 1 $v::fieldframe $key]
     }
+    ::misc::idle {wm geometry .l1wid.opsconf ""}
 }
 
 proc ::eaarl::settings::ops_conf::gui_dead {} {
