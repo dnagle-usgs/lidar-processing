@@ -59,7 +59,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "ascii.i";
   require, "ascii_encode.i";
   require, "asciixyz.i";
-  require, "atm.i";
   require, "batch_analysis.i";
   require, "batch_process.i";
   require, "bathy.i";
@@ -80,7 +79,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "dir.i";
   require, "dirload.i";
   require, "dmars.i";
-  require, "drast.i";
   require, "edb_access.i";
   require, "edf.i";
   require, "flightlines.i";
@@ -153,6 +151,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "ytriangulate.i";
   require, "zone.i";
 
+  require, "plugins/atm/load.i";
   require, "plugins/eaarl-b/load.i";
 
   // Must come last, because it depends on some of the above (it actually runs

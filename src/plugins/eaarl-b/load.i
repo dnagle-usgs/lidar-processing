@@ -5,6 +5,7 @@ scratch = save(scratch, base);
 // the current file.
 base = file_dirname(current_include())+"/";
 require, base + "batch_veg_energy.i";
+require, base + "drast.i";
 require, base + "eaarla_filter.i";
 require, base + "eaarla_process.i";
 require, base + "eaarla_raster.i";
