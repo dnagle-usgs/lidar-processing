@@ -1,11 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-require, "ytime.i"
-require, "rlw.i"
-require, "string.i"
-require, "eaarl_constants.i"
-require, "colorbar.i"
-
 struct VEG_CONF {    // Veg configuration parameters
   float thresh;     // threshold
   int max_sat(3);   // Maximum number of sat dig pixels before switching

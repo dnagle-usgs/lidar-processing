@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func set_depth_scale(new_units) {
 /* DOCUMENT set_depth_scale, new_units

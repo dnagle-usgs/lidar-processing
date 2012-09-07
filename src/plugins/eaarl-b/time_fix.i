@@ -1,4 +1,6 @@
 /*
+ This file isn't loaded by default.
+
  time_fix.i
  W. Wright 10-22-03
 

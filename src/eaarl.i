@@ -60,7 +60,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "ascii_encode.i";
   require, "asciixyz.i";
   require, "batch_process.i";
-  require, "bathy.i";
   require, "centroid.i";
   require, "class_clsobj.i";
   require, "class_deque.i";
@@ -131,7 +130,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "sf.i";
   require, "shapefile.i";
   require, "statistics.i";
-  require, "surface_topo.i";
   require, "tiles.i";
   require, "transect.i";
   require, "transrch.i";
@@ -140,7 +138,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "util_coord.i";
   require, "util_plot.i";
   require, "util_str.i";
-  require, "veg.i";
   require, "wf_analysis.i";
   require, "wf_filter.i";
   require, "wf_process.i";
