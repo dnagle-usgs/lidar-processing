@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func eaarla_process(args) {
 /* DOCUMENT eaarla_process(fnc, q=, region=, verbose=, ..., args=)

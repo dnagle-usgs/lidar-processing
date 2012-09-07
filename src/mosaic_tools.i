@@ -1,6 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "mosaic_biases.i";
-require, "eaarl.i";
 
 func cir_create_level_a_tiles(mission_dir, pbd_dir, pro_cir_dir, raw_cir_dir=,
 conf_file=, downsample=, scheme=, cir_soe_offset=, mode=, searchstr=) {

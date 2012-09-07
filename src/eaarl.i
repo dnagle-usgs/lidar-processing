@@ -62,7 +62,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "atm.i";
   require, "batch_analysis.i";
   require, "batch_process.i";
-  require, "batch_veg_energy.i";
   require, "bathy.i";
   require, "centroid.i";
   require, "class_clsobj.i";

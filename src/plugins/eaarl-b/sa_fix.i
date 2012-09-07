@@ -2,6 +2,8 @@
 
 /*
    Test program to fix scan angle error:  Richard Mitchell
+
+   This file isn't loaded by default.
 */
 
 struct SAB {

@@ -1,7 +1,4 @@
 
-require, "veg_energy.i"
-require, "polyfit_smooth.i"
-
 func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=, only_if_mf=, mf_ss=, binsize=, normalize=, mode=, pse=, plot=, bin=, emin=, emax=) {
   /* DOCUMENT batch_veg_lfpw(ipath, opath, binsize=, normalize=, mode=, pse=, plot=, bin=)
     This function makes large footprint waveforms in a batch mode. 
