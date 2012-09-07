@@ -148,7 +148,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "zone.i";
 
   require, "plugins/atm/load.i";
-  require, "plugins/eaarl-b/load.i";
+  require, "plugins/eaarlb/load.i";
 
   // Must come last, because it depends on some of the above (it actually runs
   // something instead of only defining functions)
