@@ -82,12 +82,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "dirload.i";
   require, "dmars.i";
   require, "drast.i";
-  require, "eaarl_mounting_bias.i";
-  require, "eaarla_filter.i";
-  require, "eaarla_process.i";
-  require, "eaarla_raster.i";
-  require, "eaarla_wf.i";
-  require, "eaarlb_json_log.i";
   require, "edb_access.i";
   require, "edf.i";
   require, "flightlines.i";
@@ -159,6 +153,8 @@ if(is_void(__eaarl_includes_included__)) {
   require, "ytime.i";
   require, "ytriangulate.i";
   require, "zone.i";
+
+  require, "plugins/eaarl-b/load.i";
 
   // Must come last, because it depends on some of the above (it actually runs
   // something instead of only defining functions)

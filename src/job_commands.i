@@ -168,7 +168,7 @@ func job_georef_eaarla(conf) {
   daystart = atoi(conf.daystart);
   gps_time_correction = atod(conf.gps_time_correction);
 
-  require, "eaarla_wf.i";
+  require, "plugins/eaarl-b/eaarla_wf.i";
   georef_eaarla, conf.file.in.tld, conf.file.in.gns, conf.file.in.ins,
     conf.file.in.ops, daystart, outfile=conf.file.out;
 }
