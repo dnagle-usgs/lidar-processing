@@ -287,6 +287,6 @@ if {![winfo exists .l1wid]} {
   ::l1pro::main::gui
 }
 
-source "$src_path/plot.ytk"
-source "$src_path/data_segments.ytk"
-source "$src_path/ts_check.ytk"
+source [file join $src_path plot.ytk]
+source [file join $src_path data_segments.ytk]
+source [file join $src_path ts_check.ytk]

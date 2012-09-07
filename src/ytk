@@ -902,16 +902,19 @@ if {$gui_enabled} {
    launch_gui
 }
 
+ybkg funcset initialdir \"$_ytk(initialdir)\"
+ybkg funcset _ytk 1
+ybkg funcset _pid [pid]
+ybkg funcset _hgid \"$HGID\"
+
+set src_path [file dirname [file normalize [info script]]]
+ybkg funcset src_path \"$src_path\"
+
 if { $load_on_start != "" } {
    foreach file_to_load $load_on_start {
       load_and_run $file_to_load
    }
 }
-
-ybkg funcset initialdir \"$_ytk(initialdir)\"
-ybkg funcset _ytk 1
-ybkg funcset _pid [pid]
-ybkg funcset _hgid \"$HGID\"
 
 start_yorick
 

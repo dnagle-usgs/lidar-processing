@@ -352,10 +352,6 @@ proc load_edb {} {
 # then be used to load the other modules.
 #####################################################################
    set data_path "/data/"
-   set src_path  [ file dirname [ info script ] ]
-   cd $src_path
-   ybkg cd \"$src_path\"
-   ybkg funcset src_path \"$src_path\"
    # send ytk process id to yorick global variable _pid.
    ybkg require \"eaarl.i\"
 
@@ -384,5 +380,5 @@ proc load_edb {} {
 exp_send \r
 expect ">"
 
-source "$src_path/l1pro.ytk"
+source [file join $src_path l1pro.ytk]
 wm deiconify .l1wid

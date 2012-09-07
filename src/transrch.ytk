@@ -46,10 +46,7 @@ create_vars $Xcnt
 # main
 ############################################################
 
-# set data_path "/data/0"
-set src_path [ file dirname [ info script ] ]
-source "$src_path/gui_procs.ytk";
-# cd $src_path
+source [file join $src_path gui_procs.ytk]
 
 # Main Window
 set      mw .trans
