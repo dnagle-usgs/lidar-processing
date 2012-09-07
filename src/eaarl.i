@@ -59,7 +59,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "ascii.i";
   require, "ascii_encode.i";
   require, "asciixyz.i";
-  require, "batch_analysis.i";
   require, "batch_process.i";
   require, "bathy.i";
   require, "centroid.i";
