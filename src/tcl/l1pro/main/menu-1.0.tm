@@ -131,14 +131,14 @@ proc menu_mission_settings mb {
     $mb add command {*}[menulabel "&Load ops_conf..."] \
             -command load_ops_conf
     $mb add command {*}[menulabel "&Configure ops_conf..."] \
-            -command ::eaarl::settings::ops_conf::gui
+            -command ::eaarlb::settings::ops_conf::gui
     $mb add command {*}[menulabel "&Save ops_conf..."] \
-            -command ::eaarl::settings::ops_conf::save
+            -command ::eaarlb::settings::ops_conf::save
     $mb add cascade {*}[menulabel "&Display..."] \
             -menu [menu_mission_settings_ops $mb.ops]
     $mb add separator
     $mb add command {*}[menulabel "&Bathymetry Settings..."] \
-            -command ::eaarl::settings::bath_ctl::gui_main
+            -command ::eaarlb::settings::bath_ctl::gui_main
     return $mb
 }
 
