@@ -119,6 +119,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "pcobj_export.i";
   require, "pcobj_import.i";
   require, "pip.i";
+  require, "plugins.i";
   require, "rbgga.i";
   require, "rbpnav.i";
   require, "rbtans.i";
@@ -147,8 +148,12 @@ if(is_void(__eaarl_includes_included__)) {
   require, "ytriangulate.i";
   require, "zone.i";
 
-  require, "plugins/atm/load.i";
-  require, "plugins/eaarlb/load.i";
+  // Invoke any autoloading needed for plugins.
+  plugins_autoload;
+
+  // Temporary for transitional compatibility
+  plugins_load, "atm";
+  plugins_load, "eaarlb";
 
   // Must come last, because it depends on some of the above (it actually runs
   // something instead of only defining functions)
