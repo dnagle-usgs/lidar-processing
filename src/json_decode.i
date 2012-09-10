@@ -633,6 +633,10 @@ func json_ary2array(&ary) {
   if(typeof(obj) != "oxy_object")
     return 0;
   count = ary(*);
+  if(!count) {
+    ary = [];
+    return 1;
+  }
   types = array(string, count);
   dims = array(short, count);
   for(i = 1; i <= count; i++) {
