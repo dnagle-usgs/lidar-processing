@@ -121,13 +121,14 @@ proc ::l1pro::memory::autorefresh {} {
     }
 }
 
-namespace eval ::l1pro::memory {
+proc ::l1pro::memory::startup {} {
     variable refresh 0
     if {[info exists ::_ytk]} {
         set refresh [yget alpsrc.memory_autorefresh]
     }
     ::l1pro::memory::autorefresh
 }
+::misc::idle ::l1pro::memory::startup
 
 proc ::l1pro::memory::launch_monitor {} {
     if {[winfo exists .memorymonitor]} {
