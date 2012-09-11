@@ -1,6 +1,6 @@
 {
   "description": "ATM processing",
   "yorick": {
-    "load": "atm.i"
+    "load": "load.i"
   }
 }
