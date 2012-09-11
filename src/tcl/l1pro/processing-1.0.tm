@@ -132,9 +132,6 @@ proc ::l1pro::processing::process {} {
                 set cmd "$::pro_var = make_veg(latutm=1, q=q,\
                         use_centroid=$::usecentroid, multi_peaks=1)"
             }
-            dws {
-                exp_send "require, \"waves.i\"; process_for_dws, q;\r"
-            }
             default {
                 error "Unknown processing mode: $::processing_mode"
             }
