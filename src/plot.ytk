@@ -5,6 +5,7 @@ package require Iwidgets
 package require struct::list
 package require misc
 package require tooltip
+package require getstring
 
 if {![info exists curzone]} {
    set curzone 0
@@ -880,7 +881,8 @@ proc ::plot::poly_remove {} {
 proc ::plot::poly_rename {} {
    set item [$g::polyListBox getcurselection]
    if {![string equal $item ""]} {
-      if {[tk_getString .plotmenu.polyrename new_name "New Name" "Please enter hte new name for this polygon/polyline." $item]} {
+      set new_name $item
+      if {[::getstring::tk_getString .plotmenu.polyrename new_name "Please enter the new name for this polygon/polyline." -title "New Name"]} {
          exp_send "polygon_rename, \"$item\", \"$new_name\";\r"
          expect ">"
       }
