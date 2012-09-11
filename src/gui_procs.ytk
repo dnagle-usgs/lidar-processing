@@ -1,94 +1,8 @@
 # vim: set ts=3 sts=3 sw=3 ai sr et:
-#
-# 2008-11-26:  little procs to improve the interface
-
-# This makes sure the file doesn't get sourced multiple times, since it might
-# be called from several files. If you DO need to resource it, just 'unset
-# __gui_procs_ytk_loaded' first.
-if {[info exists __gui_procs_ytk_loaded]} {
-   return
-}
-set __gui_procs_ytk_loaded 1
 
 package require Itcl
 package require Iwidgets
 package require struct::set
-package require misc
-
-proc west {type w args} {
-# from: http://wiki.tcl.tk/1420
-# when using a checkbox or radio button, display the text on
-# the west side of the button instead of the east as is the default
-   frame $w
-   set pos [lsearch $args -text]
-   if {$pos == -1} {
-      set text ""
-   } else {
-      set text [lindex $args [expr $pos+1]]
-      set args [lreplace $args $pos [incr pos]]
-   }
-   eval $type $w.r $args [list -text ""] -pady 0
-   label $w.t -text $text -pady 0
-   pack $w.t $w.r -side left -pady 0 -padx 0 -fill x -anchor e
-   set w
-} ;# RS
-
-##############################################################################
-# copied from ADAPT: lib/misc.tcl
-
-proc tk_getString {w var title text {initial {}}} {
-# adapted from http://wiki.tcl.tk/9172
-   variable ::tk::Priv
-   upvar $var result
-   catch {destroy $w}
-   set focus [focus]
-   set grab [grab current .]
-
-   toplevel $w -bd 1 -relief raised -class TkSDialog
-   wm title $w $title
-   wm iconname  $w $title
-   wm protocol  $w WM_DELETE_WINDOW {set ::tk::Priv(button) 0}
-   wm transient $w [winfo toplevel [winfo parent $w]]
-
-   entry  $w.entry -width 20
-   button $w.ok -bd 1 -width 5 -text Ok -default active -command {set ::tk::Priv(button) 1}
-   button $w.cancel -bd 1 -text Cancel -command {set ::tk::Priv(button) 0}
-   label  $w.label -text $text
-
-   grid $w.label -columnspan 2 -sticky ew -padx 3 -pady 3
-   grid $w.entry -columnspan 2 -sticky ew -padx 3 -pady 3
-   grid $w.ok $w.cancel -padx 3 -pady 3
-   grid rowconfigure $w 2 -weight 1
-   grid columnconfigure $w {0 1} -uniform 1 -weight 1
-
-   $w.entry insert 0 $initial
-
-   bind $w <Return>  {set ::tk::Priv(button) 1}
-   bind $w <Destroy> {set ::tk::Priv(button) 0}
-   bind $w <Escape>  {set ::tk::Priv(button) 0}
-
-   wm withdraw $w
-   update idletasks
-   focus $w.entry
-   set x [expr {[winfo screenwidth  $w]/2 - [winfo reqwidth  $w]/2 - [winfo vrootx $w]}]
-   set y [expr {[winfo screenheight $w]/2 - [winfo reqheight $w]/2 - [winfo vrooty $w]}]
-   wm geom $w +$x+$y
-   wm deiconify $w
-   grab $w
-
-   tkwait variable ::tk::Priv(button)
-   set result [$w.entry get]
-   bind $w <Destroy> {}
-   grab release $w
-   destroy $w
-   focus -force $focus
-   if {$grab != ""} {grab $grab}
-   update idletasks
-   return $::tk::Priv(button)
-}
-
-##############################################################################
-# imported from ADAPT: GUI/lib/utils.tcl
 
 namespace eval GUI::utils {}
 proc GUI::utils::getfile { args } {
@@ -151,9 +65,6 @@ proc GUI::utils::getfile { args } {
    return $filename
 }
 
-##############################################################################
-# imported from ADAPT: lib/GUI/EntryFieldButton.tcl
-
 if { [info commands GUI::EntryFieldButton] eq "" } {
    itcl::class GUI::EntryFieldButton {
       inherit iwidgets::Entryfield
@@ -176,9 +87,6 @@ itcl::body GUI::EntryFieldButton::constructor {args} {
 
    itk_initialize {*}$args
 }
-
-##############################################################################
-# Imported from ADAPT: lib/GUI/FileEntryButton.tcl
 
 if { [info commands GUI::FileEntryButton] eq "" } {
    itcl::class GUI::FileEntryButton {
