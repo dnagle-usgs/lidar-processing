@@ -3,13 +3,12 @@
 package require struct::set
 package require fileutil
 package require misc
+package require GUI
 
 if {[catch [list package require json]]} {
     puts "No JSON"
     return
 }
-
-source [file join $src_path gui_procs.ytk]
 
 ### INITIALIZATION
 

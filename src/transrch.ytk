@@ -46,8 +46,6 @@ create_vars $Xcnt
 # main
 ############################################################
 
-source [file join $src_path gui_procs.ytk]
-
 # Main Window
 set      mw .trans
 global   mw

@@ -1,5 +1,6 @@
 # vim: set ts=3 sts=3 sw=3 ai sr et:
 
+package provide GUI 1.0
 package require Itcl
 package require Iwidgets
 package require struct::set
