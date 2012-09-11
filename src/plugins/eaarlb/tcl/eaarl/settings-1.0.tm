@@ -1,8 +1,8 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
-package provide eaarlb::settings 1.0
+package provide eaarl::settings 1.0
 
-namespace eval ::eaarlb::settings::ops_conf::v {
+namespace eval ::eaarl::settings::ops_conf::v {
     variable top .l1wid.opsconf
     variable fieldframe
     variable ops_conf
@@ -39,7 +39,7 @@ namespace eval ::eaarlb::settings::ops_conf::v {
     }
 }
 
-proc ::eaarlb::settings::ops_conf::gui_refresh {} {
+proc ::eaarl::settings::ops_conf::gui_refresh {} {
     # Throttle to every 3/4 second to prevent flooding Yorick in the background
     # (which can cause issues)
     set elapsed [expr {[clock milliseconds] - $v::last_refresh}]
@@ -49,7 +49,7 @@ proc ::eaarlb::settings::ops_conf::gui_refresh {} {
     }
 }
 
-proc ::eaarlb::settings::ops_conf::gui_line {w text} {
+proc ::eaarl::settings::ops_conf::gui_line {w text} {
     set lbl [winfo parent $w].lbl[winfo name $w]
     ttk::label $lbl -text $text
     grid $lbl $w
@@ -57,20 +57,20 @@ proc ::eaarlb::settings::ops_conf::gui_line {w text} {
     grid $w -sticky ew
 }
 
-proc ::eaarlb::settings::ops_conf::gui_entry {w key} {
+proc ::eaarl::settings::ops_conf::gui_entry {w key} {
     set var [namespace which -variable v::ops_conf]
     ttk::entry $w.$key -textvariable ${var}($key)
     gui_line $w.$key "$key: "
 }
 
-proc ::eaarlb::settings::ops_conf::gui_spinbox {w key from to inc} {
+proc ::eaarl::settings::ops_conf::gui_spinbox {w key from to inc} {
     set var [namespace which -variable v::ops_conf]
     ttk::spinbox $w.$key -textvariable ${var}($key) \
             -from $from -to $to -increment $inc
     gui_line $w.$key "$key: "
 }
 
-proc ::eaarlb::settings::ops_conf::gui {} {
+proc ::eaarl::settings::ops_conf::gui {} {
     set w $v::top
     destroy $w
     toplevel $w
@@ -96,7 +96,7 @@ proc ::eaarlb::settings::ops_conf::gui {} {
     ybkg eaarl_ops_conf_gui_init
 }
 
-proc ::eaarlb::settings::ops_conf::gui_init {fields} {
+proc ::eaarl::settings::ops_conf::gui_init {fields} {
     set var [namespace which -variable v::ops_conf]
     foreach key $fields {
         if {[dict exists $v::settings $key]} {
@@ -110,12 +110,12 @@ proc ::eaarlb::settings::ops_conf::gui_init {fields} {
     ::misc::idle {wm geometry .l1wid.opsconf ""}
 }
 
-proc ::eaarlb::settings::ops_conf::gui_dead {} {
+proc ::eaarl::settings::ops_conf::gui_dead {} {
     destroy $v::top
     array unset v::ops_conf *
 }
 
-proc ::eaarlb::settings::ops_conf::save {} {
+proc ::eaarl::settings::ops_conf::save {} {
     set fn [tk_getSaveFile -parent .l1wid \
             -title "Select destination to save current ops_conf settings" \
             -filetypes {
@@ -128,7 +128,7 @@ proc ::eaarlb::settings::ops_conf::save {} {
     }
 }
 
-proc ::eaarlb::settings::ops_conf::view {json {name {}}} {
+proc ::eaarl::settings::ops_conf::view {json {name {}}} {
     set i 1
     while {[winfo exists ${v::top}view${i}]} {
         incr i
@@ -165,7 +165,7 @@ proc ::eaarlb::settings::ops_conf::view {json {name {}}} {
     }
 }
 
-namespace eval ::eaarlb::settings::bath_ctl::v {
+namespace eval ::eaarl::settings::bath_ctl::v {
     variable top .l1wid.bctl
     variable last_refresh 0
 
@@ -225,7 +225,7 @@ namespace eval ::eaarlb::settings::bath_ctl::v {
     unset ns var field
 }
 
-proc ::eaarlb::settings::bath_ctl::gui_main {} {
+proc ::eaarl::settings::bath_ctl::gui_main {} {
     set w $v::top
     destroy $w
     toplevel $w
@@ -293,19 +293,19 @@ proc ::eaarlb::settings::bath_ctl::gui_main {} {
     bind $f <Visibility> [namespace which -command gui_refresh]
 }
 
-proc ::eaarlb::settings::bath_ctl::launch_win {window raster pulse channel} {
+proc ::eaarl::settings::bath_ctl::launch_win {window raster pulse channel} {
     set args [list -raster $raster -pulse $pulse -channel $channel]
     set ns [namespace current]
     set gui ${ns}::window_$window
     if {[info commands $gui] ne ""} {
         $gui configure {*}$args
     } else {
-        ::eaarlb::settings::bath_ctl::gui_embed $gui {*}$args -window $window
+        ::eaarl::settings::bath_ctl::gui_embed $gui {*}$args -window $window
     }
     return $gui
 }
 
-snit::type ::eaarlb::settings::bath_ctl::gui_embed {
+snit::type ::eaarl::settings::bath_ctl::gui_embed {
     option -window -readonly 1 -default 4 -configuremethod SetOpt
     option -raster -default 1 -configuremethod SetOpt
     option -channel -default 1 -configuremethod SetOpt
@@ -400,7 +400,7 @@ snit::type ::eaarlb::settings::bath_ctl::gui_embed {
     }
 }
 
-proc ::eaarlb::settings::bath_ctl::gui_refresh {} {
+proc ::eaarl::settings::bath_ctl::gui_refresh {} {
     # Throttle to every 3/4 second to prevent flooding Yorick in the background
     # (which can cause issues)
     set elapsed [expr {[clock milliseconds] - $v::last_refresh}]
@@ -411,7 +411,7 @@ proc ::eaarlb::settings::bath_ctl::gui_refresh {} {
     }
 }
 
-proc ::eaarlb::settings::bath_ctl::save {} {
+proc ::eaarl::settings::bath_ctl::save {} {
     set fn [tk_getSaveFile -initialdir $::data_path \
             -filetypes {{{json files} {.json}} {{all files} {*}}}]
     if {$fn ne ""} {
@@ -428,7 +428,7 @@ proc ::eaarlb::settings::bath_ctl::save {} {
     }
 }
 
-proc ::eaarlb::settings::bath_ctl::load {} {
+proc ::eaarl::settings::bath_ctl::load {} {
     set fn [tk_getOpenFile -initialdir $::data_path \
             -filetypes {
                 {{json files} {.json}}
@@ -441,7 +441,7 @@ proc ::eaarlb::settings::bath_ctl::load {} {
     }
 }
 
-proc ::eaarlb::settings::bath_ctl::preset {var preset} {
+proc ::eaarl::settings::bath_ctl::preset {var preset} {
     dict for {key val} [dict get $v::presets $preset] {
         set ${var}($key) $val
     }

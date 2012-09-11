@@ -127,7 +127,7 @@ if {![info exists l1pro_data]} {
 # Some of the l1pro packages require the above variables, so this must come
 # after they exist
 package require l1pro
-package require eaarlb
+package require eaarl
 
 proc append_varlist {newvar} {
   global varlist

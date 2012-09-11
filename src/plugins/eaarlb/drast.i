@@ -183,7 +183,7 @@ tx=, autolims=, showcbar=, sfsync=) {
   win_bkp = current_window();
 
   // Attach Tcl GUI
-  tkcmd, swrite(format="::eaarlb::rasters::rastplot::launch %d %d %d",
+  tkcmd, swrite(format="::eaarl::rasters::rastplot::launch %d %d %d",
     win, rn, channel);
 
   window, win;

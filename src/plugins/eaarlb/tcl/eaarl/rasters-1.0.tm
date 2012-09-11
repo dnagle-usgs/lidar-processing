@@ -1,9 +1,9 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
-package provide eaarlb::rasters 1.0
+package provide eaarl::rasters 1.0
 
-if {![namespace exists ::eaarlb::rasters::rastplot]} {
-    namespace eval ::eaarlb::rasters::rastplot {
+if {![namespace exists ::eaarl::rasters::rastplot]} {
+    namespace eval ::eaarl::rasters::rastplot {
         namespace import ::misc::appendif
         namespace eval v {
             variable top .eaarl_rastplot
@@ -11,19 +11,19 @@ if {![namespace exists ::eaarlb::rasters::rastplot]} {
     }
 }
 
-proc ::eaarlb::rasters::rastplot::launch {window raster channel {geo 0}} {
+proc ::eaarl::rasters::rastplot::launch {window raster channel {geo 0}} {
     set args [list -raster $raster -channel $channel -geo $geo]
     set ns [namespace current]
     set gui ${ns}::window_$window
     if {[info commands $gui] ne ""} {
         $gui configure {*}$args
     } else {
-        ::eaarlb::rasters::rastplot::gui $gui {*}$args -window $window
+        ::eaarl::rasters::rastplot::gui $gui {*}$args -window $window
     }
     return $gui
 }
 
-snit::type ::eaarlb::rasters::rastplot::gui {
+snit::type ::eaarl::rasters::rastplot::gui {
     option -window -readonly 1 -default 11 -configuremethod SetOpt
     option -raster -default 1 -configuremethod SetOpt
     option -channel -default 1 -configuremethod SetOpt
