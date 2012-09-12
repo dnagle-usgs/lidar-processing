@@ -158,7 +158,6 @@ if(is_void(__eaarl_includes_included__)) {
   plugins_autoload;
 
   // Temporary for transitional compatibility
-  plugins_load, "atm";
   plugins_load, "eaarlb";
 }
 

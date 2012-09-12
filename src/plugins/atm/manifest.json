@@ -2,5 +2,8 @@
   "description": "ATM processing",
   "yorick": {
     "load": "load.i"
+  },
+  "tcl": {
+    "load": "load.tcl"
   }
 }
