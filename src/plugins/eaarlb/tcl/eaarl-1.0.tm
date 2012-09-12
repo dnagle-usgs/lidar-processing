@@ -4,5 +4,6 @@ package provide eaarl 1.0
 
 namespace eval ::eaarl {}
 
+package require eaarl::main
 package require eaarl::rasters
 package require eaarl::settings

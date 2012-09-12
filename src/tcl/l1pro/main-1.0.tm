@@ -37,73 +37,12 @@ proc ::l1pro::main::gui {} {
 }
 
 proc ::l1pro::main::panel_processing w {
-    ::mixin::labelframe::collapsible $w -text "Processing"
-    set f [$w interior]
-
-    menu $f.regionmenu
-    set base ::l1pro::processing::define_region_
-    $f.regionmenu add command -label "Rubberband box" -command ${base}box
-    $f.regionmenu add command -label "Points in polygon" -command ${base}poly
-    $f.regionmenu add command -label "Rectangular coords" -command ${base}rect
-    unset base
-    ttk::menubutton $f.region -text "Define Region" -menu $f.regionmenu \
-            -style Panel.TMenubutton
-
-    menu $f.optmenu
-    $f.optmenu add checkbutton -variable ::usecentroid \
-            -label "Correct range walk with centroid"
-    $f.optmenu add checkbutton -variable ::avg_surf \
-            -label "Use Fresnel reflections to determine water surface\
-                    (submerged only)"
-    $f.optmenu add checkbutton -variable ::autoclean_after_process \
-            -label "Automatically test and clean after processing"
-    $f.optmenu add separator
-    $f.optmenu add checkbutton -variable ::forcechannel_1 \
-            -label "Force channel 1"
-    $f.optmenu add checkbutton -variable ::forcechannel_2 \
-            -label "Force channel 2"
-    $f.optmenu add checkbutton -variable ::forcechannel_3 \
-            -label "Force channel 3"
-    $f.optmenu add checkbutton -variable ::forcechannel_4 \
-            -label "Force channel 4"
-    ttk::menubutton $f.opt -text "Options" -menu $f.optmenu \
-            -style Panel.TMenubutton
-
-    ::mixin::combobox::mapping $f.mode -state readonly -width 4 \
-            -altvariable ::processing_mode \
-            -mapping $::l1pro_data(process_mapping)
-
-    ttk::label $f.winlbl -text "Window:"
-    ttk::spinbox $f.win -from 0 -to 63 -increment 1 \
-            -width 2 -textvariable ::_map(window)
-
-    ttk::label $f.varlbl -text "Use variable:"
-    ::mixin::combobox $f.var -width 4 \
-            -textvariable ::pro_var_next \
-            -listvariable ::varlist
-
-    ttk::button $f.process -text "Process" \
-            -command ::l1pro::processing::process
-
-    lower [ttk::frame $f.f1]
-    grid $f.region -in $f.f1 -sticky ew -pady 1
-    grid $f.opt -in $f.f1 -sticky ew -pady 1
-    grid columnconfigure $f.f1 0 -weight 1
-
-    lower [ttk::frame $f.f2]
-    grid $f.winlbl $f.win $f.mode -in $f.f2 -sticky ew -padx 2
-    grid columnconfigure $f.f2 2 -weight 1
-
-    lower [ttk::frame $f.f3]
-    grid $f.varlbl $f.var -in $f.f3 -sticky ew -padx 2
-    grid columnconfigure $f.f3 1 -weight 1
-
-    grid $f.f1 $f.f2 $f.process -padx 2 -pady 1
-    grid ^ $f.f3 ^ -padx 2 -pady 1
-    grid configure $f.f1 $f.f2 $f.f3 -sticky news
-    grid configure $f.process -sticky ew
-    grid columnconfigure $f 1 -weight 1
-
+    ttk::frame $w
+    ttk::button $w.pro \
+            -text "Open EAARL Processing GUI" \
+            -command ::eaarl::main::gui
+    grid $w.pro -sticky news -padx 2 -pady 2
+    grid columnconfigure $w 0 -weight 1
     return $w
 }
 
