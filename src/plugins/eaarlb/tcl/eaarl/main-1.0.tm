@@ -31,26 +31,7 @@ proc ::eaarl::main::gui {} {
     ttk::menubutton $f.region -text "Define Region" -menu $m \
             -style Panel.TMenubutton
 
-    set m [menu $f.optmenu]
-    $m add checkbutton -variable ::usecentroid \
-            -label  "Correct walk with centroid"
-    $m add checkbutton -variable ::avg_surf \
-            -label "Use Fresnel reflections to determine water surface\
-                    (submerged only)"
-    $m add checkbutton -variable ::autoclean_after_process \
-            -label "Automatically test and clean after processing"
-    $m add separator
-    $m add checkbutton -variable ::forcechannel_1 \
-            -label "Force channel 1"
-    $m add checkbutton -variable ::forcechannel_2 \
-            -label "Force channel 2"
-    $m add checkbutton -variable ::forcechannel_3 \
-            -label "Force channel 3"
-    $m add checkbutton -variable ::forcechannel_4 \
-            -label "Force channel 4"
-    ttk::menubutton $f.opt -text "Options" -menu $m \
-            -style Panel.TMenubutton
-
+    ttk::label $f.modelbl -text "Process for:"
     ::mixin::combobox::mapping $f.mode \
             -state readonly \
             -width 16 \
@@ -70,21 +51,14 @@ proc ::eaarl::main::gui {} {
             -command ${ns}::process
 
     lower [ttk::frame $f.f1]
-    grid $f.region -in $f.f1 -sticky ew -pady 1
-    grid $f.opt -in $f.f1 -sticky ew -pady 1
-    grid columnconfigure $f.f1 0 -weight 1
+    grid $f.region $f.winlbl $f.win -in $f.f1 -sticky ew
+    grid $f.winlbl -padx 2
+    grid columnconfigure $f.f1 2 -weight 1
 
-    lower [ttk::frame $f.f2]
-    grid $f.winlbl $f.win $f.mode -in $f.f2 -sticky ew -padx 2
-    grid columnconfigure $f.f2 2 -weight 1
-
-    lower [ttk::frame $f.f3]
-    grid $f.varlbl $f.var -in $f.f3 -sticky ew -padx 2
-    grid columnconfigure $f.f3 1 -weight 1
-
-    grid $f.f1 $f.f2 $f.process -padx 2 -pady 1
-    grid ^ $f.f3 ^ -padx 2 -pady 1
-    grid configure $f.f1 $f.f2 $f.f3 -sticky news
-    grid configure $f.process -sticky ew
+    grid $f.f1 - -sticky ew -padx 2 -pady 1
+    grid $f.modelbl $f.mode -sticky ew -padx 2 -pady 1
+    grid $f.varlbl $f.var -sticky ew -padx 2 -pady 1
+    grid $f.process - -padx 2 -pady 1 -sticky ew
+    grid $f.modelbl $f.varlbl -sticky e
     grid columnconfigure $f 1 -weight 1
 }
