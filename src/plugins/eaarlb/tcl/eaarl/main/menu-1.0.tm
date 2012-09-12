@@ -11,9 +11,9 @@ namespace eval ::eaarl::main::menu {
         $mb add cascade {*}[menulabel &Data] \
                 -menu [menu_data $mb.data]
         $mb add cascade {*}[menulabel &Settings] \
-                -menu [menu_data $mb.settings]
+                -menu [menu_settings $mb.settings]
         $mb add cascade {*}[menulabel &Utilities] \
-                -menu [menu_data $mb.utilities]
+                -menu [menu_utilities $mb.utilities]
         return $mb
     }
 
