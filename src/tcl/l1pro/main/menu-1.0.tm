@@ -30,6 +30,8 @@ proc build mb {
             -menu [menu_utilities $mb.util]
     $mb add cascade {*}[menulabel &Help] \
             -menu [menu_cmdline $mb.cmd]
+    $mb add cascade {*}[menulabel &Plugins] \
+            -menu [menu_plugins $mb.plugins]
     $mb add cascade {*}[menulabel &Ytk] \
             -menu [menu_ytk $mb.ytk]
     return $mb
@@ -314,6 +316,18 @@ proc menu_cmdline mb {
         batch_convert_ascii2pbd batch_tile idl_batch_grid
     } {
         $mb add command -label $ycmd -command [list exp_send "help, $ycmd;\r"]
+    }
+    return $mb
+}
+
+proc menu_plugins mb {
+    menu $mb
+    foreach plugin [lsort [glob plugins/*/manifest.json]] {
+        set plugin [lindex [split $plugin /] 1]
+        menu $mb.$plugin
+        $mb add cascade -label $plugin -menu $mb.$plugin
+        $mb.$plugin add command -label Load \
+                -command [list exp_send "plugins_load, \"$plugin\";\r"]
     }
     return $mb
 }
