@@ -2,16 +2,18 @@
 
 # Implements the main GUI
 package provide eaarl::main 1.0
+package require eaarl::main::menu
 
 namespace eval ::eaarl::main {}
 
-proc eaarl::main::gui {} {
+proc ::eaarl::main::gui {} {
     set w .eaarl
     destroy $w
     toplevel $w
     wm protocol $w WM_DELTE_WINDOW [list wm withdraw $w]
     wm resizable $w 1 0
     wm title $w "EAARL Processing"
+    $w configure -menu [menu::build $w.mb]
 
     set f $w.f
     ttk::frame $f
