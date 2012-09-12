@@ -1,6 +1,7 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
 package provide l1pro::main::menu 1.0
+package require tkcon
 
 namespace eval ::l1pro::main::menu {
 
@@ -338,7 +339,7 @@ proc menu_ytk mb {
             -command select_ytk_fn
     $mb add separator
     $mb add command {*}[menulabel &Tkcon] \
-            -command [list exec {*}[auto_execok tkcon] &]
+            -command [list tkcon show]
     $mb add command {*}[menulabel Tk&cmd] \
             -command [list wm deiconify .tx]
     $mb add separator
