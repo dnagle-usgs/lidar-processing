@@ -28,7 +28,7 @@ proc build mb {
             -menu [menu_graph $mb.graph]
     $mb add cascade {*}[menulabel &Utilities] \
             -menu [menu_utilities $mb.util]
-    $mb add cascade {*}[menulabel &CmdLine] \
+    $mb add cascade {*}[menulabel &Help] \
             -menu [menu_cmdline $mb.cmd]
     $mb add cascade {*}[menulabel &Ytk] \
             -menu [menu_ytk $mb.ytk]
