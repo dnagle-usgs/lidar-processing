@@ -5,7 +5,7 @@ package require imglib
 package require snit
 
 namespace eval ::misc {
-    namespace export appendif idle safeafter search soe
+    namespace export appendif idle menulabel safeafter search soe
 }
 
 # ::misc::extend
@@ -44,6 +44,23 @@ proc ::misc::appendif {var args} {
         if {[uplevel 1 [list expr $cond]]} {
             uplevel 1 [list append $var $str]
         }
+    }
+}
+
+# ::misc::menulabel txt
+# Used to make it simpler to add menu labels with accelerators
+# Example of usage:
+#       $mb add command {*}[menulabel "E&xit"] -command exit
+# The above example will yield this command:
+#       $mb add command -label Exit -underline 1 -command exit
+# That is, if an ampersand is found, it is parsed and used to note where the
+# underline should occur. Otherwise, no underline is added.
+proc ::misc::menulabel {txt} {
+    lassign [::tk::UnderlineAmpersand $txt] label pos
+    if {$pos == -1} {
+        return [list -label $label]
+    } else {
+        return [list -label $label -underline $pos]
     }
 }
 

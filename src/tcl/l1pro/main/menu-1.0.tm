@@ -4,17 +4,10 @@ package provide l1pro::main::menu 1.0
 
 namespace eval ::l1pro::main::menu {
 
+namespace import ::misc::menulabel
+
 namespace eval v {
     variable yorick_style_dpi 75
-}
-
-proc menulabel txt {
-    lassign [::tk::UnderlineAmpersand $txt] label pos
-    if {$pos == -1} {
-        return [list -label $label]
-    } else {
-        return [list -label $label -underline $pos]
-    }
 }
 
 proc get_top w {
