@@ -150,7 +150,8 @@ func plugins_loaded(void) {
 func plugins_load(name, force=) {
 /* DOCUMENT plugins_load, name, force=
   Loads the specified plugin, given by NAME. The plugin's name is the directory
-  it is contained in.
+  it is contained in. An array of plugin names may also be provided to load
+  multiple plugins at once.
 
   If the specific plugin requires any additional plugins, they will also be
   loaded.
@@ -169,6 +170,11 @@ func plugins_load(name, force=) {
 
   SEE ALSO: plugins, plugins_list, plugins_loaded, plugins_autoload
 */
+  if(numberof(name) > 1) {
+    for(i = 1; i <= numberof(name); i++)
+      plugins_load, name(i), force=force;
+    return;
+  }
   if(!force && anyof(__plugins__.loaded == name))
     return;
   manifest = find(file_join(src_path, "plugins", name), glob="manifest.json");
