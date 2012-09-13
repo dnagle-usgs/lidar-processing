@@ -156,9 +156,6 @@ if(is_void(__eaarl_includes_included__)) {
 
   // Invoke any autoloading needed for plugins.
   plugins_autoload;
-
-  // Temporary for transitional compatibility
-  plugins_load, "eaarlb";
 }
 
 // Functions for working with sf_a.tcl
