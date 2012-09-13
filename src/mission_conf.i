@@ -105,6 +105,16 @@ local __mission_cache;
   variable to the mission_conf.i functionality.
 */
 
+local __mission_plugins;
+/* DOCUMENT __mission_plugins
+  This global variable stores the plugins required for the current mission.
+
+  Users shouldn't need to access this directly. It is considered a private variable to the mission_conf.i functionality
+
+  Users shouldn't need to access this directly. It is considered a private
+  variable to the mission_conf.i functionality
+*/
+
 local __mission_settings;
 /* DOCUMENT __mission_settings
   This global variable stores some settings for mission_conf.i. Users
@@ -369,9 +379,9 @@ func mission_json_export(void, compact=) {
 
   If compact=1, a compact form will be generated.
 */
-  extern __mission_conf, _hgid;
+  extern __mission_conf, __mission_plugins, _hgid;
   default, compact, 0;
-  data = h_new("days", __mission_conf);
+  data = h_new("days", __mission_conf, "plugins", __mission_plugins);
   if(!compact) {
     soe_now = [];
     timestamp, soe_now;
@@ -390,7 +400,7 @@ func mission_json_import(json, sync=) {
 /* DOCUMENT mission_json_import, json, sync=
   Loads the mission configuration defined in the given json string.
 */
-  extern __mission_conf, __mission_settings;
+  extern __mission_conf, __mission_plugins, __mission_settings;
   default, sync, 1;
   data = json_decode(json);
   if(h_has(data, "days")) {
@@ -399,6 +409,7 @@ func mission_json_import(json, sync=) {
     __mission_conf = data;
   }
 
+  date = [];
   keys = h_keys(__mission_conf);
   for(i = 1; i <= numberof(keys); i++) {
     mday = __mission_conf(keys(i));
@@ -406,7 +417,21 @@ func mission_json_import(json, sync=) {
     // compatibility for previously saved configuration files.
     if(h_has(mday, "dmars file"))
       h_set, mday, "ins file", h_pop(mday, "dmars file");
+    if(h_has(mday, "date"))
+      date = mday.date;
   }
+
+  __mission_plugins = [];
+  if(h_has(data, "plugins")) {
+    __mission_plugins = data.plugins;
+  } else {
+    if(date < "2012-01-01")
+      __mission_plugins = ["eaarla"];
+    else if(date < "2013-01-01")
+      __mission_plugins = ["eaarlb"];
+  }
+  if(numberof(__mission_plugins))
+    plugins_load, __mission_plugins;
 
   if(__mission_settings("ytk") && sync)
     mission_send;
@@ -951,7 +976,7 @@ func mission_initialize_from_path(path, strict=) {
   restriction is lifted.
 */
 // Original David Nagle 2009-02-04
-  extern __mission_conf, __mission_day;
+  extern __mission_conf, __mission_day, __mission_plugins;
   default, path, mission_path();
   default, strict, 1;
 
@@ -960,11 +985,21 @@ func mission_initialize_from_path(path, strict=) {
 
   dirs = lsdirs(path);
   days = get_date(dirs);
+
   w = where(days);
   if(!numberof(w))
     return;
   dirs = dirs(w);
   days = days(w);
+
+  __mission_plugins = [];
+  if(days(i) < "2012-01-01")
+    __mission_plugins = ["eaarla"];
+  else if(days(i) < "2013-01-01")
+    __mission_plugins = ["eaarlb"];
+  if(numberof(__mission_plugins))
+    plugins_load, __mission_plugins;
+
   for(i = 1; i <= numberof(days); i++) {
     missionday_current, dirs(i);
     dir = file_join(path, dirs(i));
