@@ -175,6 +175,7 @@ func plugins_load(name, force=) {
       plugins_load, name(i), force=force;
     return;
   }
+  name = name(1);
   // Temporary hack until we properly split out eaarla from eaarlb
   if(name == "eaarla") name = "eaarlb";
   if(!force && anyof(__plugins__.loaded == name))
