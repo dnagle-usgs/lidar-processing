@@ -19,7 +19,6 @@ proc ::l1pro::main::gui {} {
     wm title $w "Process EAARL Data"
     $w configure -menu [::l1pro::main::menu::build $w.mb]
 
-    panel_processing $w.pro
     panel_cbar $w.cbar
     panel_plot $w.plot
     panel_tools $w.tools
@@ -27,23 +26,12 @@ proc ::l1pro::main::gui {} {
     ttk::separator $w.sep -orient horizontal
     panel_status $w.status
 
-    grid $w.pro - -sticky ew
     grid $w.cbar $w.plot -sticky ews
     grid $w.tools - -sticky ew
     grid $w.filter - -sticky ew
     grid $w.sep - -sticky ew
     grid $w.status - -sticky ew
     grid columnconfigure $w 1 -weight 1
-}
-
-proc ::l1pro::main::panel_processing w {
-    ttk::frame $w
-    ttk::button $w.pro \
-            -text "Open EAARL Processing GUI" \
-            -command ::eaarl::main::gui
-    grid $w.pro -sticky news -padx 2 -pady 2
-    grid columnconfigure $w 0 -weight 1
-    return $w
 }
 
 proc ::l1pro::main::panel_cbar w {
