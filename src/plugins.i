@@ -175,6 +175,8 @@ func plugins_load(name, force=) {
       plugins_load, name(i), force=force;
     return;
   }
+  // Temporary hack until we properly split out eaarla from eaarlb
+  if(name == "eaarla") name = "eaarlb";
   if(!force && anyof(__plugins__.loaded == name))
     return;
   manifest = find(file_join(src_path, "plugins", name), glob="manifest.json");
