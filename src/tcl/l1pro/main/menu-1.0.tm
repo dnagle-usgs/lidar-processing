@@ -2,6 +2,7 @@
 
 package provide l1pro::main::menu 1.0
 package require tkcon
+package require plugins
 
 namespace eval ::l1pro::main::menu {
 
@@ -323,12 +324,10 @@ proc menu_cmdline mb {
 
 proc menu_plugins mb {
     menu $mb
-    foreach plugin [lsort [glob plugins/*/manifest.json]] {
-        set plugin [lindex [split $plugin /] 1]
-        menu $mb.$plugin
+    foreach plugin [::plugins::plugins_list] {
+        menu $mb.$plugin \
+                -postcommand [list ::plugins::menu_build $plugin $mb.$plugin]
         $mb add cascade -label $plugin -menu $mb.$plugin
-        $mb.$plugin add command -label Load \
-                -command [list exp_send "plugins_load, \"$plugin\";\r"]
     }
     return $mb
 }

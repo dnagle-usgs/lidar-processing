@@ -198,6 +198,7 @@ func plugins_load(name, force=) {
     tkcmd, swrite(format="source {%s}", file_join(base, data.tcl.load));
   save, __plugins__,
     loaded=grow(__plugins__.loaded, name);
+  tkcmd, swrite(format="lappend ::plugins::loaded {%s}", name);
 }
 
 func plugins_autoload(void) {
@@ -219,3 +220,5 @@ func plugins_autoload(void) {
   }
   save, __plugins__, auto=1;
 }
+
+tkcmd, "package require plugins";
