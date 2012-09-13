@@ -3,8 +3,10 @@
 package provide plugins 1.0
 package require tooltip
 
-namespace eval plugins {
-    variable loaded
+if {![namespace exists plugins]} {
+    namespace eval plugins {
+        variable loaded {}
+    }
 }
 
 proc ::plugins::plugins_list {} {
