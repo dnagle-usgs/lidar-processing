@@ -73,6 +73,15 @@ func mission_constants(args) {
     max_sfc_sat=2
     tx_clean=8
     dmars_invert=1
+    chn1_dx=-0.42
+    chn1_dy=-1.67
+    chn2_dx=0
+    chn2_dy=0
+    chn3_dx=-0.42
+    chn3_dy=1.67
+    chn4_dx=0
+    chn4_dy=0
+    delta_ht=300
 
   If conf.type="EAARL-B", then it is changed to conf.type="EAARL-B v1".
 
@@ -120,15 +129,15 @@ func mission_constants(args) {
   if(conf.type == "EAARL-B v1") {
     defaults = save(
       chn4_range_bias=0.,
-      chn1_dx=0.,
-      chn1_dy=0.,
-      chn2_dx=0.,
-      chn2_dy=0.,
-      chn3_dx=0.,
-      chn3_dy=0.,
-      chn4_dx=0.,
-      chn4_dy=0.,
-      delta_ht=0.,
+      chn1_dx=-0.42,
+      chn1_dy=-1.67,
+      chn2_dx=0,
+      chn2_dy=0,
+      chn3_dx=-0.42,
+      chn3_dy=1.67,
+      chn4_dx=0,
+      chn4_dy=0,
+      delta_ht=300,
       tx_clean=8s,
       dmars_invert=1s
     );
