@@ -12,12 +12,10 @@ proc ::yorick::window::path {win} {
 
 proc ::yorick::window::initialize {} {
     ybkg funcset _ytk_window_parents
-    set cmd [list grow _ytk_window_parents]
     for {set win 0} {$win < 64} {incr win} {
         ::yorick::window::embedded .yorwin$win -window $win
-        lappend cmd [.yorwin$win id]
+        ybkg grow _ytk_window_parents [.yorwin$win id]
     }
-    ybkg {*}$cmd
 }
 
 snit::widget ::yorick::window::embedded {
