@@ -28,6 +28,7 @@ local BATH_CTL;
     double thresh;  // threshold value (3)
     int first;      // first nanosecond to consider (maxdepth in ns)  (150)
     int last;       // last nanosecond to consider (maxdepth in ns)  (150)
+    int sfc_last;   // last nanosecond to consider for surface
     int maxsat;     // maximum number of saturated points.
     int lwing_dist; // distance in samples to place the left pulse wing
     int rwing_dist; // distance in samples to place the right pulse wing
@@ -37,7 +38,7 @@ local BATH_CTL;
 */
 struct BATH_CTL {
   double laser, water, agc, thresh;
-  int first, last, maxsat, lwing_dist, rwing_dist;
+  int first, last, sfc_last, maxsat, lwing_dist, rwing_dist;
   double lwing_factor, rwing_factor;
 };
 
@@ -105,6 +106,8 @@ func bath_ctl_load(filename) {
     bath_ctl.rwing_dist = 3;
     bath_ctl.lwing_factor = 0.9;
     bath_ctl.rwing_factor = 0.9;
+    // Legacy format didn't have sfc_last
+    bath_ctl.sfc_last = 12;
   // Support for current format
   } else {
     data = json_decode(lines);
@@ -289,7 +292,7 @@ xfma=, verbose=) {
   }
 
   local surface_sat_end, surface_intensity, escale;
-  bathy_detect_surface, wf, maxint, conf.thresh,
+  bathy_detect_surface, wf, maxint, conf.thresh, conf.sfc_last,
       surface_sat_end, surface_intensity, escale;
   result.first_peak = surface_intensity;
 
@@ -391,8 +394,8 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
   wf = wf - wf(1);
 }
 
-func bathy_detect_surface(wf, maxint, thresh, &surface, &surface_intensity,
-&escale) {
+func bathy_detect_surface(wf, maxint, thresh, sfc_last, &surface,
+&surface_intensity, &escale) {
 /* DOCUMENT bathy_detect_surface(wf, maxint, thresh, &surface,
  * &surface_intensity, &escale)
   Part of bathy algorithm. Detects the surface. However, this is not a -true-
@@ -402,9 +405,9 @@ func bathy_detect_surface(wf, maxint, thresh, &surface, &surface_intensity,
   wflen = numberof(wf);
   saturated = where(wf == maxint);
   numsat = numberof(saturated);
-  // For EAARL, first return saturation should always start in first 12 samples.
-  // If a saturated first return is found...
-  if((numsat > 1) && (saturated(1) <= 12)) {
+  // For EAARL, first return saturation should always start in first sfc_last
+  // samples (12 for EAARL-A). If a saturated first return is found...
+  if((numsat > 1) && (saturated(1) <= sfc_last)) {
     // If all saturated samples are contiguous, only surface is saturated.
     if(saturated(dif)(max) == 1) {
       // Last surface saturated sample is the last in saturated.
