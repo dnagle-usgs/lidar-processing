@@ -7,7 +7,7 @@ cd(src_path);
 
 #include "/opt/alps/lidar-processing/src/general.i"
 #include "/opt/alps/lidar-processing/src/l1pro.i"
-#include "/opt/alps/lidar-processing/src/veg.i"
+#include "/opt/alps/lidar-processing/src/plugins/eaarlb/load.i"
 #include "/opt/alps/lidar-processing/src/batch_process.i"
 
 cmdline = get_argv();  /* strips -batch cmdline.i */
