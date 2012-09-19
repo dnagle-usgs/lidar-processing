@@ -3,6 +3,23 @@
 # This should be run from a YYYY/trajectories directory.
 # It will then take each zip file and look for the proper place to put it.
 
+# File naming convention:
+# YYYY-MM-DD-A-B-yyyy-mm-dd-AAA-AAAA-BBBB-CCCCC-wgs84-CCC-DDD.txt
+#
+# where:
+#
+# YYYY-MM-DD : flight date
+# A          : flight "number", A, B, C...
+# B          : B P - Broadcast / Precision trajectory
+# yyyy-mm-dd : processing date when trajectory was created
+# AAA        : Creator initials
+# AAAA       : Airport ID
+# BBBB       : Remote ground station
+# CCCCC      : Airplane callsign
+# wgs84
+# CCC        : cmb fwd rev - Combined, Forward only, Reverse only
+# DDD        : ins pnav
+# .txt
 
 require 'newgetopt.pl' || die "Unable to require newgetopt.pl\n";
 
@@ -63,33 +80,45 @@ open(LS, $LS_CMD) || die("Unable to run $LS_CMD\n");
 while ( $file = <LS> ) {
   chop $file;
 
-  ($a, $b, $c, $junk) = split(/-/, $file, 4);
-  if ($a =~ /^(\d{4})(\d{2})(\d{2})/) {
+  ($A, $B, $C, $D, $E, $junk) = split(/-/, $file, 6);
+  if ($A =~ /^(\d{4})(\d{2})(\d{2})/) {
     $y = $1;
     $m = $2;
     $d = $3;
-  } elsif ( $a =~ /\D/ ) {
+  } elsif ( $A =~ /\D/ ) {
     $y = $m = $d = 0;
-  } elsif ( $a < 1990 ) {
-    $m = $a;
-    $d = $b;
-    $y = $c;
+  } elsif ( $A < 1990 ) {
+    $m = $A;
+    $d = $B;
+    $y = $C;
 
     $y =~ s/[a-zA-Z]//g;   # force it into being a numeric when VR misses a "-"
     $y += 2000 if ( $y < 20 );
     $y += 1900 if ( $y < 100);
-  } elsif(length($a) < 5) {
-    $y = $a;
-    $m = $b;
-    $d = $c;
+  } elsif(length($A) < 5) {
+    $y = $A;
+    $m = $B;
+    $d = $C;
   } else {
     $y = $m = $d = 0;
   }
 
-  $YYYYMMDD = sprintf("%04d%02d%02d", $y, $m, $d);
-  $YYYY_MM_DD = sprintf("%04d-%02d-%02d", $y, $m, $d);
+  # Now determine which flight
+  # the 4th field is new and conflicts with the (now) 5th field,
+  # so we first check to see if the 5th field is the new or the
+  # orig 5th field
 
-  printf("%s\t%s\n", $YYYYMMDD, $file);
+  if ( $E =~ /\D/ ) {      # 5th field is non-numeric, must be new
+    $f = sprintf("-%s", $D );
+  } else {
+    $f = "";               # old format, set to null
+
+  }
+
+  $YYYYMMDD = sprintf("%04d%02d%02d%s", $y, $m, $d, $f);
+  $YYYY_MM_DD = sprintf("%04d-%02d-%02d%s", $y, $m, $d, $f);
+
+  printf("%s\t%s\n", $YYYY_MM_DD, $file);
 
   open(FIND1, "find .. -type d -name $YYYYMMDD -or -type d -name $YYYY_MM_DD |") || die("Unable to run find1\n");
   while ( $dir = <FIND1> ) {
@@ -126,26 +155,16 @@ while ( $file = <LS> ) {
         system("pnav2ybin $txt") if ( ! $opt_norun );
       }
 
-      # Check to see if this was a gps trajectory
-      open(FIND2, "find . -name  \"\*imu.txt\"|")
+      # Check to see if this was an ins trajectory
+      open(FIND2, "find . -name  \"\*imu.txt\" -or -name \"\*ins.txt\" |")
         || die ("Unable to run find2\n");
       while ( $txt = <FIND2> ) {
         chop $txt;
-	$txt =~ s/\.\///;
-        printf("\tiex_ascii2pbd $txt\n")  if ( $opt_verbose );
-        system("iex_ascii2pbd `pwd`/$txt") if ( ! $opt_norun );
-      }
-      # Check to see if this was a gps trajectory
-      open(FIND2, "find . -name  \"\*ins.txt\"|")
-        || die ("Unable to run find2\n");
-      while ( $txt = <FIND2> ) {
-        chop $txt;
-	$txt =~ s/\.\///;
+        $txt =~ s/\.\///;
         printf("\tiex_ascii2pbd $txt\n")  if ( $opt_verbose );
         system("iex_ascii2pbd `pwd`/$txt") if ( ! $opt_norun );
       }
     }
-
 
     chdir ($startdir);     # go back to our starting directory
 
