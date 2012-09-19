@@ -275,7 +275,8 @@ xfma=, verbose=) {
 
   result.sa = scan_angle;
   wflen = numberof(wf);
-  numsat = numberof(where(wf == maxint));
+  saturated = wf == maxint;
+  numsat = numberof(where(saturated));
 
   if(!wflen)
     return result;
@@ -322,6 +323,8 @@ xfma=, verbose=) {
     ex_bath_message, graph, verbose, msg;
     return result;
   }
+
+  bathy_compensate_saturation, saturated, bottom_peak;
 
   bottom_intensity = wf_decay(bottom_peak);
   result.bottom_peak = wf(bottom_peak);
@@ -506,6 +509,20 @@ func bathy_detect_bottom(wf, first, last, thresh, &bottom_peak, &msg) {
   }
 
   bottom_peak = peaks(0) + offset;
+}
+
+func bathy_compensate_saturation(saturated, &bottom) {
+  is_sat = saturated(bottom);
+  // Occasionally, the AGC pushes the peak off the saturated section by one
+  // sample
+  if(!is_sat && saturated(bottom-1)) {
+    is_sat = 1;
+    bottom--;
+  }
+  sat0 = sat1 = bottom;
+  while(sat0 > 1 && saturated(sat0-1)) sat0--;
+  while(sat1 < numberof(saturated) && saturated(sat1+1)) sat1++;
+  bottom = long(0.5*(sat0+sat1));
 }
 
 func bathy_validate_bottom(wf, bottom, first, last, thresh, graph, lwing_dist,
