@@ -66,10 +66,10 @@ func mission_constants(args) {
 
   Additionally, the following are given defaults as follows.
 
-    chn1_range_bias=0.
-    chn2_range_bias=0.36
-    chn3_range_bias=0.23
-    chn4_range_bias=0.
+    chn1_range_bias=-1.1
+    chn2_range_bias=0
+    chn3_range_bias=0.9
+    chn4_range_bias=-7.9
     max_sfc_sat=2
     tx_clean=8
     dmars_invert=1
@@ -115,9 +115,6 @@ func mission_constants(args) {
     yaw_bias=0.,
     scan_bias=0.,
     range_biasM=0.,
-    chn1_range_bias=0.,
-    chn2_range_bias=0.36,
-    chn3_range_bias=0.23,
     max_sfc_sat=2n
   );
   conf = obj_merge(defaults, conf);
@@ -126,18 +123,33 @@ func mission_constants(args) {
   if(conf.type == "EAARL-B")
     save, conf, type="EAARL-B v1";
 
+  if(conf.type == "EAARL-A") {
+    defaults = save(
+      chn1_range_bias=0.,
+      chn2_range_bias=0.36,
+      chn3_range_bias=0.23
+    );
+    // If we do "conf = obj_merge(defaults, conf)", then the stuff in defaults
+    // will come first. By using temp and then later inverting, they come last.
+    temp = obj_merge(defaults, conf);
+    keycast, temp, defaults;
+    conf = obj_merge(conf, temp);
+  }
   if(conf.type == "EAARL-B v1") {
     defaults = save(
-      chn4_range_bias=0.,
+      chn1_range_bias=-1.1,
+      chn2_range_bias=0.,
+      chn3_range_bias=0.9,
+      chn4_range_bias=-7.9,
       chn1_dx=-0.42,
       chn1_dy=-1.67,
-      chn2_dx=0,
-      chn2_dy=0,
+      chn2_dx=0.,
+      chn2_dy=0.,
       chn3_dx=-0.42,
       chn3_dy=1.67,
-      chn4_dx=0,
-      chn4_dy=0,
-      delta_ht=300,
+      chn4_dx=0.,
+      chn4_dy=0.,
+      delta_ht=300.,
       tx_clean=8s,
       dmars_invert=1s
     );
