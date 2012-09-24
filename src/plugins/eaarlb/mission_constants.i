@@ -261,6 +261,36 @@ wrap_args, mission_constants;
   ops_IMU2.pitch_bias =  0.1;     // with 03/12 Albert Whitted runway
   ops_IMU2.yaw_bias   =  0.;
 
+  /*****************************************************************************
+  Defaults for the EAARL-B system on N7793Q
+  *****************************************************************************/
+  ops_eaarlb = mission_constants(type="EAARL-B");
+  ops_eaarlb.x_offset = -0.03099;
+  ops_eaarlb.y_offset = 0.02426;
+  ops_eaarlb.z_offset = -0.25877;
+  ops_eaarlb.roll_bias = 0;
+  ops_eaarlb.pitch_bias = 0;
+  ops_eaarlb.yaw_bias = 0;
+  ops_eaarlb.scan_bias = 0; // Needs to be calibrated
+  ops_eaarlb.range_biasM = 0; // Needs to be calibrated
+  ops_eaarlb.chn1_range_bias = -1.1;
+  ops_eaarlb.chn2_range_bias = 0.;
+  ops_eaarlb.chn3_range_bias = 0.9;
+  ops_eaarlb.chn4_range_bias = -7.9;
+  ops_eaarlb.chn1_dx = -0.42;
+  ops_eaarlb.chn1_dy = -1.67;
+  ops_eaarlb.chn2_dx = 0.;
+  ops_eaarlb.chn2_dy = 0.;
+  ops_eaarlb.chn3_dx = -0.42;
+  ops_eaarlb.chn3_dy = 1.67;
+  ops_eaarlb.chn4_dx = 0.;
+  ops_eaarlb.chn4_dy = 0.;
+  ops_eaarlb.delta_ht = 300.;
+  ops_eaarlb.max_sfc_sat = 2;
+  ops_eaarlb.tx_clean = 8;
+  ops_eaarlb.dmars_invert = 1;
+  ops_eaarlb.use_ins_for_gps = 1;
+
 func display_mission_constants(conf, ytk=) {
 /* DOCUMENT display_mission_constants, conf, ytk=
   Displays the mission constants given, either in Yorick or (if ytk=1) in Tcl
