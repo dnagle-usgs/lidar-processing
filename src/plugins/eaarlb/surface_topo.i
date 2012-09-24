@@ -211,6 +211,8 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
       palt(60,100:count:100),
       roll(60,100:count:100),
       pitch(60,100:count:100);
+  if(verbose)
+    pause, 0;
 
   if (msg)
     status, finished;
