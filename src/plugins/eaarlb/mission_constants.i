@@ -63,6 +63,7 @@ func mission_constants(args) {
     double delta_ht;        // flight height assumed for channel spacing
     short tx_clean;         // specifies that transmit wf needs cleaning
     short dmars_invert;     // if 1, then invert the dmars when loaded
+    short use_ins_for_gps;  // if 1, then use tans instead of pnav for georef
 
   Additionally, the following are given defaults as follows.
 
@@ -73,6 +74,7 @@ func mission_constants(args) {
     max_sfc_sat=2
     tx_clean=8
     dmars_invert=1
+    use_ins_for_gps=0
     chn1_dx=-0.42
     chn1_dy=-1.67
     chn2_dx=0
@@ -102,6 +104,13 @@ func mission_constants(args) {
       tans.heading = (tans.heading + 180) % 360
     This compensates for the INS being mounted in the opposite direction as is
     traditionally expected.
+
+  use_ins_for_gps
+    If set to 1, then the INS data will be used for determining the mirror
+    position instead of the PNAV data. This means that the mounting biases
+    (*_offset) are the distance between the mirror and the INS system. (When
+    set to 0 or omitted, the offsets are the distance between the mirror and
+    the GPS antenna.)
 */
   conf = args2obj(args);
   defaults = save(
@@ -151,7 +160,8 @@ func mission_constants(args) {
       chn4_dy=0.,
       delta_ht=300.,
       tx_clean=8s,
-      dmars_invert=1s
+      dmars_invert=1s,
+      use_ins_for_gps=0s
     );
     // If we do "conf = obj_merge(defaults, conf)", then the stuff in defaults
     // will come first. By using temp and then later inverting, they come last.

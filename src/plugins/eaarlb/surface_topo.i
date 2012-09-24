@@ -100,17 +100,29 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
     write, format="%s", " heading...";
   heading = interp_angles(tans.heading, tans.somd, atime);
 
+  local gps_north, gps_east;
+  if(has_member(ops_conf, "use_ins_for_gps") && ops_conf.use_ins_for_gps) {
+    gps = tans;
+    ll2utm, tans.lat, tans.lon, gps_north, gps_east;
+    gps_sod = tans.somd;
+    gps_alt = tans.alt;
+  } else {
+    gps = pnav;
+    ll2utm, pnav.lat, pnav.lon, gps_north, gps_east;
+    gps_sod = pnav.sod;
+    gps_alt = pnav.alt;
+  }
+
   if(verbose)
     write, format="%s", " altitude...";
-  palt = interp(pnav.alt, pnav.sod, atime);
+  palt = interp(gps_alt, gps_sod, atime);
+  gps_alt = [];
 
   if(verbose)
     write, format="%s", " northing/easting...\n";
-  local pnav_north, pnav_east;
-  ll2utm, pnav.lat, pnav.lon, pnav_north, pnav_east;
-  northing = interp(pnav_north, pnav.sod, atime);
-  easting = interp(pnav_east, pnav.sod, atime);
-  pnav_north = pnav_east = [];
+  northing = interp(gps_north, gps_sod, atime);
+  easting = interp(gps_east, gps_sod, atime);
+  gps_sod = gps_north = gps_east = [];
 
   count = stop - start + 1;
 
