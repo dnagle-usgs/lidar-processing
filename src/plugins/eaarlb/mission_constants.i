@@ -120,8 +120,8 @@ func mission_constants(args) {
   conf = obj_merge(defaults, conf);
   keycast, conf, defaults;
 
-  if(conf.type == "EAARL-B")
-    save, conf, type="EAARL-B v1";
+  if(conf.type == "EAARL-B v1")
+    save, conf, type="EAARL-B";
 
   if(conf.type == "EAARL-A") {
     defaults = save(
@@ -135,7 +135,7 @@ func mission_constants(args) {
     keycast, temp, defaults;
     conf = obj_merge(conf, temp);
   }
-  if(conf.type == "EAARL-B v1") {
+  if(conf.type == "EAARL-B") {
     defaults = save(
       chn1_range_bias=-1.1,
       chn2_range_bias=0.,
