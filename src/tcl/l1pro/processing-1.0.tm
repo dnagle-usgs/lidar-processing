@@ -142,6 +142,9 @@ proc ::l1pro::processing::process {} {
         if {$::autoclean_after_process} {
             append cmd "; test_and_clean, $::pro_var"
         }
+        if {$forced} {
+            append cmd "; $::pro_var = sortdata($::pro_var, method=\"soe\")"
+        }
         exp_send "$cmd;\r"
     }
     append_varlist $::pro_var
