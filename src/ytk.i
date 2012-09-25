@@ -346,8 +346,11 @@ func var_expr_set(expr, val) {
       h_set, var, parts(1), val;
     // Non-hashes can't have new keys added, so either replace key or clobber
     } else {
+      // Oxy group -- update
+      if(is_obj(var) && var(*,parts(1))) {
+        save, var, parts(1), val;
       // Hash key -- update
-      if(has_member(*var, parts(1))) {
+      } else if(is_pointer(var) && has_member(*var, parts(1))) {
         get_member(*var, parts(1)) = val;
       // No key -- clobber + add
       } else {
