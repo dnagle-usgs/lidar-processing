@@ -722,7 +722,7 @@ func obj_delete(args) {
       string value or a key. So obj_delete(obj, foo), obj_delete(obj, "foo"),
       and obj_delete(obj, foo=) are all equivalent.
     * KEYS do not need to exist in OBJ. If they do not, no action is taken.
-    * If KEYS exist and are removed from OBJ, then a new object. In
+    * If KEYS exist and are removed from OBJ, then a new object is created. In
       functional form, that new object is returned. In subroutine form, it
       gets stored back to OBJ. However, if there are other references to the
       same object elsewhere, KEYS will NOT be removed for them. This is an
@@ -732,6 +732,8 @@ func obj_delete(args) {
   obj = args(1);
   if(!is_obj(obj))
     error, "obj_delete requires object";
+  if(!obj(*))
+    return obj;
   drop = args(-);
   for(i = 2; i <= args(0); i++) {
     key = args(0,i) ? args(i) : args(-,i);
