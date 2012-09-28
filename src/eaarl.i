@@ -38,8 +38,9 @@ if(is_void(__eaarl_includes_included__)) {
   require, "ytk_window.i";
   require, "zlib.i";
 
-  // Patches for the above plugins
+  // Patches for core / plugins
   require, "patches/2012-08-yutils.i";
+  require, "patches/2012-09-funcset.i";
 
   // Replace built-in median with Yeti's median which is much faster
   if(is_void(ymedian))
