@@ -750,9 +750,6 @@ func missiondata_load(type, day=, noerror=) {
     } else {
       error, "Could not load pnav data: no pnav file defined";
     }
-    if(mission_has("pnav file", day=day))
-      tkcmd, swrite(format="set ::plot::g::pnav_file {%s}",
-        mission_get("pnav file", day=day));
     if(!is_void(pnav))
       auto_curzone, pnav.lat, pnav.lon;
   } else if(type == "ins") {
