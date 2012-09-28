@@ -237,6 +237,10 @@ func var_expr_tkupdate(expr, tkval) {
     newval = double(0);
     sread, tkval, format="%f", newval;
     newval = structof(val)(newval);
+  } else if(is_string(tkval) && tkval == "\"") {
+    // it's a string; however, due to a Yorick bug, an empty string was
+    // probably converted to a single double-quote mark
+    newval = "";
   } else {
     // either it's a string, or we can't handle it properly
     newval = tkval;
