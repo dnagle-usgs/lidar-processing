@@ -32,6 +32,9 @@ History:
 
 */
 
+// initialize to empty
+pnav_filename = "";
+
 struct PNAV {
   short sv;
   short flag;
