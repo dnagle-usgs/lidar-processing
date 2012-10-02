@@ -163,7 +163,8 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
 
   // Edit out tx/rx dropouts and points with out-of-range centroid values
   w = where(rtrs.dropout != 0 | rtrs.fs_rtn_centroid == 10000);
-  mag(w) = 0;
+  if(!is_void(w))
+    mag(w) = 0;
 
   pitch += ops_conf.pitch_bias;
   roll += ops_conf.roll_bias;
