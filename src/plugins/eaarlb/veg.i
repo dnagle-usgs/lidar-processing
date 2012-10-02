@@ -128,6 +128,7 @@ forcechannel=, msg=) {
   for (j = 1; j <= len; j++) {
     raw = get_erast(rn=rn+j);
     header = eaarla_decode_header(raw);
+    if (!eaarla_header_valid(header)) continue;
     for (i = 1; i <= header.number_of_pulses; i++) {
       if (multi_peaks) {
         depths(i,j) = ex_veg_all(rn+j, i, last=last, graph=graph, header=header);
