@@ -305,9 +305,11 @@ tx=, autolims=, showcbar=, sfsync=) {
 }
 
 func drast_msel(rn, type=, rx=, tx=, bath=, cb=, amp_bias=, range_bias=, rxtx=,
-units=, bathchan=, winsel=, winrx=, wintx=, winbath=) {
+units=, bathchan=, winsel=, winrx=, wintx=, winbath=, single=, pulse=,
+tkpulsevar=) {
 /* DOCUMENT drast_msel, rn, type=, rx=, tx=, cb=, bath=, rxtx=, units=,
-   amp_bias=, range_bias=, bathchan=, winsel=, winrx=, wintx=, winbath=
+   amp_bias=, range_bias=, bathchan=, winsel=, winrx=, wintx=, winbath=,
+   single=, pulse=, tkpulsevar=
 
   Enters an interactive mode that allows the user to query waveforms on an
   ndrast plot.
@@ -353,6 +355,10 @@ units=, bathchan=, winsel=, winrx=, wintx=, winbath=) {
         window=16     default
     winbath= Window to use for plotting bathy waveform.
         window=4      default
+    single= Enters single-click mode. After a single pulse is selected, it
+      immediately exits interactive mode.
+    pulse= Specifies a plot to pulse. The user will not be queried at all.
+    tkpulsevar= The name of a variable to set to the selected pulse in Tcl/Tk.
 
   Extern dependency:
     xm: Set by geo_rast and used to determine which pixel is clicked on.
@@ -366,26 +372,43 @@ units=, bathchan=, winsel=, winrx=, wintx=, winbath=) {
   default, winrx, 9;
   default, wintx, 16;
   default, winbath, 4;
+  default, single, 0;
+  default, pulse, 0;
+
+  // single = 0  -> multi mode
+  // single = 1  -> single mode
+  // single = -1 -> replot mode (internal state)
 
   extern xm;
 
-  write, format="Window: %d. Left-click to examine a waveform. Anything else aborts.\n", winsel;
-
   continue_interactive = 1;
+  if(pulse) single = -1;
+
+  if(!pulse)
+    write, format="Window: %d. Left-click to examine a waveform. Anything else aborts.\n", winsel;
 
   while(continue_interactive) {
-    window, winsel;
-    click = mouse(1, 1, "");
+    if(single)
+      continue_interactive = 0;
 
-    if(mouse_click_is("left", click)) {
-      if(type == "rast") {
-        pulse = int(click(1));
-      } else if(type == "geo") {
-        pulse = (abs(click(1)-xm))(mnx);
+    if(!pulse) {
+      window, winsel;
+      click = mouse(1, 1, "");
+
+      if(mouse_click_is("left", click)) {
+        if(type == "rast") {
+          pulse = int(click(1));
+        } else if(type == "geo") {
+          pulse = (abs(click(1)-xm))(mnx);
+        } else {
+          error, "type="+type+" not implemented";
+        }
       } else {
-        error, "type="+type+" not implemented";
+        continue_interactive = 0;
       }
+    }
 
+    if(pulse) {
       write, format=" - Pulse %d\n", pulse;
       if(rx)
         show_wf, rn, pulse, win=winrx, cb=cb, range_bias=range_bias,
@@ -395,12 +418,14 @@ units=, bathchan=, winsel=, winrx=, wintx=, winbath=) {
           forcechannel=bathchan;
       if(tx)
         show_wf_transmit, rn, pulse, win=wintx;
-    } else {
-      continue_interactive = 0;
+      if(!is_void(tkpulsevar))
+        tkcmd, swrite(format="set %s %d", tkpulsevar, pulse);
+      pulse = 0;
     }
   }
 
-  write, format="%s\n", "Finished examining waveforms.";
+  if(single >= 0)
+    write, format="%s\n", "Finished examining waveforms.";
 }
 
 func show_wf(rn, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, tx=, range_bias=,

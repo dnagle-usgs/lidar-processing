@@ -46,6 +46,7 @@ snit::type ::eaarl::rasters::rastplot::gui {
     variable winrx 9
     variable winbath 4
     variable wintx 16
+    variable pulse 60
 
     constructor {args} {
         if {[dict exists $args -window]} {
@@ -96,10 +97,38 @@ snit::type ::eaarl::rasters::rastplot::gui {
         foreach type {rx bath tx} {
             ttk::label $f.lblwin$type -text " Window:"
             ttk::spinbox $f.win$type -width 3 \
+                    -from 0 -to 63 -increment 1 \
                     -textvariable [myvar win${type}]
         }
-        ttk::button $f.examine -text "Examine\nWaveforms" \
-                -command [mymethod examine]
+
+        ttk::separator $f.sepv -orient vertical
+
+        ttk::frame $f.right
+        ttk::label $f.lblpulse -text "Pix:"
+        ttk::spinbox $f.pulse -width 3 \
+                -from 1 -to 120 -increment 1 \
+                -textvariable [myvar pulse]
+        ttk::button $f.plot -text "Plot" \
+                -width 0 \
+                -command [mymethod examine replot]
+        ttk::separator $f.sep3 -orient horizontal
+        ttk::button $f.exone -text "Select" \
+                -width 0 \
+                -command [mymethod examine single]
+        ttk::button $f.exmany -text "Browse" \
+                -width 0 \
+                -command [mymethod examine browse]
+
+        grid $f.lblpulse $f.pulse -in $f.right -padx 2 -pady 1
+        grid $f.plot     -        -in $f.right -padx 2 -pady 1
+        grid $f.sep3     -        -in $f.right -padx 2 -pady 1
+        grid $f.exone    -        -in $f.right -padx 2 -pady 1
+        grid $f.exmany   -        -in $f.right -padx 2 -pady 1
+        grid columnconfigure $f.right 1 -weight 1
+        grid rowconfigure $f.right {1 3 4} -weight 1
+        grid $f.lblpulse -sticky e
+        grid $f.pulse $f.sep3 -sticky ew
+        grid $f.plot $f.exone $f.exmany -sticky news
 
         ttk::separator $f.sep1 -orient horizontal
         ttk::separator $f.sep2 -orient horizontal
@@ -111,18 +140,19 @@ snit::type ::eaarl::rasters::rastplot::gui {
 
         grid columnconfigure $f.rx2 0 -weight 1
 
-        grid $f.rx1    $f.lblwinrx   $f.winrx   $f.examine -padx 2 -pady 1
-        grid $f.rx2    -             -          ^          -padx 2 -pady 1
-        grid $f.rx3    -             -          ^          -padx 2 -pady 1
-        grid $f.sep1   -             -          ^          -padx 2 -pady 1
-        grid $f.bath   $f.lblwinbath $f.winbath ^          -padx 2 -pady 1
-        grid $f.sep2   -             -          ^          -padx 2 -pady 1
-        grid $f.showtx $f.lblwintx   $f.wintx   ^          -padx 2 -pady 1
+        grid $f.rx1    $f.lblwinrx   $f.winrx   $f.sepv $f.right -padx 2 -pady 1
+        grid $f.rx2    -             -          ^       ^        -padx 2 -pady 1
+        grid $f.rx3    -             -          ^       ^        -padx 2 -pady 1
+        grid $f.sep1   -             -          ^       ^        -padx 2 -pady 1
+        grid $f.bath   $f.lblwinbath $f.winbath ^       ^        -padx 2 -pady 1
+        grid $f.sep2   -             -          ^       ^        -padx 2 -pady 1
+        grid $f.showtx $f.lblwintx   $f.wintx   ^       ^        -padx 2 -pady 1
         grid columnconfigure $f 3 -weight 1
         grid $f.rx1 $f.rx2 $f.rx3 $f.bath -padx 0 -sticky w
         grid $f.rxtx $f.showtx -sticky w
-        grid $f.examine -sticky news
+        grid $f.right -sticky news -padx 0 -pady 0
         grid $f.rx2 $f.sep1 $f.sep2 -sticky ew
+        grid $f.sepv -sticky ns
 
         ::tooltip::tooltip $f.bathchan \
             "Select \"Auto\" for the EAARL-A algorithm that selects channel\
@@ -150,7 +180,7 @@ snit::type ::eaarl::rasters::rastplot::gui {
         set bathchan $options(-channel)
     }
 
-    method examine {} {
+    method examine {mode} {
         set cb [expr {$chan1 + 2*$chan2 + 4*$chan3 + 8*$chan4}]
         set fc [expr {$showbath && $bathchan}]
         set cmd "drast_msel, $options(-raster)"
@@ -168,7 +198,10 @@ snit::type ::eaarl::rasters::rastplot::gui {
                 1           ", winsel=$options(-window)" \
                 $showrx     ", winrx=$winrx" \
                 $showtx     ", wintx=$wintx" \
-                $showbath   ", winbath=$winbath"
+                $showbath   ", winbath=$winbath" \
+                {$mode ne "replot"} ", tkpulsevar=\"[myvar pulse]\"" \
+                {$mode eq "single"} ", single=1" \
+                {$mode eq "replot"} ", pulse=$pulse"
         exp_send "$cmd;\r"
     }
 }
