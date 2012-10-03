@@ -51,10 +51,11 @@ local mission;
 */
 
 scratch = save(scratch, tmp, mission_plugins, mission_cache, mission_flights,
-  mission_details, mission_get, mission_has, mission_json, mission_save,
-  mission_read, mission_tksync);
-tmp = save(data, plugins, cache, flights, details, get, has, json, save, read,
-  tksync);
+  mission_details, mission_get, mission_has, mission_load_soe, mission_load,
+  mission_unload, mission_wrap, mission_unwrap, mission_json, mission_save,
+  mission_read, mission_tksync, mission_help);
+tmp = save(data, plugins, cache, flights, details, get, has, load_soe, load,
+  unload, wrap, unwrap, json, save, read, tksync, help);
 
 local mission_data;
 /* DOCUMENT mission.data
@@ -120,198 +121,98 @@ data = save(
 
 /*******************************************************************************
   mission, plugins, <cmd>
-
-  Subcommands should have a call signature thus:
-    mission_plugins_<SUBCMD>(data)
 */
 
-func mission_plugins(cmds, cmd) {
-/* DOCUMENT mission, plugins, cmd
-  Implements subcommands for working with plugins. Documentation for
-  subcommands can be found at "help, mission_plugins_SUBCMD" where SUBCMD is
-  the subcommand name.
+scratch = save(scratch, tmp, mission_plugins_load);
+tmp = save(__help, load);
 
-  By default, only one subcommand is defined:
+__help = "Contains subcommands for working with plugins.";
 
-    mission, plugins, "load"
-      Loads the plugins currently defined in mission.data.plugins.
-
-  This function is a closure. To see if additional subcommands are implemented,
-  you can query its data member. By default, this would look like so:
-    > missions.plugins.data(*,)
-    ["load"]
-
-  SEE ALSO: missions_plugins_load
-*/
-  if(cmds(*,cmd)) {
-    cmds, noop(cmd), use(data);
-    mission, tksync;
-  } else {
-    error, "invalid subcommand: "+pr1(cmd);
-  }
-}
-
-scratch = save(scratch, cmds, mission_plugins_load);
-cmds = save(load);
-
-func mission_plugins_load(data) {
-/* DOCUMENT missions, plugins, "load"
+func mission_plugins_load {
+/* DOCUMENT missions, plugins, load
   Loads the plugins currently defined in mission.data.plugins.
+
+  SEE ALSO: plugins_load
 */
-  plugins_load, data.plugins;
+  plugins_load, mission.data.plugins;
 }
 load = mission_plugins_load;
 
-plugins = closure(mission_plugins, restore(cmds));
+plugins = restore(tmp);
 restore, scratch;
 
 /*******************************************************************************
   mission, cache, <cmd>
-
-  Subcommands should have a call signature thus:
-    mission_cache_<SUBCMD>(data)
 */
-
-func mission_cache(cmds, cmd) {
-/* DOCUMENT mission, cache, cmd
-  Implements subcommands for working with the cache. Documentation for
-  subcommands can be found at "help, mission_cache_SUBCMD" where SUBCMD is
-  the subcommand name.
-
-  By default, these subcommands are defined:
-
-  TODO
-
-  This function is a closure. To see if additional subcommands are implemented,
-  you can query its data member. By default, this would look like so:
-    > missions.cache.data(*,)
-    ["load"]
-
-  SEE ALSO: 
-*/
-  if(cmds(*,cmd)) {
-    cmds, noop(cmd), use(data);
-  } else {
-    error, "invalid subcommand: "+pr1(cmd);
-  }
-}
 
 scratch = save(scratch, cmds, mission_cache_clear);
-cmds = save(clear, preload);
+cmds = save(__help, clear, preload);
 
-func mission_cache_clear(data) {
-/* DOCUMENT mission, cache, "clear"
+__help = "Contains subcommands for working with the cache.";
+
+func mission_cache_clear {
+/* DOCUMENT mission, cache, clear
   Clears all data currently stored in the cache.
 */
-  data, cache=save();
+  mission, data, cache=save();
 }
 clear = mission_cache_clear;
 
-func mission_cache_preload(data) {
-/* DOCUMENT mission, cache, "preload"
+func mission_cache_preload {
+/* DOCUMENT mission, cache, preload
   If caching is enabled, this will iterate through the defined flights and load
   each one, which triggers caching. If a flight was loaded prior to calling
-  this, the same flight will be set as loaded at the end. Otherwise, this has
-  the side effect of loading the first flight.
+  this, the same flight will be set as loaded at the end.
 
-  If caching is disabled, this is largely a no-op. However, for consistancy, if
-  no flight is currently loaded, the first flight will be loaded.
+  If caching is disabled, this is a no-op.
 */
-  loaded = data.loaded;
-
-  // If cache is disabled, don't preload. But do load the first flight if
-  // needed.
-  if(data.cache_mode == "disabled") {
-    if(is_void(loaded) && data.conf(*))
-      mission, load, data.conf(*,1);
-    return;
-  }
+  loaded = mission.data.loaded;
 
   flights = mission(get,);
   count = numberof(flights);
-  // Iterate backwards so that the first flight remains loaded when done (which
-  // is arguable more intuitive/convenient than leaving the last one loaded)
-  for(i = numberof(flights); i > 0; i--)
+  for(i = 1; i <= count; i++)
     mission, load, flights(i);
+
+  mission, unload;
   if(!is_void(loaded))
     mission, load, loaded;
 }
 preload = mission_cache_preload;
 
-cache = closure(mission_cache, restore(cmds));
+cache = restore(cmds);
 restore, scratch;
 
 /*******************************************************************************
   mission, flights, <cmd>
 
-  Subcommands should have a call signature thus:
-    mission_flights_<SUBCMD>(data, p1, p2)
-
   Plugins are encouraged to add a subcommand "auto" that will auto-initialize
   all flights given a directory name:
-    mission_flights_auto(data, path, nil)
+    mission_flights_auto(data, path)
 */
-
-func mission_flights(cmds, cmd, p1, p2) {
-/* DOCUMENT mission, flights, cmd, p1, p2
-  Implements subcommands for modifying the configuration for flights.
-  Documentation for subcommands can be found at "help, mission_flights_SUBCMD"
-  where SUBCMD is the subcommand name.
-
-  By default, these subcommands are defined:
-
-    mission, flights, "add", "<name>"
-      Adds a flight with the given name.
-    mission, flights, "remove", "<name>"
-      Remvoes the flight with the given name.
-    mission, flights, "rename", "<oldname>", "<newname>"
-      Renames the specified flight.
-    mission, flights, "swap", <idx1>, <idx2>
-      Swaps two flights (given by indices) in the ordering.
-    mission, flights, "raise", "<name>"
-      Raises the specified flight in the ordering.
-    mission, flights, "lower", "<name>"
-      Lowers the specified flight in the ordering.
-    mission, flights, "clear"
-      Removes all flights.
-
-  This function is a closure. To see if additional subcommands are implemented,
-  you can query its data member. By default, this would look like so:
-    > missions.flights.data(*,)
-    ["add","remove","rename","swap","raise","lower","clear"]
-
-  SEE ALSO: mission_flights_add, mission_flights_remove,
-    mission_flights_rename, mission_flights_swap, mission_flights_raise,
-    mission_flights_lower, mission_flights_clear
-*/
-  if(cmds(*,cmd)) {
-    cmds, noop(cmd), use(data), p1, p2;
-    mission, tksync;
-  } else {
-    error, "invalid subcommand: "+pr1(cmd);
-  }
-}
 
 scratch = save(scratch, cmds, mission_flights_add, mission_flights_remove,
   mission_flights_rename, mission_flights_swap, mission_flights_raise,
   mission_flights_lower, mission_flights_clear);
-cmds = save(add, remove, rename, swap, raise, lower, clear);
+cmds = save(__help, add, remove, rename, swap, raise, lower, clear);
 
-func mission_flights_add(data, name, nil) {
-/* DOCUMENT mission, flights, "add", "<name>"
+__help = "Contains subcommands for modifying the configuration for flights.";
+
+func mission_flights_add(name) {
+/* DOCUMENT mission, flights, add, "<name>"
   Adds a new flight with the given NAME. NAME must not be an empty string. It
   must also not match a flight that already exists.
 */
   if(!is_string(name) || !strlen(name))
     error, "invalid name: "+pr1(name);
-  if(data.conf(*,name))
+  if(mission.data.conf(*,name))
     error, "an entry already exists for "+pr1(name);
-  save, data.conf, noop(name), save();
+  save, mission.data.conf, noop(name), save();
+  mission, tksync;
 }
 add = mission_flights_add;
 
-func mission_flights_remove(data, name, nil) {
-/* DOCUMENT mission, flights, "remove", "<name>"
+func mission_flights_remove(name) {
+/* DOCUMENT mission, flights, remove, "<name>"
   Removes an existing flight as specified by its NAME. NAME must be a string
   and should match an existing flight. If NAME does not match an existing
   flight, this is a no-op.
@@ -319,13 +220,15 @@ func mission_flights_remove(data, name, nil) {
   if(!is_string(name) || !strlen(name))
     error, "invalid name: "+pr1(name);
   // Delete cached data as well as conf data
-  data, cache=obj_delete(data.cache, noop(name));
-  data, conf=obj_delete(data.conf, noop(name));
+  mission, data,
+    cache=obj_delete(mission.data.cache, noop(name)),
+    conf=obj_delete(mission.data.conf, noop(name));
+  mission, tksync;
 }
 remove = mission_flights_remove;
 
-func mission_flights_rename(data, oldname, newname) {
-/* DOCUMENT mission, flights, "rename", <oldname>, "<newname>"
+func mission_flights_rename(oldname, newname) {
+/* DOCUMENT mission, flights, rename, "<oldname>", "<newname>"
   Renames an existing flight from OLDNAME to NEWNAME. Both names must be
   non-empty strings. OLDNAME must match an existing flight, while NEWNAME must
   not match an existing flight. (However, if OLDNAME==NEWNAME, this is a
@@ -335,80 +238,86 @@ func mission_flights_rename(data, oldname, newname) {
     error, "invalid name: "+pr1(oldname);
   if(!is_string(newname) || !strlen(newname))
     error, "invalid name: "+pr1(newname);
-  if(!data.conf(*,oldname))
+  if(!mission.data.conf(*,oldname))
     error, "unknown name: "+pr1(oldname);
   if(oldname == newname)
     return;
-  if(data.conf(*,newname))
+  if(mission.data.conf(*,newname))
     error, "an entry already exists for "+pr1(newname);
   // Create new entries for cache and conf at the new name
-  if(data.cache(*,oldname))
-    save, data.cache, noop(newname), data.cache(noop(oldname));
-  save, data.conf, noop(newname), data.conf(noop(oldname));
+  if(mission.data.cache(*,oldname))
+    save, mission.data.cache, noop(newname), mission.data.cache(noop(oldname));
+  save, mission.data.conf, noop(newname), mission.data.conf(noop(oldname));
   // Swap the positions of the old and new names in conf
-  mission, flights, "swap", data.conf(*,oldname), data.conf(*);
+  mission, flights, "swap", mission.data.conf(*,oldname), mission.data.conf(*);
   // Remove entries under old name
-  data, cache=obj_delete(data.cache, noop(oldname));
-  data, conf=obj_delete(data.conf, noop(oldname));
+  mission, data,
+    cache=obj_delete(mission.data.cache, noop(oldname)),
+    conf=obj_delete(mission.data.conf, noop(oldname));
+  mission, tksync;
 }
 rename = mission_flights_rename;
 
-func mission_flights_swap(data, idx1, idx2) {
-/* DOCUMENT mission, flights, "swap", <idx1>, <idx2>
+func mission_flights_swap(idx1, idx2) {
+/* DOCUMENT mission, flights, swap, <idx1>, <idx2>
   Swaps the two flights as given by numeric index. This simply reorders the
   sequence of the flights. Each index must be an integer between 1 and the
   number of flights.
 */
-  if(!is_integer(idx1) || idx1 < 1 || idx1 > data.conf(*))
+  if(!is_integer(idx1) || idx1 < 1 || idx1 > mission.data.conf(*))
     error, "invalid idx1: "+pr1(idx1);
-  if(!is_integer(idx2) || idx2 < 1 || idx2 > data.conf(*))
+  if(!is_integer(idx2) || idx2 < 1 || idx2 > mission.data.conf(*))
     error, "invalid idx2: "+pr1(idx2);
   // No need to swap if they are the same
   if(idx1 == idx2)
     return;
-  w = indgen(data.conf(*));
+  w = indgen(mission.data.conf(*));
   w([idx1,idx2]) = [idx2,idx1];
-  data, conf=data.conf(noop(w));
+  mission, data, conf=mission.data.conf(noop(w));
+  mission, tksync;
 }
 swap = mission_flights_swap;
 
-func mission_flights_raise(data, name, nil) {
-/* DOCUMENT mission, flights, "raise", "<name>"
+func mission_flights_raise(name) {
+/* DOCUMENT mission, flights, raise, "<name>"
   Raise flight NAME up by one position. NAME must be a non-empty string
   matching an existing flight. If the flight is already first in the list, this
   is a no-op.
 */
   if(!is_string(name) || !strlen(name))
     error, "invalid name: "+pr1(name);
-  idx = data.conf(*,name);
+  idx = mission.data.conf(*,name);
   if(idx == 1) return;
   mission, flights, "swap", idx, idx-1;
+  mission, tksync;
 }
 raise = mission_flights_raise;
 
-func mission_flights_lower(data, name, nil) {
-/* DOCUMENT mission, flights, "raise", "<name>"
+func mission_flights_lower(name) {
+/* DOCUMENT mission, flights, lower, "<name>"
   Lower flight NAME down by one position. NAME must be a non-empty string
   matching an existing flight. If the flight is already last in the list, this
   is a no-op.
 */
   if(!is_string(name) || !strlen(name))
     error, "invalid name: "+pr1(name);
-  idx = data.conf(*,name);
-  if(idx == data.conf(*)) return;
+  idx = mission.data.conf(*,name);
+  if(idx == mission.data.conf(*)) return;
   mission, flights, "swap", idx, idx+1;
+  mission, tksync;
 }
 lower = mission_flights_lower;
 
-func mission_flights_clear(data, nil1, nil2) {
-/* DOCUMENT mission, flights, "clear"
+func mission_flights_clear {
+/* DOCUMENT mission, flights, clear
   Removes all flights (which means it clears the entire mission configuration).
 */
-  data, conf=save(), cache=save();
+  mission, data, conf=save(), cache=save();
+  mission, tksync;
 }
 clear = mission_flights_clear;
 
-flights = closure(mission_flights, restore(cmds));
+flights = restore(cmds);
 restore, scratch;
 
 /*******************************************************************************
@@ -422,60 +331,23 @@ restore, scratch;
     mission_details_auto(data, flight, path, nil)
 */
 
-func mission_details(cmds, cmd, flight, p1, p2) {
-/* DOCUMENT mission, details, cmd, flight, p1, p2
-  Implements subcommands for modifying the configuration details for a given
-  fight.  Documentation for subcommands can be found at "help,
-  mission_details_SUBCMD" where SUBCMD is the subcommand name.
-
-  By default, these subcommands are defined:
-
-    mission, details, "set", "<flight>", "<key>", "<val>"
-      Add or update a key-value pair.
-    mission, details, "rename", "<flight>", "<oldkey>", "<newkey>"
-      Renames a key.
-    mission, details, "remove", "<flight>", "<key>"
-      Removes a key-value pair.
-    mission, details, "swap", "<flight>", <idx1>, <idx2>
-      Swaps the positiosn of two key-value pairs.
-    mission, details, "raise", "<flight>", "<key>"
-      Raises a key-value pair in the sequence.
-    mission, details, "lower", "<flight>", "<key>"
-      Lowers a key-value pair in the sequence.
-    mission, details, "clear", "<flight>"
-      Clears all key-value pairs for a given flight.
-
-  This function is a closure. To see if additional subcommands are implemented,
-  you can query its data member. By default, this would look like so:
-    > missions.flights.data(*,)
-    ["set","rename","remove","swap","raise","lower","clear"]
-
-  SEE ALSO: mission_details_set, mission_details_rename,
-    mission_details_remove, mission_details_swap, mission_details_raise,
-    mission_details_lower, mission_details_clear
-*/
-  if(cmds(*,cmd)) {
-    cmds, noop(cmd), use(data), flight, p1, p2;
-    mission, tksync;
-  } else {
-    error, "invalid subcommand: "+pr1(cmd);
-  }
-}
-
 scratch = save(scratch, mission_details_set, mission_details_rename,
   mission_details_remove, mission_details_swap, mission_details_raise,
   mission_details_lower, mission_details_clear);
-cmds = save(set, rename, remove, swap, raise, lower, clear);
+cmds = save(__help, set, rename, remove, swap, raise, lower, clear);
 
-func mission_details_set(data, flight, key, val) {
-/* DOCUMENT mission, details, "set", "<flight>", "<key>", "<val>"
+__help = "Contains subcommands for modifying the configuration details for a\
+given fight."
+
+func mission_details_set(flight, key, val) {
+/* DOCUMENT mission, details, set, "<flight>", "<key>", "<val>"
   Sets the given KEY-VAL association for the specified FLIGHT. FLIGHT must be a
   non-empty string that matches an existing flight. KEY must also both be
   non-emptry string and VAL must be a string (but can be empty). If KEY already
   exists, its associated value will be updated; if it does not exist, it will
   be added to the details for the given flight.
 */
-  if(!is_string(flight) || !strlen(flight) || !data.conf(*,flight))
+  if(!is_string(flight) || !strlen(flight) || !mission.data.conf(*,flight))
     error, "invalid flight: "+pr1(flight);
   if(!is_string(key) || !strlen(key))
     error, "invalid key: "+pr1(key);
@@ -483,36 +355,37 @@ func mission_details_set(data, flight, key, val) {
     error, "invalid val: "+pr1(val);
 
   // If the key already exists and has the same value, this is a no-op
-  fconf = data.conf(noop(flight));
+  fconf = mission.data.conf(noop(flight));
   if(fconf(*,key) && fconf(noop(key)) == val)
     return;
 
   // Remove the cached data for this key, if necessary
-  if(data.cache(*,flight)) {
-    fcache = data.cache(noop(flight));
-    save, data.cache, noop(flight), obj_delete(fcache, noop(key));
+  if(mission.data.cache(*,flight)) {
+    fcache = mission.data.cache(noop(flight));
+    save, mission.data.cache, noop(flight), obj_delete(fcache, noop(key));
   }
 
-  save, data.conf(noop(flight)), noop(key), val;
+  save, mission.data.conf(noop(flight)), noop(key), val;
+  mission, tksync;
 }
 set = mission_details_set;
 
-func mission_details_rename(data, flight, oldkey, newkey) {
-/* DOCUMENT mission, details, "rename", "<flight>", "<oldkey>", "<newkey>"
+func mission_details_rename(flight, oldkey, newkey) {
+/* DOCUMENT mission, details, rename, "<flight>", "<oldkey>", "<newkey>"
   Renames the given OLDKEY to NEWKEY for the specified FLIGHT. FLIGHT, OLDKEY,
   and NEWKEY must all be non-empty strings. FLIGHT must match an existing
   flight and OLDKEY must match an existing key for that flight. If OLDKEY and
   NEWKEY are the same, this is a no-op. NEWKEY may not match any other existing
   key for that flight.
 */
-  if(!is_string(flight) || !strlen(flight) || !data.conf(*,flight))
+  if(!is_string(flight) || !strlen(flight) || !mission.data.conf(*,flight))
     error, "invalid flight: "+pr1(flight);
   if(!is_string(oldkey) || !strlen(oldkey))
     error, "invalid oldkey: "+pr1(oldkey);
   if(!is_string(newkey) || !strlen(newkey))
     error, "invalid newkey: "+pr1(newkey);
 
-  fconf = data.conf(noop(flight));
+  fconf = mission.data.conf(noop(flight));
   // Check that oldkey exists
   if(!fconf(*,oldkey))
     error, "invalid oldkey: "+pr1(oldkey);
@@ -526,54 +399,57 @@ func mission_details_rename(data, flight, oldkey, newkey) {
   // Remove the cached data for this key, if necessary. (Do -not- rename it,
   // since it's possible that it may get loaded differently under the new key
   // name.)
-  if(data.cache(*,flight)) {
-    fcache = data.cache(noop(flight));
-    save, data.cache, noop(flight), obj_delete(fcache, noop(oldkey));
+  if(mission.data.cache(*,flight)) {
+    fcache = mission.data.cache(noop(flight));
+    save, mission.data.cache, noop(flight), obj_delete(fcache, noop(oldkey));
   }
 
   // Create new entry, swap position with old entry, then remove old
-  // (fconf is redefined repeatedly in case the reference in data.conf changes)
-  save, data.conf(noop(flight)), noop(newkey), fconf(noop(oldkey));
-  fconf = data.conf(noop(flight));
+  // (fconf is redefined repeatedly in case the reference in mission.data.conf
+  // changes)
+  save, mission.data.conf(noop(flight)), noop(newkey), fconf(noop(oldkey));
+  fconf = mission.data.conf(noop(flight));
   mission, details, "swap", flight, fconf(*,oldkey), fconf(*);
-  fconf = data.conf(noop(flight));
-  save, data.conf, noop(flight), obj_delete(fconf, noop(oldkey));
+  fconf = mission.data.conf(noop(flight));
+  save, mission.data.conf, noop(flight), obj_delete(fconf, noop(oldkey));
+  mission, tksync;
 }
 rename = mission_details_rename;
 
-func mission_details_remove(data, flight, key, nil) {
-/* DOCUMENT mission, details, "remove", "<flight>", "<key>"
+func mission_details_remove(flight, key) {
+/* DOCUMENT mission, details, remove, "<flight>", "<key>"
   Removes the given KEY from the specified FLIGHT. FLIGHT and KEY must be
   non-empty strings. FLIGHT must match an existing flight. If KEY does not
   exist, this is a no-op.
 */
-  if(!is_string(flight) || !strlen(flight) || !data.conf(*,flight))
+  if(!is_string(flight) || !strlen(flight) || !mission.data.conf(*,flight))
     error, "invalid flight: "+pr1(flight);
   if(!is_string(key) || !strlen(key))
     error, "invalid key: "+pr1(key);
 
   // Remove the cached data for this key
-  if(data.cache(*,flight)) {
-    fcache = data.cache(noop(flight));
-    save, data.cache, noop(flight), obj_delete(fcache, noop(key));
+  if(mission.data.cache(*,flight)) {
+    fcache = mission.data.cache(noop(flight));
+    save, mission.data.cache, noop(flight), obj_delete(fcache, noop(key));
   }
 
   // Remove conf entry
-  fconf = data.conf(noop(flight));
-  save, data.conf, noop(flight), obj_delete(fconf, noop(key));
+  fconf = mission.data.conf(noop(flight));
+  save, mission.data.conf, noop(flight), obj_delete(fconf, noop(key));
+  mission, tksync;
 }
 remove = mission_details_remove;
 
-func mission_details_swap(data, flight, idx1, idx2) {
-/* DOCUMENT mission, details, "swap", "<flight>", <idx1>, <idx2>
+func mission_details_swap(flight, idx1, idx2) {
+/* DOCUMENT mission, details, swap, "<flight>", <idx1>, <idx2>
   Swaps the two key-value pairs for a given FLIGHT as given by numeric indices.
   This simply reorders the sequence of the key-value pairs. Each index must be
   an integer between 1 and the number of key-value pairs for the specified
   flight.
 */
-  if(!is_string(flight) || !strlen(flight) || !data.conf(*,flight))
+  if(!is_string(flight) || !strlen(flight) || !mission.data.conf(*,flight))
     error, "invalid flight: "+pr1(flight);
-  fconf = data.conf(noop(flight));
+  fconf = mission.data.conf(noop(flight));
   if(!is_integer(idx1) || idx1 < 1 || idx1 > fconf(*))
     error, "invalid idx1: "+pr1(idx1);
   if(!is_integer(idx2) || idx2 < 1 || idx2 > fconf(*))
@@ -583,60 +459,64 @@ func mission_details_swap(data, flight, idx1, idx2) {
     return;
   w = indgen(fconf(*));
   w([idx1,idx2]) = [idx2,idx1];
-  save, data.conf, noop(flight), fconf(noop(w));
+  save, mission.data.conf, noop(flight), fconf(noop(w));
+  mission, tksync;
 }
 swap = mission_details_swap;
 
-func mission_details_raise(data, flight, key, nil) {
-/* DOCUMENT mission, details, "raise", "<flight>", "<name>"
+func mission_details_raise(flight, key) {
+/* DOCUMENT mission, details, raise, "<flight>", "<name>"
   Raises the key-value pair identified by NAME for FLIGHT up one position in
   sequence. FLIGHT and KEY must both be non-empty strings and must match
   existing entries. If the key-value pair specified is already first, this is a
   no-op.
 */
-  if(!is_string(flight) || !strlen(flight) || !data.conf(*,flight))
+  if(!is_string(flight) || !strlen(flight) || !mission.data.conf(*,flight))
     error, "invalid flight: "+pr1(flight);
-  fconf = data.conf(noop(flight));
+  fconf = mission.data.conf(noop(flight));
   if(!is_string(key) || !strlen(key) || !fconf(*,key))
     error, "invalid key: "+pr1(key);
   idx = fconf(*,key);
   if(idx == 1) return;
-  mission, details, "swap", flight, idx, idx-1;
+  mission, details, swap, flight, idx, idx-1;
+  mission, tksync;
 }
 raise = mission_details_raise;
 
-func mission_details_lower(data, flight, key, nil) {
-/* DOCUMENT mission, details, "lower", "<flight>", "<name>"
+func mission_details_lower(flight, key) {
+/* DOCUMENT mission, details, lower, "<flight>", "<name>"
   Lowers the key-value pair identified by NAME for FLIGHT down one position in
   sequence. FLIGHT and KEY must both be non-empty strings and must match
   existing entries. If the key-value pair specified is already last, this is a
   no-op.
 */
-  if(!is_string(flight) || !strlen(flight) || !data.conf(*,flight))
+  if(!is_string(flight) || !strlen(flight) || !mission.data.conf(*,flight))
     error, "invalid flight: "+pr1(flight);
-  fconf = data.conf(noop(flight));
+  fconf = mission.data.conf(noop(flight));
   if(!is_string(key) || !strlen(key) || !fconf(*,key))
     error, "invalid key: "+pr1(key);
   idx = fconf(*,key);
   if(idx == fconf(*)) return;
-  mission, details, "swap", flight, idx, idx+1;
+  mission, details, swap, flight, idx, idx+1;
+  mission, tksync;
 }
 lower = mission_details_lower;
 
-func mission_details_clear(data, flight, nil1, nil2) {
-/* DOCUMENT mission, details, "clear", "<flight>"
+func mission_details_clear(flight) {
+/* DOCUMENT mission, details, clear, "<flight>"
   Removes all key-value pairs for the given FLIGHT, which must be a non-empty
   string that already exists in the configuration.
 */
-  if(!is_string(name) || !strlen(name) || !data.conf(*,name))
+  if(!is_string(name) || !strlen(name) || !mission.data.conf(*,name))
     error, "invalid name: "+pr1(name);
-  save, data.conf, noop(name), save();
+  save, mission.data.conf, noop(name), save();
   // Delete associated cache
-  data, cache=obj_delete(data.cache, noop(oldname));
+  mission, data, cache=obj_delete(mission.data.cache, noop(oldname));
+  mission, tksync;
 }
 clear = mission_details_clear;
 
-details = closure(mission_details, restore(cmds));
+details = restore(cmds);
 restore, scratch;
 
 /*******************************************************************************
@@ -667,12 +547,12 @@ func mission_get(flight, key) {
     The flight and key must both exist, otherwise an error will occur.
 */
   if(is_void(flight))
-    return use(data, conf, *, );
-  if(!is_string(flight) || !strlen(flight) || !use(data, conf, *,flight))
+    return mission.data.conf(*,);
+  if(!is_string(flight) || !strlen(flight) || mission.data.conf(*,flight))
     error, "invalid flight: "+pr1(flight);
   if(is_void(key))
-    return use(data, conf, noop(flight), *, );
-  fconf = use(data, conf, noop(flight));
+    return mission.data.conf(noop(flight),*,);
+  fconf = mission.data.conf(noop(flight));
   if(!is_string(key) || !strlen(key) || !fconf(*,key))
     error, "invalid key: "+pr1(key);
   return fconf(noop(key));
@@ -701,16 +581,16 @@ func mission_has(flight, key) {
     Returns 1 if the given FLIGHT exists and if it has the specified KEY;
     otherwise returns 0.
 */
-  if(!use(data, conf, *, flight))
+  if(!mission(data, conf, *, flight))
     return 0;
-  if(!is_void(key) && !use(data, conf, noop(flight), *, key))
+  if(!is_void(key) && !mission(data, conf, noop(flight), *, key))
     return 0;
   return 1;
 
   // Check to see if flight specified is valid and exists
   if(!is_string(flight) || !strlen(flight))
     error, "invalid flight: "+pr1(flight);
-  if(!data.conf(*,flight))
+  if(!mission.data.conf(*,flight))
     return 0;
 
   // If no key is specified, return 1 -- flight existed
@@ -718,7 +598,7 @@ func mission_has(flight, key) {
     return 1;
 
   // Check to see if key specified is valid and exists
-  fconf = use(data, conf, noop(flight));
+  fconf = mission(data, conf, noop(flight));
   if(!is_string(key) || !strlen(key))
     error, "invalid key: "+pr1(key);
   return fconf(*,key) > 0;
@@ -726,13 +606,57 @@ func mission_has(flight, key) {
 has = mission_has;
 
 /*******************************************************************************
+  mission, load_soe, <soe>
   mission, load, "<flight>"
+  mission, unload
+  mission(wrap,)
+  mission, unwrap, <data>
 
-  TODO
+  All of these functions are stubs. Plugins must replace these functions with
+  their own versions that are actually implemented.
+
+  Example of replacing one of them:
+
+    func mission_load(flight) {
+      // do stuff here
+    }
+    save, mission, load=mission_load;
 */
 
-// mission, load, <flight>
-// func mission_load(flight) {}
+func mission_load_soe(soe) {
+  write, "WARNING: 'mission, load_soe' is not properly implemented";
+  write, "         Most likely this means you didn't load a configuration";
+  write, "         No data loaded";
+}
+load_soe = mission_load_soe;
+
+func mission_load(flight) {
+  write, "WARNING: 'mission, load' is not properly implemented";
+  write, "         Most likely this means you didn't load a configuration";
+  write, "         No data loaded";
+}
+load = mission_load;
+
+func mission_unload(void) {
+  write, "WARNING: 'mission, unload' is not properly implemented";
+  write, "         Most likely this means you didn't load a configuration";
+  write, "         No data unloaded";
+}
+unload = mission_unload;
+
+func mission_wrap(void) {
+  write, "WARNING: 'mission(wrap,)' is not properly implemented";
+  write, "         Most likely this means you didn't load a configuration";
+  write, "         No data wrapped";
+}
+wrap = mission_wrap;
+
+func mission_unwrap(data) {
+  write, "WARNING: 'mission, unwrap' is not properly implemented";
+  write, "         Most likely this means you didn't load a configuration";
+  write, "         No data unwrapped";
+}
+unwrap = mission_unwrap;
 
 /*******************************************************************************
   mission, json, "<jsondata>"
@@ -770,12 +694,12 @@ func mission_json_export(compact) {
 */
   output = save(
     mcversion=2,
-    flights=use(data, conf),
-    plugins=use(data, plugins)
+    flights=mission.data.conf,
+    plugins=mission.data.plugins
   );
   if(!compact) {
     save, output, "save environment", save(
-      "path", use(data, path),
+      "path", mission.data.path,
       "user", get_user(),
       "host", get_host(),
       "timestamp", soe2iso86501(getsoe()),
@@ -929,6 +853,62 @@ read = mission_read;
 
 func mission_tksync {}
 tksync = mission_tksync;
+
+/*******************************************************************************
+  mission, help, ...
+*/
+
+func mission_help(args) {
+/* DOCUMENT mission, help, ...
+  Displays help for a specific topic. You can get help for any subcommand by
+  inserting "help" before the subcommands. For example, if you want help on
+  "mission, flights, add", you would use "mission, help, flights, add".
+*/
+  if(!args(0)) {
+    help, mission;
+    return;
+  }
+  names = ["mission"];
+  obj = mission;
+  for(i = 1; i <= args(0); i++) {
+    if(args(0,i) == 0) {
+      name = args(-,i);
+    } else {
+      name = args(i);
+    }
+    grow, names, name;
+    if(is_obj(obj) && obj(*,name))
+      obj = obj(noop(name));
+    else
+      obj = [];
+  }
+  if(is_func(obj) == 5) {
+    obj = obj.function;
+  }
+  if(is_func(obj)) {
+    help, obj;
+  } else if(is_obj(obj)) {
+    cmd = strjoin(names, ", ");
+    write, format="/* DOCUMENT %s\n", cmd;
+    if(obj(*,"__help"))
+      write, format="%s\n", strindent(strwrap(obj.__help, width=70),"  ");
+    write, "";
+    // set_difference also sorts them
+    subcmds = set_difference(obj(*,), ["__help", "data"]);
+    if(is_void(subcmds)) {
+      write, format="%s\n", "  No subcommands available";
+    } else {
+      subcmds = "Available subcommands: "+strjoin(subcmds, ", ");
+      write, format="%s\n", strindent(strwrap(subcmds, width=70),"  ");
+    }
+    write, format="%s\n", "*/";
+  } else {
+    query = strjoin(names, "_");
+    about, "^"+query+"$", 1;
+  }
+}
+wrap_args, mission_help;
+help = mission_help;
 
 mission = restore(tmp);
 restore, scratch;
