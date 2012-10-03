@@ -51,9 +51,10 @@ local mission;
 */
 
 scratch = save(scratch, tmp, mission_plugins, mission_cache, mission_flights,
-  mission_details, mission_get, mission_has, mission_load_soe, mission_load,
-  mission_unload, mission_wrap, mission_unwrap, mission_json, mission_save,
-  mission_read, mission_tksync, mission_help);
+  mission_details, mission_get, mission_has, mission_load_soe_stub,
+  mission_load_stub, mission_unload_stub, mission_wrap_stub,
+  mission_unwrap_stub, mission_json, mission_save, mission_read,
+  mission_tksync, mission_help);
 tmp = save(data, plugins, cache, flights, details, get, has, load_soe, load,
   unload, wrap, unwrap, json, save, read, tksync, help);
 
@@ -72,7 +73,7 @@ local mission_data;
       used. This can be one of three values:
         "disabled" - no caching will be done
         "onload" - data will be cached at load
-        "onchange" - data will be cached whenever a new flight is loaded
+        "onchange" - data will be cached whenever a flight is unloaded
       The "disabled" setting means data will be loaded from file each time a
       flight is loaded, which can be time intensive. The "onload" setting will
       cache the data the first time is loaded; future loads for that flight
@@ -623,40 +624,40 @@ has = mission_has;
     save, mission, load=mission_load;
 */
 
-func mission_load_soe(soe) {
+func mission_load_soe_stub(soe) {
   write, "WARNING: 'mission, load_soe' is not properly implemented";
   write, "         Most likely this means you didn't load a configuration";
   write, "         No data loaded";
 }
-load_soe = mission_load_soe;
+load_soe = mission_load_soe_stub;
 
-func mission_load(flight) {
+func mission_load_stub(flight) {
   write, "WARNING: 'mission, load' is not properly implemented";
   write, "         Most likely this means you didn't load a configuration";
   write, "         No data loaded";
 }
-load = mission_load;
+load = mission_load_stub;
 
-func mission_unload(void) {
+func mission_unload_stub(void) {
   write, "WARNING: 'mission, unload' is not properly implemented";
   write, "         Most likely this means you didn't load a configuration";
   write, "         No data unloaded";
 }
-unload = mission_unload;
+unload = mission_unload_stub;
 
-func mission_wrap(void) {
+func mission_wrap_stub(void) {
   write, "WARNING: 'mission(wrap,)' is not properly implemented";
   write, "         Most likely this means you didn't load a configuration";
   write, "         No data wrapped";
 }
-wrap = mission_wrap;
+wrap = mission_wrap_stub;
 
-func mission_unwrap(data) {
+func mission_unwrap_stub(data) {
   write, "WARNING: 'mission, unwrap' is not properly implemented";
   write, "         Most likely this means you didn't load a configuration";
   write, "         No data unwrapped";
 }
-unwrap = mission_unwrap;
+unwrap = mission_unwrap_stub;
 
 /*******************************************************************************
   mission, json, "<jsondata>"
