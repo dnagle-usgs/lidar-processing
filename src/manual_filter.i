@@ -68,11 +68,11 @@ func select_region_tile(data, win=, plot=, mode=) {
 }
 
 func test_and_clean(&data, verbose=, force=, mirror=, zeronorth=, zerodepth=,
-negch=) {
+negch=, chanint=) {
 /* DOCUMENT test_and_clean, data, verbose=, force=, mirror=, zeronorth=,
-    zerodepth=, negch=
+    zerodepth=, negch=, chanint=
   cleaned = test_and_clean(data, verbose=, force=, mirror=, zeronorth=,
-    zerodepth=, negch=)
+    zerodepth=, negch=, chanint=)
 
   Tests the data in various ways and cleans it as necessary.
 
@@ -117,6 +117,12 @@ negch=) {
       negch=1        Remove the points.
       negch=0        Skip this filter.
 
+  chanint= Detangles channel and intensity values. Intensity is put back in the
+    range 0 to 300. If a channel field is present and zero, it is set based on
+    the first surface intensity.
+      chanint=1     Default. Perform this fix.
+      chanint=0     Skip this fix.
+
   By default, it runs silently. Use verbose=1 to get some info.
 
   This function utilizes memory better when run as a subroutine rather than a
@@ -129,6 +135,7 @@ negch=) {
   default, zeronorth, 1;
   default, zerodepth, 1;
   default, negch, 2;
+  default, chanint, 1;
 
   if(is_void(data)) {
     if(verbose)
@@ -225,6 +232,28 @@ negch=) {
       w = where(result.lelv <= result.elevation);
       result = numberof(w) ? result(w) : [];
     }
+  }
+
+  if(chanint) {
+    if(has_member(result, "channel")) {
+      w = where(!result.channel);
+      if(numberof(w)) {
+        if(has_member(result, "intensity"))
+          result(w).channel = result(w).intensity/300 + 1;
+        else if(has_member(result, "fint"))
+          result(w).channel = result(w).fint/300 + 1;
+      }
+    }
+    if(has_member(result, "intensity"))
+      result.intensity %= 300;
+    if(has_member(result, "fint"))
+      result.fint %= 300;
+    if(has_member(result, "lint"))
+      result.lint %= 300;
+    if(has_member(result, "first_peak"))
+      result.first_peak %= 300;
+    if(has_member(result, "bottom_peak"))
+      result.bottom_peak %= 300;
   }
 
   if(am_subroutine())
