@@ -86,7 +86,6 @@ if {![namespace exists ::plot]} {
       }
    }
 }
-tky_tie add sync ::plot::g::pnav_file to pnav_filename -initialize 1
 ybkg tksetsym \"::plot::c::mapPath\" \"alpsrc.maps_dir\"
 
 proc ::plot::menu { } {
@@ -223,6 +222,9 @@ proc ::plot::menu { } {
       \nshow up here immediately; however, it should update immediately when
       \nyou next interact with this window."
    grid $f.labUTMZone $f.spnUTMZone
+
+   bind $pane <Enter> {set ::curzone $::curzone}
+   bind $pane <Visibility> {set ::curzone $::curzone}
 
    set f $pane.lfrData
    labelframe $f -text "Data to plot by default"
@@ -538,12 +540,6 @@ proc ::plot::menu { } {
    grid rowconfigure $w 0 -weight 1
    grid columnconfigure $w 0 -weight 1
    $nb raise settings
-
-   bind $w <Enter> {+set ::curzone $::curzone}
-   bind $w <Visibility> {+set ::curzone $::curzone}
-   bind $w <Enter> {+set ::plot::g::pnav_file $::plot::g::pnav_file}
-   bind $w <Visibility> {+set ::plot::g::pnav_file $::plot::g::pnav_file}
-
 }
 
 proc ::plot::replot_all { } {
