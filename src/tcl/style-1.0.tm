@@ -47,7 +47,7 @@ namespace eval style {
     # current theme as well.
     ThemeChanged
 
-    # fixMenuColors --
+    # FixMenuColors --
     # Update the given menu widget to use the colors appropriate for the
     # current theme, referencing ttk::frame.
     proc FixMenuColors w {
@@ -57,5 +57,5 @@ namespace eval style {
     }
 
     # When the theme changes, update existing menus
-    bind Menu <<ThemeChanged>> [list [namespace current]::fixMenuColors %W]
+    bind Menu <<ThemeChanged>> [list [namespace current]::FixMenuColors %W]
 }
