@@ -291,7 +291,7 @@ proc json_stringify {raw_val} {
 
 ### GUI CODE
 
-namespace eval mission {
+namespace eval missionconf {
     namespace eval v {
         variable toplevel .mission_conf
         variable dateframe ""
