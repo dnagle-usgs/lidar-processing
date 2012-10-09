@@ -38,6 +38,8 @@ namespace eval style {
 
         # Suppresses the tabs on a ttk::notebook
         ttk::style layout NoTabs.TNotebook.Tab null
+
+        ttk::style configure Modified.TEntry -fieldbackground "#98FB98"
     }
 
     # When the theme changes, update the option database
