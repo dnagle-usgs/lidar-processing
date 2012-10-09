@@ -87,7 +87,7 @@ func mission_query_soe(soe) {
   }
 
   mission, unload;
-  if(!is_void(loaded) && strlen(loaded))
+  if(strlen(loaded))
     mission, load, loaded;
 
   // If exactly one edb match is found, use it.

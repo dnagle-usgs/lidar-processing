@@ -113,8 +113,8 @@ local mission_data;
 */
 data = save(
   plugins=[],
-  path=[],
-  loaded=[],
+  path="",
+  loaded="",
   cache_mode="onload",  // disabled | onload | onchange
   conf=save(),
   cache=save()
@@ -175,7 +175,7 @@ func mission_cache_preload {
     mission, load, flights(i);
 
   mission, unload;
-  if(!is_void(loaded))
+  if(strlen(loaded))
     mission, load, loaded;
 }
 preload = mission_cache_preload;
@@ -693,11 +693,12 @@ func mission_json_export(compact) {
   This is used internally by calls to 'mission(json, compact=)'. It exports the
   mission configuration to JSON format.
 */
-  output = save(
-    mcversion=2,
+  output = save();
+  if(!compact)
+    save, output, mcversion=2;
+  save, output,
     flights=mission.data.conf,
-    plugins=mission.data.plugins
-  );
+    plugins=mission.data.plugins;
   if(!compact) {
     save, output, "save environment", save(
       "path", mission.data.path,
@@ -742,7 +743,7 @@ func mission_json_import(versions, json) {
     write, "Attempting to use anyway, but errors may ensue...";
   }
 
-  mission, data, conf=data.flights, plugins=data.plugins, loaded=[];
+  mission, data, conf=data.flights, plugins=data.plugins, loaded="";
 }
 
 scratch = save(scratch, versions);
@@ -852,7 +853,13 @@ read = mission_read;
   mission, tksync
 */
 
-func mission_tksync {}
+func mission_tksync {
+  if(_ytk) {
+    conf = mission(json, compact=1);
+    tkcmd, swrite(format="::mission::json_import {%s}", conf);
+    write, "Synced";
+  }
+}
 tksync = mission_tksync;
 
 /*******************************************************************************
