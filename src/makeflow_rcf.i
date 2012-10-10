@@ -2,8 +2,8 @@ require, "makeflow.i";
 
 func mf_automerge_tiles(path, searchstr=, update=, makeflow_fn=, forcelocal=,
 norun=) {
-/* DOCUMENT mf_automerge_tiles, path, makeflow_fn, searchstr=, update=,
-   makeflow_fn=, forcelocal=, norun=
+/* DOCUMENT mf_automerge_tiles, path, searchstr=, update=, makeflow_fn=,
+   forcelocal=, norun=
 
   Specialized batch merging function for the initial merge of processed data.
 
@@ -176,7 +176,8 @@ norun=) {
         "file-out", outfiles(i),
         vname=vnames(i),
         uniq="0",
-        skip="1"
+        skip="1",
+        soesort="1"
       )
     );
     i = j = j + 1;

@@ -82,23 +82,26 @@ func job_dirload(conf) {
     --vname     corresponds to  outvname=
     --uniq      corresponds to  uniq=
     --skip      corresponds to  skip=
+    --soesort   corresponds to  soesort=
 
   Additionally,
 
     --file-in may be provided multiple times
     --uniq defaults to "0"
     --skip defaults to "1"
+    --soesort defaults to "0"
 */
   require, "util_obj.i";
   require, "util_str.i";
   keyrequire, conf, file=;
   keyrequire, conf.file, in=, out=;
-  uniq = conf(*,"uniq") ? atoi(conf.uniq) : "0";
-  skip = conf(*,"skip") ? atoi(conf.skip) : "1";
+  uniq = conf(*,"uniq") ? atoi(conf.uniq) : 0;
+  skip = conf(*,"skip") ? atoi(conf.skip) : 1;
+  soesort = conf(*,"soesort") ? atoi(conf.soesort) : 0;
 
   require, "dirload.i";
   dirload, files=conf.file.in, outfile=conf.file.out, outvname=conf.vname,
-    uniq=uniq, skip=skip, verbose=0;
+    soesort=soesort, uniq=uniq, skip=skip, verbose=0;
 }
 
 func job_rcf_eaarl(conf) {

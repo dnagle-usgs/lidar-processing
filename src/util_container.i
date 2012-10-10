@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 /*
   This file is intended to gather various "container" related utility code

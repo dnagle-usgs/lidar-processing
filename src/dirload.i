@@ -1,5 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
+require, "eaarl_data.i";
+require, "dir.i";
+
 /*
 The functionality in this file is intended to supercede similar functions
 elsewhere, including:
@@ -98,12 +100,16 @@ files=, filter=, verbose=) {
   eaarl_struct = [];
   for(i = 1; i <= numberof(files); i++) {
     ext = strlower(file_extension(files(i)));
-    if(anyof(ext == [".bin", ".edf"]))
+    if(anyof(ext == [".bin", ".edf"])) {
+      require, "edf.i";
       temp = edf_import(files(i));
-    else if(ext == ".las")
+    } else if(ext == ".las") {
+      require, "las.i";
       temp = las_to_alps(files(i));
-    else
+    } else {
+      require, "util_container.i";
       temp = pbd_load(files(i));
+    }
     if(!is_void(temp)) {
       eaarl_struct = structof(temp);
       break;
@@ -126,21 +132,26 @@ files=, filter=, verbose=) {
   end = 0;
 
   tstamp = err = [];
-  timer_init, tstamp;
-  if(verbose)
+  if(verbose) {
+    timer_init, tstamp;
     write, format=" Loading data from %d files:\n", numberof(files);
+  }
   for(i = 1; i <= numberof(files); i++) {
     if(verbose)
       timer_tick, tstamp, i, numberof(files);
 
     ext = strlower(file_extension(files(i)));
     err = "";
-    if(anyof(ext == [".bin", ".edf"]))
+    if(anyof(ext == [".bin", ".edf"])) {
+      require, "edf.i";
       temp = edf_import(files(i));
-    else if(ext == ".las")
+    } else if(ext == ".las") {
+      require, "las.i";
       temp = las_to_alps(files(i));
-    else
+    } else {
+      require, "util_container.i";
       temp = pbd_load(files(i), err);
+    }
 
     if(is_void(temp)) {
       if(verbose)
