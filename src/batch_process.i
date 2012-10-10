@@ -2277,7 +2277,7 @@ func batch_automerge_tiles(path, searchstr=, verbose=, update=) {
     while(j < count && outfiles(j+1) == outfiles(i))
       j++;
     dirload, files=files(i:j), outfile=outfiles(i), outvname=vnames(i), uniq=0,
-      skip=1, verbose=0;
+      soesort=1, skip=1, verbose=0;
     i = j = j + 1;
     k++;
   }
