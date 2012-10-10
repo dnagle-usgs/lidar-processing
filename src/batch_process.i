@@ -640,6 +640,11 @@ Input:
   forcechannel= : Set to 1, 2, 3, or 4 to force the use of the specified
             channel. The mdate will have _chan1 or similar automatically
             appended to it if "_chan" is not already present in mdate.
+            This can also be an array of channels, such as:
+              forcechannel=[1,2,3,4]
+            This will result in mbatch being recursively invoked once per
+            channel, exactly as if you had called it once per channel
+            sequentially yourself.
 
   shapefile=    : Set to the path to a UTM ASCII shapefile containing a single
             polygon. This will be used for the boundary (and disables pick=).
@@ -690,6 +695,20 @@ Ex: curzone=18
 amar nayegandhi started (10/04/02) Lance Mosher
 Added server/client support (2009-01) Richard Mitchell
 */
+  if(numberof(forcechannel) > 1) {
+    for(i = 1; i <= numberof(forcechannel); i++) {
+      mbatch_process, typ=typ, save_dir=save_dir, shem=shem, zone=zone,
+        dat_tag=dat_tag, cmdfile=cmdfile, n=n, onlyplot=onlyplot, mdate=mdate,
+        pbd=pbd, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ,
+        only_bathy=only_bathy, only_veg=only_veg, update=update,
+        avg_surf=avg_surf, conf_file=conf_file, now=now, b_rcf=b_rcf, buf=buf,
+        w=w, no_rcf=no_rcf, mode=mode, merge=merge, clean=clean,
+        rcfmode=rcfmode, write_merge=write_merge, forcechannel=forcechannel(i),
+        shapefile=shapefile, shp_buffer=shp_buffer;
+    }
+    return;
+  }
+
   extern pnav_filenam, bath_ctl, bath_ctl_chn4, _hgid;
 
   if(forcechannel && !strglob("*_chan*", mdate)) {
