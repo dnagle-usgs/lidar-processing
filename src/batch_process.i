@@ -644,7 +644,10 @@ Input:
               forcechannel=[1,2,3,4]
             This will result in mbatch being recursively invoked once per
             channel, exactly as if you had called it once per channel
-            sequentially yourself.
+            sequentially yourself. Note that this is only really recommended
+            for use alongside shapefile=. If you are using a mode that requires
+            you to click-and-drag a region, you'll be prompted to do that once
+            per channel.
 
   shapefile=    : Set to the path to a UTM ASCII shapefile containing a single
             polygon. This will be used for the boundary (and disables pick=).
