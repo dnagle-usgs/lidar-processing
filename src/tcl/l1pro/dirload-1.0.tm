@@ -11,6 +11,7 @@ if {![namespace exists ::l1pro::dirload]} {
             variable vname merged
             variable skip 1
             variable unique 0
+            variable soesort 0
             variable zone Auto
             variable zonelist {}
             variable region_data {}
@@ -59,6 +60,9 @@ proc ::l1pro::dirload::gui {} {
     ttk::label $f.lblUnique -text "Unique:"
     ttk::checkbutton $f.chkUnique -variable ${ns}::v::unique
 
+    ttk::label $f.lblSort -text "Sort:"
+    ttk::checkbutton $f.chkSort -variable ${ns}::v::soesort
+
     ttk::label $f.lblSkip -text "Subsample:"
     ttk::spinbox $f.spnSkip -from 1 -to 10000 -increment 1 -width 5 \
             -textvariable ${ns}::v::skip
@@ -100,6 +104,7 @@ proc ::l1pro::dirload::gui {} {
             "Loads the data, then closes this GUI."
 
     grid $f.cboZone $f.lblSkip $f.spnSkip $f.lblUnique $f.chkUnique \
+            $f.lblSort $f.chkSort \
             -in $f.fraZoneLine -sticky ew
     grid columnconfigure $f.fraZoneLine {0 2} -weight 1 -uniform 1
 
@@ -183,6 +188,7 @@ proc ::l1pro::dirload::load_data termaction {
         1                   ", searchstr=\"$v::searchstr\"" \
         {$v::skip > 1}      ", skip=$v::skip" \
         {$v::unique}        ", uniq=1" \
+        {$v::soesort}       ", soesort=1" \
         {$filter ne ""}     ", filter=$filter" \
         1                   ")"
 
