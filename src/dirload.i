@@ -6,10 +6,10 @@ elsewhere, including:
   data_rgn_selector.i -- sel_rgn_from_datatiles
 */
 
-func dirload(dir, outfile=, outvname=, uniq=, skip=, searchstr=, files=,
-filter=, verbose=) {
-/* DOCUMENT data = dirload(dir, outfile=, outvname=, uniq=, skip=, searchstr=,
-  files=, filter=, verbose=)
+func dirload(dir, outfile=, outvname=, uniq=, soesort=, skip=, searchstr=,
+files=, filter=, verbose=) {
+/* DOCUMENT data = dirload(dir, outfile=, outvname=, uniq=, soesort=, skip=,
+  searchstr=, files=, filter=, verbose=)
 
   Loads and merges the data found in the specified directory.
 
@@ -44,6 +44,12 @@ filter=, verbose=) {
         skip=25  Use 4% of the points (1 of every 25)
       The subsampling occurs on a file-by-file basis as they are loaded.
 
+    soesort= Specifies whether the data should be sorted by soe. Note that if
+      you use uniq=1, the data will already be sorted by soe and you don't need
+      this option.
+        soesort=0   Don't sort (default)
+        soesort=1   Sort
+
     searchstr= A search string to use for locating files to load and marge.
       Examples:
         searchstr="*.pbd"       All pbd files (default)
@@ -63,6 +69,7 @@ filter=, verbose=) {
 */
   // no defaults for: outfile, files; default for outvname established later
   default, uniq, 0;
+  default, soesort, 0;
   default, skip, 1;
   default, searchstr, "*.pbd";
   default, verbose, 1;
@@ -176,6 +183,9 @@ filter=, verbose=) {
     if(verbose)
       write, "Removing duplicates...";
     data = uniq_data(data);
+  }
+  if(soesort && numberof(data)) {
+    data = sortdata(data, method="soe");
   }
 
   __dirload_apply_filter, data, h_new(), filter, "merged";
