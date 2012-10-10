@@ -44,9 +44,7 @@ files=, filter=, verbose=) {
         skip=25  Use 4% of the points (1 of every 25)
       The subsampling occurs on a file-by-file basis as they are loaded.
 
-    soesort= Specifies whether the data should be sorted by soe. Note that if
-      you use uniq=1, the data will already be sorted by soe and you don't need
-      this option.
+    soesort= Specifies whether the data should be sorted by soe.
         soesort=0   Don't sort (default)
         soesort=1   Sort
 
