@@ -175,8 +175,7 @@ filter=, verbose=) {
   if(uniq) {
     if(verbose)
       write, "Removing duplicates...";
-    idx = set_remove_duplicates(data.soe, idx=1);
-    data = unref(data)(idx);
+    data = uniq_data(data);
   }
 
   __dirload_apply_filter, data, h_new(), filter, "merged";
