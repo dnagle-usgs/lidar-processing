@@ -250,7 +250,7 @@ func mission_flights_rename(oldname, newname) {
     save, mission.data.cache, noop(newname), mission.data.cache(noop(oldname));
   save, mission.data.conf, noop(newname), mission.data.conf(noop(oldname));
   // Swap the positions of the old and new names in conf
-  mission, flights, "swap", mission.data.conf(*,oldname), mission.data.conf(*);
+  mission, flights, swap, mission.data.conf(*,oldname), mission.data.conf(*);
   // Remove entries under old name
   mission, data,
     cache=obj_delete(mission.data.cache, noop(oldname)),
@@ -264,6 +264,9 @@ func mission_flights_swap(idx1, idx2) {
   Swaps the two flights as given by numeric index. This simply reorders the
   sequence of the flights. Each index must be an integer between 1 and the
   number of flights.
+
+  This is primarily intended for internal use. Unlike other commands, it does
+  NOT call 'mission, tksync'.
 */
   if(!is_integer(idx1) || idx1 < 1 || idx1 > mission.data.conf(*))
     error, "invalid idx1: "+pr1(idx1);
@@ -275,7 +278,6 @@ func mission_flights_swap(idx1, idx2) {
   w = indgen(mission.data.conf(*));
   w([idx1,idx2]) = [idx2,idx1];
   mission, data, conf=mission.data.conf(noop(w));
-  mission, tksync;
 }
 swap = mission_flights_swap;
 
@@ -289,7 +291,7 @@ func mission_flights_raise(name) {
     error, "invalid name: "+pr1(name);
   idx = mission.data.conf(*,name);
   if(idx == 1) return;
-  mission, flights, "swap", idx, idx-1;
+  mission, flights, swap, idx, idx-1;
   mission, tksync;
 }
 raise = mission_flights_raise;
@@ -304,7 +306,7 @@ func mission_flights_lower(name) {
     error, "invalid name: "+pr1(name);
   idx = mission.data.conf(*,name);
   if(idx == mission.data.conf(*)) return;
-  mission, flights, "swap", idx, idx+1;
+  mission, flights, swap, idx, idx+1;
   mission, tksync;
 }
 lower = mission_flights_lower;
@@ -410,7 +412,7 @@ func mission_details_rename(flight, oldkey, newkey) {
   // changes)
   save, mission.data.conf(noop(flight)), noop(newkey), fconf(noop(oldkey));
   fconf = mission.data.conf(noop(flight));
-  mission, details, "swap", flight, fconf(*,oldkey), fconf(*);
+  mission, details, swap, flight, fconf(*,oldkey), fconf(*);
   fconf = mission.data.conf(noop(flight));
   save, mission.data.conf, noop(flight), obj_delete(fconf, noop(oldkey));
   mission, tksync;
@@ -447,6 +449,9 @@ func mission_details_swap(flight, idx1, idx2) {
   This simply reorders the sequence of the key-value pairs. Each index must be
   an integer between 1 and the number of key-value pairs for the specified
   flight.
+
+  This is primarily intended for internal use. Unlike other commands, it does
+  NOT call 'mission, tksync'.
 */
   if(!is_string(flight) || !strlen(flight) || !mission.data.conf(*,flight))
     error, "invalid flight: "+pr1(flight);
@@ -461,7 +466,6 @@ func mission_details_swap(flight, idx1, idx2) {
   w = indgen(fconf(*));
   w([idx1,idx2]) = [idx2,idx1];
   save, mission.data.conf, noop(flight), fconf(noop(w));
-  mission, tksync;
 }
 swap = mission_details_swap;
 
