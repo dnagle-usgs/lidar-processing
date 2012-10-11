@@ -115,7 +115,8 @@ namespace eval ::mission::gui {
         $f.mbnPlugins configure -menu $f.mbnPlugins.mb
 
         ttk::frame $f.fraButtons
-        ttk::button $f.btnLoad -text "Load Required Plugins"
+        ttk::button $f.btnLoad -text "Load Required Plugins" \
+                -command [list exp_send "mission, plugins, load;\r"]
         ttk::button $f.btnInitialize -text "Initialize Mission by Path" \
                 -command ::mission::gui::initialize_path_mission
         ::mixin::statevar $f.btnInitialize \
