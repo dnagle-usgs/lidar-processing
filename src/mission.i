@@ -857,7 +857,6 @@ func mission_tksync {
   if(_ytk) {
     conf = mission(json, compact=1);
     tkcmd, swrite(format="::mission::json_import {%s}", conf);
-    write, "Synced";
   }
 }
 tksync = mission_tksync;
