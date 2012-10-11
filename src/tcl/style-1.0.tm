@@ -42,9 +42,9 @@ namespace eval style {
         # Used by ::mixin::revertable
         foreach type {TEntry TCombobox TSpinbox} {
             ttk::style map Revertable.$type -fieldbackground [list \
-                    {alternate readonly} "#E0B45A" \
-                    {alternate disabled} "#E0B45A" \
-                    alternate "#FFCC66" \
+                    {alternate readonly} "#FFA500" \
+                    {alternate disabled} "#FFA500" \
+                    alternate "#FFE5B4" \
                     {*}[ttk::style map $type -fieldbackground]]
         }
 
