@@ -26,6 +26,9 @@ proc ::mission::json_import {json} {
     set data [::json::json2dict $json]
     set conf [dict get $data flights]
     set plugins [dict get $data plugins]
+    if {$plugins eq "null"} {
+        set plugins ""
+    }
 
     ::mission::gui::refresh_flights
 }
@@ -86,7 +89,10 @@ namespace eval ::mission::gui {
         ttk::label $f.lblPlugins -text "Plugins required:"
         ttk::entry $f.entPlugins -state readonly \
                 -textvariable ::mission::plugins
-        ttk::button $f.btnPlugins -text "Modify..."
+        ttk::menubutton $f.mbnPlugins -text "Modify"
+        menu $f.mbnPlugins.mb -postcommand \
+                [list ::mission::gui::plugins_menu $f.mbnPlugins.mb]
+        $f.mbnPlugins configure -menu $f.mbnPlugins.mb
 
         ttk::frame $f.fraButtons
         ttk::button $f.btnLoad -text "Load Required Plugins"
@@ -102,7 +108,7 @@ namespace eval ::mission::gui {
         grid columnconfigure $f.fraBottom {0 2} -weight 1
 
         grid $f.lblBasepath $f.entBasepath $f.btnBasepath
-        grid $f.lblPlugins $f.entPlugins $f.btnPlugins
+        grid $f.lblPlugins $f.entPlugins $f.mbnPlugins
         grid $f.fraButtons - -
         grid $f.lfrFlight - -
         grid $f.fraBottom - -
@@ -137,7 +143,7 @@ namespace eval ::mission::gui {
         grid $f.fraToolbar $f.tvwFlights $f.vsbFlights -in $f.fraFlights
         grid columnconfigure $f.fraFlights 1 -weight 1
 
-        ttk::label $f.lblField -text "Field value:"
+        ttk::label $f.lblField -text "Flight name:"
         ttk::entry $f.entField
         ttk::button $f.btnApply -text "Apply"
         ttk::button $f.btnRevert -text "Revert"
@@ -213,7 +219,8 @@ namespace eval ::mission::gui {
         set pad [list {*}$padx {*}$pady]
         foreach child [winfo descendents $w] {
             switch -- [string range [lindex [split $child .] end] 0 2] {
-                btn {
+                btn -
+                mbn {
                     grid $child -sticky ew {*}$pad
                     $child configure -width 0
                 }
@@ -231,6 +238,39 @@ namespace eval ::mission::gui {
         bind $flights <<TreeviewSelect>> ::mission::gui::refresh_details
 
         return $w
+    }
+
+    proc plugins_menu {mb} {
+        $mb delete 0 end
+        set selected $::mission::plugins
+        set available [::plugins::plugins_list]
+        foreach plugin $available {
+            $mb add checkbutton -label $plugin
+            if {$plugin in $selected} {
+                $mb invoke end
+                $mb entryconfigure end -command [list \
+                        ::mission::gui::plugins_menu_command remove $plugin]
+            } else {
+                $mb entryconfigure end -command [list \
+                        ::mission::gui::plugins_menu_command add $plugin]
+            }
+        }
+    }
+
+    proc plugins_menu_command {action plugin} {
+        if {$action eq "remove"} {
+            set plugins [lsearch -inline -all -not -exact \
+                    $::mission::plugins $plugin]
+        } else {
+            set plugins [lsort [list $plugin {*}$::mission::plugins]]
+        }
+        #set plugins [join $plugins {", "}]
+        if {$plugins eq ""} {
+            set plugins "\[\]"
+        } else {
+            set plugins "\[\"[join $plugins {", "}]\"\]"
+        }
+        exp_send "mission, data, plugins=$plugins; mission, tksync\r"
     }
 
     proc browse_basepath {} {
