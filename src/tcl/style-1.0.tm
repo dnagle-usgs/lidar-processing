@@ -39,7 +39,15 @@ namespace eval style {
         # Suppresses the tabs on a ttk::notebook
         ttk::style layout NoTabs.TNotebook.Tab null
 
-        ttk::style configure Modified.TEntry -fieldbackground "#98FB98"
+        # Used by ::mixin::revertable
+        foreach type {TEntry TCombobox TSpinbox} {
+            ttk::style map Revertable.$type -fieldbackground [list \
+                    {alternate readonly} "#E0B45A" \
+                    {alternate disabled} "#E0B45A" \
+                    alternate "#FFCC66" \
+                    {*}[ttk::style map $type -fieldbackground]]
+        }
+
     }
 
     # When the theme changes, update the option database
