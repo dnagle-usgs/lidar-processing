@@ -48,6 +48,10 @@ namespace eval ::mission::gui {
     variable flights
     variable details
 
+    variable flight_name ""
+    variable detail_type ""
+    variable detail_value ""
+
     proc refresh_vars {} {
         set ::mission::path $::mission::path
         set ::mission::loaded $::mission::loaded
@@ -158,7 +162,8 @@ namespace eval ::mission::gui {
         grid columnconfigure $f.fraFlights 1 -weight 1
 
         ttk::label $f.lblField -text "Flight name:"
-        ttk::entry $f.entField
+        ttk::entry $f.entField \
+            -textvariable ::mission::gui::flight_name
         ttk::button $f.btnApply -text "Apply"
         ttk::button $f.btnRevert -text "Revert"
 
@@ -219,10 +224,12 @@ namespace eval ::mission::gui {
         grid columnconfigure $f.fraDetails 1 -weight 1
 
         ttk::label $f.lblType -text "Field type:"
-        mixin::combobox $f.cboType
+        mixin::combobox $f.cboType \
+                -textvariable ::mission::gui::detail_type
 
         ttk::label $f.lblValue -text "Field value:"
-        ttk::entry $f.entValue
+        ttk::entry $f.entValue \
+                -textvariable ::mission::gui::detail_value
 
         ttk::frame $f.fraButtons
         ttk::button $f.btnApply -text "Apply"
@@ -259,6 +266,7 @@ namespace eval ::mission::gui {
         }
 
         bind $flights <<TreeviewSelect>> ::mission::gui::refresh_details
+        bind $details <<TreeviewSelect>> ::mission::gui::refresh_fields
 
         return $w
     }
@@ -338,7 +346,7 @@ namespace eval ::mission::gui {
     proc refresh_flights {} {
         variable flights
         variable ::mission::conf
-        set selected [$flights selection]
+        set selected [lindex [$flights selection] 0]
         set index [lsearch -exact [$flights children {}] $selected]
         $flights delete [$flights children {}]
         dict for {key val} $conf {
@@ -347,25 +355,25 @@ namespace eval ::mission::gui {
                 -values $key
         }
         if {$selected ne "" && [$flights exists $selected]} {
-            $flights selection set $selected
+            $flights selection set [list $selected]
         } elseif {$index >= 0} {
             set selected [lindex [$flights children {}] $index]
             if {$selected eq ""} {
                 set selected [lindex [$flights children {}] end]
             }
             if {$selected ne ""} {
-                $flights selection set $selected
+                $flights selection set [list $selected]
             }
         }
-        refresh_details
+        ::misc::idle ::mission::gui::refresh_details
     }
 
     proc refresh_details {} {
         variable flights
         variable details
         variable ::mission::conf
-        set flight [$flights selection]
-        set detail [$details selection]
+        set flight [lindex [$flights selection] 0]
+        set detail [lindex [$details selection] 0]
         set index [lsearch -exact [$details children {}] $detail]
         $details delete [$details children {}]
         if {$flight eq ""} {
@@ -377,15 +385,36 @@ namespace eval ::mission::gui {
                 -values [list $key $val]
         }
         if {$detail ne "" && [$details exists $detail]} {
-            $details selection set $detail
+            $details selection set [list $detail]
         } elseif {$index >= 0} {
             set detail [lindex [$details children {}] $index]
             if {$detail eq ""} {
                 set detail [lindex [$details children {}] end]
             }
             if {$detail ne ""} {
-                $details selection set $detail
+                $details selection set [list $detail]
             }
+        }
+        ::misc::idle ::mission::gui::refresh_fields
+    }
+
+    proc refresh_fields {} {
+        variable ::mission::conf
+        variable flights
+        variable details
+        variable flight_name
+        variable detail_type
+        variable detail_value
+        set flight_name [lindex [$flights selection] 0]
+        set detail_type [lindex [$details selection] 0]
+        if {
+            $detail_type ne "" &&
+            [dict exists $conf $flight_name $detail_type]
+        } {
+            set detail_value \
+                    [dict get $conf $flight_name $detail_type]
+        } else {
+            set detail_value ""
         }
     }
 
