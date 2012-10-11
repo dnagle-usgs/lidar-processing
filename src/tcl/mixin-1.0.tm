@@ -140,6 +140,134 @@ proc ::mixin::text::calc_height w {
     return $height
 }
 
+# ::mixin::revertable <widget> ?<options>?
+#   Makes a widget "revertable". When the content has been modified, it will be
+#   put in the "alternate" state. (Calling code should not set or unset the
+#   alternate state, but it is okay to check it.)
+#
+#   When in the "alternate" state, the "revert" method can be invoked to return
+#   the value back to its original value or the "apply" method can be invoked
+#   to update the real value to the current value.
+#
+#   Instead of one text variable, there are now two:
+#       -workvariable is what's visible in the GUI; this is updated as the user
+#           makes changes or when "revert" is called
+#       -textvariable is only updated when "apply" is called and stores the
+#           original value while the user is making changes
+#   Generally speaking, calling code shouldn't want to provide -workvariable
+#   since its value is transient.
+#
+#   There are also two command options added:
+#       -applycommand
+#       -revertcommand
+#   Both are called with two parameters: $old $new. These are the old
+#   (unmodified) and new (modified) values of the widget prior to the apply or
+#   revert. This is invoked *after* the apply or revert has occured.
+#
+#   This is intended to work on ttk::entry, ttk::spinbox, and ttk::combobox. If
+#   the widget doesn't already exist, it will be created as a ttk::entry. The
+#   widget's style will be modified so that the widget indicates visually when
+#   it is modified.
+snit::widgetadaptor ::mixin::revertable {
+    variable textvariable ""
+    variable workvariable ""
+
+    constructor args {
+        if {[winfo exists $win]} {
+            installhull $win
+        } else {
+            installhull using ttk::entry
+        }
+
+        $win configure -style Revertable.[winfo class $win]
+
+        # Have to initially set them manually since they depend on each other
+        set options(-workvariable) [myvar workvariable]
+        set options(-textvariable) [myvar textvariable]
+        # Still have to set them the normal way though to set up the variable
+        # traces
+        $self configure -textvariable "" -workvariable ""
+
+        $self configure {*}$args
+
+        bind $win <Escape> [mymethod revert]
+        bind $win <Return> [mymethod apply]
+    }
+
+    delegate method * to hull
+    delegate option * to hull
+
+    option {-textvariable textVariable Variable} \
+            -configuremethod SetTextVar
+    option {-workvariable workVariable Variable} \
+            -configuremethod SetWorkVar
+
+    option {-applycommand applyCommand ApplyCommand} \
+            -default {}
+    option {-revertcommand revertCommand RevertCommand} \
+            -default {}
+
+    method revert {} {
+        set old [set $options(-textvariable)]
+        set new [set $options(-workvariable)]
+        set $options(-workvariable) [set $options(-textvariable)]
+        if {$options(-revertcommand) ne ""} {
+            eval "$options(-revertcommand) $old $new"
+        }
+    }
+
+    method apply {} {
+        set old [set $options(-textvariable)]
+        set new [set $options(-workvariable)]
+        set $options(-textvariable) [set $options(-workvariable)]
+        if {$options(-applycommand) ne ""} {
+            eval "$options(-applycommand) $old $new"
+        }
+    }
+
+    method SetTextVar {option value} {
+        if {$value eq ""} {
+            set value [myvar textvariable]
+        }
+        trace remove variable $options(-textvariable) write \
+                [mymethod TraceTextWrite]
+        set options(-textvariable) $value
+        trace add variable $options(-textvariable) write \
+                [mymethod TraceTextWrite]
+    }
+
+    method SetWorkVar {option value} {
+        if {$value eq ""} {
+            set value [myvar workvariable]
+        }
+        trace remove variable $options(-workvariable) write \
+                [mymethod TraceWorkWrite]
+        set options(-workvariable) $value
+        trace add variable $options(-workvariable) write \
+                [mymethod TraceWorkWrite]
+        $hull configure -textvariable $options(-workvariable)
+    }
+
+    method TraceTextWrite {name1 name2 op} {
+        if {[$self instate !alternate]} {
+            set $options(-workvariable) [set $options(-textvariable)]
+        }
+        if {[set $options(-workvariable)] eq [set $options(-textvariable)]} {
+            $self state !alternate
+        } else {
+            $self state alternate
+        }
+    }
+
+    method TraceWorkWrite {name1 name2 op} {
+        if {[set $options(-workvariable)] eq [set $options(-textvariable)]} {
+            $self state !alternate
+        } else {
+            $self state alternate
+        }
+    }
+}
+
 # combobox <path> ?options...?
 #     A wrapper around the ttk::combobox widget that adds some additional
 #     functionality that could be found in other combobox implementations.
