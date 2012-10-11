@@ -37,7 +37,9 @@ proc ::mission::json_import {json} {
         set plugins ""
     }
 
-    ::mission::gui::refresh_flights
+    if {[winfo exists $::mission::gui::top]} {
+        ::mission::gui::refresh_flights
+    }
 }
 
 namespace eval ::mission::gui {
