@@ -52,6 +52,10 @@ namespace eval ::mission::gui {
     variable detail_type ""
     variable detail_value ""
 
+    variable widget_flight_name
+    variable widget_detail_type
+    variable widget_detail_value
+
     proc refresh_vars {} {
         set ::mission::path $::mission::path
         set ::mission::loaded $::mission::loaded
@@ -88,6 +92,9 @@ namespace eval ::mission::gui {
     proc gui_edit {w} {
         variable flights
         variable details
+        variable widget_flight_name
+        variable widget_detail_type
+        variable widget_detail_value
 
         ttk::frame $w
         set f $w
@@ -170,6 +177,7 @@ namespace eval ::mission::gui {
                 -command [list $f.entField apply]
         ttk::button $f.btnRevert -text "Revert" \
                 -command [list $f.entField revert]
+        set widget_flight_name $f.entField
 
         ttk::frame $f.fraButtons
         ttk::button $f.btnLoad -text "Load Data"
@@ -236,6 +244,7 @@ namespace eval ::mission::gui {
                 -command [list $f.cboType apply]
         ttk::button $f.btnTypeRevert -text "Revert" \
                 -command [list $f.cboType revert]
+        set widget_detail_type $f.cboType
 
         ttk::label $f.lblValue -text "Field value:"
         ttk::entry $f.entValue
@@ -246,6 +255,7 @@ namespace eval ::mission::gui {
                 -command [list $f.entValue apply]
         ttk::button $f.btnValueRevert -text "Revert" \
                 -command [list $f.entValue revert]
+        set widget_detail_value $f.entValue
 
         ttk::frame $f.fraButtons
         ttk::button $f.btnSelect -text "Select Path..."
@@ -434,7 +444,19 @@ namespace eval ::mission::gui {
         variable flight_name
         variable detail_type
         variable detail_value
+        variable widget_flight_name
+        variable widget_detail_type
+        variable widget_detail_value
+        if {[lindex [$flights selection] 0] ne $flight_name} {
+            $widget_flight_name revert
+            $widget_detail_type revert
+            $widget_detail_value revert
+        }
         set flight_name [lindex [$flights selection] 0]
+        if {[lindex [$details selection] 0] ne $detail_type} {
+            $widget_detail_type revert
+            $widget_detail_value revert
+        }
         set detail_type [lindex [$details selection] 0]
         if {
             $detail_type ne "" &&
