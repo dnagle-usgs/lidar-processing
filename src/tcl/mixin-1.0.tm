@@ -4,6 +4,18 @@ package provide mixin 1.0
 package require imglib
 package require snit
 
+# ::mixin::statevar <widget> ?<options>?
+#   Adds options to a widget that allow its state to be manipulated by a
+#   variable. There are two primary variables that should be set:
+#
+#       -statevariable should be the variable to monitor
+#       -statemap should be a dictionary that specifies what states to apply
+#           for each possible value for the state variable
+#
+#   There's also one additional optional option:
+#       -statedefault specifies the state to apply if the state variable's
+#           value isn't in the statemap; if blank, an unknown value will leave
+#           the state unchanged
 snit::widgetadaptor ::mixin::statevar {
     constructor args {
         installhull $win
@@ -22,6 +34,8 @@ snit::widgetadaptor ::mixin::statevar {
 
     option {-statemap stateMap Map} -default {}
 
+    option {-statedefault stateDefault StateDefault} -default {}
+
     method SetStateVar {option value} {
         if {$options(-statevariable) ne ""} {
             catch [list trace remove variable $options(-statevariable) write \
@@ -39,6 +53,8 @@ snit::widgetadaptor ::mixin::statevar {
         set state [set $options(-statevariable)]
         if {[dict exists $options(-statemap) $state]} {
             set state [dict get $options(-statemap) $state]
+        } elseif {$options(-statedefault) ne ""} {
+            set state $options(-statedefault)
         }
         if {[catch [list $self state $state]]} {
             if {[catch [list $self configure -state $state]]} {
