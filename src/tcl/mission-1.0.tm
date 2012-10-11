@@ -162,10 +162,14 @@ namespace eval ::mission::gui {
         grid columnconfigure $f.fraFlights 1 -weight 1
 
         ttk::label $f.lblField -text "Flight name:"
-        ttk::entry $f.entField \
-            -textvariable ::mission::gui::flight_name
-        ttk::button $f.btnApply -text "Apply"
-        ttk::button $f.btnRevert -text "Revert"
+        ttk::entry $f.entField
+        ::mixin::revertable $f.entField \
+                -textvariable ::mission::gui::flight_name \
+                -applycommand ::mission::gui::apply_flight_name
+        ttk::button $f.btnApply -text "Apply" \
+                -command [list $f.entField apply]
+        ttk::button $f.btnRevert -text "Revert" \
+                -command [list $f.entField revert]
 
         ttk::frame $f.fraButtons
         ttk::button $f.btnLoad -text "Load Data"
@@ -224,24 +228,34 @@ namespace eval ::mission::gui {
         grid columnconfigure $f.fraDetails 1 -weight 1
 
         ttk::label $f.lblType -text "Field type:"
-        mixin::combobox $f.cboType \
-                -textvariable ::mission::gui::detail_type
+        mixin::combobox $f.cboType
+        ::mixin::revertable $f.cboType \
+                -textvariable ::mission::gui::detail_type \
+                -applycommand ::mission::gui::apply_detail_type
+        ttk::button $f.btnTypeApply -text "Apply" \
+                -command [list $f.cboType apply]
+        ttk::button $f.btnTypeRevert -text "Revert" \
+                -command [list $f.cboType revert]
 
         ttk::label $f.lblValue -text "Field value:"
-        ttk::entry $f.entValue \
-                -textvariable ::mission::gui::detail_value
+        ttk::entry $f.entValue
+        ::mixin::revertable $f.entValue \
+                -textvariable ::mission::gui::detail_value \
+                -applycommand ::mission::gui::apply_detail_value
+        ttk::button $f.btnValueApply -text "Apply" \
+                -command [list $f.entValue apply]
+        ttk::button $f.btnValueRevert -text "Revert" \
+                -command [list $f.entValue revert]
 
         ttk::frame $f.fraButtons
-        ttk::button $f.btnApply -text "Apply"
-        ttk::button $f.btnRevert -text "Revert"
         ttk::button $f.btnSelect -text "Select Path..."
-        grid x $f.btnApply $f.btnRevert $f.btnSelect -in $f.fraButtons
-        grid columnconfigure $f.fraButtons {0 4} -weight 1
+        grid x $f.btnSelect -in $f.fraButtons
+        grid columnconfigure $f.fraButtons {0 2} -weight 1
 
-        grid $f.fraDetails -
-        grid $f.lblType $f.cboType
-        grid $f.lblValue $f.entValue
-        grid $f.fraButtons -
+        grid $f.fraDetails - - -
+        grid $f.lblType $f.cboType $f.btnTypeApply $f.btnTypeRevert
+        grid $f.lblValue $f.entValue $f.btnValueApply $f.btnValueRevert
+        grid $f.fraButtons - - -
         grid columnconfigure $f 1 -weight 1
 
         set padx [list -padx 2]
@@ -343,6 +357,21 @@ namespace eval ::mission::gui {
 
     }
 
+    proc apply_flight_name {old new} {
+        exp_send "mission, flights, rename, \"$old\", \"$new\";\r"
+    }
+
+    proc apply_detail_type {old new} {
+        variable flight_name
+        exp_send "mission, details, rename, \"$flight_name\", \"$old\", \"$new\";\r"
+    }
+
+    proc apply_detail_value {old new} {
+        variable flight_name
+        variable detail_type
+        exp_send "mission, details, set, \"$flight_name\", \"$detail_type\", \"$new\";\r"
+    }
+
     proc refresh_flights {} {
         variable flights
         variable ::mission::conf
@@ -352,7 +381,7 @@ namespace eval ::mission::gui {
         dict for {key val} $conf {
             $flights insert {} end \
                 -id $key \
-                -values $key
+                -values [list $key]
         }
         if {$selected ne "" && [$flights exists $selected]} {
             $flights selection set [list $selected]
