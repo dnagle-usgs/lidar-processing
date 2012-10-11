@@ -10,6 +10,13 @@ if {![namespace exists ::mission]} {
         variable loaded ""
         variable cache_mode ""
         variable conf {}
+
+        variable commands
+        array set commands {
+            initialize_path_mission {}
+            initialize_path_flight {}
+            load_data {}
+        }
     }
 
     tky_tie add read ::mission::path \
@@ -96,7 +103,12 @@ namespace eval ::mission::gui {
 
         ttk::frame $f.fraButtons
         ttk::button $f.btnLoad -text "Load Required Plugins"
-        ttk::button $f.btnInitialize -text "Initialize Mission by Path"
+        ttk::button $f.btnInitialize -text "Initialize Mission by Path" \
+                -command ::mission::gui::initialize_path_mission
+        ::mixin::statevar $f.btnInitialize \
+                -statemap {"" disabled} \
+                -statedefault {!disabled} \
+                -statevariable ::mission::commands(initialize_path_mission)
         grid x $f.btnLoad $f.btnInitialize -in $f.fraButtons
         grid columnconfigure $f.fraButtons {0 3} -weight 1
 
@@ -150,7 +162,16 @@ namespace eval ::mission::gui {
 
         ttk::frame $f.fraButtons
         ttk::button $f.btnLoad -text "Load Data"
-        ttk::button $f.btnInitialize -text "Initialize Flight by Path"
+        ::mixin::statevar $f.btnLoad \
+                -statemap {"" disabled} \
+                -statedefault {!disabled} \
+                -statevariable ::mission::commands(load_data)
+        ttk::button $f.btnInitialize -text "Initialize Flight by Path" \
+                -command ::mission::gui::initialize_path_flight
+        ::mixin::statevar $f.btnInitialize \
+                -statemap {"" disabled} \
+                -statedefault {!disabled} \
+                -statevariable ::mission::commands(initialize_path_flight)
         grid x $f.btnLoad $f.btnInitialize -in $f.fraButtons
         grid columnconfigure $f.fraButtons {0 3} -weight 1
 
@@ -289,6 +310,27 @@ namespace eval ::mission::gui {
             return
         }
         exp_send "mission, data, path=\"$new\";\r"
+    }
+
+    proc initialize_path_mission {} {
+        if {$::mission::path ne ""} {
+            set path $::mission::path
+        } else {
+            set path [tk_chooseDirectory \
+                    -mustexist 1 \
+                    -title "Choose mission base path"]
+        }
+        if {![file isdirectory $path]} {
+            tk_messageBox \
+                    -message "Invalid path selected" \
+                    -type ok -icon error
+            return
+        }
+        {*}$::mission::commands(initialize_path_flight) $path
+    }
+
+    proc initialize_path_flight {} {
+
     }
 
     proc refresh_flights {} {
