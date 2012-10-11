@@ -3,6 +3,7 @@
 package provide l1pro::main::menu 1.0
 package require tkcon
 package require plugins
+package require mission
 
 namespace eval ::l1pro::main::menu {
 
@@ -83,7 +84,9 @@ proc menu_file_variables mb {
 
 proc menu_mission mb {
     menu $mb
-    $mb add command {*}[menulabel "&Mission configuration manager"] \
+    $mb add command {*}[menulabel "&Mission configuration manager (new)"] \
+            -command ::mission::gui::launch
+    $mb add command {*}[menulabel "Mission configuration manager (&old)"] \
             -command ::missionconf::launch_gui
     $mb add command {*}[menulabel "&Plotting tool"] \
             -command ::plot::menu
