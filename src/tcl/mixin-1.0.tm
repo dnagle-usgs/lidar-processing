@@ -197,12 +197,17 @@ snit::widgetadaptor ::mixin::revertable {
 
         $win configure -style Revertable.[winfo class $win]
 
+        set original_var [$hull cget -textvariable]
+
         # Have to initially set them manually since they depend on each other
         set options(-workvariable) [myvar workvariable]
         set options(-textvariable) [myvar textvariable]
         # Still have to set them the normal way though to set up the variable
         # traces
         $self configure -textvariable "" -workvariable ""
+        if {$original_var ne ""} {
+            $self configure -textvariable $original_var
+        }
 
         $self configure {*}$args
 
