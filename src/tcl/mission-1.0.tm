@@ -2,6 +2,8 @@
 
 package provide mission 1.0
 package require imglib
+package require style
+package require fileutil
 
 if {![namespace exists ::mission]} {
     namespace eval ::mission {
@@ -259,9 +261,12 @@ namespace eval ::mission::gui {
         set widget_detail_value $f.entValue
 
         ttk::frame $f.fraButtons
-        ttk::button $f.btnSelect -text "Select Path..."
-        grid x $f.btnSelect -in $f.fraButtons
-        grid columnconfigure $f.fraButtons {0 2} -weight 1
+        ttk::button $f.btnSelectFile -text "Select File..." \
+                -command ::mission::gui::detail_select_file
+        ttk::button $f.btnSelectDir -text "Select Directory..." \
+                -command ::mission::gui::detail_select_dir
+        grid x $f.btnSelectFile $f.btnSelectDir -in $f.fraButtons
+        grid columnconfigure $f.fraButtons {0 3} -weight 1
 
         grid $f.fraDetails - - -
         grid $f.lblType $f.cboType $f.btnTypeApply $f.btnTypeRevert
@@ -381,6 +386,87 @@ namespace eval ::mission::gui {
         variable flight_name
         variable detail_type
         exp_send "mission, details, set, \"$flight_name\", \"$detail_type\", \"$new\";\r"
+    }
+
+    proc detail_select_initialdir {} {
+        variable ::mission::conf
+        variable flight_name
+        variable detail_type
+        variable detail_value
+        set base $::mission::path
+        if {$base eq "" || ![file isdirectory $base]} {
+            set base /
+        }
+        set path $base
+        set terminal [list $base . /]
+        set candidates [list]
+        if {[dict exists $conf $flight_name data_path]} {
+            lappend candidates [dict get $conf $flight_name data_path]
+        }
+        if {[dict exists $conf $flight_name $detail_type]} {
+            lappend candidates [dict get $conf $flight_name $detail_type]
+        }
+        if {$detail_value ne ""} {
+            lappend candidates $detail_value
+        }
+        foreach temp $candidates {
+            set temp [file join $base $temp]
+            while {$temp ni $terminal && ![file isdirectory $temp]} {
+                set temp [file dirname $temp]
+            }
+            if {$temp ni $terminal && [file isdirectory $temp]} {
+                set path $temp
+            }
+        }
+        return $path
+    }
+
+    proc detail_select_file {} {
+        variable top
+        variable flight_name
+        variable detail_type
+        variable detail_value
+
+        set initialfile ""
+        if {$detail_value ne ""} {
+            set initialfile [file join $::mission::path $detail_value]
+        }
+        if {[file isfile $initialfile]} {
+            set initialdir [file dirname $initialfile]
+            set initialfile [file tail $initialfile]
+        } else {
+            set initialdir [detail_select_initialdir]
+            set initialfile ""
+        }
+
+        set chosen [tk_getOpenFile \
+                -initialdir $initialdir \
+                -initialfile $initialfile \
+                -parent $top \
+                -title "Select file for \"$detail_type\" for \"$flight_name\""]
+
+        if {$chosen ne "" && [file isfile $chosen]} {
+            set path [::fileutil::relative $::mission::path $chosen]
+            exp_send "mission, details, set, \"$flight_name\", \"$detail_type\", \"$path\";\r"
+        }
+    }
+
+    proc detail_select_dir {} {
+        variable top
+        variable flight_name
+        variable detail_type
+        variable detail_value
+
+        set chosen [tk_chooseDirectory \
+                -initialdir [detail_select_initialdir] \
+                -parent $top \
+                -mustexist 1 \
+                -title "Select directory for \"$detail_type\" for \"$flight_name\""]
+
+        if {$chosen ne "" && [file isdirectory $chosen]} {
+            set path [::fileutil::relative $::mission::path $chosen]
+            exp_send "mission, details, set, \"$flight_name\", \"$detail_type\", \"$path\";\r"
+        }
     }
 
     proc refresh_flights {} {
