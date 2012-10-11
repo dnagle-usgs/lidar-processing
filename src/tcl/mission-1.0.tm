@@ -337,6 +337,7 @@ namespace eval ::mission::gui {
         variable flights
         variable ::mission::conf
         set selected [$flights selection]
+        set index [lsearch -exact [$flights children {}] $selected]
         $flights delete [$flights children {}]
         dict for {key val} $conf {
             $flights insert {} end \
@@ -345,6 +346,14 @@ namespace eval ::mission::gui {
         }
         if {$selected ne "" && [$flights exists $selected]} {
             $flights selection set $selected
+        } elseif {$index >= 0} {
+            set selected [lindex [$flights children {}] $index]
+            if {$selected eq ""} {
+                set selected [lindex [$flights children {}] end]
+            }
+            if {$selected ne ""} {
+                $flights selection set $selected
+            }
         }
         refresh_details
     }
@@ -355,6 +364,7 @@ namespace eval ::mission::gui {
         variable ::mission::conf
         set flight [$flights selection]
         set detail [$details selection]
+        set index [lsearch -exact [$details children {}] $detail]
         $details delete [$details children {}]
         if {$flight eq ""} {
             return
@@ -366,6 +376,14 @@ namespace eval ::mission::gui {
         }
         if {$detail ne "" && [$details exists $detail]} {
             $details selection set $detail
+        } elseif {$index >= 0} {
+            set detail [lindex [$details children {}] $index]
+            if {$detail eq ""} {
+                set detail [lindex [$details children {}] end]
+            }
+            if {$detail ne ""} {
+                $details selection set $detail
+            }
         }
     }
 
