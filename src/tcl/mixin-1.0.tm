@@ -228,7 +228,7 @@ snit::widgetadaptor ::mixin::revertable {
         set new [set $options(-workvariable)]
         set $options(-workvariable) [set $options(-textvariable)]
         if {$options(-revertcommand) ne ""} {
-            eval "$options(-revertcommand) $old $new"
+            eval $options(-revertcommand) [list $old $new]
         }
     }
 
@@ -237,7 +237,7 @@ snit::widgetadaptor ::mixin::revertable {
         set new [set $options(-workvariable)]
         set $options(-textvariable) [set $options(-workvariable)]
         if {$options(-applycommand) ne ""} {
-            eval "$options(-applycommand) $old $new"
+            eval $options(-applycommand) [list $old $new]
         }
     }
 
