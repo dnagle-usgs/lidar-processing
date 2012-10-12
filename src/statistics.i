@@ -103,6 +103,14 @@ func r_squared(y, x) {
   return pearson_correlation(y, yp);
 }
 
+func root_mean_square(x) {
+/* DOCUMENT root_mean_square(x)
+  Returns the root mean square of X. The yorick built-in "rms" actually returns
+  standard deviation.
+*/
+  return sqrt((x*x)(avg));
+}
+
 func covariance(x, y) {
 /* DOCUMENT covariance(x, y)
   Returns the covariance of the two variables.
