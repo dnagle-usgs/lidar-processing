@@ -182,10 +182,13 @@ func gt_metrics(z1, z2, metrics) {
   Valid metrics:
     "# points" - Number of points
     "COV" - Covariance of z1 and z2
+    "MinE" - Minimum z2-z1
     "Q1E" - First quartile of z2-z1
     "Q3E" - Third quartile of z2-z1
+    "MaxE" - Maximum z2-z1
     "Median E" - Median of z2-z1
     "ME" - Average of z2-z1
+    "MAE" - Average of abs(z2-z1)
     "Midhinge E" - Midhinge of z2-z1
     "Trimean E" - Trimean of z2-z1
     "IQME" - Interquartile mean of z2-z1
@@ -194,7 +197,8 @@ func gt_metrics(z1, z2, metrics) {
     "95% CI E" - 95% confidence interval for z2-z1
     "E skewness" - Skewness of z2-z1
     "E kurtosis" - Kurtosis of z2-z1
-    "R^2" - R squared of z2 versus z1
+    "Rsq" - R squared of z2 versus z1
+    "E StdDev" - Standard deviation of z2-z2
     "RMSE" - Root-mean-squared of z2-z1
 
   For information about the statistics, SEE ALSO:
@@ -210,6 +214,10 @@ func gt_metrics(z1, z2, metrics) {
       result(i) = swrite(format="%d", numberof(z1));
     else if(metrics(i) == "COV")
       result(i) = swrite(format="%.3f", covariance(z1,z2));
+    else if (metrics(i) == "MinE")
+      result(i) = swrite(format="%.3f", zdif(min));
+    else if (metrics(i) == "MaxE")
+      result(i) = swrite(format="%.3f", zdif(max));
     else if(metrics(i) == "Q1E")
       result(i) = swrite(format="%.3f", quartiles(zdif)(1));
     else if(metrics(i) == "Q3E")
@@ -235,10 +243,14 @@ func gt_metrics(z1, z2, metrics) {
       result(i) = swrite(format="%.3f", skewness(zdif));
     else if(metrics(i) == "E kurtosis")
       result(i) = swrite(format="%.3f", kurtosis(zdif));
-    else if(metrics(i) == "R^2")
+    else if(metrics(i) == "Rsq")
       result(i) = swrite(format="%.3f", r_squared(z2, z1));
     else if(metrics(i) == "RMSE")
+      result(i) = swrite(format="%.3f", root_mean_square(zdif));
+    else if(metrics(i) == "E StdDev")
       result(i) = swrite(format="%.3f", zdif(rms));
+    else if (metrics(i) == "MAE")
+      result(i) = swrite(format="%.3f", abs(zdif)(avg));
     else
       error, "Unknown metric: " + metrics(i);
   }
@@ -306,7 +318,7 @@ metrics=) {
   default, ci95, "hide";
   default, linear_lsf, "solid black 1.0";
   default, quadratic_lsf, "hide";
-  default, metrics, ["# points", "RMSE", "ME", "R^2"];
+  default, metrics, ["# points", "RMSE", "ME", "Rsq"];
 
   if(win < 0)
     win = 0;
@@ -356,9 +368,6 @@ metrics=) {
 
   if(!is_scalar(metrics)) {
     values = gt_metrics(z1, z2, metrics);
-    w = where(strglob("*^*", metrics));
-    if(numberof(w))
-      metrics(w) += "^";
     display = strjoin(metrics + ": " + values, "\n");
     vp = viewport();
     plt, display, vp(1) + .01, vp(4) - .01, justify="LT", height=12;
@@ -384,13 +393,13 @@ func gt_report(comparisons, which, metrics=, title=, outfile=) {
   Options:
     metrics= An array of metrics to report on. This array should be suitable
       for gt_metrics. Example:
-        metrics=["# points", "RMSE", "ME", "R^2"]    (default)
+        metrics=["# points", "RMSE", "ME", "Rsq"]    (default)
     title= If provided, this will be printed as a title at the top of the
       report.
     outfile= If provided, then the output will go to this file instead of
       being printed on the screen.
 */
-  default, metrics, ["# points", "RMSE", "ME", "R^2"];
+  default, metrics, ["# points", "RMSE", "ME", "Rsq"];
   fmt = swrite(format="%%%ds", strlen(metrics)(max));
   output = swrite(format=fmt, grow("", metrics));
   for(i = 1; i <= numberof(which); i++) {
