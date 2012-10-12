@@ -215,6 +215,13 @@ snit::widgetadaptor ::mixin::revertable {
         bind $win <Return> [mymethod apply]
     }
 
+    destructor {
+        trace remove variable $options(-textvariable) write \
+                [mymethod TraceTextWrite]
+        trace remove variable $options(-workvariable) write \
+                [mymethod TraceWorkWrite]
+    }
+
     delegate method * to hull
     delegate option * to hull
 
