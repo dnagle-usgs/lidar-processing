@@ -70,6 +70,7 @@ namespace eval ::mission::gui {
         toplevel $top
         wm title $top "Mission Configuration"
         gui_empty $top.empty
+        gui_load $top.load
         gui_edit $top.edit
 
         bind $top <Enter> ::mission::gui::refresh_vars
@@ -90,11 +91,16 @@ namespace eval ::mission::gui {
     }
 
     proc update_view {} {
+        variable ::mission::conf
         variable top
         variable view
-        pack forget $top.empty $top.edit
+        pack forget $top.empty $top.edit $top.load
         if {$view eq "load"} {
-            set w $top.empty
+            if {[llength $conf]} {
+                set w $top.load
+            } else {
+                set w $top.empty
+            }
             wm geometry $top {}
         } else {
             set w $top.edit
@@ -127,10 +133,8 @@ namespace eval ::mission::gui {
     }
 
     proc gui_load {w} {
-        ttk::frame $w.full
-        set f [ttk::frame $w.f]
-        pack $w.full -expand both -fill 1
-        pack $f -in $w.full -anchor nw
+        ttk::frame $w
+        set f $w
 
         ttk::frame $f.days
         ttk::frame $f.extra
@@ -138,7 +142,7 @@ namespace eval ::mission::gui {
                 -command [list ::mission::gui::change_view edit]
         grid $f.days -sticky ne
         grid $f.extra -sticky ew
-        grid $f.button
+        grid $f.switch
 
         return $w
     }
