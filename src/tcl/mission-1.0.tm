@@ -355,6 +355,7 @@ namespace eval ::mission::gui {
                     -type ok -icon error
             return
         }
+        set new [ystr $new]
         exp_send "mission, data, path=\"$new\";\r"
     }
 
@@ -380,18 +381,26 @@ namespace eval ::mission::gui {
     }
 
     proc apply_flight_name {old new} {
+        set old [ystr $old]
+        set new [ystr $new]
         exp_send "mission, flights, rename, \"$old\", \"$new\";\r"
     }
 
     proc apply_detail_type {old new} {
         variable flight_name
-        exp_send "mission, details, rename, \"$flight_name\", \"$old\", \"$new\";\r"
+        set flight [ystr $flight_name]
+        set old [ystr $old]
+        set new [ystr $new]
+        exp_send "mission, details, rename, \"$flight\", \"$old\", \"$new\";\r"
     }
 
     proc apply_detail_value {old new} {
         variable flight_name
         variable detail_type
-        exp_send "mission, details, set, \"$flight_name\", \"$detail_type\", \"$new\";\r"
+        set flight [ystr $flight_name]
+        set detail [ystr $detail_type]
+        set new [ystr $new]
+        exp_send "mission, details, set, \"$flight\", \"$detail\", \"$new\";\r"
     }
 
     # type must be "flights" or "details"
@@ -404,6 +413,7 @@ namespace eval ::mission::gui {
             return
         }
         if {$type eq "flights"} {
+            set flight [ystr $flight]
             exp_send "mission, $type, $action, \"$flight\";\r"
             return
         }
@@ -411,7 +421,38 @@ namespace eval ::mission::gui {
         if {$detail eq ""} {
             return
         }
+        set flight [ystr $flight]
+        set detail [ystr $detail]
         exp_send "mission, $type, $action, \"$flight\", \"$detail\";\r"
+    }
+
+    proc quick_add {type} {
+        variable ::mission::conf
+        variable flights
+        variable details
+        if {$type eq "flights"} {
+            set base "New Flight"
+        } else {
+            set base "New Detail"
+        }
+        set name "$base"
+        set counter 1
+        while {[dict exists $conf $name]} {
+            incr counter
+            set name "$base $counter"
+        }
+
+        if {$type eq "flights"} {
+            exp_send "mission, flights, add, \"$name\";\r"
+            return
+        }
+
+        set flight [lindex [$flights selection] 0]
+        if {$flight eq ""} {
+            return
+        }
+        set flight [ystr $flight]
+        exp_send "mission, details, add, \"$flight\", \"$name\";\r"
     }
 
     proc detail_select_initialdir {} {
@@ -473,7 +514,10 @@ namespace eval ::mission::gui {
 
         if {$chosen ne "" && [file isfile $chosen]} {
             set path [::fileutil::relative $::mission::path $chosen]
-            exp_send "mission, details, set, \"$flight_name\", \"$detail_type\", \"$path\";\r"
+            set flight [ystr $flight_name]
+            set detail [ystr $detail_type]
+            set path [ystr $path]
+            exp_send "mission, details, set, \"$flight\", \"$detail\", \"$path\";\r"
         }
     }
 
@@ -491,7 +535,10 @@ namespace eval ::mission::gui {
 
         if {$chosen ne "" && [file isdirectory $chosen]} {
             set path [::fileutil::relative $::mission::path $chosen]
-            exp_send "mission, details, set, \"$flight_name\", \"$detail_type\", \"$path\";\r"
+            set flight [ystr $flight_name]
+            set detail [ystr $detail_type]
+            set path [ystr $path]
+            exp_send "mission, details, set, \"$flight\", \"$detail\", \"$path\";\r"
         }
     }
 
@@ -582,4 +629,10 @@ namespace eval ::mission::gui {
         }
     }
 
+    proc ystr {str} {
+        return [string map {
+                    \" \\\"
+                    \\ \\\\
+                } $str]
+    }
 }
