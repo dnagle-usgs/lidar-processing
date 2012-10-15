@@ -708,7 +708,7 @@ func mission_json_export(compact) {
       "path", mission.data.path,
       "user", get_user(),
       "host", get_host(),
-      "timestamp", soe2iso86501(getsoe()),
+      "timestamp", soe2iso8601(getsoe()),
       "repository", _hgid
     );
   }
