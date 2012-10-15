@@ -258,60 +258,6 @@ func load_pnav2FS(junk, ifn=) {
   return fs;
 }
 
-func autoselect_pnav(dir) {
-/* DOCUMENT pnav_file = autoselect_pnav(dir)
-
-  This function attempts to determine an appropriate pnav file to load for a
-  dataset.
-
-  The dir parameter should be either the path to the mission day or the path
-  to the mission day's trajectories subdirectory.
-
-  The function will find all *-pnav.ybin files underneath the trajectories
-  directory. If there are more than one, then it selects based on what kind of
-  file it is with the following priorities (high to low): *-p-*, *-b-*, *-r-*,
-  and *-u-*. If there are still multiple matches, then it prefers
-  *-cmb-pnav.ybin if present. If there are still multiple matches, it sorts
-  them then returns the last one -- in many cases, this will result in the
-  most recently created file being chosen.
-
-  If no matches are found, [] is returned.
-
-  This function is not guaranteed to return the best or most appropriate pnav
-  file. It is a convenience function that should only be used when you know
-  it's safe to be used.
-*/
-// Original David Nagle 2009-01-21
-  dir = file_join(dir);
-  if(file_tail(dir) != "trajectories") {
-    if(file_exists(file_join(dir, "trajectories"))) {
-      dir = file_join(dir, "trajectories");
-    }
-  }
-  candidates = find(dir, glob="*-pnav.ybin");
-  if(!numberof(candidates)) return [];
-  patterns = [
-    "*-p-*-cmb-pnav.ybin",
-    "*-p-*-pnav.ybin",
-    "*-b-*-cmb-pnav.ybin",
-    "*-b-*-pnav.ybin",
-    "*-r-*-cmb-pnav.ybin",
-    "*-r-*-pnav.ybin",
-    "*-u-*-cmb-pnav.ybin",
-    "*-u-*-pnav.ybin",
-    "*-pnav.ybin"
-  ];
-  for(i = 1; i <= numberof(patterns); i++) {
-    w = where(strglob(patterns(i), candidates));
-    if(numberof(w)) {
-      candidates = candidates(w);
-      candidates = candidates(sort(candidates));
-      return candidates(0);
-    }
-  }
-  return [];
-}
-
 func pnav2fs(pn, soe=) {
 /* DOCUMENT pnav2fs(pn, soe=)
   Converts data in PNAV format to FS format. If provided, SOE is used for
