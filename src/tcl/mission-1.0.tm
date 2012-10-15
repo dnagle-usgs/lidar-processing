@@ -254,7 +254,7 @@ namespace eval ::mission::gui {
         ::mixin::statevar $f.btnLoad \
                 -statemap {"" disabled} \
                 -statedefault {!disabled} \
-                -statevariable ::mission::commands(load_data)
+                -statevariable ::mission::gui::load_data_auto
         ttk::button $f.btnInitialize -text "Initialize Flight by Path" \
                 -command ::mission::gui::initialize_path_flight
         ::mixin::statevar $f.btnInitialize \
@@ -742,6 +742,22 @@ namespace eval ::mission::gui {
         }
     }
 
+    proc load_data_auto {} {
+        variable flights
+        set flight [lindex [$flights selection] 0]
+        if {$flight ne ""} {
+            load_data_flight $flight
+        }
+    }
+
+    proc load_data_flight {flight} {
+        if {$::mission::commands(load_data) eq ""} {
+            return
+        }
+        {*}$::mission::commands(load_data) $flight
+    }
+
+    namespace export ystr
     proc ystr {str} {
         return [string map {
                     \" \\\"
