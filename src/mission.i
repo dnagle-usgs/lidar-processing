@@ -701,8 +701,8 @@ func mission_json_export(compact) {
   if(!compact)
     save, output, mcversion=2;
   save, output,
-    flights=mission.data.conf,
-    plugins=mission.data.plugins;
+    plugins=mission.data.plugins,
+    flights=mission.data.conf;
   if(!compact) {
     save, output, "save environment", save(
       "path", mission.data.path,
