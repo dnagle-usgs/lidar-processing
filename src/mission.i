@@ -850,6 +850,7 @@ func mission_read(fn) {
   f = open(fn, "r");
   mission, json, rdfile(f);
   close, f;
+  mission, plugins, load;
 }
 read = mission_read;
 
