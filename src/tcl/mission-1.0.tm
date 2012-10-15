@@ -148,7 +148,8 @@ namespace eval ::mission::gui {
 
         ttk::frame $f.fraToolbar
         ttk::button $f.tbnPlus -style Toolbutton \
-                -image ::imglib::plus
+                -image ::imglib::plus \
+                -command [list ::mission::gui::quick_add_flight]
         ttk::button $f.tbnX -style Toolbutton \
                 -image ::imglib::x \
                 -command [list ::mission::gui::quick_action flights remove]
@@ -214,7 +215,8 @@ namespace eval ::mission::gui {
 
         ttk::frame $f.fraToolbar
         ttk::button $f.tbnPlus -style Toolbutton \
-                -image ::imglib::plus
+                -image ::imglib::plus \
+                -command [list ::mission::gui::quick_add_detail]
         ttk::button $f.tbnX -style Toolbutton \
                 -image ::imglib::x \
                 -command [list ::mission::gui::quick_action details remove]
@@ -426,33 +428,38 @@ namespace eval ::mission::gui {
         exp_send "mission, $type, $action, \"$flight\", \"$detail\";\r"
     }
 
-    proc quick_add {type} {
+    proc quick_add_flight {} {
         variable ::mission::conf
         variable flights
         variable details
-        if {$type eq "flights"} {
-            set base "New Flight"
-        } else {
-            set base "New Detail"
-        }
+        set base "New Flight"
         set name "$base"
         set counter 1
         while {[dict exists $conf $name]} {
             incr counter
             set name "$base $counter"
         }
+        exp_send "mission, flights, add, \"$name\";\r"
+    }
 
-        if {$type eq "flights"} {
-            exp_send "mission, flights, add, \"$name\";\r"
-            return
-        }
-
+    proc quick_add_detail {} {
+        variable ::mission::conf
+        variable flights
+        variable details
         set flight [lindex [$flights selection] 0]
         if {$flight eq ""} {
             return
         }
+        set base "New Detail"
+        set name "$base"
+        set counter 1
+        while {[dict exists $conf $flight $name]} {
+            incr counter
+            set name "$base $counter"
+        }
+
         set flight [ystr $flight]
-        exp_send "mission, details, add, \"$flight\", \"$name\";\r"
+        exp_send "mission, details, set, \"$flight\", \"$name\", \"\";\r"
     }
 
     proc detail_select_initialdir {} {
