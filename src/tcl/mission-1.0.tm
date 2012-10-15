@@ -73,6 +73,8 @@ namespace eval ::mission::gui {
         gui_load $top.load
         gui_edit $top.edit
 
+        $top configure -menu [menu::build $top.mb]
+
         bind $top <Enter> ::mission::gui::refresh_vars
         bind $top <Visibility> ::mission::gui::refresh_vars
 
@@ -698,5 +700,51 @@ namespace eval ::mission::gui {
                     \" \\\"
                     \\ \\\\
                 } $str]
+    }
+
+    namespace eval menu {
+        namespace import ::misc::menulabel
+
+        proc build {mb} {
+            menu $mb
+            $mb add cascade {*}[menulabel &File] \
+                    -menu [menu_file $mb.file]
+            #$mb add cascade {*}[menulabel &Mode] \
+            #        -menu [menu_mode $mb.mode]
+            #$mb add cascade {*}[menulabel &Actions] \
+            #        -menu [menu_actions $mb.actions]
+            $mb add cascade {*}[menulabel &Cache] \
+                    -menu [menu_cache $mb.cache]
+            return $mb
+        }
+
+        proc menu_file {mb} {
+            menu $mb
+            $mb add command {*}[menulabel "New configuration"]
+            $mb add separator
+            $mb add command {*}[menulabel "Load configuration..."]
+            $mb add command {*}[menulabel "Save configuration..."]
+            return $mb
+        }
+
+        proc menu_cache {mb} {
+            menu $mb
+            $mb add cascade {*}[menulabel "Caching &mode..."] \
+                    -menu [menu_cache_mode $mb.mode]
+            return $mb
+        }
+
+        proc menu_cache_mode {mb} {
+            menu $mb
+            foreach mode {disabled onload onchange} {
+                $mb add radiobutton \
+                        -label $mode \
+                        -variable ::mission::cache_mode \
+                        -value $mode \
+                        -command [list exp_send \
+                                "mission, data, cache_mode=\"$mode\";\r"]
+            }
+            return $mb
+        }
     }
 }
