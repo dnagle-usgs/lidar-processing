@@ -98,7 +98,6 @@ namespace eval ::mission::gui {
         variable ::mission::conf
         variable top
         variable view
-        pack forget $top.empty $top.edit $top.load
         if {$view eq "load"} {
             if {[llength $conf]} {
                 set w $top.load
@@ -109,7 +108,10 @@ namespace eval ::mission::gui {
         } else {
             set w $top.edit
         }
-        pack $w -fill both -expand 1
+        if {$w ni [pack slaves $top]} {
+            pack forget $top.empty $top.edit $top.load
+            pack $w -fill both -expand 1
+        }
     }
 
     proc gui_empty {w} {
