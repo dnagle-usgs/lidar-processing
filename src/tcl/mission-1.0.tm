@@ -47,6 +47,7 @@ proc ::mission::json_import {json} {
 namespace eval ::mission::gui {
 
     variable top .missconf
+    variable view load
     variable flights
     variable details
 
@@ -68,13 +69,61 @@ namespace eval ::mission::gui {
         variable top
         toplevel $top
         wm title $top "Mission Configuration"
+        gui_empty $top.empty
         gui_edit $top.edit
-        pack $top.edit -fill both -expand 1
 
         bind $top <Enter> ::mission::gui::refresh_vars
         bind $top <Visibility> ::mission::gui::refresh_vars
 
         refresh_flights
+        update_view
+    }
+
+    proc change_view {newview} {
+        variable top
+        variable view
+        if {$newview ne $view} {
+            wm geometry $top {}
+            set view $newview
+        }
+        update_view
+    }
+
+    proc update_view {} {
+        variable top
+        variable view
+        pack forget $top.empty $top.edit
+        if {$view eq "load"} {
+            set w $top.empty
+            wm geometry $top {}
+        } else {
+            set w $top.edit
+        }
+        pack $w -fill both -expand 1
+    }
+
+    proc gui_empty {w} {
+        ttk::frame $w
+        set f $w
+
+        ttk::label $f.lblMessage \
+                -wraplength 100 \
+                -text "No configuration is currently loaded. Load an\
+                existing configuration through the File menu or create a\
+                new configuration by using \"Switch to Editing Mode\"."
+
+        ttk::button $f.btnSwitch \
+                -text "Switch to Editing Mode" \
+                -command [list ::mission::gui::change_view edit]
+
+        grid $f.lblMessage - - -sticky news -padx 2 -pady 2
+        grid x $f.btnSwitch -pady 2
+        grid columnconfigure $f {0 2} -weight 1 -minsize 50
+
+        bind $f.lblMessage <Configure> \
+                [list %W configure -wraplength %w]
+
+        return $w
     }
 
     proc gui_load {w} {
@@ -85,10 +134,13 @@ namespace eval ::mission::gui {
 
         ttk::frame $f.days
         ttk::frame $f.extra
-        ttk::button $f.switch -text "Switch to Editing Mode"
+        ttk::button $f.switch -text "Switch to Editing Mode" \
+                -command [list ::mission::gui::change_view edit]
         grid $f.days -sticky ne
         grid $f.extra -sticky ew
         grid $f.button
+
+        return $w
     }
 
     proc gui_edit {w} {
@@ -131,7 +183,8 @@ namespace eval ::mission::gui {
         ttk::labelframe $f.lfrFlight -text "Mission Flights"
 
         ttk::frame $f.fraBottom
-        ttk::button $f.btnSwitch -text "Switch to Loading Mode"
+        ttk::button $f.btnSwitch -text "Switch to Loading Mode" \
+                -command [list ::mission::gui::change_view load]
         grid x $f.btnSwitch -in $f.fraBottom
         grid columnconfigure $f.fraBottom {0 2} -weight 1
 
