@@ -150,11 +150,14 @@ namespace eval ::mission::gui {
         ttk::button $f.tbnPlus -style Toolbutton \
                 -image ::imglib::plus
         ttk::button $f.tbnX -style Toolbutton \
-                -image ::imglib::x
+                -image ::imglib::x \
+                -command [list ::mission::gui::quick_action flights remove]
         ttk::button $f.tbnUp -style Toolbutton \
-                -image ::imglib::arrow::up
+                -image ::imglib::arrow::up \
+                -command [list ::mission::gui::quick_action flights raise]
         ttk::button $f.tbnDown -style Toolbutton \
-                -image ::imglib::arrow::down
+                -image ::imglib::arrow::down \
+                -command [list ::mission::gui::quick_action flights lower]
         grid $f.tbnPlus -in $f.fraToolbar
         grid $f.tbnX -in $f.fraToolbar
         grid $f.tbnUp -in $f.fraToolbar
@@ -213,11 +216,14 @@ namespace eval ::mission::gui {
         ttk::button $f.tbnPlus -style Toolbutton \
                 -image ::imglib::plus
         ttk::button $f.tbnX -style Toolbutton \
-                -image ::imglib::x
+                -image ::imglib::x \
+                -command [list ::mission::gui::quick_action details remove]
         ttk::button $f.tbnUp -style Toolbutton \
-                -image ::imglib::arrow::up
+                -image ::imglib::arrow::up \
+                -command [list ::mission::gui::quick_action details raise]
         ttk::button $f.tbnDown -style Toolbutton \
-                -image ::imglib::arrow::down
+                -image ::imglib::arrow::down \
+                -command [list ::mission::gui::quick_action details lower]
         grid $f.tbnPlus -in $f.fraToolbar
         grid $f.tbnX -in $f.fraToolbar
         grid $f.tbnUp -in $f.fraToolbar
@@ -386,6 +392,26 @@ namespace eval ::mission::gui {
         variable flight_name
         variable detail_type
         exp_send "mission, details, set, \"$flight_name\", \"$detail_type\", \"$new\";\r"
+    }
+
+    # type must be "flights" or "details"
+    # action must be "raise", "lower", or "remove"
+    proc quick_action {type action} {
+        variable flights
+        variable details
+        set flight [lindex [$flights selection] 0]
+        if {$flight eq ""} {
+            return
+        }
+        if {$type eq "flights"} {
+            exp_send "mission, $type, $action, \"$flight\";\r"
+            return
+        }
+        set detail [lindex [$details selection] 0]
+        if {$detail eq ""} {
+            return
+        }
+        exp_send "mission, $type, $action, \"$flight\", \"$detail\";\r"
     }
 
     proc detail_select_initialdir {} {
