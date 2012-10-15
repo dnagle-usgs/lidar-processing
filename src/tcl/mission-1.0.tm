@@ -756,10 +756,8 @@ namespace eval ::mission::gui {
             menu $mb
             $mb add cascade {*}[menulabel &File] \
                     -menu [menu_file $mb.file]
-            #$mb add cascade {*}[menulabel &Mode] \
-            #        -menu [menu_mode $mb.mode]
-            #$mb add cascade {*}[menulabel &Actions] \
-            #        -menu [menu_actions $mb.actions]
+            $mb add cascade {*}[menulabel &Actions] \
+                    -menu [menu_actions $mb.actions]
             $mb add cascade {*}[menulabel &Cache] \
                     -menu [menu_cache $mb.cache]
             return $mb
@@ -767,13 +765,24 @@ namespace eval ::mission::gui {
 
         proc menu_file {mb} {
             menu $mb
-            $mb add command {*}[menulabel "New configuration"] \
+            $mb add command {*}[menulabel "&New configuration"] \
                     -command ::mission::gui::new_conf
             $mb add separator
-            $mb add command {*}[menulabel "Load configuration..."] \
+            $mb add command {*}[menulabel "&Load configuration..."] \
                     -command ::mission::gui::load_conf
-            $mb add command {*}[menulabel "Save configuration..."] \
+            $mb add command {*}[menulabel "&Save configuration..."] \
                     -command ::mission::gui::save_conf
+            return $mb
+        }
+
+        proc menu_actions {mb} {
+            menu $mb
+            $mb add command {*}[menulabel "Launch RGB"]
+            $mb add command {*}[menulabel "Launch CIR"]
+            $mb add command {*}[menulabel "Dump CIR"]
+            $mb add separator
+            $mb add command {*}[menulabel "Generate KMZ"]
+            $mb add command {*}[menulabel "Show EDB summary"]
             return $mb
         }
 
@@ -781,6 +790,9 @@ namespace eval ::mission::gui {
             menu $mb
             $mb add cascade {*}[menulabel "Caching &mode..."] \
                     -menu [menu_cache_mode $mb.mode]
+            $mb add separator
+            $mb add command {*}[menulabel "Preload cache"]
+            $mb add command {*}[menulabel "Clear cache"]
             return $mb
         }
 
