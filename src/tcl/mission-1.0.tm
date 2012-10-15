@@ -40,12 +40,12 @@ proc ::mission::json_import {json} {
     }
 
     if {[winfo exists $::mission::gui::top]} {
+        ::mission::gui::update_view
         ::mission::gui::refresh_flights
     }
 }
 
 namespace eval ::mission::gui {
-
     variable top .missconf
     variable view load
     variable flights
@@ -58,6 +58,8 @@ namespace eval ::mission::gui {
     variable widget_flight_name
     variable widget_detail_type
     variable widget_detail_value
+
+    variable currentfile ""
 
     proc refresh_vars {} {
         set ::mission::path $::mission::path
@@ -695,6 +697,49 @@ namespace eval ::mission::gui {
         }
     }
 
+    proc new_conf {} {
+        variable currentfile
+        set currentfile ""
+        exp_send "mission, flights, clear;\r"
+    }
+
+    proc load_conf {} {
+        variable top
+        variable currentfile
+        set fn [tk_getOpenFile \
+                -initialdir $::mission::path \
+                -parent $top \
+                -title "Select mission configuration to load"]
+        if {$fn ne ""} {
+            set currentfile $fn
+            set fn [ystr $fn]
+            exp_send "mission, read, \"$fn\";\r"
+        }
+    }
+
+    proc save_conf {} {
+        variable top
+        variable currentfile
+        set initial ""
+        if {$currentfile ne "" && $::mission::path ne ""} {
+            set initial [::fileutil::relative $::mission::path $currentfile]
+            if {[string index $initial 0] eq "."} {
+                set initial ""
+                set currentfile ""
+            }
+        }
+        set fn [tk_getSaveFile \
+                -initialdir $::mission::path \
+                -initialfile $initial \
+                -parent $top \
+                -title "Select destination for mission configuration"]
+        if {$fn ne ""} {
+            set currentfile $fn
+            set fn [ystr $fn]
+            exp_send "mission, save, \"$fn\";\r"
+        }
+    }
+
     proc ystr {str} {
         return [string map {
                     \" \\\"
@@ -720,10 +765,13 @@ namespace eval ::mission::gui {
 
         proc menu_file {mb} {
             menu $mb
-            $mb add command {*}[menulabel "New configuration"]
+            $mb add command {*}[menulabel "New configuration"] \
+                    -command ::mission::gui::new_conf
             $mb add separator
-            $mb add command {*}[menulabel "Load configuration..."]
-            $mb add command {*}[menulabel "Save configuration..."]
+            $mb add command {*}[menulabel "Load configuration..."] \
+                    -command ::mission::gui::load_conf
+            $mb add command {*}[menulabel "Save configuration..."] \
+                    -command ::mission::gui::save_conf
             return $mb
         }
 
