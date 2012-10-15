@@ -111,6 +111,57 @@ func root_mean_square(x) {
   return sqrt((x*x)(avg));
 }
 
+func normalized_rmse(y, x) {
+/* DOCUMENT normalized_rmse(y, x)
+  Returns the normalized root-mean-square error.
+*/
+  denom = x(max) - x(min);
+  if(denom) return root_mean_square(y - x)/denom;
+}
+
+func standardized_mean_error(y, x) {
+/* DOCUMENT standardized_mean_error(y, x)
+  Returns the standard mean error for two independent variables.
+*/
+// formula given by mpal
+  denom = sqrt(variance(y) + variance(x));
+  if(denom) return (y(avg) - x(avg))/denom;
+}
+
+func standard_error_of_mean(x) {
+/* DOCUMENT standard_error_of_mean(x)
+  Returns the standard error of the mean (SEM).
+*/
+  if(numberof(x) > 1)
+    return sample_sd(x)/sqrt(numberof(x));
+}
+
+func sample_sd(x) {
+/* DOCUMENT sample_sd(x)
+  Returns the sample standard deviation of X. This is a slightly different
+  formula from the standard deviation. Standard deviation is the square root of
+  the averate value of the sums of the differences between the values X and the
+  mean X. For sample standard deviation, instead of taking an average (<value
+  divided by numberof(samples), the value is divided by one less than the
+  number of samples (<value> divided by numberof(samples)-1).
+
+  This function is undefined if there are fewer than two samples.
+
+  See Wikipedia for details:
+  http://en.wikipedia.org/wiki/Standard_deviation#Sample_standard_deviation
+*/
+  count = numberof(x);
+  if(count > 1)
+    return sqrt(((x - x(avg))^2)(sum)/(count - 1));
+}
+
+func variance(x) {
+/* DOCUMENT variance(x)
+  Returns the variance of X.
+*/
+  return ((x - x(avg))^2)(avg);
+}
+
 func covariance(x, y) {
 /* DOCUMENT covariance(x, y)
   Returns the covariance of the two variables.

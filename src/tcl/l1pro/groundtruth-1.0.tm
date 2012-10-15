@@ -8,7 +8,7 @@ if {![namespace exists ::l1pro::groundtruth::v]} {
         variable metric_list [list "# points" "E StdDev" RMSE ME "Rsq" COV \
                 "Median E" MinE Q1E Q3E MaxE MAE "Midhinge E" "Trimean E" \
                 IQME "Pearson's R" "Spearman's rho" "95% CI E" "E skewness" \
-                "E kurtosis"]
+                "E kurtosis" "NRMSE" "SEM" "STME"]
         variable plg_type_list [list hide solid dash dot dashdot dashdotdot]
         variable plmk_type_list [list hide square cross triangle circle \
                 diamond cross2 triangle2]

@@ -200,11 +200,15 @@ func gt_metrics(z1, z2, metrics) {
     "Rsq" - R squared of z2 versus z1
     "E StdDev" - Standard deviation of z2-z2
     "RMSE" - Root-mean-squared of z2-z1
+    "NRMSE" - Normalized root-mean-squared of z2-z1 (as percentage)
+    "SEM" - Standard error of the mean of z2-z1
+    "STME" - Stadardized mean error between z2 and z1
 
   For information about the statistics, SEE ALSO:
     covariance quartiles median midhinge trimean interquartile_mean
     pearson_correlation spearman_correlation confidence_interval_95 skewness
-    kurtosis
+    kurtosis root_mean_square normalized_rmse standardized_mean_error
+    standard_error_of_mean sample_sd variance
 */
   count = numberof(metrics);
   result = array(string, count);
@@ -247,6 +251,12 @@ func gt_metrics(z1, z2, metrics) {
       result(i) = swrite(format="%.3f", r_squared(z2, z1));
     else if(metrics(i) == "RMSE")
       result(i) = swrite(format="%.3f", root_mean_square(zdif));
+    else if(metrics(i) == "NRMSE")
+      result(i) = swrite(format="%.1f%%", normalized_rmse(z2, z1) * 100);
+    else if(metrics(i) == "SEM")
+      result(i) = swrite(format="%.3f\n", standard_error_of_mean(zdif));
+    else if(metrics(i) == "STME")
+      result(i) = swrite(format="%.3f\n", standardized_mean_error(z2, z1));
     else if(metrics(i) == "E StdDev")
       result(i) = swrite(format="%.3f", zdif(rms));
     else if (metrics(i) == "MAE")
