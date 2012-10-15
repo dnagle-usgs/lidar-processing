@@ -11,23 +11,14 @@
 
   All subcommand functions should be given a name that matches the patterns of
   the command's other subcommands. This is gernerally mission_<CMD>_<SUBCMD>.
-  Each command has a specified number of parameters that it expects its
-  subcommands to accept, regardless of how many they actually use. If a
-  subcommand needs fewer parameters than what it is expected to accept, it must
-  still accept the extras but it may quietly ignore them.
-
-  Each command is implemented as a closure. The closure contains a data element
-  that is an oxy object associating subcommand names to functions. The first
-  argument to each subcommand will be given mission.data, for convenience sake.
-
   Here is a basic framework for adding a new subcommand "auto" to "mission,
   flights".
 
     scratch = save(scratch, mission_flights_auto);
-    func mission_flights_auto(data, path, nil) {
+    func mission_flights_auto(data, path) {
       // initialize configuration here
     }
-    save, mission.flights.data, auto=mission_flights_auto;
+    save, mission.flights, auto=mission_flights_auto;
     restore, scratch;
 
   Note that the subcommand should also have documentation provided for it!
