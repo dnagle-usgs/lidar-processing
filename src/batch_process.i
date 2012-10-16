@@ -362,8 +362,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
 
     if (typ == 0) {
       write, format = "Processing Region %d of %d for First Surface Only\n",i,n;
-      // fs_all = make_fs(latutm = 1, q = q,  ext_bad_att=1, use_centroid=1);
-      fs_all = make_fs(latutm = 1, q = q,  ext_bad_att=1, forcechannel=forcechannel );
+      fs_all = make_fs(latutm = 1, q = q,  ext_bad_att=1, usecentroid=1, forcechannel=forcechannel );
       if (is_array(fs_all)) {
         test_and_clean, fs_all;
         if (is_array(fs_all)) {
