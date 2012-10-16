@@ -17,7 +17,6 @@ func autoselect_ops_conf(dir) {
 
   If no file can be found, then the nil string is returned (string(0)).
 */
-// Original David Nagle 2009-02-04
   dir = file_join(dir);
   dirs = [dir, file_dirname(dir)];
 
@@ -46,7 +45,6 @@ func autoselect_edb(dir) {
   The function will return the first file (sorted) that matches
   dir/eaarl/*.idx. If no files match, string(0) is returned.
 */
-// Original David Nagle 2009-02-04
   files = lsfiles(file_join(dir, "eaarl"), glob="*.idx");
   if(numberof(files))
     return file_join(dir, "eaarl", files(sort(files))(1));
@@ -62,7 +60,6 @@ func autoselect_cir_dir(dir) {
   If a subdirectory "cir" exists, it will be returned. Otherwise, string(0)
   is returned.
 */
-// Original David B. Nagle 2009-05-12
   cir_dir = file_join(dir, "cir");
   if(file_isdir(cir_dir))
     return cir_dir;
@@ -80,7 +77,6 @@ func autoselect_rgb_dir(dir) {
   If a subdirectory "rgb" or "cam1" exists, it will be returned. Otherwise,
   string(0) is returned.
 */
-// Original David B. Nagle 2009-05-12
   dirs = ["rgb", "cam1"];
   for(i = 1; i <= numberof(dirs); i++) {
     rgb_dir = file_join(dir, dirs(i));
@@ -100,7 +96,6 @@ func autoselect_rgb_tar(dir) {
   multiple files match that pattern, then the files are sorted and the first
   is returned. If no matches are found, string(0) is returned.
 */
-// Original David B. Nagle 2009-05-12
   globs = ["*-cam1.tar", "cam1-*.tar", "cam1.tar"];
   for(i = 1; i <= numberof(globs); i++) {
     files = lsfiles(dir, glob=globs(i));
@@ -135,7 +130,6 @@ func autoselect_iexpbd(dir) {
    iexpbd file. It is a convenience function that should only be used when you
    know it's safe to be used.
 */
-// Original David Nagle 2009-01-21
   dir = file_join(dir);
   if(file_tail(dir) != "trajectories") {
     if(file_exists(file_join(dir, "trajectories"))) {
@@ -188,7 +182,6 @@ func autoselect_pnav(dir) {
   file. It is a convenience function that should only be used when you know
   it's safe to be used.
 */
-// Original David Nagle 2009-01-21
   dir = file_join(dir);
   if(file_tail(dir) != "trajectories") {
     if(file_exists(file_join(dir, "trajectories"))) {
