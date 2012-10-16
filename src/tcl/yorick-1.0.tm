@@ -7,6 +7,8 @@ package require snit
 
 namespace eval ::yorick {
     variable fifo_counter -1
+
+    exp_exit -onexit ::yorick::destroy_fifos_all
 }
 
 proc ::yorick::sanitize_vname var {
@@ -44,7 +46,23 @@ proc ::yorick::create_fifos {} {
     return $result
 }
 
-proc ::yorick::destroy_fifos args {
+proc ::yorick::destroy_fifos_all {} {
+    variable fifo_counter
+    while {$fifo_counter >= 0} {
+        set tmp [::fileutil::tempdir]
+        set fifo_id [pid].$fifo_counter
+
+        set yor_tcl_fn [file join $tmp ytk.$fifo_id.to_tcl]
+        set tcl_yor_fn [file join $tmp ytk.$fifo_id.to_yor]
+
+        catch [list file delete $yor_tcl_fn]
+        catch [list file delete $tcl_yor_fn]
+
+        incr fifo_counter -1
+    }
+}
+
+proc ::yorick::destroy_fifos {args} {
     if {[llength $args] % 2} {
         error "Must provide fifos as pairs of FIFO FN"
     }
