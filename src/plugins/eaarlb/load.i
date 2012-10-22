@@ -14,6 +14,8 @@ require, base + "eaarla_raster.i";
 require, base + "eaarla_vector.i";
 require, base + "eaarla_wf.i";
 require, base + "eaarlb_json_log.i";
+require, base + "edb_access.i";
+require, base + "geo_bath.i";
 require, base + "mission.i";
 require, base + "mission_constants.i";
 require, base + "mosaic_biases.i";

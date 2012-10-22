@@ -78,11 +78,9 @@ if(is_void(__eaarl_includes_included__)) {
   require, "dir.i";
   require, "dirload.i";
   require, "dmars.i";
-  require, "edb_access.i";
   require, "edf.i";
   require, "flightlines.i";
   require, "fp.i";
-  require, "geo_bath.i";
   require, "geometry.i";
   require, "geotiff_tags.i";
   require, "gridding.i";
