@@ -168,7 +168,9 @@ func mission_load(flight) {
   mission, unload;
 
   mission, data, loaded=flight;
-  if(mission.data.cache(*,flight)) {
+
+  // Load from cache, if there is cached data present and caching is enabled.
+  if(mission.data.cache_mode != "disabled" && mission.data.cache(*,flight)) {
     mission, unwrap, mission.data.cache(noop(flight));
     return;
   }
