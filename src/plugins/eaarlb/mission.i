@@ -164,7 +164,7 @@ func mission_load(flight) {
   Loads the data for the specified flight.
 */
   // Start by clearing any currently loaded data. (This also triggers onchange
-  // caching.
+  // caching.)
   mission, unload;
 
   mission, data, loaded=flight;
@@ -174,15 +174,20 @@ func mission_load(flight) {
   }
 
   // soe_bounds information is used to speed up query_soe and query_soe_rn.
+  // These shouldn't change much, so they are perma-cached regardless of cache
+  // settings.
   if(!mission.data(*,"soe_bounds"))
     mission, data, soe_bounds=save();
   if(!mission.data.soe_bounds(*,flight))
     save, mission.data.soe_bounds, noop(flight), save();
 
+  // Step through the data sources used in ALPS and load each one.
+
   extern data_path;
   if(mission(has, flight, "data_path"))
     data_path = mission(get, flight, "data_path");
 
+  // ops_conf -- neds to come first since some other sources depend on it
   extern ops_conf, ops_conf_filename;
   if(mission(has, flight, "ops_conf file")) {
     ops_conf_filename = mission(get, flight, "ops_conf file");
@@ -193,6 +198,8 @@ func mission_load(flight) {
     ops_conf = ops_eaarlb;
   }
 
+  // edb -- defines a few variables (such as soe_day_start) that are needed by
+  // things that follow
   extern edb;
   soes = [];
   if(mission(has, flight, "edb file")) {
@@ -251,6 +258,10 @@ func mission_load(flight) {
 }
 
 func mission_unload(void) {
+/* DOCUMENT mission, unload
+  Unloads all currently loaded data. *If cache_mode is "onchange", then the
+  data is cached first.
+*/
   if(mission.data.cache_mode == "onchange")
     save, mission.data.cache, mission.data.loaded, mission(wrap,);
 
@@ -277,6 +288,14 @@ func mission_unload(void) {
 }
 
 func mission_wrap(void) {
+/* DOCUMENT data = mission(wrap,)
+  Saves all of the relevant variables to an oxy group object for the currently
+  loaded dataset. The group object is then returned. The group object should be
+  restored with "mission, unwrap, <data>" instead of "restore, <data>" as there
+  may be additional routines to call after restoration.
+
+  This is intended for internal use for caching.
+*/
   extern data_path;
   extern edb, edb_filename, edb_files, total_edb_records, soe_day_start,
     eaarl_time_offset;
@@ -297,6 +316,11 @@ func mission_wrap(void) {
 }
 
 func mission_unwrap(data) {
+/* DOCUMENT mission, unwrap, <data>
+  Restores data that was wrapped by mission(wrap,).
+
+  This is intended for internal use for caching.
+*/
   extern data_path;
   extern edb, edb_filename, edb_files, total_edb_records, soe_day_start,
     eaarl_time_offset;
