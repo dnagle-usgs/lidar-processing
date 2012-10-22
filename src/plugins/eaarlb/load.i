@@ -4,6 +4,7 @@ scratch = save(scratch, base);
 // absolute path names are required. All files to include will be siblings to
 // the current file.
 base = file_dirname(current_include())+"/";
+require, base + "autoload.i";
 require, base + "batch_veg_energy.i";
 require, base + "bathy.i";
 require, base + "drast.i";
