@@ -196,16 +196,14 @@ func strwrap(str, space=, newline=, paragraph=, width=) {
   return result;
 }
 
-__strindent = regcomp("^(.*)$", newline=1);
-func strindent(str, ind) {
+func strindent(re, str, ind) {
 /* DOCUMENT newstr = strindent(str, ind);
   Indents each line of str (as deliminted by newlines) with the indentation
   given by ind.
 */
-// Original David B. Nagle 2009-04-09
-  extern __strindent;
-  return regsub(__strindent, str, ind + "\\1", all=1);
+  return ind + regsub(re, str, "\n" + ind, all=1);
 }
+strindent = closure(strindent, regcomp("\n"));
 
 func longest_common_suffix(S) {
 /* DOCUMENT suffix = longest_common_suffix(S)
