@@ -35,10 +35,9 @@ local mission;
   Some of the functionality of this object is defined in core ALPS. However, it
   also expects plugins to extend its functionality to become actually useful.
 
-  For brevity, the documentation for mission is broken out into sections.
-
-  Topics:
-    mission_data - Details on the data stored in mission.data
+  For better documentation, please use "mission, help". This dynamically
+  provides additional information via introspection. For help on help, use
+  "mission, help, help".
 */
 
 scratch = save(scratch, tmp, mission_plugins, mission_cache, mission_flights,
@@ -46,8 +45,24 @@ scratch = save(scratch, tmp, mission_plugins, mission_cache, mission_flights,
   mission_load_stub, mission_unload_stub, mission_wrap_stub,
   mission_unwrap_stub, mission_json, mission_save, mission_read,
   mission_tksync, mission_help);
-tmp = save(data, plugins, cache, flights, details, get, has, load_soe, load,
-  unload, wrap, unwrap, json, save, read, tksync, help);
+tmp = save(__help, data, plugins, cache, flights, details, get, has, load_soe,
+  load, unload, wrap, unwrap, json, save, read, tksync, help);
+
+__help = "\
+Store and manages the mission configuration. This is an oxy object and thus \
+contains both data and functions. It is expected that end-users will not need \
+to interact with this object directly, as they will be using the Mission \
+Configuration GUI.\n\
+\n\
+Some of the functionality of this object is defined in core ALPS. However, it \
+also expects plugins to extend its functionality to become actually useful.\n\
+\n\
+For brevity, the documentation for mission is broken out into sections. To \
+look up the help for a particular sub-command, use the \"help\" subcommand. \
+For example, for help on \"mission, details, set\" use:\n\
+\n\
+  mission, help, details, set\
+";
 
 local mission_data;
 /* DOCUMENT mission.data
@@ -868,7 +883,30 @@ func mission_help(args) {
   "mission, flights, add", you would use "mission, help, flights, add".
 */
   if(!args(0)) {
-    help, mission;
+    write, format="%s\n", "/* DOCUMENT mission";
+    write, format="%s\n", strindent(strwrap(mission.__help),"  ");
+    write, "";
+    write, " Follows is a list of commands and subcommands.";
+    write, "";
+    // Skip 1..2: __help, data
+    for(i = 3; i <= mission(*); i++) {
+      tmp = mission(noop(i));
+      if(is_func(tmp)) {
+        write, format="    mission, %s\n", mission(*,i);
+        continue;
+      }
+      if(!is_obj(tmp)) continue;
+      for(j = 1; j <= tmp(*); j++) {
+        if(is_func(tmp(noop(j))))
+          write, format="    mission, %s, %s\n", mission(*,i), tmp(*,j);
+      }
+    }
+    write, format="%s\n", "*/";
+    return;
+  }
+  // Lookup fails because function is wrapped.
+  if(args(0) == 1 && args(-,1) == "help") {
+    help, mission_help;
     return;
   }
   names = ["mission"];
