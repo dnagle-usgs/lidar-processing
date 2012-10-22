@@ -4,7 +4,8 @@
 
 scratch = save(scratch, mission_query_soe_rn, mission_query_soe,
   mission_load_soe_rn, mission_load_soe, mission_load, mission_unload,
-  mission_wrap, mission_unwrap);
+  mission_wrap, mission_unwrap, mission_auto, mission_flights_auto,
+  mission_details_auto, mission_details_autolist);
 
 func mission_query_soe_rn(soe, rn) {
 /* DOCUMENT mission(query_soe_rn, <soe>, <rn>)
@@ -335,7 +336,151 @@ func mission_unwrap(data) {
   iex2tans;
 }
 
+func mission_auto(path, strict=) {
+/* DOCUMENT mission, auto, "<path>", strict=
+  Automatically initializes a mission based on the given path. The path should
+  be the top-level directory of the mission and should contain subdirectories
+  for each flight.
+
+  This command will clobber any configuration that is already defined.
+
+  The strict= option controls whether non-lidar flights are included. When
+  strict=1, only flights that contain an "edb file" will be defined. When
+  strict=0, flights will be created as long as at least one key can be detected
+  for a subdirectory. This defaults to strict=1.
+*/
+  default, strict, 1;
+  mission, flights, clear;
+  mission, data, path=path;
+
+  // Mission flight directories should always start with a date in their names.
+  dirs = lsdirs(path);
+  days = get_date(dirs);
+  w = where(days);
+  if(!numberof(w))
+    return;
+  dirs = dirs(w);
+
+  // Ensure a stable ordering.
+  dirs = dirs(sort(dirs));
+
+  for(i = 1; i <= numberof(days); i++) {
+    mission, flights, auto, days(i), file_join(path, days(i)), strict=strict;
+    if(!strict && !mission.data.conf(noop(days(i)))(*))
+      mission, flights, remove, days(i);
+  }
+}
+
 save, mission, load_soe=mission_load_soe, load=mission_load,
-  unload=mission_unload, wrap=mission_wrap, unwrap=mission_unwrap;
+  unload=mission_unload, wrap=mission_wrap, unwrap=mission_unwrap,
+  auto=mission_auto;
+
+func mission_flights_auto(flight, path, strict=) {
+/* DOCUMENT mission, flights, auto, "<flight>", "<path>", strict=
+  Automatically initializes the specified flight based on the given path. The
+  path should be the flight's directory.
+
+  This command will clobber any configuration that is already defined.
+
+  The strict= option controls whether flight without lidar data will be
+  initialized. If strict=1, the flight will only be generated when lidar data
+  is present. If strict=0, it will always be generated with as much info as
+  possible. This defaults to strict=0.
+
+  If strict=1 and no lidar data is found, the flight will be entirely removed
+  from the configuration. If strict=0 and no data is found, the flight be
+  remain but will have no details defined for it.
+*/
+  // If strict=1, the flight should only be generated if there's lidar data,
+  // which is detected by the presence of an EAARL index file.
+  if(strict) {
+    mission, details, auto, flight, "edb file", path, strict=1;
+    if(!mission.data.conf(noop(flight), *, "edb file")) {
+      mission, flights, remove, flight;
+      return;
+    }
+  }
+
+  // Clear any details that are already present
+  mission, details, clear, flight;
+
+  // Keys will be added in the order specified below
+  keys = [
+    "data_path",
+    "day",
+    "edb file",
+    "pnav file",
+    "ins file",
+    "ops_conf file",
+    "bath_ctl file",
+    "rgb dir",
+    "rgb file",
+    "nir dir",
+    "cir dir"
+  ];
+
+  // Auto-detect the value for each key, but only add it if there's actually
+  // something detected.
+  count = numberof(keys);
+  for(i = 1; i <= count; i++)
+    mission, details, auto, flight, keys(i), path, strict=1;
+}
+
+save, mission.flights, auto=mission_flights_auto;
+
+func mission_details_auto(flight, key, path, strict=) {
+/* DOCUMENT mission, details, auto, "<flight>", "<key>", "<path>", strict=
+  Automatically initializes a specific key-value pair for a flight. The path
+  given should be the path to the flight (NOT to any of the data-specific
+  subdirectories in the flight).
+
+  If the function is unable to determine an appropriate value for the key, then
+  the result will depend on strict=. When strict=1, the key is deleted from the
+  flight. When strict=0, the key is set to "". The default is strict=0.
+*/
+  val = mission(details, autolist, flight, key, path)(1);
+  if(strlen(val)) {
+    mission, details, set, flight, key, val;
+  } else if(strict) {
+    mission, details, remove, flight, key;
+  } else {
+    mission, details, set, flight, key, "";
+  }
+}
+
+func mission_details_autolist(flight, key, path) {
+/* DOCUMENT mission(details, autolist, "<flight>", "<key>", "<path>")
+  Returns a list of candidates values autodetected for the give flight-key-path
+  combination. Candidates are ordered from "best guess" to "worst guess". If no
+  candidates are autodetected, then [string(0)] is returned.
+*/
+  if(key == "data_path")
+    return [path];
+  else if(key == "day")
+    return [get_date(file_tail(path))];
+  else if(key == "edb file")
+    return autoselect_edb(path, options=1);
+  else if(key == "pnav file")
+    return autoselect_pnav(path, options=1);
+  else if(key == "ins file")
+    return autoselect_iexpbd(path, options=1);
+  else if(key == "ops_conf file")
+    return autoselect_ops_conf(path, options=1);
+  else if(key == "bath_ctl file")
+    return autoselect_bath_ctl(path, options=1);
+  else if(key == "rgb dir")
+    return autoselect_rgb_dir(path, options=1);
+  else if(key == "rgb file")
+    return autoselect_rgb_tar(path, options=1);
+  else if(key == "nir dir")
+    return autoselect_nir_dir(path, options=1);
+  else if(key == "cir dir")
+    return autoselect_cir_dir(path, options=1);
+  else
+    return [string(0)];
+}
+
+save, mission.details, auto=mission_details_auto,
+  autolist=mission_details_autolist;
 
 restore, scratch;
