@@ -371,9 +371,9 @@ func mission_auto(path, strict=) {
   }
 }
 
-save, mission, load_soe=mission_load_soe, load=mission_load,
-  unload=mission_unload, wrap=mission_wrap, unwrap=mission_unwrap,
-  auto=mission_auto;
+save, mission, load_soe=mission_load_soe, load_soe_rn=mission_load_soe_rn,
+  load=mission_load, unload=mission_unload, wrap=mission_wrap,
+  unwrap=mission_unwrap, auto=mission_auto;
 
 func mission_flights_auto(flight, path, strict=) {
 /* DOCUMENT mission, flights, auto, "<flight>", "<path>", strict=
