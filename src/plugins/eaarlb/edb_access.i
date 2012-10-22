@@ -473,6 +473,20 @@ func decode_raster(raw, rn=) {
   return result;
 }
 
+func mission_edb_summary {
+/* DOCUMENT mission_edb_summary
+  Wrapper around edb_summary that calls it with the list of edb files defined
+  in the current mission configuration.
+*/
+  flights = mission(get,);
+  edbfns = [];
+  for(i = 1; i <= numberof(flights); i++) {
+    if(mission(has, flights(i), "edb file"))
+      grow, edbfns, mission(get, flights(i), "edb file");
+  }
+  edb_summary, edbfns;
+}
+
 func edb_summary(path, searchstr=) {
 /* DOCUMENT edb_summary, directory, searchstr=
   edb_summary, files

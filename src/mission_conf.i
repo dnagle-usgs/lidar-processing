@@ -1128,19 +1128,3 @@ func set_sf_bookmark(controller, day) {
     missiondata_unwrap, env_backup;
   }
 }
-
-func mission_edb_summary(nil) {
-/* DOCUMENT mission_edb_summary;
-  Wrapper around edb_summary that calls it with the list of edb files defines
-  in the current mission configuration.
-*/
-  days = missionday_list();
-  days = days(sort(days));
-  edblist = [];
-  for(i = 1; i <= numberof(days); i++) {
-    filename = mission_get("edb file", day=days(i));
-    if(!is_void(filename))
-      grow, edblist, filename;
-  }
-  edb_summary, edblist;
-}
