@@ -1,7 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-func autoselect_ops_conf(dir) {
-/* DOCUMENT ops_conf_file = autoselect_ops_conf(dir)
+func autoselect_ops_conf(dir, options=) {
+/* DOCUMENT ops_conf_file = autoselect_ops_conf(dir, options=)
 
   This function attempts to determine the ops_conf.i file to load for a
   dataset. The dir parameter should be the path to the mission day directory.
@@ -16,78 +16,163 @@ func autoselect_ops_conf(dir) {
     4. The same as 2, except looking in dir's parent directory.
 
   If no file can be found, then the nil string is returned (string(0)).
+
+  If options=1, then an array of all possibilities that meet the criteria above
+  is returned instead. If no possiblities are found, then [string(0)] is
+  returned.
 */
   dir = file_join(dir);
   dirs = [dir, file_dirname(dir)];
 
+  results = [];
   for(i = 1; i <= numberof(dirs); i++) {
     dir = dirs(i);
 
     if(file_isfile(file_join(dir, "ops_conf.i")))
-      return file_join(dir, "ops_conf.i");
+      grow, results, file_join(dir, "ops_conf.i");
 
     files = lsfiles(dir, glob="ops_conf*.i");
     if(numberof(files)) {
       files = files(sort(files));
-      return file_join(dir, files(0));
+      grow, results, file_join(dir, files);
     }
   }
 
-  return string(0);
+  if(is_void(results))
+    results = [string(0)];
+  return options ? results : results(1);
 }
 
-func autoselect_edb(dir) {
-/* DOCUMENT edb_file = autoselect_edb(dir)
+func autoselect_bath_ctl(dir, options=) {
+/* DOCUMENT bctl_file = autoselect_bath_ctl(dir, options=)
+
+  This function attempts to determine the bathy settings file to load for a
+  dataset. The dir parameter should be the path to the mission day directory.
+
+  The function attempts to find an appropriate bathy settings file by following
+  these steps:
+
+    1. Are there any files named *-bctl.json in the flight directory?
+    2. Are there any files named *-bctl.json in the parent directory?
+    3. Are there any files named *.bctl in the flight directory?
+    4. Are there any files named *.bctl in the parent directory?
+
+  If no file can be found, then the nil string is returned (string(0)).
+
+  If options=1, then an array of all possibilities that meet the criteria above
+  is returned instead. If no possiblities are found, then [string(0)] is
+  returned.
+*/
+  dir = file_join(dir);
+  dirs = [dir, file_dirname(dir)];
+  globs = ["*-bctl.json", "*.bctl"];
+
+  results = [];
+  for(i = 1; i <= numberof(globs); i++) {
+    for(j = 1; j <= numberof(dirs); j++) {
+      files = lsfiles(dirs(j), glob=globs(i));
+      if(numberof(files)) {
+        files = files(sort(files));
+        grow, results, file_join(dirs(j), files);
+      }
+    }
+  }
+
+  if(is_void(results))
+    results = [string(0)];
+  return options ? results : results(1);
+}
+
+func autoselect_edb(dir, options=) {
+/* DOCUMENT edb_file = autoselect_edb(dir, options=)
 
   This function attempts to determine the EAARL edb file to load for a
   dataset. The dir parameter should be the path to the mission day directory.
 
   The function will return the first file (sorted) that matches
   dir/eaarl/*.idx. If no files match, string(0) is returned.
+
+  If options=1, then an array of all possibilities that meet the criteria above
+  is returned instead. If no possiblities are found, then [string(0)] is
+  returned.
 */
   files = lsfiles(file_join(dir, "eaarl"), glob="*.idx");
+  results = [];
   if(numberof(files))
-    return file_join(dir, "eaarl", files(sort(files))(1));
+    results = file_join(dir, "eaarl", files(sort(files)));
   else
-    return string(0);
+    results = [string(0)];
+  return options ? results : results(1);
 }
 
-func autoselect_cir_dir(dir) {
-/* DOCUMENT cir_dir = autoselect_cir_dir(dir)
+func autoselect_cir_dir(dir, options=) {
+/* DOCUMENT cir_dir = autoselect_cir_dir(dir, options=)
   This function attempts to determine the EAARL cir directory to load for a
   dataset. The dir parameter should be the path to the mission day directory.
 
-  If a subdirectory "cir" exists, it will be returned. Otherwise, string(0)
-  is returned.
+  If a subdirectory "cir" exists, it will be returned. Otherwise, string(0) is
+  returned.
+
+  If options=1, then an array of all possibilities that meet the criteria above
+  is returned instead. If no possiblities are found, then [string(0)] is
+  returned.
 */
+  results = [];
   cir_dir = file_join(dir, "cir");
   if(file_isdir(cir_dir))
-    return cir_dir;
-  cir_dir = file_join(dir, "nir");
-  if(file_isdir(cir_dir))
-    return cir_dir;
-  return string(0);
+    grow, results, cir_dir;
+  if(is_void(results))
+    results = [string(0)];
+  return options ? results : results(1);
 }
 
-func autoselect_rgb_dir(dir) {
-/* DOCUMENT rgb_dir = autoselect_rgb_dir(dir)
+func autoselect_nir_dir(dir, options=) {
+/* DOCUMENT nir_dir = autoselect_nir_dir(dir, options=)
+  This function attempts to determine the EAARL cir directory to load for a
+  dataset. The dir parameter should be the path to the mission day directory.
+
+  If a subdirectory "nir" exists, it will be returned. Otherwise, string(0) is
+  returned.
+
+  If options=1, then an array of all possibilities that meet the criteria above
+  is returned instead. If no possiblities are found, then [string(0)] is
+  returned.
+*/
+  results = [];
+  cir_dir = file_join(dir, "nir");
+  if(file_isdir(cir_dir))
+    grow, results, cir_dir;
+  if(is_void(results))
+    results = [string(0)];
+  return options ? results : results(1);
+}
+
+func autoselect_rgb_dir(dir, options=) {
+/* DOCUMENT rgb_dir = autoselect_rgb_dir(dir, options=)
   This function attempts to determine the EAARL rgb directory to load for a
   dataset. The dir parameter should be the path to the mission day directory.
 
   If a subdirectory "rgb" or "cam1" exists, it will be returned. Otherwise,
   string(0) is returned.
+
+  If options=1, then an array of all possibilities that meet the criteria above
+  is returned instead. If no possiblities are found, then [string(0)] is
+  returned.
 */
   dirs = ["rgb", "cam1"];
+  results = [];
   for(i = 1; i <= numberof(dirs); i++) {
     rgb_dir = file_join(dir, dirs(i));
     if(file_isdir(rgb_dir))
-      return rgb_dir;
+      grow, results, rgb_dir;
   }
-  return string(0);
+  if(is_void(results))
+    results = [string(0)];
+  return options ? results : results(1);
 }
 
-func autoselect_rgb_tar(dir) {
-/* DOCUMENT rgb_tar = autoselect_rgb_tar(dir)
+func autoselect_rgb_tar(dir, options=) {
+/* DOCUMENT rgb_tar = autoselect_rgb_tar(dir, options=)
   This function attempts to determine the EAARL rgb tar file to load for a
   dataset. The dir parameter should be the path to the mission day directory.
 
@@ -95,20 +180,27 @@ func autoselect_rgb_tar(dir) {
   cam1.tar. The first pattern that matches any files will be used; if
   multiple files match that pattern, then the files are sorted and the first
   is returned. If no matches are found, string(0) is returned.
+
+  If options=1, then an array of all possibilities that meet the criteria above
+  is returned instead. If no possiblities are found, then [string(0)] is
+  returned.
 */
   globs = ["*-cam1.tar", "cam1-*.tar", "cam1.tar"];
+  results = [];
   for(i = 1; i <= numberof(globs); i++) {
     files = lsfiles(dir, glob=globs(i));
     if(numberof(files)) {
       files = files(sort(files));
-      return file_join(dir, files(1));
+      grow, results, file_join(dir, files);
     }
   }
-  return string(0);
+  if(is_void(results))
+    results = [string(0)];
+  return options ? results : results(1);
 }
 
-func autoselect_iexpbd(dir) {
-/* DOCUMENT iexpbd_file = autoselect_iexpbd(dir)
+func autoselect_iexpbd(dir, options=) {
+/* DOCUMENT iexpbd_file = autoselect_iexpbd(dir, options=)
 
    This function attempts to determine an appropriate iexpbd file to load for a
    dataset.
@@ -124,11 +216,13 @@ func autoselect_iexpbd(dir) {
    then returns the last one -- in many cases, this will result in the most
    recently created file being chosen.
 
-   If no matches are found, [] is returned.
-
    This function is not guaranteed to return the best or most appropriate
    iexpbd file. It is a convenience function that should only be used when you
    know it's safe to be used.
+
+  If options=1, then an array of all possibilities that meet the criteria above
+  is returned instead. If no possiblities are found, then [string(0)] is
+  returned.
 */
   dir = file_join(dir);
   if(file_tail(dir) != "trajectories") {
@@ -137,7 +231,7 @@ func autoselect_iexpbd(dir) {
     }
   }
   candidates = find(dir, glob="*-ins.pbd");
-  if(!numberof(candidates)) return [];
+  if(!numberof(candidates)) return options ? [] : [string(0)];
   patterns = [
     "*-p-*-fwd-ins.pbd",
     "*-p-*-ins.pbd",
@@ -148,15 +242,18 @@ func autoselect_iexpbd(dir) {
     "*-u-*-fwd-ins.pbd",
     "*-u-*-ins.pbd"
       ];
+  results = [];
   for(i = 1; i <= numberof(patterns); i++) {
     w = where(strglob(patterns(i), candidates));
     if(numberof(w)) {
-      candidates = candidates(w);
-      candidates = candidates(sort(candidates));
-      return candidates(0);
+      files = candidates(w);
+      files = files(sort(files)(::-1));
+      grow, results, files;
     }
   }
-  return [];
+  if(is_void(results))
+    results = [string(0)];
+  return options ? results : results(1);
 }
 
 func autoselect_pnav(dir) {
@@ -176,11 +273,13 @@ func autoselect_pnav(dir) {
   them then returns the last one -- in many cases, this will result in the
   most recently created file being chosen.
 
-  If no matches are found, [] is returned.
-
   This function is not guaranteed to return the best or most appropriate pnav
   file. It is a convenience function that should only be used when you know
   it's safe to be used.
+
+  If options=1, then an array of all possibilities that meet the criteria above
+  is returned instead. If no possiblities are found, then [string(0)] is
+  returned.
 */
   dir = file_join(dir);
   if(file_tail(dir) != "trajectories") {
@@ -189,7 +288,7 @@ func autoselect_pnav(dir) {
     }
   }
   candidates = find(dir, glob="*-pnav.ybin");
-  if(!numberof(candidates)) return [];
+  if(!numberof(candidates)) return options ? [] : [string(0)];
   patterns = [
     "*-p-*-cmb-pnav.ybin",
     "*-p-*-pnav.ybin",
@@ -201,13 +300,16 @@ func autoselect_pnav(dir) {
     "*-u-*-pnav.ybin",
     "*-pnav.ybin"
   ];
+  results = [];
   for(i = 1; i <= numberof(patterns); i++) {
     w = where(strglob(patterns(i), candidates));
     if(numberof(w)) {
-      candidates = candidates(w);
-      candidates = candidates(sort(candidates));
-      return candidates(0);
+      files = candidates(w);
+      files = files(sort(files)(::-1));
+      grow, results, files;
     }
   }
-  return [];
+  if(is_void(results))
+    results = [string(0)];
+  return options ? results : results(1);
 }
