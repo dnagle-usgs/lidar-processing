@@ -465,7 +465,7 @@ namespace eval ::mission::gui {
         set flight [ystr $flight_name]
         set detail [ystr $detail_type]
         set new [ystr $new]
-        exp_send "mission, details, set, \"$flight\", \"$detail\", \"$new\";\r"
+        exp_send "mission, details, set, \"$flight\", \"$detail\", \"$new\", raw=1;\r"
     }
 
     # type must be "flights" or "details"
@@ -587,7 +587,7 @@ namespace eval ::mission::gui {
             set flight [ystr $flight_name]
             set detail [ystr $detail_type]
             set path [ystr $path]
-            exp_send "mission, details, set, \"$flight\", \"$detail\", \"$path\";\r"
+            exp_send "mission, details, set, \"$flight\", \"$detail\", \"$path\", raw=1;\r"
         }
     }
 
@@ -608,7 +608,7 @@ namespace eval ::mission::gui {
             set flight [ystr $flight_name]
             set detail [ystr $detail_type]
             set path [ystr $path]
-            exp_send "mission, details, set, \"$flight\", \"$detail\", \"$path\";\r"
+            exp_send "mission, details, set, \"$flight\", \"$detail\", \"$path\", raw=1;\r"
         }
     }
 

@@ -348,13 +348,19 @@ cmds = save(__help, set, rename, remove, swap, raise, lower, clear);
 __help = "Contains subcommands for modifying the configuration details for a\
 given fight."
 
-func mission_details_set(flight, key, val) {
-/* DOCUMENT mission, details, set, "<flight>", "<key>", "<val>"
+func mission_details_set(flight, key, val, raw=) {
+/* DOCUMENT mission, details, set, "<flight>", "<key>", "<val>", raw=
   Sets the given KEY-VAL association for the specified FLIGHT. FLIGHT must be a
   non-empty string that matches an existing flight. KEY must also both be
   non-emptry string and VAL must be a string (but can be empty). If KEY already
   exists, its associated value will be updated; if it does not exist, it will
   be added to the details for the given flight.
+
+  The raw= option specifies how to treat the value and currently only impacts
+  paths, which are keys ending with " file" or " dir". When raw=1, the actual
+  value given is stored (and should be a relative path). When raw=0, an an
+  absolute path is expected as input and will be converted to a path relative
+  to mission.data.path prior to storing. Default is raw=0.
 */
   if(!is_string(flight) || !strlen(flight) || !mission.data.conf(*,flight))
     error, "invalid flight: "+pr1(flight);
@@ -362,6 +368,13 @@ func mission_details_set(flight, key, val) {
     error, "invalid key: "+pr1(key);
   if(!is_string(val))
     error, "invalid val: "+pr1(val);
+
+  if(
+    !raw && strlen(val) &&
+    ((strpart(key, -3:) == " dir") || (strpart(key, -4:) == " file"))
+  ) {
+    val = file_relative(mission.data.path, val);
+  }
 
   // If the key already exists and has the same value, this is a no-op
   fconf = mission.data.conf(noop(flight));
@@ -538,10 +551,10 @@ restore, scratch;
   This command does not have subcommands.
 */
 
-func mission_get(flight, key) {
+func mission_get(flight, key, raw=) {
 /* DOCUMENT flights = mission(get, )
   -or- keys = mission(get, "<flight>")
-  -or- value = mission(get, "<flight>", "<key>")
+  -or- value = mission(get, "<flight>", "<key>", raw=)
 
   Retrieves information from the configuration. As shown above, this can be
   called in three ways.
@@ -555,7 +568,11 @@ func mission_get(flight, key) {
 
   value = mission(get, "<flight>", "<key>")
     Returns the value associated with the given key for the specified flight.
-    The flight and key must both exist, otherwise an error will occur.
+    The flight and key must both exist, otherwise an error will occur. The raw=
+    option specifies how to return the value and currently only impacts paths,
+    which are keys ending with " file" or " dir". When raw=1, the actual value
+    stored (a relative path) is returned. When raw=0, an absolute path is
+    returned (using mission.data.path). Default is raw=0.
 */
   if(is_void(flight))
     return mission.data.conf(*,);
@@ -566,6 +583,12 @@ func mission_get(flight, key) {
   fconf = mission.data.conf(noop(flight));
   if(!is_string(key) || !strlen(key) || !fconf(*,key))
     error, "invalid key: "+pr1(key);
+  if(
+    !raw && strlen(fconf(noop(key))) &&
+    ((strpart(key, -3:) == " dir") || (strpart(key, -4:) == " file"))
+  ) {
+    return file_join(mission.path, fconf(noop(key)));
+  }
   return fconf(noop(key));
 }
 get = mission_get;
