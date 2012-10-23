@@ -187,8 +187,8 @@ func mission_load(flight) {
   // Step through the data sources used in ALPS and load each one.
 
   extern data_path;
-  if(mission(has, flight, "data_path"))
-    data_path = mission(get, flight, "data_path");
+  if(mission(has, flight, "data_path dir"))
+    data_path = mission(get, flight, "data_path dir");
 
   // ops_conf -- neds to come first since some other sources depend on it
   extern ops_conf, ops_conf_filename;
@@ -406,7 +406,7 @@ func mission_flights_auto(flight, path, strict=) {
 
   // Keys will be added in the order specified below
   keys = [
-    "data_path",
+    "data_path dir",
     "day",
     "edb file",
     "pnav file",
@@ -454,7 +454,7 @@ func mission_details_autolist(flight, key, path) {
   combination. Candidates are ordered from "best guess" to "worst guess". If no
   candidates are autodetected, then [string(0)] is returned.
 */
-  if(key == "data_path")
+  if(key == "data_path dir")
     return [path];
   else if(key == "day")
     return [get_date(file_tail(path))];
