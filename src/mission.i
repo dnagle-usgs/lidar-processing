@@ -597,22 +597,6 @@ func mission_has(flight, key) {
   if(!is_void(key) && !mission(data, conf, noop(flight), *, key))
     return 0;
   return 1;
-
-  // Check to see if flight specified is valid and exists
-  if(!is_string(flight) || !strlen(flight))
-    error, "invalid flight: "+pr1(flight);
-  if(!mission.data.conf(*,flight))
-    return 0;
-
-  // If no key is specified, return 1 -- flight existed
-  if(is_void(key))
-    return 1;
-
-  // Check to see if key specified is valid and exists
-  fconf = mission(data, conf, noop(flight));
-  if(!is_string(key) || !strlen(key))
-    error, "invalid key: "+pr1(key);
-  return fconf(*,key) > 0;
 }
 has = mission_has;
 
