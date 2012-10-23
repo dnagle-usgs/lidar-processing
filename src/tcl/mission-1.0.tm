@@ -254,7 +254,7 @@ namespace eval ::mission::gui {
         ::mixin::statevar $f.btnLoad \
                 -statemap {"" disabled} \
                 -statedefault {!disabled} \
-                -statevariable ::mission::gui::load_data_auto
+                -statevariable ::mission::commands(load_data)
         ttk::button $f.btnInitialize -text "Initialize Flight by Path" \
                 -command ::mission::gui::initialize_path_flight
         ::mixin::statevar $f.btnInitialize \
