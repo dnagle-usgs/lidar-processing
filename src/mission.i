@@ -741,7 +741,7 @@ func mission_json_import(versions, json) {
 }
 
 scratch = save(scratch, versions);
-versions = save(mission_json_version1);
+versions = save(mission_json_version1, mission_json_version2);
 
 /*
   The format used for mission configuration files has changed over time. To
@@ -811,6 +811,21 @@ func mission_json_version1(data) {
   // Assume that we've properly upgraded to mcversion 2 now.
   save, data, mcversion=2;
 
+  return data;
+}
+
+func mission_json_version2(data) {
+  // Version three renames "data_path" to "data_path dir" for consistency with
+  // other fields. This allows us to determine from the field name whether it's
+  // a path or not: paths always end with " dir" or " file".
+  for(i = 1; i <= data.flights(*); i++) {
+    if(data.flights(noop(i), *, "data_path")) {
+      save, data.flights(noop(i)), "data_path dir", data.flights(noop(i), "data_path");
+      save, data.flights, noop(i), obj_delete(data.flights(noop(i)), "data_path");
+    }
+  }
+
+  save, data, mcversion=3;
   return data;
 }
 
