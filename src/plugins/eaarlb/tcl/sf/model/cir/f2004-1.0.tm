@@ -8,6 +8,7 @@
 
 package provide sf::model::cir::f2004 1.0
 package require sf::model
+package require sf::model::tar
 package require misc
 package require snit
 package require tar

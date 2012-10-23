@@ -58,8 +58,6 @@ package provide sf 1.0
 package require sf::controller
 package require sf::gui
 package require sf::model
-package require sf::model::rgb
-package require sf::model::cir
 package require sf::model::tar
 package require sf::mediator
 package require sf::tools

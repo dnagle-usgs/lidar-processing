@@ -1,19 +1,21 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 ################################################################################
-#                                SF Model: CIR                                 #
+#                             SF Model: RGB f2006                              #
 #------------------------------------------------------------------------------#
-# This module defines creation routines and translator types for handling CIR  #
-# imagery collected using the new CIR camera starting in 2010/2011.            #
+# This module defines creation routines and translator types for handling RGB  #
+# imagery that was collected starting in mid-2006.                             #
+#                                                                              #
 ################################################################################
 
-package provide sf::model::cir::f2010 1.0
+package provide sf::model::rgb::f2006 1.0
 package require sf::model
+package require sf::model::tar
 package require misc
 package require snit
 package require tar
 package require struct::list
 
-namespace eval ::sf::model::create::cir::f2010 {}
+namespace eval ::sf::model::create::rgb::f2006 {}
 namespace eval ::sf::model::translator {}
 
 ################################################################################
@@ -23,23 +25,23 @@ namespace eval ::sf::model::translator {}
 # ---------------------------- Public procedures -------------------------------
 
 # tarfiles ?<name>? <args>
-#   Creates an object of class collection::tar::tarfiles using the CIR
+#   Creates an object of class collection::tar::tarfiles using the RGB
 #   translator.
-proc ::sf::model::create::cir::f2010::tarfiles args {
+proc ::sf::model::create::rgb::f2006::tarfiles args {
     return [_tar files $args]
 }
 
 # tarpaths ?<name>? <args>
-#   Creates an object of class collection::tar::tarpaths using the CIR
+#   Creates an object of class collection::tar::tarpaths using the RGB
 #   translator.
-proc ::sf::model::create::cir::f2010::tarpaths args {
+proc ::sf::model::create::rgb::f2006::tarpaths args {
     return [_tar paths $args]
 }
 
 # tarpath ?<name>? <args>
-#   Creates an object of class collection::tar::tarpath using the CIR
+#   Creates an object of class collection::tar::tarpath using the RGB
 #   translator.
-proc ::sf::model::create::cir::f2010::tarpath args {
+proc ::sf::model::create::rgb::f2006::tarpath args {
     return [_tar path $args]
 }
 
@@ -48,19 +50,19 @@ proc ::sf::model::create::cir::f2010::tarpath args {
 # _tar <class> <opts>
 #   This procedure implements the public procs, varying by the slight
 #   differences required for the different tar class types.
-proc ::sf::model::create::cir::f2010::_tar {class opts} {
-    return [::sf::model::create::_tar ::sf::model::translator::cir::f2010 \
+proc ::sf::model::create::rgb::f2006::_tar {class opts} {
+    return [::sf::model::create::_tar ::sf::model::translator::rgb::f2006 \
             $class $opts]
 }
 
 ################################################################################
-#                                CIR Translator                                #
+#                                RGB Translator                                #
 #------------------------------------------------------------------------------#
-# This class implements the necessary interface for interpreting CIR imagery.  #
+# This class implements the necessary interface for interpreting RGB imagery.  #
 #                                                                              #
 # The public interface conforms to translator::null.                           #
 #==============================================================================#
-snit::type ::sf::model::translator::cir::f2010 {
+snit::type ::sf::model::translator::rgb::f2006 {
     pragma -hastypeinfo false
     pragma -hastypedestroy false
     pragma -hasinstances false
@@ -80,7 +82,7 @@ snit::type ::sf::model::translator::cir::f2010 {
 
     typemethod {tar soe} fn {
         scan [file tail $fn] $patterns(fmttar) Y M D h m
-        return [::misc::soe from list $Y $M $D $h $m 0]
+        return [::misc::soe from list $Y $M $D $h $m]
     }
 
     typemethod {tar predict soes} fn {
@@ -97,19 +99,27 @@ snit::type ::sf::model::translator::cir::f2010 {
     }
 
     typemethod {file soe} fn {
-        scan [file tail $fn] $patterns(fmtjpg) Y M D h m s f
-        set s [expr {$s + $f/10000.}]
-        set soe [::misc::soe from list $Y $M $D $h $m $s]
-        return [format %.4f $soe]
+        scan [file tail $fn] $patterns(fmtjpg) Y M D h m s
+        return [::misc::soe from list $Y $M $D $h $m $s]
     }
 
     typemethod {file clean} fn {
-        scan [file tail $fn] $patterns(fmtjpg) Y M D h m - -
-        set outdir [format "%02d%02d" $h $m]
-        return [file join $outdir [file tail $fn]]
+        scan [file tail $fn] $patterns(fmtjpg) Y M D h m s
+        return [format $patterns(fmtout) $Y $M $D $h $m $s]
     }
 
-    typemethod {modify retrieve} {tokenVar argsVar} {}
+    typemethod {modify retrieve} {tokenVar argsVar} {
+        upvar $argsVar opts
+        if {[dict exists $opts -rotate]} {
+            if {[dict get $opts -rotate] > 180} {
+                dict incr opts -rotate -180
+            } else {
+                dict incr opts -rotate 180
+            }
+        } else {
+            dict set opts -rotate 180
+        }
+    }
 
     #==========================================================================#
     #                                Internals                                 #
@@ -120,12 +130,13 @@ snit::type ::sf::model::translator::cir::f2010 {
     #   expression operations.
     #       exptar - Regular expression for tar file
     #       expjpg - Regular expression for image file (jpg)
-    #       fmttar - Formatting scan pattern for tar file to extract YMDhms
+    #       fmttar - Formatting scan pattern for tar file to extract YMDhm
     #       fmtjpg - Formatting scan pattern for image file to extract YMDhms
     typevariable patterns -array {
-        exptar {^\d{8}-\d{4}.tar$}
-        expjpg {^\d{8}-\d{6}.\d{4}.jpg$}
-        fmttar {%1$4d%2$2d%3$2d-%4$2d%5$2d.tar}
-        fmtjpg {%1$4d%2$2d%3$2d-%4$2d%5$2d%6$2d.%7$4d.jpg}
+        exptar {^cam147_\d{4}-\d\d-\d\d_\d{4}.tar$}
+        expjpg {^cam147_\d{4}-\d\d-\d\d_\d{6}-\d\d.jpg$}
+        fmttar {cam147_%4d-%2d-%2d_%2d%2d.tar}
+        fmtjpg {cam147_%4d-%2d-%2d_%2d%2d%2d-%*2d.jpg}
+        fmtout {cam147_%04d-%02d-%02d_%02d%02d%02d.jpg}
     }
 }
