@@ -19,6 +19,23 @@ if {![namespace exists ::mission]} {
             initialize_path_flight {}
             load_data {}
         }
+
+        # GUI specific variables...
+
+        variable top .missconf
+        variable view load
+        variable flights
+        variable details
+
+        variable flight_name ""
+        variable detail_type ""
+        variable detail_value ""
+
+        variable widget_flight_name
+        variable widget_detail_type
+        variable widget_detail_value
+
+        variable currentfile ""
     }
 
     tky_tie add read ::mission::path \
@@ -89,23 +106,6 @@ namespace eval ::mission {
             ::mission::refresh_flights
         }
     }
-}
-
-namespace eval ::mission {
-    variable top .missconf
-    variable view load
-    variable flights
-    variable details
-
-    variable flight_name ""
-    variable detail_type ""
-    variable detail_value ""
-
-    variable widget_flight_name
-    variable widget_detail_type
-    variable widget_detail_value
-
-    variable currentfile ""
 
     proc refresh_vars {} {
         set ::mission::path $::mission::path
@@ -141,7 +141,7 @@ namespace eval ::mission {
     }
 
     proc update_view {} {
-        variable ::mission::conf
+        variable conf
         variable top
         variable view
         if {$view eq "load"} {
@@ -538,7 +538,7 @@ namespace eval ::mission {
     }
 
     proc quick_add_flight {} {
-        variable ::mission::conf
+        variable conf
         variable flights
         variable details
         set base "New Flight"
@@ -552,7 +552,7 @@ namespace eval ::mission {
     }
 
     proc quick_add_detail {} {
-        variable ::mission::conf
+        variable conf
         variable flights
         variable details
         set flight [lindex [$flights selection] 0]
@@ -572,7 +572,7 @@ namespace eval ::mission {
     }
 
     proc detail_select_initialdir {} {
-        variable ::mission::conf
+        variable conf
         variable flight_name
         variable detail_type
         variable detail_value
@@ -660,7 +660,7 @@ namespace eval ::mission {
 
     proc refresh_flights {} {
         variable flights
-        variable ::mission::conf
+        variable conf
         set selected [lindex [$flights selection] 0]
         set index [lsearch -exact [$flights children {}] $selected]
         $flights delete [$flights children {}]
@@ -686,7 +686,7 @@ namespace eval ::mission {
     proc refresh_details {} {
         variable flights
         variable details
-        variable ::mission::conf
+        variable conf
         set flight [lindex [$flights selection] 0]
         set detail [lindex [$details selection] 0]
         set index [lsearch -exact [$details children {}] $detail]
@@ -714,7 +714,7 @@ namespace eval ::mission {
     }
 
     proc refresh_fields {} {
-        variable ::mission::conf
+        variable conf
         variable flights
         variable details
         variable flight_name
