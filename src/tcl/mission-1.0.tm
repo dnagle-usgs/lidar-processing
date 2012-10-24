@@ -7,11 +7,28 @@ package require fileutil
 
 if {![namespace exists ::mission]} {
     namespace eval ::mission {
+        # List of plugins used by this conf. Updated during "mission, tksync".
+        # This is primarily read-only.
         variable plugins {}
-        variable path ""
-        variable loaded ""
-        variable cache_mode ""
+
+        # A dict of dicts containing the current configuration. Updated during
+        # "mission, tksync". This is primarily read-only.
         variable conf {}
+
+        # Corresponds to mission.data.path; read-only.
+        variable path ""
+        tky_tie add read ::mission::path \
+                from mission.data.path -initialize 1
+
+        # Corresponds to mission.data.loaded; read-only.
+        variable loaded ""
+        tky_tie add read ::mission::loaded \
+                from mission.data.loaded -initialize 1
+
+        # Corresponds to mission.data.cache_mode; read-only.
+        variable cache_mode ""
+        tky_tie add read ::mission::cache_mode \
+                from mission.data.cache_mode -initialize 1
 
         variable commands
         array set commands {
@@ -22,28 +39,29 @@ if {![namespace exists ::mission]} {
 
         # GUI specific variables...
 
+        # Toplevel
         variable top .missconf
+        # Current view mode
         variable view load
+        # Treeview with flight listing
         variable flights
+        # Treeview with details listing
         variable details
 
+        # The values for the fields available for editing at the given moment.
         variable flight_name ""
         variable detail_type ""
         variable detail_value ""
 
+        # The paths for the three revertable widgets. These are needed so that
+        # the values can be reverted by other code paths.
         variable widget_flight_name
         variable widget_detail_type
         variable widget_detail_value
 
+        # Currently loaded file (if opened/saved via the GUI)
         variable currentfile ""
     }
-
-    tky_tie add read ::mission::path \
-            from mission.data.path -initialize 1
-    tky_tie add read ::mission::loaded \
-            from mission.data.loaded -initialize 1
-    tky_tie add read ::mission::cache_mode \
-            from mission.data.cache_mode -initialize 1
 }
 
 namespace eval ::mission {
@@ -91,29 +109,48 @@ namespace eval ::mission {
         return $key
     }
 
+    # This updates the internal variables used by the mission namespace and
+    # should only be called by "mission, tksync".
     proc json_import {json} {
         variable conf
         variable plugins
         set data [::json::json2dict $json]
         set conf [dict get $data flights]
         set plugins [dict get $data plugins]
+
+        # plugins is actually an array. When it's empty, it comes through as
+        # "null". When it has values, it'll be a list -- which is a
+        # space-separated list of names; that format is fine for display. The
+        # "null" token however needs to be converted to the empty string.
         if {$plugins eq "null"} {
             set plugins ""
         }
 
+        # If the GUI exists, it needs to be refreshed whenever the data
+        # changes.
         if {[winfo exists $::mission::top]} {
             ::mission::update_view
             ::mission::refresh_flights
         }
     }
 
+    # refresh_vars forces the three variables tied to Yorick variables to
+    # update. They normally will only update when accessed; this forces a
+    # trivial access so that they can be refreshed on mouse-overs and such.
     proc refresh_vars {} {
         set ::mission::path $::mission::path
         set ::mission::loaded $::mission::loaded
         set ::mission::cache_mode $::mission::cache_mode
     }
 
+    # Launch the GUI
     proc launch {} {
+        # If the GUI already exists, make sure it's visible and abort
+        if {[winfo exists $::mission::top]} {
+            wm deiconify $::mission::top
+            return
+        }
+
         variable top
         toplevel $top
         wm title $top "Mission Configuration"
@@ -130,6 +167,8 @@ namespace eval ::mission {
         update_view
     }
 
+    # change_view sets the current view to $newview and, if the view is
+    # actually changing, it will reset the geometry
     proc change_view {newview} {
         variable top
         variable view
@@ -140,26 +179,35 @@ namespace eval ::mission {
         update_view
     }
 
+    # update_view updates the GUI to display the selected $view
     proc update_view {} {
         variable conf
         variable top
         variable view
+
+        # Determine which frame is needed for the current view
         if {$view eq "load"} {
             if {[llength $conf]} {
                 set w $top.load
             } else {
                 set w $top.empty
             }
+            # Reset geometry for load/empty, since they do not need to be
+            # resized.
             wm geometry $top {}
         } else {
             set w $top.edit
         }
+
+        # Check to see if the required view is active and, if not, remove all
+        # views and display the required view.
         if {$w ni [pack slaves $top]} {
             pack forget $top.empty $top.edit $top.load
             pack $w -fill both -expand 1
         }
     }
 
+    # Creates the view to display instead of "load" when no data is loaded.
     proc gui_empty {w} {
         ttk::frame $w
         set f $w
@@ -184,6 +232,8 @@ namespace eval ::mission {
         return $w
     }
 
+    # Creates the "load" view. This is a fairly compact view that just lets the
+    # user load data.
     proc gui_load {w} {
         ttk::frame $w
         set f $w
@@ -199,6 +249,8 @@ namespace eval ::mission {
         return $w
     }
 
+    # Creates the "edit" view. This is an involved view that lets the user set
+    # up and change the configuration.
     proc gui_edit {w} {
         variable flights
         variable details
@@ -418,6 +470,8 @@ namespace eval ::mission {
         return $w
     }
 
+    # Dynamically (re-)constructs the plugins menu used within the GUI. The
+    # menu $mb must already exist.
     proc plugins_menu {mb} {
         $mb delete 0 end
         set selected $::mission::plugins
@@ -435,6 +489,7 @@ namespace eval ::mission {
         }
     }
 
+    # Utility command used within plugins_menu to select/deselect plugins.
     proc plugins_menu_command {action plugin} {
         if {$action eq "remove"} {
             set plugins [lsearch -inline -all -not -exact \
@@ -442,7 +497,6 @@ namespace eval ::mission {
         } else {
             set plugins [lsort [list $plugin {*}$::mission::plugins]]
         }
-        #set plugins [join $plugins {", "}]
         if {$plugins eq ""} {
             set plugins "\[\]"
         } else {
@@ -451,6 +505,8 @@ namespace eval ::mission {
         exp_send "mission, data, plugins=$plugins; mission, tksync\r"
     }
 
+    # Prompt the user to browse to a path, which is then set for
+    # mission.data.path.
     proc browse_basepath {} {
         set original $::mission::path
         set new [tk_chooseDirectory \
@@ -470,6 +526,8 @@ namespace eval ::mission {
         exp_send "mission, data, path=\"$new\";\r"
     }
 
+    # Automatically initializes the dataset using the current mission.data.path
+    # (or prompts for one if not defined).
     proc initialize_path_mission {} {
         if {$::mission::path ne ""} {
             set path $::mission::path
