@@ -576,7 +576,7 @@ func mission_get(flight, key, raw=) {
 */
   if(is_void(flight))
     return mission.data.conf(*,);
-  if(!is_string(flight) || !strlen(flight) || mission.data.conf(*,flight))
+  if(!is_string(flight) || !strlen(flight) || !mission.data.conf(*,flight))
     error, "invalid flight: "+pr1(flight);
   if(is_void(key))
     return mission.data.conf(noop(flight),*,);
@@ -587,7 +587,7 @@ func mission_get(flight, key, raw=) {
     !raw && strlen(fconf(noop(key))) &&
     ((strpart(key, -3:) == " dir") || (strpart(key, -4:) == " file"))
   ) {
-    return file_join(mission.path, fconf(noop(key)));
+    return file_join(mission.data.path, fconf(noop(key)));
   }
   return fconf(noop(key));
 }
