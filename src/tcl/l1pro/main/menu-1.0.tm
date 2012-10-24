@@ -85,7 +85,7 @@ proc menu_file_variables mb {
 proc menu_mission mb {
     menu $mb
     $mb add command {*}[menulabel "&Mission configuration manager (new)"] \
-            -command ::mission::gui::launch
+            -command ::mission::launch
     $mb add command {*}[menulabel "Mission configuration manager (&old)"] \
             -command ::missionconf::launch_gui
     $mb add command {*}[menulabel "&Plotting tool"] \

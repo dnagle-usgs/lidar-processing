@@ -4,7 +4,7 @@ package provide mission::eaarl 1.0
 package require mission
 
 namespace eval ::mission::eaarl {
-    namespace import ::mission::gui::ystr
+    namespace import ::mission::ystr
 
     proc initialize_path_mission {} {}
     proc initial_path_flight {} {}

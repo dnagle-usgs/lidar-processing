@@ -84,14 +84,14 @@ namespace eval ::mission {
             set plugins ""
         }
 
-        if {[winfo exists $::mission::gui::top]} {
-            ::mission::gui::update_view
-            ::mission::gui::refresh_flights
+        if {[winfo exists $::mission::top]} {
+            ::mission::update_view
+            ::mission::refresh_flights
         }
     }
 }
 
-namespace eval ::mission::gui {
+namespace eval ::mission {
     variable top .missconf
     variable view load
     variable flights
@@ -123,8 +123,8 @@ namespace eval ::mission::gui {
 
         $top configure -menu [menu::build $top.mb]
 
-        bind $top <Enter> ::mission::gui::refresh_vars
-        bind $top <Visibility> ::mission::gui::refresh_vars
+        bind $top <Enter> ::mission::refresh_vars
+        bind $top <Visibility> ::mission::refresh_vars
 
         refresh_flights
         update_view
@@ -172,7 +172,7 @@ namespace eval ::mission::gui {
 
         ttk::button $f.btnSwitch \
                 -text "Switch to Editing Mode" \
-                -command [list ::mission::gui::change_view edit]
+                -command [list ::mission::change_view edit]
 
         grid $f.lblMessage - - -sticky news -padx 2 -pady 2
         grid x $f.btnSwitch -pady 2
@@ -191,7 +191,7 @@ namespace eval ::mission::gui {
         ttk::frame $f.days
         ttk::frame $f.extra
         ttk::button $f.switch -text "Switch to Editing Mode" \
-                -command [list ::mission::gui::change_view edit]
+                -command [list ::mission::change_view edit]
         grid $f.days -sticky ne
         grid $f.extra -sticky ew
         grid $f.switch
@@ -214,21 +214,21 @@ namespace eval ::mission::gui {
                 -state readonly \
                 -textvariable ::mission::path
         ttk::button $f.btnBasepath -text "Browse..." \
-                -command ::mission::gui::browse_basepath
+                -command ::mission::browse_basepath
 
         ttk::label $f.lblPlugins -text "Plugins required:"
         ttk::entry $f.entPlugins -state readonly \
                 -textvariable ::mission::plugins
         ttk::menubutton $f.mbnPlugins -text "Modify"
         menu $f.mbnPlugins.mb -postcommand \
-                [list ::mission::gui::plugins_menu $f.mbnPlugins.mb]
+                [list ::mission::plugins_menu $f.mbnPlugins.mb]
         $f.mbnPlugins configure -menu $f.mbnPlugins.mb
 
         ttk::frame $f.fraButtons
         ttk::button $f.btnLoad -text "Load Required Plugins" \
                 -command [list exp_send "mission, plugins, load;\r"]
         ttk::button $f.btnInitialize -text "Initialize Mission by Path" \
-                -command ::mission::gui::initialize_path_mission
+                -command ::mission::initialize_path_mission
         ::mixin::statevar $f.btnInitialize \
                 -statemap {"" disabled} \
                 -statedefault {!disabled} \
@@ -240,7 +240,7 @@ namespace eval ::mission::gui {
 
         ttk::frame $f.fraBottom
         ttk::button $f.btnSwitch -text "Switch to Loading Mode" \
-                -command [list ::mission::gui::change_view load]
+                -command [list ::mission::change_view load]
         grid x $f.btnSwitch -in $f.fraBottom
         grid columnconfigure $f.fraBottom {0 2} -weight 1
 
@@ -258,16 +258,16 @@ namespace eval ::mission::gui {
         ttk::frame $f.fraToolbar
         ttk::button $f.tbnPlus -style Toolbutton \
                 -image ::imglib::plus \
-                -command [list ::mission::gui::quick_add_flight]
+                -command [list ::mission::quick_add_flight]
         ttk::button $f.tbnX -style Toolbutton \
                 -image ::imglib::x \
-                -command [list ::mission::gui::quick_action flights remove]
+                -command [list ::mission::quick_action flights remove]
         ttk::button $f.tbnUp -style Toolbutton \
                 -image ::imglib::arrow::up \
-                -command [list ::mission::gui::quick_action flights raise]
+                -command [list ::mission::quick_action flights raise]
         ttk::button $f.tbnDown -style Toolbutton \
                 -image ::imglib::arrow::down \
-                -command [list ::mission::gui::quick_action flights lower]
+                -command [list ::mission::quick_action flights lower]
         grid $f.tbnPlus -in $f.fraToolbar
         grid $f.tbnX -in $f.fraToolbar
         grid $f.tbnUp -in $f.fraToolbar
@@ -287,8 +287,8 @@ namespace eval ::mission::gui {
         ttk::label $f.lblField -text "Flight name:"
         ttk::entry $f.entField
         ::mixin::revertable $f.entField \
-                -textvariable ::mission::gui::flight_name \
-                -applycommand ::mission::gui::apply_flight_name
+                -textvariable ::mission::flight_name \
+                -applycommand ::mission::apply_flight_name
         ttk::button $f.btnApply -text "Apply" \
                 -command [list $f.entField apply]
         ttk::button $f.btnRevert -text "Revert" \
@@ -302,7 +302,7 @@ namespace eval ::mission::gui {
                 -statedefault {!disabled} \
                 -statevariable ::mission::commands(load_data)
         ttk::button $f.btnInitialize -text "Initialize Flight by Path" \
-                -command ::mission::gui::initialize_path_flight
+                -command ::mission::initialize_path_flight
         ::mixin::statevar $f.btnInitialize \
                 -statemap {"" disabled} \
                 -statedefault {!disabled} \
@@ -325,16 +325,16 @@ namespace eval ::mission::gui {
         ttk::frame $f.fraToolbar
         ttk::button $f.tbnPlus -style Toolbutton \
                 -image ::imglib::plus \
-                -command [list ::mission::gui::quick_add_detail]
+                -command [list ::mission::quick_add_detail]
         ttk::button $f.tbnX -style Toolbutton \
                 -image ::imglib::x \
-                -command [list ::mission::gui::quick_action details remove]
+                -command [list ::mission::quick_action details remove]
         ttk::button $f.tbnUp -style Toolbutton \
                 -image ::imglib::arrow::up \
-                -command [list ::mission::gui::quick_action details raise]
+                -command [list ::mission::quick_action details raise]
         ttk::button $f.tbnDown -style Toolbutton \
                 -image ::imglib::arrow::down \
-                -command [list ::mission::gui::quick_action details lower]
+                -command [list ::mission::quick_action details lower]
         grid $f.tbnPlus -in $f.fraToolbar
         grid $f.tbnX -in $f.fraToolbar
         grid $f.tbnUp -in $f.fraToolbar
@@ -358,8 +358,8 @@ namespace eval ::mission::gui {
         ttk::label $f.lblType -text "Field type:"
         mixin::combobox $f.cboType
         ::mixin::revertable $f.cboType \
-                -textvariable ::mission::gui::detail_type \
-                -applycommand ::mission::gui::apply_detail_type
+                -textvariable ::mission::detail_type \
+                -applycommand ::mission::apply_detail_type
         ttk::button $f.btnTypeApply -text "Apply" \
                 -command [list $f.cboType apply]
         ttk::button $f.btnTypeRevert -text "Revert" \
@@ -369,8 +369,8 @@ namespace eval ::mission::gui {
         ttk::label $f.lblValue -text "Field value:"
         ttk::entry $f.entValue
         ::mixin::revertable $f.entValue \
-                -textvariable ::mission::gui::detail_value \
-                -applycommand ::mission::gui::apply_detail_value
+                -textvariable ::mission::detail_value \
+                -applycommand ::mission::apply_detail_value
         ttk::button $f.btnValueApply -text "Apply" \
                 -command [list $f.entValue apply]
         ttk::button $f.btnValueRevert -text "Revert" \
@@ -379,9 +379,9 @@ namespace eval ::mission::gui {
 
         ttk::frame $f.fraButtons
         ttk::button $f.btnSelectFile -text "Select File..." \
-                -command ::mission::gui::detail_select_file
+                -command ::mission::detail_select_file
         ttk::button $f.btnSelectDir -text "Select Directory..." \
-                -command ::mission::gui::detail_select_dir
+                -command ::mission::detail_select_dir
         grid x $f.btnSelectFile $f.btnSelectDir -in $f.fraButtons
         grid columnconfigure $f.fraButtons {0 3} -weight 1
 
@@ -412,8 +412,8 @@ namespace eval ::mission::gui {
             }
         }
 
-        bind $flights <<TreeviewSelect>> ::mission::gui::refresh_details
-        bind $details <<TreeviewSelect>> ::mission::gui::refresh_fields
+        bind $flights <<TreeviewSelect>> ::mission::refresh_details
+        bind $details <<TreeviewSelect>> ::mission::refresh_fields
 
         return $w
     }
@@ -427,10 +427,10 @@ namespace eval ::mission::gui {
             if {$plugin in $selected} {
                 $mb invoke end
                 $mb entryconfigure end -command [list \
-                        ::mission::gui::plugins_menu_command remove $plugin]
+                        ::mission::plugins_menu_command remove $plugin]
             } else {
                 $mb entryconfigure end -command [list \
-                        ::mission::gui::plugins_menu_command add $plugin]
+                        ::mission::plugins_menu_command add $plugin]
             }
         }
     }
@@ -680,7 +680,7 @@ namespace eval ::mission::gui {
                 $flights selection set [list $selected]
             }
         }
-        ::misc::idle ::mission::gui::refresh_details
+        ::misc::idle ::mission::refresh_details
     }
 
     proc refresh_details {} {
@@ -710,7 +710,7 @@ namespace eval ::mission::gui {
                 $details selection set [list $detail]
             }
         }
-        ::misc::idle ::mission::gui::refresh_fields
+        ::misc::idle ::mission::refresh_fields
     }
 
     proc refresh_fields {} {
@@ -828,12 +828,12 @@ namespace eval ::mission::gui {
         proc menu_file {mb} {
             menu $mb
             $mb add command {*}[menulabel "&New configuration"] \
-                    -command ::mission::gui::new_conf
+                    -command ::mission::new_conf
             $mb add separator
             $mb add command {*}[menulabel "&Load configuration..."] \
-                    -command ::mission::gui::load_conf
+                    -command ::mission::load_conf
             $mb add command {*}[menulabel "&Save configuration..."] \
-                    -command ::mission::gui::save_conf
+                    -command ::mission::save_conf
             return $mb
         }
 
