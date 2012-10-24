@@ -29,6 +29,49 @@ if {![namespace exists ::mission]} {
             from mission.data.cache_mode -initialize 1
 }
 
+# ::mission::has behaves like Yorick mission(has,)
+#   [::mission::has $flight] -> 0|1 is flight present?
+#   [::mission::has $flight $key] -> 0|1 is flight present with key?
+proc ::mission::has {flight {key {}}} {
+    variable conf
+    if {![dict exists $conf $flight]} {
+        return 0
+    }
+    if {$key ne "" && ![dict exists $conf $flight $key]} {
+        return 0
+    }
+    return 1
+}
+
+# ::mission::get behaves like Yorick mission(get,)
+#   [::mission::get] -> flights
+#   [::mission::get $flight] -> keys
+#   [::mission::get $flight $key] -> value
+#   [::mission::get $flight $key -raw 1] -> value without path adjustment
+proc ::mission::get {{flight {}} {key {}} args} {
+    variable conf
+    variable path
+    set raw 0
+    if {[dict exists $args -raw]} {
+        set raw [dict get $args -raw]
+    }
+    if {$flight eq ""} {
+        return [dict keys $conf]
+    }
+    if {![dict exists $conf $flight]} {
+        error "invalid flight: $flight"
+    }
+    set details [dict get $conf $flight]
+    if {$key eq ""} {
+        return [dict keys $details]
+    }
+    set val [dict get $details $key]
+    if {!$raw && [string length $val] && [lindex $key end] in "file dir"} {
+        return [file join $path $key]
+    }
+    return $key
+}
+
 proc ::mission::json_import {json} {
     variable conf
     variable plugins
