@@ -68,23 +68,3 @@ proc ::sf::tools::dump_model_images_tick {model dest query} {
                 $query]
     }
 }
-
-proc ::sf::tools::dump_mission_cir {dest args} {
-    if {[dict exists $args -subdir]} {
-        set subdir [dict get $args -subdir]
-    } else {
-        set subdir photos
-    }
-    foreach day [missionday_list] {
-        if {[mission_has "cir dir" $day]} {
-            set path [mission_get "cir dir" $day]
-            set model [::sf::model::create::cir::f2004::tarpath -path $path]
-            set dayrel [::fileutil::relative [mission_path] \
-                    [mission_get data_path $day]]
-            set daydest [file join $dest $dayrel $subdir]
-            if {[dump_model_images $model $daydest]} {
-                return
-            }
-        }
-    }
-}

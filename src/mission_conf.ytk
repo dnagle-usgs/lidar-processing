@@ -531,7 +531,7 @@ namespace eval missionconf {
             -title "Select destination for CIR imagery" \
             -initialdir [mission_path]]
         if {$outdir ne ""} {
-            ::sf::tools::dump_mission_cir $outdir
+            ::mission::eaarl::dump_mission_cir "cir dir" cir::f2004::tarpath $outdir
         }
     }
 
