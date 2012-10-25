@@ -180,18 +180,18 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
   The full-mission kmz file would then be:
     /data/0/EAARL/raw/NorIda/kml/NorIda.kmz
 */
-  extern pnav;
+  extern pnav, edb, edb_filename;
 
   if(!is_void(conf_file))
-    mission_load, conf_file;
+    mission, read, conf_file;
 
-  default, outdir, file_join(mission_path(), "kml");
-  default, name, file_tail(mission_path());
+  default, outdir, file_join(mission.data.path, "kml");
+  default, name, file_tail(mission.data.path);
   default, keepkml, !is_void(webdest);
 
   mkdirp, outdir;
 
-  days = missionday_list();
+  days = mission(get,);
   if(is_void(days)) {
     write, "No mission days defined, skipping!";
     return [];
@@ -200,15 +200,12 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
 
   masters = files = links = weblinks = [];
 
+  loaded = mission.data.loaded;
   for(i = 1; i <= numberof(days); i++) {
     pause, 1;
     write, format="\n----------\nProcessing %s\n", days(i);
-    edb_file = mission_get("edb file", day=days(i));
-    edb = soe_day_start = [];
-    if(!is_void(edb_file) && file_exists(edb_file)) {
-      f = edb_open(edb_file, verbose=0);
-      edb = (f.records);
-      close, f;
+    mission, load, days(i);
+    if(!is_void(edb)) {
       w = where(edb.seconds > time2soe([2000,0,0,0,0,0]));
       if(!numberof(w)) {
         edb = [];
@@ -217,10 +214,8 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
         tmp(3:) = 0;
         soe_day_start = time2soe(tmp);
       }
-      determine_gps_time_correction, edb_file, verbose=1;
+      determine_gps_time_correction, edb_filename, verbose=1;
     }
-    missiondata_load, "pnav", day=days(i), noerror=1;
-    missiondata_load, "ins", day=days(i), noerror=1;
     fn = file_join(outdir, days(i) + ".kml");
     if(!is_void(pnav) && !is_void(edb) && !is_void(soe_day_start)) {
       newfiles = kml_pnav(pnav, fn, name=days(i), edb=edb,
@@ -241,6 +236,9 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
       write, "No data, skipped!";
     }
   }
+  mission, unload;
+  if(strlen(loaded))
+    mission, load, loaded;
 
   write, format="\n----------\nProcessing %s\n", name;
 
