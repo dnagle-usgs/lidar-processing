@@ -180,9 +180,7 @@ func mission_cache_preload {
   for(i = 1; i <= count; i++)
     mission, load, flights(i);
 
-  mission, unload;
-  if(strlen(loaded))
-    mission, load, loaded;
+  mission, load, loaded;
 }
 preload = mission_cache_preload;
 

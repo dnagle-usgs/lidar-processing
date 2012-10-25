@@ -37,9 +37,7 @@ norun=) {
       update=update, forcelocal=forcelocal
     );
   }
-  mission, unload;
-  if(strlen(loaded))
-    mission, load, loaded;
+  mission, load, loaded;
 
   if(!am_subroutine())
     return conf;

@@ -236,9 +236,7 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
       write, "No data, skipped!";
     }
   }
-  mission, unload;
-  if(strlen(loaded))
-    mission, load, loaded;
+  mission, load, loaded;
 
   write, format="\n----------\nProcessing %s\n", name;
 

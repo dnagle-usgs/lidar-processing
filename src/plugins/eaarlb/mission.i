@@ -87,9 +87,7 @@ func mission_query_soe(soe) {
       grow, ins_match, flights(i);
   }
 
-  mission, unload;
-  if(strlen(loaded))
-    mission, load, loaded;
+  mission, load, loaded;
 
   // If exactly one edb match is found, use it.
   // If no edb match but exactly one gps, use it.

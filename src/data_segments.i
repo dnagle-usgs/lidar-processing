@@ -735,10 +735,7 @@ func tk_dsw_get_data(data, type, var, sod_field) {
       grow, working_soe, vsod(vmin:vmax) + soe_day_start;
     }
   }
-
-  mission, unload;
-  if(strlen(loaded))
-    mission, load, loaded;
+  mission, load, loaded;
 
   if(numberof(working)) {
     idx = set_remove_duplicates(int((working_soe-working_soe(min))*200), idx=1);
