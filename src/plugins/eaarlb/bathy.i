@@ -63,7 +63,7 @@ func bath_ctl_save(filename) {
   data = save(
     bath_ctl, bath_ctl_chn4,
     "save environment", save(
-      "path", mission_path(),
+      "path", mission.data.path,
       "user", get_user(),
       "host", get_host(),
       "timestamp", soe2iso8601(getsoe()),
