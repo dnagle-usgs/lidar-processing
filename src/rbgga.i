@@ -574,21 +574,18 @@ utm=, width=, win=) {
    SEE ALSO: mission_conf
 */
 // Original David B. Nagle 2009-03-12
-  extern pnav;
   default, width, 1;
   default, msize, 0.1;
   default, marker, 0;
-  env_bkp = missiondata_wrap("pnav");
-  days = missionday_list();
+  days = mission(get,);
   color_tracker = -4;
   for(i = 1; i <= numberof(days); i++) {
-    if(mission_has("pnav file", day=days(i))) {
+    if(mission(has, days(i), "pnav file")) {
+      gps = load_pnav(fn=mission(get, days(i), "pnav file"));
       color_tracker--;
       cur_color = is_void(color) ? color_tracker : color;
-      missiondata_load, "pnav", day=days(i);
-      show_pnav_track, pnav, color=cur_color, skip=skip, msize=msize,
+      show_pnav_track, gps, color=cur_color, skip=skip, msize=msize,
         marker=marker, lines=lines, utm=utm, width=width, win=win;
     }
   }
-  missiondata_unwrap, env_bkp;
 }

@@ -483,7 +483,7 @@ func eaarla_fsecs2rn(seconds, fseconds, fast=) {
     return result;
   }
 
-  missiondata_soe_load, seconds + fseconds * 1.6e-6;
+  mission, load_soe, seconds + fseconds * 1.6e-6;
   if(is_void(edb))
     return -1;
   w = where(edb.seconds == seconds & edb.fseconds == fseconds);

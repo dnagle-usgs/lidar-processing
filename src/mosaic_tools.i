@@ -43,9 +43,9 @@ conf_file=, downsample=, scheme=, cir_soe_offset=, mode=, searchstr=) {
   default, raw_cir_dir, mission_dir;
 
   if(is_void(conf_file))
-    auto_mission_conf, mission_dir, strict=0, autoname="auto_cir_conf.json";
+    mission, auto, mission_dir, strict=0;
   else
-    mission_load, conf_file;
+    mission, read, conf_file;
 
   copy_cirdata_tiles, filter_cirdata_by_pbd_data(
       gather_cir_data(
@@ -177,7 +177,7 @@ func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=, search
   default, downsample, 0;
   default, searchstr, "*.jpg";
   if(!is_void(conf_file))
-    mission_load, conf_file;
+    mission, read, conf_file;
 
   write, format="Locating images...%s", "\n";
   photo_files = find(photo_dir, glob=searchstr);
@@ -267,15 +267,14 @@ func mosaic_gather_tans(photo_soes, progress=, mounting_bias=) {
   default, mounting_bias, camera_mounting_bias;
   photo_tans = array(IEX_ATTITUDEUTM, dimsof(photo_soes));
 
-  days = missionday_list();
+  days = mission(get,);
   for(i = 1; i <= numberof(days); i++) {
     if(progress)
       write, format=" - %d: Interpolating for %s...\n", i, days(i);
-    missionday_current, days(i);
-    if(!mission_has("ins file")) continue;
-    missiondata_load, "ins";
+    mission, load, days(i);
+    if(is_void(tans)) continue;
 
-    tans_soe = date2soe(mission_get("date"), tans.somd);
+    tans_soe = soe_day_start + tans.somd;
 
     w = where(tans_soe(min) <= photo_soes & photo_soes <= tans_soe(max));
 

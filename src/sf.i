@@ -5,14 +5,15 @@ func sf_mediator_plot(win, soe, msize, marker, color, errcmd) {
   defined in module sf::mediator.
 */
   extern soe_day_start, gga;
-  env_bkp = missiondata_wrap("all");
-  if(missiondata_soe_load(soe)) {
+  loaded = mission.data.loaded;
+  mission, load_soe, soe;
+  if(!is_void(pnav)) {
     sod = soe - soe_day_start;
     mark_time_pos, sod, win=win, msize=msize, marker=marker, color=color;
   } else {
     tkcmd, swrite(format="%s {No data found in mission configuration for soe %.2f}", errcmd, double(soe));
   }
-  missiondata_unwrap, env_bkp;
+  mission, load, loaded;
 }
 
 func sf_mediator_broadcast_somd(somd) {
@@ -29,8 +30,9 @@ func sf_mediator_raster(soe, errcmd) {
   extern pixelwfvars, rn;
   vars = pixelwfvars.ndrast;
 
-  env_bkp = missiondata_wrap("all");
-  if(missiondata_soe_load(soe)) {
+  loaded = mission.data.loaded;
+  mission, load_soe, soe;
+  if(!is_void(edb)) {
     rnarr = where(abs(edb.seconds - soe) <= 1);
     if(numberof(rnarr)) {
       rnsoes = edb.seconds(rnarr) + edb.fseconds(rnarr)*1.6e-6;
@@ -44,10 +46,10 @@ func sf_mediator_raster(soe, errcmd) {
       window_select, win;
     } else {
       tkcmd, swrite(format="%s {No rasters found for soe %d}", errcmd, int(soe));
-      missiondata_unwrap, env_bkp;
+      mission, load, loaded;
     }
   } else {
     tkcmd, swrite(format="%s {No data found in mission configuration for soe %d}", errcmd, int(soe));
-    missiondata_unwrap, env_bkp;
+    mission, load, loaded;
   }
 }

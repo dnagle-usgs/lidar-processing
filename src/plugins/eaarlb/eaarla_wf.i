@@ -11,21 +11,21 @@ func mission_georef_eaarla(outdir=, update=) {
         update=0    Process all files; replace any existing PBD files.
         update=1    Create missing PBD files, skip existing ones.
 */
-  cache_state = missiondata_cache("query");
-  missiondata_cache, "disable";
-  missiondata_cache, "clear";
+  extern edb_filename;
+  cache_mode = mission.data.cache_mode;
+  mission, data, cache_mode="disable";
+  mission, cache, clear;
 
-  days = missionday_list();
+  days = mission(get,);
   count = numberof(days);
   for(i = 1; i <= count; i++) {
     write, format="Processing day %d/%d:\n", i, count;
-    missionday_current, days(i);
-    missiondata_load, "all";
-    batch_georef_eaarla, file_dirname(mission_get("edb file")),
+    mission, load, days(i);
+    batch_georef_eaarla, file_dirname(edb_filename),
       outdir=outdir, update=update, interval=45;
   }
 
-  missiondata_cache, cache_state;
+  mission, data, cache_mode=cache_mode;
 }
 
 func batch_georef_eaarla(tlddir, files=, searchstr=, outdir=, gns=, ins=, ops=,

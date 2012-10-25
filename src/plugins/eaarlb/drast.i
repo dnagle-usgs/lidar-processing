@@ -875,8 +875,8 @@ func sfsod_to_rn(sfsod) {
 
 func drast_set_soe(soe) {
   extern edb;
-  found = missiondata_soe_load(soe);
-  if(found) {
+  mission, load_soe, soe;
+  if(!is_void(edb)) {
     w = where(abs(edb.seconds - soe) <= 1);
     if(numberof(w)) {
       rnsoes = edb.seconds(w) + edb.fseconds(w)*1.6e-6;

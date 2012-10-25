@@ -45,8 +45,8 @@ func batch_kml_mission(datadir, outdir, searchstr=, outfile=, webdest=) {
   jidx = grow(0, where(jsons == 0));
   pidx = grow(0, where(paths == 0));
 
-  missiondata_cache, "disable";
-  missiondata_cache, "clear";
+  mission, data, cache_mode="disable";
+  mission, cache, clear;
 
   mission_kmls = day_kmls = part_kmls = array(pointer, numberof(jidx)-1);
   tree = h_new();

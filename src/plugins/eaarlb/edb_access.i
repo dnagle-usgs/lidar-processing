@@ -325,7 +325,7 @@ func get_soe_rasts(start, stop) {
   count = numberof(start);
   result = array(pointer, count);
   for(i = 1; i <= count; i++) {
-    missiondata_soe_load, start(i);
+    mission, load_soe, start(i);
     b1 = digitize(start(i)-1, edb.seconds);
     b0 = digitize(stop(i), edb.seconds) - 1;
     result(i) = &get_erast(rn=indgen(b1:b0));
