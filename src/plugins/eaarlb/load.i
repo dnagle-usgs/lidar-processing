@@ -19,6 +19,7 @@ include, base + "geo_bath.i";
 include, base + "mission.i";
 include, base + "mission_constants.i";
 include, base + "mosaic_biases.i";
+include, base + "sf.i";
 include, base + "surface_topo.i";
 include, base + "veg.i";
 include, base + "veg_energy.i";
