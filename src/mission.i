@@ -100,8 +100,8 @@ local mission_data;
       mission, data, cache_mode="onload"
 
     mission.data.loaded - Scalar string specifying which flight is loaded. This
-      will be void if no flights are loaded. This should not be externally
-      modified.
+      will be the empty string if no flights are loaded. This should not be
+      externally modified.
 
     mission.data.conf - Oxy object containing the mission configuration. This
       will contain oxy objects with key names that are the flight names; each
