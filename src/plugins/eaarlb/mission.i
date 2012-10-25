@@ -268,6 +268,8 @@ func mission_unload(void) {
   if(mission.data.cache_mode == "onchange")
     save, mission.data.cache, mission.data.loaded, mission(wrap,);
 
+  mission, data, loaded="";
+
   extern data_path;
   data_path = "";
 
