@@ -24,12 +24,14 @@ install: $(bindir)
 		echo install -c $(ROOTPATH)/$$script $(bindir)/$$script; \
 		install -c $(ROOTPATH)/$$script $(bindir)/$$script; \
 	done
+	ln -s comment "$(bindir)/#"
 
 install-linked: $(bindir)
 	@for script in $(SCRIPTS); do \
 		echo ln -s $(ROOTPATH)/$$script $(bindir)/$$script; \
 		ln -s $(ROOTPATH)/$$script $(bindir)/$$script; \
 	done
+	ln -s comment "$(bindir)/#"
 
 clean:
 
