@@ -396,6 +396,13 @@ func mission_flights_auto(flight, path, strict=) {
   from the configuration. If strict=0 and no data is found, the flight be
   remain but will have no details defined for it.
 */
+  // Make sure the flight exists
+  if(!mission(has, flight))
+    mission, flights, add, flight;
+
+  // Clear any details that are already present
+  mission, details, clear, flight;
+
   // If strict=1, the flight should only be generated if there's lidar data,
   // which is detected by the presence of an EAARL index file.
   if(strict) {
@@ -404,10 +411,8 @@ func mission_flights_auto(flight, path, strict=) {
       mission, flights, remove, flight;
       return;
     }
+    mission, details, clear, flight;
   }
-
-  // Clear any details that are already present
-  mission, details, clear, flight;
 
   // Keys will be added in the order specified below
   keys = [
