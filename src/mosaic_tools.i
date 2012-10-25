@@ -9,7 +9,7 @@ conf_file=, downsample=, scheme=, cir_soe_offset=, mode=, searchstr=) {
   Creates the Level A directory structure of images.
 
   This consolidates the following steps into a single call:
-    auto_mission_conf, mission_dir, strict=0, autoname="auto_cir_conf.json";
+    mission, auto, mission_dir, strict=0;
     cirdata = gather_cir_data(raw_cir_dir, downsample=2);
     cirdata = filter_cirdata_by_pbd_data(cirdata, pbd_dir);
     copy_cirdata_tiles, cirdata, "10k2k", pro_cir_dir;
