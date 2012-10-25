@@ -368,10 +368,10 @@ func mission_auto(path, strict=) {
   // Ensure a stable ordering.
   dirs = dirs(sort(dirs));
 
-  for(i = 1; i <= numberof(days); i++) {
-    mission, flights, auto, days(i), file_join(path, days(i)), strict=strict;
-    if(!strict && !mission.data.conf(noop(days(i)))(*))
-      mission, flights, remove, days(i);
+  for(i = 1; i <= numberof(dirs); i++) {
+    mission, flights, auto, dirs(i), file_join(path, dirs(i)), strict=strict;
+    if(!strict && !mission.data.conf(noop(dirs(i)))(*))
+      mission, flights, remove, dirs(i);
   }
 }
 

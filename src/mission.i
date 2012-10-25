@@ -529,11 +529,11 @@ func mission_details_clear(flight) {
   Removes all key-value pairs for the given FLIGHT, which must be a non-empty
   string that already exists in the configuration.
 */
-  if(!is_string(name) || !strlen(name) || !mission.data.conf(*,name))
-    error, "invalid name: "+pr1(name);
-  save, mission.data.conf, noop(name), save();
+  if(!is_string(flight) || !strlen(flight) || !mission.data.conf(*,flight))
+    error, "invalid flight: "+pr1(flight);
+  save, mission.data.conf, noop(flight), save();
   // Delete associated cache
-  mission, data, cache=obj_delete(mission.data.cache, noop(oldname));
+  mission, data, cache=obj_delete(mission.data.cache, noop(flight));
   mission, tksync;
 }
 clear = mission_details_clear;
