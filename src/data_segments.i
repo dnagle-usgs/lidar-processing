@@ -702,26 +702,22 @@ func tk_dsw_get_data(data, type, var, sod_field) {
 
   segment_ptrs = split_by_fltline(unref(data));
 
-  // Backup variables, then get stats for each mission day
-  env_backup = missiondata_wrap(type);
+  loaded = mission.data.loaded;
+
   // heading gets handled specially
   working = [];
   working_soe = [];
-  days = missionday_list();
+  days = mission(get,);
   for(i = 1; i <= numberof(segment_ptrs); i++) {
     temp = *segment_ptrs(i);
-    day = missiondata_soe_query(temp.soe(1));
-    if(!strlen(day))
-      continue;
-    missiondata_load, type, day=day;
+    mission, load_soe_rn, temp.soe(1), temp.rn(1);
     if(!numberof(symbol_def(var)))
       continue;
     ex_data = symbol_def(var);
-    soe_offset = date2soe(mission_get("date", day=day))(1);
     vsod = get_member(ex_data, sod_field);
 
-    dmin = temp.soe(min) - soe_offset;
-    dmax = temp.soe(max) - soe_offset;
+    dmin = temp.soe(min) - soe_day_start;
+    dmax = temp.soe(max) - soe_day_start;
 
     if(dmax < 0)
       continue;
@@ -736,10 +732,13 @@ func tk_dsw_get_data(data, type, var, sod_field) {
 
     if(vmin <= vmax) {
       grow, working, ex_data(vmin:vmax);
-      grow, working_soe, vsod(vmin:vmax) + soe_offset;
+      grow, working_soe, vsod(vmin:vmax) + soe_day_start;
     }
   }
-  missiondata_unwrap, env_backup;
+
+  mission, unload;
+  if(strlen(loaded))
+    mission, load, loaded;
 
   if(numberof(working)) {
     idx = set_remove_duplicates(int((working_soe-working_soe(min))*200), idx=1);
