@@ -256,8 +256,8 @@ func autoselect_iexpbd(dir, options=) {
   return options ? results : results(1);
 }
 
-func autoselect_pnav(dir) {
-/* DOCUMENT pnav_file = autoselect_pnav(dir)
+func autoselect_pnav(dir, options=) {
+/* DOCUMENT pnav_file = autoselect_pnav(dir, options=)
 
   This function attempts to determine an appropriate pnav file to load for a
   dataset.
