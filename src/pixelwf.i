@@ -3,10 +3,6 @@ require, "fit_gauss.i";
 
 if(is_void(pixelwfvars)) {
   pixelwfvars = h_new(
-    working=h_new(
-      loaded_day=string(0),
-      loaded_when=-50
-    ),
     selection=h_new(
       background=0,
       raster=1,
@@ -102,14 +98,9 @@ func pixelwf_load_data(void) {
     return;
 
   day = pixelwfvars.selection.missionday;
-  working = pixelwfvars.working;
 
-  // If the loaded day is the current day and it was loaded less than 5
-  // seconds ago, we can fairly safely assume that the data in memory is good
-  if(working.loaded_day != day || abs(working.loaded_when - getsod()) > 5) {
-    missiondata_load, "all", day=day;
-    h_set, working, loaded_day=day, loaded_when=getsod();
-  }
+  if(day != mission.data.loaded)
+    mission, load, day;
 }
 
 func pixelwf_fit_gauss(void) {
@@ -255,7 +246,7 @@ func pixelwf_selected_info(nearest, vname=) {
   }
   write, format="%s", "\n";
   write, format="Timestamp: %s\n", soe2iso8601(point.soe);
-  write, format="Mission day: %s\n", missionday_current();
+  write, format="Mission day: %s\n", mission.data.loaded;
   write, format="somd= %.4f ; soe= %.4f\n", point.soe - soe_day_start, point.soe;
   rp = parse_rn(point.rn);
   write, format="raster= %d ; pulse= %d\n", rp(1), rp(2);
@@ -290,8 +281,7 @@ func pixelwf_selected_info(nearest, vname=) {
 
     write, "";
     write, format="Trajectory files:\n  %s\n  %s\n",
-      file_tail(mission_get("pnav file")),
-      file_tail(mission_get("ins file"));
+      file_tail(pnav_filename), file_tail(ins_filename);
   }
 }
 
@@ -302,13 +292,12 @@ func pixelwf_highlight_point(point) {
 
 func pixelwf_set_point(point) {
   extern rn, pixelwfvars;
-  missiondata_soe_load, point.soe;
-  h_set, pixelwfvars.working, loaded_day=missionday_current(), loaded_when=getsod();
+  mission, load_soe_rn, point.soe, point.rn;
   rp = parse_rn(point.rn);
   h_set, pixelwfvars.selection, raster=rp(1), pulse=rp(2);
   tksetval, "::l1pro::pixelwf::vars::selection::raster", rp(1);
   tksetval, "::l1pro::pixelwf::vars::selection::pulse", rp(2);
-  tksetval, "::l1pro::pixelwf::vars::selection::missionday", missionday_current();
+  tksetval, "::l1pro::pixelwf::vars::selection::missionday", mission.data.loaded;
   rn = rp(1);
 }
 
@@ -339,8 +328,8 @@ func pixelwf_find_point(spot) {
 func pixelwf_set_soe(soe) {
   extern edb, pixelwfvars;
   vars = pixelwfvars.selection;
-  found = missiondata_soe_load(soe);
-  if(found) {
+  mission, load_soe, soe;
+  if(strlen(mission.data.loaded)) {
     w = where(abs(edb.seconds - soe) <= 1);
     if(numberof(w)) {
       rnsoes = edb.seconds(w) + edb.fseconds(w)*1.6e-6;
@@ -348,7 +337,7 @@ func pixelwf_set_soe(soe) {
       rn = w(closest);
       tksetval, "::l1pro::pixelwf::vars::selection::raster", rn;
       tksetval, "::l1pro::pixelwf::vars::selection::pulse", 1;
-      tksetval, "::l1pro::pixelwf::vars::selection::missionday", missionday_current();
+      tksetval, "::l1pro::pixelwf::vars::selection::missionday", mission.data.loaded;
     }
   }
   return found;

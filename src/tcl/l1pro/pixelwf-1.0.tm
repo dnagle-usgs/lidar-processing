@@ -340,7 +340,7 @@ namespace eval ::l1pro::pixelwf::gui {
     }
 
     proc helper_update_days {} {
-        set ::l1pro::pixelwf::gui::missionday_list [missionday_list]
+        set ::l1pro::pixelwf::gui::missionday_list [::mission::get]
     }
 
     proc makemenu mb {
