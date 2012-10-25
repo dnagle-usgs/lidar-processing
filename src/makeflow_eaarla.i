@@ -24,20 +24,22 @@ norun=) {
   t0 = array(double, 3);
   timer, t0;
 
-  days = missionday_list();
+  days = mission(get,);
   count = numberof(days);
   conf = save();
+  loaded = mission.data.loaded;
   for(i = 1; i <= count; i++) {
     write, format=" Preparing day %d/%d...\n", i, count;
-    missionday_current, days(i);
-    missiondata_load, "all";
+    mission, load, days(i);
     obj_merge, conf, mf_georef_eaarla(
-      file_dirname(mission_get("edb file")),
-      gns=pnav_filename, ins=ins_filename, ops=ops_conf_filename,
-      daystart=soe_day_start, outdir=outdir, update=update,
-      forcelocal=forcelocal
+      file_dirname(edb_filename), gns=pnav_filename, ins=ins_filename,
+      ops=ops_conf_filename, daystart=soe_day_start, outdir=outdir,
+      update=update, forcelocal=forcelocal
     );
   }
+  mission, unload;
+  if(strlen(loaded))
+    mission, load, loaded;
 
   if(!am_subroutine())
     return conf;
