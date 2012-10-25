@@ -162,13 +162,17 @@ func mission_load_soe(soe) {
 
 func mission_load(flight) {
 /* DOCUMENT mission, load, "<flight>"
-  Loads the data for the specified flight.
+  Loads the data for the specified flight. If the flight given is "", then all
+  data will just be unloaded.
 */
   // Start by clearing any currently loaded data. (This also triggers onchange
   // caching.)
   mission, unload;
 
   mission, data, loaded=flight;
+
+  if(!strlen(flight))
+    return;
 
   // Load from cache, if there is cached data present and caching is enabled.
   if(mission.data.cache_mode != "disabled" && mission.data.cache(*,flight)) {
