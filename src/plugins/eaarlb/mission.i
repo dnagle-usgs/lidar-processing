@@ -219,10 +219,10 @@ func mission_load(flight) {
     pnav = rbpnav(fn=mission(get, flight, "pnav file"), verbose=0);
     if(!curzone && has_member(pnav, "lat") && has_member(pnav, "lon"))
       auto_curzone, pnav.lat, pnav.lon;
-    if(has_member(pnav, "sod") && mission_has(flight, "date")) {
+    if(has_member(pnav, "sod") && mission(has, flight, "date")) {
       idx = [1, numberof(pnav)];
       save, mission.data.soe_bounds(noop(flight)), "gps",
-        date2soe(mission_get(flight, "date"), pnav.sod(idx));
+        date2soe(mission(get, flight, "date"), pnav.sod(idx));
     }
     save, mission.data.soe_bounds(noop(flight)), "edb",
       edb.seconds(idx) + edb.fseconds(idx)*1.6e-6;
@@ -239,10 +239,10 @@ func mission_load(flight) {
       tans = iex_nav = rbtans(fn=ins_filename);
       iex_head = [];
     }
-    if(has_member(tans, "somd") && mission_has(flight, "date")) {
+    if(has_member(tans, "somd") && mission(has, flight, "date")) {
       idx = [1, numberof(tans)];
       save, mission.data.soe_bounds(noop(flight)), "ins",
-        date2soe(mission_get(flight, "date"), tans.somd(idx));
+        date2soe(mission(get, flight, "date"), tans.somd(idx));
     }
     if(!curzone && has_member(tans, "lat") && has_member(tans, "lon"))
       auto_curzone, tans.lat, tans.lon;
