@@ -27,7 +27,7 @@ func mission_query_soe_rn(soe, rn) {
   Note that this may call on "mission, load" to cycle through flights.
   Depending on your cache mode, this may result in unwanted side effects.
 */
-  flights = mission(query, soe);
+  flights = mission(query_soe, soe);
   if(numberof(flights) <= 1) return flights;
 
   count = numberof(flights);
@@ -63,7 +63,7 @@ func mission_query_soe(soe) {
   Note that this may call on "mission, load" to cycle through flights.
   Depending on your cache mode, this may result in unwanted side effects.
 */
-  loaded = mission.loaded;
+  loaded = mission.data.loaded;
 
   if(!mission.data(*,"soe_bounds"))
     mission, data, soe_bounds=save();
