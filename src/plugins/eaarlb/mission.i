@@ -373,7 +373,8 @@ func mission_auto(path, strict=) {
   }
 }
 
-save, mission, load_soe=mission_load_soe, load_soe_rn=mission_load_soe_rn,
+save, mission, query_soe_rn=mission_query_soe_rn, query_soe=mission_query_soe,
+  load_soe=mission_load_soe, load_soe_rn=mission_load_soe_rn,
   load=mission_load, unload=mission_unload, wrap=mission_wrap,
   unwrap=mission_unwrap, auto=mission_auto;
 
