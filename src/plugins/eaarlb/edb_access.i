@@ -155,10 +155,19 @@ func load_edb(fn=, update=, verbose=, override_offset=) {
   // need this first, cuz get_erast uses it.
   eaarl_time_offset = 0;
 
-  if(is_void(override_offset))
-    eaarl_time_offset = edb(1).seconds - decode_raster(rn=1).soe;
-  else
+  edb_fn1 = file_join(file_dirname(edb_filename), file_tail(edb_files(1)));
+  if(!is_void(override_offset)) {
     eaarl_time_offset = override_offset;
+  } else if(file_exists(edb_fn1)) {
+    eaarl_time_offset = edb(1).seconds - decode_raster(rn=1).soe;
+  } else {
+    write, "WARNING: Unable to determine eaarl_time_offset, using 0"
+    if(file_exists(edb_fn1+".bz2"))
+      write, "         EAARL TLD files appear to be compressed, please decompress";
+    else
+      write, "         EAARL TLD files appear to be missing";
+    eaarl_time_offset = 0.;
+  }
 
   // Set these up with some suitable fall-back values
   data_begins = 1;
