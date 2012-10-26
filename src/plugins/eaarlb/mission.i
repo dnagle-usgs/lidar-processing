@@ -417,7 +417,7 @@ func mission_flights_auto(flight, path, strict=) {
   // Keys will be added in the order specified below
   keys = [
     "data_path dir",
-    "day",
+    "date",
     "edb file",
     "pnav file",
     "ins file",
@@ -466,7 +466,7 @@ func mission_details_autolist(flight, key, path) {
 */
   if(key == "data_path dir")
     return [path];
-  else if(key == "day")
+  else if(key == "date")
     return [get_date(file_tail(path))];
   else if(key == "edb file")
     return autoselect_edb(path, options=1);
