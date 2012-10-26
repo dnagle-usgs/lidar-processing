@@ -35,6 +35,7 @@ if {![namespace exists ::mission]} {
             initialize_path_mission {}
             initialize_path_flight {}
             load_data {}
+            menu_actions {}
         }
 
         # GUI specific variables...
@@ -872,19 +873,28 @@ namespace eval ::mission {
     namespace eval menu {
         namespace import ::misc::menulabel
 
+        proc postmenu {mb cmd} {
+            return [menu $mb -postcommand [list ::mission::menu::$cmd $mb]]
+        }
+
+        proc clear {mb} {
+            destroy [winfo children $mb]
+            $mb delete 0 end
+        }
+
         proc build {mb} {
             menu $mb
             $mb add cascade {*}[menulabel &File] \
-                    -menu [menu_file $mb.file]
+                    -menu [postmenu $mb.file menu_file]
             $mb add cascade {*}[menulabel &Actions] \
-                    -menu [menu_actions $mb.actions]
+                    -menu [postmenu $mb.actions menu_actions]
             $mb add cascade {*}[menulabel &Cache] \
-                    -menu [menu_cache $mb.cache]
+                    -menu [postmenu $mb.cache menu_cache]
             return $mb
         }
 
         proc menu_file {mb} {
-            menu $mb
+            clear $mb
             $mb add command {*}[menulabel "&New configuration"] \
                     -command ::mission::new_conf
             $mb add separator
@@ -892,32 +902,33 @@ namespace eval ::mission {
                     -command ::mission::load_conf
             $mb add command {*}[menulabel "&Save configuration..."] \
                     -command ::mission::save_conf
-            return $mb
         }
 
         proc menu_actions {mb} {
-            menu $mb
+            clear $mb
             $mb add command {*}[menulabel "Launch RGB"]
             $mb add command {*}[menulabel "Launch CIR"]
             $mb add command {*}[menulabel "Dump CIR"]
             $mb add separator
             $mb add command {*}[menulabel "Generate KMZ"]
             $mb add command {*}[menulabel "Show EDB summary"]
-            return $mb
+
+            if {$::mission::commands(menu_actions) ne ""} {
+                {*}$::mission::commands(menu_actions) $mb
+            }
         }
 
         proc menu_cache {mb} {
-            menu $mb
+            clear $mb
             $mb add cascade {*}[menulabel "Caching &mode..."] \
-                    -menu [menu_cache_mode $mb.mode]
+                    -menu [postmenu $mb.mode menu_cache_mode]
             $mb add separator
             $mb add command {*}[menulabel "Preload cache"]
             $mb add command {*}[menulabel "Clear cache"]
-            return $mb
         }
 
         proc menu_cache_mode {mb} {
-            menu $mb
+            clear $mb
             foreach mode {disabled onload onchange} {
                 $mb add radiobutton \
                         -label $mode \
@@ -926,7 +937,6 @@ namespace eval ::mission {
                         -command [list exp_send \
                                 "mission, data, cache_mode=\"$mode\";\r"]
             }
-            return $mb
         }
     }
 }
