@@ -110,7 +110,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "map.i";
   require, "mathop.i";
   require, "mission.i";
-  require, "mission_conf.i";
   require, "mosaic_tools.i";
   require, "mouse.i";
   require, "nad832navd88.i";

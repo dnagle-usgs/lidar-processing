@@ -355,8 +355,6 @@ proc load_edb {} {
    # send ytk process id to yorick global variable _pid.
    ybkg require \"eaarl.i\"
 
-   source [file join $src_path mission_conf.ytk]
-
 ####   exp_send "#include \"edb_access.i\"\r"
 ####   exp_send "#include \"map.i\"\r"
 
