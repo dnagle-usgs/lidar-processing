@@ -5,6 +5,7 @@ package require mission
 
 namespace eval ::mission::eaarl {
     namespace import ::mission::ystr
+    namespace import ::misc::menulabel
 
     proc initialize_path_mission {} {}
     proc initial_path_flight {} {}
@@ -14,6 +15,18 @@ namespace eval ::mission::eaarl {
         exp_send "mission, load, \"$flight\";\r"
     }
     set ::mission::commands(load_data) ::mission::eaarl::load_data
+
+    proc menu_actions {mb} {
+        $mb add separator
+        $mb add command {*}[menulabel "Launch RGB"]
+        $mb add command {*}[menulabel "Launch NIR"]
+        $mb add command {*}[menulabel "Dump RGB"]
+        $mb add command {*}[menulabel "Dump NIR"]
+        $mb add separator
+        $mb add command {*}[menulabel "Generate KMZ"]
+        $mb add command {*}[menulabel "Show EDB summary"]
+    }
+    set ::mission::commands(menu_actions) ::mission::eaarl::menu_actions
 
     proc dump_imagery {type driver dest} {
         set dubdir photos

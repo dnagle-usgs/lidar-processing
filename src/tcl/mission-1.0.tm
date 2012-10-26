@@ -906,12 +906,7 @@ namespace eval ::mission {
 
         proc menu_actions {mb} {
             clear $mb
-            $mb add command {*}[menulabel "Launch RGB"]
-            $mb add command {*}[menulabel "Launch CIR"]
-            $mb add command {*}[menulabel "Dump CIR"]
-            $mb add separator
-            $mb add command {*}[menulabel "Generate KMZ"]
-            $mb add command {*}[menulabel "Show EDB summary"]
+            $mb add command {*}[menulabel "Initialize mission from path"]
 
             if {$::mission::commands(menu_actions) ne ""} {
                 {*}$::mission::commands(menu_actions) $mb
