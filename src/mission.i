@@ -762,7 +762,8 @@ func mission_json_import(versions, json) {
 }
 
 scratch = save(scratch, versions);
-versions = save(mission_json_version1, mission_json_version2);
+versions = save(mission_json_version1, mission_json_version2,
+  mission_json_version3);
 
 /*
   The format used for mission configuration files has changed over time. To
@@ -847,6 +848,34 @@ func mission_json_version2(data) {
   }
 
   save, data, mcversion=3;
+  return data;
+}
+
+func mission_json_version3(data) {
+  // Conversion to version 4 does two things:
+  // - fixes "cir dir" to "nir dir" for EAARL-B
+  // - enforces a sane ordering for all known fields (old versions were
+  //   arbitrarily ordered due to history of using Yeti hashes)
+  if(anyof(data.plugins == "eaarlb")) {
+    for(i = 1; i <= data.flights(*); i++) {
+      if(data.flights(noop(i), *, "cir dir")) {
+        save, data.flights(noop(i)), "nir dir", data.flights(noop(i), "cir dir");
+        save, data.flights, noop(i), obj_delete(data.flights(noop(i)), "cir dir");
+      }
+    }
+  }
+
+  for(i = 1; i <= data.flights(*); i++) {
+    tmp = data.flights(noop(i));
+    idx1 = tmp(*,["data_path dir", "date", "edb file", "pnav file", "ins file",
+      "ops_conf file", "bath_ctl file", "rgb dir", "rgb file", "cir dir",
+      "nir dir"]);
+    idx1 = idx1(where(idx1));
+    idx2 = set_difference(indgen(tmp(*)), idx1);
+    save, data.flights, noop(i), tmp(grow(idx1, idx2));
+  }
+
+  save, data, mcversion=4;
   return data;
 }
 
