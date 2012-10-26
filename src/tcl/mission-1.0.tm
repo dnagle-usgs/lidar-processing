@@ -105,7 +105,7 @@ namespace eval ::mission {
         }
         set val [dict get $details $key]
         if {!$raw && [string length $val] && [lindex $key end] in "file dir"} {
-            return [file join $path $key]
+            return [file join $path $val]
         }
         return $key
     }
