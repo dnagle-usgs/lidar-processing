@@ -20,16 +20,38 @@ namespace eval ::mission::eaarl {
         $mb add separator
         $mb add command {*}[menulabel "Launch RGB"]
         $mb add command {*}[menulabel "Launch NIR"]
-        $mb add command {*}[menulabel "Dump RGB"]
-        $mb add command {*}[menulabel "Dump NIR"]
+        $mb add command {*}[menulabel "Dump RGB"] \
+                -command ::mission::eaarl::menu_dump_rgb
+        $mb add command {*}[menulabel "Dump NIR"] \
+                -command ::mission::eaarl::menu_dump_nir
         $mb add separator
         $mb add command {*}[menulabel "Generate KMZ"]
         $mb add command {*}[menulabel "Show EDB summary"]
     }
     set ::mission::commands(menu_actions) ::mission::eaarl::menu_actions
 
-    proc dump_imagery {type driver dest} {
-        set dubdir photos
+    proc menu_dump_rgb {} {
+        set outdir [tk_chooseDirectory \
+                -title "Select destination for RGB imagery" \
+                -initialdir $::mission::path]
+        if {$outdir ne ""} {
+            dump_imagery "rgb dir" cir::f2010::tarpath $outdir \
+                    -subdir photos/rgb
+        }
+    }
+
+    proc menu_dump_nir {} {
+        set outdir [tk_chooseDirectory \
+                -title "Select destination for NIR imagery" \
+                -initialdir $::mission::path]
+        if {$outdir ne ""} {
+            dump_imagery "nir dir" cir::f2010::tarpath $outdir \
+                    -subdir photos/nir
+        }
+    }
+
+    proc dump_imagery {type driver dest args} {
+        set subdir photos
         if {[dict exists $args -subdir]} {
             set subdir [dict get $args -subdir]
         }
