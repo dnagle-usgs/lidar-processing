@@ -165,7 +165,7 @@ graph=, pse=, msg=) {
   status, start, msg=msg;
   for(j=1, rn=start; rn <= stop; j++, rn++) {
     for(pulse=1; pulse<=120; pulse++) {
-      depths(pulse,j) = ex_bath(rn, pulse, last=last, forcechannel=, graph=graph);
+      depths(pulse,j) = ex_bath(rn, pulse, last=last, forcechannel=forcechannel, graph=graph);
       pause, pse;
     }
     status, progress, j, count;
