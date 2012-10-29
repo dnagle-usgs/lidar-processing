@@ -1003,8 +1003,10 @@ namespace eval ::mission {
             $mb add cascade {*}[menulabel "Caching &mode..."] \
                     -menu [postmenu $mb.mode menu_cache_mode]
             $mb add separator
-            $mb add command {*}[menulabel "Preload cache"]
-            $mb add command {*}[menulabel "Clear cache"]
+            $mb add command {*}[menulabel "Preload cache"] \
+                    -command [list exp_send "mission, cache, preload;\r"]
+            $mb add command {*}[menulabel "Clear cache"] \
+                    -command [list exp_send "mission, cache, clear;\r"]
         }
 
         proc menu_cache_mode {mb} {
