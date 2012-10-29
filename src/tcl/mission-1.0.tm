@@ -951,17 +951,28 @@ namespace eval ::mission {
 
     # menu command
     # Prompts user to select a configuration, which is then loaded.
-    proc load_conf {} {
+    # If a configuration is loaded, returns 1; otherwise, returns 0.
+    # If this is called outside of the mission configuration GUI, the calling
+    # procedure should provide a -parent option specifying the GUI that should
+    # be its parent.
+    proc load_conf {args} {
         variable top
         variable currentfile
+        set parent $top
+        if {[dict exists $args -parent]} {
+            set parent [dict get $args -parent]
+        }
         set fn [tk_getOpenFile \
                 -initialdir $::mission::path \
-                -parent $top \
+                -parent $parent \
                 -title "Select mission configuration to load"]
         if {$fn ne ""} {
             set currentfile $fn
             set fn [ystr $fn]
             exp_send "mission, read, \"$fn\";\r"
+            return 1
+        } else {
+            return 0
         }
     }
 

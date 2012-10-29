@@ -42,6 +42,9 @@ proc build mb {
 
 proc menu_file mb {
     menu $mb
+    $mb add command {*}[menulabel "Load &mission configuration..."] \
+            -command ::l1pro::main::menu::load_and_launch_missconf
+    $mb add separator
     $mb add command {*}[menulabel "&Load ALPS data..."] \
             -command ::l1pro::file::load_pbd
     $mb add command {*}[menulabel "&Save ALPS data..."] \
@@ -346,6 +349,12 @@ proc menu_ytk mb {
     $mb add checkbutton {*}[menulabel "&Help goes in new window"] \
             -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
     return $mb
+}
+
+proc load_and_launch_missconf {} {
+    if {[::mission::load_conf -parent .l1wid]} {
+        ::mission::launch
+    }
 }
 
 proc load_ground_pnav {} {
