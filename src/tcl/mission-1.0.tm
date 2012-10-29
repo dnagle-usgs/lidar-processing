@@ -38,6 +38,8 @@ if {![namespace exists ::mission]} {
             refresh_load {}
         }
 
+        variable detail_types {}
+
         # GUI specific variables...
 
         # Toplevel
@@ -421,7 +423,8 @@ namespace eval ::mission {
         grid columnconfigure $f.fraDetails 1 -weight 1
 
         ttk::label $f.lblType -text "Detail type:"
-        mixin::combobox $f.cboType
+        mixin::combobox $f.cboType \
+                -postcommand [list ::mission::refresh_detail_types $f.cboType]
         ::mixin::revertable $f.cboType \
                 -textvariable ::mission::detail_type \
                 -applycommand ::mission::apply_detail_type
@@ -590,6 +593,27 @@ namespace eval ::mission {
     }
 
     proc initialize_path_flight {} {
+    }
+
+    # Updates the values list for the "Detail type:" field. This will display
+    # all known detail types that are not already defined for the current
+    # flight.
+    proc refresh_detail_types {cbo} {
+        variable detail_types
+        variable detail_type
+        variable flight_name
+        set values [list]
+        if {$detail_type ni $detail_types} {
+            lappend values $detail_type
+        }
+        foreach type $detail_types {
+            if {$type eq $detail_type} {
+                lappend values $type
+            } elseif {![has $flight_name $type]} {
+                lappend values $type
+            }
+        }
+        $cbo configure -values $values
     }
 
     # Used by revertable field "Flight name:" to apply the new value

@@ -7,6 +7,20 @@ namespace eval ::mission::eaarl {
     namespace import ::yorick::ystr
     namespace import ::misc::menulabel
 
+    set ::mission::detail_types {
+        "data_path dir"
+        "date"
+        "edb file"
+        "pnav file"
+        "ins file"
+        "ops_conf file"
+        "bath_ctl file"
+        "rgb dir"
+        "rgb file"
+        "cir dir"
+        "nir dir"
+    }
+
     proc initialize_path_mission {path} {
         exp_send "mission, auto, \"$path\";\r"
     }
