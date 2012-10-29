@@ -16,7 +16,7 @@ proc ::l1pro::main::gui {} {
     wm withdraw $w
     wm protocol $w WM_DELETE_WINDOW [list wm withdraw $w]
     wm resizable $w 1 0
-    wm title $w "Process EAARL Data"
+    wm title $w "ALPS - Point Cloud Plotting"
     $w configure -menu [::l1pro::main::menu::build $w.mb]
 
     panel_cbar $w.cbar
