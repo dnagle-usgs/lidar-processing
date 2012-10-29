@@ -61,7 +61,9 @@ if {![namespace exists ::mission]} {
         variable detail_value ""
 
         # The paths for the three revertable widgets. These are needed so that
-        # the values can be reverted by other code paths.
+        # the values can be reverted by other code paths and so that the
+        # entries can be disabled when they shouldn't be modified (when nothing
+        # is selected).
         variable widget_flight_name
         variable widget_detail_type
         variable widget_detail_value
@@ -483,6 +485,10 @@ namespace eval ::mission {
         bind $flights <<TreeviewSelect>> ::mission::refresh_details
         bind $details <<TreeviewSelect>> ::mission::refresh_fields
 
+        $widget_flight_name state disabled
+        $widget_detail_type state disabled
+        $widget_detail_value state disabled
+
         return $w
     }
 
@@ -855,6 +861,7 @@ namespace eval ::mission {
         ::misc::idle ::mission::refresh_fields
     }
 
+    # Refreshes the load view GUI.
     proc refresh_load {} {
         variable load_flights
         variable load_extra
@@ -916,6 +923,21 @@ namespace eval ::mission {
                     [dict get $conf $flight_name $detail_type]
         } else {
             set detail_value ""
+        }
+
+        if {[llength [$flights selection]]} {
+            $widget_flight_name state !disabled
+            if {[llength [$details selection]]} {
+                $widget_detail_type state !disabled
+                $widget_detail_value state !disabled
+            } else {
+                $widget_detail_type state disabled
+                $widget_detail_value state disabled
+            }
+        } else {
+            $widget_flight_name state disabled
+            $widget_detail_type state disabled
+            $widget_detail_value state disabled
         }
     }
 
