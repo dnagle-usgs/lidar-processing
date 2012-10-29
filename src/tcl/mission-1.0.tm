@@ -66,6 +66,7 @@ if {![namespace exists ::mission]} {
 }
 
 namespace eval ::mission {
+    namespace import ::yorick::ystr
 
     # ::mission::has behaves like Yorick mission(has,)
     #   [::mission::has $flight] -> 0|1 is flight present?
@@ -860,14 +861,6 @@ namespace eval ::mission {
             return
         }
         {*}$::mission::commands(load_data) $flight
-    }
-
-    namespace export ystr
-    proc ystr {str} {
-        return [string map {
-                    \" \\\"
-                    \\ \\\\
-                } $str]
     }
 
     namespace eval menu {

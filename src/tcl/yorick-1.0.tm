@@ -6,6 +6,15 @@ package require fileutil
 package require snit
 
 namespace eval ::yorick {
+    namespace export ystr
+
+    proc ystr {str} {
+        return [string map {
+                \" \\\"
+                \\ \\\\
+            } $str]
+    }
+
     variable fifo_counter -1
 
     exp_exit -onexit ::yorick::destroy_fifos_all

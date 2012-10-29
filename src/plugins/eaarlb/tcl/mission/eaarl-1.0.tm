@@ -4,7 +4,7 @@ package provide mission::eaarl 1.0
 package require mission
 
 namespace eval ::mission::eaarl {
-    namespace import ::mission::ystr
+    namespace import ::yorick::ystr
     namespace import ::misc::menulabel
 
     proc initialize_path_mission {} {}
