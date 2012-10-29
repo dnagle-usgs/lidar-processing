@@ -31,8 +31,8 @@ proc ::eaarl::main::gui {} {
     ttk::menubutton $f.region -text "Define Region" -menu $m \
             -style Panel.TMenubutton
 
-    ttk::label $f.channels -text "Force channel:"
-    foreach chan {1 2 3 4} {
+    ttk::label $f.channels -text "Channel:"
+    foreach chan {1 2 3 4 A} {
         ttk::checkbutton $f.chan$chan \
                 -text $chan \
                 -variable ::forcechannel_$chan
@@ -63,14 +63,14 @@ proc ::eaarl::main::gui {} {
     grid columnconfigure $f.f1 2 -weight 1
 
     lower [ttk::frame $f.f2]
-    grid $f.channels $f.chan1 $f.chan2 $f.chan3 $f.chan4 \
+    grid $f.chan1 $f.chan2 $f.chan3 $f.chan4 $f.chanA \
             -in $f.f2 -sticky w -padx 2
 
     grid $f.f1 - -sticky ew -padx 2 -pady 1
-    grid $f.f2 - -sticky w -padx 2 -pady 1
+    grid $f.channels $f.f2 -sticky ew -padx 2 -pady 1
     grid $f.modelbl $f.mode -sticky ew -padx 2 -pady 1
     grid $f.varlbl $f.var -sticky ew -padx 2 -pady 1
     grid $f.process - -padx 2 -pady 1 -sticky ew
-    grid $f.modelbl $f.varlbl -sticky e
+    grid $f.channels $f.modelbl $f.varlbl -sticky e
     grid columnconfigure $f 1 -weight 1
 }

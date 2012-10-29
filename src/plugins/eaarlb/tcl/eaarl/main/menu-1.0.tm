@@ -97,13 +97,15 @@ namespace eval ::eaarl::main::menu {
                 -label "Automatically test and clean after processing"
         $mb add separator
         $mb add checkbutton -variable ::forcechannel_1 \
-                -label "Force channel 1"
+                -label "Use channel 1"
         $mb add checkbutton -variable ::forcechannel_2 \
-                -label "Force channel 2"
+                -label "Use channel 2"
         $mb add checkbutton -variable ::forcechannel_3 \
-                -label "Force channel 3"
+                -label "Use channel 3"
         $mb add checkbutton -variable ::forcechannel_4 \
-                -label "Force channel 4"
+                -label "Use channel 4"
+        $mb add checkbutton -variable ::forcechannel_A \
+                -label "Use EAARL-A channel handling"
         return $mb
     }
 
