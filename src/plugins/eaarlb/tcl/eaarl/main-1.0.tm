@@ -31,6 +31,13 @@ proc ::eaarl::main::gui {} {
     ttk::menubutton $f.region -text "Define Region" -menu $m \
             -style Panel.TMenubutton
 
+    ttk::label $f.channels -text "Force channel:"
+    foreach chan {1 2 3 4} {
+        ttk::checkbutton $f.chan$chan \
+                -text $chan \
+                -variable ::forcechannel_$chan
+    }
+
     ttk::label $f.modelbl -text "Process for:"
     ::mixin::combobox::mapping $f.mode \
             -state readonly \
@@ -55,7 +62,12 @@ proc ::eaarl::main::gui {} {
     grid $f.winlbl -padx 2
     grid columnconfigure $f.f1 2 -weight 1
 
+    lower [ttk::frame $f.f2]
+    grid $f.channels $f.chan1 $f.chan2 $f.chan3 $f.chan4 \
+            -in $f.f2 -sticky w -padx 2
+
     grid $f.f1 - -sticky ew -padx 2 -pady 1
+    grid $f.f2 - -sticky w -padx 2 -pady 1
     grid $f.modelbl $f.mode -sticky ew -padx 2 -pady 1
     grid $f.varlbl $f.var -sticky ew -padx 2 -pady 1
     grid $f.process - -padx 2 -pady 1 -sticky ew
