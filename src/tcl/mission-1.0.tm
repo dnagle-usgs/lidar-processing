@@ -445,6 +445,7 @@ namespace eval ::mission {
         ::mixin::revertable $f.cboType \
                 -textvariable ::mission::detail_type \
                 -applycommand ::mission::apply_detail_type
+        bind $f.cboType <<ComboboxSelected>> +[list $f.cboType apply]
         ttk::button $f.btnTypeApply -text "Apply" \
                 -command [list $f.cboType apply]
         ttk::button $f.btnTypeRevert -text "Revert" \
