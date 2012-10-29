@@ -121,7 +121,7 @@ data = save(
   plugins=[],
   path="",
   loaded="",
-  cache_mode="onload",  // disabled | onload | onchange
+  cache_mode="onchange",  // disabled | onload | onchange
   conf=save(),
   cache=save()
 );
