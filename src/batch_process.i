@@ -163,7 +163,10 @@ func unpackage_tile (fn=,host= ) {
     // }
 
     close,af;
-    cmd = swrite(format="/opt/alps/lidar-processing/scripts/check_for_tlds.pl %s %s", afn, host);
+    cmd = swrite(format="/opt/alps/lidar-processing/scripts/check_for_tlds.pl %s %s %s",
+        afn,
+        host,
+        file_tail(file_dirname(edb_filename)) );
     write, cmd;
     system, cmd;
     write, format="Unpackage_Tile(%s): %s: done\n", host, cmd;
