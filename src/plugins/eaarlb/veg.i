@@ -296,10 +296,12 @@ Returns:
     if ((rn_arr(1,i) != 0)) {
       msg = "Processing for first_surface...";
       write, msg;
+      pause, 1; // make sure Yorick shows output
       status, start, msg=msg;
       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid, use_highelv_echo=use_highelv_echo, forcechannel=forcechannel, msg=msg);
       msg = swrite(format="Processing segment %d of %d for vegetation", i, no_t);
       write, msg;
+      pause, 1; // make sure Yorick shows output
       status, start, msg=msg;
       if (multi_peaks) {
         d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i), multi_peaks=1, msg=msg);
@@ -317,6 +319,7 @@ Returns:
       }
       grow, veg_all, veg;
       tot_count += numberof(veg.elevation);
+      pause, 1; // make sure Yorick shows output
     }
   }
 

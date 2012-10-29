@@ -205,6 +205,7 @@ func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
       msg_prefix = swrite(format="Line %d/%d; ", i, count);
       msg = msg_prefix + "Step 1/3: Processing bathymetry...";
       write, format="Processing segment %d of %d for bathymetry\n", i, count;
+      pause, 1; // make sure Yorick shows output
       status, start, msg=msg;
       depth = run_bath(start=raster_starts(i), stop=raster_stops(i),
         forcechannel=forcechannel, msg=msg);
@@ -215,6 +216,7 @@ func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
 
       msg = msg_prefix + "Step 2/3: Processing surface...";
       write, "Processing for first_surface...";
+      pause, 1; // make sure Yorick shows output
       status, start, msg=msg;
       surface = first_surface(start=raster_starts(i), stop=raster_stops(i),
         usecentroid=1, forcechannel=forcechannel, msg=msg);
@@ -222,11 +224,13 @@ func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
       msg = msg_prefix + "Step 3/3: Merging and correcting depths...";
       status, start, msg=msg;
       write, "Using make_fs_bath for submerged topography...";
+      pause, 1; // make sure Yorick shows output
       depth = make_fs_bath(depth, surface, avg_surf=avg_surf,
         sample_interval=sample_interval);
 
       // make depth correction using compute_depth
       write, "Correcting water depths for Snells law...";
+      pause, 1; // make sure Yorick shows output
       grow, depth_all, compute_depth(depth, sample_interval=sample_interval);
     }
   }

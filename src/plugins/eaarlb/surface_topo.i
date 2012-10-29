@@ -225,9 +225,9 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
       roll(60,100:count:100),
       pitch(60,100:count:100);
   if(verbose)
-    pause, 0;
+    pause, 1; // make sure Yorick shows output
 
-  if (msg)
+  if(msg)
     status, finished;
   return surface;
 }
@@ -283,6 +283,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=, forcechannel=, verbose=) {
       fcount++;
       msg = swrite(format="Line %d/%d: Processing first surface...", i, no_t);
       if(verbose) write, msg;
+      pause, 1; // make sure Yorick shows output
       status, start, msg=msg;
       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i),
           usecentroid=usecentroid, forcechannel=forcechannel, msg=msg,
