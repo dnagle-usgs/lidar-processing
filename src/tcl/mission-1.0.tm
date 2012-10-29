@@ -251,18 +251,27 @@ namespace eval ::mission {
         ttk::frame $w
         set f $w
 
+        ttk::frame $f.loaded
+        ttk::label $f.lblloaded -text "Loaded flight:"
+        ttk::entry $f.entloaded -textvariable ::mission::loaded
+        $f.entloaded state readonly
+        grid $f.lblloaded $f.entloaded -in $f.loaded -sticky ew -padx 2 -pady 2
+
         ttk::frame $f.flights
         set load_flights $f.flights
 
-        ttk::separator $f.sep -orient horizontal
+        ttk::separator $f.sep1 -orient horizontal
+        ttk::separator $f.sep2 -orient horizontal
 
         ttk::frame $f.extra
         set load_extra $f.extra
 
         ttk::button $f.switch -text "Switch to Editing Mode" \
                 -command [list ::mission::change_view edit]
+        grid $f.loaded -sticky ew -pady 1
+        grid $f.sep1 -sticky ew
         grid $f.flights -sticky ne -pady 1
-        grid $f.sep -sticky ew
+        grid $f.sep2 -sticky ew
         grid $f.extra -sticky ew
         grid $f.switch -padx 2 -pady 2
 
@@ -965,6 +974,7 @@ namespace eval ::mission {
         set fn [tk_getOpenFile \
                 -initialdir $::mission::path \
                 -parent $parent \
+                -filetypes {{"JSON files" .json} {"All files" *}} \
                 -title "Select mission configuration to load"]
         if {$fn ne ""} {
             set currentfile $fn
