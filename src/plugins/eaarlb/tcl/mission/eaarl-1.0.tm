@@ -129,7 +129,10 @@ namespace eval ::mission::eaarl {
                 -command ::mission::eaarl::menu_load_cir
         ttk::button $f.btnNIR -text "All NIR" -width 0 \
                 -command ::mission::eaarl::menu_load_nir
+        ttk::button $f.btnPro -text "Open Processing GUI" -width 0 \
+                -command ::eaarl::main::gui
         grid x $f.btnRGB $f.btnCIR $f.btnNIR -sticky ew -padx 2 -pady 2
+        grid $f.btnPro - - - - -padx 2 -pady 2
         grid columnconfigure $f {0 4} -weight 1
 
         if {!$has_rgb} {$f.btnRGB state disabled}
