@@ -297,6 +297,7 @@ func pixelwf_set_point(point) {
   h_set, pixelwfvars.selection, raster=rp(1), pulse=rp(2);
   tksetval, "::l1pro::pixelwf::vars::selection::raster", rp(1);
   tksetval, "::l1pro::pixelwf::vars::selection::pulse", rp(2);
+  h_set, pixelwfvars.selection, missionday=mission.data.loaded;
   tksetval, "::l1pro::pixelwf::vars::selection::missionday", mission.data.loaded;
   rn = rp(1);
 }
