@@ -154,22 +154,31 @@ namespace eval ::mission::eaarl {
             }
         }
 
-        set f $extra
+        set f [ttk::frame $extra.f1]
         ttk::button $f.btnRGB -text "All RGB" -width 0 \
                 -command ::mission::eaarl::menu_load_rgb
         ttk::button $f.btnCIR -text "All CIR" -width 0 \
                 -command ::mission::eaarl::menu_load_cir
         ttk::button $f.btnNIR -text "All NIR" -width 0 \
                 -command ::mission::eaarl::menu_load_nir
-        ttk::button $f.btnPro -text "Open Processing GUI" -width 0 \
-                -command ::eaarl::main::gui
-        grid x $f.btnRGB $f.btnCIR $f.btnNIR -sticky ew -padx 2 -pady 2
-        grid $f.btnPro - - - - -padx 2 -pady 2
+        grid x $f.btnRGB $f.btnCIR $f.btnNIR -padx 2 -pady 2
         grid columnconfigure $f {0 4} -weight 1
 
         if {!$has_rgb} {$f.btnRGB state disabled}
         if {!$has_cir} {$f.btnCIR state disabled}
         if {!$has_nir} {$f.btnNIR state disabled}
+
+        set f [ttk::frame $extra.f2]
+        ttk::button $f.btnPro -text "Processing GUI" -width 0 \
+                -command ::eaarl::main::gui
+        ttk::button $f.btnPlot -text "Plotting Tool" -width 0 \
+                -command ::plot::menu
+        grid x $f.btnPro $f.btnPlot -padx 2 -pady 2
+        grid columnconfigure $f {0 3} -weight 1
+
+        grid $extra.f1 -sticky ew
+        grid $extra.f2 -sticky ew
+        grid columnconfigure $extra 0 -weight 1
     }
     set ::mission::commands(refresh_load) ::mission::eaarl::refresh_load
 
