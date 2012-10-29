@@ -607,7 +607,71 @@ namespace eval ::mission {
         }
     }
 
+    # Automatically initializes a flight using data_path (or prompts if none
+    # present)
     proc initialize_path_flight {} {
+        if {$::mission::commands(initialize_path_flight) eq ""} {
+            tk_messageBox -icon error \
+                    -parent $::mission::top \
+                    -type ok \
+                    -title "Plugins not loaded" \
+                    -message "You have not loaded any plugins yet. Please\
+                        define and load the required plugin(s)."
+            return
+        }
+
+        variable flight_name
+        if {$flight_name eq ""} {
+            return
+        }
+
+        if {[has $flight_name "data_path dir"]} {
+            set path [get $flight_name "data_path dir"]
+
+            if {![file isdirectory $path]} {
+                tk_messageBox -icon warning \
+                        -parent $::mission::top \
+                        -type ok \
+                        -title "Invalid \"data_path dir\" defined" \
+                        -message "You must select a valid \"data_path dir\"\
+                            before you can initialize the flight by path."
+                return
+            }
+        } else {
+            set path [tk_chooseDirectory \
+                    -mustexist 1 \
+                    -title "Choose flight path"]
+
+            if {$path eq ""} {
+                return
+            } elseif {![file isdirectory $path]} {
+                tk_messageBox -icon warning \
+                        -parent $::mission::top \
+                        -type ok \
+                        -title "Invalid path" \
+                        -message "You must select a valid path in order to\
+                                initialize the flight by path."
+                return
+            }
+        }
+
+        if {![llength [get $flight_name]]} {
+            set choice yes
+        } else {
+            set choice [tk_messageBox -icon question \
+                    -parent $::mission::top \
+                    -type yesno \
+                    -title "Initialize Flight by Path" \
+                    -message "Initializing the flight by path will clear the\
+                        currently defined configuration for this flight and\
+                        replace it with automatically determined details. Are\
+                        you sure you want to do this?"]
+        }
+
+        if {$choice eq "yes"} {
+            {*}$::mission::commands(initialize_path_flight) $flight_name $path
+        }
+
     }
 
     # Updates the values list for the "Detail type:" field. This will display

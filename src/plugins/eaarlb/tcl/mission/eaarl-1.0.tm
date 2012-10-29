@@ -27,7 +27,11 @@ namespace eval ::mission::eaarl {
     set ::mission::commands(initialize_path_mission) \
             ::mission::eaarl::initialize_path_mission
 
-    proc initialize_path_flight {} {}
+    proc initialize_path_flight {flight path} {
+        exp_send "mission, flights, auto, \"[ystr $flight]\", \"$path\";\r"
+    }
+    set ::mission::commands(initialize_path_flight) \
+            ::mission::eaarl::initialize_path_flight
 
     proc load_data {flight} {
         set flight [ystr $flight]
