@@ -37,10 +37,37 @@ namespace eval ::mission::eaarl {
         $mb add command {*}[menulabel "Dump NIR"] \
                 -command ::mission::eaarl::menu_dump_nir
         $mb add separator
-        $mb add command {*}[menulabel "Generate KMZ"]
-        $mb add command {*}[menulabel "Show EDB summary"]
+        $mb add cascade {*}[menulabel "Generate KMZ"] \
+                -menu $mb.kmz
+        menu $mb.kmz -postcommand [list ::mission::eaarl::menu_kmz $mb.kmz]
+        $mb add command {*}[menulabel "Show EDB summary"] \
+                -command [list exp_send "mission_edb_summary;\r"]
     }
     set ::mission::commands(menu_actions) ::mission::eaarl::menu_actions
+
+    proc menu_kmz {mb} {
+        $mb delete 0 end
+        $mb add command {*}[menulabel "Full mission"] \
+                -command ::mission::eaarl::menu_gen_kmz
+        if {[llength [::mission::get]]} {
+            $mb add separator
+        }
+        foreach flight [::mission::get] {
+            $mb add command -label $flight -command \
+                    [list ::mission::eaarl::menu_gen_kmz $flight]
+        }
+    }
+
+    proc menu_gen_kmz {{flight {}}} {
+        if {$flight eq ""} {
+            exp_send "kml_mission;\r"
+        } else {
+            set kmz [file join $::mission::path kml $flight.kmz]
+            exp_send "mission, load, \"[ystr $flight]\";\
+                    kml_pnav, pnav, \"$kmz\", edb=edb,\
+                        soe_day_start=soe_day_start, ins_header=iex_head;\r"
+        }
+    }
 
     proc refresh_load {flights extra} {
         set f $flights
