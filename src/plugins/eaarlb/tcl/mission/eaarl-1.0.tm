@@ -29,8 +29,11 @@ namespace eval ::mission::eaarl {
                 -command ::mission::eaarl::menu_load_cir
         $mb add command {*}[menulabel "Launch NIR"] \
                 -command ::mission::eaarl::menu_load_nir
+        $mb add separator
         $mb add command {*}[menulabel "Dump RGB"] \
                 -command ::mission::eaarl::menu_dump_rgb
+        $mb add command {*}[menulabel "Dump CIR"] \
+                -command ::mission::eaarl::menu_dump_cir
         $mb add command {*}[menulabel "Dump NIR"] \
                 -command ::mission::eaarl::menu_dump_nir
         $mb add separator
@@ -217,6 +220,16 @@ namespace eval ::mission::eaarl {
         if {$outdir ne ""} {
             dump_imagery "rgb dir" cir::f2010::tarpath $outdir \
                     -subdir photos/rgb
+        }
+    }
+
+    proc menu_dump_cir {} {
+        set outdir [tk_chooseDirectory \
+                -title "Select destination for CIR imagery" \
+                -initialdir $::mission::path]
+        if {$outdir ne ""} {
+            dump_imagery "cir dir" cir::f2010::tarpath $outdir \
+                    -subdir photos/cir
         }
     }
 
