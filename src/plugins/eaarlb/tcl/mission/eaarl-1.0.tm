@@ -21,6 +21,34 @@ namespace eval ::mission::eaarl {
         "nir dir"
     }
 
+    set ::mission::detail_filetypes {
+        "edb file" {
+            {{EAARL Database Index files} {.idx}}
+            {{All files} *}
+        }
+        "pnav file" {
+            {{PNAV files} {.ybin}}
+            {{All files} *}
+        }
+        "ins file" {
+            {{pbd files} {.pbd .pdb}}
+            {{TANS files} {.ybin}}
+            {{All files} *}
+        }
+        "ops_conf file" {
+            {{Yorick files} {.i}}
+            {{All files} *}
+        }
+        "bath_ctl file" {
+            {{Bathy settings files} {.json .bctl}}
+            {{All files} *}
+        }
+        "rgb file" {
+            {{tar files} {.tar}}
+            {{All files} *}
+        }
+    }
+
     proc initialize_path_mission {path} {
         exp_send "mission, auto, \"$path\";\r"
     }

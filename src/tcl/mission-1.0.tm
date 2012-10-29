@@ -38,7 +38,13 @@ if {![namespace exists ::mission]} {
             refresh_load {}
         }
 
+        # List of all known detail types; used to populate the dropdown box for
+        # "Detail type:". This should get set by a plugin.
         variable detail_types {}
+
+        # Dict of -filetypes options for each applicable detail type; used
+        # during "Select File...".
+        variable detail_filetypes {}
 
         # GUI specific variables...
 
@@ -823,6 +829,7 @@ namespace eval ::mission {
         variable flight_name
         variable detail_type
         variable detail_value
+        variable detail_filetypes
 
         set initialfile ""
         if {$detail_value ne ""} {
@@ -836,9 +843,16 @@ namespace eval ::mission {
             set initialfile ""
         }
 
+        if {[dict exists $detail_filetypes $detail_type]} {
+            set filetypes [dict get $detail_filetypes $detail_type]
+        } else {
+            set filetypes {{"All files" *}}
+        }
+
         set chosen [tk_getOpenFile \
                 -initialdir $initialdir \
                 -initialfile $initialfile \
+                -filetypes $filetypes \
                 -parent $top \
                 -title "Select file for \"$detail_type\" for \"$flight_name\""]
 
