@@ -44,6 +44,12 @@ namespace eval ::mission::eaarl {
             grid $f.lbl$row -sticky w
             grid $f.load$row $f.rgb$row $f.nir$row -sticky ew
         }
+
+        set f $extra
+        ttk::button $f.btnRGB -text "All RGB" -width 0
+        ttk::button $f.btnNIR -text "All NIR" -width 0
+        grid x $f.btnRGB $f.btnNIR -sticky ew -padx 2 -pady 2
+        grid columnconfigure $f {0 3} -weight 1
     }
     set ::mission::commands(refresh_load) ::mission::eaarl::refresh_load
 

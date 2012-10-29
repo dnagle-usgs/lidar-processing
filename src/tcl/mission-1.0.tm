@@ -251,14 +251,17 @@ namespace eval ::mission {
         ttk::frame $f.flights
         set load_flights $f.flights
 
+        ttk::separator $f.sep -orient horizontal
+
         ttk::frame $f.extra
         set load_extra $f.extra
 
         ttk::button $f.switch -text "Switch to Editing Mode" \
                 -command [list ::mission::change_view edit]
-        grid $f.flights -sticky ne
+        grid $f.flights -sticky ne -pady 1
+        grid $f.sep -sticky ew
         grid $f.extra -sticky ew
-        grid $f.switch
+        grid $f.switch -padx 2 -pady 2
 
         return $w
     }
