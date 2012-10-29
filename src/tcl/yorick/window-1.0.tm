@@ -6,15 +6,35 @@ package require snit
 
 namespace eval ::yorick::window {}
 
+# Returns the path for a given Yorick window
 proc ::yorick::window::path {win} {
     return .yorwin$win
 }
 
+# Returns a list of which Yorick windows are mapped (visible).
+# Use [mapped num] or [mapped] to get a list of Yorick window numbers.
+# Use [mapped path] to get a list of Tcl window paths.
+proc ::yorick::window::mapped {{type num}} {
+    set result [list]
+    for {set win 0} {$win < 64} {incr win} {
+        if {[winfo ismapped [path $win]]} {
+            if {$type eq "num"} {
+                lappend result $win
+            } else {
+                lappend result [path $win]
+            }
+        }
+    }
+    return $result
+}
+
+# This should be called exactly once at startup. It creates a Tcl GUI for each
+# Yorick window and tells Yorick what Tcl window ID to use for each window.
 proc ::yorick::window::initialize {} {
     ybkg funcset _ytk_window_parents
     for {set win 0} {$win < 64} {incr win} {
-        ::yorick::window::embedded .yorwin$win -window $win
-        ybkg grow _ytk_window_parents [.yorwin$win id]
+        ::yorick::window::embedded [path $win] -window $win
+        ybkg grow _ytk_window_parents [[path $win] id]
     }
 }
 
