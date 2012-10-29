@@ -48,6 +48,10 @@ if {![namespace exists ::mission]} {
         variable flights
         # Treeview with details listing
         variable details
+        # Frame containing flights on load view
+        variable load_flights
+        # Frame containing extra stuff on load view
+        variable load_extra
 
         # The values for the fields available for editing at the given moment.
         variable flight_name ""
@@ -237,14 +241,21 @@ namespace eval ::mission {
     # Creates the "load" view. This is a fairly compact view that just lets the
     # user load data.
     proc gui_load {w} {
+        variable load_flights
+        variable load_extra
+
         ttk::frame $w
         set f $w
 
-        ttk::frame $f.days
+        ttk::frame $f.flights
+        set load_flights $f.flights
+
         ttk::frame $f.extra
+        set load_extra $f.extra
+
         ttk::button $f.switch -text "Switch to Editing Mode" \
                 -command [list ::mission::change_view edit]
-        grid $f.days -sticky ne
+        grid $f.flights -sticky ne
         grid $f.extra -sticky ew
         grid $f.switch
 
@@ -757,6 +768,8 @@ namespace eval ::mission {
     # Refreshes the GUI in response to updated flight information -or- in
     # response to a change in selected flight (in the edit view).
     proc refresh_details {} {
+        ::misc::idle ::mission::refresh_load_generic
+
         variable flights
         variable details
         variable conf
@@ -783,7 +796,28 @@ namespace eval ::mission {
                 $details selection set [list $detail]
             }
         }
+
         ::misc::idle ::mission::refresh_fields
+    }
+
+    proc refresh_load_generic {} {
+        variable load_flights
+        set f $load_flights
+
+        foreach child [winfo children $f] {
+            destroy $child
+        }
+
+        set row 0
+        foreach flight [get] {
+            incr row
+            ttk::label $f.lbl$row -text $flight
+            ttk::button $f.btn$row -text "Load" -command \
+                    [list exp_send "mission, load, \"[ystr $flight]\";\r"]
+            grid $f.lbl$row $f.btn$row -padx 2 -pady 2
+            grid $f.lbl$row -sticky w
+            grid $f.btn$row -sticky ew
+        }
     }
 
     # Refreshes the revertable fields based on current selections in the edit
