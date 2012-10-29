@@ -36,6 +36,7 @@ if {![namespace exists ::mission]} {
             initialize_path_flight {}
             load_data {}
             menu_actions {}
+            refresh_load {}
         }
 
         # GUI specific variables...
@@ -768,7 +769,7 @@ namespace eval ::mission {
     # Refreshes the GUI in response to updated flight information -or- in
     # response to a change in selected flight (in the edit view).
     proc refresh_details {} {
-        ::misc::idle ::mission::refresh_load_generic
+        ::misc::idle ::mission::refresh_load
 
         variable flights
         variable details
@@ -800,14 +801,25 @@ namespace eval ::mission {
         ::misc::idle ::mission::refresh_fields
     }
 
-    proc refresh_load_generic {} {
+    proc refresh_load {} {
         variable load_flights
-        set f $load_flights
+        variable load_extra
+        variable commands
 
-        foreach child [winfo children $f] {
+        foreach child [winfo children $load_flights] {
+            destroy $child
+        }
+        foreach child [winfo children $load_extra] {
             destroy $child
         }
 
+        if {$commands(refresh_load) ne ""} {
+            ::misc::idle [list {*}$commands(refresh_load) \
+                    $load_flights $load_extra]
+            return
+        }
+
+        set f $load_flights
         set row 0
         foreach flight [get] {
             incr row

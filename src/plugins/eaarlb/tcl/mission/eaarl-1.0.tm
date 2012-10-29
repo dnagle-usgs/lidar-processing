@@ -30,6 +30,23 @@ namespace eval ::mission::eaarl {
     }
     set ::mission::commands(menu_actions) ::mission::eaarl::menu_actions
 
+    proc refresh_load {flights extra} {
+        set f $flights
+        set row 0
+        foreach flight [::mission::get] {
+            incr row
+            ttk::label $f.lbl$row -text $flight
+            ttk::button $f.load$row -text "Load" -width 0 -command \
+                    [list exp_send "mission, load, \"[ystr $flight]\";\r"]
+            ttk::button $f.rgb$row -text "RGB" -width 0
+            ttk::button $f.nir$row -text "NIR" -width 0
+            grid $f.lbl$row $f.load$row $f.rgb$row $f.nir$row -padx 2 -pady 2
+            grid $f.lbl$row -sticky w
+            grid $f.load$row $f.rgb$row $f.nir$row -sticky ew
+        }
+    }
+    set ::mission::commands(refresh_load) ::mission::eaarl::refresh_load
+
     proc menu_dump_rgb {} {
         set outdir [tk_chooseDirectory \
                 -title "Select destination for RGB imagery" \
