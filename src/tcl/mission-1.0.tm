@@ -409,7 +409,7 @@ namespace eval ::mission {
         grid $f.fraToolbar $f.tvwDetails $f.vsbDetails -in $f.fraDetails
         grid columnconfigure $f.fraDetails 1 -weight 1
 
-        ttk::label $f.lblType -text "Field type:"
+        ttk::label $f.lblType -text "Detail type:"
         mixin::combobox $f.cboType
         ::mixin::revertable $f.cboType \
                 -textvariable ::mission::detail_type \
@@ -420,7 +420,7 @@ namespace eval ::mission {
                 -command [list $f.cboType revert]
         set widget_detail_type $f.cboType
 
-        ttk::label $f.lblValue -text "Field value:"
+        ttk::label $f.lblValue -text "Detail value:"
         ttk::entry $f.entValue
         ::mixin::revertable $f.entValue \
                 -textvariable ::mission::detail_value \
@@ -548,7 +548,6 @@ namespace eval ::mission {
     }
 
     proc initialize_path_flight {} {
-
     }
 
     proc apply_flight_name {old new} {
