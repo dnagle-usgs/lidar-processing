@@ -232,7 +232,7 @@ func mission_load(flight) {
     write, "WARNING: no pnav file defined for "+pr1(flight);
   }
 
-  extern ins_filename, tans;
+  extern ins_filename, iex_nav, iex_head, tans;
   if(mission(has, flight, "ins file")) {
     ins_filename = mission(get, flight, "ins file");
     if(file_extension(ins_filename) == ".pbd") {
