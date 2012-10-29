@@ -351,9 +351,9 @@ func mission_auto(path, strict=) {
   The strict= option controls whether non-lidar flights are included. When
   strict=1, only flights that contain an "edb file" will be defined. When
   strict=0, flights will be created as long as at least one key can be detected
-  for a subdirectory. This defaults to strict=1.
+  for a subdirectory. This defaults to strict=0.
 */
-  default, strict, 1;
+  default, strict, 0;
   mission, flights, clear;
   mission, data, path=path;
 
