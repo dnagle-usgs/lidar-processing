@@ -550,12 +550,14 @@ namespace eval ::mission {
     proc initialize_path_flight {} {
     }
 
+    # Used by revertable field "Flight name:" to apply the new value
     proc apply_flight_name {old new} {
         set old [ystr $old]
         set new [ystr $new]
         exp_send "mission, flights, rename, \"$old\", \"$new\";\r"
     }
 
+    # Used by revertable field "Detail type:" to apply the new value
     proc apply_detail_type {old new} {
         variable flight_name
         set flight [ystr $flight_name]
@@ -564,6 +566,7 @@ namespace eval ::mission {
         exp_send "mission, details, rename, \"$flight\", \"$old\", \"$new\";\r"
     }
 
+    # Used by revertable field "Detail value:" to apply the new value
     proc apply_detail_value {old new} {
         variable flight_name
         variable detail_type
@@ -573,6 +576,8 @@ namespace eval ::mission {
         exp_send "mission, details, set, \"$flight\", \"$detail\", \"$new\", raw=1;\r"
     }
 
+    # Implements the raise, lower, and remove quick buttons to the left of the
+    # treeviews.
     # type must be "flights" or "details"
     # action must be "raise", "lower", or "remove"
     proc quick_action {type action} {
@@ -596,6 +601,7 @@ namespace eval ::mission {
         exp_send "mission, $type, $action, \"$flight\", \"$detail\";\r"
     }
 
+    # Implements the add quick button to the left of the flight treeview.
     proc quick_add_flight {} {
         variable conf
         variable flights
@@ -610,6 +616,7 @@ namespace eval ::mission {
         exp_send "mission, flights, add, \"$name\";\r"
     }
 
+    # Implements the add quick button to the left of the details treeview.
     proc quick_add_detail {} {
         variable conf
         variable flights
@@ -630,6 +637,8 @@ namespace eval ::mission {
         exp_send "mission, details, set, \"$flight\", \"$name\", \"\";\r"
     }
 
+    # Utility proc for detail_select_file and detail_select_dir
+    # Comes up with an appropriate directory to use for their initialdir
     proc detail_select_initialdir {} {
         variable conf
         variable flight_name
@@ -663,6 +672,7 @@ namespace eval ::mission {
         return $path
     }
 
+    # Prompts the user to browse to a file to use for the current field
     proc detail_select_file {} {
         variable top
         variable flight_name
@@ -696,6 +706,7 @@ namespace eval ::mission {
         }
     }
 
+    # Prompts the user to browse to a file to use for the current field
     proc detail_select_dir {} {
         variable top
         variable flight_name
@@ -717,6 +728,7 @@ namespace eval ::mission {
         }
     }
 
+    # Refreshes the GUI in response to updated flight information.
     proc refresh_flights {} {
         variable flights
         variable conf
@@ -742,6 +754,8 @@ namespace eval ::mission {
         ::misc::idle ::mission::refresh_details
     }
 
+    # Refreshes the GUI in response to updated flight information -or- in
+    # response to a change in selected flight (in the edit view).
     proc refresh_details {} {
         variable flights
         variable details
@@ -772,6 +786,8 @@ namespace eval ::mission {
         ::misc::idle ::mission::refresh_fields
     }
 
+    # Refreshes the revertable fields based on current selections in the edit
+    # view of the GUI.
     proc refresh_fields {} {
         variable conf
         variable flights
@@ -804,12 +820,16 @@ namespace eval ::mission {
         }
     }
 
+    # menu command
+    # Clears the configuration
     proc new_conf {} {
         variable currentfile
         set currentfile ""
         exp_send "mission, flights, clear;\r"
     }
 
+    # menu command
+    # Prompts user to select a configuration, which is then loaded.
     proc load_conf {} {
         variable top
         variable currentfile
@@ -824,6 +844,9 @@ namespace eval ::mission {
         }
     }
 
+    # menu command
+    # Prompts the user for a destination, where the configuration is then saved
+    # to.
     proc save_conf {} {
         variable top
         variable currentfile
@@ -847,6 +870,7 @@ namespace eval ::mission {
         }
     }
 
+    # NOT USED
     proc load_data_auto {} {
         variable flights
         set flight [lindex [$flights selection] 0]
@@ -855,6 +879,7 @@ namespace eval ::mission {
         }
     }
 
+    # NOT USED (except by load_data_auto above)
     proc load_data_flight {flight} {
         if {$::mission::commands(load_data) eq ""} {
             return
