@@ -139,6 +139,9 @@ proc ::l1pro::processing::process {} {
     }
 
     if {$cmd ne ""} {
+        if {$forced} {
+            append cmd  "; $::pro_var = merge_pointers($::pro_var)"
+        }
         if {$::autoclean_after_process} {
             append cmd "; test_and_clean, $::pro_var"
         }
@@ -153,15 +156,15 @@ proc ::l1pro::processing::process {} {
 proc ::l1pro::processing::process_channel {channel} {
     switch -- $::processing_mode {
         fs {
-            set cmd "grow, $::pro_var, make_fs(latutm=1, q=q, ext_bad_att=1,\
+            set cmd "grow, $::pro_var, &make_fs(latutm=1, q=q, ext_bad_att=1,\
                     usecentroid=$::usecentroid, forcechannel=$channel)"
         }
         bathy {
-            set cmd "grow, $::pro_var, make_bathy(latutm = 1, q = q,\
+            set cmd "grow, $::pro_var, &make_bathy(latutm = 1, q = q,\
                     avg_surf=$::avg_surf, forcechannel=$channel)"
             }
         veg {
-            set cmd "grow, $::pro_var, make_veg(latutm=1, q=q, ext_bad_att=1,\
+            set cmd "grow, $::pro_var, &make_veg(latutm=1, q=q, ext_bad_att=1,\
                     use_centroid=$::usecentroid, forcechannel=$channel)"
         }
         default {
