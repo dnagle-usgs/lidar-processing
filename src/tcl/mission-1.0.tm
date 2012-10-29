@@ -542,20 +542,51 @@ namespace eval ::mission {
     # Automatically initializes the dataset using the current mission.data.path
     # (or prompts for one if not defined).
     proc initialize_path_mission {} {
-        if {$::mission::path ne ""} {
-            set path $::mission::path
-        } else {
+        if {$::mission::commands(initialize_path_mission) eq ""} {
+            tk_messageBox -icon error \
+                    -parent $::mission::top \
+                    -type ok \
+                    -title "Plugins not loaded" \
+                    -message "You have not loaded any plugins yet. Please\
+                        define and load the required plugin(s)."
+            return
+        }
+
+        set path $::mission::path
+        if {$path eq ""} {
             set path [tk_chooseDirectory \
                     -mustexist 1 \
                     -title "Choose mission base path"]
-        }
-        if {![file isdirectory $path]} {
-            tk_messageBox \
-                    -message "Invalid path selected" \
-                    -type ok -icon error
+        } elseif {![file isdirectory $path]} {
+            tk_messageBox -icon warning \
+                    -parent $::mission::top \
+                    -type ok \
+                    -title "Invalid base path defined" \
+                    -message "You must select a valid \"Mission base path\"\
+                        before you can initialize the mission by path."
             return
         }
-        {*}$::mission::commands(initialize_path_flight) $path
+
+        if {$path eq ""} {
+            return
+        }
+
+        if {![llength $::mission::conf]} {
+            set choice yes
+        } else {
+            set choice [tk_messageBox -icon question \
+                    -parent $::mission::top \
+                    -type yesno \
+                    -title "Initialize Mission by Path" \
+                    -message "Initializing the mission by path will clear the\
+                        currently defined configuration and replace it with\
+                        automatically determined flights and details. Are you\
+                        sure you want to do this?"]
+        }
+
+        if {$choice eq "yes"} {
+            {*}$::mission::commands(initialize_path_mission) $path
+        }
     }
 
     proc initialize_path_flight {} {
@@ -813,8 +844,7 @@ namespace eval ::mission {
         }
 
         if {$commands(refresh_load) ne ""} {
-            ::misc::idle [list {*}$commands(refresh_load) \
-                    $load_flights $load_extra]
+            {*}$commands(refresh_load) $load_flights $load_extra
             return
         }
 
@@ -960,7 +990,8 @@ namespace eval ::mission {
 
         proc menu_actions {mb} {
             clear $mb
-            $mb add command {*}[menulabel "Initialize mission from path"]
+            $mb add command {*}[menulabel "Initialize mission from path"] \
+                    -command ::mission::initialize_path_mission
 
             if {$::mission::commands(menu_actions) ne ""} {
                 {*}$::mission::commands(menu_actions) $mb

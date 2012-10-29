@@ -7,8 +7,13 @@ namespace eval ::mission::eaarl {
     namespace import ::yorick::ystr
     namespace import ::misc::menulabel
 
-    proc initialize_path_mission {} {}
-    proc initial_path_flight {} {}
+    proc initialize_path_mission {path} {
+        exp_send "mission, auto, \"$path\";\r"
+    }
+    set ::mission::commands(initialize_path_mission) \
+            ::mission::eaarl::initialize_path_mission
+
+    proc initialize_path_flight {} {}
 
     proc load_data {flight} {
         set flight [ystr $flight]
