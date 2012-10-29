@@ -34,7 +34,6 @@ if {![namespace exists ::mission]} {
         array set commands {
             initialize_path_mission {}
             initialize_path_flight {}
-            load_data {}
             menu_actions {}
             refresh_load {}
         }
@@ -365,11 +364,8 @@ namespace eval ::mission {
         set widget_flight_name $f.entField
 
         ttk::frame $f.fraButtons
-        ttk::button $f.btnLoad -text "Load Data"
-        ::mixin::statevar $f.btnLoad \
-                -statemap {"" disabled} \
-                -statedefault {!disabled} \
-                -statevariable ::mission::commands(load_data)
+        ttk::button $f.btnLoad -text "Load Data" \
+                -command ::mission::editview_load_data
         ttk::button $f.btnInitialize -text "Initialize Flight by Path" \
                 -command ::mission::initialize_path_flight
         ::mixin::statevar $f.btnInitialize \
@@ -919,21 +915,13 @@ namespace eval ::mission {
         }
     }
 
-    # NOT USED
-    proc load_data_auto {} {
+    # Implements the "Load Data" button on the edit view
+    proc editview_load_data {} {
         variable flights
         set flight [lindex [$flights selection] 0]
         if {$flight ne ""} {
-            load_data_flight $flight
+            exp_send "mission, load, \"[ystr $flight]\";\r"
         }
-    }
-
-    # NOT USED (except by load_data_auto above)
-    proc load_data_flight {flight} {
-        if {$::mission::commands(load_data) eq ""} {
-            return
-        }
-        {*}$::mission::commands(load_data) $flight
     }
 
     namespace eval menu {
