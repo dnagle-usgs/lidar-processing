@@ -906,6 +906,9 @@ func mission_read(fn) {
   mission, json, rdfile(f);
   close, f;
   mission, plugins, load;
+  // Even though tksync is invoked by "mission, json", need to invoke again to
+  // account for changes that plugins make.
+  mission, tksync;
 }
 read = mission_read;
 
