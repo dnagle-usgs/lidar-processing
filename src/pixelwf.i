@@ -118,29 +118,36 @@ func pixelwf_fit_gauss(void) {
 
 func pixelwf_ex_bath(void) {
   extern pixelwfvars;
+  channel = pixelwfvars.selection.channel;
   raster = pixelwfvars.selection.raster;
   pulse = pixelwfvars.selection.pulse;
   vars = pixelwfvars.ex_bath;
   pixelwf_load_data;
 
+  if(!channel) channel = [];
+
   win = current_window();
   result = ex_bath(raster, pulse, win=vars.win, graph=1, xfma=1,
-    verbose=vars.verbose);
+    verbose=vars.verbose, forcechannel=channel);
   pixelwf_handle_result, vars, result;
   window_select, win;
 }
 
 func pixelwf_ex_veg(void) {
   extern pixelwfvars;
+  channel = pixelwfvars.selection.channel;
   raster = pixelwfvars.selection.raster;
   pulse = pixelwfvars.selection.pulse;
   vars = pixelwfvars.ex_veg;
   pixelwf_load_data;
 
+  if(!channel) channel = [];
+
   win = current_window();
   result = ex_veg(raster, pulse, win=vars.win, graph=1, last=vars.last,
     use_be_peak=vars.use_be_peak, use_be_centroid=vars.use_be_centroid,
-    hard_surface=vars.hard_surface, verbose=vars.verbose);
+    hard_surface=vars.hard_surface, verbose=vars.verbose,
+    forcechannel=channel);
   pixelwf_handle_result, vars, result;
   window_select, win;
 }
@@ -172,27 +179,35 @@ func pixelwf_show_wf_transmit(void) {
 
 func pixelwf_geo_rast(void) {
   extern pixelwfvars;
+  channel = pixelwfvars.selection.channel;
   raster = pixelwfvars.selection.raster;
   pulse = pixelwfvars.selection.pulse;
   vars = pixelwfvars.geo_rast;
   pixelwf_load_data;
 
-  geo_rast, raster, win=vars.win, eoffset=vars.eoffset, verbose=vars.verbose;
+  channel = max(1, channel);
+
+  geo_rast, raster, channel=channe, win=vars.win, eoffset=vars.eoffset,
+    verbose=vars.verbose;
 }
 
 func pixelwf_ndrast(void) {
   extern pixelwfvars, rn;
+  channel = pixelwfvars.selection.channel;
   raster = pixelwfvars.selection.raster;
   pulse = pixelwfvars.selection.pulse;
   vars = pixelwfvars.ndrast;
   pixelwf_load_data;
   rn = raster;
 
+  channel = max(1, channel);
+
   win = current_window();
   window, vars.win;
   fma;
 
-  result = ndrast(raster, graph=1, win=vars.win, units=vars.units, sfsync=0);
+  result = ndrast(raster, channel=channel, graph=1, win=vars.win,
+    units=vars.units, sfsync=0);
   pixelwf_handle_result, vars, result;
 
   window_select, win;
@@ -251,6 +266,9 @@ func pixelwf_selected_info(nearest, vname=) {
   write, format="somd= %.4f ; soe= %.4f\n", point.soe - soe_day_start, point.soe;
   rp = parse_rn(point.rn);
   write, format="raster= %d ; pulse= %d\n", rp(1), rp(2);
+  if(has_member(point, "channel") && point.channel) {
+    write, format="channel = %d\n", point.channel;
+  }
   if((dimsof(get_member(var_expr_get(pixelwfvars.selection.pro_var),"soe"))(1)) == 1) {
     write, format="Corresponds to %s(%d)\n", vname, nearest.index;
   }
@@ -295,9 +313,11 @@ func pixelwf_set_point(point) {
   extern rn, pixelwfvars;
   mission, load_soe_rn, point.soe, point.rn;
   rp = parse_rn(point.rn);
-  h_set, pixelwfvars.selection, raster=rp(1), pulse=rp(2);
+  channel = has_member(point, "channel") ? short(point.channel) : 0;
+  h_set, pixelwfvars.selection, raster=rp(1), pulse=rp(2), channel=channel;
   tksetval, "::l1pro::pixelwf::vars::selection::raster", rp(1);
   tksetval, "::l1pro::pixelwf::vars::selection::pulse", rp(2);
+  tksetval, "::l1pro::pixelwf::vars::selection::channel", channel;
   h_set, pixelwfvars.selection, missionday=mission.data.loaded;
   tksetval, "::l1pro::pixelwf::vars::selection::missionday", mission.data.loaded;
   rn = rp(1);
@@ -344,4 +364,3 @@ func pixelwf_set_soe(soe) {
   }
   return found;
 }
-
