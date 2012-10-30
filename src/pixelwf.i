@@ -5,6 +5,7 @@ if(is_void(pixelwfvars)) {
   pixelwfvars = h_new(
     selection=h_new(
       background=0,
+      channel=0,
       raster=1,
       pulse=1,
       missionday="",

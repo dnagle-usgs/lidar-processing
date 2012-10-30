@@ -19,6 +19,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
         namespace eval vars {
             namespace eval selection {
                 variable background 1
+                variable channel 0
                 variable raster 1
                 variable pulse 1
                 variable missionday {}
@@ -113,6 +114,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
                     ex_veg last
                 }
                 {1 240} {selection pulse}
+                {0 4} {selection channel}
                 {0 5} {fit_gauss add_peak}
                 {0 63} {
                     fit_gauss win
@@ -353,11 +355,14 @@ namespace eval ::l1pro::pixelwf::gui {
         set ns ::l1pro::pixelwf::vars::selection
         ttk::frame $f
 
-        ttk::label $f.lblDay -text Day:
-        ::mixin::combobox $f.cboDay -textvariable ${ns}::missionday \
+        ttk::label $f.lblFlight -text Flight:
+        ::mixin::combobox $f.cboFlight -textvariable ${ns}::missionday \
                 -state readonly -width 0 \
                 -listvariable ::l1pro::pixelwf::gui::missionday_list \
                 -postcommand ::l1pro::pixelwf::gui::helper_update_days
+
+        ttk::label $f.lblChannel -text Channel:
+        helper_spinbox $f.spnChannel ${ns}::channel
 
         ttk::label $f.lblRaster -text Raster:
         helper_spinbox $f.spnRaster ${ns}::raster
@@ -378,7 +383,7 @@ namespace eval ::l1pro::pixelwf::gui {
         ::mixin::combobox $f.cboVar -textvariable ::pro_var -state readonly \
                 -width 0 -listvariable ::varlist
 
-        ttk::checkbutton $f.chkSf -text "SF Sync" -variable ${ns}::sfsync
+        ttk::checkbutton $f.chkSync -text "Sync" -variable ${ns}::sfsync
         ttk::checkbutton $f.chkExt -text "Extended output" \
                 -variable ${ns}::extended
         ttk::checkbutton $f.chkLoad -text "Auto load mission data" \
@@ -416,19 +421,21 @@ namespace eval ::l1pro::pixelwf::gui {
         ttk::button $f.btnMouse -text "Examine Pixels" \
                 -command [list exp_send "pixelwf_enter_interactive;\r"]
 
-        grid $f.lblDay $f.cboDay - -
+        grid $f.lblFlight $f.cboFlight - -
         grid $f.lblVar $f.cboVar - -
-        grid $f.lblRaster $f.spnRaster $f.lblPulse $f.spnPulse
-        grid $f.lblWindow $f.spnWindow $f.chkSf -
-        grid $f.lblRadius $f.spnRadius $f.chkExt -
+        grid $f.lblChannel $f.spnChannel $f.lblWindow $f.spnWindow
+        grid $f.lblRaster  $f.spnRaster  $f.lblRadius $f.spnRadius
+        grid $f.lblPulse   $f.spnPulse
+        grid $f.chkExt - $f.chkSync -
         grid $f.chkLoad - - -
         grid $f.chkBg - - -
         grid $f.btnMouse - $f.btnGraph -
 
         default_sticky \
-                $f.lblDay $f.cboDay \
+                $f.lblFlight $f.cboFlight \
+                $f.lblChannel $f.spnChannel \
                 $f.lblRaster $f.spnRaster $f.lblPulse $f.spnPulse \
-                $f.lblWindow $f.spnWindow $f.lblVar $f.cboVar $f.chkSf \
+                $f.lblWindow $f.spnWindow $f.lblVar $f.cboVar $f.chkSync \
                 $f.lblRadius $f.spnRadius $f.btnMouse $f.btnGraph \
                 $f.chkExt $f.chkLoad $f.chkBg
 
