@@ -374,8 +374,12 @@ snit::type ::eaarl::settings::bath_ctl::gui_embed {
     }
 
     method replot {} {
-        exp_send "ex_bath, $options(-raster), $options(-pulse), graph=1,\
-                win=$options(-window), xfma=1, forcechannel=$options(-channel);\r"
+        set cmd "ex_bath, $options(-raster), $options(-pulse), graph=1,\
+                win=$options(-window), xfma=1"
+        if {$options(-channel)} {
+            append cmd ", forcechannel=$options(-channel)"
+        }
+        exp_send "$cmd;\r"
     }
 
     method SetOpt {option value} {
@@ -388,6 +392,9 @@ snit::type ::eaarl::settings::bath_ctl::gui_embed {
         if {$options(-channel) == 4} {
             $f configure -text "Bathy Settings for Channel 4"
             set var ${ns}::v::bath_ctl_chn4
+        } elseif {$options(-channel) == 0} {
+            $f configure -text "Bathy Settings for EAARL-A (Channels 1, 2, and 3)"
+            set var ${ns}::v::bath_ctl
         } else {
             $f configure -text "Bathy Settings for Channels 1, 2, and 3"
             set var ${ns}::v::bath_ctl
