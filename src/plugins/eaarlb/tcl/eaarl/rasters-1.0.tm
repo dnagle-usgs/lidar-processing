@@ -43,7 +43,7 @@ snit::type ::eaarl::rasters::rastplot::gui {
     variable chan3 1
     variable chan4 0
     variable amp_bias 0
-    variable range_bias 0
+    variable range_bias 1
     variable rxtx 0
     variable units meters
     variable bathchan 0

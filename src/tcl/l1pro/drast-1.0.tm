@@ -271,7 +271,7 @@ proc ::l1pro::drast::gui_opts_play {f labelgrid} {
             -variable ${ns}::v::show_sline
     ttk::checkbutton $f.wf -text "Show waveform" \
             -variable ${ns}::v::show_wf
-    ttk::checkbutton $f.sfsync -text "Sync with SF" \
+    ttk::checkbutton $f.sfsync -text "Sync" \
             -variable ${ns}::v::sfsync
     ttk::checkbutton $f.autolidar -text "Auto Plot Lidar (Process EAARL Data)" \
             -variable ${ns}::v::autolidar

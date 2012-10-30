@@ -415,7 +415,7 @@ namespace eval ::l1pro::pixelwf::gui {
                 \nyou see on the command line won't be that useful to call on\
                 \ntheir own outside of the GUI."
 
-        ttk::button $f.btnGraph -text "Plot" \
+        ttk::button $f.btnGraph -text "Plot All" \
             -command [list [namespace current]::yorcmd pixelwf_plot]
 
         ttk::button $f.btnMouse -text "Examine Pixels" \

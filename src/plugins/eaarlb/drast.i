@@ -260,11 +260,11 @@ tx=, autolims=, showcbar=, sfsync=, pulse=) {
   hms = sod2hms(somd, str=1);
   if(channel) {
     if(tx)
-      xtitle = swrite(format="rn:%d tx+chn:%d  Pixel #", rn, channel);
+      xtitle = swrite(format="rn:%d tx+chn:%d  Pulse #", rn, channel);
     else
-      xtitle = swrite(format="rn:%d chn:%d  Pixel #", rn, channel);
+      xtitle = swrite(format="rn:%d chn:%d  Pulse #", rn, channel);
   } else {
-    xtitle = swrite(format="rn:%d tx  Pixel #", rn);
+    xtitle = swrite(format="rn:%d tx  Pulse #", rn);
   }
   xtitle = swrite(format="somd:%d hms:%s %s", somd, hms, xtitle);
 
@@ -545,7 +545,7 @@ amp_bias=, units=) {
     plt, "tx", pltx, plty, justify=justify, height=12, color="cyan";
   }
 
-  xtitle = swrite(format="Raster:%d  Pix:%d   Digital Counts", rn, pix);
+  xtitle = swrite(format="Raster:%d  Pls:%d   Digital Counts", rn, pix);
   ytitle = swrite(format="Water depth (%s)", units);
   xytitles, xtitle, ytitle;
   pltitle, regsub("_", data_path, "!_", all=1);
@@ -609,7 +609,7 @@ func show_geo_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster=) {
     plmk,elvspan,255-r(,pix,3),msize=.1,width=10,marker=1,color="blue"
   }
 
-  xtitle = swrite(format="Pix:%d   Digital Counts", pix);
+  xtitle = swrite(format="Pls:%d   Digital Counts", pix);
   if(!is_void(raster)) xtitle = swrite(format="Raster:%d %s", raster, xtitle);
   ytitle = "Elevation (m)";
   xytitles, xtitle, ytitle;
@@ -808,7 +808,7 @@ func show_wf_transmit(rast, pix, win=, xfma=) {
   plg, time, tx, marker=0, color="black";
   plmk, time, tx, msize=.2, marker=1, color="black";
 
-  xtitle = swrite(format="Pix:%d   Digital Counts", pix);
+  xtitle = swrite(format="Pls:%d   Digital Counts", pix);
   if(!is_void(raster)) xtitle = swrite(format="Raster:%d %s", raster, xtitle);
   ytitle = "Index";
   xytitles, xtitle, ytitle;

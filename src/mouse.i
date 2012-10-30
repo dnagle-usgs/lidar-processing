@@ -205,7 +205,7 @@ func mdist(&click, units=, win=, plot=, verbose=, nox=, noy=) {
 
   SEE ALSO: lldist, mouse_measure
 */
-  default, units, "ll";
+  default, units, "m";
   default, win, window();
   default, plot, 1;
   default, verbose, 1;
