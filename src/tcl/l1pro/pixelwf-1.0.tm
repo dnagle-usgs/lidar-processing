@@ -299,7 +299,7 @@ namespace eval ::l1pro::pixelwf::gui {
 
         if {[winfo exists $w]} {destroy $w}
         toplevel $w
-        wm title $w "Examine Pixels"
+        wm title $w "Examine Pixels Settings"
 
         set mf $w
 
