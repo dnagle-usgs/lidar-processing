@@ -53,9 +53,9 @@ func ytk_rast(rn) {
 }
 
 func ndrast(rn, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=, tx=,
-autolims=) {
+autolims=, pulse=) {
 /* DOCUMENT drast(rn, channel=, units=, win=, graph=, sfsync=, cmin=, cmax=,
-   tx=, autolims=)
+   tx=, autolims=, pulse=)
   Displays raster waveform data for the given raster. Try this:
 
     > rn = 1000
@@ -82,6 +82,9 @@ autolims=) {
   prevent this behavior.
 
   By default, this will sync with SF. Set sfsync=0 to disable that behavior.
+
+  Option pulse= is passed through to show_rast and is just for initializing the
+  GUI.
 */
   extern aa, last_somd, pkt_sf;
   default, graph, 1;
@@ -112,13 +115,13 @@ autolims=) {
 
   if(graph)
     show_rast, rn, channel=channel, units=units, win=win, cmin=cmin, cmax=cmax,
-      tx=tx, autolims=autolims;
+      tx=tx, autolims=autolims, pulse=pulse;
 
   return &aa;
 }
 
 func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=, eoffset=,
-tx=, autolims=, showcbar=, sfsync=) {
+tx=, autolims=, showcbar=, sfsync=, pulse=) {
 /* DOCUMENT show_rast, rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=,
    tx=, autolims=, showbar=, sfsync=
 
@@ -159,6 +162,8 @@ tx=, autolims=, showcbar=, sfsync=) {
         showcbar=0        Default
     sfsync= Sync with SF.
         sfsync=0          Default
+    pulse= Initialize the GUI with the specified pulse number.
+        pulse=60          Default
 */
   extern data_path, soe_day_start;
   default, channel, 1;
@@ -172,6 +177,7 @@ tx=, autolims=, showcbar=, sfsync=) {
   default, autolims, 1;
   default, showcbar, 0;
   default, sfsync, 0;
+  default, pulse, 60;
 
   // Ignore tx=1 if channel=0
   if(channel == 0) tx = 0;
@@ -183,8 +189,8 @@ tx=, autolims=, showcbar=, sfsync=) {
   win_bkp = current_window();
 
   // Attach Tcl GUI
-  tkcmd, swrite(format="::eaarl::rasters::rastplot::launch %d %d %d",
-    win, rn, channel);
+  tkcmd, swrite(format="::eaarl::rasters::rastplot::launch %d %d %d -pulse %d",
+    win, rn, channel, pulse);
 
   window, win;
   // TODO: Is this necessary now?

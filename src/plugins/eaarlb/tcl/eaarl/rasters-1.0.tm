@@ -11,14 +11,17 @@ if {![namespace exists ::eaarl::rasters::rastplot]} {
     }
 }
 
-proc ::eaarl::rasters::rastplot::launch {window raster channel {geo 0}} {
-    set args [list -raster $raster -channel $channel -geo $geo]
+proc ::eaarl::rasters::rastplot::launch {window raster channel args} {
+    set opts [list -raster $raster -channel $channel -geo 0 -pulse 60]
+    foreach {key val} $args {
+        dict set opts $key $val
+    }
     set ns [namespace current]
     set gui ${ns}::window_$window
     if {[info commands $gui] ne ""} {
-        $gui configure {*}$args
+        $gui configure {*}$opts
     } else {
-        ::eaarl::rasters::rastplot::gui $gui {*}$args -window $window
+        ::eaarl::rasters::rastplot::gui $gui {*}$opts -window $window
     }
     return $gui
 }
@@ -28,6 +31,7 @@ snit::type ::eaarl::rasters::rastplot::gui {
     option -raster -default 1 -configuremethod SetOpt
     option -channel -default 1 -configuremethod SetOpt
     option -geo -default 0 -configuremethod SetOpt
+    option -pulse -default 60
 
     component window
 
@@ -46,7 +50,6 @@ snit::type ::eaarl::rasters::rastplot::gui {
     variable winrx 9
     variable winbath 8
     variable wintx 16
-    variable pulse 60
 
     constructor {args} {
         if {[dict exists $args -window]} {
@@ -107,7 +110,7 @@ snit::type ::eaarl::rasters::rastplot::gui {
         ttk::label $f.lblpulse -text "Pix:"
         ttk::spinbox $f.pulse -width 3 \
                 -from 1 -to 120 -increment 1 \
-                -textvariable [myvar pulse]
+                -textvariable [myvar options](-pulse)
         ttk::button $f.plot -text "Plot" \
                 -width 0 \
                 -command [mymethod examine replot]
@@ -199,9 +202,9 @@ snit::type ::eaarl::rasters::rastplot::gui {
                 $showrx     ", winrx=$winrx" \
                 $showtx     ", wintx=$wintx" \
                 $showbath   ", winbath=$winbath" \
-                {$mode ne "replot"} ", tkpulsevar=\"[myvar pulse]\"" \
+                {$mode ne "replot"} ", tkpulsevar=\"[myvar options](-pulse)\"" \
                 {$mode eq "single"} ", single=1" \
-                {$mode eq "replot"} ", pulse=$pulse"
+                {$mode eq "replot"} ", pulse=$options(-pulse)"
         exp_send "$cmd;\r"
     }
 }
