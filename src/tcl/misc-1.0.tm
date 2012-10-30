@@ -490,6 +490,9 @@ proc ::misc::cascade_windows {wins} {
     set y1 [lindex [split [wm geometry $test] x+] 3]
     set y2 [winfo rooty $test]
     set delta [expr {$y2 - $y1}]
+    set x1 [lindex [split [wm geometry $test] x+] 2]
+    set x2 [winfo rootx $test]
+    set deco [expr {$x2 - $x1}]
     destroy $test
 
     set h [winfo screenheight .]
@@ -498,17 +501,21 @@ proc ::misc::cascade_windows {wins} {
     set x 0
     set y 0
     foreach win $wins {
+        lassign [split [wm geometry $win] x+] dx dy x0 y0
+        set y1 [winfo rooty $win]
+        set win_w [expr {$dx + $deco + $deco}]
+        set win_h [expr {$dy + $deco + ($y1-$y0)}]
+        if {$w - $x <= $win_w} {
+            set x 0
+        }
+        if {$h - $y <= $win_h} {
+            set y 0
+        }
         wm withdraw $win
         wm deiconify $win
         wm geometry $win +$x+$y
         incr x $delta
         incr y $delta
-        if {$w - $x < $delta * 5} {
-            set x 0
-        }
-        if {$h - $y < $delta * 5} {
-            set y 0
-        }
     }
 }
 
