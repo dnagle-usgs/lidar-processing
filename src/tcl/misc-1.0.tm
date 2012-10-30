@@ -541,3 +541,10 @@ proc ::misc::cascade_windows_auto {args} {
         cascade_windows $tops
     }
 }
+
+proc ::misc::raise_win {win} {
+    set geo +[join [lrange [split [wm geometry $win] +] 1 end] +]
+    wm withdraw $win
+    wm deiconify $win
+    wm geometry $win $geo
+}

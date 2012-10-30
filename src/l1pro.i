@@ -40,5 +40,5 @@ func maingui(void) {
   Forces the main "ALPS - Point Cloud Plotting" GUI to appear on top of
   everything else.
 */
-  tkcmd, "wm withdraw .l1wid; wm deiconify .l1wid";
+  tkcmd, "::misc::raise_win .l1wid";
 }
