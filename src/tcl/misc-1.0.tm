@@ -475,3 +475,62 @@ proc constrain {var between min and max} {
 }
 
 proc center_win win {::tk::PlaceWindow $win}
+
+# Arranges a series of windows in a "cascade" sequence.
+proc ::misc::cascade_windows {wins} {
+    if {![llength $wins]} {
+        return
+    }
+
+    set counter 0
+    while {[winfo exists [set test .temptest]]} {incr counter}
+
+    toplevel $test
+    update
+    set y1 [lindex [split [wm geometry $test] x+] 3]
+    set y2 [winfo rooty $test]
+    set delta [expr {$y2 - $y1}]
+    destroy $test
+
+    set h [winfo screenheight .]
+    set w [winfo screenwidth .]
+
+    set x 0
+    set y 0
+    foreach win $wins {
+        wm withdraw $win
+        wm deiconify $win
+        wm geometry $win +$x+$y
+        incr x $delta
+        incr y $delta
+        if {$w - $x < $delta * 5} {
+            set x 0
+        }
+        if {$h - $y < $delta * 5} {
+            set y 0
+        }
+    }
+}
+
+proc ::misc::cascade_windows_auto {args} {
+    if {[llength $args] % 2} {
+        error "must provide \"-option value\" pairs"
+    }
+    set tops [lsort [wm stackorder .]]
+    foreach {option val} $args {
+        switch -- $option {
+            "-filtercmd" {
+                set tops [::struct::list filter $tops $val]
+            }
+            "-filterfor" {
+                set tops [::struct::list filterfor [lindex $val 0] $tops [lindex $val 1]]
+            }
+            default {
+                error "unknown option: $option"
+            }
+        }
+    }
+    if {[llength $tops]} {
+        cascade_windows $tops
+    }
+}

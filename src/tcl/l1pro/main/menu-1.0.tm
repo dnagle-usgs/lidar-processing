@@ -188,6 +188,9 @@ proc menu_window mb {
             -menu [menu_window_style $mb.sty]
     $mb add cascade {*}[menulabel "&Grid lines..."] \
             -menu [menu_window_grid $mb.grid]
+    $mb add separator
+    $mb add cascade {*}[menulabel "&Cascade arrange..."] \
+            -menu [menu_window_cascade $mb.cascade]
     return $mb
 }
 
@@ -226,6 +229,19 @@ proc menu_window_grid mb {
     $mb add command {*}[menulabel "X origin"] -command [{*}$cmd 2 0]
     $mb add command {*}[menulabel "Y origin"] -command [{*}$cmd 0 2]
     $mb add command {*}[menulabel "Both origins"] -command [{*}$cmd 2 2]
+    return $mb
+}
+
+proc menu_window_cascade mb {
+    menu $mb
+    $mb add command {*}[menulabel "&All windows and GUIs"] \
+            -command ::misc::cascade_windows_auto
+    $mb add command {*}[menulabel "&Yorick windows"] \
+            -command [list ::misc::cascade_windows_auto \
+                -filterfor {x {[string match .yorwin* $x]}}]
+    $mb add command {*}[menulabel "&GUIs"] \
+            -command [list ::misc::cascade_windows_auto \
+                -filterfor {x {![string match .yorwin* $x]}}]
     return $mb
 }
 
