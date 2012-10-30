@@ -546,9 +546,12 @@ namespace eval ::mission {
     # Prompt the user to browse to a path, which is then set for
     # mission.data.path.
     proc browse_basepath {} {
-        set original $::mission::path
+        set initialdir $::mission::path
+        if {$initialdir eq ""} {
+            set initialdir $::_ytk(initialdir)
+        }
         set new [tk_chooseDirectory \
-                -initialdir $::mission::path \
+                -initialdir $initialdir \
                 -mustexist 1 \
                 -title "Choose mission base path"]
         if {$new eq ""} {
@@ -798,7 +801,7 @@ namespace eval ::mission {
         variable detail_value
         set base $::mission::path
         if {$base eq "" || ![file isdirectory $base]} {
-            set base /
+            set base $::_ytk(initialdir)
         }
         set path $base
         set terminal [list $base . /]
@@ -1050,8 +1053,12 @@ namespace eval ::mission {
         if {[dict exists $args -parent]} {
             set parent [dict get $args -parent]
         }
+        set initialdir $::mission::path
+        if {$initialdir eq ""} {
+            set initialdir $::_ytk(initialdir)
+        }
         set fn [tk_getOpenFile \
-                -initialdir $::mission::path \
+                -initialdir $initialdir \
                 -parent $parent \
                 -filetypes {{"JSON files" .json} {"All files" *}} \
                 -title "Select mission configuration to load"]
