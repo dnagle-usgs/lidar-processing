@@ -138,12 +138,6 @@ highelv_thresh=, forcechannel=, skip=, verbose=, msg=) {
       rtrs(i).irange = raster.irange;
     }
 
-    if((i % update_freq) == 0) {
-      if(use_ytk)
-        tkcmd, swrite(format="set progress %d", i*100/count);
-      else if(verbose)
-        write, format="  %d/%d     \r", i, count;
-    }
     if (msg)
       status, progress, i, count;
   }
