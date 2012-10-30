@@ -250,6 +250,10 @@ cache = save();
 
 local status; status = restore(tmp); restore, scratch;
 /* DOCUMENT status
+
+  NOTICE: This is currently all set to do no-op operations to help us determine
+  whether it's causing ALPS to hang.
+
   The status object is used to send status and progress information to the
   l1pro GUI status area. This is primarily used to give progress information
   during long-running processes.
@@ -284,3 +288,11 @@ local status; status = restore(tmp); restore, scratch;
     be set to "Ready.", the time remaining will be cleared, and the progress
     bar will be emptied.
 */
+
+// Make everything a no-op to help us troubleshoot.
+scratch = save(scratch, nothing);
+func nothing(a, b, count=, interval=, msg=) {
+  return;
+}
+save, status, start=nothing, progress=nothing, finished=nothing;
+restore, scratch;
