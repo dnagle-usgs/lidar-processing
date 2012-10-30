@@ -81,6 +81,8 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
     return merge_pointers(parts);
   }
   extern rtrs;
+  if(verbose)
+    write, "\n Retrieving irange values...";
   rtrs = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo, forcechannel=forcechannel, msg=msg);
   if (msg)
     status, start, msg=msg;
@@ -89,7 +91,7 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
   atime = rtrs.soe - soe_day_start;
 
   if(verbose)
-    write, "\n Projecting trajectory to UTM...";
+    write, "Projecting trajectory to UTM...";
   local gps_north, gps_east;
   if(has_member(ops_conf, "use_ins_for_gps") && ops_conf.use_ins_for_gps) {
     use_ins_for_gps = 1;
