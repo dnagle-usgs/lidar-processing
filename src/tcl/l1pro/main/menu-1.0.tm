@@ -191,6 +191,12 @@ proc menu_window mb {
     $mb add separator
     $mb add cascade {*}[menulabel "&Cascade arrange..."] \
             -menu [menu_window_cascade $mb.cascade]
+    $mb add cascade {*}[menulabel "Raise &window..."] \
+            -menu [menu $mb.raisewin -postcommand \
+                [list ::l1pro::main::menu::menu_window_raise $mb.raisewin win]]
+    $mb add cascade {*}[menulabel "Raise &GUI..."] \
+            -menu [menu $mb.raisegui -postcommand \
+                [list ::l1pro::main::menu::menu_window_raise $mb.raisegui gui]]
     return $mb
 }
 
@@ -243,6 +249,32 @@ proc menu_window_cascade mb {
             -command [list ::misc::cascade_windows_auto \
                 -filterfor {x {![string match .yorwin* $x]}}]
     return $mb
+}
+
+proc menu_window_raise {mb which} {
+    $mb delete 0 end
+    set tops [wm stackorder .]
+    if {$which eq "win"} {
+        set tops [::struct::list filterfor x $tops {[string match .yorwin* $x]}]
+    } else {
+        set tops [::struct::list filterfor x $tops {![string match .yorwin* $x]}]
+        # Hack to exclude the parent menu entry
+        set tops [::struct::list filterfor x $tops \
+                {[wm title $x] ne "#l1wid#mb#window"}]
+    }
+    if {![llength $tops]} {
+        $mb add command -label "No windows currently open"
+    }
+    if {$which eq "win"} {
+        set tops [lsort -dictionary $tops]
+    } else {
+        set compare {{a b} {string compare [wm title $a] [wm title $b]}}
+        set tops [lsort -dictionary -command [list apply $compare] $tops]
+    }
+    foreach top $tops {
+        $mb add command -label [wm title $top] -command \
+                [list ::misc::raise_win $top]
+    }
 }
 
 proc menu_utilities mb {
