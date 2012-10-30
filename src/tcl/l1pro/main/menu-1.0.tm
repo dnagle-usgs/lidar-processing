@@ -197,6 +197,8 @@ proc menu_window mb {
     $mb add cascade {*}[menulabel "Raise &GUI..."] \
             -menu [menu $mb.raisegui -postcommand \
                 [list ::l1pro::main::menu::menu_window_raise $mb.raisegui gui]]
+    $mb add command {*}[menulabel "Close all Yorick windows"] \
+            -command ::l1pro::main::menu::killall_yorick_wins
     return $mb
 }
 
@@ -429,6 +431,19 @@ proc set_yorick_style s {
 
 proc set_yorick_gridxy {x y} {
     exp_send "gridxy, $x, $y;\r"
+}
+
+proc killall_yorick_wins {} {
+    set response [tk_messageBox \
+            -parent .l1wid \
+            -icon warning \
+            -type yesno \
+            -title "Close all Yorick windows" \
+            -message "Are you sure you want to close all of your open Yorick\
+                windows?"]
+    if {$response eq "yes"} {
+        exp_send "for(i = 0; i <= 63; i++) winkill, i;\r"
+    }
 }
 
 } ;# closes namespace eval ::l1pro::main::menu
