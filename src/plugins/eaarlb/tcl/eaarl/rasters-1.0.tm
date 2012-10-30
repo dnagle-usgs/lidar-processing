@@ -44,7 +44,7 @@ snit::type ::eaarl::rasters::rastplot::gui {
     variable units meters
     variable bathchan 0
     variable winrx 9
-    variable winbath 4
+    variable winbath 8
     variable wintx 16
     variable pulse 60
 
