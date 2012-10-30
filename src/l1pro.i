@@ -34,3 +34,11 @@ func __ytk_l1pro_vars_externquery(____tclcmd____) {
 
   tkcmd, swrite(format="%s {%s}", ____tclcmd____, data);
 }
+
+func maingui(void) {
+/* DOCUMENT maingui
+  Forces the main "ALPS - Point Cloud Plotting" GUI to appear on top of
+  everything else.
+*/
+  tkcmd, "wm withdraw .l1wid; wm deiconify .l1wid";
+}
