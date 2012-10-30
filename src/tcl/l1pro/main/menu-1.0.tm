@@ -27,8 +27,8 @@ proc build mb {
             -menu [menu_file $mb.file]
     $mb add cascade {*}[menulabel &Mission] \
             -menu [menu_mission $mb.mission]
-    $mb add cascade {*}[menulabel &Graph] \
-            -menu [menu_graph $mb.graph]
+    $mb add cascade {*}[menulabel &Window] \
+            -menu [menu_window $mb.window]
     $mb add cascade {*}[menulabel &Utilities] \
             -menu [menu_utilities $mb.util]
     $mb add cascade {*}[menulabel &Help] \
@@ -163,7 +163,7 @@ proc menu_mission_eaarlb mb {
     return $mb
 }
 
-proc menu_graph mb {
+proc menu_window mb {
     menu $mb
     $mb add command {*}[menulabel "&Limits Tool"] \
             -command ::l1pro::tools::copy_limits::gui
@@ -183,15 +183,15 @@ proc menu_graph mb {
                     dpi=100;\r"}
     $mb add separator
     $mb add cascade {*}[menulabel Palette...] \
-            -menu [menu_graph_palette $mb.pal]
+            -menu [menu_window_palette $mb.pal]
     $mb add cascade {*}[menulabel Style...] \
-            -menu [menu_graph_style $mb.sty]
+            -menu [menu_window_style $mb.sty]
     $mb add cascade {*}[menulabel "&Grid lines..."] \
-            -menu [menu_graph_grid $mb.grid]
+            -menu [menu_window_grid $mb.grid]
     return $mb
 }
 
-proc menu_graph_palette mb {
+proc menu_window_palette mb {
     menu $mb
     foreach p [list earth altearth stern rainbow yarg heat gray] {
         $mb add command -label $p -underline 0 \
@@ -200,7 +200,7 @@ proc menu_graph_palette mb {
     return $mb
 }
 
-proc menu_graph_style mb {
+proc menu_window_style mb {
     menu $mb
     $mb add radiobutton {*}[menulabel "&75 DPI"] -value 75 \
             -variable [namespace which -variable v::yorick_style_dpi]
@@ -214,7 +214,7 @@ proc menu_graph_style mb {
     return $mb
 }
 
-proc menu_graph_grid mb {
+proc menu_window_grid mb {
     menu $mb
     set cmd [list list [namespace code set_yorick_gridxy]]
     $mb add command {*}[menulabel "None"] -command [{*}$cmd 0 0]
