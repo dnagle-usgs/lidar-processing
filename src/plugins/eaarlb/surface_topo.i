@@ -89,29 +89,43 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
   atime = rtrs.soe - soe_day_start;
 
   if(verbose)
-    write, format="%s", "\n Interpolating: roll...";
-  roll = interp(tans.roll, tans.somd, atime);
+    write, "\n Projecting trajectory to UTM...";
+  local gps_north, gps_east;
+  if(has_member(ops_conf, "use_ins_for_gps") && ops_conf.use_ins_for_gps) {
+    use_ins_for_gps = 1;
+  } else {
+    use_ins_for_gps = 0;
+  }
+
+  // Store tans in ins, reduced down to just the range we need
+  bounds = digitize([atime(*)(min), atime(*)(max)], tans.somd);
+  bound1 = max(bounds(1) - 1, 1);
+  bound0 = bounds(0);
+  ins = tans(bound1:bound0);
+  bound0 = bound1 = bounds = [];
+
+  if(use_ins_for_gps) {
+    gps = ins;
+    gps_sod = gps.somd;
+    gps_alt = gps.alt;
+  } else {
+    gps = pnav;
+    gps_sod = gps.sod;
+    gps_alt = gps.alt;
+  }
+  ll2utm, gps.lat, gps.lon, gps_north, gps_east;
+
+  if(verbose)
+    write, format="%s", " Interpolating: roll...";
+  roll = interp(ins.roll, ins.somd, atime);
 
   if(verbose)
     write, format="%s", " pitch...";
-  pitch = interp(tans.pitch, tans.somd, atime);
+  pitch = interp(ins.pitch, ins.somd, atime);
 
   if(verbose)
     write, format="%s", " heading...";
-  heading = interp_angles(tans.heading, tans.somd, atime);
-
-  local gps_north, gps_east;
-  if(has_member(ops_conf, "use_ins_for_gps") && ops_conf.use_ins_for_gps) {
-    gps = tans;
-    ll2utm, tans.lat, tans.lon, gps_north, gps_east;
-    gps_sod = tans.somd;
-    gps_alt = tans.alt;
-  } else {
-    gps = pnav;
-    ll2utm, pnav.lat, pnav.lon, gps_north, gps_east;
-    gps_sod = pnav.sod;
-    gps_alt = pnav.alt;
-  }
+  heading = interp_angles(ins.heading, ins.somd, atime);
 
   if(verbose)
     write, format="%s", " altitude...";
