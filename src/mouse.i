@@ -178,8 +178,8 @@ func mdist(&click, units=, win=, plot=, verbose=, nox=, noy=) {
 
   Options:
     units= Specifies the units used in the input window.
-        units="ll"  Geographic coordinates in degrees (default)
-        units="m"   Meters
+        units="ll"  Geographic coordinates in degrees
+        units="m"   Meters (default)
         units="cm"  Centimeters
         units="mm"  Millimeters
     win= Specifies a window. If omitted, the current window is used.
