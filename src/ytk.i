@@ -146,7 +146,7 @@ func tkcmd(s, async=) {
     tkcmd, "after 1000", async=0
 */
   extern ytkfifo, _pid, Y_USER;
-  write, ytkfifo, s;
+  write, ytkfifo, format="%s\n", s;
   if(ytkfifo)
     fflush, ytkfifo;
   if(!is_void(async) && !async) {

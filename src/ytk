@@ -183,11 +183,12 @@ proc ybkg args {
 #  Also, do not send any input that includes newlines. It just doesn't work
 #  yet.
 ##
-   set cmd [eval concat $args]
-   set ::__ybkg__wait 1
-   set cmd [base64::encode -wrapchar "" $cmd]
-   puts $::tky_fifo "bkg $cmd"
-   while {$::__ybkg__wait} {sleep 1}
+    set cmd [eval concat $args]
+    set ::__ybkg__wait 1
+    fifo_log yor $cmd
+    set cmd [base64::encode -wrapchar "" $cmd]
+    puts $::tky_fifo "bkg $cmd"
+    while {$::__ybkg__wait} {sleep 1}
 }
 
 proc yget yvar {
@@ -540,13 +541,10 @@ proc establish_fifos {} {
 #     tky_fifo_name: The filename of the Tcl->Yorick fifo.
 #     ytk_fifo: The filehandle for the Yorick->Tcl fifo.
 #     tky_fifo: The filehandle for the Tcl->Yorick fifo.
-#     tkcmd_line: Set to 0.
 #  Also configures ytk_fifo to call ytk_fifo_fileevent for the readable
 #  fileevent.
 ##
-   global ytk_fifo_name tky_fifo_name tkcmd_line ytk_fifo tky_fifo
-
-   set tkcmd_line 0
+   global ytk_fifo_name tky_fifo_name ytk_fifo tky_fifo
 
    set fifos [::yorick::create_fifos]
    lassign $fifos ytk_fifo ytk_fifo_name tky_fifo tky_fifo_name
@@ -573,24 +571,45 @@ proc ytk_fifo_fileevent {} {
 #
 #  If there isn't a complete line available on the fifo, this does nothing.
 ##
-   global tkcmd_line ytk_fifo
+    global ytk_fifo
 
-   set ycmdstr [gets $ytk_fifo]
+    set ycmdstr [gets $ytk_fifo]
 
-   # If a full line isn't available, gets will return ""
-   if {[string length $ycmdstr]} {
-      incr tkcmd_line
-      tx_doc "$tkcmd_line:$ycmdstr\n"
+    # If a full line isn't available, gets will return ""
+    if {[string length $ycmdstr]} {
 
-      if { [catch { uplevel #0 $ycmdstr } errcode] } {
-         send_user "*** Ytk Error in:$ycmdstr\n"
-         tx_doc "**ERROR:  $errcode\n"
-      }
+        if { [catch { uplevel #0 $ycmdstr } errcode] } {
+            fifo_log tcl $ycmdstr $errcode
+            send_user "*** Ytk Error in:$ycmdstr\n"
+        } else {
+            fifo_log tcl $ycmdstr
+        }
 
-      # Disabling this update for now, as it shouldn't be necessary and because
-      # update is often a source of bugs.
-      update idletasks
-   }
+        update idletasks
+    }
+}
+
+proc fifo_log {src msg {err NULL}} {
+    global fifo_log_counter
+    set text .tx.doc
+    if {[winfo exists $text]} {
+        incr fifo_log_counter($src)
+        set now [clock seconds]
+        $text ins end "[clock format $now -format %Y-%m-%d] " [list $src date]
+        $text ins end "[clock format $now -format %T] " [list $src time]
+        $text ins end "\[$src\] " [list $src src]
+        $text ins end [format "%5d: " $fifo_log_counter($src)] [list $src counter]
+        $text ins end "$msg\n" $src
+
+        if {$err ne "NULL"} {
+            $text ins end "  ERROR: $err\n" [list $src err]
+        }
+
+        $text yview moveto 1.0
+        if {[$text index end] > 1100} {
+            $text del 1.0 "end - 1001 lines"
+        }
+    }
 }
 
 proc tx_doc {message} {
@@ -837,18 +856,94 @@ proc launch_gui {} {
 # Returns:
 #  Nothing
 ##
-   global Y_SITE _ytk yorick_version tk_patchLevel
+    global Y_SITE _ytk yorick_version tk_patchLevel
 
-   toplevel .tx
-   wm withdraw .tx
-   wm title .tx "tkcmd history"
-   wm protocol .tx WM_DELETE_WINDOW [list wm withdraw .tx]
-   scrollbar .tx.sb -command [list .tx.doc yview]
-   ::mixin::text::readonly .tx.doc -width 80 -height 10 \
-      -yscrollcommand [list .tx.sb set]
-   grid .tx.doc .tx.sb -sticky news
-   grid columnconfigure .tx 0 -weight 1
-   grid rowconfigure .tx 0 -weight 1
+    toplevel .tx
+    wm withdraw .tx
+    wm title .tx "Background Command History"
+    wm protocol .tx WM_DELETE_WINDOW [list wm withdraw .tx]
+
+    ttk::scrollbar .tx.sb -command [list .tx.doc yview] -orient vertical
+    ::mixin::text::readonly .tx.doc -width 100 -height 40 \
+            -yscrollcommand [list .tx.sb set] \
+            -wrap word
+
+    set f [ttk::frame .tx.f]
+    ttk::label $f.display -text "Display:"
+    ::mixin::combobox $f.src -text "Tcl + Yor" -width 9 \
+            -state readonly \
+            -values [list "Tcl + Yor" Tcl Yor] \
+            -modifycmd {
+                switch -- [%W getvalue] {
+                    0 {
+                        .tx.doc tag configure yor -elide {}
+                        .tx.doc tag configure tcl -elide {}
+                        .tx.doc tag configure src -elide {}
+                    }
+                    1 {
+                        .tx.doc tag configure yor -elide 1
+                        .tx.doc tag configure tcl -elide {}
+                        .tx.doc tag configure src -elide 1
+                    }
+                    2 {
+                        .tx.doc tag configure yor -elide {}
+                        .tx.doc tag configure tcl -elide 1
+                        .tx.doc tag configure src -elide 1
+                    }
+                }
+            }
+
+    ttk::label $f.wraplbl -text "Wrap:"
+    ::mixin::combobox $f.wrap -text "word" -width 5 \
+            -state readonly \
+            -values [list none char word] \
+            -modifycmd {
+                switch -- [%W getvalue] {
+                    0 {.tx.doc configure -wrap none}
+                    1 {.tx.doc configure -wrap char}
+                    2 {.tx.doc configure -wrap word}
+                }
+            }
+
+    set ::fifo_log_conf(date) {}
+    set ::fifo_log_conf(time) {}
+    set ::fifo_log_conf(counter) {}
+
+    ttk::checkbutton $f.date -text "Date" \
+            -variable ::fifo_log_conf(date) \
+            -onvalue {} -offvalue 1 \
+            -command {
+                .tx.doc tag configure date -elide $::fifo_log_conf(date)
+            }
+
+    ttk::checkbutton $f.time -text "Time" \
+            -variable ::fifo_log_conf(time) \
+            -onvalue {} -offvalue 1 \
+            -command {
+                .tx.doc tag configure time -elide $::fifo_log_conf(time)
+            }
+
+    ttk::checkbutton $f.counter -text "Sequence" \
+            -variable ::fifo_log_conf(counter) \
+            -onvalue {} -offvalue 1 \
+            -command {
+                .tx.doc tag configure counter -elide $::fifo_log_conf(counter)
+            }
+    pack $f.display $f.src $f.date $f.time $f.counter \
+            -in $f -side left -padx 2 -pady 2
+    pack $f.wrap $f.wraplbl \
+            -in $f -side right -padx 2 -pady 2
+
+    grid .tx.doc .tx.sb -sticky news
+    grid .tx.f - -sticky ew
+    grid columnconfigure .tx 0 -weight 1
+    grid rowconfigure .tx 0 -weight 1
+
+    .tx.doc tag configure yor -foreground "#00008B" \
+            -lmargin2 40
+    .tx.doc tag configure tcl -foreground "#006400" \
+            -lmargin2 40
+    .tx.doc tag configure err -background "#FF0"
 }
 
 proc init_hgid {} {

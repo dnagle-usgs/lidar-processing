@@ -393,7 +393,7 @@ proc menu_ytk mb {
     $mb add separator
     $mb add command {*}[menulabel &Tkcon] \
             -command [list tkcon show]
-    $mb add command {*}[menulabel Tk&cmd] \
+    $mb add command {*}[menulabel "&Background Command History"] \
             -command [list wm deiconify .tx]
     $mb add separator
     $mb add checkbutton {*}[menulabel "&Help goes in new window"] \
