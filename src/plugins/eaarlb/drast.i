@@ -24,9 +24,9 @@ func apply_depth_scale(scale, units=, autoshift=) {
   default, units, _depth_display_units;
   default, autoshift, 1;
   // If the units are "ns", no action is necessary and is thus omitted here
-  if (_depth_display_units == "meters") {
+  if (units == "meters") {
     scale = (scale + (autoshift ? 5 : 0)) * CNSH2O2X;
-  } else if (_depth_display_units == "feet") {
+  } else if (units == "feet") {
     scale = (scale + (autoshift ? 5 : 0)) * CNSH2O2XF;
   }
   return scale;
@@ -136,8 +136,8 @@ tx=, autolims=, showcbar=, sfsync=, pulse=) {
         channel=1         Default
         channel=0         Display the transmit raster
     units= Units to use for the y axis.
-        units="meters"    Default
-        units="ns"
+        units="meters"
+        units="ns"        Default
         units="feet"
     win= Window to plot in. (Defaults to current window.)
     cmin= Constrain colobar to the given minimum value.
