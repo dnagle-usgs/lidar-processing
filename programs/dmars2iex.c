@@ -307,7 +307,8 @@ dmars_rec( FILE *f, FILE *odf, int pass) {
      if ( osow > iex.sow )
        printf("TIME REVERSAL: %f : %f\n", iex.sow, osow);
      else {
-       osow = iex.sow;
+       if ( iex.sow - osow < 5 )
+         osow = iex.sow;
 
 if ( cnt++ == 0 )
  fprintf(stderr,"\nFirst dmars sow: %8.3f\n", iex.sow);
