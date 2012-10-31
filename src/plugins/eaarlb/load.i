@@ -16,6 +16,7 @@ include, base + "eaarla_wf.i";
 include, base + "eaarlb_json_log.i";
 include, base + "edb_access.i";
 include, base + "geo_bath.i";
+include, base + "irg.i";
 include, base + "mission.i";
 include, base + "mission_constants.i";
 include, base + "mosaic_biases.i";

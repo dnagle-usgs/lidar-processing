@@ -87,7 +87,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "groundtruth.i";
   require, "histogram.i";
   require, "ircf.i";
-  require, "irg.i";
   require, "jpeg_support.i";
   require, "json_decode.i";
   require, "json_encode.i";
