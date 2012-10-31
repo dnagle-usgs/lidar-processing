@@ -419,10 +419,12 @@ func draw_grid(w) {
   plgrid, indgen(y0:y1:2000), indgen(x0:x1:2000), color=[250,140,140],
     width=width;
 
-  // Only show 1km tiles if range is >= 8km
+  // Only show 10km tiles if range is >= 8km
   if(y1 - y0 >= 8000) {
-    plgrid, indgen(y0:y1:10000), indgen(x0:x1:10000), color=[170,120,170],
-      width=7;
+    // Adding 9999 combined with the :10000 step makes sure we round up to the
+    // next full 10km grid cell when we are in 2km mode.
+    plgrid, indgen(y0:y1+9999:10000), indgen(x0:x1+9999:10000),
+      color=[170,120,170], width=7;
   }
 
   window_select, old_w;
