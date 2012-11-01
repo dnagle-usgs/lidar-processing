@@ -16,6 +16,8 @@ namespace eval ::yorick {
     }
 
     variable fifo_counter -1
+    variable startdate [clock format [clock seconds] -format %y%m%d]
+    variable tmpdir [file join [::fileutil::tempdir] ytk]
 
     exp_exit -onexit ::yorick::destroy_fifos_all
 }
@@ -29,17 +31,18 @@ proc ::yorick::sanitize_vname var {
 
 proc ::yorick::create_fifos {} {
     variable fifo_counter
+    variable tmpdir
+    variable startdate
     set mkfifo [auto_execok mkfifo]
     if {$mkfifo eq ""} {
         error "mkfifo unavailable"
     }
 
-    set tmp [::fileutil::tempdir]
-    set fifo_id [clock format [clock seconds] \
-            -format %y%m%d].[pid].[incr fifo_counter]
+    file mkdir $tmpdir
+    set fifo_id $startdate.[pid].[incr fifo_counter]
 
-    set yor_tcl_fn [file join $tmp ytk.$fifo_id.tcl]
-    set tcl_yor_fn [file join $tmp ytk.$fifo_id.yor]
+    set yor_tcl_fn [file join $tmpdir $fifo_id.tcl]
+    set tcl_yor_fn [file join $tmpdir $fifo_id.yor]
 
     if {[file exists $yor_tcl_fn] || [file exists $tcl_yor_fn]} {
         error "named pipe exists prior to creation"
@@ -58,27 +61,32 @@ proc ::yorick::create_fifos {} {
 
 proc ::yorick::destroy_fifos_all {} {
     variable fifo_counter
+    variable tmpdir
+    variable startdate
     while {$fifo_counter >= 0} {
-        set tmp [::fileutil::tempdir]
+        set fifo_id $startdate.[pid].$fifo_counter
         set fifo_id [pid].$fifo_counter
 
-        set yor_tcl_fn [file join $tmp ytk.$fifo_id.to_tcl]
-        set tcl_yor_fn [file join $tmp ytk.$fifo_id.to_yor]
+        set yor_tcl_fn [file join $tmpdir $fifo_id.tcl]
+        set tcl_yor_fn [file join $tmpdir $fifo_id.yor]
 
         catch [list file delete $yor_tcl_fn]
         catch [list file delete $tcl_yor_fn]
 
         incr fifo_counter -1
     }
+    catch [list file delete $tmpdir]
 }
 
 proc ::yorick::destroy_fifos {args} {
+    variable tmpdir
     if {[llength $args] % 2} {
         error "Must provide fifos as pairs of FIFO FN"
     }
     foreach {fifo fn} $args {
         catch [list close $fifo]
         catch [list file delete $fn]
+        catch [list file delete $tmpdir]
     }
 }
 
