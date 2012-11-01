@@ -35,10 +35,11 @@ proc ::yorick::create_fifos {} {
     }
 
     set tmp [::fileutil::tempdir]
-    set fifo_id [pid].[incr fifo_counter]
+    set fifo_id [clock format [clock seconds] \
+            -format %y%m%d].[pid].[incr fifo_counter]
 
-    set yor_tcl_fn [file join $tmp ytk.$fifo_id.to_tcl]
-    set tcl_yor_fn [file join $tmp ytk.$fifo_id.to_yor]
+    set yor_tcl_fn [file join $tmp ytk.$fifo_id.tcl]
+    set tcl_yor_fn [file join $tmp ytk.$fifo_id.yor]
 
     if {[file exists $yor_tcl_fn] || [file exists $tcl_yor_fn]} {
         error "named pipe exists prior to creation"
