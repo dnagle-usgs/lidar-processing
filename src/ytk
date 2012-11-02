@@ -667,7 +667,7 @@ proc source_ytk_file {filename} {
 #  None
 #
 # Returns:
-#  1 if the file is one of .i, .ytk, .tk, or .tcl; 0 otherwise.
+#  Nothing
 #
 # Side effects:
 #  The file is sourced (in either Yorick or Tcl), which could have any effect
@@ -676,6 +676,8 @@ proc source_ytk_file {filename} {
 #  If the file is a .i file, then global ycode_dir is set to its containing
 #  directory and both Tcl and Yorick have their working directory updated to
 #  match it.
+#
+#  If the file is not a Yorck or Tcl file, an error will result.
 ##
    global ycode_dir
    switch [file extension $filename] {
@@ -683,7 +685,6 @@ proc source_ytk_file {filename} {
       ".tk"  -
       ".ytk" {
          uplevel #0 [list source $filename]
-         return 1
       }
       ".i" {
          set ycode_dir [file dirname $filename]
@@ -691,10 +692,9 @@ proc source_ytk_file {filename} {
          ybkg cd \"$ycode_dir\"
          exp_send "#include \"$filename\"\r"
          expect "> "
-         return 1
       }
       default {
-         return 0
+         error "don't know how to handle file"
       }
    }
 }
@@ -777,38 +777,6 @@ proc start_yorick {}  {
             }
          }
       }
-   }
-}
-
-proc load_and_run {fn} {
-##
-# load_and_run fn
-#  Attempts to load and run the given file $fn. If it fails, the program aborts
-#  after notifying the user.
-#
-#  This is only used when starting Ytk with a command-line file argument.
-#
-# Arguments:
-#  fn: A string indicating the path/filename to try to load.
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  If it fails, the program terminates.
-#
-#  If it succeeds, almost any side effect could happen since it is sourcing
-#  external code. See source_ytk_file for more info on side effects.
-##
-   if { ![file exists $fn] } {
-      tk_messageBox -icon error -message "$fn not found" -type ok
-      ytk_exit 1
-   }
-
-   if {![source_ytk_file $fn]} {
-      # Wrong kind of file
-      tk_messageBox -icon error -message "Don't know how to handle $fn" -type ok
-      ytk_exit 1
    }
 }
 
@@ -972,7 +940,7 @@ ybkg funcset src_path \"$src_path\"
 
 if { $load_on_start != "" } {
    foreach file_to_load $load_on_start {
-      load_and_run $file_to_load
+      source_ytk_file $file_to_load
    }
 }
 
