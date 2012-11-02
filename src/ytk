@@ -555,6 +555,24 @@ proc ytk_fifo_fileevent {} {
 }
 
 proc fifo_log {src msg {err NULL}} {
+##
+# fifo_log
+#   Processes a log message from one of the FIFOs.
+#
+# Arguments:
+#   src: One of either 'tcl' or 'yor' indicating which pipe the message is
+#       from.
+#   msg: The message to log.
+#   err: Optional. If present, this is an error that resulted from the invoked
+#       command.
+#
+# Returns:
+#   Nothing
+#
+# Side effects:
+#   The message is appended to the contents of text widget in the .tx toplevel
+#   window.
+##
     global fifo_log_counter
     set text .tx.doc
     if {[winfo exists $text]} {
