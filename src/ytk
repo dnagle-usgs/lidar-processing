@@ -51,7 +51,6 @@ set env(PATH) $bindir$pathsep$env(PATH)
 
 package require Tk
 package require style
-package require tile
 package require BWidget
 package require Expect
 package require Iwidgets
