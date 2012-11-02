@@ -647,24 +647,20 @@ proc start_yorick {}  {
 ##
    global _ytk interact_out str Y_SITE
    upvar spawn_id spawn_id
+   set hwin 0
    expect ">"
    interact {
       -o
-      -nobuffer
       -re "/\\* DOCUMENT.*\n" {
-         regsub -all "\r" $interact_out(0,string) "" str
          if { $_ytk(separate_help_win) eq "Yes" } {
+            regsub -all "\r" $interact_out(0,string) "" str
             interact {
                -o
                -re ".*\\*/" {
                   regsub -all "\r" $interact_out(0,string) "" str2
                   set str "$str$str2"
 
-                  set hwin 0
-                  while {[winfo exists [set top .docwin$hwin]]} {
-                    incr hwin
-                  }
-
+                  set top .docwin[incr hwin]
                   toplevel $top -class DOCUMENT
                   set wintitle [lindex [split $str "\n"] 0]
                   set wintitle [regsub -nocase {^ */\* *DOCU} $wintitle DOCU]
@@ -680,6 +676,8 @@ proc start_yorick {}  {
                }
                timeout 1 return
             }
+         } else {
+            puts -nonewline $interact_out(0,string)
          }
       }
    }
