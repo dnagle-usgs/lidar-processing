@@ -514,18 +514,25 @@ proc spawn_yorick {} {
 #  If successful, then expect does whatever it does when spawn works (including
 #  setting various expect-related variables), in the global scope.
 ##
-   global _ytk ytk_fifo_name tky_fifo_name
-   set rlterm [expr {$_ytk(use_rlterm) eq "Yes"}]
-   set rlwrap [expr {$_ytk(use_rlwrap) eq "Yes"}]
-   set result [::yorick::spawn $ytk_fifo_name $tky_fifo_name -rlwrap $rlwrap \
-      -rlterm $rlterm]
-   if {$result ne ""} {
-      set ::spawn_id [lindex $result 0]
-      array set ::spawn_out [lindex $result 1]
-      return 0
-   } else {
-      return 1
-   }
+    global _ytk ytk_fifo_name tky_fifo_name
+
+    set rlterm [expr {$_ytk(use_rlterm) eq "Yes"}]
+    set rlwrap [expr {$_ytk(use_rlwrap) eq "Yes"}]
+    set result [::yorick::spawn $ytk_fifo_name $tky_fifo_name \
+            -rlwrap $rlwrap -rlterm $rlterm]
+
+    if {$result ne ""} {
+        # Make this expect session the default
+        set ::spawn_id [lindex $result 0]
+        array set ::spawn_out [lindex $result 1]
+
+        # Configure with 32 KB buffer
+        match_max -i $::spawn_id 32768
+
+        return 0
+    } else {
+        return 1
+    }
 }
 
 proc ytk_exit {code} {
@@ -638,10 +645,9 @@ proc start_yorick {}  {
 #  In order to avoid hanging, this will only catch DOCUMENT statements that are
 #  received within an interval of a single second.
 ##
-   global _ytk interact_out indoc hwin str Y_SITE
+   global _ytk interact_out str Y_SITE
    upvar spawn_id spawn_id
    expect ">"
-   set n 0
    interact {
       -o
       -nobuffer
@@ -653,19 +659,23 @@ proc start_yorick {}  {
                -re ".*\\*/" {
                   regsub -all "\r" $interact_out(0,string) "" str2
                   set str "$str$str2"
-                  incr hwin
+
+                  set hwin 0
+                  while {[winfo exists [set top .docwin$hwin]]} {
+                    incr hwin
+                  }
+
+                  toplevel $top -class DOCUMENT
                   set wintitle [lindex [split $str "\n"] 0]
                   set wintitle [regsub -nocase {^ */\* *DOCU} $wintitle DOCU]
-                  toplevel .docwin$hwin -class DOCUMENT
-                  set cmd "scrollbar .docwin$hwin.sb -command {.docwin$hwin.doc yview }"
-                  eval $cmd
+                  wm title $top $wintitle
 
-                  ::mixin::text::readonly .docwin$hwin.doc -height 25 \
-                     -yscrollcommand [list .docwin$hwin.sb set]
-                  .docwin$hwin.doc ins end $str
-                  pack .docwin$hwin.doc -side left -fill both -expand 1
-                  pack .docwin$hwin.sb -side left -fill y -expand 0
-                  wm title .docwin$hwin $wintitle
+                  ttk::scrollbar $top.sb -command [list $top.doc yview]
+                  ::mixin::text::readonly $top.doc -height 25 \
+                     -yscrollcommand [list $top.sb set]
+                  $top.doc ins end $str
+                  pack $top.doc -side left -fill both -expand 1
+                  pack $top.sb -side left -fill y -expand 0
                   return
                }
                timeout 1 return
@@ -809,17 +819,13 @@ if {[auto_execok yorick] eq ""} {
 establish_fifos
 
 puts " Tcl [info patchlevel], Tk $tk_patchLevel, Expect [exp_version] ready."
-if { [spawn_yorick] } {
+if {[spawn_yorick]} {
    puts "Encountered problem starting yorick... please restart with a different yorick"
    ytk_exit 3
 }
 
 expect "Yorick * ready"
 set yorick_version [lindex [split $expect_out(0,string)] 1]
-
-set indoc 0
-set hwin 0
-match_max -i $spawn_id 32768
 
 wm withdraw .
 wm protocol . WM_DELETE_WINDOW [list wm withdraw .]
@@ -833,10 +839,8 @@ ybkg funcset _hgid \"$HGID\"
 set src_path [file dirname [file normalize [info script]]]
 ybkg funcset src_path \"$src_path\"
 
-if { $load_on_start != "" } {
-   foreach file_to_load $load_on_start {
-      source_ytk_file $file_to_load
-   }
+foreach file_to_load $load_on_start {
+    source_ytk_file $file_to_load
 }
 
 start_yorick
