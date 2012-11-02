@@ -529,21 +529,6 @@ filetype, filetypes) {
   return cmdargs;
 }
 
-func tk_messageBox(message, type, title=) {
-/* DOCUMENT tk_messageBox(message, type, title=)
-  tk_messageBox pops up a message box. The Tcl/Tk side is implemented in
-  y_messageBox. Returns the value of tk_messageBox.
-*/
-  extern _ytk;
-  if(is_void(_ytk)) {
-    ytk_not_present;
-    return;
-  }
-  if(is_void(title)) title = "";
-  tkcmd, swrite(format="y_messageBox {%s} {%s} {%s}", message, type, title);
-  return rdline(prompt="");
-}
-
 func source(fn) {
 /* DOCUMENT source, fn;
   Tells Tcl to source the given file.

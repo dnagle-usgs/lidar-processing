@@ -76,13 +76,6 @@ set Y_SITE ""
 #                                  Procedures                                  #
 ################################################################################
 
-proc string_to_hex input {
-# Converts input, which can be any arbitrar string of data, into hexadecimal
-# format. This is a simple form of ASCII-armoring and is used by ybkg to
-# protect newlines and other potentially troublesome characters.
-   join [::struct::list mapfor c [split $input {}] {format %02x [scan $c %c]}] ""
-}
-
 # From http://wiki.tcl.tk/727
 proc intgen {{seed 0}} {
    set self [lindex [info level 0] 0]
@@ -284,81 +277,6 @@ proc tky_set {varName val} {
       # special handling we cannot provide so we pass it through
       set var $val
    }
-}
-
-proc y_messageBox {message type title} {
-##
-# y_messageBox message type title
-#  Displays a messagebox, waits for the user to click a button, then returns
-#  their response to Yorick. This is used by tk_messageBox in Yorick.
-#
-#  The primary reason for using this over the native tk_messageBox is to ensure
-#  that the dialog is visible to the user. The normal tk_messageBox does not
-#  raise above other windows, which means it's often not seen right away.
-#
-# Arguments:
-#  message - A string to show in the box.
-#  type - The type of message box, identical to tk_messageBox -type options.
-#  title - The title for the message box window.
-##
-   set dlg [iwidgets::messagedialog .#auto -title $title \
-      -modality application -text $message]
-
-   switch -- $type {
-      abortretryignore {
-         $dlg buttonconfigure 0 \
-            -text "Abort" -command [list $dlg deactivate abort]
-         $dlg buttonconfigure 1 \
-            -text "Retry" -command [list $dlg deactivate retry]
-         $dlg buttonconfigure 2 \
-            -text "Ignore" -command [list $dlg deactivate ignore]
-         $dlg hide 3
-      }
-      ok {
-         $dlg buttonconfigure 0 \
-            -text "OK" -command [list $dlg deactivate ok]
-         $dlg hide 1
-         $dlg hide 2
-         $dlg hide 3
-      }
-      okcancel {
-         $dlg buttonconfigure 0 \
-            -text "OK" -command [list $dlg deactivate ok]
-         $dlg buttonconfigure 1 \
-            -text "Cancel" -command [list $dlg deactivate cancel]
-         $dlg hide 2
-         $dlg hide 3
-      }
-      retrycancel {
-         $dlg buttonconfigure 0 \
-            -text "Retry" -command [list $dlg deactivate retry]
-         $dlg buttonconfigure 1 \
-            -text "Cancel" -command [list $dlg deactivate cancel]
-         $dlg hide 2
-         $dlg hide 3
-      }
-      yesno {
-         $dlg buttonconfigure 0 \
-            -text "Yes" -command [list $dlg deactivate yes]
-         $dlg buttonconfigure 1 \
-            -text "No" -command [list $dlg deactivate no]
-         $dlg hide 2
-         $dlg hide 3
-      }
-      yesnocancel {
-         $dlg buttonconfigure 0 \
-            -text "Yes" -command [list $dlg deactivate yes]
-         $dlg buttonconfigure 1 \
-            -text "No" -command [list $dlg deactivate no]
-         $dlg buttonconfigure 2 \
-            -text "Cancel" -command [list $dlg deactivate cancel]
-         $dlg hide 3
-      }
-   }
-
-   $dlg center
-   after 1 raise $dlg
-   exp_send "[$dlg activate]\r"
 }
 
 proc yorick_executable {} {
@@ -577,29 +495,6 @@ proc fifo_log {src msg {err NULL}} {
             $text del 1.0 "end - 1001 lines"
         }
     }
-}
-
-proc tx_doc {message} {
-##
-# tx_doc message
-#  Updates .tx.doc with the given message. If .tx.doc does not exist, this is a
-#  no-op.
-#
-# Arguments:
-#  A list that comprises valid arguments to .tx.doc.
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  Inserts $message at the end of .tx.doc; scrolls to the bottom; and deletes
-#  all but the last 100 lines.
-##
-   if {[winfo exists .tx.doc]} {
-      .tx.doc ins end $message
-      .tx.doc yview moveto 1.0
-      .tx.doc del 1.0 "end - 101 lines"
-   }
 }
 
 proc spawn_yorick {} {
