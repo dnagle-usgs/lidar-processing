@@ -63,22 +63,6 @@ package require yorick
 
 wm withdraw .
 
-set gui_enabled 1
-if { ![catch {package require cmdline}] } {
-   set ytk_cmdline_options {
-      {gui     "force ytk gui to load"}
-      {nogui   "disable ytk gui"}
-   }
-   set usage ": ytk \[options] \[filename]\n:options:"
-   array set params [::cmdline::getoptions argv $ytk_cmdline_options $usage]
-   if { $params(nogui) } {
-      set gui_enabled 0
-   }
-   if { $params(gui) } {
-      set gui_enabled 1
-   }
-}
-
 set load_on_start ""
 if { $argc != 0 } {
   set load_on_start $argv
@@ -976,9 +960,7 @@ match_max -i $spawn_id 32768
 
 wm withdraw .
 wm protocol . WM_DELETE_WINDOW [list wm withdraw .]
-if {$gui_enabled} {
-   launch_gui
-}
+launch_gui
 
 ybkg funcset initialdir \"$_ytk(initialdir)\"
 ybkg funcset _ytk 1
