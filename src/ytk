@@ -645,42 +645,101 @@ proc start_yorick {}  {
 #  In order to avoid hanging, this will only catch DOCUMENT statements that are
 #  received within an interval of a single second.
 ##
-   global _ytk interact_out str Y_SITE
-   upvar spawn_id spawn_id
-   set hwin 0
-   expect ">"
-   interact {
-      -o
-      -re "/\\* DOCUMENT.*\n" {
-         if { $_ytk(separate_help_win) eq "Yes" } {
-            regsub -all "\r" $interact_out(0,string) "" str
-            interact {
-               -o
-               -re ".*\\*/" {
-                  regsub -all "\r" $interact_out(0,string) "" str2
-                  set str "$str$str2"
-
-                  set top .docwin[incr hwin]
-                  toplevel $top -class DOCUMENT
-                  set wintitle [lindex [split $str "\n"] 0]
-                  set wintitle [regsub -nocase {^ */\* *DOCU} $wintitle DOCU]
-                  wm title $top $wintitle
-
-                  ttk::scrollbar $top.sb -command [list $top.doc yview]
-                  ::mixin::text::readonly $top.doc -height 25 \
-                     -yscrollcommand [list $top.sb set]
-                  $top.doc ins end $str
-                  pack $top.doc -side left -fill both -expand 1
-                  pack $top.sb -side left -fill y -expand 0
-                  return
-               }
-               timeout 1 return
+    global _ytk interact_out str Y_SITE
+    upvar spawn_id spawn_id
+    set hwin 0
+    expect ">"
+    set ::state 0
+    interact {
+        -o
+        # This should never conflict with the command line because the command
+        # line always has the pattern "\n> " at the start. DOCUMENT statements
+        # never start with >.
+        -re {\n[[:blank:]]*/\*[[:blank:]]*DOCUMENT.*\n} {
+            if {$_ytk(separate_help_win) eq "Yes"} {
+                set help $interact_out(0,string)
+                # If the help is short, the whole thing will already be stored
+                # in help - in that case, skip the nested interact.
+                if {![show_help $help]} {
+                    interact {
+                        -o
+                        # Try to pick up the "defined at:" line to include in
+                        # the help window, if possible
+                        -re {.*\*/\s*defined at:[^\n]*\n} {
+                            append help $interact_out(0,string)
+                            show_help $help
+                            return
+                        }
+                        # If no "defined at:" is present, try to absorb as much
+                        # trailing whitespace as possible.
+                        -re {.*\*/\s*} {
+                            append help $interact_out(0,string)
+                            show_help $help
+                            return
+                        }
+                        # If the help is really long (or if it turns out this
+                        # isn't actually a valid help block), append the
+                        # current chunk to the working help string until we
+                        # know what to do with it.
+                        -re {.*} {
+                            append help $interact_out(0,string)
+                        }
+                        # If a whole second passes since the opening
+                        # "/* DOCUMENT" then assume this isn't a valid help
+                        # block so that the user's session does not block.
+                        timeout 1 {
+                            puts -nonewline $help
+                            return
+                        }
+                    }
+                }
+            } else {
+                puts -nonewline $interact_out(0,string)
             }
-         } else {
-            puts -nonewline $interact_out(0,string)
-         }
-      }
-   }
+        }
+        # Help outputs almost instantly, so abort on any delays.
+        timeout 1 {
+        }
+    }
+}
+
+proc show_help {raw} {
+##
+# show_help
+#   Helper proc for start_yorick. It checks to make sure $raw contains a valid
+#   DOCUMENT block and pops open a help window for it if it does. Returns 1 if
+#   DOCUMENT found, 0 otherwise.
+##
+    set doc_pattern {^(.*?)([^\n]*/\*[[:blank:]]*DOCUMENT.*\*/(?:\s*\n)?)(.*)$}
+    if {![regexp $doc_pattern $raw - pre help post]} {
+        return 0
+    }
+    puts -nonewline $pre
+
+    set def_pattern {^\s*defined at:[^\n]*\n}
+    if {[regexp $def_pattern $post def]} {
+        append help $def
+    }
+    puts -nonewline $post
+
+    regsub -all \r $help "" help
+
+    set i 0
+    while {[winfo exists [set top .docwin$i]]} {incr i}
+
+    toplevel $top -class DOCUMENT
+    set wintitle [lindex [split $help "\n"] 0]
+    set wintitle [regsub -nocase {^ */\* *DOCU} $wintitle DOCU]
+    wm title $top $wintitle
+
+    ttk::scrollbar $top.sb -command [list $top.doc yview]
+    ::mixin::text::readonly $top.doc -height 25 \
+            -yscrollcommand [list $top.sb set]
+    $top.doc ins end $help
+    pack $top.doc -side left -fill both -expand 1
+    pack $top.sb -side left -fill y -expand 0
+
+    return 1
 }
 
 proc launch_gui {} {
