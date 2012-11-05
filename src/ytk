@@ -620,7 +620,9 @@ proc select_ytk_fn {} {
             {{All Files}         {*}     }
         }]
 
-    source_ytk_file $fn
+    if {$fn ne ""} {
+        source_ytk_file $fn
+    }
 }
 
 proc start_yorick {}  {
