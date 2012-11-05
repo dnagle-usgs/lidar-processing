@@ -150,19 +150,16 @@ func get_user(void) {
 /* DOCUMENT get_user()
   Returns the current user's username. If not found, returns string(0).
 */
-// Original David Nagle 2009-06-04
-  if(get_env("USER")) return get_env("USER");
-  return string(0);
+  if(_user) return _user;
+  return get_env("USER");
 }
 
 func get_host(void) {
 /* DOCUMENT get_host()
   Returns the current host's hostname. If not found, returns string(0).
 */
-// Original David Nagle 2009-06-04
   if(get_env("HOSTNAME")) return get_env("HOSTNAME");
-  if(get_env("HOST")) return get_env("HOST");
-  return string(0);
+  return get_env("HOST");
 }
 
 func binary_search(ary, val, exact=, inline=) {

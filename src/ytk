@@ -23,6 +23,9 @@ exec wish "$0" ${1+"$@"}
 # 2 - No Yorick found
 # 3 - Problem encountered while spawning Yorick
 
+# Time that the script started
+set _starttime [clock seconds]
+
 proc app_root_dir {} {
     # Copied from http://wiki.tcl.tk/1710
     set originalPath [pwd]
@@ -891,6 +894,8 @@ ybkg funcset initialdir \"$_ytk(initialdir)\"
 ybkg funcset _ytk 1
 ybkg funcset _pid [pid]
 ybkg funcset _hgid \"$HGID\"
+ybkg funcset _starttime $_starttime
+ybkg funcset _user $tcl_platform(user)
 
 set src_path [file dirname [file normalize [info script]]]
 ybkg funcset src_path \"$src_path\"
