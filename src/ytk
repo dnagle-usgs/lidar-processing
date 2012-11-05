@@ -1,8 +1,7 @@
 #!/bin/sh
 # \
 exec wish "$0" ${1+"$@"}
-
-# vim: set ts=3 sts=3 sw=3 ai sr et syntax=tcl:
+# vim: set syntax=tcl ts=4 sts=4 sw=4 ai sr et:
 
 # Program to add some limited tcl/Tk GUI capability to Yorick programs.
 #
@@ -13,7 +12,7 @@ exec wish "$0" ${1+"$@"}
 # A full copy can be found at: http://www.gnu.org/licenses/gpl.txt
 #
 # The main site for this program is:
-#     http://ytk.sourceforge.net
+#       http://ytk.sourceforge.net
 #
 # This version of Ytk is a fork from the version found at SourceForge, tailored
 # for ALPS. At this point, the two are incompatible.
@@ -25,19 +24,19 @@ exec wish "$0" ${1+"$@"}
 # 3 - Problem encountered while spawning Yorick
 
 proc app_root_dir {} {
-   # Copied from http://wiki.tcl.tk/1710
-   set originalPath [pwd]
-   set scriptPath   $::argv0
-   set workingPath  [file dirname $::argv0]
-   while {![catch {file readlink $scriptPath} result]} {
-      cd $workingPath
-      set scriptPath  [file join [pwd] $result]
-      set workingPath [file dirname $scriptPath]
-   }
-   cd [file dirname $scriptPath]
-   set scriptPath [pwd]
-   cd $originalPath
-   return $scriptPath
+    # Copied from http://wiki.tcl.tk/1710
+    set originalPath [pwd]
+    set scriptPath $::argv0
+    set workingPath [file dirname $::argv0]
+    while {![catch {file readlink $scriptPath} result]} {
+        cd $workingPath
+        set scriptPath  [file join [pwd] $result]
+        set workingPath [file dirname $scriptPath]
+    }
+    cd [file dirname $scriptPath]
+    set scriptPath [pwd]
+    cd $originalPath
+    return $scriptPath
 }
 
 ::tcl::tm::path add [file join [app_root_dir] tcl]
@@ -65,7 +64,7 @@ wm withdraw .
 
 set load_on_start ""
 if { $argc != 0 } {
-  set load_on_start $argv
+    set load_on_start $argv
 }
 
 set ycode_dir "."
@@ -73,57 +72,57 @@ set ytkcode_dir "."
 set Y_SITE ""
 
 ################################################################################
-#                                  Procedures                                  #
+#                                             Procedures                                             #
 ################################################################################
 
 # From http://wiki.tcl.tk/727
 proc intgen {{seed 0}} {
-   set self [lindex [info level 0] 0]
-   proc $self "{seed [incr seed]}" [info body $self]
-   set seed
+    set self [lindex [info level 0] 0]
+    proc $self "{seed [incr seed]}" [info body $self]
+    set seed
 }
 
 proc sleep {{ms 200}} {
-   set sleepvar "::__sleep_var_[intgen]__"
-   after $ms [list set $sleepvar 0]
-   vwait $sleepvar
-   unset $sleepvar
+    set sleepvar "::__sleep_var_[intgen]__"
+    after $ms [list set $sleepvar 0]
+    vwait $sleepvar
+    unset $sleepvar
 }
 
 set __ybkg__wait 0
 proc ybkg args {
 ##
 # ybkg args
-#  Sends a command to Yorick in the background. This does NOT accept normal
-#  Yorick commands!! You must format them in a format acceptable to funcdef. In
-#  Yorick, use 'help, funcdef' for more information.
+#   Sends a command to Yorick in the background. This does NOT accept normal
+#   Yorick commands!! You must format them in a format acceptable to funcdef. In
+#   Yorick, use 'help, funcdef' for more information.
 #
-#  Some examples:
+#   Some examples:
 #
-#     ybkg write 1 2 3
-#        -- Corresponds to: write, 1, 2, 3
+#       ybkg write 1 2 3
+#           -- Corresponds to: write, 1, 2, 3
 #
-#     ybkg write \"Hello, world!\"
-#        -- Corresponds to: write, "Hello, world!"
+#       ybkg write \"Hello, world!\"
+#           -- Corresponds to: write, "Hello, world!"
 #
-#     ybkg write {"Hello, world!"}
-#        -- Corresponds to: write, "Hello, world!"
+#       ybkg write {"Hello, world!"}
+#           -- Corresponds to: write, "Hello, world!"
 #
-#     ybkg {write "Hello, world!"}
-#        -- Corresponds to: write, "Hello, world!"
+#       ybkg {write "Hello, world!"}
+#           -- Corresponds to: write, "Hello, world!"
 #
-#     ybkg funcset foo 10
-#        -- Corresponds to: funcset, foo, 10
-#           which corresponds to: foo = 10
+#       ybkg funcset foo 10
+#           -- Corresponds to: funcset, foo, 10
+#               which corresponds to: foo = 10
 #
-#  Please be aware that you will NOT receive any notifications in the case of
-#  errors! They will be silently ignored.
+#   Please be aware that you will NOT receive any notifications in the case of
+#   errors! They will be silently ignored.
 #
-#  Also, do not use ystr with this. The input for funcdef does not require as
-#  many escapes.
+#   Also, do not use ystr with this. The input for funcdef does not require as
+#   many escapes.
 #
-#  Also, do not send any input that includes newlines. It just doesn't work
-#  yet.
+#   Also, do not send any input that includes newlines. It just doesn't work
+#   yet.
 ##
     set cmd [eval concat $args]
     set ::__ybkg__wait 1
@@ -136,307 +135,307 @@ proc ybkg args {
 proc yget yvar {
 ##
 # set val [yget yvar]
-#  This retrieves the value of a yorick variable yvar.
+#   This retrieves the value of a yorick variable yvar.
 ##
-   set wait_var ::__yvar_tmp_[intgen]__
-   set cancel [after 1000 [list set $wait_var {}]]
-   after 0 [list after idle [list ybkg tksetvar \"$wait_var\" \"$yvar\"]]
-   vwait $wait_var
-   after cancel $cancel
-   set result [set $wait_var]
-   unset $wait_var
-   return $result
+    set wait_var ::__yvar_tmp_[intgen]__
+    set cancel [after 1000 [list set $wait_var {}]]
+    after 0 [list after idle [list ybkg tksetvar \"$wait_var\" \"$yvar\"]]
+    vwait $wait_var
+    after cancel $cancel
+    set result [set $wait_var]
+    unset $wait_var
+    return $result
 }
 
 proc tky_tie {cmd type tkvar - yvar args} {
 ##
 # Subcommands:
-#     tky_tie add broadcast tkvarName to yvarName [-initialize 1]
-#     tky_tie add sync tkvarName with yvarName [-initialize 1 -src tcl]
-#     tky_tie add read tkvarName from yvarName [-initialize 1]
-#     tky_tie remove broadcast tkvarName to yvarName
-#     tky_tie remove sync tkvarName with yvarName
-#     tky_tie remove read tkvarName from yvarName
+#   tky_tie add broadcast tkvarName to yvarName [-initialize 1]
+#   tky_tie add sync tkvarName with yvarName [-initialize 1 -src tcl]
+#   tky_tie add read tkvarName from yvarName [-initialize 1]
+#   tky_tie remove broadcast tkvarName to yvarName
+#   tky_tie remove sync tkvarName with yvarName
+#   tky_tie remove read tkvarName from yvarName
 #
 # This adds or removes a tie between a Tcl variable and a Yorick variable.
 # There are two kinds of ties: broadcast and sync.
 #
 # broadcast
-#  With a broadcast tie, the Tcl variable will broadcast its value to Yorick
-#  whenever it gets set. However, Yorick will still remain free to change this
-#  value at will in between broadcasts. The broadcast only happens when the
-#  variable is set. You can force a new broadcast by doing this:
-#     set tkVar [set $tkVar]
+#   With a broadcast tie, the Tcl variable will broadcast its value to Yorick
+#   whenever it gets set. However, Yorick will still remain free to change this
+#   value at will in between broadcasts. The broadcast only happens when the
+#   variable is set. You can force a new broadcast by doing this:
+#       set tkVar [set $tkVar]
 #
-#  The broadcast tie supports one optional setting. If you specify "-initialize
-#  1", then Yorick will be initialized with the Tcl variable's current value.
-#  Without this option, Yorick doesn't get update until the variable is
-#  assigned to next.
+#   The broadcast tie supports one optional setting. If you specify "-initialize
+#   1", then Yorick will be initialized with the Tcl variable's current value.
+#   Without this option, Yorick doesn't get update until the variable is
+#   assigned to next.
 #
 # sync
-#  With a sync tie, Tcl does its best to keep the same value in both Yorick and
-#  Tcl. When Tcl sets the variable to a new value, that value is broadcast to
-#  Yorick. When Tcl needs to retrieve the variable's value, it asks Yorick what
-#  the current value is. Thus, the Tcl variable effectively becomes an alias
-#  for the Yorick variable.
+#   With a sync tie, Tcl does its best to keep the same value in both Yorick and
+#   Tcl. When Tcl sets the variable to a new value, that value is broadcast to
+#   Yorick. When Tcl needs to retrieve the variable's value, it asks Yorick what
+#   the current value is. Thus, the Tcl variable effectively becomes an alias
+#   for the Yorick variable.
 #
-#  One major caveat: Changing the Yorick variable will not immediately provoke
-#  a change in the Tcl variable. For example, if you are using the Tcl variable
-#  in a GUI, the GUI will not immediately update. It won't update until Tcl
-#  next references that variable explicitly in some fashion.
+#   One major caveat: Changing the Yorick variable will not immediately provoke
+#   a change in the Tcl variable. For example, if you are using the Tcl variable
+#   in a GUI, the GUI will not immediately update. It won't update until Tcl
+#   next references that variable explicitly in some fashion.
 #
-#  You can force a sync by doing this:
-#     set tkVar
+#   You can force a sync by doing this:
+#       set tkVar
 #
-#  The sync tie supports two optional settings. If you specify "-initailize 1",
-#  then Yorick will be initialized with the Tcl variable's current value. If
-#  you additionally specify -src tcl, then the reverse will happen: Tcl will be
-#  initialized with the Yorick variable's current value.
+#   The sync tie supports two optional settings. If you specify "-initailize 1",
+#   then Yorick will be initialized with the Tcl variable's current value. If
+#   you additionally specify -src tcl, then the reverse will happen: Tcl will be
+#   initialized with the Yorick variable's current value.
 #
 # read
-#  With a read tie, the Tcl variable will ask Yorick for its value whenever it
-#  is acccessed. As with sync, this only occurs when the variable is explicitly
-#  checked.
+#   With a read tie, the Tcl variable will ask Yorick for its value whenever it
+#   is acccessed. As with sync, this only occurs when the variable is explicitly
+#   checked.
 #
-#  When a read tie is in effect, it is still technically permissible to set the
-#  Tcl variable. However, the changes have no effect so this is not
-#  recommended.
+#   When a read tie is in effect, it is still technically permissible to set the
+#   Tcl variable. However, the changes have no effect so this is not
+#   recommended.
 #
-#  The read tie supports one optional setting. If you specify "-initialize 1",
-#  then Tcl will be initialized with the Yorick variable's current value. This
-#  is useful if tying to a variable that is used in a GUI.
+#   The read tie supports one optional setting. If you specify "-initialize 1",
+#   then Tcl will be initialized with the Yorick variable's current value. This
+#   is useful if tying to a variable that is used in a GUI.
 ##
-   array set opts [list -initialize 0 -src yor]
-   array set opts $args
-   if {$cmd ni {add remove append}} {
-      error "Unknown command: $cmd"
-   }
-   if {[regexp {^(.*?)(?:\((.*)\))$} $tkvar - var key]} {
-      set tkvar [uplevel [list namespace which -variable $var]]($key)
-   } else {
-      set tkvar [uplevel [list namespace which -variable $tkvar]]
-   }
-   switch -- $type {
-      broadcast {
-         if {$cmd ne "remove" && $opts(-initialize)} {
-            __tky_tie_write $tkvar $yvar - - -
-         }
-         trace $cmd variable $tkvar write [list __tky_tie_write $tkvar $yvar]
-      }
-      sync {
-         if {$cmd ne "remove" && $opts(-initialize)} {
-            if {$opts(-src) eq "tcl"} {
-               __tky_tie_write $tkvar $yvar - - -
-            } else {
-               __tky_tie_read $tkvar $yvar - - -
+    array set opts [list -initialize 0 -src yor]
+    array set opts $args
+    if {$cmd ni {add remove append}} {
+        error "Unknown command: $cmd"
+    }
+    if {[regexp {^(.*?)(?:\((.*)\))$} $tkvar - var key]} {
+        set tkvar [uplevel [list namespace which -variable $var]]($key)
+    } else {
+        set tkvar [uplevel [list namespace which -variable $tkvar]]
+    }
+    switch -- $type {
+        broadcast {
+            if {$cmd ne "remove" && $opts(-initialize)} {
+                __tky_tie_write $tkvar $yvar - - -
             }
-         }
-         trace $cmd variable $tkvar write [list __tky_tie_write $tkvar $yvar]
-         trace $cmd variable $tkvar read [list __tky_tie_read $tkvar $yvar]
-      }
-      read {
-         if {$cmd ne "remove" && $opts(-initialize)} {
-            __tky_tie_read $tkvar $yvar - - -
-         }
-         trace $cmd variable $tkvar read [list __tky_tie_read $tkvar $yvar]
-      }
-      default {
-         error "Unknown type $type"
-      }
-   }
-   return
+            trace $cmd variable $tkvar write [list __tky_tie_write $tkvar $yvar]
+        }
+        sync {
+            if {$cmd ne "remove" && $opts(-initialize)} {
+                if {$opts(-src) eq "tcl"} {
+                    __tky_tie_write $tkvar $yvar - - -
+                } else {
+                    __tky_tie_read $tkvar $yvar - - -
+                }
+            }
+            trace $cmd variable $tkvar write [list __tky_tie_write $tkvar $yvar]
+            trace $cmd variable $tkvar read [list __tky_tie_read $tkvar $yvar]
+        }
+        read {
+            if {$cmd ne "remove" && $opts(-initialize)} {
+                __tky_tie_read $tkvar $yvar - - -
+            }
+            trace $cmd variable $tkvar read [list __tky_tie_read $tkvar $yvar]
+        }
+        default {
+            error "Unknown type $type"
+        }
+    }
+    return
 }
 
 proc __tky_tie_write {tkvar yvar name1 name2 op} {
 # Used by tky_tie
-   ybkg var_expr_tkupdate \"$yvar\" \"[set $tkvar]\"
+    ybkg var_expr_tkupdate \"$yvar\" \"[set $tkvar]\"
 }
 
 proc __tky_tie_read {tkvar yvar name1 name2 op} {
 # Used by tky_tie
-   set $tkvar [yget $yvar]
+    set $tkvar [yget $yvar]
 }
 
 proc tky_set {varName val} {
 # Used by ytk.i's tksetval.
-   upvar $varName var
+    upvar $varName var
 
-   if {[string match {"*"} $val]} {
-      # Scalar string, need to eval to unescape newlines and lose quotes
-      eval set var $val
-   } elseif {[string match {\[*\]} $val]} {
-      if {[string match *\"* $val]} {
-         # Array of strings... cannot parse safely so we pass through
-         set var $val
-      } else {
-         # Array of non-strings, easy to convert to a list
-         set var [lindex [string map [list \[ \{ \] \} , " "] $val] 0]
-      }
-   } else {
-      # Anything else either doesn't require special handling, or requires
-      # special handling we cannot provide so we pass it through
-      set var $val
-   }
+    if {[string match {"*"} $val]} {
+        # Scalar string, need to eval to unescape newlines and lose quotes
+        eval set var $val
+    } elseif {[string match {\[*\]} $val]} {
+        if {[string match *\"* $val]} {
+            # Array of strings... cannot parse safely so we pass through
+            set var $val
+        } else {
+            # Array of non-strings, easy to convert to a list
+            set var [lindex [string map [list \[ \{ \] \} , " "] $val] 0]
+        }
+    } else {
+        # Anything else either doesn't require special handling, or requires
+        # special handling we cannot provide so we pass it through
+        set var $val
+    }
 }
 
 proc yorick_executable {} {
 ##
 # yorick_executable
-#  Attempts to determine the yorick executable file.
+#   Attempts to determine the yorick executable file.
 #
-#  In order of priority, tries to use the following:
-#     - value of _ytk(yorick_executable), if set (from .ytkrc)
-#     - ../../bin/yorick
-#     - ../../yorick/bin/yorick
-#     - yorick in path (shell call to "which yorick")
-#     - yorick provided by user when prompted for one
-#     - empty string (which means Ytk will probably exit)
+#   In order of priority, tries to use the following:
+#       - value of _ytk(yorick_executable), if set (from .ytkrc)
+#       - ../../bin/yorick
+#       - ../../yorick/bin/yorick
+#       - yorick in path (shell call to "which yorick")
+#       - yorick provided by user when prompted for one
+#       - empty string (which means Ytk will probably exit)
 #
 # Arguments:
-#  None
+#   None
 #
 # Returns:
-#  A string representing the path+filename to the Yorick executable. If no
-#  executable is available, an empty string is returned.
+#   A string representing the path+filename to the Yorick executable. If no
+#   executable is available, an empty string is returned.
 ##
-   set flag yes
-   while {[auto_execok yorick] eq "" && $flag eq "yes"} {
-      set flag [tk_messageBox -icon error -type yesno \
-         -message "Ytk cannot locate Yorick, which it needs to function. Would you like to manually locate a Yorick? (If you answer no, Ytk will exit.)"]
-      if { $flag eq "yes" } {
-         set ::_ytk(yorick_executable) [tk_getOpenFile -initialdir /]
-      }
-   }
+    set flag yes
+    while {[auto_execok yorick] eq "" && $flag eq "yes"} {
+        set flag [tk_messageBox -icon error -type yesno \
+            -message "Ytk cannot locate Yorick, which it needs to function. Would you like to manually locate a Yorick? (If you answer no, Ytk will exit.)"]
+        if { $flag eq "yes" } {
+            set ::_ytk(yorick_executable) [tk_getOpenFile -initialdir /]
+        }
+    }
 }
 
 proc trace__ytk {name1 name2 op} {
 # When entries are added to _ytk in the form NAME_executable, auto_execs is
 # updated so that NAME returns the new value placed in _ytk.
-   if {[string match "*_executable" $name2]} {
-      set cmd [string range $name2 0 end-11]
-      set ::auto_execs($cmd) $::_ytk($name2)
-   } elseif {$name2 eq "executables_path"} {
-      set pathsep [expr {$::tcl_platform(platform) eq "windows" ? ";" : ":"}]
-      set path [split $::env(PATH) $pathsep]
-      set path [lreplace $path 0 0 $::_ytk($name2)]
-      set ::env(PATH) [join $path $pathsep]
-   }
+    if {[string match "*_executable" $name2]} {
+        set cmd [string range $name2 0 end-11]
+        set ::auto_execs($cmd) $::_ytk($name2)
+    } elseif {$name2 eq "executables_path"} {
+        set pathsep [expr {$::tcl_platform(platform) eq "windows" ? ";" : ":"}]
+        set path [split $::env(PATH) $pathsep]
+        set path [lreplace $path 0 0 $::_ytk($name2)]
+        set ::env(PATH) [join $path $pathsep]
+    }
 }
 
 proc restore_defaults {} {
 ##
 # restore_defaults
-#  Restores default values to the _ytk global.
+#   Restores default values to the _ytk global.
 #
 # Arguments:
-#  None
+#   None
 #
 # Returns:
-#  Nothing
+#   Nothing
 #
 # Side effects:
-#  Unsets the global _ytk, the defines it to a set of default values.
+#   Unsets the global _ytk, the defines it to a set of default values.
 ##
-   global _ytk
-   array unset _ytk *
-   set _ytk(use_rlterm)          No
-   set _ytk(use_rlwrap)          Yes
-   set _ytk(separate_help_win)   Yes
-   set _ytk(ycode_dir)           .
-   set _ytk(ytkcode_dir)         /opt/eaarl/lidar-processing/src/
-   set _ytk(initialdir)          /data
-   set _ytk(rlwrap_nodupes)      1
+    global _ytk
+    array unset _ytk *
+    set _ytk(use_rlterm)                No
+    set _ytk(use_rlwrap)                Yes
+    set _ytk(separate_help_win) Yes
+    set _ytk(ycode_dir)             .
+    set _ytk(ytkcode_dir)           /opt/eaarl/lidar-processing/src/
+    set _ytk(initialdir)                /data
+    set _ytk(rlwrap_nodupes)        1
 }
 
 proc load_options {} {
 ##
 # load_options
-#  Loads the user's _ytk options from a file previously saved via save_options.
+#   Loads the user's _ytk options from a file previously saved via save_options.
 #
 # Arguments:
-#  None
+#   None
 #
 # Returns:
-#  Nothing
+#   Nothing
 #
 # Side effects:
-#  Restores the default values for _ytk (as defined by restore_defaults). Then
-#  sources ~/.ytkrc, which presumbly updates some of the _ytk values with the
-#  user's preferences. However, the sourcing is not done safely so this could
-#  have virtually any side effect.
+#   Restores the default values for _ytk (as defined by restore_defaults). Then
+#   sources ~/.ytkrc, which presumbly updates some of the _ytk values with the
+#   user's preferences. However, the sourcing is not done safely so this could
+#   have virtually any side effect.
 ##
-   global _ytk
+    global _ytk
 
-   # Restore defaults -- in case .ytkrc doesn't specify everything
-   restore_defaults
+    # Restore defaults -- in case .ytkrc doesn't specify everything
+    restore_defaults
 
-   set ytkrc_paths [list /etc/ytkrc ~/.ytkrc .ytkrc]
+    set ytkrc_paths [list /etc/ytkrc ~/.ytkrc .ytkrc]
 
-   foreach rc $ytkrc_paths {
-      if {[file exists $rc]} {
-         puts "Loading ytk configuration file: $rc"
-         set cnf [interp create -safe]
-         if {[catch [list interp invokehidden $cnf source $rc] err]} {
-            puts "Error encountered in configuration file: $err"
-         } else {
-            if {[interp eval $cnf array exists _ytk]} {
-               foreach key [interp eval $cnf array names _ytk] {
-                  set _ytk($key) [interp eval $cnf set _ytk($key)]
-               }
+    foreach rc $ytkrc_paths {
+        if {[file exists $rc]} {
+            puts "Loading ytk configuration file: $rc"
+            set cnf [interp create -safe]
+            if {[catch [list interp invokehidden $cnf source $rc] err]} {
+                puts "Error encountered in configuration file: $err"
+            } else {
+                if {[interp eval $cnf array exists _ytk]} {
+                    foreach key [interp eval $cnf array names _ytk] {
+                        set _ytk($key) [interp eval $cnf set _ytk($key)]
+                    }
+                }
             }
-         }
-         interp delete $cnf
-      }
-   }
+            interp delete $cnf
+        }
+    }
 }
 
 proc establish_fifos {} {
 ##
 # establish_fifos
-#  Creates and configures the fifos needed for communication between Yorick and
-#  Tcl (in both directions).
+#   Creates and configures the fifos needed for communication between Yorick and
+#   Tcl (in both directions).
 #
 # Arguments:
-#  None
+#   None
 #
 # Returns:
-#  Nothing
+#   Nothing
 #
 # Side effects:
-#  Establishes the following global variables:
-#     ytk_fifo_name: The filename of the Yorick->Tcl fifo.
-#     tky_fifo_name: The filename of the Tcl->Yorick fifo.
-#     ytk_fifo: The filehandle for the Yorick->Tcl fifo.
-#     tky_fifo: The filehandle for the Tcl->Yorick fifo.
-#  Also configures ytk_fifo to call ytk_fifo_fileevent for the readable
-#  fileevent.
+#   Establishes the following global variables:
+#       ytk_fifo_name: The filename of the Yorick->Tcl fifo.
+#       tky_fifo_name: The filename of the Tcl->Yorick fifo.
+#       ytk_fifo: The filehandle for the Yorick->Tcl fifo.
+#       tky_fifo: The filehandle for the Tcl->Yorick fifo.
+#   Also configures ytk_fifo to call ytk_fifo_fileevent for the readable
+#   fileevent.
 ##
-   global ytk_fifo_name tky_fifo_name ytk_fifo tky_fifo
+    global ytk_fifo_name tky_fifo_name ytk_fifo tky_fifo
 
-   set fifos [::yorick::create_fifos]
-   lassign $fifos ytk_fifo ytk_fifo_name tky_fifo tky_fifo_name
+    set fifos [::yorick::create_fifos]
+    lassign $fifos ytk_fifo ytk_fifo_name tky_fifo tky_fifo_name
 
-   fileevent $ytk_fifo readable ytk_fifo_fileevent
+    fileevent $ytk_fifo readable ytk_fifo_fileevent
 }
 
 proc ytk_fifo_fileevent {} {
 ##
 # ytk_fifo_filevent
-#  Processes a command received on the Yorick->Tcl fifo. This is invoked by the
-#  fileevent readable on $ytk_fifo.
+#   Processes a command received on the Yorick->Tcl fifo. This is invoked by the
+#   fileevent readable on $ytk_fifo.
 #
 # Arguments:
-#  None
+#   None
 #
 # Returns:
-#  Nothing
+#   Nothing
 #
 # Side effects:
-#  This will evaluate the first string found on the fifo $ytk_fifo. If .tx.doc
-#  exists, it will be updated accordingly. If an error is encountered, the user
-#  is notified via expect as well as on .tx.doc.
+#   This will evaluate the first string found on the fifo $ytk_fifo. If .tx.doc
+#   exists, it will be updated accordingly. If an error is encountered, the user
+#   is notified via expect as well as on .tx.doc.
 #
-#  If there isn't a complete line available on the fifo, this does nothing.
+#   If there isn't a complete line available on the fifo, this does nothing.
 ##
     global ytk_fifo
 
@@ -444,8 +443,7 @@ proc ytk_fifo_fileevent {} {
 
     # If a full line isn't available, gets will return ""
     if {[string length $ycmdstr]} {
-
-        if { [catch { uplevel #0 $ycmdstr } errcode] } {
+        if {[catch {uplevel #0 $ycmdstr} errcode]} {
             fifo_log tcl $ycmdstr $errcode
             send_user "*** Ytk Error in:$ycmdstr\n"
         } else {
@@ -500,19 +498,19 @@ proc fifo_log {src msg {err NULL}} {
 proc spawn_yorick {} {
 ##
 # spawn_yorick
-#  Attempts to spawn Yorick. If rlterm or rlwrap are available on the system
-#  path, they will be used if the user has enabled them (rlterm takes
-#  precedence over rlwrap if both exist and are enabled).
+#   Attempts to spawn Yorick. If rlterm or rlwrap are available on the system
+#   path, they will be used if the user has enabled them (rlterm takes
+#   precedence over rlwrap if both exist and are enabled).
 #
 # Arguments:
-#  None
+#   None
 #
 # Returns:
-#  0 if the spawn succeeded; 1 if it did not.
+#   0 if the spawn succeeded; 1 if it did not.
 #
 # Side effects:
-#  If successful, then expect does whatever it does when spawn works (including
-#  setting various expect-related variables), in the global scope.
+#   If successful, then expect does whatever it does when spawn works (including
+#   setting various expect-related variables), in the global scope.
 ##
     global _ytk ytk_fifo_name tky_fifo_name
 
@@ -538,112 +536,112 @@ proc spawn_yorick {} {
 proc ytk_exit {code} {
 ##
 # ytk_exit code
-#  Exits Yorick with the given code after performing cleanup (which consists of
-#  closing and deleting the fifos).
+#   Exits Yorick with the given code after performing cleanup (which consists of
+#   closing and deleting the fifos).
 #
 # Arguments:
-#  code: A integer in the range 0-127, which will be returned as the exit code.
+#   code: A integer in the range 0-127, which will be returned as the exit code.
 #
 # Returns:
-#  Nothing
+#   Nothing
 #
 # Side effects:
-#  The fifos are closed and their corresponding files deleted. Then the
-#  application terminates with the given exit $code.
+#   The fifos are closed and their corresponding files deleted. Then the
+#   application terminates with the given exit $code.
 ##
-   global ytk_fifo_name tky_fifo_name ytk_fifo tky_fifo
-   foreach session [::yorick::session info instances] {
-      $session destroy
-   }
-   ::yorick::destroy_fifos $ytk_fifo $ytk_fifo_name $tky_fifo $tky_fifo_name
-   exit $code
+    global ytk_fifo_name tky_fifo_name ytk_fifo tky_fifo
+    foreach session [::yorick::session info instances] {
+        $session destroy
+    }
+    ::yorick::destroy_fifos $ytk_fifo $ytk_fifo_name $tky_fifo $tky_fifo_name
+    exit $code
 }
 
 proc source_ytk_file {filename} {
 ##
 # source_ytk_file filename
-#  Sources the file defined by $filename -- in Yorick if it's a .i file, in Tcl
-#  if it's a .ytk, .tk, or .tcl file.
+#   Sources the file defined by $filename -- in Yorick if it's a .i file, in Tcl
+#   if it's a .ytk, .tk, or .tcl file.
 #
 # Arguments:
-#  None
+#   None
 #
 # Returns:
-#  Nothing
+#   Nothing
 #
 # Side effects:
-#  The file is sourced (in either Yorick or Tcl), which could have any effect
-#  depending on the code in question.
+#   The file is sourced (in either Yorick or Tcl), which could have any effect
+#   depending on the code in question.
 #
-#  If the file is a .i file, then global ycode_dir is set to its containing
-#  directory and both Tcl and Yorick have their working directory updated to
-#  match it.
+#   If the file is a .i file, then global ycode_dir is set to its containing
+#   directory and both Tcl and Yorick have their working directory updated to
+#   match it.
 #
-#  If the file is not a Yorck or Tcl file, an error will result.
+#   If the file is not a Yorck or Tcl file, an error will result.
 ##
-   global ycode_dir
-   switch [file extension $filename] {
-      ".tcl" -
-      ".tk"  -
-      ".ytk" {
-         uplevel #0 [list source $filename]
-      }
-      ".i" {
-         set ycode_dir [file dirname $filename]
-         cd $ycode_dir
-         ybkg cd \"$ycode_dir\"
-         exp_send "#include \"$filename\"\r"
-         expect "> "
-      }
-      default {
-         error "don't know how to handle file"
-      }
-   }
+    global ycode_dir
+    switch [file extension $filename] {
+        ".tcl" -
+        ".tk" -
+        ".ytk" {
+            uplevel #0 [list source $filename]
+        }
+        ".i" {
+            set ycode_dir [file dirname $filename]
+            cd $ycode_dir
+            ybkg cd \"$ycode_dir\"
+            exp_send "#include \"$filename\"\r"
+            expect "> "
+        }
+        default {
+            error "don't know how to handle file"
+        }
+    }
 }
 
 proc select_ytk_fn {} {
 ##
 # select_ytk_fn
-#  Prompts the user to select a file to source, then sources it.
+#   Prompts the user to select a file to source, then sources it.
 #
 # Returns:
-#  Nothing
+#   Nothing
 #
 # Side effects:
-#  The file is sourced at the global scope, which could have any effect; see
-#  source_ytk_file.
+#   The file is sourced at the global scope, which could have any effect; see
+#   source_ytk_file.
 ##
-   set fn [tk_getOpenFile \
-      -filetypes {
-         {{Yorick Specfic Tcl/Tk Programs} {.ytk} }
-         {{Yorick or Tcl/tk program} {.i .ytk}  }
-         {{Yorick Programs} {.i}  }
-         {{Tcl/Tk Programs} {.tcl .tk} }
-         {{All Files}       {*}   }
-      }]
+    set fn [tk_getOpenFile \
+        -filetypes {
+            {{Yorick Specfic Tcl/Tk Programs} {.ytk} }
+            {{Yorick or Tcl/tk program} {.i .ytk}   }
+            {{Yorick Programs} {.i}  }
+            {{Tcl/Tk Programs} {.tcl .tk} }
+            {{All Files}         {*}     }
+        }]
 
-   source_ytk_file $fn
+    source_ytk_file $fn
 }
 
 proc start_yorick {}  {
 ##
 # start_yorick
-#  Starts the main Yorick loop. This primarily watches for DOCUMENT strings and
-#  will catch them to display in GUI form if configured to do so.
+#   Starts the main Yorick loop. This primarily watches for DOCUMENT strings and
+#   will catch them to display in GUI form if configured to do so.
 #
 # Arguments:
-#  None
+#   None
 #
 # Returns:
-#  Nothing
+#   Nothing
 #
 # Side effects:
-#  If configured to spawn documentation for Yorick via Tcl, this will watch
-#  Yorick's output and attempt to intercept DOCUMENT statements. Otherwise, it
-#  lets everything else pass through as-is.
+#   If configured to spawn documentation for Yorick via Tcl, this will watch
+#   Yorick's output and attempt to intercept DOCUMENT statements. Otherwise, it
+#   lets everything else pass through as-is.
 #
-#  In order to avoid hanging, this will only catch DOCUMENT statements that are
-#  received within an interval of a single second.
+#   In order to avoid hanging, this will only catch DOCUMENT statements that are
+#   received within an interval of a single second.
 ##
     global _ytk interact_out str Y_SITE
     upvar spawn_id spawn_id
@@ -698,8 +696,7 @@ proc start_yorick {}  {
             }
         }
         # Help outputs almost instantly, so abort on any delays.
-        timeout 1 {
-        }
+        timeout 1 {}
     }
 }
 
@@ -745,13 +742,13 @@ proc show_help {raw} {
 proc launch_gui {} {
 ##
 # launch_gui
-#  Sets up the core GUI for Ytk.
+#   Sets up the core GUI for Ytk.
 #
 # Arguments:
-#  None
+#   None
 #
 # Returns:
-#  Nothing
+#   Nothing
 ##
     global Y_SITE _ytk yorick_version tk_patchLevel
 
@@ -856,7 +853,7 @@ proc init_hgid {} {
 ######## END PROCEDURES ########
 
 trace add variable _ytk write trace__ytk
-restore_defaults     ;# begin with the default settings
+restore_defaults        ;# begin with the default settings
 load_options
 init_hgid
 
@@ -869,16 +866,16 @@ set env(GISTPATH) [file join [pwd] gist]
 
 yorick_executable
 if {[auto_execok yorick] eq ""} {
-   puts stderr "No yorick found, aborting..."
-   ytk_exit 2
+    puts stderr "No yorick found, aborting..."
+    ytk_exit 2
 }
 
 establish_fifos
 
 puts " Tcl [info patchlevel], Tk $tk_patchLevel, Expect [exp_version] ready."
 if {[spawn_yorick]} {
-   puts "Encountered problem starting yorick... please restart with a different yorick"
-   ytk_exit 3
+    puts "Encountered problem starting yorick... please restart with a different yorick"
+    ytk_exit 3
 }
 
 expect "Yorick * ready"
