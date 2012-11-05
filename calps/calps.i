@@ -199,6 +199,12 @@ extern _ymergeuniq_D;
   void mergeuniq_D(double *, long *, long *);
 */
 
+// *** defined in linux.c
+extern get_pid;
+/* DOCUMENT get_pid()
+  Returns the process ID for the current Yorick process.
+*/
+
 __calps_backup = save(
   calps_compatibility,
   _ytriangulate, triangulate,
