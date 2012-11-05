@@ -309,7 +309,10 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
           write, f, format="   batch processed on %s as %s\n", get_host(), get_user();
         if(!is_void(_hgid))
           write, f, format="   using repository revision %s\n", _hgid;
-        if (!is_array(conf_file_lines)) write, f, format="PNAV FILE: %s\n",pnav_filename;
+        if (!is_array(conf_file_lines)) {
+          write, f, format="PNAV FILE: %s\n",pnav_filename;
+          write, f, format="INS FILE: %s\n",ins_filename;
+        }
         if (typ == 1) {
           bconf = (forcechannel == 4) ? bath_ctl_chn4 : bath_ctl;
           write, f, "Bathymetry Constants: "
@@ -317,7 +320,14 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
           write, f, format="Water: %f\n",bconf.water;
           write, f, format="AGC  : %f\n",bconf.agc;
           write, f, format="Threshold: %f\n",bconf.thresh;
+          write, f, format="First : %d\n",bconf.first;
           write, f, format="Last : %d\n",bconf.last;
+          write, f, format="Surface Last : %d\n",bconf.sfc_last;
+          write, f, format="Max Sat : %d\n",bconf.maxsat;
+          write, f, format="Left Wing Dist: %d\n",bconf.lwing_dist;
+          write, f, format="Right Wing Dist: %d\n",bconf.rwing_dist;
+          write, f, format="Left Wing Factor: %f\n",bconf.lwing_factor;
+          write, f, format="Right Wing Factor: %f\n",bconf.rwing_factor;
         }
         if (is_array(conf_file_lines)) {
           write, f, "Conf File settings\n";
