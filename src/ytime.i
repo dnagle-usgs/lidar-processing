@@ -1,5 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+require, "util_basic.i";
+
 extern _ys;
 /* DOCUMENT _ys
   Array of integers representing the seconds of the epoch at midnight, Jan 1,
