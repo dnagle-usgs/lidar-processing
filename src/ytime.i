@@ -502,6 +502,7 @@ func determine_gps_time_correction(fn, verbose=) {
   * Now outputs a status message so the user knows that the correction has
     been set (or that it hasn't, if this fails).
 */
+  require, "dir.i";
   extern gps_time_correction;
   default, verbose, 1;
   success = 0;
@@ -579,6 +580,7 @@ func seconds2prettytime(seconds, maxparts=) {
     "1 days"
 */
 // Original David Nagle 2009-12-29
+  require, "yeti_regex.i";
   dims = dimsof(seconds);
   if(!is_void(maxparts) && !is_scalar(seconds))
     error, "maxparts= only compatible with scalars.";
@@ -686,8 +688,6 @@ func get_date(text) {
   (string(0)) will be returned instead.
 */
   require, "yeti_regex.i";
-  // Original David Nagle 2008-12-24 (as part of ytime.i's
-  // determine_gps_time_correction)
   // The year may be in the range 1970 to 2099.
   yreg = "19[789][0-9]|20[0-9][0-9]";
   // The month may be in the range 01 to 12.
