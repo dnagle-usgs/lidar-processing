@@ -43,7 +43,6 @@ func soe2sod(soe) {
   the data type of soe.
 
   SEE ALSO: soe2sod soe2time hms2sod sod2hms time2soe
-
 */
   return soe % 86400;
 }
@@ -223,18 +222,6 @@ func time2soe( a ) {
     temp = [];
   }
   return _ys(idx) + a(..,2)*86400 + a(..,3);
-}
-
-func time_correct (path) {
-  extern tca, edb;
-  fname = path+"tca.pbd";
-  if (catch(0x02)) {
-    return;
-  }
-  f = openb(fname);
-  restore, f, tca;
-  edb.seconds = edb.seconds + tca;
-  close, f;
 }
 
 func is_leap(y) {

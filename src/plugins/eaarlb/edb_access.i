@@ -244,6 +244,18 @@ To see a raster, try:\n\
     write, "load_edb_completed";
 }
 
+func time_correct(path) {
+  extern tca, edb;
+  fname = path+"tca.pbd";
+  if (catch(0x02)) {
+    return;
+  }
+  f = openb(fname);
+  restore, f, tca;
+  edb.seconds = edb.seconds + tca;
+  close, f;
+}
+
 func edb_update(time_correction) {
 /* DOCUMENT edb_update, time_correction;
   Writes the memory version of edb back into the file.  Used to correct time
