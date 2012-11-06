@@ -317,6 +317,7 @@ func date2soe(date, sod) {
   when they all share the same date.
 */
 // Original David B. Nagle 2009-05-18
+  require, "util_str.i";
   date = get_date(unref(date));
   y = atoi(strpart(date, 1:4));
   m = atoi(strpart(date, 6:7));
