@@ -53,6 +53,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "eaarl_constants.i";
   require, "eaarl_structs.i";
   require, "eaarl_data.i";
+  require, "util_basic.i";
   require, "general.i";
   require, "util_obj.i";
   require, "util_progress.i";
