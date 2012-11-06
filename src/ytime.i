@@ -23,22 +23,12 @@ __years = [];
 
 __months = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-func getsod(void) {
-/* DOCUMENT getsod()
-
-  Returns the current SOD based on Yorick's timestamp() function.
-
-  SEE ALSO: timestamp, parsedate, getsoe
-*/
-  return (parsedate(timestamp())(4:6)*[3600,60,1])(sum);
-}
-
 func getsoe(void) {
 /* DOCUMENT getsoe()
 
   Returns the current SOE based on Yorick's timestamp() function.
 
-  SEE ALSO: timestamp, getsod
+  SEE ALSO: timestamp
 */
   soe = [];
   timestamp, soe;
