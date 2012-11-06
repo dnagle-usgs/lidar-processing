@@ -700,3 +700,44 @@ func seconds2clocktime(seconds, maxparts=) {
     clock(w) = "00";
   return dims(0) ? reform(clock, dims) : clock(1);
 }
+
+func get_date(text) {
+/* DOCUMENT get_date(text)
+  Given an arbitrary string of text, this will parse out the date and return
+  it in YYYY-MM-DD format.
+
+  This will match using the following rules:
+  * The date must be at the beginning of the string.
+  * The date may be in YYYY-MM-DD or YYYYMMDD format. (But cannot be in
+    YYYY-MMDD or YYYYMM-DD format.)
+  * If there are any characters following the date, the first must not be a
+    number. (So 20020101pm is okay but 200201019 is not.)
+
+  If text is an array of strings, then an array of strings (with the same
+  dimensions) will be returned.
+
+  If a string does not contain a parseable date, then the nil string
+  (string(0)) will be returned instead.
+*/
+  require, "yeti_regex.i";
+  // Original David Nagle 2008-12-24 (as part of ytime.i's
+  // determine_gps_time_correction)
+  // The year may be in the range 1970 to 2099.
+  yreg = "19[789][0-9]|20[0-9][0-9]";
+  // The month may be in the range 01 to 12.
+  mreg = "0[1-9]|1[0-2]";
+  // The day may be in the range 01 to 31.
+  dreg = "0[1-9]|[12][0-9]|3[01]";
+
+  full_reg = swrite(format="^(%s)(-?)(%s)\\2(%s)($|[^0-9])", yreg, mreg, dreg);
+
+  m_full = m_year = m_dash = m_month = m_day = [];
+  w = where(regmatch(full_reg, text, m_full, m_year, m_dash, m_month, m_day));
+
+  result = array(string(0), dimsof(text));
+  if(numberof(w)) {
+    result(w) = swrite(format="%s-%s-%s", m_year(w), m_month(w), m_day(w));
+  }
+
+  return result;
+}
