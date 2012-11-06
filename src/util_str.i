@@ -1,5 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "general.i";
+require, "util_basic.i";
 require, "rdcols.i";
 require, "yeti_regex.i";
 
