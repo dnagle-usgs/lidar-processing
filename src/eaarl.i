@@ -50,6 +50,8 @@ if(is_void(__eaarl_includes_included__)) {
   // ALPS requires
   // These must come first, since some other functions make use of them at the
   // top level
+  require, "logger.i";
+  require, "assert.i";
   require, "eaarl_constants.i";
   require, "eaarl_structs.i";
   require, "eaarl_data.i";

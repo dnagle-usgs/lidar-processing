@@ -41,6 +41,15 @@ local alpsrc;
     makeflow_enable = 1
       Use 1 to enable use of Makeflow. Use 0 to disable.
 
+    log_dir = /tmp/alps.log/
+      Specifies the default directory where to write out ALPS logs.
+
+    log_level = debug
+      Specifies the default level at which to log.
+
+    log_keep = 30
+      Specifies how many days to keep log files around for.
+
   SEE ALSO: alpsrc_load
 */
 
@@ -91,7 +100,14 @@ func __alpsrc_set_defaults(&hash) {
   h_set, hash, makeflow_opts="-N alps -T local";
   h_set, hash, makeflow_enable=1;
   h_set, hash, memory_autorefresh=5;
+  h_set, hash, log_dir="/tmp/alps.log/";
+  h_set, hash, log_level="debug";
+  h_set, hash, log_keep=30;
 }
 
 __alpsrc_set_defaults, __alpsrc_defaults;
 alpsrc_load;
+
+// Purge old log files if everything is in order to allow it.
+if(is_hash(alpsrc) && is_numerical(alpsrc.log_keep) && is_func(logger_purge))
+  logger_purge, alpsrc.log_keep;
