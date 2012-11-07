@@ -450,6 +450,7 @@ func mission_details_auto(flight, key, path, strict=) {
 */
   val = mission(details, autolist, flight, key, path);
   if(numberof(val)) val = val(1);
+  if(!is_string(val)) val = "";
   if(strlen(val)) {
     mission, details, set, flight, key, val;
   } else if(strict) {
