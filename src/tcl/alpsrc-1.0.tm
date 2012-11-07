@@ -31,9 +31,4 @@ if {![info exists ::alpsrc]} {
     foreach key $::alpsrc::keys {set ::alpsrc($key) -}
     trace add variable ::alpsrc read ::alpsrc::read
     trace add variable ::alpsrc write ::alpsrc::write
-
-    bind Toplevel <Enter> +::alpsrc::update
-    bind Toplevel <Visibility> +::alpsrc::update
-    bind YorickWindow <Enter> +::alpsrc::update
-    bind YorickWindow <Visibility> +::alpsrc::update
 }
