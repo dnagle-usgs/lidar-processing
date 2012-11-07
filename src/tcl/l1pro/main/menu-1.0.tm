@@ -413,8 +413,8 @@ proc load_ground_pnav {} {
 
 proc load_ground_pnav2fs {} {
     exp_send "gt_fs = load_pnav2FS(); grow, gt_fsall, gt_fs;\r"
-    append_varlist gs_fs
-    append_varlist gs_fsall
+    append_varlist gt_fs
+    append_varlist gt_fsall
 }
 
 proc set_yorick_palette p {
