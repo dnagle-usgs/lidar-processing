@@ -1,6 +1,7 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
 package provide l1pro::memory 1.0
+package require alpsrc
 
 namespace eval ::l1pro::memory {
     variable current Unknown
@@ -122,10 +123,7 @@ proc ::l1pro::memory::autorefresh {} {
 }
 
 proc ::l1pro::memory::startup {} {
-    variable refresh 0
-    if {[info exists ::_ytk]} {
-        set refresh [yget alpsrc.memory_autorefresh]
-    }
+    set refresh $::alpsrc(memory_autorefresh)
     ::l1pro::memory::autorefresh
 }
 ::misc::idle ::l1pro::memory::startup
