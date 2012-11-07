@@ -688,13 +688,13 @@ proc start_yorick {}  {
                         # "/* DOCUMENT" then assume this isn't a valid help
                         # block so that the user's session does not block.
                         timeout 1 {
-                            puts -nonewline $help
+                            exp_send_user $help
                             return
                         }
                     }
                 }
             } else {
-                puts -nonewline $interact_out(0,string)
+                exp_send_user $interact_out(0,string)
             }
         }
         # Help outputs almost instantly, so abort on any delays.
@@ -713,13 +713,13 @@ proc show_help {raw} {
     if {![regexp $doc_pattern $raw - pre help post]} {
         return 0
     }
-    puts -nonewline $pre
+    exp_send_user $pre
 
     set def_pattern {^\s*defined at:[^\n]*\n}
     if {[regexp $def_pattern $post def]} {
         append help $def
     }
-    puts -nonewline $post
+    exp_send_user $post
 
     regsub -all \r $help "" help
 
