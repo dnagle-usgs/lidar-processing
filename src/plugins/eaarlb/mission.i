@@ -448,7 +448,8 @@ func mission_details_auto(flight, key, path, strict=) {
   the result will depend on strict=. When strict=1, the key is deleted from the
   flight. When strict=0, the key is set to "". The default is strict=0.
 */
-  val = mission(details, autolist, flight, key, path)(1);
+  val = mission(details, autolist, flight, key, path);
+  if(numberof(val)) val = val(1);
   if(strlen(val)) {
     mission, details, set, flight, key, val;
   } else if(strict) {
