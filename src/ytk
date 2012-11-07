@@ -908,6 +908,14 @@ foreach file_to_load $load_on_start {
 # with ALPS Yorick settings properly.
 package require logger
 
+logger debug "Started YTK as: $argv0 $argv"
+logger debug "info library: [info library]"
+logger debug "info nameofexecutable [info nameofexecutable]"
+logger debug "info script: [info script]"
+logger debug "info patchlevel: [info patchlevel]"
+logger debug "Yorick executable: [auto_execok yorick]"
+logger debug "Yorick version: $yorick_version"
+
 start_yorick
 
 ytk_exit 0
