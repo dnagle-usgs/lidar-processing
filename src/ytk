@@ -58,7 +58,7 @@ package require Expect
 package require Iwidgets
 package require base64
 package require fileutil
-package require log
+
 package require struct::list
 package require mixin
 package require yorick
@@ -903,6 +903,10 @@ ybkg funcset src_path \"$src_path\"
 foreach file_to_load $load_on_start {
     source_ytk_file $file_to_load
 }
+
+# Have to include logger *after* Yorick starts up in order to let it match up
+# with ALPS Yorick settings properly.
+package require logger
 
 start_yorick
 
