@@ -4,12 +4,12 @@
 // by returning a subset of the object or by modifying the object's contents in
 // some way.
 
-func eaarla_wf_filter_channel(wf, lim=, max_intensity=, max_saturated=) {
-/* DOCUMENT eaarla_wf_filter_channel(wf, lim=, max_intensity=, max_saturated=)
-  The input for this must be a wfobj from the EAARL-A system. This function
-  will go through each pulse's triplet of channels to select the best one in
-  terms of saturation. A new wfobj with just these will be returned; the new
-  wfobj will have 1/3 the size of the original.
+func eaarl_wf_filter_channel(wf, lim=, max_intensity=, max_saturated=) {
+/* DOCUMENT eaarl_wf_filter_channel(wf, lim=, max_intensity=, max_saturated=)
+  The input for this must be a wfobj from the EAARL system. This function will
+  go through each pulse's triplet of channels to select the best one in terms
+  of saturation. A new wfobj with just these will be returned; the new wfobj
+  will have 1/3 the size of the original.
 
   Note: The input WF -must- already be sorted so that each pulse's channels are
   together as a triplet in 1-2-3 order!
@@ -39,7 +39,7 @@ func eaarla_wf_filter_channel(wf, lim=, max_intensity=, max_saturated=) {
     wf = wf(index, 1:wf.count);
 
   if(wf.count % 3 != 0)
-    error, "Invalid input to eaarla_wf_select_channel";
+    error, "Invalid input to eaarl_wf_filter_channel";
 
   keep = array(short(0), wf.count);
 

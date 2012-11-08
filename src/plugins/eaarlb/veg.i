@@ -151,8 +151,8 @@ forcechannel=, msg=) {
   if (graph) animate, 1;
   for (j = 1; j <= len; j++) {
     raw = get_erast(rn=rn+j);
-    header = eaarla_decode_header(raw);
-    if (!eaarla_header_valid(header)) continue;
+    header = eaarl_decode_header(raw);
+    if (!eaarl_header_valid(header)) continue;
     for (i = 1; i <= header.number_of_pulses; i++) {
       if (multi_peaks) {
         depths(i,j) = ex_veg_all(rn+j, i, last=last, graph=graph, header=header);
@@ -480,9 +480,9 @@ func ex_veg_all(rn, pulse_number, last=, graph=, pse=, thresh=, win=, verbose=,h
 
   raw = get_erast(rn=rn);
   if (is_void(header)) {
-    pulse = eaarla_decode_pulse(raw, pulse_number, wfs=1);
+    pulse = eaarl_decode_pulse(raw, pulse_number, wfs=1);
   } else {
-    pulse = eaarla_decode_pulse(raw, pulse_number, header=header, wfs=1);
+    pulse = eaarl_decode_pulse(raw, pulse_number, header=header, wfs=1);
   }
 
   rv.sa = pulse.shaft_angle;
@@ -769,9 +769,9 @@ forcechannel=, header=) {
 
   raw = get_erast(rn=rn);
   if (is_void(header)) {
-    pulse = eaarla_decode_pulse(raw, pulse_number, wfs=1);
+    pulse = eaarl_decode_pulse(raw, pulse_number, wfs=1);
   } else {
-    pulse = eaarla_decode_pulse(raw, pulse_number, header=header, wfs=1);
+    pulse = eaarl_decode_pulse(raw, pulse_number, header=header, wfs=1);
   }
   irange = pulse.raw_irange;
 

@@ -312,7 +312,7 @@ func pcobj_rn(cache, idx) {
     for(i = 1; i <= numberof(idx); i++) {
       if(cache(idx(i)))
         continue;
-      result = eaarla_fsecs2rn(use(raster_seconds,idx(i)),
+      result = eaarl_fsecs2rn(use(raster_seconds,idx(i)),
         use(raster_fseconds,idx(i)));
       w = where(use(raster_seconds) == use(raster_seconds,idx(i)) &
         use(raster_fseconds) == use(raster_fseconds,idx(i)));

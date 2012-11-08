@@ -54,8 +54,8 @@
   3   ?   ui8[?]  Array of char data with length given
 */
 
-func eaarla_decode_header(raw, offset) {
-/* DOCUMENT eaarla_decode_header(raw, offset)
+func eaarl_decode_header(raw, offset) {
+/* DOCUMENT eaarl_decode_header(raw, offset)
   Given the raw data for a raster, this will decode and return its header
   information as an oxy group object with these fields:
 
@@ -110,10 +110,10 @@ func eaarla_decode_header(raw, offset) {
   return result;
 }
 
-func eaarla_header_valid(header) {
-/* DOCUMENT eaarla_header_valid(header)
+func eaarl_header_valid(header) {
+/* DOCUMENT eaarl_header_valid(header)
   Returns 1 if the given header is valid, 0 if not. HEADER must be the result
-  of eaarla_decode_header.
+  of eaarl_decode_header.
 */
   if(header.raster_length < 20)
     return 0;
@@ -132,8 +132,8 @@ func eaarla_header_valid(header) {
   return 1;
 }
 
-func eaarla_decode_pulse(raw, pulse, offset, header=, wfs=) {
-/* DOCUMENT eaarla_decode_pulse(raw, pulse, offset, header=)
+func eaarl_decode_pulse(raw, pulse, offset, header=, wfs=) {
+/* DOCUMENT eaarl_decode_pulse(raw, pulse, offset, header=)
   Given the raw data for a raster, this will decode and return the pulse
   information for the specified pulse number.
 
@@ -143,7 +143,7 @@ func eaarla_decode_pulse(raw, pulse, offset, header=, wfs=) {
     offset: Offset into RAW where raster starts. Defaults to 1, which is
       appropriate when passed individual raster data chunks.
   Options:
-    header= The result of eaarla_decode_header. If not supplied, it was be
+    header= The result of eaarl_decode_header. If not supplied, it was be
       determined from RAW. Providing the header is more efficient if you
       already have it or will be retrieving multiple pulses from one raster.
     wfs= By default the waveforms aren't included. Set to wfs=1 to include
@@ -185,9 +185,9 @@ func eaarla_decode_pulse(raw, pulse, offset, header=, wfs=) {
   the corresponding *_length fields).
 */
   default, offset, 1;
-  if(is_void(header)) header = eaarla_decode_header(raw, offset);
+  if(is_void(header)) header = eaarl_decode_header(raw, offset);
   result = save();
-  if(!eaarla_header_valid(header))
+  if(!eaarl_header_valid(header))
     return result;
 
   offset = header.pulse_offsets(pulse);
@@ -262,8 +262,8 @@ func eaarla_decode_pulse(raw, pulse, offset, header=, wfs=) {
   return result;
 }
 
-func eaarla_decode_rasters(raw, wfs=) {
-/* DOCUMENT data = eaarla_decode_rasters(raw)
+func eaarl_decode_rasters(raw, wfs=) {
+/* DOCUMENT data = eaarl_decode_rasters(raw)
   RAW may be an array of char for a single raster, or it may be an array of
   pointers to such data. The raster data will be decoded and returned as an
   oxy group object with the following fields:
@@ -345,8 +345,8 @@ func eaarla_decode_rasters(raw, wfs=) {
   i = 0;
   while(offset < nraw) {
     i++;
-    header = eaarla_decode_header(raw, offset);
-    valid(i) = eaarla_header_valid(header);
+    header = eaarl_decode_header(raw, offset);
+    valid(i) = eaarl_header_valid(header);
     raster_length(i) = header.raster_length;
     if(!valid(i)) {
       offset += raster_length(i);
@@ -360,7 +360,7 @@ func eaarla_decode_rasters(raw, wfs=) {
     digitizer(i) = header.digitizer;
 
     for(j = 1; j <= number_of_pulses(i); j++) {
-      pulse = eaarla_decode_pulse(raw, j, offset, header=header, wfs=wfs);
+      pulse = eaarl_decode_pulse(raw, j, offset, header=header, wfs=wfs);
       offset_time(i,j) = pulse.offset_time;
       number_of_waveforms(i,j) = pulse.number_of_waveforms;
       transmit_bias(i,j) = pulse.transmit_bias;
@@ -452,8 +452,8 @@ func eaarla_decode_rasters(raw, wfs=) {
   return result;
 }
 
-func eaarla_fsecs2rn(seconds, fseconds, fast=) {
-/* DOCUMENT rn = eaarla_fsecs2rn(seconds, fseconds, fast=)
+func eaarl_fsecs2rn(seconds, fseconds, fast=) {
+/* DOCUMENT rn = eaarl_fsecs2rn(seconds, fseconds, fast=)
   Given a pair of values SECONDS and FSECONDS, this will return the
   corresponding RN.
 
@@ -478,7 +478,7 @@ func eaarla_fsecs2rn(seconds, fseconds, fast=) {
   if(!is_scalar(seconds)) {
     result = array(long, dimsof(seconds));
     for(i = 1; i <= numberof(seconds); i++) {
-      result(i) = eaarla_fsecs2rn(seconds(i), fseconds(i));
+      result(i) = eaarl_fsecs2rn(seconds(i), fseconds(i));
     }
     return result;
   }
@@ -502,22 +502,22 @@ func eaarla_fsecs2rn(seconds, fseconds, fast=) {
   }
 
   count = numberof(edb);
-  rast = eaarla_decode_header(get_erast(rn=rn));
+  rast = eaarl_decode_header(get_erast(rn=rn));
   while(rn < count && rast.seconds < seconds) {
     rn++;
-    rast = eaarla_decode_header(get_erast(rn=rn));
+    rast = eaarl_decode_header(get_erast(rn=rn));
   }
   while(rn > 1 && rast.seconds > seconds) {
     rn--;
-    rast = eaarla_decode_header(get_erast(rn=rn));
+    rast = eaarl_decode_header(get_erast(rn=rn));
   }
   while(rn < count && rast.seconds == seconds && rast.fseconds < fseconds) {
     rn++;
-    rast = eaarla_decode_header(get_erast(rn=rn));
+    rast = eaarl_decode_header(get_erast(rn=rn));
   }
   while(rn > 1 && rast.seconds == seconds && rast.fseconds > fseconds) {
     rn--;
-    rast = eaarla_decode_header(get_erast(rn=rn));
+    rast = eaarl_decode_header(get_erast(rn=rn));
   }
 
   if(rast.seconds == seconds && rast.fseconds == fseconds)

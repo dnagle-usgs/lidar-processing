@@ -1,10 +1,10 @@
 require, "makeflow.i";
 
-func mf_mission_georef_eaarla(outdir=, update=, makeflow_fn=, forcelocal=,
+func mf_mission_georef_eaarl(outdir=, update=, makeflow_fn=, forcelocal=,
 norun=) {
-/* DOCUMENT mf_mission_georef_eaarla, outdir=, update=, makeflow_rn=,
+/* DOCUMENT mf_mission_georef_eaarl, outdir=, update=, makeflow_rn=,
    forcelocal=, norun=
-  Runs mf_georef_eaarla for each mission day in a mission configuration.
+  Runs mf_georef_eaarl for each mission day in a mission configuration.
 
   Options:
     outdir= Specifies an output directory where the PBD data should go. By
@@ -31,7 +31,7 @@ norun=) {
   for(i = 1; i <= count; i++) {
     write, format=" Preparing day %d/%d...\n", i, count;
     mission, load, days(i);
-    obj_merge, conf, mf_georef_eaarla(
+    obj_merge, conf, mf_georef_eaarl(
       file_dirname(edb_filename), gns=pnav_filename, ins=ins_filename,
       ops=ops_conf_filename, daystart=soe_day_start, outdir=outdir,
       update=update, forcelocal=forcelocal
@@ -48,12 +48,12 @@ norun=) {
   timer_finished, t0;
 }
 
-func mf_georef_eaarla(tlddir, files=, searchstr=, outdir=, gns=, ins=, ops=,
+func mf_georef_eaarl(tlddir, files=, searchstr=, outdir=, gns=, ins=, ops=,
 daystart=, update=, makeflow_fn=, forcelocal=, norun=) {
-/* DOCUMENT mf_georef_eaarla, tlddir, files=, searchstr=, outdir=, gns=, ins=,
+/* DOCUMENT mf_georef_eaarl, tlddir, files=, searchstr=, outdir=, gns=, ins=,
    ops=, daystart=, update=, makeflow_fn=, forcelocal=, norun=
 
-  Runs georef_eaarla in a batch mode over a set of TLD files.
+  Runs georef_eaarl in a batch mode over a set of TLD files.
 
   Parameters:
     tlddir: Directory under which TLD files are found.
@@ -128,7 +128,7 @@ daystart=, update=, makeflow_fn=, forcelocal=, norun=) {
       forcelocal=forcelocal,
       input=[files(i), gns, ins, ops],
       output=outfiles(i),
-      command="job_georef_eaarla",
+      command="job_georef_eaarl",
       options=save(
         string(0), [],
         "file-in-tld", files(i),

@@ -1,6 +1,6 @@
-func eaarla_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, laX, maX,
+func eaarl_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, laX, maX,
 maY, mag, &mx, &my, &mz, &px, &py, &pz) {
-/* DOCUMENT eaarla_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ,
+/* DOCUMENT eaarl_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ,
    laX, maX, maY, mag, &mx, &my, &mz, &px, &py, &pz)
 
   This function computes the mirror and target points for the EAARL-A system.
@@ -269,7 +269,7 @@ maY, mag, &mx, &my, &mz, &px, &py, &pz) {
     pz = LSrZ * mag + mz
 */
   log_id = logger_id();
-  if(logger(debug)) logger, debug, log_id+"Entering eaarla_direct_vector";
+  if(logger(debug)) logger, debug, log_id+"Entering eaarl_direct_vector";
 
   z = arZ * DEG2RAD;
   x = arX * DEG2RAD;
@@ -350,5 +350,5 @@ maY, mag, &mx, &my, &mz, &px, &py, &pz) {
   px = LSrX * mag + mx;
   py = LSrY * mag + my;
   pz = LSrZ * mag + mz;
-  if(logger(debug)) logger, debug, log_id+"Leaving eaarla_direct_vector";
+  if(logger(debug)) logger, debug, log_id+"Leaving eaarl_direct_vector";
 }

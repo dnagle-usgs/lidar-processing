@@ -459,13 +459,13 @@ func decode_raster(raw, rn=) {
     raw = get_erast(rn=rn);
 
   result = array(RAST,1);
-  header = eaarla_decode_header(raw);
+  header = eaarl_decode_header(raw);
   if(header.raster_type != 5) {
     write, format="Raster %d has invalid type (%d) Len:%d\n",
       header.raster_number, header.raster_type, header.raster_length;
     return result;
   }
-  if(!eaarla_header_valid(header))
+  if(!eaarl_header_valid(header))
     return result;
 
   seconds = header.seconds + eaarl_time_offset;
@@ -478,7 +478,7 @@ func decode_raster(raw, rn=) {
   result.npixels = header.number_of_pulses;
 
   for(i = 1; i <= header.number_of_pulses; i++) {
-    pulse = eaarla_decode_pulse(raw, i, header=header, wfs=1);
+    pulse = eaarl_decode_pulse(raw, i, header=header, wfs=1);
     result.irange(i) = pulse.raw_irange;
     result.sa(i) = pulse.shaft_angle;
     result.offset_time(i) = (pulse.offset_time + header.fseconds) \

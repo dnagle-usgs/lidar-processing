@@ -234,7 +234,7 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
   }
 
   local mx, my, mz, px, py, pz;
-  eaarla_direct_vector,
+  eaarl_direct_vector,
     yaw, pitch, roll,
     easting, northing, palt,
     dx, dy, dz,

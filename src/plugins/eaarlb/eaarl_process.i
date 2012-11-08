@@ -1,8 +1,8 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-func eaarla_process(args) {
-/* DOCUMENT eaarla_process(fnc, q=, region=, verbose=, ..., args=)
-  Processes EAARL-A data.
+func eaarl_process(args) {
+/* DOCUMENT eaarl_process(fnc, q=, region=, verbose=, ..., args=)
+  Processes EAARL data.
 
   Parameter FNC must be a function or function name. The function must have a
   signature that contains, at a minimum:
@@ -22,7 +22,7 @@ func eaarla_process(args) {
       omitted, then the user will be prompted to drag out a box in the current
       window.
     verbose= Specifies whether informational output should be displayed by
-      eaarla_process. By default it is, use verbose=0 to disable. This value is
+      eaarl_process. By default it is, use verbose=0 to disable. This value is
       stored to OPT as well, unless OPT already has a VERBOSE= key.
     args= An oxy group object containing key-value pairs that will be passed to
       FNC. This allows for arbitrary key-value configuration information to be
@@ -94,8 +94,8 @@ func eaarla_process(args) {
     msg="Processing first surface, finished CURRENT rasters of COUNT...";
   for(i = 1; i <= numberof(start); i++) {
     raw = merge_pointers(get_erast(rn=indgen(start(i):stop(i))));
-    rasts = eaarla_decode_rasters(raw, wfs=1);
-    wf = georef_eaarla(rasts, pnav, tans, ops_conf, soe_day_start);
+    rasts = eaarl_decode_rasters(raw, wfs=1);
+    wf = georef_eaarl(rasts, pnav, tans, ops_conf, soe_day_start);
     raw = rasts = [];
     // Replace first parameter (function name) with waveforms and pass along
     // this wfobj's starting raster number
@@ -108,10 +108,10 @@ func eaarla_process(args) {
 
   return merge_pointers(result);
 }
-wrap_args, eaarla_process;
+wrap_args, eaarl_process;
 
-func eaarla_init_pointcloud(wf, rn_start=) {
-/* DOCUMENT result = eaarla_init_pointcloud(wf, rn_start=)
+func eaarl_init_pointcloud(wf, rn_start=) {
+/* DOCUMENT result = eaarl_init_pointcloud(wf, rn_start=)
   Initializes a POINTCLOUD_2PT structure based on WF, which should be a wfobj.
   The fields zone, mx, my, mz, soe, raster_seconds, raster_fseconds, pulse,
   channel, and digitizer will all be populated. If RN_START= is provided, it
@@ -119,7 +119,7 @@ func eaarla_init_pointcloud(wf, rn_start=) {
   populated, with the assumption that the points in WF are in ascending order
   by raster and that the rasters are continuous.
 
-  This is primariliy a utility function for EAARL-A processing functions.
+  This is primariliy a utility function for EAARL processing functions.
 */
   result = array(POINTCLOUD_2PT, wf.count);
 
@@ -148,12 +148,12 @@ func eaarla_init_pointcloud(wf, rn_start=) {
   return result;
 }
 
-func eaarla_fs(args) {
-/* DOCUMENT pointcloud = eaarla_fs(wf, args=, usecentroid=, altitude_thresh=,
+func eaarl_fs(args) {
+/* DOCUMENT pointcloud = eaarl_fs(wf, args=, usecentroid=, altitude_thresh=,
     rn_start=, keepbad=)
 
   Processes waveform data for first surface returns. WF should be a wfobj with
-  EAARL-A data.
+  EAARL data.
 
   The WF input should contain all three channels. As a side-effect, WF will be
   modified to select one channel per pulse. Thus WF.count will be reduced by a
@@ -191,7 +191,7 @@ func eaarla_fs(args) {
 
   if(args.usecentroid) {
     // Pick the channel for each triplet
-    eaarla_wf_filter_channel, wf, lim=12, max_intensity=251,
+    eaarl_wf_filter_channel, wf, lim=12, max_intensity=251,
       max_saturated=ops_conf.max_sfc_sat;
   } else {
     // Take first of each triplet
@@ -215,4 +215,4 @@ func eaarla_fs(args) {
 
   return working;
 }
-wrap_args, eaarla_fs;
+wrap_args, eaarl_fs;
