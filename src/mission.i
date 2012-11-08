@@ -893,6 +893,7 @@ func mission_save(fn) {
   f = open(fn, "w");
   write, f, format="%s\n", mission(json,);
   close, f;
+  if(logger(info)) logger, info, "Saved mission configuration to "+fn;
 }
 save = mission_save;
 
@@ -905,6 +906,7 @@ func mission_read(fn) {
   f = open(fn, "r");
   mission, json, rdfile(f);
   close, f;
+  if(logger(info)) logger, info, "Loaded mission configuration from "+fn;
   mission, plugins, load;
   // Even though tksync is invoked by "mission, json", need to invoke again to
   // account for changes that plugins make.

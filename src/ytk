@@ -133,7 +133,7 @@ proc ybkg args {
     set cmd [eval concat $args]
     set ::__ybkg__wait 1
     fifo_log yor $cmd
-    logger debug "Sending background command: $cmd"
+    logger trace "Sending background command: $cmd"
     set cmd [base64::encode -wrapchar "" $cmd]
     logger trace "Encoded as: $cmd"
     puts $::tky_fifo "bkg $cmd"
@@ -451,7 +451,7 @@ proc ytk_fifo_fileevent {} {
 
     # If a full line isn't available, gets will return ""
     if {[string length $ycmdstr]} {
-        logger debug "Received background command: $ycmdstr"
+        logger trace "Received background command: $ycmdstr"
         if {[catch {uplevel #0 $ycmdstr} errcode]} {
             logger error "Error in background command: $ycmdstr\n  $errcode"
             fifo_log tcl $ycmdstr $errcode
@@ -609,6 +609,7 @@ proc source_ytk_file {filename} {
             expect "> "
         }
         default {
+            logger error "source_ytk_file: don't know how to handle file $filename"
             error "don't know how to handle file"
         }
     }
@@ -867,6 +868,10 @@ proc init_hgid {} {
     }
 }
 
+proc bgerror {msg} {
+    logger warn "background error: $msg"
+}
+
 ######## END PROCEDURES ########
 
 logger debug "Started YTK as: $argv0 $argv"
@@ -922,6 +927,7 @@ set src_path [file dirname [file normalize [info script]]]
 ybkg funcset src_path \"$src_path\"
 
 foreach file_to_load $load_on_start {
+    logger info "Loading on startup: $file_to_load"
     source_ytk_file $file_to_load
 }
 

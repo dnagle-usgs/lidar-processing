@@ -15,6 +15,10 @@ func restore_alps_data(fn, vname=, skip=) {
   } else {
     data = pbd_load(fn, err, fvname);
     if(strlen(err)) {
+      if(logger(warn))
+        logger, warn, "restore_alps_data: Unable to load file due to error...\n"+
+            "Problem file: "+fn+"\n"+
+            "Error: "+err;
       write, format="Unable to load file due to error: %s\n", err;
       return;
     }
@@ -32,8 +36,10 @@ func restore_alps_data(fn, vname=, skip=) {
     tkcmd, swrite(format="append_varlist %s", vname);
     tkcmd, swrite(format="set pro_var %s", vname);
     write, format="Loaded variable %s\n", vname;
+    if(logger(info)) logger, info, "Loaded variable "+vname+" from "+fn;
   } else {
     write, format="Loaded object variable %s\n", vname;
+    if(logger(info)) logger, info, "Loaded object variable "+vname+" from "+fn;
   }
 }
 

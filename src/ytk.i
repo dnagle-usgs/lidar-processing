@@ -72,13 +72,19 @@ func tky_bg_stdout(msg) {
     if(!line) {
       // process has died! should probably handle this better...
     } else {
+      if(logger && logger(trace))
+        logger, trace, "Raw background command: "+line;
       cmd = strpart(line, 1:3);
       data = strpart(line, 5:);
       if(cmd == "bkg") {
         data = strchar(base64_decode(data));
+        if(logger && logger(trace))
+          logger, trace, "Received background command: "+data;
         self, append, data;
         tkcmd, "set ::__ybkg__wait 0"
       } else {
+        if(logger && logger(warn))
+          logger, warn, "Received unknown command type: "+cmd;
       }
     }
   }
@@ -127,6 +133,8 @@ func tky_stdout(msg) {
 
 func safe_run_funcdef(f) {
   if(catch(-1)) {
+    if(logger && logger(error))
+      logger, warn, "safe_run_funcdef encountered an error";
     return;
   }
   f;
@@ -146,6 +154,8 @@ func tkcmd(s, async=) {
     tkcmd, "after 1000", async=0
 */
   extern ytkfifo, _pid, Y_USER;
+  if(logger && logger(trace))
+    logger, trace, "Sending background command: "+pr1(s);
   write, ytkfifo, format="%s\n", s;
   if(ytkfifo)
     fflush, ytkfifo;
@@ -155,8 +165,12 @@ func tkcmd(s, async=) {
     write, ytkfifo, "::fileutil::writeFile {" + Y_USER + "/" + blockfn + "} {}";
     if(ytkfifo)
       fflush, ytkfifo;
+    if(logger && logger(trace))
+      logger, trace, "  async mode - blocking";
     while(noneof(lsdir(Y_USER) == blockfn))
       continue;
+    if(logger && logger(trace))
+      logger, trace, "  async mode - unblocked";
     remove, Y_USER + "/" + blockfn;
   }
 }
