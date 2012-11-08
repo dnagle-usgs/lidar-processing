@@ -216,8 +216,11 @@ func plugins_autoload(void) {
 
   SEE ALSO: plugins, plugins_list, plugins_loaded, plugins_load
 */
-  if(__plugins__.auto)
-    error, "autoloads were already processed";
+  if(__plugins__.auto) {
+    if(logger(warn))
+      logger, warn, "plugins_autoload: autoloads were already processed";
+    return;
+  }
   manifests = find(file_join(src_path, "plugins"), glob="manifest.json");
   for(i = 1; i <= numberof(manifests); i++) {
     data = json_decode(rdfile(manifests(i)));
