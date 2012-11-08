@@ -1,5 +1,6 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
+require, "logger.i";
 /*
   Original: Amar Nayegandhi
   mbatch_process: Richard Mitchell
@@ -234,19 +235,44 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
 }
 
 func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, forcechannel= ) {
-  extern ofn, _hgid;
+  extern ofn, _hgid, get_typ, auto;
+  log_id = logger_id();
+  if(logger(debug)) {
+    logger, debug, log_id+"Entering process_tile";
+    logger, debug, log_id+"Called with params:";
+    logger, debug, log_id+"  q="+pr1(q);
+    logger, debug, log_id+"  r="+pr1(r);
+    logger, debug, log_id+"  typ="+pr1(typ);
+    logger, debug, log_id+"  min_e="+pr1(min_e);
+    logger, debug, log_id+"  max_e="+pr1(max_e);
+    logger, debug, log_id+"  min_n="+pr1(min_n);
+    logger, debug, log_id+"  max_n="+pr1(max_n);
+    logger, debug, log_id+"  host="+pr1(host);
+    logger, debug, log_id+"  update="+pr1(update);
+    logger, debug, log_id+"  forcechannel="+pr1(typ);
+    logger, debug, log_id+"Externs:";
+    logger, debug, log_id+"  ofn="+pr1(ofn);
+    logger, debug, log_id+"  _hgid="+pr1(_hgid);
+    logger, debug, log_id+"  get_typ="+pr1(get_typ);
+    logger, debug, log_id+"  auto="+pr1(auto);
+  }
   default, host, "localhost";
     if (get_typ) {
+      if(logger(debug)) logger, debug, log_id+"get_typ enabled";
       typ=[]
       typ_idx = where(tile.min_e == min_e);
       if (is_array(typ_idx)) typ_idx2 = where(tile.max_n(typ_idx) == max_n);
       if (is_array(typ_idx2)) typ = [tile.typ(typ_idx(typ_idx2))](1);
       if (!typ) typ = typer(min_e, max_e, min_n, max_n, zone);
+      if(logger(debug)) logger, debug, log_id+"typ="+pr1(typ);
     }
     if (auto) {
+      if(logger(debug)) logger, debug, log_id+"auto enabled";
       idx_e = long(10000 * long(min_e / 10000));
       idx_n = long(10000 * long(1+(max_n / 10000)));
       if ((max_n % 10000) == 0) idx_n = long(max_n);
+      if(logger(debug))
+        logger, debug, log_id+"idx_e="+pr1(idx_e)+" idx_n="+pr1(idx_n);
       ofn = array(string, 2);
       ofn(1) = swrite(format="%si_e%d_n%d_%s/t_e%6.0f_n%7.0f_%s/",
         save_dir,
@@ -258,12 +284,18 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
       if (edf) ofn(2) = ofn(2) + ".edf";
       if (pbd) ofn(2) = ofn(2) + ".pbd";
       pofn = ofn(1) + ofn(2);
+      if(logger(debug)) {
+        logger, debug, log_id+"ofn(1)="+ofn(1);
+        logger, debug, log_id+"ofn(2)="+ofn(2);
+        logger, debug, log_id+"pofn="+pofn;
+      }
 
       // if update = 1, check to see if file exists
       if (update) {
-
+        if(logger(debug)) logger, debug, log_id+"update enabled";
         // Get files from server
         if ( ! strmatch(host, "localhost") ) {
+          if(logger(debug)) logger, debug, log_id+"retrieving files via rsync";
           write, format="rsyncing %s:%s\n", host, ofn(1);
           cmd = swrite(format="rsync -PHaqR %s:%s /", host, ofn(1));
           write, cmd;
@@ -288,6 +320,8 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
         close, f;
         if (nf) {
           write, format="File %s already exists...\n", new_file;
+          if(logger(debug))
+            logger, debug, log_id+"File already exists, aborting: "+new_file;
           // continue; // RWM
           return update;
         }
@@ -527,6 +561,8 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
       }
     }
 
+  if(logger(debug))
+    logger, debug, log_id+"Leaving process_tile";
   return update;
 }
 
