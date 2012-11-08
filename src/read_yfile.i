@@ -37,20 +37,6 @@ func restore_alps_data(fn, vname=, skip=) {
   }
 }
 
-func set_read_tk(junk) {
-  /* DOCUMENT set_read_tk(vname)
-   This function sets the variable name in the Process Eaarl Data gui
-  amar nayegandhi 05/05/03
-  */
-
-  extern vname
-  tkcmd, swrite(format="append_varlist %s",vname);
-  tkcmd, "l1pro::tools::varmanage::gui";
-  tkcmd, swrite(format="set pro_var %s", vname);
-  write, "Tk updated \r";
-
-}
-
 func update_var_settings(data, vname, fn=) {
   if(is_void(_ytk) || !_ytk)
     return;
