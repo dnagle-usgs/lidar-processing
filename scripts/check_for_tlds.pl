@@ -55,9 +55,10 @@ sub mysplit {
 
 ############################################################
 
-if ( $#ARGV == 1 ) {
+if ( $#ARGV == 2 ) {
   $fn   = $ARGV[0];
   $host = $ARGV[1];
+  $eaarl= $ARGV[2];
 } else {
   printf("argc: %d\n", $#ARGV);
   &showusage();
@@ -69,7 +70,7 @@ $path = <IN>; chop $path;
 $list = "";
 while ( $file=<IN> ) {
   chop $file;
-  $fqn = $path . "/eaarl/" . $file;
+  $fqn = $path . "/" . $eaarl . "/" . $file;
   if ( ! -e $fqn ) {
     printf("NEED: %s\n", $fqn);
     $fqn = $host . ":" . $fqn;     # prepend the hostname

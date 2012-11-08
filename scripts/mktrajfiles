@@ -120,7 +120,8 @@ while ( $file = <LS> ) {
 
   printf("%s\t%s\n", $YYYY_MM_DD, $file);
 
-  open(FIND1, "find .. -type d -name $YYYYMMDD -or -type d -name $YYYY_MM_DD |") || die("Unable to run find1\n");
+  # 2012-11-08: Added -L to follow symlinks
+  open(FIND1, "find -L .. -type d -name $YYYYMMDD -or -type d -name $YYYY_MM_DD |") || die("Unable to run find1\n");
   while ( $dir = <FIND1> ) {
     chop $dir;
     $tmp = $dir . "/trajectories";
@@ -147,7 +148,8 @@ while ( $file = <LS> ) {
       system("unzip $startdir/" . $zipdir) if ( ! $opt_norun );
 
       # Check to see if this was a gps trajectory
-      open(FIND2, "find . -name  \"\*cmb-pnav\" -or -name \"\*pnav.txt\"|")
+      # 2012-11-08: Added -L to follow symlinks
+      open(FIND2, "find -L . -name  \"\*cmb-pnav\" -or -name \"\*pnav.txt\"|")
         || die ("Unable to run find2\n");
       while ( $txt = <FIND2> ) {
         chop $txt;
@@ -156,7 +158,8 @@ while ( $file = <LS> ) {
       }
 
       # Check to see if this was an ins trajectory
-      open(FIND2, "find . -name  \"\*imu.txt\" -or -name \"\*ins.txt\" |")
+      # 2012-11-08: Added -L to follow symlinks
+      open(FIND2, "find -L . -name  \"\*imu.txt\" -or -name \"\*ins.txt\" |")
         || die ("Unable to run find2\n");
       while ( $txt = <FIND2> ) {
         chop $txt;
