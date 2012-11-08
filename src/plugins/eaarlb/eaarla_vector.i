@@ -268,6 +268,9 @@ maY, mag, &mx, &my, &mz, &px, &py, &pz) {
     py = LSrY * mag + my
     pz = LSrZ * mag + mz
 */
+  log_id = logger_id();
+  if(logger(debug)) logger, debug, log_id+"Entering eaarla_direct_vector";
+
   z = arZ * DEG2RAD;
   x = arX * DEG2RAD;
   y = arY * DEG2RAD;
@@ -347,4 +350,5 @@ maY, mag, &mx, &my, &mz, &px, &py, &pz) {
   px = LSrX * mag + mx;
   py = LSrY * mag + my;
   pz = LSrZ * mag + mz;
+  if(logger(debug)) logger, debug, log_id+"Leaving eaarla_direct_vector";
 }

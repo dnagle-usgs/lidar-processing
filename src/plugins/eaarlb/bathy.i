@@ -130,6 +130,20 @@ func bath_ctl_load(filename) {
 
 func run_bath(nil, start=, stop=, center=, delta=, last=, forcechannel=,
 graph=, pse=, msg=) {
+  log_id = logger_id();
+  if(logger(debug)) {
+    logger, debug, log_id+"Entering run_bath";
+    logger, debug, log_id+"Parameters:";
+    logger, debug, log_id+"  start="+pr1(start);
+    logger, debug, log_id+"  stop="+pr1(stop);
+    logger, debug, log_id+"  center="+pr1(center);
+    logger, debug, log_id+"  delta="+pr1(delta);
+    logger, debug, log_id+"  last="+pr1(last);
+    logger, debug, log_id+"  forcechannel="+pr1(forcechannel);
+    logger, debug, log_id+"  graph="+pr1(graph);
+    logger, debug, log_id+"  pse="+pr1(pse);
+    logger, debug, log_id+"  msg="+pr1(msg);
+  }
   extern bath_ctl;
   default, last, 250;
   default, graph, 0;
@@ -171,6 +185,7 @@ graph=, pse=, msg=) {
     status, progress, j, count;
   }
   status, finished;
+  if(logger(debug)) logger, debug, log_id+"Leaving run_bath";
   return depths;
 }
 

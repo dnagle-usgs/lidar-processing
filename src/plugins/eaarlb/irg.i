@@ -73,6 +73,23 @@ highelv_thresh=, forcechannel=, skip=, verbose=, msg=) {
 
   Returns data in RTRS structure.
 */
+  log_id = logger_id();
+  if(logger(debug)) {
+    logger, debug, log_id+"Entering irg";
+    logger, debug, log_id+"Parameters:";
+    logger, debug, log_id+"  start="+pr1(start);
+    logger, debug, log_id+"  stop="+pr1(stop);
+    logger, debug, log_id+"  inc="+pr1(inc);
+    logger, debug, log_id+"  delta="+pr1(delta);
+    logger, debug, log_id+"  usecentroid="+pr1(usecentroid);
+    logger, debug, log_id+"  use_highelv_echo="+pr1(use_highelv_echo);
+    logger, debug, log_id+"  highelv_thresh="+pr1(highelv_thresh);
+    logger, debug, log_id+"  forcechannel="+pr1(forcechannel);
+    logger, debug, log_id+"  skip="+pr1(skip);
+    logger, debug, log_id+"  verbose="+pr1(verbose);
+    logger, debug, log_id+"  msg="+pr1(msg);
+  }
+
   extern ops_conf;
   ops_conf_validate, ops_conf;
 
@@ -144,6 +161,7 @@ highelv_thresh=, forcechannel=, skip=, verbose=, msg=) {
   if (msg)
     status, finished;
 
+  if(logger(debug)) logger, debug, log_id+"Leaving irg";
   return rtrs;
 }
 

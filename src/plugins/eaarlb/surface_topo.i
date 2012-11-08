@@ -45,6 +45,20 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
     1 = start,  stop
     2 = start,  delta
 */
+  log_id = logger_id();
+  if(logger(debug)) {
+    logger, debug, log_id+"Entering first_surface";
+    logger, debug, log_id+"Parameters:";
+    logger, debug, log_id+"  start="+pr1(start);
+    logger, debug, log_id+"  stop="+pr1(stop);
+    logger, debug, log_id+"  center="+pr1(center);
+    logger, debug, log_id+"  delta="+pr1(delta);
+    logger, debug, log_id+"  usecentroid="+pr1(usecentroid);
+    logger, debug, log_id+"  use_highelv_echo="+pr1(use_highelv_echo);
+    logger, debug, log_id+"  forcechannel="+pr1(forcechannel);
+    logger, debug, log_id+"  verbose="+pr1(verbose);
+    logger, debug, log_id+"  msg="+pr1(msg);
+  }
   default, verbose, 1;
   sample_interval = 1.0;
 
@@ -68,6 +82,8 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
   // This is to prevent overrunning available memory
   maxcount = 25000;
   if(stop - start >= maxcount) {
+    if(logger(debug))
+      logger, debug, log_id+"More than "+pr1(maxcount)+" rasters, recursing";
     count = stop - start + 1;
     intervals = long(ceil(count/double(maxcount)));
     parts = array(pointer, intervals);
@@ -78,6 +94,7 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
         usecentroid=usecentroid, use_highelv_echo=use_highelv_echo,
         forcechannel=forcechannel, verbose=verbose, msg=msg);
     }
+    if(logger(debug)) logger, debug, log_id+"Leaving first_surface";
     return merge_pointers(parts);
   }
   extern rtrs;
@@ -107,16 +124,20 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
   bound0 = bound1 = bounds = [];
 
   if(use_ins_for_gps) {
+    if(logger(debug)) logger, debug, log_id+"Using INS for GPS";
     gps = ins;
     gps_sod = gps.somd;
     gps_alt = gps.alt;
   } else {
+    if(logger(debug)) logger, debug, log_id+"Using GPS for GPS";
     gps = pnav;
     gps_sod = gps.sod;
     gps_alt = gps.alt;
   }
+  if(logger(debug)) logger, debug, log_id+"Projecting trajectory to UTM";
   ll2utm, gps.lat, gps.lon, gps_north, gps_east;
 
+  if(logger(debug)) logger, debug, log_id+"Interpolating";
   if(verbose)
     write, format="%s", " Interpolating: roll...";
   roll = interp(ins.roll, ins.somd, atime);
@@ -152,13 +173,14 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
   lasang = 45.0;
   cyaw = 0.;
 
-  if(verbose)
-    write, "Projecting to the surface...";
+  if(verbose) write, "Projecting to the surface...";
+  if(logger(debug)) logger, debug, log_id+"Projecting to the surface";
 
   // Check to see if scan angles must be fixed. If not, use ops_conf bias.
   scan_bias = array(ops_conf.scan_bias, count);
   fix = [];
   if(is_array(fix_sa1) && is_array(fix_sa2)) {
+    if(logger(debug)) logger, debug, log_id+"Using scan angle fixes";
     write, "Using scan angle fixes...";
 
     if(rtrs(1).sa(1) > rtrs(1).sa(118))
@@ -191,6 +213,7 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
   if(forcechannel && has_member(ops_conf, "delta_ht")) {
     if(verbose > 1)
       write, format=" Calculating channel spacing for channel %d...\n", forcechannel;
+    if(logger(debug)) logger, debug, log_id+"Calculating channel spacing for channel "+pr1(forcechannel);
     chandx = get_member(ops_conf, swrite(format="chn%d_dx", forcechannel));
     chandy = get_member(ops_conf, swrite(format="chn%d_dy", forcechannel));
     chandz = ops_conf.delta_ht;
@@ -199,12 +222,14 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
       if(verbose > 1)
         write, format="   x theta: %.4f\n", chantx;
       scan_angles -= chantx;
+      if(logger(debug)) logger, debug, log_id+"Adjusting scan angles for channel by "+pr1(chantx);
     }
     if(chandy && chandz) {
       chanty = atan(chandy, chandz) * RAD2DEG;
       if(verbose > 1)
         write, format="   y theta: %.4f\n", chanty;
       lasang -= chanty;
+      if(logger(debug)) logger, debug, log_id+"Adjusting laser angles for channel by "+pr1(chantx);
     }
   }
 
@@ -218,6 +243,7 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
     mirang, scan_angles, mag,
     mx, my, mz, px, py, pz;
 
+  if(logger(debug)) logger, debug, log_id+"Populating R structure";
   surface = array(R, count);
   surface.meast  =     mx * 100.0;
   surface.mnorth =     my * 100.0;
@@ -233,18 +259,23 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
   if(forcechannel)
     surface.channel = forcechannel;
 
-  if(verbose && count >= 100)
-    write, format="%5d %8.1f %6.2f %6.2f %6.2f\n",
+  if(count >= 100 && (verbose || logger(debug))) {
+    sample = swrite(format="%5d %8.1f %6.2f %6.2f %6.2f\n",
       indgen(100:count:100),
       rtrs(100:count:100).soe(60)%86400,
       palt(60,100:count:100),
       roll(60,100:count:100),
-      pitch(60,100:count:100);
+      pitch(60,100:count:100));
+    if(verbose) write, format="%s", sample;
+    if(logger(debug)) logger, debug, (log_id+sample)(sum);
+  }
+
   if(verbose)
     pause, 1; // make sure Yorick shows output
 
   if(msg)
     status, finished;
+  if(logger(debug)) logger, debug, log_id+"Leaving first_surface";
   return surface;
 }
 

@@ -91,6 +91,27 @@ forcechannel=, msg=) {
 
   SEE ALSO: first_surface, ex_veg, ex_veg_all
 */
+  log_id = logger_id();
+  if(logger(debug)) {
+    logger, debug, log_id+"Entering run_vegx";
+    logger, debug, log_id+"Parameters:";
+    logger, debug, log_id+"  rn="+pr1(rn);
+    logger, debug, log_id+"  len="+pr1(len);
+    logger, debug, log_id+"  start="+pr1(start);
+    logger, debug, log_id+"  stop="+pr1(stop);
+    logger, debug, log_id+"  center="+pr1(center);
+    logger, debug, log_id+"  delta="+pr1(delta);
+    logger, debug, log_id+"  last="+pr1(last);
+    logger, debug, log_id+"  graph="+pr1(graph);
+    logger, debug, log_id+"  pse="+pr1(pse);
+    logger, debug, log_id+"  use_be_centroid="+pr1(use_be_centroid);
+    logger, debug, log_id+"  use_be_peak="+pr1(use_be_peak);
+    logger, debug, log_id+"  hard_surface="+pr1(hard_surface);
+    logger, debug, log_id+"  alg_mode="+pr1(alg_mode);
+    logger, debug, log_id+"  multi_peaks="+pr1(multi_peaks);
+    logger, debug, log_id+"  forcechannel="+pr1(forcechannel);
+    logger, debug, log_id+"  msg="+pr1(msg);
+  }
   extern ops_conf, veg_conf;
   default, graph, 0;
   default, last, 250;
@@ -110,6 +131,9 @@ forcechannel=, msg=) {
       len = stop - start + 1;
     } else {
       write, "Input parameters not correctly defined. See help, run_vegx. Please start again.";
+      if(logger(warn))
+        logger, warn, "Input parameters not correctly defined. See help, run_vegx. Please start again.";
+      if(logger(debug)) logger, debug, log_id+"Aborting run_vegx";
       return 0;
     }
   }
@@ -144,6 +168,7 @@ forcechannel=, msg=) {
   }
   if (graph) animate, 0;
   if (msg != 0) status, finished;
+  if(logger(debug)) logger, debug, log_id+"Leaving run_vegx";
   return depths;
 }
 
