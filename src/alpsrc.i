@@ -88,6 +88,7 @@ func __alpsrc_set_defaults(&hash) {
 /* DOCUMENT __alpsrc_set_defaults, hash;
   Sets the initial defaults for __alpsrc_defaults.
 */
+  // IMPORTANT: When this changes, also change tcl/alpsrc-1.0.tm
   default, hash, h_new();
   h_set, hash, batcher_dir=file_join(get_cwd(), "..", "batcher");
   // If the src directory is .../eaarl/lidar-processing/src
@@ -107,6 +108,9 @@ func __alpsrc_set_defaults(&hash) {
 
 __alpsrc_set_defaults, __alpsrc_defaults;
 alpsrc_load;
+
+if(_ytk)
+  tkcmd, "package require alpsrc\n::alpsrc::link";
 
 // Purge old log files if everything is in order to allow it.
 if(is_hash(alpsrc) && is_numerical(alpsrc.log_keep) && is_func(logger_purge))
