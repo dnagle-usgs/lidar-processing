@@ -29,6 +29,22 @@ package provide logger 1.0
 #       }
 #   }
 #
+# To retrieve a unique ID prefix:
+#   set log_id [::logger::id]
+# This will returns a unique identifier that can be used within logging output
+# to identify, for example, which proc you're in. Always returns an even number
+# in parentheses, like so: "(2)". (Unlike Yorick, it does not include a
+# trailing space.) Here's an example of usage:
+#
+#   proc example {foo bar} {
+#       set log_id [::logger::id]
+#       ::logger debug "$log_id Entering example"
+#       ::logger debug "$log_id foo = $foo"
+#       ::logger debug "$log_id bar = $bar"
+#       # Do something with foo and bar...
+#       ::logger debug "$log_id Leaving example"
+#   }
+#
 # Logging will start at the level defined in alpsrc, which is "debug" by
 # default. Yorick and Tcl log levels are configured independently. This means
 # you can set them to different logging levels if you need more or less output
@@ -49,6 +65,7 @@ package provide logger 1.0
 namespace eval ::logger {
     variable fn
     variable fh
+    variable id 0
 
     proc datetime {soe} {
         return [clock format $soe -gmt 1 -format %y%m%d.%H%M%S]
@@ -132,6 +149,11 @@ namespace eval ::logger {
         namespace ensemble configure ::logger::if_logging -map $if_mapping
         namespace ensemble configure ::logger -map $main_mapping
         ::logger info "logging at level $level"
+    }
+
+    proc id {} {
+        variable id
+        return "([incr id 2])"
     }
 }
 ::logger::init

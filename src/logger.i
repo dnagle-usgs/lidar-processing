@@ -276,6 +276,34 @@ if(is_void(logger)) {
     logger_level, "debug";
 }
 
+func logger_id(last, void) {
+/* DOCUMENT logger_id()
+  Returns a unique identifier that can be used within logging output to
+  identify, for example, which function you're in. Always returns an odd number
+  in parentheses followed by a space as a string, like so: "(1) ". (A similar
+  utility function exists in Tcl that always returns an even number. The odd
+  versus even distinction helps prevent confusion if they happen to
+  interleave.)
+
+  Here's an example of usage:
+
+    func example(foo, bar) {
+      log_id = logger_id();
+      if(logger(debug)) {
+        logger, debug, log_id+"Entering example()";
+        logger, debug, log_id+"foo = "+pr1(foo);
+        logger, debug, log_id+"bar = "+pr1(bar);
+      }
+      // do something with foo and bar...
+      if(logger(debug)) logger, debug, log_id+"Leaving example()";
+    }
+*/
+  last += 2;
+  logger_id = closure(logger_id.function, last);
+  return swrite(format="(%d) ", last);
+}
+logger_id = closure(logger_id, -1);
+
 func logger_purge(days) {
 /* DOCUMENTS logger_purge, <days>
   Purges (deletes) log files older than <DAYS>. If <DAYS> is non-positive, this
