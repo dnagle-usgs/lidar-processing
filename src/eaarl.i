@@ -105,7 +105,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "lines.i";
   require, "ll2utm.i";
   require, "makeflow.i";
-  require, "makeflow_eaarla.i";
   require, "makeflow_las.i";
   require, "makeflow_rcf.i";
   require, "manual_filter.i";
