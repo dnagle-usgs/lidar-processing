@@ -8,6 +8,7 @@ include, base + "autoselect.i";
 include, base + "batch_veg_energy.i";
 include, base + "bathy.i";
 include, base + "drast.i";
+include, base + "eaarl_constants.i";
 include, base + "eaarl_filter.i";
 include, base + "eaarl_json_log.i";
 include, base + "eaarl_process.i";
