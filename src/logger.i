@@ -313,14 +313,15 @@ func logger_purge(days) {
   exist, then this is a no-op.
 */
   if(assert) assert, is_numerical(days), "days is non-numeric";
-  if(logger(debug)) logger, debug, "logger_purge, "+pr1(days)+";";
+  logid = logger_id();
+  if(logger(debug)) logger, debug, logid+"logger_purge, "+pr1(days)+";";
 
   thresh = getsoe() - days * 86400;
   ts = logger_logfn_datetime(thresh);
-  if(logger(debug)) logger, debug, "logger_purge: datetime threshold = "+ts;
+  if(logger(debug)) logger, debug, logid+"datetime threshold = "+ts;
 
   log_dir = logger_logdir();
-  if(logger(debug)) logger, debug, "logger_purge: log_dir = "+log_dir;
+  if(logger(debug)) logger, debug, logid+"log_dir = "+log_dir;
 
   files = lsdir(log_dir);
   if(structof(files) == long) return;
@@ -332,7 +333,7 @@ func logger_purge(days) {
   else if(is_func(get_user))
     user = get_user();
   if(!user) return;
-  if(logger(debug)) logger, debug, "logger_purge: restricting to user="+user;
+  if(logger(debug)) logger, debug, logid+"restricting to user="+user;
   w = where(strglob("*."+user, files));
   if(!numberof(w)) return;
   files = files(w);
@@ -348,7 +349,7 @@ func logger_purge(days) {
       if(noneof(lsdirs(log_dir) == files(i)))
         logger, info, "deleted old log: "+fn;
       else if(logger(debug))
-        logger, debug, "logger_purge: unable to delete old log: "+fn;
+        logger, debug, logid+"unable to delete old log: "+fn;
     }
   }
 }
