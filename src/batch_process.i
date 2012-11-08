@@ -2123,12 +2123,11 @@ Input:
 func batch_automerge_tiles(path, searchstr=, verbose=, update=) {
 /* DOCUMENT batch_automerge_tiles(path, searchstr=, verbose=, update=)
   Specialized batch merging function for the initial merge of processed data.
-
-  By default, it will find all files matching *_v.pbd and *_b.pbd. It will
-  then merge everything it can. It makes distinctions between _v and _b, and
-  it also makes distinctions between w84, n88, n88_g03, n88_g09, etc. Thus,
-  it's safe to run on a directory containing both veg and bathy or both w84
-  and n88; they won't all get mixed together inappropriately.
+  By default, it will find all files matching *_v.pbd, *_b.pbd, and *_f.pbd. It
+  will then merge everything it can. It makes distinctions between _v, _b, and
+  _b, and it also makes distinctions between w84, n88, n88_g03, n88_g09, etc.
+  Thus, it's safe to run on a directory containing both veg and bathy or both
+  w84 and n88; they won't all get mixed together inappropriately.
 
   Parameters:
     path: The path to the directory.
@@ -2138,10 +2137,11 @@ func batch_automerge_tiles(path, searchstr=, verbose=, update=) {
       interested in merging some of the available files. However, if your
       search string matches things that this function isn't designed to
       handle, it won't handle them. Examples:
-        searchstr=["*_v.pbd", "*_b.pbd"]    Find all _v and _b files (default)
+        searchstr=["*_v.pbd", "*_b.pbd", "*_f.pbd"]
+                                            Find all _v/_b/_f files (default)
         searchstr="*_b.pbd"                 Find only _b files
         searchstr="*w84*_v.pbd"             Find only w84 _v files
-      Note that searchstr= can be an array for this function, if need be.
+      Note that searchstr= can be an array for this function.
 
     verbose= Specifies how chatty the function should be. Settings:
         verbose=0      Be silent
@@ -2165,7 +2165,7 @@ func batch_automerge_tiles(path, searchstr=, verbose=, update=) {
       e352_n3006_w84_b
     Again, the information will vary based on the files merged.
 */
-  default, searchstr, ["*_v.pbd", "*_b.pbd"];
+  default, searchstr, ["*_v.pbd", "*_b.pbd", "*_f.pbd"];
   default, verbose, 1;
   default, update, 0;
 
@@ -2177,7 +2177,7 @@ func batch_automerge_tiles(path, searchstr=, verbose=, update=) {
   // Extract tile names
   tiles = extract_tile(tails, dtlength="long", qqprefix=0);
 
-  // Break up into _v/_b
+  // Break up into _v/_b/_f
   types = array(string, numberof(files));
   w = where(strglob("*_v.pbd", tails));
   if(numberof(w))
@@ -2185,6 +2185,9 @@ func batch_automerge_tiles(path, searchstr=, verbose=, update=) {
   w = where(strglob("*_b.pbd", tails));
   if(numberof(w))
     types(w) = "b";
+  w = where(strglob("*_f.pbd", tails));
+  if(numberof(w))
+    types(w) = "f";
 
   // Break up into w84, n88, etc.
   parsed = parse_datum(tails);
