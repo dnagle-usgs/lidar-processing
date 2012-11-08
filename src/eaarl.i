@@ -54,7 +54,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "assert.i";
   require, "alps_constants.i";
   require, "eaarl_structs.i";
-  require, "eaarl_data.i";
+  require, "alps_data.i";
   require, "util_basic.i";
   require, "general.i";
   require, "util_obj.i";
