@@ -299,12 +299,12 @@ proc client'read sock {
          set res "";
          if { $remote == 1 } {
             puts "batcher.tcl: rsyncing $host:/$fdir/$args"
-            catch { exec rsync -PHaqR --no-t $host:/$fdir/$args / } res
+            catch { exec rsync -PHaqRk --no-t $host:/$fdir/$args / } res
             if { $res > "" } {      # display errors
                puts "res1: $res"
                # retry once
                system sleep 2
-               catch { exec rsync -PHaqR --no-t $host:/$fdir/$args / } res
+               catch { exec rsync -PHaqRk --no-t $host:/$fdir/$args / } res
             }
          }
 
