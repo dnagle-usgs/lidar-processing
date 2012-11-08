@@ -5,6 +5,59 @@ require, "eaarl.i";
 default, total_edb_records, 0;
 default, data_path, "";
 
+local EAARL_INDEX;
+/* DOCUMENT
+  Structure for indexing into TLD files to retrieve waveforms.
+
+  struct EAARL_INDEX {
+    int seconds;         seconds of the epoch
+    int fseconds;        fractional seconds (1e-6)
+    int offset;          offset in file to raster data
+    int raster_length;   length of raster
+    short file_number;   file raster is in (index into array of filenames)
+    char pixels;         pixel count for this raster
+    char digitizer;      digitizer used
+  };
+
+  SEE ALSO: edb_open load_edb
+*/
+struct EAARL_INDEX {
+  int seconds;
+  int fseconds;
+  int offset;
+  int raster_length;
+  short file_number;
+  char pixels;
+  char digitizer;
+};
+
+local RAST;
+/* DOCUMENT
+  Structure for raw waveform raster data.
+
+  struct RAST {
+    int soe;                   seconds of the epoch
+    int rasternbr;             raster number
+    int digitizer;             digitizer
+    int npixels;               number of pixels actually in this raster
+    int irange(120);           integer range values
+    int sa(120);               shaft angles
+    double offset_time(120);   fractional offset seconds
+    int rxbias(120,4);         receive waveform bias values
+    pointer tx(120);           transmit waveforms
+    pointer rx(120,4);         return waveforms
+  };
+
+  SEE ALSO: decode_raster
+*/
+struct RAST {
+  int soe, rasternbr, digitizer, npixels;
+  int irange(120), sa(120);
+  double offset_time(120);
+  int rxbias(120,4);
+  pointer tx(120), rx(120,4);
+};
+
 func get_total_edb_records {
 /* DOCUMENT get_total_edb_records;
   YTK glue used by drast.ytk to get the records information.
