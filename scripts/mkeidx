@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 #mkeidx: automatically make the master earl index
-# ls *.tld | /opt/eaarl/lidar-processing/bin/efdb MM-DD-YY.idx
+# ls *.tld | /opt/alps/lidar-processing/bin/efdb MM-DD-YY.idx
 # 
 # Original: Richard Mitchell.
 #

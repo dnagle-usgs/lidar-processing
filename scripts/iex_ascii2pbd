@@ -1,5 +1,5 @@
-#!/opt/eaarl/bin/yorick -batch
-#include "/opt/eaarl/lidar-processing/src/dmars.i"
+#!/opt/alps/bin/yorick -batch
+#include "/opt/alps/lidar-processing/src/dmars.i"
 
 cmdline = get_argv();  /* strips -batch cmdline.i */
 if (numberof(cmdline) == 2) {
