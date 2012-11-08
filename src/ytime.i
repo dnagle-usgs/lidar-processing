@@ -269,8 +269,8 @@ func soe2ymd(soe) {
     mn = digitize(doy(wn), months(2:)+1);
     dn = doy(wn) - months(mn);
   }
-  month = merge(my, mn, leaps);
-  day = merge(dy, dn, leaps);
+  month = ymerge(my, mn, leaps);
+  day = ymerge(dy, dn, leaps);
 
   return [year, month, day];
 }
@@ -388,7 +388,7 @@ func ymd2doy(year, month, day) {
     months = __months(cum);
     doyn = months(long(month(wn))) + day(wn);
   }
-  doy = merge(doyy, doyn, leaps);
+  doy = ymerge(doyy, doyn, leaps);
 
   return doy;
 }
