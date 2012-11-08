@@ -133,7 +133,9 @@ proc ybkg args {
     set cmd [eval concat $args]
     set ::__ybkg__wait 1
     fifo_log yor $cmd
+    logger debug "Sending background command: $cmd"
     set cmd [base64::encode -wrapchar "" $cmd]
+    logger trace "Encoded as: $cmd"
     puts $::tky_fifo "bkg $cmd"
     while {$::__ybkg__wait} {sleep 1}
 }
@@ -449,7 +451,9 @@ proc ytk_fifo_fileevent {} {
 
     # If a full line isn't available, gets will return ""
     if {[string length $ycmdstr]} {
+        logger debug "Received background command: $ycmdstr"
         if {[catch {uplevel #0 $ycmdstr} errcode]} {
+            logger error "Error in background command: $ycmdstr\n  $errcode"
             fifo_log tcl $ycmdstr $errcode
             send_user "*** Ytk Error in:$ycmdstr\n"
         } else {
@@ -560,6 +564,11 @@ proc ytk_exit {code} {
         $session destroy
     }
     ::yorick::destroy_fifos $ytk_fifo $ytk_fifo_name $tky_fifo $tky_fifo_name
+    if {$code} {
+        logger warn "Shutting down with code $code"
+    } else {
+        logger info "Exiting normally"
+    }
     exit $code
 }
 
@@ -860,6 +869,12 @@ proc init_hgid {} {
 
 ######## END PROCEDURES ########
 
+logger debug "Started YTK as: $argv0 $argv"
+logger debug "info library: [info library]"
+logger debug "info nameofexecutable [info nameofexecutable]"
+logger debug "info script: [info script]"
+logger debug "info patchlevel: [info patchlevel]"
+
 trace add variable _ytk write trace__ytk
 restore_defaults        ;# begin with the default settings
 load_options
@@ -889,6 +904,9 @@ if {[spawn_yorick]} {
 expect "Yorick * ready"
 set yorick_version [lindex [split $expect_out(0,string)] 1]
 
+logger debug "Yorick executable: [auto_execok yorick]"
+logger debug "Yorick version: $yorick_version"
+
 wm withdraw .
 wm protocol . WM_DELETE_WINDOW [list wm withdraw .]
 launch_gui
@@ -906,14 +924,6 @@ ybkg funcset src_path \"$src_path\"
 foreach file_to_load $load_on_start {
     source_ytk_file $file_to_load
 }
-
-logger debug "Started YTK as: $argv0 $argv"
-logger debug "info library: [info library]"
-logger debug "info nameofexecutable [info nameofexecutable]"
-logger debug "info script: [info script]"
-logger debug "info patchlevel: [info patchlevel]"
-logger debug "Yorick executable: [auto_execok yorick]"
-logger debug "Yorick version: $yorick_version"
 
 start_yorick
 
