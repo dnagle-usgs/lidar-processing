@@ -52,7 +52,7 @@ if(is_void(__eaarl_includes_included__)) {
   // top level
   require, "logger.i";
   require, "assert.i";
-  require, "eaarl_constants.i";
+  require, "alps_constants.i";
   require, "eaarl_structs.i";
   require, "eaarl_data.i";
   require, "util_basic.i";
