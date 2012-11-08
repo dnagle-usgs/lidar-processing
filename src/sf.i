@@ -53,3 +53,26 @@ func sf_mediator_raster(soe, errcmd) {
     mission, load, loaded;
   }
 }
+
+if(is_void(last_somd)) last_somd = 0;
+
+func send_sod_to_sf(somd) {
+/* DOCUMENT send_sod_to_sf, somd
+  Wrapper around the Tcl command send_sod_to_sf
+*/
+  extern last_somd, soe_day_start;
+  tkcmd, swrite(format="send_sod_to_sf %d", somd);
+  soe = int(soe_day_start + somd);
+  tkcmd, swrite(format="::sf::mediator broadcast soe %d", soe);
+  last_somd = somd;
+}
+
+func send_tans_to_sf(somd, pitch, roll, heading) {
+/* DOCUMENT send_tans_to_sf, somd, pitch, roll, heading
+  Wrapper around the Tcl command send_tans_to_sf
+*/
+  extern last_somd;
+  tkcmd, swrite(format="send_tans_to_sf %d %f %f %f",
+    somd, pitch, roll, heading);
+  last_somd = somd;
+}
