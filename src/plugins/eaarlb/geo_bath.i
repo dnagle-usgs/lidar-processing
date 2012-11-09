@@ -151,8 +151,8 @@ func compute_depth(data, sample_interval=) {
   return data;
 }
 
-func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
-/* DOCUMENT make_bathy(latutm=, q=, avg_surf=, forcechannel=)
+func make_bathy(latutm=, q=, avg_surf=, minsamples=, forcechannel=) {
+/* DOCUMENT make_bathy(latutm=, q=, avg_surf=, minsamples=, forcechannel=)
   This function allows a user to define a region on the gga plot of flightlines
   (usually window 6) to write out a 'level 1' file and plot a depth image
   defined in that region.
@@ -218,7 +218,8 @@ func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
       pause, 1; // make sure Yorick shows output
       status, start, msg=msg;
       surface = first_surface(start=raster_starts(i), stop=raster_stops(i),
-        usecentroid=1, forcechannel=forcechannel, msg=msg);
+        usecentroid=1, minsamples=minsamples, forcechannel=forcechannel,
+        msg=msg);
 
       msg = msg_prefix + "Step 3/3: Merging and correcting depths...";
       status, start, msg=msg;

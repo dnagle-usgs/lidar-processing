@@ -259,8 +259,10 @@ func make_fs_veg(d, rrr) {
   return geoveg;
 }
 
-func make_veg(latutm=, q=, ext_bad_att=, use_centroid=, use_highelv_echo=, multi_peaks=, alg_mode=, forcechannel=) {
-/* DOCUMENT make_veg(latutm=, q=, ext_bad_att=, use_centroid=, use_highelv_echo=, multi_peaks=, alg_mode=, forcechannel=)
+func make_veg(latutm=, q=, ext_bad_att=, use_centroid=, use_highelv_echo=,
+multi_peaks=, alg_mode=, minsamples=, forcechannel=) {
+/* DOCUMENT make_veg(latutm=, q=, ext_bad_att=, use_centroid=,
+   use_highelv_echo=, multi_peaks=, alg_mode=, minsamples=, forcechannel=)
  This function allows a user to define a region on the gga plot of
  flightlines (usually window 6) to  process data using the vegetation
  algorithm.
@@ -323,7 +325,9 @@ Returns:
       write, msg;
       pause, 1; // make sure Yorick shows output
       status, start, msg=msg;
-      rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid, use_highelv_echo=use_highelv_echo, forcechannel=forcechannel, msg=msg);
+      rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i),
+        usecentroid=use_centroid, use_highelv_echo=use_highelv_echo,
+        minsamples=minsamples, forcechannel=forcechannel, msg=msg);
       msg = swrite(format="Processing segment %d of %d for vegetation", i, no_t);
       write, msg;
       pause, 1; // make sure Yorick shows output
