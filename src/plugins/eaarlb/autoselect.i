@@ -10,7 +10,7 @@ func autoselect_ops_conf(dir, options=) {
   these steps:
 
     1. Is there a file named ops_conf.i in dir? If so, it is returned.
-    2. Do any files in dir match ops_conf*.i? If so, those files are sorted
+    2. Do any files in dir match *ops_conf*.i? If so, those files are sorted
        by name and the last is returned.
     3. The same as 1, except looking in dir's parent directory.
     4. The same as 2, except looking in dir's parent directory.
@@ -31,7 +31,7 @@ func autoselect_ops_conf(dir, options=) {
     if(file_isfile(file_join(dir, "ops_conf.i")))
       grow, results, file_join(dir, "ops_conf.i");
 
-    files = lsfiles(dir, glob="ops_conf*.i");
+    files = lsfiles(dir, glob="*ops_conf*.i");
     if(numberof(files)) {
       files = files(sort(files));
       grow, results, file_join(dir, files);
