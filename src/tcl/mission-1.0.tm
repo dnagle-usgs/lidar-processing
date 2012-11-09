@@ -50,6 +50,8 @@ if {![namespace exists ::mission]} {
 
         # Toplevel
         variable top .missconf
+        # Toplevel for field selection GUI
+        variable topselect .missconf.keyselect
         # Current view mode
         variable view load
         # Treeview with flight listing
@@ -76,6 +78,11 @@ if {![namespace exists ::mission]} {
 
         # Currently loaded file (if opened/saved via the GUI)
         variable currentfile ""
+
+        # Used in the detail selection GUI for its radioboxes
+        variable keyselect ""
+        # Used in detail selection GUI to remember state
+        variable keyselectstate ""
     }
 }
 
@@ -464,12 +471,14 @@ namespace eval ::mission {
         set widget_detail_value $f.entValue
 
         ttk::frame $f.fraButtons
+        ttk::button $f.btnSelectDetect -text "Select Detected..." \
+                -command ::mission::detail_select_detected
         ttk::button $f.btnSelectFile -text "Select File..." \
                 -command ::mission::detail_select_file
         ttk::button $f.btnSelectDir -text "Select Directory..." \
                 -command ::mission::detail_select_dir
-        grid x $f.btnSelectFile $f.btnSelectDir -in $f.fraButtons
-        grid columnconfigure $f.fraButtons {0 3} -weight 1
+        grid x $f.btnSelectDetect $f.btnSelectFile $f.btnSelectDir -in $f.fraButtons
+        grid columnconfigure $f.fraButtons {0 4} -weight 1
 
         grid $f.fraDetails - - -
         grid $f.lblType $f.cboType $f.btnTypeApply $f.btnTypeRevert
@@ -506,6 +515,78 @@ namespace eval ::mission {
         $widget_detail_value state disabled
 
         return $w
+    }
+
+    proc gui_select {json} {
+        variable conf
+        variable topselect
+        variable keyselect
+        variable keyselectstate
+        destroy $topselect
+        toplevel $topselect
+
+        set data [::json::json2dict $json]
+        set flight [dict get $data flight]
+        set detail [dict get $data key]
+        set path [dict get $data path]
+        set options [dict get $data options]
+
+        set keyselectstate [list $flight $detail $path]
+
+        set f $topselect.f
+        ttk::frame $f
+        pack $f -fill both -expand 1
+
+        ttk::label $f.lblMessage -text \
+                "Please select the desired value from the list below."
+        ttk::label $f.lblWhich -text "Flight: $flight  Detail: $detail"
+
+        grid $f.lblMessage -sticky w -padx 2 -pady 2
+        grid $f.lblWhich -sticky w -padx 2 -pady 2
+
+        set keyselect ""
+        if {[dict exists $conf $flight $detail]} {
+            set keyselect [dict get $conf $flight $detail]
+            if {$keyselect ni $options} {
+                lappend options $keyselect
+            }
+        }
+
+        set i 0
+        set added [list]
+        foreach option $options {
+            # Autoselect may return duplicates in its list
+            if {$option in $added} {
+                continue
+            }
+            incr i
+            ttk::radiobutton $f.rdoOption$i -text $option -value $option \
+                    -variable ::mission::keyselect
+            grid $f.rdoOption$i -sticky w -padx 2
+            lappend added $option
+        }
+
+        ttk::frame $f.fraButtons
+        ttk::button $f.btnApply -text Apply \
+                -command ::mission::gui_select_apply
+        ttk::button $f.btnCancel -text Cancel \
+                -command [list destroy $topselect]
+        grid x $f.btnApply $f.btnCancel -in $f.fraButtons -padx 5
+        grid columnconfigure $f.fraButtons {0 3} -weight 1
+        grid $f.fraButtons -sticky ew -pady 2
+    }
+
+    proc gui_select_apply {} {
+        variable topselect
+        variable keyselect
+        variable keyselectstate
+        destroy $topselect
+        lassign $keyselectstate flight detail path
+        set val [ystr $keyselect]
+        set flight [ystr $flight]
+        set detail [ystr $detail]
+        set path [ystr $path]
+        exp_send "mission, details, set, \"$flight\", \"$detail\", \"$val\", raw=1\r"
     }
 
     # Dynamically (re-)constructs the plugins menu used within the GUI. The
@@ -790,6 +871,34 @@ namespace eval ::mission {
 
         set flight [ystr $flight]
         exp_send "mission, details, set, \"$flight\", \"$name\", \"\";\r"
+    }
+
+    # Prompts the user to select from a detected list of options for the
+    # current field
+    proc detail_select_detected {} {
+        variable top
+        variable flight_name
+        variable detail_type
+        variable detail_value
+        variable detail_filetypes
+
+        if {[has $flight_name "data_path dir"]} {
+            set path [get $flight_name "data_path dir"]
+        } else {
+            tk_messageBox -icon warning \
+                    -parent $::mission::top \
+                    -type ok \
+                    -title "Need data_path" \
+                    -message "You must select a \"data_path dir\" before you\
+                        can detect detail options."]
+            return
+        }
+
+        set flight [ystr $flight_name]
+        set detail [ystr $detail_type]
+        set path [ystr $path]
+
+        exp_send "gui_mission_select, \"$flight\", \"$detail\", \"$path\";\r"
     }
 
     # Utility proc for detail_select_file and detail_select_dir
