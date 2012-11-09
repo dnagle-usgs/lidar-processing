@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func batch_las_extract_return(dir, searchstr=, files=, outdir=, update=,
 which=) {

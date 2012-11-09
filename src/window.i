@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func window_embed_tk(win, parent, dofma, style, dpi, sys0) {
 /* DOCUMENT window_embed_tk, win, parent

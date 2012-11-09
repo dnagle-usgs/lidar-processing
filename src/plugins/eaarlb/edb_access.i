@@ -1,6 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "general.i";
-require, "eaarl.i";
 
 default, total_edb_records, 0;
 default, data_path, "";

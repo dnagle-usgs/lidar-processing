@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func pcobj_to_old_fs(data, fs=, mirror=) {
 /* DOCUMENT pcobj_to_old_fs(data, fs=, mirror=)

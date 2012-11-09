@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 // The functions in this file are used to filter waveforms or wfobj objects,
 // either by returning a subset of the data or by modifying the data in some

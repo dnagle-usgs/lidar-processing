@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 // scratch stores the values of scratch and tmp so that we can restore them
 // when we're done, leaving things as we found them.

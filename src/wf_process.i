@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func process_init_pointcloud(wf, rn_start=) {
 /* DOCUMENT result = process_init_pointcloud(wf, rn_start=)

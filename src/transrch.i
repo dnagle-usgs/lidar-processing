@@ -10,8 +10,6 @@
 
 *********************************************************************/
 
-require, "eaarl.i";
-
 func transrch( fs, m, llst, _rx=, _el=, spot=, iwin=, disp_type= ) {
 /* DOCUMENT  transrch(fs, m)
 Searches for the point in the transect plot window iwin (default 3) nearest to where

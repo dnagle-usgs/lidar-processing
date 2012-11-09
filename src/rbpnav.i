@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 /*
 History:
    9/20/02  -ww Fixed problem where data_path was being overwritten

@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func solve_affine(sx, sy, dx, dy) {
 /* DOCUMENT solve_affine(sx, sy, dx, dy)

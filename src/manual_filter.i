@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func select_region_tile(data, win=, plot=, mode=) {
 /* DOCUMENT select_region(data, win=, plot=, mode=)

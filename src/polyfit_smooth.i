@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func poly2_fit_safe(y, x1, x2, m, w) {
 /* DOCUMENT poly2_fit_safe(y, x1, x2, m)

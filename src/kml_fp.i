@@ -1,4 +1,4 @@
-require, "eaarl.i";
+// vim: set ts=2 sts=2 sw=2 ai sr et:
 
 func kml_fp(fp, shapefile=, outfile=, color=, name=) {
 /* DOCUMENT kml_fp, fp, shapefile=, outfile=, color=, name=

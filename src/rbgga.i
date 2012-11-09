@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, _batch=) {
 /* DOCUMENT pnav_sel_rgn(win=, color=, mode=, region=, verbose=, _batch=)

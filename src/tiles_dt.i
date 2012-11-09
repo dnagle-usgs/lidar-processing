@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func dt2utm_km(dtcodes, &east, &north, &zone, &quad, &cell) {
 /* DOCUMENT dt2utm_km, dtcodes, &east, &north, &zone, &quad, &cell

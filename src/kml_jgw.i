@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func kml_jgw_make_levels(dir, levels=, searchstr=, update=, fast=, quality=) {
 /* DOCUMENT kml_jgw_make_levels, dir, levels=, searchstr=, update=, fast=,

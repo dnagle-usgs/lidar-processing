@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func perpendicular_intercept(x1, y1, x2, y2, x3, y3) {
 /* DOCUMENT perpendicular_intercept(x1, y1, x2, y2, x3, y3)

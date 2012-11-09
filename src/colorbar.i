@@ -1,7 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-require, "eaarl.i";
-
 func set_cbar(bar,w=) {
 /* DOCUMENT set_cbar(bar, w=)
   Lets the user interactively set the colorbar using a histogram.

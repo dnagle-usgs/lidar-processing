@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func tky_ascii_rdcols_sample(opts, cmd) {
 /* tky_ascii_rdcols_sample, opts, cmd

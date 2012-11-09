@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
 /* DOCUMENT gt_extract_comparisons(model, truth, modelmode=, truthmode=,

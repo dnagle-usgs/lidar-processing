@@ -9,8 +9,6 @@
    GEOID09 model.
 */
 
-require, "eaarl.i";
-
 func geoid_load(fn) {
 /* DOCUMENT g = geoid_load(fn)
   Loads the GEOID data from a file.

@@ -1,6 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 // This would probably be better located elsewhere but for now...
-require, "eaarl.i";
 
 func __ytk_l1pro_vars_filequery(fn, tclcmd) {
 /* DOCUMENT __ytk_l1pro_vars_filequery, fn, tclcmd;

@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 // To avoid name collisions breaking help, some functions get temporarily named
 // with an underscore prefix.

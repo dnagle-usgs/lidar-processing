@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func write_ascii_xyz(data, fn, mode=, intensity_mode=, ESRI=, header=, footer=,
 delimit=, indx=, intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=,

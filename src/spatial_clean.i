@@ -1,5 +1,3 @@
-require, "eaarl.i";
-
 func win_sel(win=,draw_box=) {
    /* DOCUMENT win_sel(win=)
      This function allows the user to select a window for applying spatial_clean algorithm.  The coordinates of the selected window are returned as an array.

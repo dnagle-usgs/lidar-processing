@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
 
 func geotiff_tags_encode(gtif) {
 /* DOCUMENT geotiff_tags_encode(gtif)

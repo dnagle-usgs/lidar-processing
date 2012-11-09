@@ -1,6 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 // Original by Amar Nayegandhi
-require, "eaarl.i";
 
 func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origdata=, retindx=, silent=, noplot=, nosort=) {
 /* DOCUMENT sel_data_rgn(data, type=, mode=, win=, exclude=, rgn=)
