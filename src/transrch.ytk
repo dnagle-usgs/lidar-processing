@@ -31,7 +31,10 @@ set trans_cnct 0
 global varlist;
 
 # number of mtransect frames to generate
-set Xcnt         3
+set Xcnt [yget Xcnt]
+if {![string is integer -strict $Xcnt]} {
+   set Xcnt 3
+}
 
 proc create_vars { cnt } {
    global Xcnt
