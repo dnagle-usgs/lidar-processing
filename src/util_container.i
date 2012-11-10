@@ -14,6 +14,62 @@
     - Yorick binary files
 */
 
+func has_member(val, member, deref=) {
+/* DOCUMENT has_member(val, member, deref=)
+  Tests to see if the given value contains a member with the given name.
+  Returns 1 if it does, 0 if it does not.
+
+  If deref=1, then pointers will be derefenced as necessary.
+*/
+// Original David Nagle 2009-08-14
+  if(deref && is_pointer(val)) val = *val;
+  if(is_hash(val)) return h_has(val, member);
+  if(is_stream(val)) return anyof(*(get_vars(val)(1)) == member);
+  if(is_obj(val)) return val(*,member) > 0;
+  if(catch(0x08)) {
+    return 0;
+  }
+  get_member, val, member;
+  return 1;
+}
+
+func has_members(val, deref=) {
+/* DOCUMENT has_members(val, deref=)
+  Checks to see if val is something that has members that can be accessed via
+  get_member. Returns 1 if so, 0 if not.
+
+  If deref=1, then pointers will be dereferenced as necessary.
+*/
+// Original David Nagle 2009-08-14
+  if(deref && is_pointer(val)) val = *val;
+  return is_stream(val) || is_hash(val) || is_obj(val) ||
+    (typeof(val) == "struct_instance");
+}
+
+func get_members(val) {
+/* DOCUMENT members = get_members(val);
+  Returns an array of strings, corresponding to the members in val (which can
+  be a Yeti hash, a stream, or a struct instance).
+*/
+  if(is_hash(val)) return h_keys(val);
+  if(is_stream(val)) return *(get_vars(val)(1));
+  if(typeof(val) == "struct_instance") {
+    fields = print(structof(val))(2:-1);
+    fields = regsub("^ +", fields);
+    fields = regsub("(\\(.+\\))?;$", fields);
+    fields = strsplit(fields, " ")(,2);
+    return fields;
+  }
+  if(is_obj(val)) {
+    fields = val(*,);
+    w = where(fields);
+    if(!numberof(w))
+      return [];
+    return fields(w);
+  }
+  return [];
+}
+
 func h_merge(..) {
 /* DOCUMENT h_merge(objA, objB, objC, ...)
   Merges all of its arguments into a single hash. They must all be Yeti hash
