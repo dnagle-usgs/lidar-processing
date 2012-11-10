@@ -926,6 +926,7 @@ ybkg funcset _user $tcl_platform(user)
 set src_path [file dirname [file normalize [info script]]]
 ybkg funcset src_path \"$src_path\"
 
+source_ytk_file ytk.i
 foreach file_to_load $load_on_start {
     logger info "Loading on startup: $file_to_load"
     source_ytk_file $file_to_load

@@ -1,6 +1,9 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 // Place to collect all yorick .i files that eaarl needs.
 
+if(is_void(src_path))
+  src_path = pwd();
+
 if(is_void(__eaarl_includes_included__)) {
   __eaarl_includes_included__ = 1;
 
@@ -34,8 +37,8 @@ if(is_void(__eaarl_includes_included__)) {
   require, "yeti.i";
   require, "yeti_regex.i";
   require, "yeti_yhdf.i";
-  require, "ytk.i";
-  require, "ytk_window.i";
+  if(_ytk)
+    require, "ytk_window.i";
   require, "zlib.i";
 
   // Patches for core / plugins
