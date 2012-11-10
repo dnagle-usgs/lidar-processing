@@ -37,8 +37,13 @@ if(is_void(__eaarl_includes_included__)) {
   require, "yeti.i";
   require, "yeti_regex.i";
   require, "yeti_yhdf.i";
-  if(_ytk)
+  if(_ytk) {
+    require, "ytk.i";
     require, "ytk_window.i";
+  } else {
+    require, "noytk.i";
+  }
+  require, "ytk_extra.i";
   require, "zlib.i";
 
   // Patches for core / plugins
