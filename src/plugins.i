@@ -203,11 +203,12 @@ func plugins_load(name, force=) {
   base = file_dirname(manifest);
   if(data.yorick && data.yorick.load)
     include, file_join(base, data.yorick.load), 1;
-  if(data.tcl && data.tcl.load)
+  if(_ytk && data.tcl && data.tcl.load)
     tkcmd, swrite(format="source {%s}", file_join(base, data.tcl.load));
   save, __plugins__,
     loaded=grow(__plugins__.loaded, name);
-  tkcmd, swrite(format="lappend ::plugins::loaded {%s}", name);
+  if(_ytk)
+    tkcmd, swrite(format="lappend ::plugins::loaded {%s}", name);
 }
 
 func plugins_autoload(void) {
@@ -227,10 +228,11 @@ func plugins_autoload(void) {
     base = file_dirname(manifests(i));
     if(data.yorick && data.yorick.auto)
       include, file_join(base, data.yorick.auto), 1;
-    if(data.tcl && data.tcl.auto)
+    if(_ytk && data.tcl && data.tcl.auto)
       tkcmd, swrite(format="source {%s}", file_join(base, data.tcl.auto));
   }
   save, __plugins__, auto=1;
 }
 
-tkcmd, "package require plugins";
+if(_ytk)
+  tkcmd, "package require plugins";
