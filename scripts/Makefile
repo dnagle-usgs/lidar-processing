@@ -19,12 +19,12 @@ SCRIPTS = ascii_rename.pl check_for_tlds.pl check_to_archive clean.awk \
 $(bindir):
 	mkdir $(bindir)
 
-install: $(bindir)
+install: $(bindir) $(bindir)/\#
 	@for script in $(SCRIPTS); do \
 		echo install -c $(ROOTPATH)/$$script $(bindir)/$$script; \
 		install -c $(ROOTPATH)/$$script $(bindir)/$$script; \
 	done
-	ln -s comment "$(bindir)/#"
+
 
 install-linked: $(bindir)
 	@for script in $(SCRIPTS); do \
@@ -32,6 +32,11 @@ install-linked: $(bindir)
 		ln -s $(ROOTPATH)/$$script $(bindir)/$$script; \
 	done
 	ln -s comment "$(bindir)/#"
+
+# always doing "ln -s" causes make to error if the destination
+# file exists and using -sf seemed potentially scary.
+$(bindir)/\#: comment
+	ln -s comment $@
 
 clean:
 

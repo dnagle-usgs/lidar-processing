@@ -30,11 +30,14 @@ undef $opt_where;   # same
 sub showusage {
   print <<EOF;
 
-  $0
+  $0 [file1] [file2]
 
   run from a YYYY/trajectories directory.
   It finds where each zip file should be unzipped, unzips it, and runs pnav2ybin
   as necessary.
+
+  If filenames are listed on the cmdline, only those files are checked to
+  see if they need to be installed.
 
   Each zip file is displayed as it is processed, regardless of the options used.
 
@@ -68,8 +71,17 @@ sub get_cli_opts {
 printf("myint   = %d\n", $opt_myint  ) if ( $opt_myint  );
 printf("myfloat = %f\n", $opt_myfloat) if ( $opt_myfloat);
 
-$LS_CMD = "ls *.zip|";
-
+# check to see if any filenames were supplied on the cmdline.
+# if so, only process those, else check everything
+if ( $#ARGV >= 0 ) {
+  my $list="";
+  for ($i=0; $i<=$#ARGV; ++$i) {
+    $list .= $ARGV[$i] . " ";
+  }
+  $LS_CMD = "ls $list|";
+}  else {
+  $LS_CMD = "ls *.zip|";
+}
 
 ############################################################
 
