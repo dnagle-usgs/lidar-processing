@@ -70,14 +70,18 @@ func pcr(rast, pulse, forcechannel=) {
     This would go in the first "if" statement below.
   */
 
-  rx = rast.rx(pulse,);
 
   if(!is_void(forcechannel)) {
-    rx_centroid = cent(*rx(forcechannel));
+    rx = *rast.rx(pulse,forcechannel);
+    rx_centroid = cent(rx);
     rx_centroid(1:2) += get_member(ops_conf,
         swrite(format="chn%d_range_bias", forcechannel));
-    rx_centroid(3) += 300 * (forcechannel - 1);
+    nsat = numberof(where(rx(1:np) <= 1));
+    // This ensures we get contrast even on waveforms where the peak is
+    // saturated.
+    rx_centroid(3) += (20 * nsat);
   } else {
+    rx = rast.rx(pulse,);
     if((numberof(where((*rx(1))(1:np) < 5))) <= ops_conf.max_sfc_sat) {
       rx_centroid = cent(*rx(1));
       // Must be water column only return.

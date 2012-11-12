@@ -925,7 +925,9 @@ func struct_cast(&data, dest, verbose=, special=) {
       if(has_member(result, "lelv"))
         result.lelv = data.lz * 100;
       if(has_member(result, "intensity"))
-        result.intensity = data.fint + 300 * (data.channel-1);
+        result.intensity = data.fint;
+        // This only applied to EAARL-A
+        //result.intensity = data.fint + 300 * (data.channel-1);
       if(has_member(result, "first_peak"))
         result.first_peak = data.fint;
       if(has_member(result, "bottom_peak"))
@@ -970,17 +972,20 @@ func struct_cast(&data, dest, verbose=, special=) {
         result.lx = result.fx;
         result.ly = result.fy;
         result.lz = result.fz;
-        result.channel = eaarl_intensity_channel(result.fint);
+        // EAARL-A only
+        //result.channel = eaarl_intensity_channel(result.fint);
         result.nx = 1;
       }
       if(structeq(src, VEG__)) {
-        result.channel = eaarl_intensity_channel(result.lint);
+        // EAARL-A only
+        //result.channel = eaarl_intensity_channel(result.lint);
       }
       if(structeq(src, GEO)) {
         result.lx = result.fx;
         result.ly = result.fy;
         result.lz = (data.elevation + data.depth) * 0.01;
-        result.channel = eaarl_intensity_channel(result.lint);
+        // EAARL-A only
+        //result.channel = eaarl_intensity_channel(result.lint);
         result.nx = 2;
       }
     }
