@@ -838,7 +838,9 @@ ndivide=) {
         mn_be_elv = min(be_elv);
         mx_be_elv = max(be_elv);
         // now find the 2-D polynomial fit for these points using order 3.
-        c = poly2_fit(be_elv/100., e1.east/100., e1.north/100., 3);
+        c = poly2_fit_safe(be_elv/100., e1.east/100., e1.north/100., 3);
+        if(is_void(c))
+          continue;
         // define a random set of points in that area selected to apply
         // this fit
 
