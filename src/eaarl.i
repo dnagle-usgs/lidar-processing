@@ -129,6 +129,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "pcobj_import.i";
   require, "pip.i";
   require, "plugins.i";
+  require, "polyfit_smooth.i";
   require, "rbgga.i";
   require, "rbpnav.i";
   require, "rbtans.i";
