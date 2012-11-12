@@ -72,7 +72,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "ascii_encode.i";
   require, "asciixyz.i";
   require, "batch_process.i";
-  require, "centroid.i";
   require, "class_clsobj.i";
   require, "class_deque.i";
   require, "class_mapobj.i";

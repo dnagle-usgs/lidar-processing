@@ -7,6 +7,7 @@ base = file_dirname(current_include())+"/";
 include, base + "autoselect.i";
 include, base + "batch_veg_energy.i";
 include, base + "bathy.i";
+include, base + "centroid.i";
 include, base + "drast.i";
 include, base + "eaarl_constants.i";
 include, base + "eaarl_filter.i";
