@@ -112,26 +112,12 @@ ndivide=) {
     ygrid = [bbox(3)];
   }
 
-  if ( _ytk && (ngridy>1)) {
-    tkcmd,"destroy .polyfit; toplevel .polyfit; set progress 0;"
-    tkcmd,swrite(format="ProgressBar .polyfit.pb \
-      -fg blue \
-      -troughcolor white \
-      -relief raised \
-      -maximum %d \
-      -variable progress \
-      -height 30 \
-      -width 400", int(ngridy));
-    tkcmd,"pack .polyfit.pb; update; center_win .polyfit;"
-  }
-
-  //timer, t0
-
   origdata = [];
   if (!gridmode) {
     maxblistall = max(max(boxlist(*,2),boxlist(*,4)));
     minblistall = min(min(boxlist(,2),boxlist(,4)));
   }
+  status, start, msg="Polyfit smooth...";
   for (i = 1; i <= ngridy; i++) {
     if (!gridmode) {
       // check to see if ygrid is within the boxlist region
@@ -267,14 +253,11 @@ ndivide=) {
         new_eaarl(count+1:count+nrand) = new_pts;
         count += nrand;
       }
+      status, progress, i+(double(j)/ngridx), ngridy;
     }
-
-    if (_ytk && (ngridy>1))
-      tkcmd, swrite(format="set progress %d", i)
+    status, progress, i, ngridy;
   }
-  if (_ytk) {
-    tkcmd, "destroy .polyfit"
-  }
+  status, finished;
   // remove points from eaarl_orig, that were tagged with rn = 0 in eaarl;
   rnidx = [];
   if (!gridmode) {
