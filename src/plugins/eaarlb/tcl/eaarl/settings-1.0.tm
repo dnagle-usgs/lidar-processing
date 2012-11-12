@@ -34,6 +34,7 @@ namespace eval ::eaarl::settings::ops_conf::v {
         chn4_dy         {gui_spinbox 0 1000 1}
         delta_ht        {gui_spinbox 0 1000 1}
         max_sfc_sat     {gui_spinbox -100 100 1}
+        minsamples      {gui_spinbox 0 100 1}
         tx_clean        {gui_spinbox 0 100 1}
         dmars_invert    {gui_spinbox 0 1 1}
     }

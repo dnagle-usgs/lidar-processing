@@ -32,6 +32,7 @@ func mission_constants(args) {
     double chn2_range_bias; // range bias for channel 2
     double chn3_range_bias; // range bias for channel 3
     int max_sfc_sat;        // Maximum saturation allowed for first return
+    short minsamples;       // Minimum samples required for waveform
   }
 
   Additionally, the following are given defaults as follows.
@@ -89,6 +90,13 @@ func mission_constants(args) {
 
   == Further explanation of fields ==
 
+  ops_conf.minsamples
+    If a waveform has fewer than this many samples, it is completely rejected.
+    This was implemented to solve the issue that arises when the plane rolls
+    enough that the surface is outside of its maximum range gate. When this
+    happens, we get very short waveforms containing just noise (because they're
+    well above the surface).
+
   ops_conf.tx_clean
     When this field is present, the transmit waveform will be cleaned up. The
     field should be an index value into the transmit waveform. The transmit
@@ -124,7 +132,8 @@ func mission_constants(args) {
     yaw_bias=0.,
     scan_bias=0.,
     range_biasM=0.,
-    max_sfc_sat=2n
+    max_sfc_sat=2n,
+    minsamples=0s
   );
   conf = obj_merge(defaults, conf);
   keycast, conf, defaults;

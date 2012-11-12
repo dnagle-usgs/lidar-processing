@@ -17,9 +17,9 @@
 */
 
 func first_surface(nil, start=, stop=, center=, delta=, usecentroid=,
-use_highelv_echo=, minsamples=, forcechannel=, verbose=, msg=) {
+use_highelv_echo=, forcechannel=, verbose=, msg=) {
 /* DOCUMENT first_surface(start=, stop=, center=, delta=, usecentroid=,
-   use_highelv_echo=, minsamples=, forcechannel=, verbose=)
+   use_highelv_echo=, forcechannel=, verbose=)
 
   Project the EAARL threshold trigger point to the surface.
 
@@ -29,7 +29,6 @@ use_highelv_echo=, minsamples=, forcechannel=, verbose=, msg=) {
     center= Center raster when doing before and after.
     delta= Number of rasters to process before and after.
     usecentroid= Set to 1 to use the centroid of the waveform.
-    minsamples= Excludes wfs with fewer than this many samples.
     use_highelv_echo= Set to 1 to exclude waveforms that tripped above the
         range gate.
     verbose= By default, progress/info output is enabled (verbose=1). Set
@@ -56,7 +55,6 @@ use_highelv_echo=, minsamples=, forcechannel=, verbose=, msg=) {
     logger, debug, log_id+"  delta="+pr1(delta);
     logger, debug, log_id+"  usecentroid="+pr1(usecentroid);
     logger, debug, log_id+"  use_highelv_echo="+pr1(use_highelv_echo);
-    logger, debug, log_id+"  minsamples="+pr1(minsamples);
     logger, debug, log_id+"  forcechannel="+pr1(forcechannel);
     logger, debug, log_id+"  verbose="+pr1(verbose);
     logger, debug, log_id+"  msg="+pr1(msg);
@@ -94,8 +92,7 @@ use_highelv_echo=, minsamples=, forcechannel=, verbose=, msg=) {
       j = min(stop, i + maxcount - 1);
       parts(interval) = &first_surface(start=i, stop=j,
         usecentroid=usecentroid, use_highelv_echo=use_highelv_echo,
-        minsamples=minsamples, forcechannel=forcechannel, verbose=verbose,
-        msg=msg);
+        forcechannel=forcechannel, verbose=verbose, msg=msg);
     }
     if(logger(debug)) logger, debug, log_id+"Leaving first_surface";
     return merge_pointers(parts);
@@ -103,8 +100,7 @@ use_highelv_echo=, minsamples=, forcechannel=, verbose=, msg=) {
   extern rtrs;
   if(verbose)
     write, "\n Retrieving irange values...";
-  rtrs = irg(start, stop, usecentroid=usecentroid, minsamples=minsamples,
-    use_highelv_echo=use_highelv_echo, forcechannel=forcechannel, msg=msg);
+  rtrs = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo, forcechannel=forcechannel, msg=msg);
   if (msg)
     status, start, msg=msg;
   irg_a = rtrs;
@@ -294,10 +290,8 @@ func open_seg_process_status_bar {
   }
 }
 
-func make_fs(latutm=, q=, ext_bad_att=, usecentroid=, minsamples=,
-forcechannel=, verbose=) {
-/* DOCUMENT make_fs(latutm=, q=, ext_bad_att=, usecentroid=, minsamples=,
-   forcechannel=, verbose=)
+func make_fs(latutm=, q=, ext_bad_att=, usecentroid=, forcechannel=, verbose=) {
+/* DOCUMENT make_fs(latutm=, q=, ext_bad_att=, usecentroid=, forcechannel=, verbose=)
   This function prepares data to write/plot first surface topography for a
   selected region of flightlines.
 */
@@ -340,7 +334,7 @@ forcechannel=, verbose=) {
       status, start, msg=msg;
       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i),
           usecentroid=usecentroid, forcechannel=forcechannel, msg=msg,
-          minsamples=minsamples, verbose=verbose);
+          verbose=verbose);
       // Must call again since first_surface will clear it:
       status, start, msg=msg;
       fs_all(i) = &rrr;

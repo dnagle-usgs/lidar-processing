@@ -7,7 +7,6 @@ set forcechannel_2 0
 set forcechannel_3 0
 set forcechannel_4 0
 set forcechannel_A 0
-set minsamples 0
 
 namespace eval ::l1pro::processing {
     namespace import ::misc::appendif
@@ -140,15 +139,15 @@ proc ::l1pro::processing::process {} {
         switch -- $::processing_mode {
             fs {
                 set cmd "$::pro_var = make_fs(latutm=1, q=q, ext_bad_att=1,\
-                        usecentroid=$::usecentroid, minsamples=$::minsamples)"
+                        usecentroid=$::usecentroid)"
             }
             bathy {
                 set cmd "$::pro_var = make_bathy(latutm = 1, q = q,\
-                        avg_surf=$::avg_surf, minsamples=$::minsamples)"
+                        avg_surf=$::avg_surf)"
                 }
             veg {
                 set cmd "$::pro_var = make_veg(latutm=1, q=q, ext_bad_att=1,\
-                        use_centroid=$::usecentroid, minsamples=$::minsamples)"
+                        use_centroid=$::usecentroid)"
             }
             cveg {
                 set cmd "$::pro_var = make_veg(latutm=1, q=q,\
@@ -179,18 +178,15 @@ proc ::l1pro::processing::process_channel {channel} {
     switch -- $::processing_mode {
         fs {
             set cmd "grow, $::pro_var, &make_fs(latutm=1, q=q, ext_bad_att=1,\
-                    usecentroid=$::usecentroid, forcechannel=$channel,\
-                    minsamples=$::minsamples)"
+                    usecentroid=$::usecentroid, forcechannel=$channel)"
         }
         bathy {
-            set cmd "grow, $::pro_var, &make_bathy(latutm=1, q=q,\
-                    avg_surf=$::avg_surf, forcechannel=$channel,\
-                    minsamples=$::minsamples)"
+            set cmd "grow, $::pro_var, &make_bathy(latutm = 1, q = q,\
+                    avg_surf=$::avg_surf, forcechannel=$channel)"
             }
         veg {
             set cmd "grow, $::pro_var, &make_veg(latutm=1, q=q, ext_bad_att=1,\
-                    use_centroid=$::usecentroid, forcechannel=$channel,\
-                    minsamples=$::minsamples)"
+                    use_centroid=$::usecentroid, forcechannel=$channel)"
         }
         default {
             error "Invalid processing mode: $::processing_mode"

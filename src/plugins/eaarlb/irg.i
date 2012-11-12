@@ -31,9 +31,9 @@ struct RTRS {
 };
 
 func irg(start, stop, inc=, delta=, usecentroid=, use_highelv_echo=,
-highelv_thresh=, minsamples=, forcechannel=, skip=, verbose=, msg=) {
+highelv_thresh=, forcechannel=, skip=, verbose=, msg=) {
 /* DOCUMENT irg(start, stop, inc=, delta=, usecentroid=, use_highelv_echo=,
-   minsamples=, forcechannel=, skip=, verbose=)
+   forcechannel=, skip=, verbose=)
 
   Returns an array of irange values for the specified records, from START to
   STOP.
@@ -62,10 +62,6 @@ highelv_thresh=, minsamples=, forcechannel=, skip=, verbose=, msg=) {
       waveforms to correct for range walk.
         usecentroid=0     Disable (default)
         usecentroid=1     Enable
-    minsamples= Excludes records whose waveforms have fewer than MINSAMPLES
-      samples. This is only applied when usecentroid=1 is in effect.
-        minsamples=0      Use all records (default)
-        minsamples=3      Excludes records with numberof(samples) <= 2
     use_highelv_echo= Excludes records whose waveforms tripped above the
       range gate and whose echo caused a peak in the positive direction
       higher than the bias.
@@ -87,7 +83,6 @@ highelv_thresh=, minsamples=, forcechannel=, skip=, verbose=, msg=) {
     logger, debug, log_id+"  usecentroid="+pr1(usecentroid);
     logger, debug, log_id+"  use_highelv_echo="+pr1(use_highelv_echo);
     logger, debug, log_id+"  highelv_thresh="+pr1(highelv_thresh);
-    logger, debug, log_id+"  minsamples="+pr1(minsamples);
     logger, debug, log_id+"  forcechannel="+pr1(forcechannel);
     logger, debug, log_id+"  skip="+pr1(skip);
     logger, debug, log_id+"  verbose="+pr1(verbose);
@@ -109,7 +104,6 @@ highelv_thresh=, minsamples=, forcechannel=, skip=, verbose=, msg=) {
   default, skip, 1;
   default, verbose, 0;
   default, usecentroid, 0;
-  default, minsamples, 0;
   default, use_highelv_echo, 0;
   default, highlelv_thresh, 5;
   default, msg, "Processing integer ranges...";
@@ -134,6 +128,9 @@ highelv_thresh=, minsamples=, forcechannel=, skip=, verbose=, msg=) {
     write, format="skip: %d\n", skip;
 
   chan = forcechannel ? forcechannel : 1;
+  minsamples = 0;
+  if(has_members(ops_conf) && has_member(ops_conf, "minsamples"))
+    minsamples = ops_conf.minsamples;
 
   if (msg)
     status, start, msg=msg;
