@@ -253,3 +253,21 @@ xy=) {
   timer_finished, t0;
   return result;
 }
+
+func polyfit_pbd(file_in, file_out, mode=, gridsize=, buffer=, ndivide=,
+nrand=, xy=) {
+/* DOCUMENT polyfit_pbd, file_in, file_out, mode=, gridsize=, buffer=,
+   ndivide=, nrand=, xy=
+
+   Simple wrapper around polyfit_data. This loads FILE_IN, calls polyfit_data,
+   then writes FILE_OUT.
+*/
+  local vname;
+  data = pbd_load(file_in, , vname);
+  if(is_void(data)) return;
+  data = polyfit_data(data, mode=mode, gridsize=gridsize, buffer=buffer,
+    ndivide=ndivide, nrand=nrand, xy=xy);
+  if(is_void(data)) return;
+  vname += "_pf";
+  pbd_save, file_out, vname, data;
+}
