@@ -16,8 +16,8 @@ func poly2_fit_safe(y, x1, x2, m, w) {
   return poly2_fit(y, x1, x2, m, w);
 }
 
-func polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=) {
-/* DOCUMENT polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=)
+func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
+/* DOCUMENT polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=)
 
   This function creates a 3rd order magnitude polynomial fit within the give
   data region and introduces random points within the selected region based on
@@ -27,7 +27,8 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=) {
   the window + buffer (wbuf) are considered for deriving the surface.
 
   Parameter:
-    eaarl: data array to be smoothed.
+    data: Data array to be smoothed. (This must have had test_and_clean applied
+      already.)
 
   Options:
     wslide = window size in cm that slides through the data array
@@ -41,9 +42,11 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=) {
       by ndivide). Default = 8;
 
   Output:
-    Data array of the same type as the 'eaarl' data array.
+    Data array of the same type as the original data array.
 */
 // Original 2005-08-05 Amar Nayegandhi
+  if(is_void(data)) return;
+
   t0 = array(double, 3);
   timer, t0;
 
@@ -58,18 +61,14 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=) {
   // Convert to meters
   wslide /= 100.;
 
-  eaarl = test_and_clean(eaarl);
-
-  a = structof(eaarl(1));
-  new_eaarl = array(a, numberof(eaarl));
+  a = structof(data(1));
+  new_eaarl = array(a, numberof(data));
   count = 0;
-  new_count = numberof(eaarl);
+  new_count = numberof(data);
 
-  if (!is_array(eaarl)) return;
-
-  eaarl = sortdata(eaarl, mode=mode, method="x");
+  data = sortdata(data, mode=mode, method="x");
   local x, y, z;
-  data2xyz, eaarl, x, y, z, mode=mode;
+  data2xyz, data, x, y, z, mode=mode;
 
   indx = [];
 
@@ -133,7 +132,7 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=) {
           elvall(k) = poly2(xp, yp, c);
         }
         if (mode == "fs") {
-          a = structof(eaarl(1));
+          a = structof(data(1));
           if (structeq(a, FS)) new_pts = array(FS,nrand);
           if (structeq(a, VEG__)) new_pts = array(VEG__,nrand);
         }
