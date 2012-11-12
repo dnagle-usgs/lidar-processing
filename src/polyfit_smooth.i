@@ -289,7 +289,7 @@ ndivide=) {
   new_eaarl.mnorth = new_eaarl.north;
   new_eaarl.melevation = new_eaarl.elevation + 300*100;
 
-  if (mode == 1) {
+  if (mode == "fs") {
     if (structeq(structof(new_eaarl), VEG__)) {
       // make last elevations the same as first return elevations
       new_eaarl.lnorth = new_eaarl.east;
