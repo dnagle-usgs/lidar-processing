@@ -65,7 +65,7 @@ xy=) {
   t0 = array(double, 3);
   timer, t0;
 
-  default, mode, "ba";
+  default, mode, "fs";
   default, gridsize, 15;
   default, buffer, 0;
   default, ndivide, 8;
@@ -270,4 +270,48 @@ nrand=, xy=) {
   if(is_void(data)) return;
   vname += "_pf";
   pbd_save, file_out, vname, data;
+}
+
+func batch_polyfit(dir, searchstr=, files=, update=, mode=, gridsize=, buffer=,
+ndivide=, nrand=, xy=) {
+  default, searchstr, "*.pbd";
+  default, update, 0;
+  default, mode, "fs";
+  default, gridsize, 15;
+  default, buffer, 0;
+  default, ndivide, 8;
+  default, xy, "uniform";
+
+  if(is_void(files))
+    files = find(dir, glob=searchstr);
+
+  if(xy == "random")
+    suffix = "_pfr_";
+  else if(xy == "_replace")
+    suffix = "_pfs_";
+  else
+    suffix = "_pfu_";
+  suffix += swrite(format="g%d_b%d_", long(gridsize*100), long(buffer*100));
+  if(!is_void(nrand))
+    suffix += swrite(format="nr%d", nrand);
+  else
+    suffix += swrite(format="nd%d", ndivide);
+
+  files_out = file_rootname(files)+suffix+".pbd";
+
+  if(update) {
+    w = where(!file_exists(files_out));
+    if(!numberof(w)) {
+      write, "All files already exist.";
+      return;
+    }
+    files = files(w);
+    files_out = files_out(w);
+  }
+
+  count = numberof(files);
+  for(i = 1; i <= count; i++) {
+    polyfit_pbd, files(i), files_out(i), mode=mode, gridsize=gridsize,
+      buffer=buffer, ndivide=ndivide, nrand=nrand, xy=xy;
+  }
 }
