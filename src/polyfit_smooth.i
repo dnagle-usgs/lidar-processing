@@ -16,18 +16,15 @@ func poly2_fit_safe(y, x1, x2, m, w) {
   return poly2_fit(y, x1, x2, m, w);
 }
 
-func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=, gridmode=,
-ndivide=) {
-/* DOCUMENT polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=,
-  gridmode=, ndivide=)
+func polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=) {
+/* DOCUMENT polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=)
 
   This function creates a 3rd order magnitude polynomial fit within the give
   data region and introduces random points within the selected region based on
   the polynomial surface. The points within the region are replaced by these
-  random points.  The region can be defined in an array (boxlist=), or if
-  gridmode is set to 1, the entire input data is considered for smoothing.  A
-  window (size wslide x wslide) slides through the data array, and all points
-  within the window + buffer (wbuf) are considered for deriving the surface.
+  random points. The entire input data is considered for smoothing. A window
+  (size wslide x wslide) slides through the data array, and all points within
+  the window + buffer (wbuf) are considered for deriving the surface.
 
   Parameter:
     eaarl: data array to be smoothed.
@@ -38,11 +35,6 @@ ndivide=) {
       mode = "fs"; //for first surface
       mode = "ba"; //for bathymetry (default)
       mode = "be"; //for bare earth vegetation
-    gridmode= set to 1 to work in a grid mode. All data will be fitted to a
-      polynomial within the defined wslide range and buffer distance (wbuf).
-    boxlist = list of regions (x,y bounding box) where the poly fit function
-      is to be applied.  All data within that region will be removed, and
-      fitted with data within some wbuf buffer distance.
     wbuf = buffer distance (cm) around the selected region.  Default = 0
     ndivide= factor used to determine the number of random points to be added
       within each grid cell.  ( total area of the selected region is divided
@@ -52,8 +44,10 @@ ndivide=) {
     Data array of the same type as the 'eaarl' data array.
 */
 // Original 2005-08-05 Amar Nayegandhi
+  t0 = array(double, 3);
+  timer, t0;
+
   default, mode, "ba";
-  default, gridmode, 1;
   default, wbuf, 0;
   default, ndivide, 8;
 
@@ -90,20 +84,13 @@ ndivide=) {
   wslide /= 100.;
 
   //now make a grid in the bbox
-  if (gridmode) {
-    ngridx = int(ceil((bbox(2)-bbox(1))/wslide));
-  } else {
-    // number of regions where poly fit will be needed.
-    ngridx = numberof(boxlist(,1));
-  }
+  ngridx = int(ceil((bbox(2)-bbox(1))/wslide));
   ngridy = int(ceil((bbox(4)-bbox(3))/wslide));
 
-  if (gridmode) {
-    if (ngridx > 1) {
-      xgrid = bbox(1)+span(0, wslide*(ngridx-1), ngridx);
-    } else {
-      xgrid = [bbox(1)];
-    }
+  if (ngridx > 1) {
+    xgrid = bbox(1)+span(0, wslide*(ngridx-1), ngridx);
+  } else {
+    xgrid = [bbox(1)];
   }
 
   if (ngridy > 1) {
@@ -113,18 +100,8 @@ ndivide=) {
   }
 
   origdata = [];
-  if (!gridmode) {
-    maxblistall = max(max(boxlist(*,2),boxlist(*,4)));
-    minblistall = min(min(boxlist(,2),boxlist(,4)));
-  }
   status, start, msg="Polyfit smooth...";
   for (i = 1; i <= ngridy; i++) {
-    if (!gridmode) {
-      // check to see if ygrid is within the boxlist region
-      yi = ygrid(i);
-      yib = (ygrid(i) + wslide);
-      if ((yi > maxblistall) || (yi < minblistall) || (yib > maxblistall) || (yib < minblistall)) continue;
-    }
     q = where(y >= ygrid(i)-wbuf);
     if (is_array(q)) {
       qq = where(y(q) <= ygrid(i)+wslide+wbuf);
@@ -135,21 +112,10 @@ ndivide=) {
     if (!(is_array(q))) continue;
 
     for (j = 1; j <= ngridx; j++) {
-      if (!gridmode) {
-        // check to see if ygrid is within the boxlist region
-        maxblist = max(boxlist(j,2),boxlist(j,4));
-        minblist = min(boxlist(j,2),boxlist(j,4));
-        if ((yi > maxblist) || (yi < minblist) || (yib > maxblist) || (yib < minblist)) continue;
-      }
       //define the extent of the strip to fit
       m = array(double, 4); // in meters
-      if (!gridmode) {
-        m(1) = min(boxlist(j,1),boxlist(j,3))-wbuf;
-        m(3) = max(boxlist(j,1),boxlist(j,3))+wbuf;
-      } else {
-        m(1) = (xgrid(j)-wbuf);
-        m(3) = (xgrid(j) + wslide+wbuf);
-      }
+      m(1) = (xgrid(j)-wbuf);
+      m(3) = (xgrid(j) + wslide+wbuf);
       m(2) = ygrid(i);
       m(4) = (ygrid(i) + wslide);
       indx = [];
@@ -260,10 +226,10 @@ ndivide=) {
   status, finished;
   // remove points from eaarl_orig, that were tagged with rn = 0 in eaarl;
   rnidx = [];
-  if (!gridmode) {
-    rnidx = grow(rnidx, where(eaarl.rn != 0));
-    new_eaarl = grow(new_eaarl, eaarl(rnidx));
-  }
+  //if (!gridmode) {
+  //  rnidx = grow(rnidx, where(eaarl.rn != 0));
+  //  new_eaarl = grow(new_eaarl, eaarl(rnidx));
+  //}
 
   new_eaarl = new_eaarl(1:count);
 
@@ -281,40 +247,12 @@ ndivide=) {
     }
   }
 
+  timer_finished, t0;
   return new_eaarl;
 }
 
-func make_boxlist(win) {
-// Original 2005-08-08 Amar Nayegandhi
-  window, win;
-
-  boxlist = array(double, 10, 4);
-  count = 1;
-  contadd = 1;
-  icount = 1;
-  ans = 'n';
-  while (contadd) {
-    m = mouse(1,1,"select region: ");
-    plg, [m(2),m(2),m(4),m(4),m(2)], [m(1),m(3),m(3),m(1),m(1)], color="red", width=1.5;
-    if ((count % 10) == 0) {
-      icount++;
-      boxlist1 = boxlist;
-      boxlist = array(double, 10*icount,4);
-      boxlist(1:count,) = boxlist1;
-    }
-    boxlist(count++,) = m(1:4);
-    n = read(prompt="Continue? (y/n):", format="%c",ans);
-    if (ans != 'y' ) contadd = 0;
-  }
-
-  boxlist = boxlist(1:count-1,);
-  return boxlist;
-}
-
-func batch_polyfit_smooth(bdata, iwin=, wslide=, mode=, boxlist=, wbuf=,
-gridmode=, ndivide=) {
-/* DOCUMENT batch_polyfit_smooth(idata, iwin=, wslide=, mode=, boxlist=, wbuf=,
-  gridmode=, ndivide=)
+func batch_polyfit_smooth(bdata, iwin=, wslide=, mode=, wbuf=, ndivide=) {
+/* DOCUMENT batch_polyfit_smooth(idata, iwin=, wslide=, mode=, wbuf=, ndivide=)
   See polyfit_eaarl_pts for explanation of input parameters
 */
 // Original 2005-08-12 Amar Nayegandhi
@@ -384,7 +322,7 @@ gridmode=, ndivide=) {
     if (!is_array(dt_idx)) continue;
     dtdata = bdata(dt_idx);
 
-    dtdp = polyfit_eaarl_pts(dtdata, wslide=wslide, mode=mode, wbuf=wbuf, gridmode=gridmode,ndivide=ndivide);
+    dtdp = polyfit_eaarl_pts(dtdata, wslide=wslide, mode=mode, wbuf=wbuf, ndivide=ndivide);
 
     if (!is_array(dtdp)) continue;
 
