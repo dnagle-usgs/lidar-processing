@@ -72,61 +72,38 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=) {
 
   indx = [];
 
-  // define a bounding box
-  bbox = array(float, 4);
-  bbox = [x(min), x(max), y(min), y(max)];
-
   if (!wslide) wslide = 1500; //in centimeters
 
   // Convert to meters
   wslide /= 100.;
 
-  //now make a grid in the bbox
-  ngridx = int(ceil((bbox(2)-bbox(1))/wslide));
-  ngridy = int(ceil((bbox(4)-bbox(3))/wslide));
+  // Calculate grid cell for each point
+  xgrid = long(x/wslide);
+  ygrid = long(y/wslide);
 
-  if (ngridx > 1) {
-    xgrid = bbox(1)+span(0, wslide*(ngridx-1), ngridx);
-  } else {
-    xgrid = [bbox(1)];
-  }
+  // Figure out how many x-columns we have
+  xgrid_uniq = set_remove_duplicates(xgrid);
+  xgrid_count = numberof(xgrid_uniq);
 
-  if (ngridy > 1) {
-    ygrid = bbox(3)+span(0, wslide*(ngridy-1), ngridy);
-  } else {
-    ygrid = [bbox(3)];
-  }
-
-  origdata = [];
   status, start, msg="Polyfit smooth...";
-  for (i = 1; i <= ngridy; i++) {
-    q = where(y >= ygrid(i)-wbuf);
-    if (is_array(q)) {
-      qq = where(y(q) <= ygrid(i)+wslide+wbuf);
-      if (is_array(qq)) {
-        q = q(qq);
-      } else q = []
-    }
-    if (!(is_array(q))) continue;
+  for(xgi = 1; xgi <= xgrid_count; xgi++) {
+    // Extract indices for this column; abort if we mysteriously have none
+    curxmatch = where(xgrid == xgrid_uniq(xgi));
+    if(is_void(curxmatch))
+      continue;
 
-    for (j = 1; j <= ngridx; j++) {
-      //define the extent of the strip to fit
-      m = array(double, 4); // in meters
-      m(1) = (xgrid(j)-wbuf);
-      m(3) = (xgrid(j) + wslide+wbuf);
-      m(2) = ygrid(i);
-      m(4) = (ygrid(i) + wslide);
-      indx = [];
-      if (is_array(q)) {
-        indx = where(x(q) >= m(1)*100.);
-        if (is_array(indx)) {
-          iindx = where(x(q)(indx) <= m(3)*100.);
-          if (is_array(iindx)) {
-            indx = indx(iindx);
-            indx = q(indx);
-          } else indx = [];
-        }
-      }
+    // Figure out how many y-rows we have
+    ygrid_uniq = set_remove_duplicates(ygrid(curxmatch));
+    ygrid_count = numberof(ygrid_uniq);
+
+    // Iterate over rows
+    for(ygi = 1; ygi <= ygrid_count; ygi++) {
+      // Extract indices for row+col; abort if we mysteriously have none
+      curymatch = where(ygrid(curxmatch) == ygrid_uniq(ygi));
+      if(is_void(curymatch))
+        continue;
+      indx = curxmatch(curymatch);
+
       if (numberof(indx) > 3) {
       // this is the data inside the box
       // tag these points in the original data array, so that we can remove
@@ -216,9 +193,8 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=) {
         new_eaarl(count+1:count+nrand) = new_pts;
         count += nrand;
       }
-      status, progress, i+(double(j)/ngridx), ngridy;
+      status, progress, xgi - 1 + double(ygi)/ygrid_count, xgrid_count;
     }
-    status, progress, i, ngridy;
   }
   status, finished;
 
