@@ -68,16 +68,11 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
   // Number of random points
   nrand = long(narea/ndivide) + 1;
 
-  a = structof(data(1));
-  result = array(a, numberof(data));
-  count = 0;
-  new_count = numberof(data);
+  strct = structof(data(1));
 
   data = sortdata(data, mode=mode, method="x");
   local x, y, z;
   data2xyz, data, x, y, z, mode=mode;
-
-  indx = [];
 
   // Calculate grid cell for each point
   xgrid = long(x/wslide);
@@ -98,6 +93,9 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
   status, start, msg="Polyfit smooth...";
   if(wbuf)
     curxbuf_hi = indgen(numberof(data));
+
+  result = array(pointer, xgrid_count);
+  count = 0;
   for(xgi = 1; xgi <= xgrid_count; xgi++) {
     // Extract indices for this column; abort if we mysteriously have none
     curxmatch = where(xgrid == xgrid_uniq(xgi));
@@ -128,6 +126,7 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
     ygrid_count = numberof(ygrid_uniq);
 
     // Iterate over rows
+    xresult = array(pointer, ygrid_count);
     for(ygi = 1; ygi <= ygrid_count; ygi++) {
       // Extract indices for row+col; abort if we mysteriously have none
       curymatch = where(ygrid(curxmatch) == ygrid_uniq(ygi));
@@ -190,84 +189,38 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
         yp = ys(yidx);
         zp = poly2(xp, yp, c);
 
-        if (mode == "fs") {
-          a = structof(data(1));
-          if (structeq(a, FS)) new_pts = array(FS,nrand);
-          if (structeq(a, VEG__)) new_pts = array(VEG__,nrand);
-        }
-        if (mode == "ba")
-          new_pts = array(GEO,nrand);
-        if (mode == "be")
-          new_pts = array(VEG__,nrand);
-        new_pts.east = int(xp*100);
-        new_pts.north = int(yp*100);
-        if (mode == "be") {
-          new_pts.least = int(xp*100);
-          new_pts.lnorth = int(yp*100);
-        }
-        if (mode == "ba") {
-          new_pts.elevation = -10;
-          new_pts.depth = int(zp*100 + 10);
-        }
-        if (mode == "be") {
-          new_pts.lelv = int(zp*100);
-        }
-        if (mode == "fs") {
-          new_pts.elevation = int(zp*100);
-        }
-        new_pts.rn = span(count+1,count+nrand,nrand);
-        new_pts.soe = span(count+1,count+nrand,nrand);
-
-        // remove any points that are not within the elevation boundaries
-        // of the original points
-        if (mode=="fs")
-          xidx = where(((new_pts.elevation) > zmin) & ((new_pts.elevation) < zmax));
-        if (mode=="ba")
-          xidx = where(((new_pts.elevation+new_pts.depth) > zmin) & ((new_pts.elevation+new_pts.depth) < zmax));
-        if (mode=="be")
-          xidx = where(((new_pts.lelv) > zmin) & ((new_pts.lelv) < zmax));
-        if (is_array(xidx)) {
-          new_pts = new_pts(xidx);
-        } else {
-          new_pts = [];
+        w = where(zp >= zmin & zp <= zmax);
+        if(!numberof(w))
           continue;
-        }
-        xidx = [];
-        npts = numberof(new_pts);
+        xp = xp(w);
+        yp = yp(w);
+        zp = zp(w);
 
-        if ((count+npts) > numberof(result)) {
-          tmp = result(1:count);
-          new_count += numberof(result);
-          if (mode=="fs" || mode =="be")
-            result = array(VEG__, new_count);
-          if (mode=="ba")
-            result = array(GEO, new_count);
-          result(1:count) = tmp;
-          temp = [];
-        }
-        result(count+1:count+npts) = new_pts;
+        npts = numberof(xp);
+        new_pts = array(strct, npts);
+
+        if(mode != "fs")
+          xyz2data, xp, yp, zp, new_pts, mode=mode;
+        xyz2data, xp, yp, zp, new_pts, mode="fs";
+
+        new_pts.rn = new_pts.soe = indgen(count+1:count+npts);
         count += npts;
+
+        xresult(ygi) = &new_pts;
       }
       status, progress, xgi - 1 + double(ygi)/ygrid_count, xgrid_count;
       indx = curbuf = curymatch = [];
     }
+    result(xgi) = &merge_pointers(xresult);
   }
+  result = merge_pointers(result);
   status, finished;
 
-  result = result(1:count);
-
-  // add fake mirror east,north, and elevation values (assume AGL to be 300m)
-  result.meast = result.east;
-  result.mnorth = result.north;
-  result.melevation = result.elevation + 300*100;
-
-  if (mode == "fs") {
-    if (structeq(structof(result), VEG__)) {
-      // make last elevations the same as first return elevations
-      result.lnorth = result.east;
-      result.least = result.east;
-      result.lelv = result.elevation;
-    }
+  // Fake out mirror coordinates (assume AGL to be 300m)
+  if(numberof(result)) {
+    result.meast = result.east;
+    result.mnorth = result.north;
+    result.melevation = result.elevation + 30000;
   }
 
   timer_finished, t0;
