@@ -72,8 +72,6 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=) {
 
   indx = [];
 
-  eaarl_orig = eaarl;
-
   // define a bounding box
   bbox = array(float, 4);
   bbox = [x(min), x(max), y(min), y(max)];
@@ -163,7 +161,7 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=) {
         }
         if (mode == "fs") {
           a = structof(eaarl(1));
-          if (structeq(a, FS)) new_pts = array(R,nrand);
+          if (structeq(a, FS)) new_pts = array(FS,nrand);
           if (structeq(a, VEG__)) new_pts = array(VEG__,nrand);
         }
         if (mode == "ba")
