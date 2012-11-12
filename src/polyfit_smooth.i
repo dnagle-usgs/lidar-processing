@@ -18,6 +18,10 @@ func poly2_fit_safe(y, x1, x2, m, w) {
 
 func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=, constrain=) {
 /* DOCUMENT polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=, constrain=)
+
+  !!! NOTE: The algorithm used by this function does not appear trustworthy.
+  !!! Please use this function instead: polyfit_eaarl_pts
+
   Given a set of XYZ points, this will return a new set of XYZ points where
   each XY point in the original is polyfit within a grid cell to determine a
   new Z value.
@@ -109,6 +113,9 @@ func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=, constrain=) {
 func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, degree=, constrain=, pts=) {
 /* DOCUMENT polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, degree=, constrain=,
   pts=)
+
+  !!! NOTE: The algorithm used by this function does not appear trustworthy.
+  !!! Please use this function instead: polyfit_eaarl_pts
 
   Given a set of XYZ points, this will return a new set of XYZ points that are
   randomly distributed in each grid square, with elevations poly-fit to the
@@ -229,6 +236,10 @@ func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, degree=, constrain=, pts=) {
 
 func polyfit_xyz_grd(x, y, z, grid=, buf=, n=, degree=, constrain=, pts=) {
 /* DOCUMENT polyfit_xyz_grd(x, y, z, grid=, buf=, n=, degree=, pts=)
+
+  !!! NOTE: The algorithm used by this function does not appear trustworthy.
+  !!! Please use this function instead: polyfit_eaarl_pts
+
   Given a set of XYZ points, this will return a new set of XYZ points that are
   distributed in a regular grid in each grid square, with elevations poly-fit
   to the input points.
@@ -358,6 +369,9 @@ pts=) {
 /* DOCUMENT polyfit_data(data, mode=, method=, grid=, buf=, n=, degree=,
   constrain=, pts)
 
+  !!! NOTE: The algorithm used by this function does not appear trustworthy.
+  !!! Please use this function instead: polyfit_eaarl_pts
+
   Given ALPS data, this will return a new set of ALPS data that have had a
   polyfit algorithm applied.
 
@@ -402,6 +416,9 @@ func batch_polyfit_data(dir, outdir=, files=, searchstr=, update=, mode=,
 method=, grid=, buf=, n=, degree=, constrain=, pts=, verbose=) {
 /* DOCUMENT batch_polyfit_data, dir, outdir=, files=, searchstr=, update=,
   mode=, method=, grid=, buf=, n=, degree=, constrain=, pts=, verbose=
+
+  !!! NOTE: The algorithm used by this function does not appear trustworthy.
+  !!! Please use this function instead: batch_polyfit_smooth
 
   Runs in batch mode over a set of files and apply a polyfit algorithm to
   each.
