@@ -30,7 +30,7 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=) {
     eaarl: data array to be smoothed.
 
   Options:
-    wslide = window size that slides through the data array.
+    wslide = window size in cm that slides through the data array
     mode =
       mode = "fs"; //for first surface
       mode = "ba"; //for bathymetry (default)
@@ -48,19 +48,20 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=) {
   timer, t0;
 
   default, mode, "ba";
+  default, wslide, 1500;
   default, wbuf, 0;
   default, ndivide, 8;
 
   if(is_integer(mode))
     mode = ["fs","ba","be"](mode);
 
-  tmr1 = tmr2 = array(double, 3);
-  timer, tmr1;
+  // Convert to meters
+  wslide /= 100.;
 
   eaarl = test_and_clean(eaarl);
 
   a = structof(eaarl(1));
-  new_eaarl = array(a, numberof(eaarl) );
+  new_eaarl = array(a, numberof(eaarl));
   count = 0;
   new_count = numberof(eaarl);
 
@@ -71,11 +72,6 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=) {
   data2xyz, eaarl, x, y, z, mode=mode;
 
   indx = [];
-
-  if (!wslide) wslide = 1500; //in centimeters
-
-  // Convert to meters
-  wslide /= 100.;
 
   // Calculate grid cell for each point
   xgrid = long(x/wslide);
