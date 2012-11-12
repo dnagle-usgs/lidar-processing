@@ -35,9 +35,9 @@ ndivide=) {
   Options:
     wslide = window size that slides through the data array.
     mode =
-      mode = 1; //for first surface
-      mode = 2; //for bathymetry (default)
-      mode = 3; // for bare earth vegetation
+      mode = "fs"; //for first surface
+      mode = "ba"; //for bathymetry (default)
+      mode = "be"; //for bare earth vegetation
     gridmode= set to 1 to work in a grid mode. All data will be fitted to a
       polynomial within the defined wslide range and buffer distance (wbuf).
     boxlist = list of regions (x,y bounding box) where the poly fit function
@@ -52,10 +52,13 @@ ndivide=) {
     Data array of the same type as the 'eaarl' data array.
 */
 // Original 2005-08-05 Amar Nayegandhi
-  default, mode, 2;
+  default, mode, "ba";
   default, gridmode, 1;
   default, wbuf, 0;
   default, ndivide, 8;
+
+  if(is_integer(mode))
+    mode = ["fs","ba","be"](mode);
 
   tmr1 = tmr2 = array(double, 3);
   timer, tmr1;
@@ -69,30 +72,22 @@ ndivide=) {
 
   if (!is_array(eaarl)) return;
 
+  eaarl = sortdata(eaarl, mode=mode, method="x");
+  local x, y, z;
+  data2xyz, eaarl, x, y, z, mode=mode;
+
   indx = [];
-  if (mode == 3) {
-    eaarl = eaarl(sort(eaarl.least)); // for bare_earth
-  } else {
-    eaarl = eaarl(sort(eaarl.east)); // for first surface and bathy
-  }
 
   eaarl_orig = eaarl;
 
   // define a bounding box
   bbox = array(float, 4);
-  if (mode != 3) {
-    bbox(1) = min(eaarl.east);
-    bbox(2) = max(eaarl.east);
-    bbox(3) = min(eaarl.north);
-    bbox(4) = max(eaarl.north);
-  } else {
-    bbox(1) = min(eaarl.least);
-    bbox(2) = max(eaarl.least);
-    bbox(3) = min(eaarl.lnorth);
-    bbox(4) = max(eaarl.lnorth);
-  }
+  bbox = [x(min), x(max), y(min), y(max)];
 
   if (!wslide) wslide = 1500; //in centimeters
+
+  // Convert to meters
+  wslide /= 100.;
 
   //now make a grid in the bbox
   if (gridmode) {
@@ -140,27 +135,16 @@ ndivide=) {
   for (i = 1; i <= ngridy; i++) {
     if (!gridmode) {
       // check to see if ygrid is within the boxlist region
-      yi = ygrid(i)/100.;
-      yib = (ygrid(i) + wslide)/100.;
+      yi = ygrid(i);
+      yib = (ygrid(i) + wslide);
       if ((yi > maxblistall) || (yi < minblistall) || (yib > maxblistall) || (yib < minblistall)) continue;
     }
-    q = [];
-    if (mode == 3) {
-      q = where(eaarl.lnorth >= ygrid(i)-wbuf);
-      if (is_array(q)) {
-        qq = where(eaarl.lnorth(q) <= ygrid(i)+wslide+wbuf);
-        if (is_array(qq)) {
-          q = q(qq);
-        } else q = []
-      }
-    } else {
-      q = where (eaarl.north >= ygrid(i)-wbuf);
-      if (is_array(q)) {
-        qq = where(eaarl.north(q) <= ygrid(i)+wslide+wbuf);
-        if (is_array(qq)){
-          q = q(qq);
-        } else q = [];
-      }
+    q = where(y >= ygrid(i)-wbuf);
+    if (is_array(q)) {
+      qq = where(y(q) <= ygrid(i)+wslide+wbuf);
+      if (is_array(qq)) {
+        q = q(qq);
+      } else q = []
     }
     if (!(is_array(q))) continue;
 
@@ -174,34 +158,23 @@ ndivide=) {
       //define the extent of the strip to fit
       m = array(double, 4); // in meters
       if (!gridmode) {
-        m(1) = min(boxlist(j,1),boxlist(j,3))-wbuf/100.;
-        m(3) = max(boxlist(j,1),boxlist(j,3))+wbuf/100.;
+        m(1) = min(boxlist(j,1),boxlist(j,3))-wbuf;
+        m(3) = max(boxlist(j,1),boxlist(j,3))+wbuf;
       } else {
-        m(1) = (xgrid(j)-wbuf)/100.;
-        m(3) = (xgrid(j) + wslide+wbuf)/100.;
+        m(1) = (xgrid(j)-wbuf);
+        m(3) = (xgrid(j) + wslide+wbuf);
       }
-      m(2) = ygrid(i)/100.;
-      m(4) = (ygrid(i) + wslide)/100.;
+      m(2) = ygrid(i);
+      m(4) = (ygrid(i) + wslide);
       indx = [];
       if (is_array(q)) {
-        if (mode == 3) {
-          indx = where(eaarl.least(q) >= m(1)*100.);
-          if (is_array(indx)) {
-            iindx = where(eaarl.least(q)(indx) <= m(3)*100.);
-            if (is_array(iindx)) {
-              indx = indx(iindx);
-              indx = q(indx);
-            } else indx = [];
-          }
-        } else {
-          indx = where(eaarl.east(q) >= m(1)*100);
-          if (is_array(indx)) {
-            iindx = where(eaarl.east(q)(indx) <= m(3)*100);
-            if (is_array(iindx)) {
-              indx = indx(iindx);
-              indx = q(indx);
-            } else indx = [];
-          }
+        indx = where(x(q) >= m(1)*100.);
+        if (is_array(indx)) {
+          iindx = where(x(q)(indx) <= m(3)*100.);
+          if (is_array(iindx)) {
+            indx = indx(iindx);
+            indx = q(indx);
+          } else indx = [];
         }
       }
       if (numberof(indx) > 3) {
@@ -209,21 +182,11 @@ ndivide=) {
       // tag these points in the original data array, so that we can remove
       // them later.
         eaarl(indx).rn = 0;
-        if (mode==3) {
-          be_elv = eaarl.lelv(indx);
-        }
-        if (mode==2) {
-          be_elv = eaarl.elevation(indx)+eaarl.depth(indx);
-        }
-        if (mode==1) {
-          be_elv = eaarl.elevation(indx);
-        }
-        e1 = eaarl(indx);
         //find min and max for be_elv
-        mn_be_elv = min(be_elv);
-        mx_be_elv = max(be_elv);
+        mn_be_elv = z(indx)(min);
+        mx_be_elv = z(indx)(max);
         // now find the 2-D polynomial fit for these points using order 3.
-        c = poly2_fit_safe(be_elv/100., e1.east/100., e1.north/100., 3);
+        c = poly2_fit_safe(z(indx), x(indx), y(indx), 3);
         if(is_void(c))
           continue;
         // define a random set of points in that area selected to apply
@@ -247,29 +210,29 @@ ndivide=) {
           yp = ss(iidx2(k),2);
           elvall(k) = poly2(xp, yp, c);
         }
-        if (mode == 1) {
+        if (mode == "fs") {
           a = structof(eaarl(1));
           if (structeq(a, FS)) new_pts = array(R,nrand);
           if (structeq(a, VEG__)) new_pts = array(VEG__,nrand);
         }
-        if (mode == 2)
+        if (mode == "ba")
           new_pts = array(GEO,nrand);
-        if (mode == 3)
+        if (mode == "be")
           new_pts = array(VEG__,nrand);
         new_pts.east = int(ss(iidx1,1)*100);
         new_pts.north = int(ss(iidx2,2)*100);
-        if (mode == 3) {
+        if (mode == "be") {
           new_pts.least = int(ss(iidx1,1)*100);
           new_pts.lnorth = int(ss(iidx2,2)*100);
         }
-        if (mode == 2) {
+        if (mode == "ba") {
           new_pts.elevation = -10;
           new_pts.depth = int(elvall*100 + 10);
         }
-        if (mode == 3) {
+        if (mode == "be") {
           new_pts.lelv = int(elvall*100);
         }
-        if (mode == 1) {
+        if (mode == "fs") {
           new_pts.elevation = int(elvall*100);
         }
         new_pts.rn = span(count+1,count+nrand,nrand);
@@ -277,11 +240,11 @@ ndivide=) {
 
         // remove any points that are not within the elevation boundaries
         // of the original points
-        if (mode==1)
+        if (mode=="fs")
           xidx = where(((new_pts.elevation) > mn_be_elv) & ((new_pts.elevation) < mx_be_elv));
-        if (mode==2)
+        if (mode=="ba")
           xidx = where(((new_pts.elevation+new_pts.depth) > mn_be_elv) & ((new_pts.elevation+new_pts.depth) < mx_be_elv));
-        if (mode==3)
+        if (mode=="be")
           xidx = where(((new_pts.lelv) > mn_be_elv) & ((new_pts.lelv) < mx_be_elv));
         if (is_array(xidx)) {
           new_pts = new_pts(xidx);
@@ -294,9 +257,9 @@ ndivide=) {
         if ((count+nrand) > numberof(new_eaarl)) {
           new_eaarl1 = new_eaarl(1:count);
           new_count += numberof(new_eaarl);
-          if (mode==1 || mode ==3)
+          if (mode=="fs" || mode =="be")
             new_eaarl = array(VEG__, new_count);
-          if (mode==2)
+          if (mode=="ba")
             new_eaarl = array(GEO, new_count);
           new_eaarl(1:count) = new_eaarl1;
           new_eaarl1 = [];
