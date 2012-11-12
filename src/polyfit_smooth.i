@@ -16,9 +16,9 @@ func poly2_fit_safe(y, x1, x2, m, w) {
   return poly2_fit(y, x1, x2, m, w);
 }
 
-func polyfit_eaarl_pts(data, gridsize=, mode=, buffer=, ndivide=, nrand=,
+func polyfit_data(data, gridsize=, mode=, buffer=, ndivide=, nrand=,
 xy=) {
-/* DOCUMENT polyfit_eaarl_pts(data, gridsize=, mode=, buffer=, ndivide=,
+/* DOCUMENT polyfit_data(data, gridsize=, mode=, buffer=, ndivide=,
    nrand=, xy=)
 
   This is a smoothing function. It divides the data into grid cells. In each
