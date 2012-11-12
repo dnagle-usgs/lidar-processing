@@ -90,6 +90,10 @@ func mission_constants(args) {
 
   == Further explanation of fields ==
 
+  ops_conf.x_offset, ops_conf.y_offset, ops_conf.z_offset
+    These represent then distance from the GPS antenna (or INS center) to the
+    mirror exit.
+
   ops_conf.minsamples
     If a waveform has fewer than this many samples, it is completely rejected.
     This was implemented to solve the issue that arises when the plane rolls
