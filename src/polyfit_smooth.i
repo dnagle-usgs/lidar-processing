@@ -16,57 +16,69 @@ func poly2_fit_safe(y, x1, x2, m, w) {
   return poly2_fit(y, x1, x2, m, w);
 }
 
-func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
-/* DOCUMENT polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=)
+func polyfit_eaarl_pts(data, gridsize=, mode=, buffer=, ndivide=, nrand=,
+xy=) {
+/* DOCUMENT polyfit_eaarl_pts(data, gridsize=, mode=, buffer=, ndivide=,
+   nrand=, xy=)
 
-  This function creates a 3rd order magnitude polynomial fit within the give
-  data region and introduces random points within the selected region based on
-  the polynomial surface. The points within the region are replaced by these
-  random points. The entire input data is considered for smoothing. A window
-  (size wslide x wslide) slides through the data array, and all points within
-  the window + buffer (wbuf) are considered for deriving the surface.
+  This is a smoothing function. It divides the data into grid cells. In each
+  grid cell, a 3rd order polynomial is fit to the data. New points are created
+  using the polynomial fit, and only those points are returned.
 
   Parameter:
     data: Data array to be smoothed. (This must have had test_and_clean applied
       already.)
 
   Options:
-    wslide = window size in cm that slides through the data array
-    mode =
-      mode = "fs"; //for first surface
-      mode = "ba"; //for bathymetry (default)
-      mode = "be"; //for bare earth vegetation
-    wbuf = buffer distance (cm) around the selected region.  Default = 0
-    ndivide= factor used to determine the number of random points to be added
-      within each grid cell.  ( total area of the selected region is divided
-      by ndivide). Default = 8;
+    gridsize= Size of grid cells in meters. Data will be divided into grid
+      cells of size GRID by GRID meters. Random points will be generated from
+      the smoothing polynomial within each grid cell.
+        gridsize=15   15 meter by 15 meter grid cells (default)
+    buffer= A buffer size in meters to put around each grid cell. These extra
+      points are included when deriving the smoothing polynomial.
+        buffer=0    No buffer (default)
+        buffer=1    Add a 1 meter buffer
+    mode= Specified data mode to use.
+      mode="fs"     First surface (default)
+      mode="ba"     Bathymetry
+      mode="be"     Bare earth
+    nrand= The number of random points to generate in each cell. If provided,
+      ndivide is ignored; otherwise ndivide will determine nrand. This must be
+      at least 1.
+    ndivide= Factor used to determine the number of random points to be added
+      within each grid cell.
+        ndivide=8   Default, use a factor of 8
+      The area of the cells are divided by ndivide to determine nrand. Exact
+      formula used:
+        nrand = long(min(2,long(gridsize^2))/ndivide)+1
+    xy= Specifies how the x,y coordinates are determined when generating new
+      points. Default is xy="uniform".
+        xy="uniform"  Points are selected from a uniformally spaced sub-grid
+        xy="random"   Points are completely random in the grid cell
+        xy="replace"  Replacements use x,y points from original data
 
   Output:
     Data array of the same type as the original data array.
 */
-// Original 2005-08-05 Amar Nayegandhi
   if(is_void(data)) return;
 
   t0 = array(double, 3);
   timer, t0;
 
   default, mode, "ba";
-  default, wslide, 1500;
-  default, wbuf, 0;
+  default, gridsize, 15;
+  default, buffer, 0;
   default, ndivide, 8;
+  default, xy, "uniform";
 
   if(is_integer(mode))
     mode = ["fs","ba","be"](mode);
 
-  // Convert to meters
-  wslide /= 100.;
-  if(wbuf)
-    wbuf /= 100.;
-
   // Integer meters area of cells. Must be at least 2, though.
-  narea = min(2, long(wslide^2));
+  narea = min(2, long(gridsize^2));
   // Number of random points
-  nrand = long(narea/ndivide) + 1;
+  if(is_void(nrand))
+    nrand = long(narea/ndivide) + 1;
 
   strct = structof(data(1));
 
@@ -75,15 +87,15 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
   data2xyz, data, x, y, z, mode=mode;
 
   // Calculate grid cell for each point
-  xgrid = long(x/wslide);
-  ygrid = long(y/wslide);
+  xgrid = long(x/gridsize);
+  ygrid = long(y/gridsize);
 
   // Determine buffering extents
-  if(wbuf) {
-    xbuf_lo = long((x-wbuf)/wslide);
-    xbuf_hi = long((x+wbuf)/wslide);
-    ybuf_lo = long((y-wbuf)/wslide);
-    ybuf_hi = long((y+wbuf)/wslide);
+  if(buffer) {
+    xbuf_lo = long((x-buffer)/gridsize);
+    xbuf_hi = long((x+buffer)/gridsize);
+    ybuf_lo = long((y-buffer)/gridsize);
+    ybuf_hi = long((y+buffer)/gridsize);
   }
 
   // Figure out how many x-columns we have
@@ -91,7 +103,7 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
   xgrid_count = numberof(xgrid_uniq);
 
   status, start, msg="Polyfit smooth...";
-  if(wbuf)
+  if(buffer)
     curxbuf_hi = indgen(numberof(data));
 
   result = array(pointer, xgrid_count);
@@ -101,7 +113,7 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
     curxmatch = where(xgrid == xgrid_uniq(xgi));
     if(is_void(curxmatch))
       continue;
-    if(wbuf) {
+    if(buffer) {
       // curxbuf_hi for each iteration will contain all the points for all
       // further iterations, but removes some of the points from previous
       // iterations. Thus an efficiency boost is gained by trimming it down at
@@ -134,7 +146,7 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
         continue;
       indx = curxmatch(curymatch);
 
-      if(wbuf) {
+      if(buffer) {
         // curybuf_hi works much like curxbuf_hi
         w = where(ygrid_uniq(ygi) <= ybuf_hi(curybuf_hi));
         // This should never happen...
@@ -155,7 +167,7 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
       // curbuf are the points that are within the buffer region for this cell
 
       // If not using a buffer region, then both are the same
-      if(!wbuf)
+      if(!buffer)
         curbuf = indx;
 
       // A two-dimensional fit requires at least 3 points to avoid crazy
@@ -175,19 +187,32 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
 
         // define a random set of points in that area selected to apply
         // this fit
-        xp1 = xgrid_uniq(xgi) * wslide;
-        yp1 = ygrid_uniq(ygi) * wslide;
-        xp0 = xp1 + wslide;
-        yp0 = yp1 + wslide;
 
-        xs = span(xp1, xp0, narea);
-        ys = span(yp1, yp0, narea);
+        if(xy == "replace") {
+          if(numberof(indx) > 1)
+            indx = indx(sort(random(numberof(indx))));
+          w = indx(:min(numberof(indx),nrand));
+          xp = x(w);
+          yp = y(w);
+        } else if(xy == "random") {
+          xp = (xgrid_uniq(xgi) + random(nrand)) * gridsize;
+          yp = (ygrid_uniq(ygi) + random(nrand)) * gridsize;
+        } else {
+          // assume uniform
+          xp1 = xgrid_uniq(xgi) * gridsize;
+          yp1 = ygrid_uniq(ygi) * gridsize;
+          xp0 = xp1 + gridsize;
+          yp0 = yp1 + gridsize;
 
-        xidx = long(random(nrand)*narea)+1;
-        yidx = long(random(nrand)*narea)+1;
+          xs = span(xp1, xp0, narea);
+          ys = span(yp1, yp0, narea);
 
-        xp = xs(xidx);
-        yp = ys(yidx);
+          xidx = long(random(nrand)*narea)+1;
+          yidx = long(random(nrand)*narea)+1;
+
+          xp = xs(xidx);
+          yp = ys(yidx);
+        }
         zp = poly2(xp, yp, c);
 
         w = where(zp >= zmin & zp <= zmax);
