@@ -62,7 +62,7 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
   wslide /= 100.;
 
   a = structof(data(1));
-  new_eaarl = array(a, numberof(data));
+  result = array(a, numberof(data));
   count = 0;
   new_count = numberof(data);
 
@@ -175,17 +175,17 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
         xidx = [];
         nrand = numberof(new_pts);
 
-        if ((count+nrand) > numberof(new_eaarl)) {
-          new_eaarl1 = new_eaarl(1:count);
-          new_count += numberof(new_eaarl);
+        if ((count+nrand) > numberof(result)) {
+          tmp = result(1:count);
+          new_count += numberof(result);
           if (mode=="fs" || mode =="be")
-            new_eaarl = array(VEG__, new_count);
+            result = array(VEG__, new_count);
           if (mode=="ba")
-            new_eaarl = array(GEO, new_count);
-          new_eaarl(1:count) = new_eaarl1;
-          new_eaarl1 = [];
+            result = array(GEO, new_count);
+          result(1:count) = tmp;
+          temp = [];
         }
-        new_eaarl(count+1:count+nrand) = new_pts;
+        result(count+1:count+nrand) = new_pts;
         count += nrand;
       }
       status, progress, xgi - 1 + double(ygi)/ygrid_count, xgrid_count;
@@ -193,22 +193,22 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
   }
   status, finished;
 
-  new_eaarl = new_eaarl(1:count);
+  result = result(1:count);
 
   // add fake mirror east,north, and elevation values (assume AGL to be 300m)
-  new_eaarl.meast = new_eaarl.east;
-  new_eaarl.mnorth = new_eaarl.north;
-  new_eaarl.melevation = new_eaarl.elevation + 300*100;
+  result.meast = result.east;
+  result.mnorth = result.north;
+  result.melevation = result.elevation + 300*100;
 
   if (mode == "fs") {
-    if (structeq(structof(new_eaarl), VEG__)) {
+    if (structeq(structof(result), VEG__)) {
       // make last elevations the same as first return elevations
-      new_eaarl.lnorth = new_eaarl.east;
-      new_eaarl.least = new_eaarl.east;
-      new_eaarl.lelv = new_eaarl.elevation;
+      result.lnorth = result.east;
+      result.least = result.east;
+      result.lelv = result.elevation;
     }
   }
 
   timer_finished, t0;
-  return new_eaarl;
+  return result;
 }
