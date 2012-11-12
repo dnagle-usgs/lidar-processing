@@ -243,9 +243,9 @@ ndivide=) {
         iidx2 = int(rr2*narea)+1;
         elvall = array(double, nrand);
         for (k=1;k<=nrand;k++) {
-          x = ss(iidx1(k),1);
-          y = ss(iidx2(k),2);
-          elvall(k) = c(1)+c(2)*x+c(3)*y+c(4)*x^2+c(5)*x*y + c(6)*y^2 + c(7)*x^3 + c(8)*x^2*y + c(9)*x*y^2 + c(10)*y^3;
+          xp = ss(iidx1(k),1);
+          yp = ss(iidx2(k),2);
+          elvall(k) = poly2(xp, yp, c);
         }
         if (mode == 1) {
           a = structof(eaarl(1));
