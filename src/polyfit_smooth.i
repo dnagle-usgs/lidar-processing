@@ -133,7 +133,6 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=) {
       // this is the data inside the box
       // tag these points in the original data array, so that we can remove
       // them later.
-        eaarl(indx).rn = 0;
         //find min and max for be_elv
         mn_be_elv = z(indx)(min);
         mx_be_elv = z(indx)(max);
@@ -224,12 +223,6 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, wbuf=, ndivide=) {
     status, progress, i, ngridy;
   }
   status, finished;
-  // remove points from eaarl_orig, that were tagged with rn = 0 in eaarl;
-  rnidx = [];
-  //if (!gridmode) {
-  //  rnidx = grow(rnidx, where(eaarl.rn != 0));
-  //  new_eaarl = grow(new_eaarl, eaarl(rnidx));
-  //}
 
   new_eaarl = new_eaarl(1:count);
 
