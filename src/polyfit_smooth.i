@@ -169,8 +169,9 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
         // The poly2_fit function does not always work; poly2_fit_safe returns
         // [] when it fails. In these cases, we just skip the current cell. Not
         // much else we can do.
-        if(is_void(c))
+        if(is_void(c)) {
           continue;
+        }
 
         // define a random set of points in that area selected to apply
         // this fit
@@ -190,8 +191,9 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
         zp = poly2(xp, yp, c);
 
         w = where(zp >= zmin & zp <= zmax);
-        if(!numberof(w))
+        if(!numberof(w)) {
           continue;
+        }
         xp = xp(w);
         yp = yp(w);
         zp = zp(w);
@@ -200,8 +202,8 @@ func polyfit_eaarl_pts(data, wslide=, mode=, wbuf=, ndivide=) {
         new_pts = array(strct, npts);
 
         if(mode != "fs")
-          xyz2data, xp, yp, zp, new_pts, mode=mode;
-        xyz2data, xp, yp, zp, new_pts, mode="fs";
+          new_pts = xyz2data(xp, yp, zp, new_pts, mode=mode);
+        new_pts = xyz2data(xp, yp, zp, new_pts, mode="fs");
 
         new_pts.rn = new_pts.soe = indgen(count+1:count+npts);
         count += npts;
