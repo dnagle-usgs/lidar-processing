@@ -354,8 +354,8 @@ rcf_parms=, mode=, rtn=, marker=) {
   return glst(llst);
 }
 
-func transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, disp_type=) {
-/* DOCUMENT transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, disp_type=)
+func transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=) {
+/* DOCUMENT transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=)
   Searches for the point in the transect plot window iwin (default 3) nearest
   to where the user clicks.
 
@@ -391,6 +391,16 @@ func transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, disp_type=) {
   if(!is_void(_el)) elevation = _el;
   default, _last_transrch, [0.0, 0.0, 0.0, 0.0];
   default, iwin, 3;
+
+  if(is_void(mode)) {
+    if(!is_void(disp_type)) {
+      if(logger(warn))
+        logger, warn, "call to transect using deprecated option disp_type=";
+    } else {
+      disp_type = 0;
+    }
+    mode = ["fs","be","ba"](disp_type+1);
+  }
 
   // xyzzy - this assumes the default iwin for transect
   window, iwin;
@@ -490,14 +500,14 @@ func transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, disp_type=) {
   mindata_dump_info, edb, mindata, minindx, last=_last_transrch,
     ref=_transrch_reference;
 
-  _last_transrch = get_east_north_elv(mindata, disp_type=disp_type);
+  _last_transrch = get_east_north_elv(mindata, mode=mode);
 
   window_select, wbkp;
 }
 
-func mtransrch(fs, m, llst, _rx=, _el=, spot=, iwin=, disp_type=, ptype=,
-fset=) {
-/* DOCUMENT mtransrch(fs, m, llst, _rx=, _el=, spot=, iwin=, disp_type=,
+func mtransrch(fs, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=,
+ptype=, fset=) {
+/* DOCUMENT mtransrch(fs, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=,
    ptype=, fset=)
   Call transrch repeatedly until the user clicks the right mouse button.
   Should work similar to Pixel Waveform.
@@ -515,11 +525,21 @@ fset=) {
   default, _last_transrch, [0.0, 0.0, 0.0, 0.0];
   default, _last_soe, 0;
   default, iwin, 3;
-  default, disp_type, 0;  // fs topo
   default, ptype, 0;      // fs topo
   default, msize, 1.0;
   default, fset, 0;
   default, buf, 1000;     // 10 meters
+
+  if(is_void(mode)) {
+    if(!is_void(disp_type)) {
+      if(logger(warn))
+        logger, warn, "call to transect using deprecated option disp_type=";
+    } else {
+      disp_type = 0;
+    }
+    mode = ["fs","be","ba"](disp_type+1);
+  }
+
   if(is_pointer(data)) data = *data(1);
 
   left_mouse =  1;
@@ -552,21 +572,21 @@ fset=) {
     transrch, fs, m, llst, _rx=_rx, _el=_el, spot=spot, iwin=iwin;
 
     if(mouse_button == center_mouse || mouse_button == shift_mouse) {
-      _transrch_reference = get_east_north_elv(mindata, disp_type=disp_type);
+      _transrch_reference = get_east_north_elv(mindata, mode=mode);
     }
 
-    mdata = get_east_north_elv(mindata, disp_type=disp_type);
+    mdata = get_east_north_elv(mindata, mode=mode);
 
     if(is_void(_transrch_reference)) {
       write, "No Reference Point Set";
     } else {
-      if(disp_type == 0) {
+      if(mode == "fs") {
         write, format="   Ref. Dist: %8.2fm  Elev diff: %7.2fm\n",
           sqrt(double(mdata(1,) - _transrch_reference(1))^2 +
           double(mdata(2,) - _transrch_reference(2))^2),
           (mdata(3,) - _transrch_reference(3));
       }
-      if((disp_type == 1) || (disp_type == 2)) {
+      if(anyof(mode == ["be","ba"])) {
         write, format="   Ref. Dist: %8.2fm  Last Elev diff: %7.2fm\n",
           sqrt(double(mdata(1,) - _transrch_reference(1))^2 +
           double(mdata(2,) - _transrch_reference(2))^2),
@@ -578,23 +598,19 @@ fset=) {
   window_select, wbkp;
 }
 
-func get_east_north_elv(mindata, disp_type=) {
-/* DOCUMENT get_east_north_elv(mindata, disp_type=)
+func get_east_north_elv(mindata, mode=) {
+/* DOCUMENT get_east_north_elv(mindata, mode=)
   This function returns array containing the easting and northing values based
   on the type of data being used.
 
   INPUT:
     mindata - eaarl n-data array (1 element)
-    disp_type - type of data to be displayed/returned
-      0: first surface - it returns (east, north, elevation, 0)
-      1: last surface - it returns (least, lnorth, elevation, lelv);
-      2: bathymetry - it returns (east, north, elevation, elv+depth);
+    mode= fs, be, or ba
   OUTPUT:
     (4,n) array consisting of east, north, elevation, lelv/depth values based
     on the display type.
 */
-  default, disp_type, 0; // first return
-  mode = ["fs","be","ba"](disp_type+1);
+  default, mode, "fs";
 
   mindata = test_and_clean(mindata);
 
