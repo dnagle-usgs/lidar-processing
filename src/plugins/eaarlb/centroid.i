@@ -73,6 +73,7 @@ func pcr(rast, pulse, forcechannel=) {
 
   if(!is_void(forcechannel)) {
     rx = *rast.rx(pulse,forcechannel);
+    if(!numberof(rx)) return;
     rx_centroid = cent(rx);
     rx_centroid(1:2) += get_member(ops_conf,
         swrite(format="chn%d_range_bias", forcechannel));
