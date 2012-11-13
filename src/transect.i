@@ -16,9 +16,9 @@ extern _transect_history;
 */
 
 func mtransect(fs, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
-rcf_parms=, rtn=, show=, msize=, exp=, marker=) {
+rcf_parms=, rtn=, show=, msize=, expect=, marker=) {
 /* DOCUMENT mtransect(fs, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
-   rcf_parms=, rtn=, show=, msize=, exp=, marker=)
+   rcf_parms=, rtn=, show=, msize=, expect=, marker=)
 
   Mouse selected transect. mtransect allows you to "drag out" a line within an
   ALPS topo display window and then create a new graph of all of the points
@@ -125,7 +125,7 @@ rcf_parms=, rtn=, show=, msize=, exp=, marker=) {
   } else {
     limits, lmts(1),lmts(2), lmts(3), lmts(4);
   }
-  if(!is_void(exp))
+  if(!is_void(expect))
     write, format="%s\n", "END mtransect:";
 
   window_select, wbkp;

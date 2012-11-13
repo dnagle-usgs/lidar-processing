@@ -161,7 +161,7 @@ proc run_mt { id } {
 #  set fma_var [lindex $fma_list      [$tw.f2$id.fmaval    getvalue]]
 
 #   puts "m=mtransect( $src_var, xfma=$fma_var show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var )"
-   exp_send "if (is_array(where($src_var.soe(dif)))) $src_var = sortdata($src_var, method=\"soe\"); m$id=mtransect( $src_var, xfma=$fma_var, show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var, iwin=$iwn_var, owin=$own_var, exp=1,rtn=$rtn_var, msize=$msize_var, marker=$marker_var, connect=$trans_cnct )\r"
+   exp_send "if (is_array(where($src_var.soe(dif)))) $src_var = sortdata($src_var, method=\"soe\"); m$id=mtransect( $src_var, xfma=$fma_var, show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var, iwin=$iwn_var, owin=$own_var, expect=1,rtn=$rtn_var, msize=$msize_var, marker=$marker_var, connect=$trans_cnct )\r"
    expect "END mtransect:"
    exp_send "llst$id=llst;rx$id=rx;elevation$id=elevation\r"
 }
