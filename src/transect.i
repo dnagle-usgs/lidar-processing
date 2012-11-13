@@ -16,9 +16,9 @@ extern _transect_history;
 */
 
 func mtransect(fs, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
-rcf_parms=, rtn=, show=, msize=, expect=, marker=) {
+rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
 /* DOCUMENT mtransect(fs, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
-   rcf_parms=, rtn=, show=, msize=, expect=, marker=)
+   rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=)
 
   Mouse selected transect. mtransect allows you to "drag out" a line within an
   ALPS topo display window and then create a new graph of all of the points
@@ -39,7 +39,12 @@ rcf_parms=, rtn=, show=, msize=, expect=, marker=) {
   recall=    :  Used to recall a previously generated transact line.
   color=     :  The starting color 1:7, use negative to use only 1 color
   xfma=      :  Set to 1 to auto fma.
-  rtn=       :  Select return type where:
+  mode=      :  Data mode:
+          mode="fs"  first surface
+          mode="be"  bare earth
+          mode="ba"  bathy
+  rtn=       :  Deprecated; use mode= instead. This is ignored if mode= is
+    present. Select return type where:
           0  first return
           1  veg last return
           2  submerged topo
@@ -73,7 +78,6 @@ rcf_parms=, rtn=, show=, msize=, expect=, marker=) {
 
   wbkp = current_window();
 
-  default, rtn, 0;  // first return
   default, w, 150;
   default, connect, 0;
   default, owin, 3;
@@ -82,7 +86,17 @@ rcf_parms=, rtn=, show=, msize=, expect=, marker=) {
   default, xfma, 0;
   default, color, 2;  // start at red, not black
 
-  window,owin;
+  if(is_void(mode)) {
+    if(!is_void(rtn)) {
+      if(logger(warn))
+        logger, warn, "call to transect using deprecated option rtn=";
+    } else {
+      rtn = 0;
+    }
+    mode = ["fs","be","ba"](rtn+1);
+  }
+
+  window, owin;
   lmts = limits();
   window,iwin;
   if(is_void(recall)) {
@@ -103,10 +117,10 @@ rcf_parms=, rtn=, show=, msize=, expect=, marker=) {
   }
 
   glst = transect(fs, l, connect=connect, color=color, xfma=xfma,
-    rcf_parms=rcf_parms, rtn=rtn, owin=owin, lw=w, msize=msize, marker=marker);
+    rcf_parms=rcf_parms, mode=mode, owin=owin, lw=w, msize=msize, marker=marker);
   // plot the actual points selected onto the input window
   if (show == 2 ) {
-    data2xyz, unref(fs(glst)), x, y, z, mode=["be","ba","fs"](rtn);
+    data2xyz, unref(fs(glst)), x, y, z, mode=mode;
     window, iwin;
     plmk, unref(y), unref(x), msize=msize, marker=marker, color="black",
       width=10;
@@ -130,9 +144,9 @@ rcf_parms=, rtn=, show=, msize=, expect=, marker=) {
 }
 
 func transect(fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=,
-rcf_parms=, rtn=, marker=) {
+rcf_parms=, mode=, rtn=, marker=) {
 /* DOCUMENT transect(fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=,
-   color=, rcf_parms=, rtn=, marker=)
+   color=, rcf_parms=, mode=, rtn=, marker=)
 
   Input:
   fs         :  Data where you drew the line
@@ -146,11 +160,15 @@ rcf_parms=, rtn=, marker=) {
             fw is the width of the filter
             np is the number of points on either side of the index
              to use as a jury.
-  rtn=       :  Select return type where:
-            0  first return
-            1  veg last return
-            2  submerged topo from bathy algo
-
+  mode=      :  Data mode:
+          mode="fs"  first surface
+          mode="be"  bare earth
+          mode="ba"  bathy
+  rtn=       :  Deprecated; use mode= instead. This is ignored if mode= is
+    present. Select return type where:
+          0  first return
+          1  veg last return
+          2  submerged topo
   msize      :  set msize value (same as plcm, etc.), default = .1
   marker     :  set marker value (same as plcm, etc.), default = 1
 
@@ -166,6 +184,16 @@ rcf_parms=, rtn=, marker=) {
   default, owin, 3;
   default, msize, 0.1;
   default, marker, 1;
+
+  if(is_void(mode)) {
+    if(!is_void(rtn)) {
+      if(logger(warn))
+        logger, warn, "call to transect using deprecated option rtn=";
+    } else {
+      rtn = 0;
+    }
+    mode = ["fs","be","ba"](rtn+1);
+  }
 
   window, wait=1;
   window, owin;
@@ -225,11 +253,11 @@ rcf_parms=, rtn=, marker=) {
   // XYZZY - y is computed from elevation
   // XYZZY - lw is the search width
   llst = where(abs(ry) < lw);
-  if(rtn == 0)
+  if(mode == "fs")
     elevation = fs.elevation(*);
-  else if(rtn == 1)
+  else if(mode == "be")
     elevation = fs.lelv(*);
-  else if(rtn == 2)
+  else if(mode == "ba")
     elevation = fs.elevation(*) + fs.depth(*);
 
   //     1        2      3       4        5          6         7
