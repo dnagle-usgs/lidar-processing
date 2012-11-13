@@ -291,7 +291,7 @@ proc menu_utilities mb {
             -command ::l1pro::groundtruth::gui
     $mb add separator
     $mb add command {*}[menulabel "Transect Tool"] \
-            -command [list source [file join $::src_path transrch.ytk]]
+            -command [list source [file join $::src_path transect.ytk]]
     $mb add cascade {*}[menulabel "Launch segments by..."] \
             -menu [menu_utilities_segments $mb.seg]
     $mb add separator
