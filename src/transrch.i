@@ -214,7 +214,7 @@ fset=) {
           double(mdata(2,) - _transrch_reference(2))^2)/100.0,
           (mdata(3,)/100.0 - _transrch_reference(3)/100);
       }
-      if((disp_type == 1) (disp_type == 2)) {
+      if((disp_type == 1) || (disp_type == 2)) {
         write, format="   Ref. Dist: %8.2fm  Last Elev diff: %7.2fm\n",
           sqrt(double(mdata(1,) - _transrch_reference(1))^2 +
           double(mdata(2,) - _transrch_reference(2))^2)/100.0,
