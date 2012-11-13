@@ -93,13 +93,12 @@ func transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, disp_type=) {
   write, format="Result: %6d: %f %f\n", minindx, xx(minindx), yy(minindx);
   x = [xx(minindx), xx(minindx)];
   y = [yy(minindx), yy(minindx)];
-  // plg, y, x, width=10.0, color="red";    // highlight selected point in iwin
 
   // We want to determine which segment a point is from so that we can redraw
   // it in that color.
 
   // Made segs extern in transect.i
-  // 2008-11-25: wonder why i did that.  must be computed here so we can
+  // 2008-11-25: wonder why i did that. must be computed here so we can
   // have multiple transects - rwm
   segs = where(abs(fs.soe(m)(dif)) > 5.0);
   // there must be a better way.
@@ -119,12 +118,11 @@ func transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, disp_type=) {
   pixelwf_set_point, mindata;
   rasterno = mindata.rn&0xFFFFFF;
   pulseno = mindata.rn/0xFFFFFF
-  hms= sod2hms(soe2sod(mindata.soe));
+  hms = sod2hms(soe2sod(mindata.soe));
   write, format="Indx  : %6d HMS: %02d%02d%02d  Raster/Pulse: %d/%d FS UTM: %7.1f, %7.1f\n",
     minindx, hms(1), hms(2), hms(3), rasterno, pulseno, mindata.north/100.0,
     mindata.east/100.0;
   show_track, mindata, utm=1, skip=0, color=clr(col), win=5, msize=.5;
-  // show_fstrack,fs(m(minindx)), utm=1, skip=0, color="blue", win=5, msize=.5;
   window, 1, wait=1;
   fma;
   rr = decode_raster(rn=rasterno);

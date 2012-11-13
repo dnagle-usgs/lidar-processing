@@ -69,8 +69,7 @@ rcf_parms=, rtn=, show=, msize=, expect=, marker=) {
 
   SEE ALSO: transect, _transect_history
 */
-  extern _transect_history;
-  extern transect_line;
+  extern _transect_history, transect_line;
 
   wbkp = current_window();
 
@@ -102,7 +101,6 @@ rcf_parms=, rtn=, show=, msize=, expect=, marker=) {
     if(recall > 0) recall = -recall;
     l = _transect_history(, recall);
   }
-  // if ( color > 0 ) --color;  // XYZZY adjust for nsegs starting at 1
 
   glst = transect(fs, l, connect=connect, color=color, xfma=xfma,
     rcf_parms=rcf_parms, rtn=rtn, owin=owin, lw=w, msize=msize, marker=marker);
@@ -113,7 +111,6 @@ rcf_parms=, rtn=, show=, msize=, expect=, marker=) {
     plmk, unref(y), unref(x), msize=msize, marker=marker, color="black",
       width=10;
   }
-  //show_track,fs(glst), utm=1, skip=0, color="red", lines=0, win=iwin;
   if(show == 3) {   // this only redraws the last transect selected.
     window, iwin;
     plg, [transect_line(2),transect_line(4)]/100.,
@@ -197,8 +194,6 @@ rcf_parms=, rtn=, marker=) {
     fs = fs(sort(fs.soe))
 
   // build a matrix to select only the data withing the bounding box
-  //  good = (fs.north(*) < n)  & ( fs.north(*) > s ) & (fs.east(*) < e ) & ( fs.east(*) > w );
-  //  glst = where(good);
 
   glst = data_box(fs.east, fs.north, w, e, s, n);
   // rotation:  x' = xcos - ysin
@@ -242,11 +237,8 @@ rcf_parms=, rtn=, marker=) {
 
   window, owin;
   window, wait=1;
-  ///  fma
   segs = where(abs(fs.soe(glst(llst))(dif)) > 5.0);
   nsegs = numberof(segs)+1;
-  //segs
-  //nsegs
   if(nsegs > 1) {
    // 20060425:  setting ss to [0] causes bizarre behavior where lines appear
    // to get merged.
@@ -261,14 +253,11 @@ rcf_parms=, rtn=, marker=) {
   ss = [0];
   if(nsegs > 1) {
     grow, ss, segs, [0];
-
-    // "ss";ss
-    // "nsegs";nsegs
     c = color;
     msum = 0;
     for(i = 1; i < numberof(ss); i++) {
-      if(c >= 0) c = ((color+(i-1))%7);
-      //    write, format="%d: %d %2d %2d %d  ", c, color, i, color+i, ((color+i)%7);
+      if(c >= 0)
+        c = ((color+(i-1))%7);
       soeb = fs.soe(*)(glst(llst)(ss(i)+1));
       t = soe2time( soeb );
       tb = fs.soe(*)(glst(llst)(ss(i)+1))%86400;
@@ -279,7 +268,6 @@ rcf_parms=, rtn=, marker=) {
       // This grabs the heading from the tans data nearest the end point.  This
       // really only works when looking at "just processed" data and not batch
       // processed data.
-      // AN - 20090629 -- Will now work with batch processed data as well.
       hd = 0.0;
       if(is_array(tans)) {
         foo = where(abs(tans.somd-te) < .010);
@@ -316,7 +304,8 @@ rcf_parms=, rtn=, marker=) {
     if(!is_void(rcf_parms))
       si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2))));
     plmk, yy(si),xx(si), color=clr(color), msize=msize, marker=marker, width=10;
-    if(connect) plg, yy(si), xx(si),color=clr(color);
+    if(connect)
+      plg, yy(si), xx(si),color=clr(color);
 
     c = (color+0)&7;
     soeb = fs.soe(*)(glst(llst)(1));
@@ -377,7 +366,7 @@ func extract_transect_info(tlst, fs, &coords, &segtimes, rtn=) {
   write, format="Transect Length = %4.2f m\n", tlength;
 
   // find the start and stop time
-  // find number of flightline  segments
+  // find number of flightline segments
   segs = where(abs(fs.soe(tlst)(dif)) > 5.0);
   nsegs = numberof(segs)+1;
   segtimes = array(long,2,nsegs);
