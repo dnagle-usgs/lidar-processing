@@ -274,6 +274,41 @@ nrand=, xy=) {
 
 func batch_polyfit(dir, searchstr=, files=, update=, mode=, gridsize=, buffer=,
 ndivide=, nrand=, xy=) {
+/* DOCUMENT batch_polyfit, dir, searchstr=, files=, update=, mode=, gridsize=,
+   buffer=, ndivide=, nrand=, xy=
+
+  Applies polyfit_data in batch mode.
+
+  Parameter:
+    dir: The directory to run in.
+
+  Options:
+    searchstr= Specifies the search string to use to find files in DIR.
+        searchstr="*.pbd"     Default
+    files= Specifies an array of files to use. If this is used, DIR and
+      SEARCHSTR are ignored.
+    update= Specifies whether to overwrite existing files.
+        update=0      Clobber existing files (default)
+        update=1      Skip existing files
+    mode= Specified data mode to use.
+      mode="fs"     First surface (default)
+      mode="ba"     Bathymetry
+      mode="be"     Bare earth
+    nrand= The number of random points to generate in each cell. If provided,
+      ndivide is ignored; otherwise ndivide will determine nrand. This must be
+      at least 1.
+    ndivide= Factor used to determine the number of random points to be added
+      within each grid cell.
+        ndivide=8   Default, use a factor of 8
+      The area of the cells are divided by ndivide to determine nrand. Exact
+      formula used:
+        nrand = long(min(2,long(gridsize^2))/ndivide)+1
+    xy= Specifies how the x,y coordinates are determined when generating new
+      points. Default is xy="uniform".
+        xy="uniform"  Points are selected from a uniformally spaced sub-grid
+        xy="random"   Points are completely random in the grid cell
+        xy="replace"  Replacements use x,y points from original data
+*/
   default, searchstr, "*.pbd";
   default, update, 0;
   default, mode, "fs";
