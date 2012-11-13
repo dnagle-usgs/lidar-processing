@@ -209,14 +209,14 @@ fset=) {
       if(disp_type == 0) {
         write, format="   Ref. Dist: %8.2fm  Elev diff: %7.2fm\n",
           sqrt(double(mdata(1,) - _transrch_reference(1))^2 +
-          double(mdata(2,) - _transrch_reference(2))^2)/100.0,
-          (mdata(3,)/100.0 - _transrch_reference(3)/100);
+          double(mdata(2,) - _transrch_reference(2))^2),
+          (mdata(3,) - _transrch_reference(3));
       }
       if((disp_type == 1) || (disp_type == 2)) {
         write, format="   Ref. Dist: %8.2fm  Last Elev diff: %7.2fm\n",
           sqrt(double(mdata(1,) - _transrch_reference(1))^2 +
-          double(mdata(2,) - _transrch_reference(2))^2)/100.0,
-          (mdata(4,)/100.0 - _transrch_reference(4)/100);
+          double(mdata(2,) - _transrch_reference(2))^2),
+          (mdata(4,) - _transrch_reference(4));
       }
     }
   } while(mouse_button != right_mouse);
@@ -252,10 +252,10 @@ func get_east_north_elv(mindata, disp_type=) {
     z2 = array(0., numberof(mindata));
 
   result = array(double, 4, numberof(mindata));
-  result(1,) = x*100;
-  result(2,) = y*100;
-  result(3,) = z1*100;
-  result(4,) = z2*100;
+  result(1,) = x;
+  result(2,) = y;
+  result(3,) = z1;
+  result(4,) = z2;
   return result;
 }
 
@@ -319,7 +319,7 @@ func mindata_dump_info(edb, mindata, minindx, last=, ref=) {
     mindata.melevation/100.0, aoi, hy/100.0;
 
   write, format="First Surface elev: %8.2fm Delta: %7.2fm\n",
-    mindata.elevation/100.0, mindata.elevation/100.0 - last(3)/100.0;
+    mindata.elevation/100.0, mindata.elevation/100.0 - last(3);
 
   if(structeq(structof(mindata(1)), FS)) {
     fs_chn_used = eaarl_intensity_channel(mindata.intensity);
@@ -332,8 +332,8 @@ func mindata_dump_info(edb, mindata, minindx, last=, ref=) {
     be_chn_used = eaarl_intensity_channel(mindata.lint);
 
     write, format="Last return elev: %8.2fm Delta: %7.2fm\n",
-      mindata.lelv/100., mindata.lelv/100.-last(4)/100.
-        write, format="First/Last return elv DIFF: %8.2fm\n",
+      mindata.lelv/100., mindata.lelv/100.-last(4);
+    write, format="First/Last return elv DIFF: %8.2fm\n",
       (mindata.elevation-mindata.lelv)/100.;
     write, format="First Surface channel-intensity: %d-%3d\n",
       fs_chn_used, mindata.fint;
@@ -347,7 +347,7 @@ func mindata_dump_info(edb, mindata, minindx, last=, ref=) {
 
     write, format="Bottom elev: %8.2fm Delta: %7.2fm\n",
       (mindata.elevation+mindata.depth)/100.,
-      (mindata.elevation+mindata.depth)/100.-last(4)/100.;
+      (mindata.elevation+mindata.depth)/100.-last(4);
     write, format="First/Bottom return elv DIFF: %8.2fm", mindata.depth/100.;
     write, format="Surface channel-intensity: %d-%3d\n", fs_chn_used,
       mindata.first_peak;
