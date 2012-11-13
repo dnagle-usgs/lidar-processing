@@ -3,7 +3,6 @@
 # 2008-11-21:  Interface to mtransect, mtransrch, and show_track
 #
 
-exp_send "require, \"transrch.i\"\r"
 package require struct::list
 package require misc
 package require tooltip
