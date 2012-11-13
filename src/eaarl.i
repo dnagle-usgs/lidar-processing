@@ -141,8 +141,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "shapefile.i";
   require, "statistics.i";
   require, "tiles.i";
-  require, "transect.i";
-  require, "transrch.i";
+  require, "transect_transrch.i";
   require, "util_cast.i";
   require, "util_container.i";
   require, "util_coord.i";
