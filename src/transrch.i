@@ -240,23 +240,23 @@ func get_east_north_elv(mindata, disp_type=) {
     on the display type.
 */
   default, disp_type, 0; // first return
+  mode = ["fs","be","ba"](disp_type+1);
+
   mindata = test_and_clean(mindata);
-  n = numberof(mindata);
-  mdata = array(double, 4, n);
-  if((disp_type == 0) || (disp_type == 2)) {
-    mdata(1,n) = mindata.north;
-    mdata(2,n) = mindata.east;
-  }
-  mdata(3,n) = mindata.elevation;
-  if (disp_type == 2) {
-    mdata(4,n) = mindata.elevation+mindata.depth;
-  }
-  if ((disp_type == 1)) {
-    mdata(1,n) = mindata.lnorth;
-    mdata(2,n) = mindata.least;
-    mdata(4,n) = mindata.lelv;
-  }
-  return mdata;
+
+  local x, y, z1, z2;
+  data2xyz, mindata, x, y, z1, mode="fs";
+  if(mode != "fs")
+    data2xyz, mindata, x, y, z2, mode=mode;
+  else
+    z2 = array(0., numberof(mindata));
+
+  result = array(double, 4, numberof(mindata));
+  result(1,) = x*100;
+  result(2,) = y*100;
+  result(3,) = z1*100;
+  result(4,) = z2*100;
+  return result;
 }
 
 func mindata_dump_info(edb, mindata, minindx, last=, ref=) {
