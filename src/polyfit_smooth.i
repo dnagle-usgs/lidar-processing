@@ -310,6 +310,28 @@ buffer=, ndivide=, nrand=, xy=) {
         xy="uniform"  Points are selected from a uniformally spaced sub-grid
         xy="random"   Points are completely random in the grid cell
         xy="replace"  Replacements use x,y points from original data
+
+  For an input file name BASENAME.PBD, the output file will be named as
+  follows:
+      BASENAME_pfX_gX_bX_nXX.pbd
+  where the X's will vary as described below:
+
+      _pfr_ corresponds to xy="random"
+      _pfs_ corresponds to xy="replace" (mnemonic: substitute)
+      _pfu_ corresponds to xy="uniform"
+
+      _gX_ will be set such that X is gridsize*100
+      _bX_ will be set such that X is buffer*100
+
+      _nrX_ corresponds to nrand=X
+      _ndX_ corresponds to ndivide=X
+
+  A few examples:
+
+      BASENAME_pfr_g500_b0_nr5.pbd
+          xy="random", gridsize=5.00, buffer=0, nrand=5
+      BASENAME_pfu_g1000_b250_nd8.pbd
+          xy="uniform", gridsize=10.00, buffer=2.50, ndivide=8
 */
   default, searchstr, "*.pbd";
   default, update, 0;
