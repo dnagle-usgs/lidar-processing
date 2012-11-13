@@ -272,10 +272,10 @@ nrand=, xy=) {
   pbd_save, file_out, vname, data;
 }
 
-func batch_polyfit(dir, searchstr=, files=, update=, mode=, gridsize=, buffer=,
-ndivide=, nrand=, xy=) {
-/* DOCUMENT batch_polyfit, dir, searchstr=, files=, update=, mode=, gridsize=,
-   buffer=, ndivide=, nrand=, xy=
+func batch_polyfit(dir, searchstr=, files=, outdir=, update=, mode=, gridsize=,
+buffer=, ndivide=, nrand=, xy=) {
+/* DOCUMENT batch_polyfit, dir, searchstr=, files=, outdir=, update=, mode=,
+   gridsize=, buffer=, ndivide=, nrand=, xy=
 
   Applies polyfit_data in batch mode.
 
@@ -287,6 +287,8 @@ ndivide=, nrand=, xy=) {
         searchstr="*.pbd"     Default
     files= Specifies an array of files to use. If this is used, DIR and
       SEARCHSTR are ignored.
+    outdir= If specified, output files go into this directory instead of being
+      created alongside their source files.
     update= Specifies whether to overwrite existing files.
         update=0      Clobber existing files (default)
         update=1      Skip existing files
@@ -333,6 +335,8 @@ ndivide=, nrand=, xy=) {
     suffix += swrite(format="nd%d", ndivide);
 
   files_out = file_rootname(files)+suffix+".pbd";
+  if(!is_void(outdir))
+    files_out = file_join(outdir, file_tail(files_out));
 
   if(update) {
     w = where(!file_exists(files_out));
