@@ -74,16 +74,14 @@ rcf_parms=, rtn=, show=, msize=, exp=, marker=) {
 
   wbkp = current_window();
 
-  if(is_void(rtn)) rtn = 0;   // default is first return
-  if(is_void(w)) w = 150;
-  if(is_void(connect)) connect = 0;
-  if(is_void(owin)) owin = 3;
-  if(is_void(iwin)) iwin = 5;
-  if(is_void(msize)) msize = 0.1;
-  if(is_void(xfma)) xfma= 0;
-  if(is_void(color)) color= 2;  // start at red, not black
-  if(is_void(rcf_parms)) rcf_parms = [];
-  if(is_void(marker)) marker = [];
+  default, rtn, 0;  // first return
+  default, w, 150;
+  default, connect, 0;
+  default, owin, 3;
+  default, iwin, 5;
+  default, msize, 0.1;
+  default, xfma, 0;
+  default, color, 2;  // start at red, not black
 
   window,owin;
   lmts = limits();
@@ -165,12 +163,13 @@ rcf_parms=, rtn=, marker=) {
 
   wbkp = current_window();
 
-  if(is_void(rtn)) rtn = 0;       // default is first return
-  if(is_void(lw)) lw = 150;       // search width, cm
-  if(is_void(color)) color = 1;   // 1 is first color
-  if(is_void(owin)) owin = 3;
-  if(is_void(msize)) msize = 0.1;
-  if(is_void(marker)) marker = 1;
+  default, rtn, 0;    // first return
+  default, lw, 150;   // search width, cm
+  default, color, 1;  // 1 is first color
+  default, owin, 3;
+  default, msize, 0.1;
+  default, marker, 1;
+
   window, wait=1;
   window, owin;
   if(xfma) fma;
@@ -478,10 +477,10 @@ func reprocess_data_along_transect(new_pnav, outdir=, ofname_tag=, rtn=, w=) {
     outdir = "~/";
   }
 
-  if(is_void(save_data)) save_data = 1;
-  if(is_void(save_transect_output)) save_transect_output = 1;
-  if(is_void(ofname_tag)) ofname_tag = "base";
-  if(is_void(rtn)) rtn = 0;
+  default, save_data, 1;
+  default, save_transect_output, 1;
+  default, ofname_tag, "base";
+  default, rtn, 0;
 
   segtimes = transect_all;
   nsegs = numberof(segtimes(1,));

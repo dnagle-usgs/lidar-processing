@@ -35,8 +35,8 @@ func transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, disp_type=) {
   extern _last_transrch;
   if(!is_void(_rx)) rx = _rx;
   if(!is_void(_el)) elevation = _el;
-  if(is_void(_last_transrch)) _last_transrch = [0.0, 0.0, 0.0, 0.0];
-  if(is_void(iwin)) iwin = 3;
+  default, _last_transrch, [0.0, 0.0, 0.0, 0.0];
+  default, iwin, 3;
 
   // xyzzy - this assumes the default iwin for transect
   window, iwin;
@@ -160,15 +160,15 @@ fset=) {
 
   extern _last_transrch, _transrch_reference;
 
-  if(is_void(_last_transrch )) _last_transrch = [0.0, 0.0, 0.0, 0.0];
-  if(is_void(_last_soe)) _last_soe = 0;
-  if(is_void(iwin)) iwin = 3;
-  if(is_void(disp_type)) disp_type = 0; //default fs topo
-  if(is_void(ptype)) ptype = 0; //default fs topo
-  if(is_void(msize)) msize = 1.0
-  if(is_void(fset)) fset = 0
-  if(typeof(data)=="pointer") data = *data(1);
-  if(is_void(buf)) buf = 1000; // 10 meters
+  default, _last_transrch, [0.0, 0.0, 0.0, 0.0];
+  default, _last_soe, 0;
+  default, iwin, 3;
+  default, disp_type, 0;  // fs topo
+  default, ptype, 0;      // fs topo
+  default, msize, 1.0;
+  default, fset, 0;
+  default, buf, 1000;     // 10 meters
+  if(is_pointer(data)) data = *data(1);
 
   left_mouse =  1;
   center_mouse = 2;
@@ -241,7 +241,7 @@ func get_east_north_elv(mindata, disp_type=) {
     (4,n) array consisting of east, north, elevation, lelv/depth values based
     on the display type.
 */
-  if(is_void(disp_type)) disp_type = 0; // defaults to first return
+  default, disp_type, 0; // first return
   mindata = test_and_clean(mindata);
   n = numberof(mindata);
   mdata = array(double, 4, n);
