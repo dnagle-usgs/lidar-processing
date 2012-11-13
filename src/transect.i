@@ -542,12 +542,6 @@ ptype=, fset=) {
 
   if(is_pointer(data)) data = *data(1);
 
-  left_mouse =  1;
-  center_mouse = 2;
-  right_mouse = 3;
-  shift_mouse = 12;
-  ctl_left_mouse = 41;
-
   // the data must be clean coming in, otherwise the index do not match the
   // data.
   fs = test_and_clean(fs);
@@ -560,10 +554,9 @@ ptype=, fset=) {
     window, iwin;
 
     spot = mouse(1,1, "");
-    mouse_button = spot(10) + 10 * spot(11);
-    if(mouse_button == right_mouse) break;
+    if(mouse_click_is("right", spot)) break;
 
-    if(mouse_button == ctl_left_mouse) {
+    if(mouse_click_is("ctrl+left", spot)) {
       grow, finaldata, mindata;
       write, format="\007Point appended to finaldata.  Total saved = %d\n",
         ++nsaved;
@@ -571,7 +564,7 @@ ptype=, fset=) {
 
     transrch, fs, m, llst, _rx=_rx, _el=_el, spot=spot, iwin=iwin;
 
-    if(mouse_button == center_mouse || mouse_button == shift_mouse) {
+    if(mouse_click_is(["middle", "shift+left"], spot)) {
       _transrch_reference = data2xyz(mindata, mode=mode);
     }
 
@@ -584,7 +577,7 @@ ptype=, fset=) {
       dist = sqrt((mdata(1:2)^2)(sum));
       write, format="   Ref. Dist: %.2fm  Elev diff: %.2fm\n", dist, delta(3);
     }
-  } while(mouse_button != right_mouse);
+  } while(!mouse_click_is("right", spot));
 
   window_select, wbkp;
 }
