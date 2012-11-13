@@ -500,7 +500,7 @@ func transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=) {
   mindata_dump_info, edb, mindata, minindx, last=_last_transrch,
     ref=_transrch_reference;
 
-  _last_transrch = get_east_north_elv(mindata, mode=mode);
+  _last_transrch = data2xyz(mindata, mode=mode);
 
   window_select, wbkp;
 }
@@ -522,7 +522,7 @@ ptype=, fset=) {
 
   extern _last_transrch, _transrch_reference;
 
-  default, _last_transrch, [0.0, 0.0, 0.0, 0.0];
+  default, _last_transrch, [0.0, 0.0, 0.0];
   default, _last_soe, 0;
   default, iwin, 3;
   default, ptype, 0;      // fs topo
@@ -572,61 +572,21 @@ ptype=, fset=) {
     transrch, fs, m, llst, _rx=_rx, _el=_el, spot=spot, iwin=iwin;
 
     if(mouse_button == center_mouse || mouse_button == shift_mouse) {
-      _transrch_reference = get_east_north_elv(mindata, mode=mode);
+      _transrch_reference = data2xyz(mindata, mode=mode);
     }
 
-    mdata = get_east_north_elv(mindata, mode=mode);
+    mdata = data2xyz(mindata, mode=mode);
 
     if(is_void(_transrch_reference)) {
       write, "No Reference Point Set";
     } else {
-      if(mode == "fs") {
-        write, format="   Ref. Dist: %8.2fm  Elev diff: %7.2fm\n",
-          sqrt(double(mdata(1,) - _transrch_reference(1))^2 +
-          double(mdata(2,) - _transrch_reference(2))^2),
-          (mdata(3,) - _transrch_reference(3));
-      }
-      if(anyof(mode == ["be","ba"])) {
-        write, format="   Ref. Dist: %8.2fm  Last Elev diff: %7.2fm\n",
-          sqrt(double(mdata(1,) - _transrch_reference(1))^2 +
-          double(mdata(2,) - _transrch_reference(2))^2),
-          (mdata(4,) - _transrch_reference(4));
-      }
+      delta = mdata - _transrch_reference;
+      dist = sqrt((mdata(1:2)^2)(sum));
+      write, format="   Ref. Dist: %.2fm  Elev diff: %.2fm\n", dist, delta(3);
     }
   } while(mouse_button != right_mouse);
 
   window_select, wbkp;
-}
-
-func get_east_north_elv(mindata, mode=) {
-/* DOCUMENT get_east_north_elv(mindata, mode=)
-  This function returns array containing the easting and northing values based
-  on the type of data being used.
-
-  INPUT:
-    mindata - eaarl n-data array (1 element)
-    mode= fs, be, or ba
-  OUTPUT:
-    (4,n) array consisting of east, north, elevation, lelv/depth values based
-    on the display type.
-*/
-  default, mode, "fs";
-
-  mindata = test_and_clean(mindata);
-
-  local x, y, z1, z2;
-  data2xyz, mindata, x, y, z1, mode="fs";
-  if(mode != "fs")
-    data2xyz, mindata, x, y, z2, mode=mode;
-  else
-    z2 = array(0., numberof(mindata));
-
-  result = array(double, 4, numberof(mindata));
-  result(1,) = x;
-  result(2,) = y;
-  result(3,) = z1;
-  result(4,) = z2;
-  return result;
 }
 
 func mindata_dump_info(edb, mindata, minindx, last=, ref=) {
