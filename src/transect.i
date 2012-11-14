@@ -116,11 +116,11 @@ rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
     line = _transect_history(, recall);
   }
 
-  glst = transect(data, line, connect=connect, color=color, xfma=xfma,
+  data = transect(data, line, connect=connect, color=color, xfma=xfma,
     rcf_parms=rcf_parms, mode=mode, owin=owin, lw=w, msize=msize, marker=marker);
   // plot the actual points selected onto the input window
   if (show == 2 ) {
-    data2xyz, unref(data(glst)), x, y, z, mode=mode;
+    data2xyz, unref(data), x, y, z, mode=mode;
     window, iwin;
     plmk, unref(y), unref(x), msize=msize, marker=marker, color="black",
       width=10;
@@ -140,7 +140,7 @@ rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
     write, format="%s\n", "END mtransect:";
 
   window_select, wbkp;
-  return glst;
+  return data;
 }
 
 func transect(data, line, lw=, connect=, xtime=, msize=, xfma=, owin=, color=,
@@ -347,7 +347,7 @@ rcf_parms=, mode=, rtn=, marker=) {
       t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), hd, clr(c);
   }
   window_select, wbkp;
-  return glst(llst);
+  return data(glst(llst));
 }
 
 func transrch(data, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=) {
