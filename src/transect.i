@@ -207,11 +207,7 @@ rcf_parms=, mode=, rtn=, marker=) {
 
   // compute the rotation angle needed to make the selected line
   // run east west
-  dnom = line(1)-line(3);
-  if(dnom != 0.0)
-    angle = atan((line(2)-line(4)) / dnom) ;
-  else
-    angle = pi/2.0;
+  angle = atan(line(2)-line(4), line(1)-line(3));
 
   // clean and sort data
   data = test_and_clean(data);
