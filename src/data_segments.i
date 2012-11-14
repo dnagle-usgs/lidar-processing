@@ -235,22 +235,6 @@ func tk_sdw_launch_split(varname, how) {
     vars, title);
 }
 
-func tk_sdw_launch_fltlines(varname) {
-  tk_sdw_launch_split, varname, "line";
-}
-
-func tk_sdw_launch_fltlines_digitizer(varname) {
-  tk_sdw_launch_split, varname, ["line", "digitizer"];
-}
-
-func tk_sdw_launch_days(varname) {
-  tk_sdw_launch_split, varname, "flight";
-}
-
-func tk_sdw_launch_days_digitizer(varname) {
-  tk_sdw_launch_split, varname, ["flight", "digitizer"];
-}
-
 func tk_sdw_send_times(obj, idx, data) {
   mintime = soe2iso8601(data.soe(min));
   maxtime = soe2iso8601(data.soe(max));
@@ -599,22 +583,6 @@ func tk_dsw_launch_split_stats(varname, how) {
     save, segs, noop(i), gather_data_stats(segs(noop(i)));
   json = json_encode(segs);
   tkcmd, swrite(format="launch_datastats_stats {%s}", json);
-}
-
-func tk_dsw_launch_fltlines(varname) {
-  tk_dsw_launch_split_stats, varname, "line";
-}
-
-func tk_dsw_launch_fltlines_digitizer(varname) {
-  tk_dsw_launch_split_stats, varname, ["line", "digitizer"];
-}
-
-func tk_dsw_launch_days(varname) {
-  tk_dsw_launch_split_stats, varname, "flight";
-}
-
-func tk_dsw_launch_days_digitizer(varname) {
-  tk_dsw_launch_split_stats, varname, ["flight", "digitizer"];
 }
 
 func tk_dsw_launch_stats(vars) {
