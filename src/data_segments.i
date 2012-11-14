@@ -1,5 +1,33 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+func split_data(data, how, varname=, timediff=, daythresh=, pulsecount=) {
+  segs = save();
+  save, segs, string(0), data;
+
+  for(i = 1; i <= numberof(how); i++) {
+    if(how(i) == "flight")
+      segs = subsplit_by_flight(segs, timediff=timediff, daythresh=daythresh,
+        pulsecount=pulsecount);
+    else if(how(i) == "line")
+      segs = subsplit_by_line(segs, timediff=timediff);
+    else if(how(i) == "channel")
+      segs = subsplit_by_channel(segs);
+    else if(how(i) == "digitizer")
+      segs = subsplit_by_digitizer(segs);
+    else
+      error, "unknown split method: "+how(i);
+  }
+  if(!is_string(varname)) {
+    result = segs;
+  } else {
+    result = save();
+    for(i = 1; i <= segs(*); i++) {
+      save, result, segs(*,i)+"_"+varname, segs(noop(i));
+    }
+  }
+  return result;
+}
+
 func split_sequence_by_gaps(seq, gap=) {
 /* DOCUMENT ptr = split_sequence_by_gaps(seq, gap=)
   Splits a sequence of values into segments, breaking wherever the gap is
@@ -35,96 +63,27 @@ func split_sequence_by_gaps(seq, gap=) {
   return ptr;
 }
 
-func subsplit_by_digitizer(ptr) {
-/* DOCUMENT sptr = subsplit_by_digitizer(ptr)
-  Given an array of pointers as returned by split_by_day or split_by_fltline,
-  this will return an array of the same data subsplit by digitizer. Generally,
-  this will contain twice as many elements as the input.
-
-  Example:
-    fptr = split_by_fltline(data);
-    sptr = subsplit_by_digitizer(fptr);
-    f1d1 = sptr(1);   // First flightline, first digitizer
-    f1d2 = sptr(2);   // First flightline, second digitizer
-    f2d1 = sptr(1);   // Second flightline, first digitizer
-    f2d2 = sptr(2);   // Second flightline, second digitizer
-    ...
-
-  Note that if any of the data arrays contains data from only one digitizer,
-  then that array will not get split. This will result in one of the elements
-  of the resulting pointer array being (nil).
-
-  Also, the notion of "first digitizer" and "second digitizer" is arbitrary.
-  The "first digitizer" for one day may correspond to the same physical
-  digitizer that gets considered "second digitizer" for another.
-*/
-// Original David Nagle 2009-12-03
-  dig = array(pointer, 2*numberof(ptr));
-  for(i = 1; i <= numberof(ptr); i++) {
-    j = i*2 - 1;
-    data = *ptr(i);
-
-    w = where(data.rn % 2 == 0);
-    if(numberof(w))
-      dig(j) = &data(w);
-
-    w = where(data.rn % 2 == 1);
-    if(numberof(w))
-      dig(j+1) = &data(w);
-  }
-  return dig;
-}
-
-func split_by_day(data, timediff=, daythresh=, pulsecount=) {
-/* DOCUMENT dptr = split_by_day(data)
-
-  This function splits the data by day. It will only work with EAARL data as
-  it uses a combination of raster number and time to analytically
-  differentiate between days.
-
-  Note that "day" isn't necessarily a literal day. If the digitizer is
-  restarted during a flight or if multiple flights occur in a day, then each
-  will count as separate days.
-
-  Parameter:
-    data: An array of ALPS data (using structs such as FS, GEO, VEG__, etc.)
-
-  Returns:
-    An array of pointers to each day's data. For example:
-      dptr = split_by_day(data)
-      d1 = *dptr(1) is the first day's data
-      d2 = *dptr(2) is the second day's data
-      dn = *dptr(n) is the nth day's data
-
-  Advanced options:
-    The defaults for the following options shouldn't need to be changed under
-    ordinary circumstances. They are documented primarily for completeness,
-    without expectation that they will get used.
-
-    timediff= The time difference in seconds to use when splitting data into
-      individual flightlines. This is passed to split_by_fltline, where it
-      defaults to 60 seconds.
-    daythresh= A threshold in minutes used to determine if a pair of
-      flightlines came from the same day. This defaults to 20.
-    pulsecount= The number of pulses in a raster. Defaults to 119.
-*/
-// Original David Nagle 2009-12-03
+func split_by_flight(data, timediff=, daythresh=, pulsecount=) {
   default, daythresh, 20;
   default, pulsecount, 119;
-  fltlines = split_by_fltline(data, timediff=timediff);
+  local rn, pulse;
+
+  lines = split_by_line(data, timediff=timediff);
 
   // bbar: The average y-intercept in linear fit for
   //    raster = intercept + slope * time
-  bbar = array(double, numberof(fltlines));
-  for(i = 1; i <= numberof(fltlines); i++) {
-    data = *fltlines(i);
+  // This thus gives an approximate time for when the rasters for this flight
+  // started.
+  bbar = array(double, numberof(lines));
+  for(i = 1; i <= numberof(lines); i++) {
+    data = *lines(i);
     data = data(sort(data.soe));
-    rn = parse_rn(data.rn);
+    parse_rn, data.rn, rn, pulse;
     // rnu: Combines raster and pulse into a unified form that better
     // reflects position in sequence. A pulse is effectively converted into a
     // fractional raster number.
-    rnu = rn(,1) + (rn(,2)-1.)/pulsecount;
-    rn = [];
+    rnu = rn + (pulse-1.)/pulsecount;
+    rn = pulse = [];
 
     model = regress(unref(data).soe, [1, rnu]);
     bbar(i) = model(1);
@@ -133,58 +92,118 @@ func split_by_day(data, timediff=, daythresh=, pulsecount=) {
   // Downgrade resolution of bbar from fractional seconds to integer minutes
   bbar = long(bbar/60);
 
-  // Sort the bbars (and keep the fltlines sorted with them)
+  // Sort the bbars (and keep the lines sorted with them)
   idx = sort(bbar);
   bbar = bbar(idx);
-  fltlines = fltlines(idx);
+  lines = lines(idx);
 
-  // Merge fltlines that have similar bbars, they are from the same day.
-  merged = array(pointer, numberof(fltlines));
+  // Merge lines that have similar bbars, they are from the same flight.
+  merged = array(pointer, numberof(lines));
   merged(1) = &(*fltlines(1));
   j = 1;
   for(i = 2; i <= numberof(bbar); i++) {
-    if(bbar(i) - bbar(i-1) < daythresh) {
-      merged(j) = &grow(*merged(j), *fltlines(i));
+    if(abs(bbar(i) - bbar(i-1)) < daythresh) {
+      merged(j) = &grow(*merged(j), *lines(i));
     } else {
       j++;
-      merged(j) = &(*fltlines(i));
+      merged(j) = &(*lines(i));
     }
   }
   return merged(:j);
 }
 
-func split_by_fltline(data, timediff=) {
-/* DOCUMENT fptr = split_by_fltline(data, timediff=)
-  This function splits the data by flightline.
-  orig: amar nayegandhi 12/26/08.
-  INPUT:
-    data: input data array of type (R,FS,GEO,VEG__, ATM, etc.)
-    timediff= minimum time difference between segments, in seconds; defaults
-      to 60 seconds
-  OUTPUT:
-    fptr = array of pointers pointing to the flight segments
-    for e.g. - f1 = *fptr(1) is the 1st flight line segment
-            f2 = *fptr(2) is the 2nd flight line segment
-            fn = *fptr(n) is the nth flight line segment
-*/
+func split_by_line(data, timediff=) {
   default, timediff, 60;
+  data = sortdata(test_and_clean(segs(noop(i))), method="soe");
+  ptr = split_sequence_by_gaps(data.soe, gap=timediff);
+  for(i = 1; i <= numberof(ptr); i++)
+    ptr(i) = &data(*ptr(i));
+  return ptr;
+}
 
-  // Convert data to point format (if in raster format) and clean
-  data = test_and_clean(data);
-
-  // Needs to be sorted in order for time diffing to work
-  data = data(sort(data.soe));
-
-  // Split into segments
-  sptr = split_sequence_by_gaps(data.soe, gap=timediff);
-
-  // Extract data for segments
-  num = numberof(sptr);
-  fptr = array(pointer, num);
-  for(i = 1; i <= num; i++) {
-    fptr(i) = &data(*sptr(i));
+func split_by_channel(data) {
+  data = test_and_clean(segs(noop(i)));
+  if(has_member(data, "channel")) {
+    chans = set_remove_duplicates(data.channel);
+    num = numberof(chans);
+    ptr = array(pointer, num);
+    for(i = 1; i <= num; i++) {
+      w = where(data.channel == chans(i));
+      ptr(i) = &data(w);
+    }
+  } else {
+    return [&data];
   }
-  return fptr;
+}
+
+func split_by_digitizer(data) {
+  data = test_and_clean(data);
+  dig = data.rn % 2;
+  ptr = [];
+  if(anyof(dig))
+    grow, ptr, &data(where(dig));
+  if(nallof(dig))
+    grow, ptr, &data(where(!dig));
+  return ptr;
+}
+
+func subsplit_fmt(prefix, num, varname) {
+  fmt = swrite(format="%s%%0%dd", prefix, int_digits(num));
+  if(strlen(varname))
+    fmt = varname + "_" + fmt;
+  return fmt;
+}
+
+func subsplit_by_flight(segs, timediff=, daythresh=, pulsecount=) {
+  result = save();
+  for(i = 1; i <= segs(*); i++) {
+    ptr = split_by_flight(segs(noop(i)), timediff=timediff,
+      daythresh=daythresh, pulsecount=pulsecount);
+    num = numberof(ptr);
+    fmt = subsplit_fmt("flt", num, segs(*,i));
+    for(j = 1; j <= num; j++)
+      save, result, swrite(format=fmt, j), *ptr(j);
+  }
+  return result;
+}
+
+func subsplit_by_line(segs, timediff=) {
+  result = save();
+  for(i = 1; i <= segs(*); i++) {
+    ptr = split_by_line(segs(noop(i)), timediff=timediff);
+    num = numberof(ptr);
+    fmt = subsplit_fmt("line", num, segs(*,i));
+    for(j = 1; j <= num; j++)
+      save, result, swrite(format=fmt, j), *ptr(j);
+  }
+  return result;
+}
+
+func subsplit_by_channel(segs) {
+  result = save();
+  for(i = 1; i <= segs(*); i++) {
+    ptr = split_by_channel(segs(noop(i)));
+    num = numberof(ptr);
+    fmt = subsplit_fmt("chan", num, segs(*,i));
+    for(j = 1; j <= num; j++) {
+      data = *ptr(j);
+      chan = has_member(*ptr(j), "channel") ? (*ptr(j)).channel : 0;
+      save, result, swrite(format=fmt, chan), *ptr(j);
+    }
+  }
+  return result;
+}
+
+func subsplit_by_digitizer(segs) {
+  result = save();
+  for(i = 1; i <= segs(*); i++) {
+    ptr = split_by_digitizer(segs(noop(i)));
+    num = numberof(ptr);
+    fmt = subsplit_fmt("d", num, segs(*,i));
+    for(j = 1; j <= num; j++)
+      save, result, swrite(format=fmt, j), *ptr(j);
+  }
+  return result;
 }
 
 func rcf_by_fltline(data, mode=, rcfmode=, buf=, w=, n=, timediff=) {
