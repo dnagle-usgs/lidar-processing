@@ -101,12 +101,11 @@ rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
   window,iwin;
   if(is_void(recall)) {
     // get the line coords with the mouse and convert to cm
-    transect_line = mouse(1, 2, "")(1:4)*100.0;
+    transect_line = mouse(1, 2, "")(1:4);
     line = transect_line;   // just to keep the equations short;
     if(show)
-      plg, [line(2),line(4)]/100., [line(1),line(3)]/100., width=2.0,
-        color="red";
-    grow, _transect_history, [l]
+      plg, [line(2),line(4)], [line(1),line(3)], width=2.0, color="red";
+    grow, _transect_history, [line]
   } else {
     if(numberof(_transect_history) == 0) {
       write, "No transect lines in _transect_history";
@@ -128,8 +127,8 @@ rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
   }
   if(show == 3) {   // this only redraws the last transect selected.
     window, iwin;
-    plg, [transect_line(2),transect_line(4)]/100.,
-      [transect_line(1),transect_line(3)]/100., width=2.0, color="red";
+    plg, [transect_line(2),transect_line(4)],
+      [transect_line(1),transect_line(3)], width=2.0, color="red";
   }
   window, owin;
   if(is_void(recall)) {
@@ -151,7 +150,7 @@ rcf_parms=, mode=, rtn=, marker=) {
 
   Input:
   fs         :  Data where you drew the line
-  line       :  Coordinates for transect in cm as [x1,y1,x2,y2]
+  line       :  Coordinates for transect in meters as [x1,y1,x2,y2]
   lw=        :  Search distance either side of the line in centimeters
   xtime=     :  Set to 1 to plot against time (sod)
   xfma=      :  Set to 1 to clear screen
@@ -211,9 +210,8 @@ rcf_parms=, mode=, rtn=, marker=) {
   dnom = line(1)-line(3);
   if(dnom != 0.0)
     angle = atan((line(2)-line(4)) / dnom) ;
-  else angle = pi/2.0;
-  //  angle ;
-  //  [n,s,e,w]
+  else
+    angle = pi/2.0;
 
   // clean and sort fs
   fs = test_and_clean(fs);
@@ -224,7 +222,7 @@ rcf_parms=, mode=, rtn=, marker=) {
 
   // build a matrix to select only the data withing the bounding box
 
-  glst = data_box(fs.east, fs.north, w, e, s, n);
+  glst = data_box(fs.east/100., fs.north/100., w, e, s, n);
   // rotation:  x' = xcos - ysin
   //            y' = ycos + xsin
 
@@ -240,8 +238,8 @@ rcf_parms=, mode=, rtn=, marker=) {
   }
 
   // XYZZY - this is the last place we see fs being used for x
-  y = fs.north(*)(glst) - line(2);
-  x = fs.east(*)(glst)  - line(1);
+  y = fs.north(*)(glst)/100. - line(2);
+  x = fs.east(*)(glst)/100. - line(1);
 
   ca = cos(-angle);
   sa = sin(-angle);
@@ -255,11 +253,11 @@ rcf_parms=, mode=, rtn=, marker=) {
   // XYZZY - lw is the search width
   llst = where(abs(ry) < lw);
   if(mode == "fs")
-    elevation = fs.elevation(*);
+    elevation = fs.elevation(*)/100.;
   else if(mode == "be")
-    elevation = fs.lelv(*);
+    elevation = fs.lelv(*)/100.;
   else if(mode == "ba")
-    elevation = fs.elevation(*) + fs.depth(*);
+    elevation = fs.elevation(*)/100. + fs.depth(*)/100.;
 
   //     1        2      3       4        5          6         7
   clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
@@ -308,16 +306,16 @@ rcf_parms=, mode=, rtn=, marker=) {
         t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), hd, clr(abs(c));
 
       if(xtime) {
-        plmk, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0,
-          fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(abs(c)),
+        plmk, elevation(*)(glst(llst)(ss(i)+1:ss(i+1))),
+          fs.soe(*)(llst)(ss(i)+1:ss(i+1)),color=clr(abs(c)),
           msize=msize, width=10, marker=marker;
         if(connect)
-          plg, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0,
-            fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0, color=clr(abs(c));
+          plg, elevation(*)(glst(llst)(ss(i)+1:ss(i+1))),
+            fs.soe(*)(llst)(ss(i)+1:ss(i+1)), color=clr(abs(c));
       } else {
-        xx = rx(llst)(ss(i)+1:ss(i+1))/100.0;
+        xx = rx(llst)(ss(i)+1:ss(i+1));
         si = sort(xx);
-        yy = elevation(glst(llst)(ss(i)+1:ss(i+1)))/100.0;
+        yy = elevation(glst(llst)(ss(i)+1:ss(i+1)));
         if(!is_void(rcf_parms))
           si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2))));
         // XYZZY - this is where the points get plotted
@@ -327,8 +325,8 @@ rcf_parms=, mode=, rtn=, marker=) {
       }
     }
   } else {
-    xx = rx(llst)/100.0;
-    yy = elevation(glst(llst))/100.0;
+    xx = rx(llst);
+    yy = elevation(glst(llst));
     si = sort(xx);
     if(!is_void(rcf_parms))
       si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2))));
