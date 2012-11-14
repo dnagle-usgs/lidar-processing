@@ -143,13 +143,13 @@ rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
   return glst;
 }
 
-func transect(fs, line, lw=, connect=, xtime=, msize=, xfma=, owin=, color=,
+func transect(data, line, lw=, connect=, xtime=, msize=, xfma=, owin=, color=,
 rcf_parms=, mode=, rtn=, marker=) {
-/* DOCUMENT transect(fs, line, lw=, connect=, xtime=, msize=, xfma=, owin=,
+/* DOCUMENT transect(data, line, lw=, connect=, xtime=, msize=, xfma=, owin=,
    color=, rcf_parms=, mode=, rtn=, marker=)
 
   Input:
-  fs         :  Data where you drew the line
+  data       :  Data where you drew the line
   line       :  Coordinates for transect in meters as [x1,y1,x2,y2]
   lw=        :  Search distance either side of the line in centimeters
   xtime=     :  Set to 1 to plot against time (sod)
@@ -213,17 +213,17 @@ rcf_parms=, mode=, rtn=, marker=) {
   else
     angle = pi/2.0;
 
-  // clean and sort fs
-  fs = test_and_clean(fs);
+  // clean and sort data
+  data = test_and_clean(data);
   // sort by soe only if soe values are not the same. This is necessary because
   // some times a data set is brought in that does not have any soe value
-  if(is_array(where(fs.soe(dif))))
-    fs = fs(sort(fs.soe))
+  if(is_array(where(data.soe(dif))))
+    data = data(sort(data.soe))
 
   // build a matrix to select only the data withing the bounding box
 
   local x, y, elevation;
-  data2xyz, fs, x, y, mode=mode;
+  data2xyz, data, x, y, mode=mode;
   glst = data_box(x, y, w, e, s, n);
   // rotation:  x' = xcos - ysin
   //            y' = ycos + xsin
@@ -239,8 +239,8 @@ rcf_parms=, mode=, rtn=, marker=) {
     return;
   }
 
-  // XYZZY - this is the last place we see fs being used for x
-  data2xyz, fs(glst), x, y, elevation, mode=mode;
+  // XYZZY - this is the last place we see data being used for x
+  data2xyz, data(glst), x, y, elevation, mode=mode;
   x -= line(1);
   y -= line(2);
 
@@ -261,7 +261,7 @@ rcf_parms=, mode=, rtn=, marker=) {
 
   window, owin;
   window, wait=1;
-  segs = where(abs(fs.soe(glst(llst))(dif)) > 5.0);
+  segs = where(abs(data.soe(glst(llst))(dif)) > 5.0);
   nsegs = numberof(segs)+1;
   if(nsegs > 1) {
    // 20060425:  setting ss to [0] causes bizarre behavior where lines appear
@@ -282,10 +282,10 @@ rcf_parms=, mode=, rtn=, marker=) {
     for(i = 1; i < numberof(ss); i++) {
       if(c >= 0)
         c = ((color+(i-1))%7);
-      soeb = fs.soe(*)(glst(llst)(ss(i)+1));
+      soeb = data.soe(*)(glst(llst)(ss(i)+1));
       t = soe2time( soeb );
-      tb = fs.soe(*)(glst(llst)(ss(i)+1))%86400;
-      te = fs.soe(*)(glst(llst)(ss(i+1)))%86400;
+      tb = data.soe(*)(glst(llst)(ss(i)+1))%86400;
+      te = data.soe(*)(glst(llst)(ss(i+1)))%86400;
       td = abs(te - tb);
       hms = sod2hms(tb);
 
@@ -304,11 +304,11 @@ rcf_parms=, mode=, rtn=, marker=) {
 
       if(xtime) {
         plmk, elevation(*)(llst(ss(i)+1:ss(i+1))),
-          fs.soe(*)(llst)(ss(i)+1:ss(i+1)),color=clr(abs(c)),
+          data.soe(*)(llst)(ss(i)+1:ss(i+1)),color=clr(abs(c)),
           msize=msize, width=10, marker=marker;
         if(connect)
           plg, elevation(*)(llst(ss(i)+1:ss(i+1))),
-            fs.soe(*)(llst)(ss(i)+1:ss(i+1)), color=clr(abs(c));
+            data.soe(*)(llst)(ss(i)+1:ss(i+1)), color=clr(abs(c));
       } else {
         xx = rx(llst)(ss(i)+1:ss(i+1));
         si = sort(xx);
@@ -332,10 +332,10 @@ rcf_parms=, mode=, rtn=, marker=) {
       plg, yy(si), xx(si),color=clr(color);
 
     c = (color+0)&7;
-    soeb = fs.soe(*)(glst(llst)(1));
+    soeb = data.soe(*)(glst(llst)(1));
     t = soe2time(soeb);
-    tb = fs.soe(*)(glst(llst)(1))%86400;
-    te = fs.soe(*)(glst(llst)(0))%86400;
+    tb = data.soe(*)(glst(llst)(1))%86400;
+    te = data.soe(*)(glst(llst)(0))%86400;
     td = abs(te - tb);
     hms = sod2hms(tb);
     if(is_array(tans)) {
