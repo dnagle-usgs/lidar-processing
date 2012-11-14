@@ -15,9 +15,9 @@ extern _transect_history;
     transect( fs_all, _transect_history(,-1), ..... )
 */
 
-func mtransect(fs, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
+func mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
 rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
-/* DOCUMENT mtransect(fs, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
+/* DOCUMENT mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
    rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=)
 
   Mouse selected transect. mtransect allows you to "drag out" a line within an
@@ -31,7 +31,7 @@ rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
     -2 for the one before that, etc.
 
   Input:
-  fs         :  Variable to process
+  data       :  Variable to process
   owin=      :  Desired Yorick output graph window.       Default is 3
   iwin=      :  Source window for transect.               Default is 5
   w=         :  Search distance from line in centimeters. Default is 150cm
@@ -116,11 +116,11 @@ rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
     line = _transect_history(, recall);
   }
 
-  glst = transect(fs, line, connect=connect, color=color, xfma=xfma,
+  glst = transect(data, line, connect=connect, color=color, xfma=xfma,
     rcf_parms=rcf_parms, mode=mode, owin=owin, lw=w, msize=msize, marker=marker);
   // plot the actual points selected onto the input window
   if (show == 2 ) {
-    data2xyz, unref(fs(glst)), x, y, z, mode=mode;
+    data2xyz, unref(data(glst)), x, y, z, mode=mode;
     window, iwin;
     plmk, unref(y), unref(x), msize=msize, marker=marker, color="black",
       width=10;
@@ -350,8 +350,8 @@ rcf_parms=, mode=, rtn=, marker=) {
   return glst(llst);
 }
 
-func transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=) {
-/* DOCUMENT transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=)
+func transrch(data, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=) {
+/* DOCUMENT transrch(data, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=)
   Searches for the point in the transect plot window iwin (default 3) nearest
   to where the user clicks.
 
@@ -364,7 +364,7 @@ func transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=) {
   selected.
 
   Input:
-    fs          : Variable to process, must be of type FS.
+    data        : Variable to process, must be of type FS.
                   use fs=test_and_clean(fs_all) to create
     m           : is the result from a call to mtransect()
     llst        : internal variable created from mtransect()
@@ -460,7 +460,7 @@ func transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=) {
   // Made segs extern in transect.i
   // 2008-11-25: wonder why i did that. must be computed here so we can
   // have multiple transects - rwm
-  segs = where(abs(fs.soe(m)(dif)) > 5.0);
+  segs = where(abs(data.soe(m)(dif)) > 5.0);
   // there must be a better way.
   for(i = 1, col = 0; i <= numberof(segs); i++) {
     if(segs(i) < minindx)
@@ -474,7 +474,7 @@ func transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=) {
   // highlight selected point in iwin
   plg, y, x, width=10.0, color=clr(col);
 
-  mindata = fs(m(minindx));
+  mindata = data(m(minindx));
   pixelwf_set_point, mindata;
   rasterno = mindata.rn&0xFFFFFF;
   pulseno = mindata.rn/0xFFFFFF
@@ -501,10 +501,10 @@ func transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=) {
   window_select, wbkp;
 }
 
-func mtransrch(fs, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=,
+func mtransrch(data, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=,
 ptype=, fset=) {
-/* DOCUMENT mtransrch(fs, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=,
-   ptype=, fset=)
+/* DOCUMENT mtransrch(data, m, llst, _rx=, _el=, spot=, iwin=, mode=,
+   disp_type=, ptype=, fset=)
   Call transrch repeatedly until the user clicks the right mouse button.
   Should work similar to Pixel Waveform.
 
@@ -540,7 +540,7 @@ ptype=, fset=) {
 
   // the data must be clean coming in, otherwise the index do not match the
   // data.
-  fs = test_and_clean(fs);
+  data = test_and_clean(data);
 
   rtn_data = [];
   nsaved = 0;
@@ -558,7 +558,7 @@ ptype=, fset=) {
         ++nsaved;
     }
 
-    transrch, fs, m, llst, _rx=_rx, _el=_el, spot=spot, iwin=iwin;
+    transrch, data, m, llst, _rx=_rx, _el=_el, spot=spot, iwin=iwin;
 
     if(mouse_click_is(["middle", "shift+left"], spot)) {
       _transrch_reference = data2xyz(mindata, mode=mode);
