@@ -525,8 +525,7 @@ modified amar nayegandhi April 2005
   if (uniq && numberof(sel_eaarl)) {
     if(!silent)
       write, "Finding unique elements in array...";
-    idx = set_remove_duplicates(sel_eaarl.soe, idx=1);
-    sel_eaarl = unref(sel_eaarl)(idx);
+    sel_eaarl = uniq_data(sel_eaarl);
   }
   if(!silent)
     write, format = "Total Number of selected points = %d\n", numberof(sel_eaarl);
