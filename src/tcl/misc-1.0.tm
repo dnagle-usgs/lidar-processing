@@ -548,3 +548,17 @@ proc ::misc::raise_win {win} {
     wm deiconify $win
     wm geometry $win $geo
 }
+
+proc ::misc::combinations {items} {
+    if {[llength $items] == 1} {
+        return $items
+    }
+    set item [lindex $items 0]
+    set with [list]
+    set without [combinations [lrange $items 1 end]]
+    foreach group [combinations [lrange $items 1 end]] {
+        lappend with [list $item {*}$group]
+    }
+    return [list $item {*}$with {*}$without]
+
+}
