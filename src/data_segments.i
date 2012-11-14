@@ -99,7 +99,7 @@ func split_by_flight(data, timediff=, daythresh=, pulsecount=) {
 
   // Merge lines that have similar bbars, they are from the same flight.
   merged = array(pointer, numberof(lines));
-  merged(1) = &(*fltlines(1));
+  merged(1) = &(*lines(1));
   j = 1;
   for(i = 2; i <= numberof(bbar); i++) {
     if(abs(bbar(i) - bbar(i-1)) < daythresh) {
@@ -114,7 +114,7 @@ func split_by_flight(data, timediff=, daythresh=, pulsecount=) {
 
 func split_by_line(data, timediff=) {
   default, timediff, 60;
-  data = sortdata(test_and_clean(segs(noop(i))), method="soe");
+  data = sortdata(test_and_clean(data), method="soe");
   ptr = split_sequence_by_gaps(data.soe, gap=timediff);
   for(i = 1; i <= numberof(ptr); i++)
     ptr(i) = &data(*ptr(i));
@@ -217,79 +217,37 @@ func rcf_by_fltline(data, mode=, rcfmode=, buf=, w=, n=, timediff=) {
 
   The timediff= option is as documented in split_by_fltline.
 */
-  ptrs = split_by_fltline(unref(data), timediff=timediff);
+  ptrs = split_by_line(unref(data), timediff=timediff);
   for(i = 1; i <= numberof(ptrs); i++)
     ptrs(i) = &rcf_filter_eaarl(*ptrs(i), buf=buf, w=w, n=n, mode=mode,
       rcfmode=rcfmode);
   return merge_pointers(ptrs);
 }
 
+func tk_sdw_launch_split(varname, how) {
+  segs = split_data(symbol_def(varname), how, varname=varname);
+  restore, segs;
+  vars = strjoin(segs(*,), " ");
+  how = strjoin(how, ", ");
+  title = "Segments for "+varname+" by "+how;
+  tkcmd, swrite(format="launch_segmenteddatawindow {%s} -title {%s}",
+    vars, title);
+}
+
 func tk_sdw_launch_fltlines(varname) {
-  fptr = split_by_fltline(symbol_def(varname));
-  fmt = swrite(format="flt%%0%dd_%%s", long(log10(numberof(fptr))) + 1);
-  segvars = swrite(format=fmt, indgen(numberof(fptr)), varname);
-  for(i = 1; i <= numberof(fptr); i++) {
-    symbol_set, segvars(i), *fptr(i);
-  }
-  segvars = (unref(segvars) + " ")(sum);
-  tkcmd, swrite(format="launch_segmenteddatawindow {%s} -title {Segments for %s by flightline}", segvars, varname);
+  tk_sdw_launch_split, varname, "line";
 }
 
 func tk_sdw_launch_fltlines_digitizer(varname) {
-  ptr = subsplit_by_digitizer(split_by_fltline(symbol_def(varname)));
-
-  flts = transpose(array(indgen(numberof(ptr)/2), 2))(*);
-  digs = array([1,2], numberof(ptr)/2)(*);
-  fmt = swrite(format="flt%%0%dd_d%%d_%%s", long(log10(numberof(ptr)/2)) + 1);
-  segvars = swrite(format=fmt, unref(flts), unref(digs), varname);
-
-  w = where(ptr);
-  if(!numberof(ptr)) {
-    // Shouldn't happen...
-    write, "Aborting! No data found?";
-  }
-  ptr = ptr(w);
-  segvars = segvars(w);
-
-  for(i = 1; i <= numberof(ptr); i++) {
-    symbol_set, segvars(i), *ptr(i);
-  }
-  segvars = (unref(segvars) + " ")(sum);
-  tkcmd, swrite(format="launch_segmenteddatawindow {%s} -title {Segments for %s by flightline and digitizer}", segvars, varname);
+  tk_sdw_launch_split, varname, ["line", "digitizer"];
 }
 
 func tk_sdw_launch_days(varname) {
-  dptr = split_by_day(symbol_def(varname));
-  fmt = swrite(format="day%%0%dd_%%s", long(log10(numberof(dptr))) + 1);
-  segvars = swrite(format=fmt, indgen(numberof(dptr)), varname);
-  for(i = 1; i <= numberof(dptr); i++) {
-    symbol_set, segvars(i), *dptr(i);
-  }
-  segvars = (unref(segvars) + " ")(sum);
-  tkcmd, swrite(format="launch_segmenteddatawindow {%s} -title {Segments for %s by day}", segvars, varname);
+  tk_sdw_launch_split, varname, "flight";
 }
 
 func tk_sdw_launch_days_digitizer(varname) {
-  ptr = subsplit_by_digitizer(split_by_day(symbol_def(varname)));
-
-  days = transpose(array(indgen(numberof(ptr)/2), 2))(*);
-  digs = array([1,2], numberof(ptr)/2)(*);
-  fmt = swrite(format="day%%0%dd_d%%d_%%s", long(log10(numberof(ptr)/2)) + 1);
-  segvars = swrite(format=fmt, unref(days), unref(digs), varname);
-
-  w = where(ptr);
-  if(!numberof(ptr)) {
-    // Shouldn't happen...
-    write, "Aborting! No data found?";
-  }
-  ptr = ptr(w);
-  segvars = segvars(w);
-
-  for(i = 1; i <= numberof(ptr); i++) {
-    symbol_set, segvars(i), *ptr(i);
-  }
-  segvars = (unref(segvars) + " ")(sum);
-  tkcmd, swrite(format="launch_segmenteddatawindow {%s} -title {Segments for %s by day and digitizer}", segvars, varname);
+  tk_sdw_launch_split, varname, ["flight", "digitizer"];
 }
 
 func tk_sdw_send_times(obj, idx, data) {
@@ -634,80 +592,36 @@ func gather_data_stats(data, &working_tans, &working_pnav) {
   return stats;
 }
 
-func tk_dsw_launch_fltlines(varname) {
-  fptr = split_by_fltline(symbol_def(varname));
-  segvars = swrite(format="%s_flt%d", varname, indgen(numberof(fptr)));
-  stats = h_new();
-  for(i = 1; i <= numberof(fptr); i++) {
-    h_set, stats, segvars(i), gather_data_stats(*fptr(i));
-  }
-  json = json_encode(stats);
+func tk_dsw_launch_split_stats(varname, how) {
+  segs = split_data(symbol_def(varname), how, varname=varname);
+  for(i = 1; i <= segs(*); i++)
+    save, segs, noop(i), gather_data_stats(segs(noop(i)));
+  json = json_encode(segs);
   tkcmd, swrite(format="launch_datastats_stats {%s}", json);
+}
+
+func tk_dsw_launch_fltlines(varname) {
+  tk_dsw_launch_split_stats, varname, "line";
 }
 
 func tk_dsw_launch_fltlines_digitizer(varname) {
-  ptr = subsplit_by_digitizer(split_by_fltline(symbol_def(varname)));
-
-  flts = transpose(array(indgen(numberof(ptr)/2), 2))(*);
-  digs = array([1,2], numberof(ptr)/2)(*);
-  segvars = swrite(format="%s_flt%d_d%d", varname, unref(flts), unref(digs));
-
-  w = where(ptr);
-  if(!numberof(ptr)) {
-    // Shouldn't happen...
-    write, "Aborting! No data found?";
-  }
-  ptr = ptr(w);
-  segvars = segvars(w);
-
-  stats = h_new();
-  for(i = 1; i <= numberof(ptr); i++) {
-    h_set, stats, segvars(i), gather_data_stats(*ptr(i));
-  }
-  json = json_encode(stats);
-  tkcmd, swrite(format="launch_datastats_stats {%s}", json);
+  tk_dsw_launch_split_stats, varname, ["line", "digitizer"];
 }
 
 func tk_dsw_launch_days(varname) {
-  dptr = split_by_day(symbol_def(varname));
-  segvars = swrite(format="%s_day%d", varname, indgen(numberof(dptr)));
-  stats = h_new();
-  for(i = 1; i <= numberof(dptr); i++) {
-    h_set, stats, segvars(i), gather_data_stats(*dptr(i));
-  }
-  json = json_encode(stats);
-  tkcmd, swrite(format="launch_datastats_stats {%s}", json);
+  tk_dsw_launch_split_stats, varname, "flight";
 }
 
 func tk_dsw_launch_days_digitizer(varname) {
-  ptr = subsplit_by_digitizer(split_by_day(symbol_def(varname)));
-
-  days = transpose(array(indgen(numberof(ptr)/2), 2))(*);
-  digs = array([1,2], numberof(ptr)/2)(*);
-  segvars = swrite(format="%s_day%d_d%d", varname, unref(days), unref(digs));
-
-  w = where(ptr);
-  if(!numberof(ptr)) {
-    // Shouldn't happen...
-    write, "Aborting! No data found?";
-  }
-  ptr = ptr(w);
-  segvars = segvars(w);
-
-  stats = h_new();
-  for(i = 1; i <= numberof(ptr); i++) {
-    h_set, stats, segvars(i), gather_data_stats(*ptr(i));
-  }
-  json = json_encode(stats);
-  tkcmd, swrite(format="launch_datastats_stats {%s}", json);
+  tk_dsw_launch_split_stats, varname, ["flight", "digitizer"];
 }
 
 func tk_dsw_launch_stats(vars) {
   vars = strsplit(vars, " ");
-  stats = h_new();
+  stats = save();
   for(i = 1; i <= numberof(vars); i++) {
     data = symbol_def(vars(i));
-    h_set, stats, vars(i), gather_data_stats(data);
+    save, stats, vars(i), gather_data_stats(data);
   }
   json = json_encode(stats);
   tkcmd, swrite(format="launch_datastats_stats {%s}", json);
@@ -719,7 +633,7 @@ func tk_dsw_get_data(data, type, var, sod_field) {
 // tk_dsw_get_data(data, "pnav", "pnav");
   extern tans, pnav;
 
-  segment_ptrs = split_by_fltline(unref(data));
+  segment_ptrs = split_by_line(unref(data));
 
   loaded = mission.data.loaded;
 
