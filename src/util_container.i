@@ -175,7 +175,7 @@ func pbd_append(file, vname, data, uniq=) {
   if(file_exists(file))
     data = grow(pbd_load(file), unref(data));
   if(uniq)
-    data = data(set_remove_duplicates(data.soe, idx=1));
+    data = uniq_data(data);
   pbd_save, file, vname, data;
 }
 
