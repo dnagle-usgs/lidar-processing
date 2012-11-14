@@ -122,7 +122,7 @@ func split_by_line(data, timediff=) {
 }
 
 func split_by_channel(data) {
-  data = test_and_clean(segs(noop(i)));
+  data = test_and_clean(data);
   if(has_member(data, "channel")) {
     chans = set_remove_duplicates(data.channel);
     num = numberof(chans);
@@ -131,6 +131,7 @@ func split_by_channel(data) {
       w = where(data.channel == chans(i));
       ptr(i) = &data(w);
     }
+    return ptr;
   } else {
     return [&data];
   }
@@ -187,7 +188,7 @@ func subsplit_by_channel(segs) {
     fmt = subsplit_fmt("chan", num, segs(*,i));
     for(j = 1; j <= num; j++) {
       data = *ptr(j);
-      chan = has_member(*ptr(j), "channel") ? (*ptr(j)).channel : 0;
+      chan = has_member(*ptr(j), "channel") ? (*ptr(j)).channel(1) : 0;
       save, result, swrite(format=fmt, chan), *ptr(j);
     }
   }
