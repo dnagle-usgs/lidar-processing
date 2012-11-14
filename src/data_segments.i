@@ -75,7 +75,7 @@ func subsplit_by_digitizer(ptr) {
   return dig;
 }
 
-func split_by_day(data, timediff=, daythresh=) {
+func split_by_day(data, timediff=, daythresh=, pulsecount=) {
 /* DOCUMENT dptr = split_by_day(data)
 
   This function splits the data by day. It will only work with EAARL data as
