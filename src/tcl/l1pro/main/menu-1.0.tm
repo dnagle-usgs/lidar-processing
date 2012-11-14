@@ -294,8 +294,6 @@ proc menu_utilities mb {
             -command [list source [file join $::src_path transrch.ytk]]
     $mb add cascade {*}[menulabel "Launch segments by..."] \
             -menu [menu_utilities_segments $mb.seg]
-    $mb add cascade {*}[menulabel "Launch statistics by..."] \
-            -menu [menu_utilities_statistics $mb.stat]
     $mb add separator
     $mb add command {*}[menulabel "Check and correct EDB time"] \
             -command ts_check
@@ -305,6 +303,9 @@ proc menu_utilities mb {
     $mb add command {*}[menulabel "S&how Flightlines with No TANS Data..."] \
             -command {exp_send "plot_no_tans_fltlines(tans, gga);\r"}
     $mb add separator
+    $mb add cascade {*}[menulabel "Launch statistics by..."] \
+            -menu [menu_utilities_statistics $mb.stat]
+    $mb add separator
     $mb add cascade {*}[menulabel "Memory usage indicator..."] \
         -menu [menu_utilities_memory $mb.mem]
 
@@ -313,29 +314,19 @@ proc menu_utilities mb {
 
 proc menu_utilities_segments mb {
     menu $mb
-    $mb add command {*}[menulabel "Flightline"] \
-            -command [list segment_data_launcher fltlines]
-    $mb add command {*}[menulabel "Flightline and digitizer"] \
-            -command [list segment_data_launcher fltlines_digitizer]
-    $mb add command {*}[menulabel "Day"] \
-            -command [list segment_data_launcher days]
-    $mb add command {*}[menulabel "Day and digitizer"] \
-            -command [list segment_data_launcher days_digitizer]
-    $mb add command {*}[menulabel "Manual selection"] \
-            -command select_data_segments
+    foreach how [::misc::combinations {flight line channel digitizer}] {
+        $mb add command {*}[menulabel [join $how ", "]] \
+                -command [list segment_data_launcher $how]
+    }
     return $mb
 }
 
 proc menu_utilities_statistics mb {
     menu $mb
-    $mb add command {*}[menulabel "Flightline"] \
-            -command [list segment_stat_launcher fltlines]
-    $mb add command {*}[menulabel "Flightline and digitizer"] \
-            -command [list segment_stat_launcher fltlines_digitizer]
-    $mb add command {*}[menulabel "Day"] \
-            -command [list segment_stat_launcher days]
-    $mb add command {*}[menulabel "Day and digitizer"] \
-            -command [list segment_stat_launcher days_digitizer]
+    foreach how [::misc::combinations {flight line channel digitizer}] {
+        $mb add command {*}[menulabel [join $how ", "]] \
+                -command [list segment_stat_launcher $how]
+    }
     return $mb
 }
 

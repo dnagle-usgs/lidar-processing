@@ -217,14 +217,11 @@ proc launch_datastatswindow {variables args} {
    expect "> "
 }
 
-proc segment_stat_launcher {method {yvar -}} {
+proc segment_stat_launcher {how {yvar -}} {
    if {$yvar eq "-"} {
       set yvar $::pro_var
    }
-   set valid [list fltlines fltlines_digitizer days days_digitizer]
-   if {[lsearch $valid $method] == -1} {
-      error "Invalid method for segment_stat_launcher: $method"
-   }
-   exp_send "tk_dsw_launch_$method, \"$yvar\";\r"
+   set how \[\"[join $how \",\"]\"\]
+   exp_send "tk_dsw_launch_split_stats, \"$yvar\", $how;\r"
    expect "> "
 }

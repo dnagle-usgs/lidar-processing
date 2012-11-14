@@ -516,15 +516,12 @@ itcl::body SegmentedDataWindow::selected {cmd} {
    }
 }
 
-proc segment_data_launcher {method {yvar -}} {
+proc segment_data_launcher {how {yvar -}} {
    if {$yvar eq "-"} {
       set yvar $::pro_var
    }
-   set valid [list fltlines fltlines_digitizer days days_digitizer]
-   if {[lsearch $valid $method] == -1} {
-      error "Invalid method for segment_data_launcher: $method"
-   }
-   exp_send "tk_sdw_launch_$method, \"$yvar\";\r"
+   set how \[\"[join $how \",\"]\"\]
+   exp_send "tk_sdw_launch_split, \"$yvar\", $how;\r"
    expect "> "
 }
 
