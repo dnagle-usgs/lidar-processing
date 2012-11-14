@@ -113,3 +113,21 @@ func pass_void(f, val) {
   if(is_void(val)) return val;
   return f(val);
 }
+
+func int_digits(num) {
+/* DOCUMENT digits = int_digits(num)
+  Returns the number of digitis required to represent the given value as an
+  integer. The given value should probably an integer, but floats are also
+  accepted.
+
+  Typical usage is for constructing a format string for a series of integers to
+  keep them the same length:
+
+    > flts = indgen(12);
+    > fmt = swrite(format="flt%%0%dd", int_digits(numberof(flts)));
+    > swrite(format=fmt, flts);
+    ["flt01","flt02","flt03","flt04","flt05","flt06","flt07","flt08","flt09",
+    "flt10","flt11","flt12"]
+*/
+  return long(log10(num))+1;
+}
