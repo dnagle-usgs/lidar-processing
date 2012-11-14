@@ -102,9 +102,10 @@ rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
   if(is_void(recall)) {
     // get the line coords with the mouse and convert to cm
     transect_line = mouse(1, 2, "")(1:4)*100.0;
-    l = transect_line;   // just to keep the equations short;
+    line = transect_line;   // just to keep the equations short;
     if(show)
-      plg, [l(2),l(4)]/100., [l(1),l(3)]/100., width=2.0, color="red";
+      plg, [line(2),line(4)]/100., [line(1),line(3)]/100., width=2.0,
+        color="red";
     grow, _transect_history, [l]
   } else {
     if(numberof(_transect_history) == 0) {
@@ -113,10 +114,10 @@ rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
       return;
     }
     if(recall > 0) recall = -recall;
-    l = _transect_history(, recall);
+    line = _transect_history(, recall);
   }
 
-  glst = transect(fs, l, connect=connect, color=color, xfma=xfma,
+  glst = transect(fs, line, connect=connect, color=color, xfma=xfma,
     rcf_parms=rcf_parms, mode=mode, owin=owin, lw=w, msize=msize, marker=marker);
   // plot the actual points selected onto the input window
   if (show == 2 ) {
@@ -143,14 +144,14 @@ rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
   return glst;
 }
 
-func transect(fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=,
+func transect(fs, line, lw=, connect=, xtime=, msize=, xfma=, owin=, color=,
 rcf_parms=, mode=, rtn=, marker=) {
-/* DOCUMENT transect(fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=,
+/* DOCUMENT transect(fs, line, lw=, connect=, xtime=, msize=, xfma=, owin=,
    color=, rcf_parms=, mode=, rtn=, marker=)
 
   Input:
   fs         :  Data where you drew the line
-  l          :  Line (as given by mouse())
+  line       :  Coordinates for transect in cm as [x1,y1,x2,y2]
   lw=        :  Search distance either side of the line in centimeters
   xtime=     :  Set to 1 to plot against time (sod)
   xfma=      :  Set to 1 to clear screen
@@ -200,16 +201,16 @@ rcf_parms=, mode=, rtn=, marker=) {
   if(xfma) fma;
 
   // determine the bounding box n,s,e,w coords
-  n = l(2:4:2)(max);
-  s = l(2:4:2)(min);
-  w = l(1:3:2)(min);
-  e = l(1:3:2)(max);
+  n = line(2:4:2)(max);
+  s = line(2:4:2)(min);
+  w = line(1:3:2)(min);
+  e = line(1:3:2)(max);
 
   // compute the rotation angle needed to make the selected line
   // run east west
-  dnom = l(1)-l(3);
+  dnom = line(1)-line(3);
   if(dnom != 0.0)
-    angle = atan((l(2)-l(4)) / dnom) ;
+    angle = atan((line(2)-line(4)) / dnom) ;
   else angle = pi/2.0;
   //  angle ;
   //  [n,s,e,w]
@@ -239,8 +240,8 @@ rcf_parms=, mode=, rtn=, marker=) {
   }
 
   // XYZZY - this is the last place we see fs being used for x
-  y = fs.north(*)(glst) - l(2);
-  x = fs.east(*)(glst)  - l(1);
+  y = fs.north(*)(glst) - line(2);
+  x = fs.east(*)(glst)  - line(1);
 
   ca = cos(-angle);
   sa = sin(-angle);
@@ -412,14 +413,14 @@ func transrch(fs, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=) {
   write, format="mouse :       : %f %f\n", spot(1), spot(2);
 
   if(1) {   // the yorick way - rwm
-    ll = limits();
+    lims = limits();
 
     dx = spot(1)-xx;
     // need to normalize the x and y values
-    dx = dx / (ll(2) - ll(1));
+    dx = dx / (lims(2) - lims(1));
     dx = dx^2;
     dy = spot(2)-yy;
-    dy = dy / (ll(4) - ll(3));
+    dy = dy / (lims(4) - lims(3));
     dy = dy^2;
     dd = dx+dy;
     dd = sqrt(dd);
