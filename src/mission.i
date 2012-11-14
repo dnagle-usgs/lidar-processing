@@ -42,11 +42,11 @@ local mission;
 
 scratch = save(scratch, tmp, mission_plugins, mission_cache, mission_flights,
   mission_details, mission_get, mission_has, mission_load_soe_stub,
-  mission_load_stub, mission_unload_stub, mission_wrap_stub,
-  mission_unwrap_stub, mission_json, mission_save, mission_read,
-  mission_tksync, mission_help);
+  mission_load_soe_rn_stub, mission_load_stub, mission_unload_stub,
+  mission_wrap_stub, mission_unwrap_stub, mission_json, mission_save,
+  mission_read, mission_tksync, mission_help);
 tmp = save(__help, data, plugins, cache, flights, details, get, has, load_soe,
-  load, unload, wrap, unwrap, json, save, read, tksync, help);
+  load_soe_rn, load, unload, wrap, unwrap, json, save, read, tksync, help);
 
 __help = "\
 Store and manages the mission configuration. This is an oxy object and thus \
@@ -622,6 +622,7 @@ func mission_has(flight, key) {
 has = mission_has;
 
 /*******************************************************************************
+  mission, load_soe_rn, <soe>
   mission, load_soe, <soe>
   mission, load, "<flight>"
   mission, unload
@@ -638,6 +639,13 @@ has = mission_has;
     }
     save, mission, load=mission_load;
 */
+
+func mission_load_soe_rn_stub(soe, rn) {
+  write, "WARNING: 'mission, load_soe_rn' is not properly implemented";
+  write, "         Most likely this means you didn't load a configuration";
+  write, "         No data loaded";
+}
+load_soe_rn = mission_load_soe_rn_stub;
 
 func mission_load_soe_stub(soe) {
   write, "WARNING: 'mission, load_soe' is not properly implemented";
