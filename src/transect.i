@@ -222,7 +222,9 @@ rcf_parms=, mode=, rtn=, marker=) {
 
   // build a matrix to select only the data withing the bounding box
 
-  glst = data_box(fs.east/100., fs.north/100., w, e, s, n);
+  local x, y, elevation;
+  data2xyz, fs, x, y, mode=mode;
+  glst = data_box(x, y, w, e, s, n);
   // rotation:  x' = xcos - ysin
   //            y' = ycos + xsin
 
@@ -238,8 +240,9 @@ rcf_parms=, mode=, rtn=, marker=) {
   }
 
   // XYZZY - this is the last place we see fs being used for x
-  y = fs.north(*)(glst)/100. - line(2);
-  x = fs.east(*)(glst)/100. - line(1);
+  data2xyz, fs(glst), x, y, elevation, mode=mode;
+  x -= line(1);
+  y -= line(2);
 
   ca = cos(-angle);
   sa = sin(-angle);
@@ -252,12 +255,6 @@ rcf_parms=, mode=, rtn=, marker=) {
   // XYZZY - y is computed from elevation
   // XYZZY - lw is the search width
   llst = where(abs(ry) < lw);
-  if(mode == "fs")
-    elevation = fs.elevation(*)/100.;
-  else if(mode == "be")
-    elevation = fs.lelv(*)/100.;
-  else if(mode == "ba")
-    elevation = fs.elevation(*)/100. + fs.depth(*)/100.;
 
   //     1        2      3       4        5          6         7
   clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
@@ -306,16 +303,16 @@ rcf_parms=, mode=, rtn=, marker=) {
         t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), hd, clr(abs(c));
 
       if(xtime) {
-        plmk, elevation(*)(glst(llst)(ss(i)+1:ss(i+1))),
+        plmk, elevation(*)(llst(ss(i)+1:ss(i+1))),
           fs.soe(*)(llst)(ss(i)+1:ss(i+1)),color=clr(abs(c)),
           msize=msize, width=10, marker=marker;
         if(connect)
-          plg, elevation(*)(glst(llst)(ss(i)+1:ss(i+1))),
+          plg, elevation(*)(llst(ss(i)+1:ss(i+1))),
             fs.soe(*)(llst)(ss(i)+1:ss(i+1)), color=clr(abs(c));
       } else {
         xx = rx(llst)(ss(i)+1:ss(i+1));
         si = sort(xx);
-        yy = elevation(glst(llst)(ss(i)+1:ss(i+1)));
+        yy = elevation(llst(ss(i)+1:ss(i+1)));
         if(!is_void(rcf_parms))
           si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2))));
         // XYZZY - this is where the points get plotted
@@ -326,7 +323,7 @@ rcf_parms=, mode=, rtn=, marker=) {
     }
   } else {
     xx = rx(llst);
-    yy = elevation(glst(llst));
+    yy = elevation(llst);
     si = sort(xx);
     if(!is_void(rcf_parms))
       si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2))));
