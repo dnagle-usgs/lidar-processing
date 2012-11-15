@@ -286,7 +286,14 @@ mode=, marker=) {
   return data;
 }
 
-func transect_pixelwf_interactive(vname, line) {
+func transect_pixelwf_interactive(vname, line, win=) {
+/* DOCUMENT transect_pixelwf_interactive, vname, line, win=
+  Enters an interactive query mode similar to pixelwf_interactive, except that
+  it queries a transect plot. VNAME should be the name of the variable
+  containing the points plotted, LINE should be the transect they're plotted
+  with respect to, and WIN should be the window they're plotted in.
+*/
+  if(is_void(win)) win = window();
   data = var_expr_get(vname);
 
   // Pull out data coordinates
@@ -329,6 +336,12 @@ func transect_pixelwf_interactive(vname, line) {
 }
 
 func transect_pixelwf_find_point(spot, data, x, y) {
+/* DOCUMENT transect_pixelwf_find_point(spot, data, x, y)
+  Utility function for transect_pixelwf_interactive. Given SPOT (a mouse click
+  result), DATA (a point cloud), and X,Y (the coordiantes in the plot that
+  correspond to the points in DATA), this returns a various info about the
+  closest point to SPOT.
+*/
   extern pixelwfvars;
   vars = pixelwfvars.selection;
   radius = vars.radius;
