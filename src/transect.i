@@ -15,8 +15,8 @@ extern _transect_history;
     transect( fs_all, _transect_history(,-1), ..... )
 */
 
-func mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=, mode=,
-rtn=, show=, msize=, expect=, marker=) {
+func mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
+mode=, rtn=, show=, msize=, expect=, marker=) {
 /* DOCUMENT mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
    mode=, rtn=, show=, msize=, expect=, marker=)
 
@@ -73,8 +73,6 @@ rtn=, show=, msize=, expect=, marker=) {
 */
   extern _transect_history, transect_line;
 
-  wbkp = current_window();
-
   default, w, 150;
   default, connect, 0;
   default, owin, 3;
@@ -83,6 +81,8 @@ rtn=, show=, msize=, expect=, marker=) {
   default, xfma, 0;
   default, color, 2;  // start at red, not black
 
+  // Handle the complexities of having a deprecated rtn= option and a
+  // non-deprecated mode= option.
   if(is_void(mode)) {
     if(!is_void(rtn)) {
       if(logger(warn))
@@ -93,63 +93,73 @@ rtn=, show=, msize=, expect=, marker=) {
     mode = ["fs","be","ba"](rtn+1);
   }
 
-  window, owin;
-  lmts = limits();
-  window,iwin;
+  wbkp = current_window();
+
   if(is_void(recall)) {
-    // get the line coords with the mouse and convert to cm
-    transect_line = mouse(1, 2, "")(1:4);
-    line = transect_line;   // just to keep the equations short;
+    window, iwin;
+    line = transect_line = mouse(1, 2, "")(1:4);
     if(show)
       plg, [line(2),line(4)], [line(1),line(3)], width=2.0, color="red";
-    grow, _transect_history, [line]
+    window_select, wbkp;
+
+    grow, _transect_history, [list];
   } else {
-    if(numberof(_transect_history) == 0) {
-      write, "No transect lines in _transect_history";
-      window_select, wbkp;
+    // Make sure recall is negative
+    recall = -abs(recall);
+    if(is_void(_transect_history)) {
+      write, "No lines in _transect_history";
       return;
     }
-    if(recall > 0) recall = -recall;
-    line = _transect_history(, recall);
+    if(abs(recall) >= dimsof(_transect_history)(3)) {
+      write, "Requested line exceeds history in _transect_history";
+      return;
+    }
+    line = transect_line = _transect_history(,recall);
   }
 
+  if(recall) {
+    window, owin;
+    lims = limits();
+  }
   data = transect(data, line, connect=connect, color=color, xfma=xfma,
     mode=mode, owin=owin, lw=w, msize=msize, marker=marker);
+
   // plot the actual points selected onto the input window
-  if (show == 2 ) {
-    data2xyz, unref(data), x, y, z, mode=mode;
+  if(show == 2) {
+    local x, y;
+    data2xyz, data, x, y, mode=mode;
     window, iwin;
-    plmk, unref(y), unref(x), msize=msize, marker=marker, color="black",
+    plmk, y, x, msize=msize, marker=marker, color="black",
       width=10;
   }
-  if(show == 3) {   // this only redraws the last transect selected.
+  // this only redraws the last transect selected.
+  if(show == 3) {
     window, iwin;
-    plg, [transect_line(2),transect_line(4)],
-      [transect_line(1),transect_line(3)], width=2.0, color="red";
+    plg, [line(2),line(4)], [line(1),line(3)], width=2.0, color="red";
   }
+
   window, owin;
-  if(is_void(recall)) {
-    limits;
+  if(recall) {
+    limits, lims(1),lims(2), lims(3), lims(4);
   } else {
-    limits, lmts(1),lmts(2), lmts(3), lmts(4);
+    limits;
   }
+  window_select, wbkp;
   if(!is_void(expect))
     write, format="%s\n", "END mtransect:";
 
-  window_select, wbkp;
   return data;
 }
 
-func transect(data, line, lw=, connect=, xtime=, msize=, xfma=, owin=, color=,
+func transect(data, line, lw=, connect=, msize=, xfma=, owin=, color=,
 mode=, rtn=, marker=) {
-/* DOCUMENT transect(data, line, lw=, connect=, xtime=, msize=, xfma=, owin=,
+/* DOCUMENT transect(data, line, lw=, connect=, msize=, xfma=, owin=,
    color=, mode=, rtn=, marker=)
 
   Input:
   data       :  Data where you drew the line
   line       :  Coordinates for transect in meters as [x1,y1,x2,y2]
   lw=        :  Search distance either side of the line in centimeters
-  xtime=     :  Set to 1 to plot against time (sod)
   xfma=      :  Set to 1 to clear screen
   owin=      :  Set output window
   color=     :  Select starting color, 1-7, use negative to use only 1 color
@@ -169,15 +179,14 @@ mode=, rtn=, marker=) {
 */
   extern rx, elevation, glst, llst, segs;
 
-  wbkp = current_window();
-
   default, rtn, 0;    // first return
   default, lw, 150;   // search width, cm
-  default, color, 1;  // 1 is first color
   default, owin, 3;
   default, msize, 0.1;
   default, marker, 1;
 
+  // Handle the complexities of having a deprecated rtn= option and a
+  // non-deprecated mode= option.
   if(is_void(mode)) {
     if(!is_void(rtn)) {
       if(logger(warn))
@@ -188,151 +197,91 @@ mode=, rtn=, marker=) {
     mode = ["fs","be","ba"](rtn+1);
   }
 
-  window, wait=1;
-  window, owin;
-  if(xfma) fma;
+  // lw is the transect width. Except it's actually only half the transect
+  // width, and it's in cm. So double, then convert to m.
+  lw = (lw*2)/100.;
 
-  // determine the bounding box n,s,e,w coords
-  n = line(2:4:2)(max);
-  s = line(2:4:2)(min);
-  w = line(1:3:2)(min);
-  e = line(1:3:2)(max);
-
-  // compute the rotation angle needed to make the selected line
-  // run east west
-  angle = atan(line(2)-line(4), line(1)-line(3));
-
-  // clean and sort data
+  // Clean up data
   data = test_and_clean(data);
-  // sort by soe only if soe values are not the same. This is necessary because
-  // some times a data set is brought in that does not have any soe value
-  if(is_array(where(data.soe(dif))))
-    data = data(sort(data.soe))
 
-  // build a matrix to select only the data withing the bounding box
-
-  local x, y, elevation;
-  data2xyz, data, x, y, mode=mode;
-  glst = data_box(x, y, w, e, s, n);
-  // rotation:  x' = xcos - ysin
-  //            y' = ycos + xsin
-
-  // Steps:
-  //    1 translate data and line to 0,0
-  //    2 rotate data and line
-  //    3 select desired data
-
-  if(numberof(glst) == 0) {
-    write, "No points found along specified line";
-    window_select, wbkp;
+  if(!numberof(data)) {
+    write, "No points remain after test_and_clean";
     return;
   }
 
-  // XYZZY - this is the last place we see data being used for x
-  data2xyz, data(glst), x, y, elevation, mode=mode;
-  x -= line(1);
-  y -= line(2);
+  // Reduce data to just the portion within the transect
+  ply = line_to_poly(line(1), line(2), line(3), line(4), width=lw/100.);
+  data = data_in_poly(data, ply, mode=mode);
 
+  if(!numberof(data)) {
+    write, "No points along specified transect line";
+    return;
+  }
+
+  // Compute the angle needed to rotate the data to run east-to-west
+  angle = atan(line(2)-line(4), line(1)-line(3));
   ca = cos(-angle);
   sa = sin(-angle);
 
-  // XYZZY - rx is used to plot x
-  // XYZZY - would the rx element give us the glst element to use?
-  rx = x*ca - y*sa;
-  ry = y*ca + x*sa;
+  // Break the data up into segments
+  segs = split_data(data, "line");
 
-  // XYZZY - y is computed from elevation
-  // XYZZY - lw is the search width
-  llst = where(abs(ry) < lw);
-
-  //     1        2      3       4        5          6         7
-  clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
-
-  window, owin;
-  window, wait=1;
-  segs = where(abs(data.soe(glst(llst))(dif)) > 5.0);
-  nsegs = numberof(segs)+1;
-  if(nsegs > 1) {
-   // 20060425:  setting ss to [0] causes bizarre behavior where lines appear
-   // to get merged.
-   ss = [];
-   grow, ss, segs,[0];
-   segs = ss;
-
-   segs = segs(where(abs(segs(dif)) > 1.0));
-   nsegs = numberof(segs)+1;
+  colors = ["black", "red", "blue", "green", "magenta", "yellow", "cyan"];
+  // Convert string to number
+  if(is_string(color))
+    color = where(color == colors)(1);
+  if(is_integer(color)) {
+    // Put the selected color first in the list
+    colors = roll(colors, 1-abs(color));
+    // If color is negative, then use ONLY that color
+    if(color < 0)
+      colors = colors(:1);
   }
+  ncolors = numberof(colors);
+  // Blank out color, we'll be re-using it for something else later
+  color = [];
 
-  ss = [0];
-  if(nsegs > 1) {
-    grow, ss, segs, [0];
-    c = color;
-    msum = 0;
-    for(i = 1; i < numberof(ss); i++) {
-      if(c >= 0)
-        c = ((color+(i-1))%7);
-      soeb = data.soe(*)(glst(llst)(ss(i)+1));
-      t = soe2time( soeb );
-      tb = data.soe(*)(glst(llst)(ss(i)+1))%86400;
-      te = data.soe(*)(glst(llst)(ss(i+1)))%86400;
-      td = abs(te - tb);
-      hms = sod2hms(tb);
+  wbkp = current_window();
+  window, owin, wait=1;
+  if(xfma) fma;
 
-      // This grabs the heading from the tans data nearest the end point.  This
-      // really only works when looking at "just processed" data and not batch
-      // processed data.
-      hd = 0.0;
-      if(is_array(tans)) {
-        foo = where(abs(tans.somd-te) < .010);
-        if(numberof(foo) > 0)
-          hd = tans.heading(foo(1));
-      }
+  local x, y, z;
+  for(i = 1; i <= segs(*); i++) {
+    color = colors(i % ncolors);
+    seg = segs(noop(i));
+    data2xyz, seg, x, y, z, mode=mode;
 
-      write, format="%d:%d sod = %6.2f:%-10.2f(%10.4f) utc=%2d:%02d:%02d %5.1f %s\n",
-        t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), hd, clr(abs(c));
+    // Project line to run along X axis, east to west
+    x -= line(1);
+    y -= line(2);
+    rx = x*ca + y*sa;
+    ry = x*sa + y*ca;
 
-      if(xtime) {
-        plmk, elevation(*)(llst(ss(i)+1:ss(i+1))),
-          data.soe(*)(llst)(ss(i)+1:ss(i+1)),color=clr(abs(c)),
-          msize=msize, width=10, marker=marker;
-        if(connect)
-          plg, elevation(*)(llst(ss(i)+1:ss(i+1))),
-            data.soe(*)(llst)(ss(i)+1:ss(i+1)), color=clr(abs(c));
-      } else {
-        xx = rx(llst)(ss(i)+1:ss(i+1));
-        si = sort(xx);
-        yy = elevation(llst(ss(i)+1:ss(i+1)));
-        // XYZZY - this is where the points get plotted
-        plmk, yy(si), xx(si),color=clr(abs(c)), msize=msize, width=10,
-          marker=marker;
-        if(connect) plg, yy(si), xx(si),color=clr(abs(c));
-      }
+    date = soe2date(seg.soe(1));
+    sodmin = soe2somd(seg.soe(1));
+    sodmax = soe2somd(seg.soe(0));
+    soddif = sodmax-sodmin;
+    hms = sod2hms(soe2sod(seg.soe(1)), str=1);
+
+    // If tans data is available, grab the heading
+    heading = 0.;
+    if(!is_void(tans)) {
+      tansdif = abs(tans.somd - sodmin);
+      w = tansdif(mnx);
+      if(tansdif(w) < 0.01)
+        heading = tans(w).heading;
     }
-  } else {
-    xx = rx(llst);
-    yy = elevation(llst);
-    si = sort(xx);
-    plmk, yy(si),xx(si), color=clr(color), msize=msize, marker=marker, width=10;
+
+    write, format="%s sod = %8.2f:%8.2f (%7.3f) utc=%s %5.1f %s\n"
+      date, sodmin, sodmax, soddif, hms, heading, color;
+
+    plmk, z, rx, color=color, msize=msize, width=10, marker=marker;
     if(connect)
-      plg, yy(si), xx(si),color=clr(color);
-
-    c = (color+0)&7;
-    soeb = data.soe(*)(glst(llst)(1));
-    t = soe2time(soeb);
-    tb = data.soe(*)(glst(llst)(1))%86400;
-    te = data.soe(*)(glst(llst)(0))%86400;
-    td = abs(te - tb);
-    hms = sod2hms(tb);
-    if(is_array(tans)) {
-      hd = tans.heading(*)(int(te));
-    } else {
-      hd = 0.0;
-    }
-    write, format="%d:%d sod = %6.2f:%-10.2f(%10.4f) utc=%2d:%02d:%02d %5.1f %s\n",
-      t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), hd, clr(c);
+      plg, z, rx, color=color;
   }
+
   window_select, wbkp;
-  return data(glst(llst));
+  return data;
 }
 
 func transrch(data, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=) {
