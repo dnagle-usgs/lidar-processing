@@ -269,7 +269,7 @@ func pixelwf_selected_info(nearest, vname=) {
   if(has_member(point, "channel") && point.channel) {
     write, format="channel = %d\n", point.channel;
   }
-  if((dimsof(get_member(var_expr_get(pixelwfvars.selection.pro_var),"soe"))(1)) == 1) {
+  if((dimsof(get_member(var_expr_get(vname),"soe"))(1)) == 1) {
     write, format="Corresponds to %s(%d)\n", vname, nearest.index;
   }
 
