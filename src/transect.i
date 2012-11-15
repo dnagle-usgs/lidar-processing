@@ -284,329 +284,78 @@ mode=, rtn=, marker=) {
   return data;
 }
 
-func transrch(data, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=) {
-/* DOCUMENT transrch(data, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=)
-  Searches for the point in the transect plot window iwin (default 3) nearest
-  to where the user clicks.
+func transect_pixelwf_interactive(vname, line) {
+  data = var_expr_get(vname);
 
-  The selected point is highlighted red in the transect window and as a blue
-  circle on the topo (5) window.
+  // Compute the angle needed to rotate the data to run east-to-west
+  angle = atan(line(2)-line(4), line(1)-line(3));
+  ca = cos(-angle);
+  sa = sin(-angle);
 
-  Windows showing the raster and pixel waveform are displayed.
+  // Pull out data coordinates
+  local x, y, z;
+  data2xyz, data, x, y, z, mode=mode;
 
-  Text is displayed in the console window showing details on the point
-  selected.
+  // Project line to run along X axis, east to west
+  xt = x - line(1);
+  yt = y - line(2);
+  rx = xt*ca + yt*sa;
+  ry = xt*sa + yt*ca;
+  xt = yt = [];
 
-  Input:
-    data        : Variable to process, must be of type FS.
-                  use fs=test_and_clean(fs_all) to create
-    m           : is the result from a call to mtransect()
-    llst        : internal variable created from mtransect()
-
-  To use, first generate a transect with these steps:
-
-    cln_fs = test_and_clean(fs)
-    m = mtransect(cln_fs, show=1);
-
-    transrch, cln_fs, fs, llst;
-*/
-  //     1        2      3       4        5          6         7
-  clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
+  // The window we're clicking in has RX along its X axis and Z along its Y
+  // axis.
 
   wbkp = current_window();
 
-  extern mindata;
-  extern _last_transrch;
-  if(!is_void(_rx)) rx = _rx;
-  if(!is_void(_el)) elevation = _el;
-  default, _last_transrch, [0.0, 0.0, 0.0, 0.0];
-  default, iwin, 3;
+  continue_interactive = 1;
+  while(continue_interactive) {
+   write, format="\nWindow %d: Left-click to examine a point. Anything else aborts.\n", win;
 
-  if(is_void(mode)) {
-    if(!is_void(disp_type)) {
-      if(logger(warn))
-        logger, warn, "call to transect using deprecated option disp_type=";
-    } else {
-      disp_type = 0;
-    }
-    mode = ["fs","be","ba"](disp_type+1);
-  }
+    window, win;
+    spot = mouse(1, 1, "");
 
-  // xyzzy - this assumes the default iwin for transect
-  window, iwin;
-  // m is the result from mtransect()
-  // llst is an extern from transect()
-  xx = rx(llst) / 100.;
-  yy = elevation(m) / 100.;
-  if(is_void(spot)) spot = mouse();
-  write, format="mouse :       : %f %f\n", spot(1), spot(2);
-
-  if(1) {   // the yorick way - rwm
-    lims = limits();
-
-    dx = spot(1)-xx;
-    // need to normalize the x and y values
-    dx = dx / (lims(2) - lims(1));
-    dx = dx^2;
-    dy = spot(2)-yy;
-    dy = dy / (lims(4) - lims(3));
-    dy = dy^2;
-    dd = dx+dy;
-    dd = sqrt(dd);
-    minindx = dd(mnx);
-
-  } else {  // non-yorick way
-    // copied from raspulsrch(), useful for debugging
-    qy = where(yy     > spot(2) -   2.5 & yy     < spot(2) +   2.5);
-    qx = where(xx(qy) > spot(1) - 500.0 & xx(qy) < spot(1) + 500.0);
-
-    // Does this really differ from qx?
-    indx = qy(qx);
-    write, format="searching %d points\n", numberof(indx);
-
-    if(is_array(indx)) {
-      mindist = 999999;
-      for(i = 1; i < numberof(indx); i++) {
-        dist = sqrt(((spot(1) - xx(indx(i)))^2) + ((spot(2) - yy(indx(i)))^2));
-        x = [xx(i), xx(i)];
-        y = [yy(i), yy(i)];
-        plg, y, x, width=8.0, color="green";
-        if(dist < mindist) {
-          mindist = dist;
-          minindx = indx(i);
-          x = [xx(minindx), xx(minindx)];
-          y = [yy(minindx), yy(minindx)];
-          plg, y, x, width=9.0, color="blue";
-        }
+    if(mouse_click_is("left", spot)) {
+      write, format="\n-----\n\n%s", "";
+      nearest = transect_pixelwf_find_point(spot, data, rx, z);
+      if(is_void(nearest.point)) {
+        write, format="Location clicked: %9.2f %10.2f\n", spot(1), spot(2);
+        write, format="No point found within search radius (%.2fm).\n",
+          pixelwfvars.selection.radius;
+      } else {
+        pixelwf_set_point, nearest.point;
+        plmk, nearest.y, nearest.x, msize=0.004, color="red",
+          marker=[[0,1,0,1,0,-1,0,-1,0],[0,1,0,-1,0,-1,0,1,0]];
+        tkcmd, "::misc::idle {ybkg pixelwf_plot}";
+        pixelwf_selected_info, nearest, vname=vname;
       }
+    } else {
+      continue_interactive = 0;
     }
-  } // end of the non-yorick way
-
-  // Now we have the x/y values of the nearest transect point.
-  // From here we need to find the original data value
-  write, format="Result: %6d: %f %f\n", minindx, xx(minindx), yy(minindx);
-  x = [xx(minindx), xx(minindx)];
-  y = [yy(minindx), yy(minindx)];
-
-  // We want to determine which segment a point is from so that we can redraw
-  // it in that color.
-
-  // Made segs extern in transect.i
-  // 2008-11-25: wonder why i did that. must be computed here so we can
-  // have multiple transects - rwm
-  segs = where(abs(data.soe(m)(dif)) > 5.0);
-  // there must be a better way.
-  for(i = 1, col = 0; i <= numberof(segs); i++) {
-    if(segs(i) < minindx)
-      col = i;
   }
-
-  // just is.
-  col += 2;
-  col = col % 7;
-  write, format="color=%s\n", clr(col);
-  // highlight selected point in iwin
-  plg, y, x, width=10.0, color=clr(col);
-
-  mindata = data(m(minindx));
-  pixelwf_set_point, mindata;
-  rasterno = mindata.rn&0xFFFFFF;
-  pulseno = mindata.rn/0xFFFFFF
-  hms = sod2hms(soe2sod(mindata.soe));
-  write, format="Indx  : %6d HMS: %02d%02d%02d  Raster/Pulse: %d/%d FS UTM: %7.1f, %7.1f\n",
-    minindx, hms(1), hms(2), hms(3), rasterno, pulseno, mindata.north/100.0,
-    mindata.east/100.0;
-  show_track, mindata, utm=1, skip=0, color=clr(col), win=5, msize=.5;
-  window, 1, wait=1;
-  fma;
-  rr = decode_raster(rn=rasterno);
-  write, format="soe: %d  rn: %d  dgtz: %d  np: %d\n",
-    rr.soe, rr.rasternbr, rr.digitizer, rr.npixels;
-
-  // Now lets display the waveform
-  show_wf, rasterno, pulseno, win=0, cb=7;
-  limits;
-
-  mindata_dump_info, edb, mindata, minindx, last=_last_transrch,
-    ref=_transrch_reference;
-
-  _last_transrch = data2xyz(mindata, mode=mode);
 
   window_select, wbkp;
 }
 
-func mtransrch(data, m, llst, _rx=, _el=, spot=, iwin=, mode=, disp_type=,
-ptype=, fset=) {
-/* DOCUMENT mtransrch(data, m, llst, _rx=, _el=, spot=, iwin=, mode=,
-   disp_type=, ptype=, fset=)
-  Call transrch repeatedly until the user clicks the right mouse button.
-  Should work similar to Pixel Waveform.
+func transect_pixelwf_find_point(spot, data, x, y) {
+  extern pixelwfvars;
+  vars = pixelwfvars.selection;
+  radius = vars.radius;
 
-  To use, first generate a transect with these steps:
+  bbox = spot([1,1,2,2]) * radius * [-1,1,-1,1];
+  w = data_box(x, y, bbox);
 
-    cln_fs = test_and_clean(fs_all)
-    m = mtransect(cln_fs, show=1);
-    mtransrch, cln_fs, fs, llst;
-*/
-  wbkp = current_window();
-
-  extern _last_transrch, _transrch_reference;
-
-  default, _last_transrch, [0.0, 0.0, 0.0];
-  default, _last_soe, 0;
-  default, iwin, 3;
-  default, ptype, 0;      // fs topo
-  default, msize, 1.0;
-  default, fset, 0;
-  default, buf, 1000;     // 10 meters
-
-  if(is_void(mode)) {
-    if(!is_void(disp_type)) {
-      if(logger(warn))
-        logger, warn, "call to transect using deprecated option disp_type=";
-    } else {
-      disp_type = 0;
+  distance = index = point = [];
+  if(numberof(w)) {
+    d = sqrt((x-spot(1))^2 + (y-spot(2))^2);
+    if(d(min) <= radius) {
+      distance = d(min);
+      index = w(d(mnx));
+      point = data(index);
+      nx = x(d(mnx));
+      ny = y(d(mnx));
     }
-    mode = ["fs","be","ba"](disp_type+1);
   }
 
-  if(is_pointer(data)) data = *data(1);
-
-  // the data must be clean coming in, otherwise the index do not match the
-  // data.
-  data = test_and_clean(data);
-
-  rtn_data = [];
-  nsaved = 0;
-
-  do {
-    write, format="Window: %d. Left: examine point, Center: set reference, Right: quit\n", iwin;
-    window, iwin;
-
-    spot = mouse(1,1, "");
-    if(mouse_click_is("right", spot)) break;
-
-    if(mouse_click_is("ctrl+left", spot)) {
-      grow, finaldata, mindata;
-      write, format="\007Point appended to finaldata.  Total saved = %d\n",
-        ++nsaved;
-    }
-
-    transrch, data, m, llst, _rx=_rx, _el=_el, spot=spot, iwin=iwin;
-
-    if(mouse_click_is(["middle", "shift+left"], spot)) {
-      _transrch_reference = data2xyz(mindata, mode=mode);
-    }
-
-    mdata = data2xyz(mindata, mode=mode);
-
-    if(is_void(_transrch_reference)) {
-      write, "No Reference Point Set";
-    } else {
-      delta = mdata - _transrch_reference;
-      dist = sqrt((mdata(1:2)^2)(sum));
-      write, format="   Ref. Dist: %.2fm  Elev diff: %.2fm\n", dist, delta(3);
-    }
-  } while(!mouse_click_is("right", spot));
-
-  window_select, wbkp;
-}
-
-func mindata_dump_info(edb, mindata, minindx, last=, ref=) {
-/* DOCUMENT mindata_dump_info, edb, mindata, minindx, last=, ref=
-
-  NEEDS DOCUMENTATION
-*/
-  if(is_void(ref)) last = [0.0, 0.0, 0.0, 0.0];
-  if(!is_array(edb)) {
-    write, "edb is not set, try again";
-    return;
-  }
-
-  rasterno = mindata.rn&0xffffff;
-  pulseno = mindata.rn>>24;
-  _last_soe = edb(mindata.rn&0xffffff).seconds;
-
-  somd = edb(mindata.rn&0xffffff).seconds % 86400;
-  rast = decode_raster(get_erast(rn=rasterno));
-
-  fsecs = rast.offset_time - edb(mindata.rn&0xffffff).seconds;
-  ztime = soe2time(somd);
-  zdt = soe2time(abs(edb(mindata.rn&0xffffff).seconds - _last_soe));
-
-  if(is_array(tans) && is_array(pnav)) {
-    pnav_idx = abs(pnav.sod - somd)(mnx);
-    tans_idx = abs(tans.somd - somd)(mnx);
-    knots = lldist(pnav(pnav_idx).lat, pnav(pnav_idx).lon,
-      pnav(pnav_idx+1).lat, pnav(pnav_idx+1).lon) *
-      3600.0/abs(pnav(pnav_idx+1).sod - pnav(pnav_idx).sod);
-  }
-
-  write, "\n=============================================================";
-  write, format="                  Raster/Pulse: %d/%d UTM: %7.1f, %7.1f\n",
-    mindata.rn&0xffffff, pulseno, mindata.north/100.0, mindata.east/100.0;
-
-  if(is_array(edb)) {
-    write, format="        Time: %7.4f (%02d:%02d:%02d) Delta:%d:%02d:%02d \n",
-      double(somd)+fsecs(pulseno), ztime(4), ztime(5), ztime(6), zdt(4),
-      zdt(5), zdt(6);
-  }
-  if(is_array(tans) && is_array(pnav)) {
-    write, format="    GPS Pdop: %8.2f  Svs:%2d  Rms:%6.3f Flag:%d\n",
-      pnav(pnav_idx).pdop, pnav(pnav_idx).sv, pnav(pnav_idx).xrms,
-      pnav(pnav_idx).flag;
-    write, format="     Heading:  %8.3f Pitch: %5.3f Roll: %5.3f %5.1fm/s %4.1fkts\n",
-      tans(tans_idx).heading, tans(tans_idx).pitch, tans(tans_idx).roll,
-      knots * 1852.0/3600.0, knots;
-  }
-
-  hy = sqrt(double(mindata.melevation - mindata.elevation)^2 +
-      double(mindata.meast - mindata.east)^2 +
-      double(mindata.mnorth - mindata.north)^2);
-
-  if((mindata.melevation > mindata.elevation) && (mindata.elevation > -100000))
-    aoi = acos((mindata.melevation - mindata.elevation) / hy) * RAD2DEG;
-  else
-    aoi = -9999.999;
-  write, format="Scanner Elev: %8.2fm   Aoi:%6.3f Slant rng:%6.3f\n",
-    mindata.melevation/100.0, aoi, hy/100.0;
-
-  write, format="First Surface elev: %8.2fm Delta: %7.2fm\n",
-    mindata.elevation/100.0, mindata.elevation/100.0 - last(3);
-
-  if(structeq(structof(mindata(1)), FS)) {
-    fs_chn_used = eaarl_intensity_channel(mindata.intensity);
-    write, format="First Surface channel / intensity: %d / %3d\n",
-      fs_chn_used, mindata.intensity;
-  }
-
-  if(structeq(structof(mindata(1)), VEG__)) {
-    fs_chn_used = eaarl_intensity_channel(mindata.fint);
-    be_chn_used = eaarl_intensity_channel(mindata.lint);
-
-    write, format="Last return elev: %8.2fm Delta: %7.2fm\n",
-      mindata.lelv/100., mindata.lelv/100.-last(4);
-    write, format="First/Last return elv DIFF: %8.2fm\n",
-      (mindata.elevation-mindata.lelv)/100.;
-    write, format="First Surface channel-intensity: %d-%3d\n",
-      fs_chn_used, mindata.fint;
-    write, format="Last Surface channel-intensity: %d-%3d\n",
-      be_chn_used, mindata.lint;
-  }
-
-  if(structeq(structof(mindata(1)), GEO)) {
-    fs_chn_used = eaarl_intensity_channel(mindata.first_peak);
-    be_chn_used = eaarl_intensity_channel(mindata.bottom_peak);
-
-    write, format="Bottom elev: %8.2fm Delta: %7.2fm\n",
-      (mindata.elevation+mindata.depth)/100.,
-      (mindata.elevation+mindata.depth)/100.-last(4);
-    write, format="First/Bottom return elv DIFF: %8.2fm", mindata.depth/100.;
-    write, format="Surface channel-intensity: %d-%3d\n", fs_chn_used,
-      mindata.first_peak;
-    write, format="Bottom channel / intensity: %d-%3d\n", be_chn_used,
-      mindata.bottom_peak;
-  }
-
-  write, "=============================================================\n";
+  return save(point, index, distance, spot, x=nx, y=ny);
 }
