@@ -73,9 +73,10 @@ func transect_plot_line(line, win=, recall=) {
   window_select, wbkp;
 }
 
-func transect_plot_points(line, data, how=, win=, msize=, marker=, connect=) {
-/* DOCUMENT transect_plot_points, line, data, how=, win=, msize=, marker=,
-   connect=
+func transect_plot_points(line, data, how=, win=, xfma=, msize=, marker=,
+connect=) {
+/* DOCUMENT transect_plot_points, line, data, how=, win=, xfma=, msize=,
+   marker=, connect=
 
   Plots the points from DATA as they appear along the transect LINE. Points
   will be broken up into segments (based on HOW).
@@ -92,6 +93,7 @@ func transect_plot_points(line, data, how=, win=, msize=, marker=, connect=) {
         how="channel"             Break data up by channel
         how=["line","channel"]    Break data up by lines and by channels
     win= Window to plot in.
+    xfma= Set to 1 to issue an fma prior to plotting.
     msize= Size to use for plotted points.
     marker= Marker to use for plotted points.
     connect= Set to connect=1 to draw a polyline in addition to the points.
@@ -139,166 +141,128 @@ func transect_plot_points(line, data, how=, win=, msize=, marker=, connect=) {
   window_select, wbkp;
 }
 
-func mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
-mode=, show=, msize=, expect=, marker=) {
-/* DOCUMENT mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
-   mode=, show=, msize=, expect=, marker=)
+func transect(data, line=, recall=, segment=, iwin=, owin=, width=, connect=,
+xmfa=, mode=, msize=, marker=, plot=, showline=, showpts=) {
+/* DOCUMENT transect(data, line=, recall=, segment=, iwin=, owin=, width=,
+   connect=, xmfa=, mode=, msize=, marker=, plot=, showline=, showpts=)
 
-  Mouse selected transect. mtransect allows you to "drag out" a line within an
-  ALPS topo display window and then create a new graph of all of the points
-  near the line.
+  Performs a transect operation against some data and plots the result.
 
-  To recall a transect line, call mtransect with the recall= parameter and set
-  it to:
-    0 for the most recent line
-    -1 for the previous line
-    -2 for the one before that, etc.
+  The transect line is acquired in one of three ways:
+    1. If line= is specified, that line is used.
+    2. If recall= is specified, then a line from the history is used.
+    3. Otherwise, the user is prompted to drag out a line.
 
-  Input:
-  data       :  Variable to process
-  owin=      :  Desired Yorick output graph window.       Default is 3
-  iwin=      :  Source window for transect.               Default is 5
-  w=         :  Search distance from line in centimeters. Default is 150cm
-  connect=   :  Set to 1 to connect the points.
-  recall=    :  Used to recall a previously generated transact line.
-  color=     :  The starting color 1:7, use negative to use only 1 color
-  xfma=      :  Set to 1 to auto fma.
-  mode=      :  Data mode:
-          mode="fs"  first surface
-          mode="be"  bare earth
-          mode="ba"  bathy
-  show=      :  Set to 1 to plot the transect in window, win.
-  msize=     :  set msize value (same as plcm, etc.), default = .1
-  marker=    :  set marker value (same as plcm, etc.), default = 1
+  Parameter:
+    data: An array of data to transect.
 
-  Examples:
-
-  g = mtransect(fs_all, connect=1, xfma=1)
-
-    - use fs_all as data source
-    - connect the dots in the output plot
-    - rcf filter the output with a 1.0 meter filter width and use 5 points on
-      either side of each point as the jury pool
-    - auto fma
-    - returns the index of the selected points in g
-    - this example expects you to generate the line segment with the mouse
-
-  g = mtransect(fs_all, connect=1, xfma=1, recall=0)
-
-  This example is the same as above, except:
-  - the transect line is taken from the global transect_history array
-
-  SEE ALSO: transect, _transect_history
+  Options:
+    line= Optional. If provided, must be an array [x0,y0,x1,y1] specifying the
+      transect line.
+    recall= Optional. If provided, must be an integer representing which line
+      from the transect history to use.
+    segment= Specifies how to segment the points. If omitted, no segmenting
+      will happen and plot will be in one color.
+        segment="line"                Segment by line
+        segment=["line", "channel"]   Segment by line and channel
+    iwin= "Input" window, where the point cloud to transect is plotted. This
+      window is used when prompting the user to draw a transect. It is also
+      used to plot the transect line (if showline=1 or =2) and to highligh the
+      selected points (if showpts=1).
+        iwin=5      Window 5, default
+    owin= "Output" window, where the transect points are plotted (if plot=1).
+        owin=3      Window 3, default
+    width= Width of the transect line. This is the total width, with the
+      transect line running down the middle. (So points are used if they are
+      within width/2 of the transect line.)
+        width=3.0   3 meter width (1.5m on either side), default
+    connect= By default, transect points are plotted as a scatterplot. This
+      option adds a polyline graph to connect the points.
+        connect=0   Don't plot lines, default
+        connect=1   Plot polylines
+    xfma= Specifies whether to issue an fma prior to plotting transect points.
+        xfma=0      No fma, default
+        xfma=1      Issue fma
+    mode= Data mode to use for points.
+        mode="fs    Default
+    msize= Size to use for plotted points.
+        msize=0.1   Default
+    marker= Marker to use for plotted points.
+        marker=1    Default
+    plot= Specifies whether or not to plot the transect points.
+        plot=0      Don't plot
+        plot=1      Plot, default
+    showline= Specifies whether to show the transect line.
+        showline=0  Never show transect line
+        showline=1  Show transect line if just acquired, default
+        showline=2  Always show line, even if from line= or recall=
+    showpts= Specifies whether to plot markers over the points used for the
+      transect in the original data window.
+        showpts=0   Don't show, default
+        showpts=1   Show
 */
-  extern _transect_history, transect_line;
-
-  default, mode, "fs";
-  default, w, 150;
-  default, connect, 0;
-  default, owin, 3;
   default, iwin, 5;
-  default, msize, 0.1;
+  default, owin, 3;
+  default, width, 3.0;
+  default, connect, 0;
   default, xfma, 0;
-  default, color, 2;  // start at red, not black
+  default, mode, "fs";
+  default, msize, 0.1;
+  default, marker, 1;
+  default, plot, 1;
+  default, showline, 1;
+  default, showpts, 0;
 
   wbkp = current_window();
 
-  if(is_void(recall)) {
+  if(is_void(data)) {
+    write, "No data provided";
+    return;
+  }
+
+  data = test_and_clean(data);
+  if(is_void(data)) {
+    write, "test_and_clean removed all data";
+    return;
+  }
+
+  if(is_void(line) && is_void(recall)) {
     window, iwin;
-    line = transect_line = mouse(1, 2, "")(1:4);
-    if(show)
-      transect_plot_line, line, win=iwin;
+    write, format="Drag to draw transect line in window %d\n", iwin;
+    line = mouse(1, 2, "")(1:4);
+    grow, _transect_history, [line];
     window_select, wbkp;
 
-    grow, _transect_history, [list];
+    if(showline)
+      transect_plot_line, line, win=iwin;
   } else {
-    line = transect_line = transect_recall(recall);
+    if(is_void(line) && !is_void(recall))
+      line = transect_recall(recall);
+    if(is_void(line))
+      error, "No transect line selected";
+    if(showline > 1)
+      transect_plot_line, line, win=iwin;
   }
 
-  if(recall) {
-    window, owin;
-    lims = limits();
+  data = data_transect(data, line, width=width, mode=mode);
+  if(is_void(data)) {
+    write, "no data along transect";
+    return;
   }
-  data = transect(data, line, connect=connect, color=color, xfma=xfma,
-    mode=mode, owin=owin, lw=w, msize=msize, marker=marker);
+
+  if(plot)
+    transect_plot_points, line, data, how=segment, win=owin, xfma=xfma,
+      msize=msize, marker=marker, connect=connect;
 
   // plot the actual points selected onto the input window
-  if(show == 2) {
+  if(showpts) {
     local x, y;
     data2xyz, data, x, y, mode=mode;
     window, iwin;
-    plmk, y, x, msize=msize, marker=marker, color="black",
-      width=10;
-  }
-  // this only redraws the last transect selected.
-  if(show == 3) {
-    transect_plot_line, line, win=iwin;
+    plmk, y, x, msize=msize, marker=marker, color="black";
+    window_select, wbkp;
   }
 
-  window, owin;
-  if(recall) {
-    limits, lims(1),lims(2), lims(3), lims(4);
-  } else {
-    limits;
-  }
-  window_select, wbkp;
-  if(!is_void(expect))
-    write, format="%s\n", "END mtransect:";
-
-  return data;
-}
-
-func transect(data, line, lw=, connect=, msize=, xfma=, owin=, color=,
-mode=, marker=) {
-/* DOCUMENT transect(data, line, lw=, connect=, msize=, xfma=, owin=,
-   color=, mode=, marker=)
-
-  Input:
-  data       :  Data where you drew the line
-  line       :  Coordinates for transect in meters as [x1,y1,x2,y2]
-  lw=        :  Search distance either side of the line in centimeters
-  xfma=      :  Set to 1 to clear screen
-  owin=      :  Set output window
-  color=     :  Select starting color, 1-7, use negative to use only 1 color
-  mode=      :  Data mode:
-          mode="fs"  first surface
-          mode="be"  bare earth
-          mode="ba"  bathy
-  msize      :  set msize value (same as plcm, etc.), default = .1
-  marker     :  set marker value (same as plcm, etc.), default = 1
-
-  SEE ALSO: mtransact, _transect_history
-*/
-  default, mode, "fs";
-  default, rtn, 0;    // first return
-  default, lw, 150;   // search width, cm
-  default, owin, 3;
-  default, msize, 0.1;
-  default, marker, 1;
-
-  // lw is the transect width. Except it's actually only half the transect
-  // width, and it's in cm. So double, then convert to m.
-  lw = (lw*2)/100.;
-
-  // Clean up data
-  data = test_and_clean(data);
-
-  if(!numberof(data)) {
-    write, "No points remain after test_and_clean";
-    return;
-  }
-
-  data = data_transect(data, line, width=lw, mode=mode);
-
-  if(!numberof(data)) {
-    write, "No points along specified transect line";
-    return;
-  }
-
-  transect_plot_points, line, data, how="line", win=owin, msize=msize,
-    marker=marker, connect=connect;
-
-  window_select, wbkp;
   return data;
 }
 
