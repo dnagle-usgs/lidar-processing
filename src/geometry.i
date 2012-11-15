@@ -1,5 +1,35 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+func project_points_to_line(line, x, y, &xp, &yp, notranslate=) {
+/* DOCUMENT project_points_to_line, line, x, y, &xp, &xp, notranslate=
+  LINE should be an array [x0,y0,x1,y1] giving the start and end points of a
+  line segment. The point cloud X, Y will be translated such that the point
+  X0,Y0 will be at the origin 0,0. Then all points will be rotated such that
+  the point X1,Y1 would lie on the positive X axis.
+
+  If option notranslate=1 is specified, then the point cloud is not translated
+  to the origion and the points are rotated about the point X0,Y0 instead.
+*/
+  // Compute the angle needed to rotate the points to run along positive X
+  // axis.
+  angle = atan(line(4) - line(2), line(3) - line(1));
+  ca = cos(-angle);
+  sa = sin(-angle);
+
+  // Translate points to have segment start point at origin
+  xt = x - line(1);
+  yt = y - line(2);
+
+  // Rotate points to align with X axis
+  xp = xt * ca - yt * sa;
+  yp = xt * sa + yt * ca;
+
+  if(notranslate) {
+    xp += line(1);
+    yp += line(2);
+  }
+}
+
 func solve_affine(sx, sy, dx, dy) {
 /* DOCUMENT solve_affine(sx, sy, dx, dy)
 
