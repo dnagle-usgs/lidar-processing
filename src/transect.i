@@ -218,11 +218,6 @@ mode=, rtn=, marker=) {
     return;
   }
 
-  // Compute the angle needed to rotate the data to run east-to-west
-  angle = atan(line(2)-line(4), line(1)-line(3));
-  ca = cos(-angle);
-  sa = sin(-angle);
-
   // Break the data up into segments
   segs = split_data(data, "line");
 
@@ -245,17 +240,12 @@ mode=, rtn=, marker=) {
   window, owin, wait=1;
   if(xfma) fma;
 
-  local x, y, z;
+  local x, y, z, rx, ry;
   for(i = 1; i <= segs(*); i++) {
     color = colors(i % ncolors);
     seg = segs(noop(i));
     data2xyz, seg, x, y, z, mode=mode;
-
-    // Project line to run along X axis, east to west
-    x -= line(1);
-    y -= line(2);
-    rx = x*ca + y*sa;
-    ry = x*sa + y*ca;
+    project_points_to_line, line, x, y, rx, ry;
 
     date = soe2date(seg.soe(1));
     sodmin = soe2somd(seg.soe(1));
@@ -287,21 +277,10 @@ mode=, rtn=, marker=) {
 func transect_pixelwf_interactive(vname, line) {
   data = var_expr_get(vname);
 
-  // Compute the angle needed to rotate the data to run east-to-west
-  angle = atan(line(2)-line(4), line(1)-line(3));
-  ca = cos(-angle);
-  sa = sin(-angle);
-
   // Pull out data coordinates
-  local x, y, z;
+  local x, y, z, rx, ry;
   data2xyz, data, x, y, z, mode=mode;
-
-  // Project line to run along X axis, east to west
-  xt = x - line(1);
-  yt = y - line(2);
-  rx = xt*ca + yt*sa;
-  ry = xt*sa + yt*ca;
-  xt = yt = [];
+  project_points_to_line, line, x, y, rx, ry;
 
   // The window we're clicking in has RX along its X axis and Z along its Y
   // axis.
