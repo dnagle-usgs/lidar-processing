@@ -16,9 +16,9 @@ extern _transect_history;
 */
 
 func mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
-mode=, rtn=, show=, msize=, expect=, marker=) {
+mode=, show=, msize=, expect=, marker=) {
 /* DOCUMENT mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
-   mode=, rtn=, show=, msize=, expect=, marker=)
+   mode=, show=, msize=, expect=, marker=)
 
   Mouse selected transect. mtransect allows you to "drag out" a line within an
   ALPS topo display window and then create a new graph of all of the points
@@ -43,11 +43,6 @@ mode=, rtn=, show=, msize=, expect=, marker=) {
           mode="fs"  first surface
           mode="be"  bare earth
           mode="ba"  bathy
-  rtn=       :  Deprecated; use mode= instead. This is ignored if mode= is
-    present. Select return type where:
-          0  first return
-          1  veg last return
-          2  submerged topo
   show=      :  Set to 1 to plot the transect in window, win.
   msize=     :  set msize value (same as plcm, etc.), default = .1
   marker=    :  set marker value (same as plcm, etc.), default = 1
@@ -73,6 +68,7 @@ mode=, rtn=, show=, msize=, expect=, marker=) {
 */
   extern _transect_history, transect_line;
 
+  default, mode, "fs";
   default, w, 150;
   default, connect, 0;
   default, owin, 3;
@@ -80,18 +76,6 @@ mode=, rtn=, show=, msize=, expect=, marker=) {
   default, msize, 0.1;
   default, xfma, 0;
   default, color, 2;  // start at red, not black
-
-  // Handle the complexities of having a deprecated rtn= option and a
-  // non-deprecated mode= option.
-  if(is_void(mode)) {
-    if(!is_void(rtn)) {
-      if(logger(warn))
-        logger, warn, "call to transect using deprecated option rtn=";
-    } else {
-      rtn = 0;
-    }
-    mode = ["fs","be","ba"](rtn+1);
-  }
 
   wbkp = current_window();
 
@@ -152,9 +136,9 @@ mode=, rtn=, show=, msize=, expect=, marker=) {
 }
 
 func transect(data, line, lw=, connect=, msize=, xfma=, owin=, color=,
-mode=, rtn=, marker=) {
+mode=, marker=) {
 /* DOCUMENT transect(data, line, lw=, connect=, msize=, xfma=, owin=,
-   color=, mode=, rtn=, marker=)
+   color=, mode=, marker=)
 
   Input:
   data       :  Data where you drew the line
@@ -167,11 +151,6 @@ mode=, rtn=, marker=) {
           mode="fs"  first surface
           mode="be"  bare earth
           mode="ba"  bathy
-  rtn=       :  Deprecated; use mode= instead. This is ignored if mode= is
-    present. Select return type where:
-          0  first return
-          1  veg last return
-          2  submerged topo
   msize      :  set msize value (same as plcm, etc.), default = .1
   marker     :  set marker value (same as plcm, etc.), default = 1
 
@@ -179,23 +158,12 @@ mode=, rtn=, marker=) {
 */
   extern rx, elevation, glst, llst, segs;
 
+  default, mode, "fs";
   default, rtn, 0;    // first return
   default, lw, 150;   // search width, cm
   default, owin, 3;
   default, msize, 0.1;
   default, marker, 1;
-
-  // Handle the complexities of having a deprecated rtn= option and a
-  // non-deprecated mode= option.
-  if(is_void(mode)) {
-    if(!is_void(rtn)) {
-      if(logger(warn))
-        logger, warn, "call to transect using deprecated option rtn=";
-    } else {
-      rtn = 0;
-    }
-    mode = ["fs","be","ba"](rtn+1);
-  }
 
   // lw is the transect width. Except it's actually only half the transect
   // width, and it's in cm. So double, then convert to m.
