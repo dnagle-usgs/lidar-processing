@@ -15,6 +15,24 @@ extern _transect_history;
     transect( fs_all, _transect_history(,-1), ..... )
 */
 
+func data_transect(data, line, width=, mode=) {
+/* DOCUMENT data_transect(data, line, width=, mode=)
+  Returns the points from DATA that fall along the transect LINE.
+
+  Parameters:
+    data: An array of ALPS data.
+    line: An array [x0,y0,x1,y1] specifying the start and end points of the
+      transect line.
+  Options:
+    width= The width of the transect line.
+      width=1.0     Line is 1m wide; gets points within 50cm of line (default)
+    mode= Data mode to use.
+*/
+  default, width, 1.0;
+  ply = line_to_poly(line(1), line(2), line(3), line(4), width=width);
+  return data_in_poly(data, ply, mode=mode);
+}
+
 func transect_recall(idx) {
 /* DOCUMENT transect_recall(idx)
   Retrieve a line from the transect history. IDX should be an integer. It may
@@ -270,9 +288,7 @@ mode=, marker=) {
     return;
   }
 
-  // Reduce data to just the portion within the transect
-  ply = line_to_poly(line(1), line(2), line(3), line(4), width=lw/100.);
-  data = data_in_poly(data, ply, mode=mode);
+  data = data_transect(data, line, width=lw, mode=mode);
 
   if(!numberof(data)) {
     write, "No points along specified transect line";
