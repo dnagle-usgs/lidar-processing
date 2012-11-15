@@ -40,6 +40,21 @@ func transect_recall(idx) {
   return _transect_history(,idx);
 }
 
+func transect_plot_line(line, win=, recall=) {
+/* DOCUMENT transect_plot_line, line, win=, recall=
+  Plots a transect line. The line will be red. The start point will be given a
+  blue dot and the end point will be given a red dot.
+*/
+  extern _transect_history;
+  wbkp = current_window();
+  if(!is_void(win)) window, win;
+  if(!is_void(recall)) line = transect_recall(recall);
+  plg, line([2,4]), line([1,3]), width=2., color="red";
+  plmk, line(2), line(1), marker=4, msize=.2, color="blue";
+  plmk, line(4), line(3), marker=4, msize=.2, color="red";
+  window_select, wbkp;
+}
+
 func mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
 mode=, show=, msize=, expect=, marker=) {
 /* DOCUMENT mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
@@ -108,7 +123,7 @@ mode=, show=, msize=, expect=, marker=) {
     window, iwin;
     line = transect_line = mouse(1, 2, "")(1:4);
     if(show)
-      plg, [line(2),line(4)], [line(1),line(3)], width=2.0, color="red";
+      transect_plot_line, line, win=iwin;
     window_select, wbkp;
 
     grow, _transect_history, [list];
@@ -133,8 +148,7 @@ mode=, show=, msize=, expect=, marker=) {
   }
   // this only redraws the last transect selected.
   if(show == 3) {
-    window, iwin;
-    plg, [line(2),line(4)], [line(1),line(3)], width=2.0, color="red";
+    transect_plot_line, line, win=iwin;
   }
 
   window, owin;
