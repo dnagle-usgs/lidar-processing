@@ -15,6 +15,31 @@ extern _transect_history;
     transect( fs_all, _transect_history(,-1), ..... )
 */
 
+func transect_recall(idx) {
+/* DOCUMENT transect_recall(idx)
+  Retrieve a line from the transect history. IDX should be an integer. It may
+  be positive or negative, but only its absolute magnitude matters.
+    idx=0 will return the most recently created transect
+    idx=1 or idx=-1 will return the second most recent transect
+    idx=2 or idx=-2 will return the third most recent transect
+    etc.
+  If the given IDX does not exist in the history, then EXIT will be called to
+  abort out of all current functions.
+*/
+  extern _transect_history;
+  // Force IDX to be a non-positive number
+  idx = -abs(idx);
+  if(is_void(_transect_history)) {
+    write, "No lines in _transect_history";
+    exit;
+  }
+  if(abs(idx) >= dimsof(_transect_history)(3)) {
+    write, "Requested line exceeds history in _transect_history";
+    exit;
+  }
+  return _transect_history(,idx);
+}
+
 func mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
 mode=, show=, msize=, expect=, marker=) {
 /* DOCUMENT mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
@@ -88,17 +113,7 @@ mode=, show=, msize=, expect=, marker=) {
 
     grow, _transect_history, [list];
   } else {
-    // Make sure recall is negative
-    recall = -abs(recall);
-    if(is_void(_transect_history)) {
-      write, "No lines in _transect_history";
-      return;
-    }
-    if(abs(recall) >= dimsof(_transect_history)(3)) {
-      write, "Requested line exceeds history in _transect_history";
-      return;
-    }
-    line = transect_line = _transect_history(,recall);
+    line = transect_line = transect_recall(recall);
   }
 
   if(recall) {
@@ -156,8 +171,6 @@ mode=, marker=) {
 
   SEE ALSO: mtransact, _transect_history
 */
-  extern rx, elevation, glst, llst, segs;
-
   default, mode, "fs";
   default, rtn, 0;    // first return
   default, lw, 150;   // search width, cm
