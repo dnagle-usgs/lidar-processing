@@ -33,25 +33,50 @@ func data_transect(data, line, width=, mode=) {
   return data_in_poly(data, ply, mode=mode);
 }
 
+func transect_history(void) {
+/* DOCUMENT transect_history
+  Shows a list of all transects currently defined in the transect history.
+*/
+  extern _transect_history;
+  if(is_void(_transect_history)) {
+    write, "No transect history";
+    return;
+  }
+  write, format="%s\n", "First recall= will never change for a given line.";
+  write, format="%s\n", "Second recall= changes as new transects are added to the history";
+  count = dimsof(_transect_history)(3);
+  for(idx1 = 1; idx1 <= count; idx1++) {
+    idx2 = idx1 - count;
+    line = transect_recall(idx1);
+    dist = long(sqrt(line([1,3])(dif)^2 + line([2,4])(dif)^2)(1)+.5);
+    line = long(line+.5);
+    write, format="recall=%-2d  recall=%-3d  (%6d,%7d) to (%6d,%7d)  length %d\n",
+      idx1, idx2, line(1), line(2), line(3), line(4), dist;
+  }
+}
+
 func transect_recall(idx) {
 /* DOCUMENT transect_recall(idx)
   Retrieve a line from the transect history. IDX should be an integer. It may
-  be positive or negative, but only its absolute magnitude matters.
-    idx=0 will return the most recently created transect
-    idx=1 or idx=-1 will return the second most recent transect
-    idx=2 or idx=-2 will return the third most recent transect
+  be positive or negative. If negative, then it's an index into the history
+  where 0 is most recent and -1 is second most recent. If positive, then it's
+  into into the history where 1 is most recent and 2 is second most recent.
+    idx=1 or idx=0 will return the most recently created transect
+    idx=2 or idx=-1 will return the second most recent transect
+    idx=3 or idx=-2 will return the third most recent transect
     etc.
   If the given IDX does not exist in the history, then EXIT will be called to
   abort out of all current functions.
 */
   extern _transect_history;
-  // Force IDX to be a non-positive number
-  idx = -abs(idx);
   if(is_void(_transect_history)) {
     write, "No lines in _transect_history";
     exit;
   }
-  if(abs(idx) >= dimsof(_transect_history)(3)) {
+  count = dimsof(_transect_history)(3);
+  if(idx < 0)
+    idx += count;
+  if(idx > count) {
     write, "Requested line exceeds history in _transect_history";
     exit;
   }
