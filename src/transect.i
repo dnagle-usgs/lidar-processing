@@ -55,6 +55,72 @@ func transect_plot_line(line, win=, recall=) {
   window_select, wbkp;
 }
 
+func transect_plot_points(line, data, how=, win=, msize=, marker=, connect=) {
+/* DOCUMENT transect_plot_points, line, data, how=, win=, msize=, marker=,
+   connect=
+
+  Plots the points from DATA as they appear along the transect LINE. Points
+  will be broken up into segments (based on HOW).
+
+  Parameters:
+    line: A 4-element array [x0,y0,x1,y1]
+    data: The points along LINE (as determined by transect)
+
+  Options:
+    how= A string or array of strings containing any of "flight", "line",
+      "channel", or "digitizer". This specifies how DATA will be broken up into
+      segments. Each segment gets its own color.
+        how="line"                Break data into flight lines (default)
+        how="channel"             Break data up by channel
+        how=["line","channel"]    Break data up by lines and by channels
+    win= Window to plot in.
+    msize= Size to use for plotted points.
+    marker= Marker to use for plotted points.
+    connect= Set to connect=1 to draw a polyline in addition to the points.
+*/
+  // Break the data up into segments
+  segs = split_data(data, how);
+
+  colors = ["black", "red", "blue", "green", "magenta", "yellow", "cyan"];
+  ncolors = numberof(colors);
+
+  wbkp = current_window();
+  if(!is_void(win)) window, win;
+  if(xfma) fma;
+
+  local x, y, z, rx, ry;
+  for(i = 1; i <= segs(*); i++) {
+    color = colors(i % ncolors);
+    seg = segs(noop(i));
+    data2xyz, seg, x, y, z, mode=mode;
+    project_points_to_line, line, x, y, rx, ry;
+
+    date = soe2date(seg.soe(1));
+    sodmin = soe2somd(seg.soe(1));
+    sodmax = soe2somd(seg.soe(0));
+    soddif = sodmax-sodmin;
+    hms = sod2hms(soe2sod(seg.soe(1)), str=1);
+
+    // If tans data is available, grab the heading
+    heading = 0.;
+    if(!is_void(tans)) {
+      tansdif = abs(tans.somd - sodmin);
+      w = tansdif(mnx);
+      if(tansdif(w) < 0.01)
+        heading = tans(w).heading;
+    }
+
+    write, format="%s sod = %8.2f:%8.2f (%7.3f) utc=%s %5.1f %s\n"
+      date, sodmin, sodmax, soddif, hms, heading, color;
+
+    if(connect)
+      plg, z, rx, color=color;
+    plmk, z, rx, color=color, msize=msize, width=10, marker=marker;
+  }
+
+  window_select, wbkp;
+}
+
 func mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
 mode=, show=, msize=, expect=, marker=) {
 /* DOCUMENT mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
@@ -213,57 +279,8 @@ mode=, marker=) {
     return;
   }
 
-  // Break the data up into segments
-  segs = split_data(data, "line");
-
-  colors = ["black", "red", "blue", "green", "magenta", "yellow", "cyan"];
-  // Convert string to number
-  if(is_string(color))
-    color = where(color == colors)(1);
-  if(is_integer(color)) {
-    // Put the selected color first in the list
-    colors = roll(colors, 1-abs(color));
-    // If color is negative, then use ONLY that color
-    if(color < 0)
-      colors = colors(:1);
-  }
-  ncolors = numberof(colors);
-  // Blank out color, we'll be re-using it for something else later
-  color = [];
-
-  wbkp = current_window();
-  window, owin, wait=1;
-  if(xfma) fma;
-
-  local x, y, z, rx, ry;
-  for(i = 1; i <= segs(*); i++) {
-    color = colors(i % ncolors);
-    seg = segs(noop(i));
-    data2xyz, seg, x, y, z, mode=mode;
-    project_points_to_line, line, x, y, rx, ry;
-
-    date = soe2date(seg.soe(1));
-    sodmin = soe2somd(seg.soe(1));
-    sodmax = soe2somd(seg.soe(0));
-    soddif = sodmax-sodmin;
-    hms = sod2hms(soe2sod(seg.soe(1)), str=1);
-
-    // If tans data is available, grab the heading
-    heading = 0.;
-    if(!is_void(tans)) {
-      tansdif = abs(tans.somd - sodmin);
-      w = tansdif(mnx);
-      if(tansdif(w) < 0.01)
-        heading = tans(w).heading;
-    }
-
-    write, format="%s sod = %8.2f:%8.2f (%7.3f) utc=%s %5.1f %s\n"
-      date, sodmin, sodmax, soddif, hms, heading, color;
-
-    plmk, z, rx, color=color, msize=msize, width=10, marker=marker;
-    if(connect)
-      plg, z, rx, color=color;
-  }
+  transect_plot_points, line, data, how="line", win=owin, msize=msize,
+    marker=marker, connect=connect;
 
   window_select, wbkp;
   return data;
