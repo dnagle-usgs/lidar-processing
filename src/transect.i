@@ -15,10 +15,10 @@ extern _transect_history;
     transect( fs_all, _transect_history(,-1), ..... )
 */
 
-func mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
-rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
+func mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=, mode=,
+rtn=, show=, msize=, expect=, marker=) {
 /* DOCUMENT mtransect(data, iwin=, owin=, w=, connect=, recall=, color=, xfma=,
-   rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=)
+   mode=, rtn=, show=, msize=, expect=, marker=)
 
   Mouse selected transect. mtransect allows you to "drag out" a line within an
   ALPS topo display window and then create a new graph of all of the points
@@ -49,15 +49,12 @@ rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
           1  veg last return
           2  submerged topo
   show=      :  Set to 1 to plot the transect in window, win.
-  rcf_parms= :  Filter output with [W, P], where
-          W = filter width
-          P = # points on either side to use as jury pool
   msize=     :  set msize value (same as plcm, etc.), default = .1
   marker=    :  set marker value (same as plcm, etc.), default = 1
 
   Examples:
 
-  g = mtransect(fs_all, connect=1, rcf_parms=[1.0, 5], xfma=1)
+  g = mtransect(fs_all, connect=1, xfma=1)
 
     - use fs_all as data source
     - connect the dots in the output plot
@@ -67,7 +64,7 @@ rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
     - returns the index of the selected points in g
     - this example expects you to generate the line segment with the mouse
 
-  g = mtransect(fs_all, connect=1, rcf_parms=[1.0, 5], xfma=1, recall=0)
+  g = mtransect(fs_all, connect=1, xfma=1, recall=0)
 
   This example is the same as above, except:
   - the transect line is taken from the global transect_history array
@@ -117,7 +114,7 @@ rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
   }
 
   data = transect(data, line, connect=connect, color=color, xfma=xfma,
-    rcf_parms=rcf_parms, mode=mode, owin=owin, lw=w, msize=msize, marker=marker);
+    mode=mode, owin=owin, lw=w, msize=msize, marker=marker);
   // plot the actual points selected onto the input window
   if (show == 2 ) {
     data2xyz, unref(data), x, y, z, mode=mode;
@@ -144,9 +141,9 @@ rcf_parms=, mode=, rtn=, show=, msize=, expect=, marker=) {
 }
 
 func transect(data, line, lw=, connect=, xtime=, msize=, xfma=, owin=, color=,
-rcf_parms=, mode=, rtn=, marker=) {
+mode=, rtn=, marker=) {
 /* DOCUMENT transect(data, line, lw=, connect=, xtime=, msize=, xfma=, owin=,
-   color=, rcf_parms=, mode=, rtn=, marker=)
+   color=, mode=, rtn=, marker=)
 
   Input:
   data       :  Data where you drew the line
@@ -156,10 +153,6 @@ rcf_parms=, mode=, rtn=, marker=) {
   xfma=      :  Set to 1 to clear screen
   owin=      :  Set output window
   color=     :  Select starting color, 1-7, use negative to use only 1 color
-  rcf_parms= :  [fw,np]  RCF the data where:
-            fw is the width of the filter
-            np is the number of points on either side of the index
-             to use as a jury.
   mode=      :  Data mode:
           mode="fs"  first surface
           mode="be"  bare earth
@@ -309,8 +302,6 @@ rcf_parms=, mode=, rtn=, marker=) {
         xx = rx(llst)(ss(i)+1:ss(i+1));
         si = sort(xx);
         yy = elevation(llst(ss(i)+1:ss(i+1)));
-        if(!is_void(rcf_parms))
-          si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2))));
         // XYZZY - this is where the points get plotted
         plmk, yy(si), xx(si),color=clr(abs(c)), msize=msize, width=10,
           marker=marker;
@@ -321,8 +312,6 @@ rcf_parms=, mode=, rtn=, marker=) {
     xx = rx(llst);
     yy = elevation(llst);
     si = sort(xx);
-    if(!is_void(rcf_parms))
-      si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2))));
     plmk, yy(si),xx(si), color=clr(color), msize=msize, marker=marker, width=10;
     if(connect)
       plg, yy(si), xx(si),color=clr(color);
