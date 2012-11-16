@@ -8,6 +8,7 @@ namespace eval l1pro::transect {
         namespace eval v {
             variable top .transect
             variable maxrow 0
+            variable settings
         }
     }
 
@@ -15,6 +16,9 @@ namespace eval l1pro::transect {
         destroy $v::top
         set v::maxrow 0
         toplevel $v::top
+
+        array unset v::settings
+
         set w [ttk::frame $v::top.f]
         pack $w -expand 1 -fill both
 
@@ -75,14 +79,41 @@ namespace eval l1pro::transect {
         pack $f.septop -pady 2
     }
 
+    proc init_settings {row} {
+        variable v::settings
+
+        set settings($row,var) $::pro_var
+
+        switch -- $::plot_settings(display_mode) {
+            be - ch {
+                set settings($row,mode) be
+            }
+            ba - lint - de {
+                set settings($row,mode) ba
+            }
+            default {
+                set settings($row,mode) fs
+            }
+        }
+    }
+
     proc gui_add_row {} {
         set f $v::top.f.rows
         set row [incr v::maxrow]
         set p $f.row${row}_
 
-        ttk::button ${p}transect -text "Transect" -width 0
-        ::mixin::combobox ${p}var -text "fs_all" -width 8
-        ::mixin::combobox ${p}mode -text "fs" -width 2
+        init_settings $row
+
+        set var ::l1pro::transect::v::settings
+
+        ttk::button ${p}transect -text "Transect" -width 0 \
+                -command [list l1pro::transect::do_transect $row]
+        ::mixin::combobox ${p}var -state readonly -width 8 \
+                -textvariable ${var}($row,var) \
+                -listvariable ::varlist
+        ::mixin::combobox ${p}mode -state readonly -width 2 \
+                -textvariable ${var}($row,mode) \
+                -values {fs be ba}
         ttk::checkbutton ${p}userecall -text "" \
                 -style NoLabel.TCheckbutton
         ::mixin::combobox ${p}recall -text 0 -width 5
@@ -163,5 +194,11 @@ namespace eval l1pro::transect {
                 destroy $child
             }
         }
+    }
+
+    # Dummy for debugging for now
+    proc do_transect {row} {
+        puts "var:\t$v::settings($row,var)"
+        puts "mode:\t$v::settings($row,mode)"
     }
 }
