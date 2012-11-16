@@ -31,6 +31,17 @@ namespace eval style {
         }
         ttk::style layout TPanedwindow {Sash.xsash}
 
+        ttk::style layout NoLabel.TCheckbutton {
+            Checkbutton.padding -sticky nwse
+            -children {Checkbutton.indicator -side left -sticky {}}
+        }
+
+        foreach class {TCheckbutton TLabel} {
+            set font [ttk::style configure $class -font]
+            dict set font -size 8
+            ttk::style configure Small.$class -font $font
+        }
+
         # Custom styles for buttons that appear on "panels" (as in the main
         # l1pro GUI)
         ttk::style configure Panel.TMenubutton -padding {2 0}
