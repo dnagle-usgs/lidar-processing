@@ -46,79 +46,7 @@ namespace eval l1pro::transect {
                 -padx 2 -pady 0 -sticky ew
 
         foreach i {1 2 3} {
-            set row [incr v::maxrow]
-            set p $f.row${row}_
-
-            ttk::button ${p}transect -text "Transect" -width 0
-            ::mixin::combobox ${p}var -text "fs_all" -width 8
-            ::mixin::combobox ${p}mode -text "fs" -width 2
-            ttk::checkbutton ${p}userecall -text "" \
-                    -style NoLabel.TCheckbutton
-            ::mixin::combobox ${p}recall -text 0 -width 5
-            ttk::spinbox ${p}width -text 3.00 -width 5
-            ttk::spinbox ${p}iwin -text 5 -width 3
-            ttk::spinbox ${p}owin -text 3 -width 3
-            ::mixin::combobox ${p}marker -text square -width 6
-            ttk::spinbox ${p}msize -text 1.0 -width 4
-            ttk::checkbutton ${p}connect -text "Connect" \
-                    -style Small.TCheckbutton
-            ttk::checkbutton ${p}fma -text "FMA" \
-                    -style Small.TCheckbutton
-            ttk::checkbutton ${p}showline -text "Line" \
-                    -style Small.TCheckbutton
-            ttk::checkbutton ${p}showpoints -text "Points" \
-                    -style Small.TCheckbutton
-            ttk::label ${p}segment -text "Segment by:" \
-                    -style Small.TLabel
-            ttk::checkbutton ${p}flight -text "flight" \
-                    -style Small.TCheckbutton
-            ttk::checkbutton ${p}line -text "line" \
-                    -style Small.TCheckbutton
-            ttk::checkbutton ${p}channel -text "channel" \
-                    -style Small.TCheckbutton
-            ttk::checkbutton ${p}digitizer -text "digitizer" \
-                    -style Small.TCheckbutton
-            ttk::button ${p}plotline -text "Line" -width 0
-            ttk::button ${p}examine -text "Examine" -width 0
-            ttk::button ${p}delete -text "X" -width 0
-
-            foreach j {1 2 3 4 5 6} {
-                ttk::separator ${p}sep$j -orient vertical
-            }
-            ttk::separator ${p}seph -orient horizontal
-
-            lower [ttk::frame ${p}optionshi]
-            pack ${p}connect ${p}fma ${p}showline ${p}showpoints \
-                    -in ${p}optionshi -side left -padx 2
-            lower [ttk::frame ${p}optionslo]
-            pack ${p}segment ${p}flight ${p}line ${p}channel ${p}digitizer \
-                    -in ${p}optionslo -side left -padx 1
-            pack ${p}segment -padx 2
-            lower [ttk::frame ${p}options]
-            pack ${p}optionshi ${p}optionslo \
-                    -in ${p}options -side top -anchor w
-
-            grid \
-                    ${p}transect \
-                    ${p}sep1 \
-                    ${p}var ${p}mode \
-                    ${p}sep2 \
-                    ${p}userecall ${p}recall \
-                    ${p}sep3 \
-                    ${p}width ${p}iwin ${p}owin \
-                    ${p}sep4 \
-                    ${p}marker ${p}msize \
-                    ${p}sep5 \
-                    ${p}options \
-                    ${p}sep6 \
-                    ${p}plotline ${p}examine ${p}delete \
-                    -padx 2 -pady 2
-            grid ${p}seph - - - - - - - - - - - - - - - - - - - \
-                    -padx 2 -pady 0 -sticky ew
-
-            foreach j {1 2 3 4 5 6} {
-                grid ${p}sep$j -sticky ns -padx 2 -pady 0
-            }
+            gui_add_row
         }
 
         set f $w.bottom
@@ -135,7 +63,8 @@ namespace eval l1pro::transect {
         ttk::spinbox $f.size -width 4
         ttk::checkbutton $f.utm -text "UTM"
         ttk::button $f.history -text "Show History" -width 0
-        ttk::button $f.add_row -text "Add Row" -width 0
+        ttk::button $f.add_row -text "Add Row" -width 0 \
+                -command l1pro::transect::gui_add_row
 
         lower [ttk::frame $f.bottom]
         pack $f.show_track $f.var $f.lblskip $f.skip $f.lblcolor $f.color \
@@ -148,5 +77,91 @@ namespace eval l1pro::transect {
         pack $f.septop -pady 2
     }
 
+    proc gui_add_row {} {
+        set f $v::top.f.rows
+        set row [incr v::maxrow]
+        set p $f.row${row}_
 
+        ttk::button ${p}transect -text "Transect" -width 0
+        ::mixin::combobox ${p}var -text "fs_all" -width 8
+        ::mixin::combobox ${p}mode -text "fs" -width 2
+        ttk::checkbutton ${p}userecall -text "" \
+                -style NoLabel.TCheckbutton
+        ::mixin::combobox ${p}recall -text 0 -width 5
+        ttk::spinbox ${p}width -text 3.00 -width 5
+        ttk::spinbox ${p}iwin -text 5 -width 3
+        ttk::spinbox ${p}owin -text 3 -width 3
+        ::mixin::combobox ${p}marker -text square -width 6
+        ttk::spinbox ${p}msize -text 1.0 -width 4
+        ttk::checkbutton ${p}connect -text "Connect" \
+                -style Small.TCheckbutton
+        ttk::checkbutton ${p}fma -text "FMA" \
+                -style Small.TCheckbutton
+        ttk::checkbutton ${p}showline -text "Line" \
+                -style Small.TCheckbutton
+        ttk::checkbutton ${p}showpoints -text "Points" \
+                -style Small.TCheckbutton
+        ttk::label ${p}segment -text "Segment by:" \
+                -style Small.TLabel
+        ttk::checkbutton ${p}flight -text "flight" \
+                -style Small.TCheckbutton
+        ttk::checkbutton ${p}line -text "line" \
+                -style Small.TCheckbutton
+        ttk::checkbutton ${p}channel -text "channel" \
+                -style Small.TCheckbutton
+        ttk::checkbutton ${p}digitizer -text "digitizer" \
+                -style Small.TCheckbutton
+        ttk::button ${p}plotline -text "Line" -width 0
+        ttk::button ${p}examine -text "Examine" -width 0
+        ttk::button ${p}delete -text "X" -width 0 \
+                -command [list l1pro::transect::gui_del_row $row]
+
+        foreach j {1 2 3 4 5 6} {
+            ttk::separator ${p}sep$j -orient vertical
+        }
+        ttk::separator ${p}seph -orient horizontal
+
+        lower [ttk::frame ${p}optionshi]
+        pack ${p}connect ${p}fma ${p}showline ${p}showpoints \
+                -in ${p}optionshi -side left -padx 2
+        lower [ttk::frame ${p}optionslo]
+        pack ${p}segment ${p}flight ${p}line ${p}channel ${p}digitizer \
+                -in ${p}optionslo -side left -padx 1
+        pack ${p}segment -padx 2
+        lower [ttk::frame ${p}options]
+        pack ${p}optionshi ${p}optionslo \
+                -in ${p}options -side top -anchor w
+
+        grid \
+                ${p}transect \
+                ${p}sep1 \
+                ${p}var ${p}mode \
+                ${p}sep2 \
+                ${p}userecall ${p}recall \
+                ${p}sep3 \
+                ${p}width ${p}iwin ${p}owin \
+                ${p}sep4 \
+                ${p}marker ${p}msize \
+                ${p}sep5 \
+                ${p}options \
+                ${p}sep6 \
+                ${p}plotline ${p}examine ${p}delete \
+                -padx 2 -pady 2
+        grid ${p}seph - - - - - - - - - - - - - - - - - - - \
+                -padx 2 -pady 0 -sticky ew
+
+        foreach j {1 2 3 4 5 6} {
+            grid ${p}sep$j -sticky ns -padx 2 -pady 0
+        }
+    }
+
+    proc gui_del_row {row} {
+        set f $v::top.f.rows
+        set p $f.row${row}_
+        foreach child [winfo children $f] {
+            if {[string match ${p}* $child]} {
+                destroy $child
+            }
+        }
+    }
 }
