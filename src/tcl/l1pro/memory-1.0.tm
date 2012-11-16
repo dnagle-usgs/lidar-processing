@@ -123,6 +123,7 @@ proc ::l1pro::memory::autorefresh {} {
 }
 
 proc ::l1pro::memory::startup {} {
+    variable refresh
     set refresh $::alpsrc(memory_autorefresh)
     ::l1pro::memory::autorefresh
 }
