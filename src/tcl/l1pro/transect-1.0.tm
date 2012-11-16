@@ -35,19 +35,17 @@ namespace eval l1pro::transect {
         ttk::separator ${p}seph -orient horizontal
 
         grid \
-            x x \
+            x x x \
             ${p}data - x \
             ${p}recall - x \
             ${p}width ${p}iwin ${p}owin x \
             ${p}marker - x \
             ${p}options \
             -padx 2 -pady 2
-        grid ${p}seph - - - - - - - - - - - - - - - - - - - \
+        grid ${p}seph - - - - - - - - - - - - - - - - - - - - - \
                 -padx 2 -pady 0 -sticky ew
 
-        foreach i {1 2 3} {
-            gui_add_row
-        }
+        gui_add_row
 
         set f $w.bottom
         ttk::separator $f.septop -orient horizontal
@@ -116,7 +114,7 @@ namespace eval l1pro::transect {
         ttk::button ${p}delete -text "X" -width 0 \
                 -command [list l1pro::transect::gui_del_row $row]
 
-        foreach j {1 2 3 4 5 6} {
+        foreach j {0 1 2 3 4 5 6 7} {
             ttk::separator ${p}sep$j -orient vertical
         }
         ttk::separator ${p}seph -orient horizontal
@@ -133,6 +131,7 @@ namespace eval l1pro::transect {
                 -in ${p}options -side top -anchor w
 
         grid \
+                ${p}sep0 \
                 ${p}transect \
                 ${p}sep1 \
                 ${p}var ${p}mode \
@@ -146,11 +145,12 @@ namespace eval l1pro::transect {
                 ${p}options \
                 ${p}sep6 \
                 ${p}plotline ${p}examine ${p}delete \
+                ${p}sep7 \
                 -padx 2 -pady 2
-        grid ${p}seph - - - - - - - - - - - - - - - - - - - \
+        grid ${p}seph - - - - - - - - - - - - - - - - - - - - - \
                 -padx 2 -pady 0 -sticky ew
 
-        foreach j {1 2 3 4 5 6} {
+        foreach j {0 1 2 3 4 5 6 7} {
             grid ${p}sep$j -sticky ns -padx 2 -pady 0
         }
     }
