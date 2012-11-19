@@ -13,6 +13,16 @@ namespace eval l1pro::transect {
             variable maxrow 0
             variable settings
 
+            variable track
+            array set track {
+                var     pnav
+                skip    5
+                color   blue
+                win     5
+                msize   0.1
+                utm     1
+            }
+
             variable marker_mapping {
                 Square      1
                 Cross       2
@@ -28,7 +38,11 @@ namespace eval l1pro::transect {
     }
 
     proc gui {} {
-        destroy $v::top
+        if {[winfo exists $v::top]} {
+            wm deiconify $v::top
+            ::misc::raise_win $v::top
+            return
+        }
         set v::maxrow 0
         toplevel $v::top
 
@@ -66,19 +80,31 @@ namespace eval l1pro::transect {
 
         gui_add_row
 
+        set var ::l1pro::transect::v::track
         set f $w.bottom
         ttk::separator $f.septop -orient horizontal
-        ttk::button $f.show_track -text "Show Track:" -width 0
-        ::mixin::combobox $f.var -text "pnav" -width 8
+        ttk::button $f.show_track -text "Show Track:" -width 0 \
+                -command l1pro::transect::do_show_track
+        ::mixin::combobox $f.var \
+                -width 6 -state readonly \
+                -textvariable ${var}(var) \
+                -values {pnav gt_fsall gt_fs fs_all}
         ttk::label $f.lblskip -text "Skip:"
-        ttk::spinbox $f.skip -width 3
+        ttk::spinbox $f.skip -width 3 \
+                -textvariable ${var}(skip)
         ttk::label $f.lblcolor -text "Color:"
-        ::mixin::combobox $f.color -text "blue" -width 5
+        ::mixin::combobox $f.color \
+                -width 7 -state readonly \
+                -textvariable ${var}(color) \
+                -values {black red blue green yellow magenta cyan}
         ttk::label $f.lblwin -text "Win:"
-        ttk::spinbox $f.win -width 3
+        ttk::spinbox $f.win -width 2 \
+                -textvariable ${var}(win)
         ttk::label $f.lblsize -text "Size:"
-        ttk::spinbox $f.size -width 4
-        ttk::checkbutton $f.utm -text "UTM"
+        ttk::spinbox $f.size -width 3 \
+                -textvariable ${var}(msize)
+        ttk::checkbutton $f.utm -text "UTM" \
+                -variable ${var}(utm)
         ttk::button $f.history -text "Show History" -width 0
         ttk::button $f.add_row -text "Add Row" -width 0 \
                 -command l1pro::transect::gui_add_row
@@ -147,7 +173,7 @@ namespace eval l1pro::transect {
 
         set var ::l1pro::transect::v::settings
 
-        ttk::button ${p}transect -text "Transect $row" -width 0 \
+        ttk::button ${p}transect -text "Transect $row:" -width 0 \
                 -command [list l1pro::transect::do_transect $row]
         ::mixin::combobox ${p}var -state readonly -width 12 \
                 -textvariable ${var}($row,var) \
@@ -320,7 +346,7 @@ namespace eval l1pro::transect {
     }
 
     proc do_examine {row} {
-        set settings [get_settingw $row]
+        set settings [get_settings $row]
         dict with settings {
             if {$userecall} {
                 set rec $recall
@@ -328,6 +354,17 @@ namespace eval l1pro::transect {
                 set rec 0
             }
             exp_send "transect_pixelwf_interactive, $var, recall=$rec, win=$owin;\r"
+        }
+    }
+
+    proc do_show_history {} {
+        exp_send "transect_history;\r"
+    }
+
+    proc do_show_track {} {
+        set settings [array get v::track]
+        dict with settings {
+            exp_send "show_track, $var, utm=$utm, skip=$skip, color=\"$color\", win=$win, msize=$msize;\r"
         }
     }
 }
