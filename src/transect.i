@@ -288,7 +288,7 @@ xfma=, mode=, msize=, marker=, plot=, showline=, showpts=) {
   return data;
 }
 
-func transect_pixelwf_interactive(vname, line, recall=, win=) {
+func transect_pixelwf_interactive(vname, line, recall=, win=, mode=) {
 /* DOCUMENT transect_pixelwf_interactive, vname, line, win=
   Enters an interactive query mode similar to pixelwf_interactive, except that
   it queries a transect plot. VNAME should be the name of the variable
