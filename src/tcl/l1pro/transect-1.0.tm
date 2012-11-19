@@ -182,10 +182,19 @@ namespace eval l1pro::transect {
         ttk::checkbutton ${p}digitizer -text "digitizer" \
                 -variable ${var}($row,digitizer) \
                 -style Small.TCheckbutton
-        ttk::button ${p}plotline -text "Line" -width 0
-        ttk::button ${p}examine -text "Examine" -width 0
+        ttk::button ${p}plotline -text "Line" -width 0 \
+                -command [list l1pro::transect::do_line $row]
+        ttk::button ${p}examine -text "Examine" -width 0 \
+                -command [list l1pro::transect::do_examine $row]
         ttk::button ${p}delete -text "X" -width 0 \
                 -command [list l1pro::transect::gui_del_row $row]
+
+        ::mixin::statevar ${p}recall \
+                -statemap {0 disabled 1 !disabled} \
+                -statevariable ${var}($row,userecall)
+        ::mixin::statevar ${p}plotline \
+                -statemap {0 disabled 1 !disabled} \
+                -statevariable ${var}($row,userecall)
 
         foreach j {0 1 2 3 4 5 6 7} {
             ttk::separator ${p}sep$j -orient vertical
@@ -242,5 +251,14 @@ namespace eval l1pro::transect {
     proc do_transect {row} {
         puts "var:\t$v::settings($row,var)"
         puts "mode:\t$v::settings($row,mode)"
+    }
+
+    proc do_line {row} {
+        set owin $v::settings($row,owin)
+        set recall $v::settings($row,recall)
+        exp_send "transect_plot_line, win=$owin, recall=$recall;\r"
+    }
+
+    proc do_examine {row} {
     }
 }
