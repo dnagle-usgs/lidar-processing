@@ -164,9 +164,9 @@ connect=) {
 }
 
 func transect(data, line=, recall=, segment=, iwin=, owin=, width=, connect=,
-xmfa=, mode=, msize=, marker=, plot=, showline=, showpts=) {
+xfma=, mode=, msize=, marker=, plot=, showline=, showpts=) {
 /* DOCUMENT transect(data, line=, recall=, segment=, iwin=, owin=, width=,
-   connect=, xmfa=, mode=, msize=, marker=, plot=, showline=, showpts=)
+   connect=, xfma=, mode=, msize=, marker=, plot=, showline=, showpts=)
 
   Performs a transect operation against some data and plots the result.
 
