@@ -74,7 +74,7 @@ func mission_constants(args) {
     chn4_range_bias=-7.9
     max_sfc_sat=2
     tx_clean=8
-    dmars_invert=1
+    dmars_invert=0
     use_ins_for_gps=0
     chn1_dx=-0.42
     chn1_dy=-1.67
@@ -115,7 +115,8 @@ func mission_constants(args) {
       tans.roll *= -1
       tans.heading = (tans.heading + 180) % 360
     This compensates for the INS being mounted in the opposite direction as is
-    traditionally expected.
+    traditionally expected. This compensation is only necessary if it is not
+    applied when processing the trajectory in Inertial Explorer.
 
   use_ins_for_gps
     If set to 1, then the INS data will be used for determining the mirror
