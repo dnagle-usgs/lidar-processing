@@ -84,9 +84,12 @@ func make_fs_bath(d, rrr, avg_surf=, sample_interval=) {
         // current surface elevation is. this change is defined by the array
         // offset
         offset = ((old_elvs - elvs)/(CNSH2O2X*sample_interval*100.));
-        if(logger(trace)) logger, trace, log_id+"  -- offset="+pr1(offset);
       }
     }
+    if(logger(trace)) logger, trace, log_id+"  d(,i).idx="+pr1(d(,i).idx);
+    if(logger(trace)) logger, trace, log_id+"  info(d(,i).idx)="+info(d(,i).idx)(sum);
+    if(logger(trace)) logger, trace, log_id+"  offset="+pr1(offset);
+    if(logger(trace)) logger, trace, log_id+"  info(offset)="+info(offset)(sum);
     indx = where((d(,i).idx > 0) & (abs(offset) < 100));
     if(logger(trace)) logger, trace, log_id+"  indx="+pr1(indx);
     if (is_array(indx)) {
