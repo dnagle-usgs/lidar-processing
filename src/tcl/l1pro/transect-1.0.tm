@@ -9,6 +9,16 @@ namespace eval l1pro::transect {
             variable top .transect
             variable maxrow 0
             variable settings
+
+            variable marker_mapping {
+                Square      1
+                Cross       2
+                Triangle    3
+                Circle      4
+                Diamond     5
+                Cross2      6
+                Triangle2   7
+            }
         }
     }
 
@@ -123,7 +133,7 @@ namespace eval l1pro::transect {
 
         ttk::button ${p}transect -text "Transect" -width 0 \
                 -command [list l1pro::transect::do_transect $row]
-        ::mixin::combobox ${p}var -state readonly -width 8 \
+        ::mixin::combobox ${p}var -state readonly -width 12 \
                 -textvariable ${var}($row,var) \
                 -listvariable ::varlist
         ::mixin::combobox ${p}mode -state readonly -width 2 \
@@ -132,17 +142,19 @@ namespace eval l1pro::transect {
         ttk::checkbutton ${p}userecall -text "" \
                 -variable ${var}($row,userecall) \
                 -style NoLabel.TCheckbutton
-        ::mixin::combobox ${p}recall -text 0 -width 5 \
+        ::mixin::combobox ${p}recall -text 0 -width 4 \
                 -textvariable ${var}($row,recall)
-        ttk::spinbox ${p}width -text 3.00 -width 5 \
+        ttk::spinbox ${p}width -width 4 \
                 -textvariable ${var}($row,width)
-        ttk::spinbox ${p}iwin -text 5 -width 3 \
+        ttk::spinbox ${p}iwin -width 2 \
                 -textvariable ${var}($row,iwin)
-        ttk::spinbox ${p}owin -text 3 -width 3 \
+        ttk::spinbox ${p}owin -width 2 \
                 -textvariable ${var}($row,owin)
-        ::mixin::combobox ${p}marker -text square -width 6 \
-                -textvariable ${var}($row,marker)
-        ttk::spinbox ${p}msize -text 1.0 -width 4 \
+        ::mixin::combobox::mapping ${p}marker \
+                -width 7 -state readonly \
+                -altvariable ${var}($row,marker) \
+                -mapping $v::marker_mapping
+        ttk::spinbox ${p}msize -text 1.0 -width 3 \
                 -textvariable ${var}($row,msize)
         ttk::checkbutton ${p}connect -text "Connect" \
                 -variable ${var}($row,connect) \
@@ -150,10 +162,10 @@ namespace eval l1pro::transect {
         ttk::checkbutton ${p}fma -text "FMA" \
                 -variable ${var}($row,xfma) \
                 -style Small.TCheckbutton
-        ttk::checkbutton ${p}showline -text "Line" \
+        ttk::checkbutton ${p}showline -text "Show Line" \
                 -variable ${var}($row,showline) \
                 -style Small.TCheckbutton
-        ttk::checkbutton ${p}showpoints -text "Points" \
+        ttk::checkbutton ${p}showpoints -text "Show Points" \
                 -variable ${var}($row,showpts) \
                 -style Small.TCheckbutton
         ttk::label ${p}segment -text "Segment by:" \
