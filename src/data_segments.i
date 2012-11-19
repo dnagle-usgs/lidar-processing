@@ -85,7 +85,7 @@ func split_by_flight(data, timediff=, daythresh=, pulsecount=) {
     rnu = rn + (pulse-1.)/pulsecount;
     rn = pulse = [];
 
-    model = regress(unref(data).soe, [1, rnu]);
+    model = poly1_fit(unref(data).soe, rnu, 1);
     bbar(i) = model(1);
   }
 
