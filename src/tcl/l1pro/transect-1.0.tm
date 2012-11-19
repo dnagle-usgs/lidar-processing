@@ -45,6 +45,8 @@ namespace eval l1pro::transect {
         }
         set v::maxrow 0
         toplevel $v::top
+        wm title $v::top "Transect Tool"
+        wm resizable $v::top 1 0
 
         array unset v::settings
 
@@ -79,6 +81,8 @@ namespace eval l1pro::transect {
                 -padx 2 -pady 0 -sticky ew
 
         gui_add_row
+
+        grid columnconfigure $f 3 -weight 1 -minsize 75
 
         set var ::l1pro::transect::v::track
         set f $w.bottom
@@ -274,6 +278,8 @@ namespace eval l1pro::transect {
                 -padx 2 -pady 2
         grid ${p}seph - - - - - - - - - - - - - - - - - - - - - \
                 -padx 2 -pady 0 -sticky ew
+
+        grid ${p}var -sticky ew
 
         foreach j {0 1 2 3 4 5 6 7} {
             grid ${p}sep$j -sticky ns -padx 2 -pady 0
