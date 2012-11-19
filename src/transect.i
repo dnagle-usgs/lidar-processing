@@ -352,12 +352,12 @@ func transect_pixelwf_find_point(spot, data, x, y) {
   vars = pixelwfvars.selection;
   radius = vars.radius;
 
-  bbox = spot([1,1,2,2]) * radius * [-1,1,-1,1];
+  bbox = spot([1,1,2,2]) + radius * [-1,1,-1,1];
   w = data_box(x, y, bbox);
 
   distance = index = point = [];
   if(numberof(w)) {
-    d = sqrt((x-spot(1))^2 + (y-spot(2))^2);
+    d = sqrt((x(w)-spot(1))^2 + (y(w)-spot(2))^2);
     if(d(min) <= radius) {
       distance = d(min);
       index = w(d(mnx));
