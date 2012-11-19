@@ -152,7 +152,7 @@ connect=) {
         heading = tans(w).heading;
     }
 
-    write, format="%s sod = %8.2f:%8.2f (%7.3f) utc=%s %5.1f %s\n"
+    write, format="%s sod = %8.2f:%8.2f (%7.3f) utc=%s %5.1f %s\n",
       date, sodmin, sodmax, soddif, hms, heading, color;
 
     if(connect)
