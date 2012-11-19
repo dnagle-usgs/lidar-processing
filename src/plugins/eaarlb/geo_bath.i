@@ -57,30 +57,38 @@ func make_fs_bath(d, rrr, avg_surf=, sample_interval=) {
 
   if(logger(debug)) logger, debug, log_id+"Total rasters to process: "+pr1(len);
   for (i=1; i<=len; i++) {
+    if(logger(trace)) logger, trace, log_id+"Raster "+pr1(i);
     offset(*) = 0.;
     // code added by AN (12/03/04) to make all surface returns across a raster
     // to be the average of the fresnel reflections.  the surface return is
     // determined from the reflections that have the first channel saturated
     // and come from close to the center of the swath.
     if(avg_surf) {
+      if(logger(trace)) logger, trace, log_id+"  avg_surf enabled";
       iidx = where((rrr(i).intensity > 220) & (abs(60 - pulse(,i)) < pulse_window));
       if(!is_array(iidx)) {
+        if(logger(trace)) logger, trace, log_id+"  -- no fresnel";
         write,format= "No water surface Fresnel reflection in raster rn = %d\n", raster(1,i);
       } else {
         elvs = median(rrr(i).elevation(iidx));
+        if(logger(trace)) logger, trace, log_id+"  -- elvs="+pr1(elvs);
         elvsidx = where(abs(rrr(i).elevation(iidx)-elvs) <= surface_window);
         elvs = avg(rrr(i).elevation(iidx(elvsidx)));
+        if(logger(trace)) logger, trace, log_id+"  -- elvs="+pr1(elvs);
         old_elvs = rrr(i).elevation;
         indx = where(rrr(i).melevation - rrr(i).elevation > altitude_thresh);
+        if(logger(trace)) logger, trace, log_id+"  -- indx="+pr1(indx);
         if (is_array(indx)) rrr(i).elevation(indx) = int(elvs);
         // now rrr.fs_rtn_centroid will change depending on where in time the
         // surface occurs for each laser pulse with respect to where its
         // current surface elevation is. this change is defined by the array
         // offset
         offset = ((old_elvs - elvs)/(CNSH2O2X*sample_interval*100.));
+        if(logger(trace)) logger, trace, log_id+"  -- offset="+pr1(offset);
       }
     }
     indx = where((d(,i).idx > 0) & (abs(offset) < 100));
+    if(logger(trace)) logger, trace, log_id+"  indx="+pr1(indx);
     if (is_array(indx)) {
       fs_rtn_cent = rrr(i).fs_rtn_centroid(indx)+offset(indx);
       // NOTE: This depth value will be ignored and clobbered by compute_depth
