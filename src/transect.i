@@ -193,7 +193,7 @@ xmfa=, mode=, msize=, marker=, plot=, showline=, showpts=) {
       selected points (if showpts=1).
         iwin=5      Window 5, default
     owin= "Output" window, where the transect points are plotted (if plot=1).
-        owin=3      Window 3, default
+        owin=2      Window 2, default
     width= Width of the transect line. This is the total width, with the
       transect line running down the middle. (So points are used if they are
       within width/2 of the transect line.)
@@ -224,7 +224,7 @@ xmfa=, mode=, msize=, marker=, plot=, showline=, showpts=) {
         showpts=1   Show
 */
   default, iwin, 5;
-  default, owin, 3;
+  default, owin, 2;
   default, width, 3.0;
   default, connect, 0;
   default, xfma, 0;
