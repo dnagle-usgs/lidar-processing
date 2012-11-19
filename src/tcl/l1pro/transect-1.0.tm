@@ -1,8 +1,11 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
 package provide l1pro::transect 1.0
+package require mixin
+package require misc
 
 namespace eval l1pro::transect {
+    namespace import ::misc::appendif
 
     if {![namespace exists v]} {
         namespace eval v {
@@ -122,6 +125,17 @@ namespace eval l1pro::transect {
                 set settings($row,mode) fs
             }
         }
+    }
+
+    proc get_settings {row} {
+        set result [list]
+        foreach key {
+            var userecall recall width iwin owin marker msize connect xfma
+            showline showpts flight line channel digitizer mode
+        } {
+            dict set result $key $v::settings($row,$key)
+        }
+        return $result
     }
 
     proc gui_add_row {} {
@@ -262,20 +276,58 @@ namespace eval l1pro::transect {
 
     # Dummy for debugging for now
     proc do_transect {row} {
-        if {$v::settings($row,userecall)} {
-            add_or_promote_recall $v::settings($row,recall)
-        }
+        set settings [get_settings $row]
+        dict with settings {
+            if {$userecall} {
+                add_or_promote_recall $recall
+            }
 
-        puts "var:\t$v::settings($row,var)"
-        puts "mode:\t$v::settings($row,mode)"
+            set segment [list]
+            foreach type {flight line channel digitizer} {
+                if {[set $type]} {
+                    lappend segment $type
+                }
+            }
+            if {[llength $segment] > 1} {
+                set segment \[\"[join $segment \",\"]\"\]
+            } elseif {$segment ne ""} {
+                set segment \"$segment\"
+            }
+
+            set cmd "tr$row = transect($var, mode=\"$mode\""
+            appendif cmd \
+                    $userecall          ", recall=$recall" \
+                    {$segment ne ""}    ", segment=$segment" \
+                    {$width != 3}       ", width=$width" \
+                    {$iwin != 5}        ", iwin=$iwin" \
+                    {$owin != 2}        ", owin=$owin" \
+                    $xfma               ", xfma=1" \
+                    {$marker != 1}      ", marker=$marker" \
+                    {$msize != 0.1}     ", msize=$msize" \
+                    $connect            ", connect=1" \
+                    $showline           ", showline=2" \
+                    $showpts            ", showpts=1" \
+                    1                   ")"
+            exp_send "$cmd;\r"
+        }
     }
 
     proc do_line {row} {
-        set owin $v::settings($row,owin)
-        set recall $v::settings($row,recall)
-        exp_send "transect_plot_line, win=$owin, recall=$recall;\r"
+        set settings [get_settings $row]
+        dict with settings {
+            exp_send "transect_plot_line, win=$owin, recall=$recall;\r"
+        }
     }
 
     proc do_examine {row} {
+        set settings [get_settingw $row]
+        dict with settings {
+            if {$userecall} {
+                set rec $recall
+            } else {
+                set rec 0
+            }
+            exp_send "transect_pixelwf_interactive, $var, recall=$rec, win=$owin;\r"
+        }
     }
 }
