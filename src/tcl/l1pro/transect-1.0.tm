@@ -19,6 +19,8 @@ namespace eval l1pro::transect {
                 Cross2      6
                 Triangle2   7
             }
+
+            variable recalls [list 0 -1 -2 -3 1 2 3]
         }
     }
 
@@ -143,7 +145,8 @@ namespace eval l1pro::transect {
                 -variable ${var}($row,userecall) \
                 -style NoLabel.TCheckbutton
         ::mixin::combobox ${p}recall -text 0 -width 4 \
-                -textvariable ${var}($row,recall)
+                -textvariable ${var}($row,recall) \
+                -listvariable ::l1pro::transect::v::recalls
         ttk::spinbox ${p}width -width 4 \
                 -textvariable ${var}($row,width)
         ttk::spinbox ${p}iwin -width 2 \
@@ -247,8 +250,22 @@ namespace eval l1pro::transect {
         }
     }
 
+    proc add_or_promote_recall {val} {
+        set newlist [list $val]
+        foreach item $v::recalls {
+            if {$item ni $newlist} {
+                lappend newlist $item
+            }
+        }
+        set v::recalls [lrange $newlist 0 9]
+    }
+
     # Dummy for debugging for now
     proc do_transect {row} {
+        if {$v::settings($row,userecall)} {
+            add_or_promote_recall $v::settings($row,recall)
+        }
+
         puts "var:\t$v::settings($row,var)"
         puts "mode:\t$v::settings($row,mode)"
     }
