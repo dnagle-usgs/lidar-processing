@@ -22,6 +22,18 @@ func make_fs_bath(d, rrr, avg_surf=, sample_interval=) {
 
    SEE ALSO: first_surface, run_bath
 */
+  log_id = logger_id();
+  if(logger(debug)) {
+    logger, debug, log_id+"Entering make_fs_bath";
+    logger, debug, log_id+"Parameters:";
+    logger, debug, log_id+"  d="+pr1(d);
+    logger, debug, log_id+"  info(d)="+info(d)(sum);
+    logger, debug, log_id+"  rrr="+pr1(rrr);
+    logger, debug, log_id+"  info(rrr)="+info(rrr)(sum);
+    logger, debug, log_id+"  avg_surf="+pr1(avg_surf);
+    logger, debug, log_id+"  sample_interval="+pr1(sample_interval);
+  }
+
   // d is the depth array from bathy.i
   // rrr is the topo array from surface_topo.i
   default, avg_surf, 0;
@@ -43,7 +55,8 @@ func make_fs_bath(d, rrr, avg_surf=, sample_interval=) {
   altitude_thresh = 5000;
   pulse_window = 25;
 
-  for (i=1; i<=len; i=i+1) {
+  if(logger(debug)) logger, debug, log_id+"Total rasters to process: "+pr1(len);
+  for (i=1; i<=len; i++) {
     offset(*) = 0.;
     // code added by AN (12/03/04) to make all surface returns across a raster
     // to be the average of the fresnel reflections.  the surface return is
@@ -72,11 +85,12 @@ func make_fs_bath(d, rrr, avg_surf=, sample_interval=) {
       fs_rtn_cent = rrr(i).fs_rtn_centroid(indx)+offset(indx);
       // NOTE: This depth value will be ignored and clobbered by compute_depth
       // if it is used.
-      geodepth(i).depth(indx) = int((-d(,i).idx(indx) + fs_rtn_cent ) * CNSH2O2X *100.-0.5);
+      geodepth(i).depth(indx) = int((-d(,i).idx(indx) + fs_rtn_cent) * CNSH2O2X *100.-0.5);
       geodepth(i).sr2(indx) =int((d(,i).idx(indx) - fs_rtn_cent)*10);
     }
   }
 
+  if(logger(debug)) logger, debug, log_id+"Storing remaining results to geodepth";
   if(has_member(rrr, "channel") && has_member(geodepth, "channel"))
     geodepth.channel = rrr.channel;
 
@@ -91,6 +105,7 @@ func make_fs_bath(d, rrr, avg_surf=, sample_interval=) {
   geodepth.bottom_peak = d.bottom_peak;
   geodepth.first_peak = d.first_peak;
 
+  if(logger(debug)) logger, debug, log_id+"Leaving make_fs_bath";
   return geodepth;
 }
 
@@ -105,6 +120,15 @@ func compute_depth(data, sample_interval=) {
 
   SEE ALSO: make_fs_bath, make_bathy
 */
+  log_id = logger_id();
+  if(logger(debug)) {
+    logger, debug, log_id+"Entering compute_depth";
+    logger, debug, log_id+"Parameters:";
+    logger, debug, log_id+"  data="+pr1(data);
+    logger, debug, log_id+"  info(data)="+info(data)(sum);
+    logger, debug, log_id+"  sample_interval="+pr1(sample_interval);
+  }
+
   // Force copy so that original isn't modified in place.
   data = noop(data);
 
@@ -127,18 +151,21 @@ func compute_depth(data, sample_interval=) {
 
   w = where((fs(..,3) <= ref(..,3)) & notequal);
   if(numberof(w)) {
+    if(logger(debug)) logger, debug, log_id+"Projecting points";
     be = point_project(ref(w,), fs(w,), dist(w), tp=1);
     ba(w,) = snell_be_to_bathy(fs(w,), be);
     be = [];
   }
   w = where((fs(..,3) > ref(..,3)) & notequal);
   if(numberof(w)) {
+    if(logger(debug)) logger, debug, log_id+"Projecting points with FS above mirror";
     be = point_project(ref(w,), fs(w,), -dist(w), tp=1);
     ba(w,) = snell_be_to_bathy(fs(w,), be);
     be = [];
   }
   w = where(!notequal);
   if(numberof(w)) {
+    if(logger(debug)) logger, debug, log_id+"Handling points with FS at mirror";
     ba(w,) = fs(w,);
   }
 
@@ -148,6 +175,8 @@ func compute_depth(data, sample_interval=) {
   data.east = ba(..,1)*100;
   data.north = ba(..,2)*100;
   data.depth = (ba(..,3) - fs(..,3))*100;
+
+  if(logger(debug)) logger, debug, log_id+"Leaving compute_depth";
   return data;
 }
 
@@ -171,14 +200,29 @@ func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
   SEE ALSO: first_surface, run_bath, make_fs_bath, rbpnav, rbtans,
     define_bath_ctl
 */
+  log_id = logger_id();
+  if(logger(debug)) {
+    logger, debug, log_id+"Entering make_bathy";
+    logger, debug, log_id+"Parameters:";
+    logger, debug, log_id+"  latutm="+pr1(latum);
+    logger, debug, log_id+"  q="+pr1(q);
+    logger, debug, log_id+"  info(q)="+info(q)(sum);
+    logger, debug, log_id+"  avg_surf="+pr1(avg_surf);
+    logger, debug, log_id+"  forcechannel="+pr1(forcechannel);
+  }
+
   extern tans, pnav;
   depth_all = [];
   sample_interval = 1.0;
 
-  if(is_void(tans))
+  if(is_void(tans)) {
+    if(logger(debug)) logger, debug, log_id+"Aborting make_bathy (no tans)";
     error, "TANS/INS data not loaded";
-  if(is_void(pnav))
+  }
+  if(is_void(pnav)) {
+    if(logger(debug)) logger, debug, log_id+"Aborting make_bathy (no pnav)";
     error, "PNAV data not loaded";
+  }
 
   if (!is_array(q)) {
     q = pnav_sel_rgn(region=llarr);
@@ -191,6 +235,7 @@ func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
   if(is_void(raster_ranges)) {
     write, "No Data in selected flightline. Good Bye!";
     status, finished;
+    if(logger(debug)) logger, debug, log_id+"Aborting make_bathy (no selection)";
     return [];
   }
   raster_starts = raster_ranges(1,);
@@ -199,7 +244,9 @@ func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
 
   count = numberof(raster_starts);
 
+  if(logger(debug)) logger, debug, log_id+"Total lines: "+pr1(count);
   for(i = 1; i <= count; i++) {
+    if(logger(debug)) logger, debug, log_id+"Processing line "+pr1(i);
     if((raster_starts(i) != 0)) {
       msg_prefix = swrite(format="Line %d/%d; ", i, count);
       msg = msg_prefix + "Step 1/3: Processing bathymetry...";
@@ -210,6 +257,7 @@ func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
         forcechannel=forcechannel, msg=msg);
       if(depth == 0) {
         status, finished;
+        if(logger(debug)) logger, debug, log_id+"Aborting make_bathy (run_bath failed)";
         return 0;
       }
 
@@ -239,5 +287,6 @@ func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
   write, format="Total number of records processed = %d\n",
       numberof(depth_all.elevation);
 
+  if(logger(debug)) logger, debug, log_id+"Leaving make_bathy";
   return depth_all;
 }
