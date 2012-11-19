@@ -349,7 +349,7 @@ namespace eval l1pro::transect {
     proc do_line {row} {
         set settings [get_settings $row]
         dict with settings {
-            exp_send "transect_plot_line, win=$owin, recall=$recall;\r"
+            exp_send "transect_plot_line, win=$iwin, recall=$recall;\r"
         }
     }
 
