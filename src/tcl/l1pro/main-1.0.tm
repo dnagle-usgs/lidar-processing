@@ -127,7 +127,6 @@ proc ::l1pro::main::panel_plot w {
     ::mixin::combobox::mapping $f.mtype -width 8 -state readonly \
             -altvariable ::plot_settings(mtype) \
             -mapping {
-                None        0
                 Square      1
                 Cross       2
                 Triangle    3
