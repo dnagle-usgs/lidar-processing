@@ -869,7 +869,12 @@ proc init_hgid {} {
 }
 
 proc bgerror {msg} {
-    logger warn "background error: $msg"
+    global errorInfo
+    logger warn "background error: $msg\n$errorInfo"
+    set rtn [catch [list ::tk::dialog::error::bgerror $msg]]
+    if {$rtn} {
+        return -code $rtn
+    }
 }
 
 ######## END PROCEDURES ########
