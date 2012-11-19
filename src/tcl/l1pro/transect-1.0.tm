@@ -147,7 +147,7 @@ namespace eval l1pro::transect {
 
         set var ::l1pro::transect::v::settings
 
-        ttk::button ${p}transect -text "Transect" -width 0 \
+        ttk::button ${p}transect -text "Transect $row" -width 0 \
                 -command [list l1pro::transect::do_transect $row]
         ::mixin::combobox ${p}var -state readonly -width 12 \
                 -textvariable ${var}($row,var) \
