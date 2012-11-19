@@ -288,15 +288,19 @@ xmfa=, mode=, msize=, marker=, plot=, showline=, showpts=) {
   return data;
 }
 
-func transect_pixelwf_interactive(vname, line, win=) {
+func transect_pixelwf_interactive(vname, line, recall=, win=) {
 /* DOCUMENT transect_pixelwf_interactive, vname, line, win=
   Enters an interactive query mode similar to pixelwf_interactive, except that
   it queries a transect plot. VNAME should be the name of the variable
   containing the points plotted, LINE should be the transect they're plotted
-  with respect to, and WIN should be the window they're plotted in.
+  with respect to, and WIN should be the window they're plotted in. RECALL can
+  be used to recall an existing line from the transect history.
 */
   if(is_void(win)) win = window();
   data = var_expr_get(vname);
+
+  if(is_void(line) && !is_void(recall))
+    line = transect_recall(recall);
 
   // Pull out data coordinates
   local x, y, z, rx, ry;
