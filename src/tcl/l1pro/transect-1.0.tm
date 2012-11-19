@@ -341,6 +341,8 @@ namespace eval l1pro::transect {
                     $showpts            ", showpts=1" \
                     1                   ")"
             exp_send "$cmd;\r"
+
+            append_varlist tr$row
         }
     }
 
