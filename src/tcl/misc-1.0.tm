@@ -549,6 +549,45 @@ proc ::misc::raise_win {win} {
     wm geometry $win $geo
 }
 
+proc ::misc::xwd {} {
+    # Do a screen capture of a mouse selected window.
+    #
+    # Capture a mouse selected window to an image file. This proc uses the xwd
+    # command to capture a selected window to an /tmp/*.xwd file and then uses
+    # the convert command to covert that file to any number of different
+    # formats. Once the image has been stored in the desired format, the
+    # /tmp/*.xwd file is deleted.
+    global capture_path data_path capture_name
+    if {![info exists capture_path]} {
+        if {[info exists data_path]} {
+            set capture_path $data_path
+        } else {
+            set capture_path ""
+        }
+    }
+    if {![info exists capture_name]} {
+        set capture_name ""
+    }
+    tk_messageBox -type ok -message "Raise the window you want to capture,\
+            click OK, and then click on the desired window."
+    update idletasks
+    exec xwd -out /tmp/junk.xwd
+    set fn [tk_getSaveFile -initialdir $capture_path \
+            -defaultextension .png \
+            -initialfile $capture_name]
+    if {$fn ne ""} {
+        set ext [file extension $fn]
+        if {$ext ni ".jpg .gif .png .bmp .pnm .tif .tiff"} {
+            set fn [file rootname $fn].png
+        }
+        set capture_name [file tail $fn]
+        set capture_path [file dirname $fn]
+        # Require the user to get their unix path right.
+        exec convert /tmp/junk.xwd $fn
+        file delete -force /tmp/junk.xwd
+    }
+}
+
 proc ::misc::combinations {items} {
     if {[llength $items] == 1} {
         return $items

@@ -69,7 +69,7 @@ proc menu_file mb {
     $mb add cascade {*}[menulabel "&Variables..."] \
             -menu [menu_file_variables $mb.vars]
     $mb add command {*}[menulabel "&Capture a display..."] \
-            -command scap
+            -command ::misc::xwd
     $mb add separator
     $mb add command {*}[menulabel "&Dismiss"] \
             -command [list wm withdraw [get_top $mb]]
