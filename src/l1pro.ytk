@@ -114,13 +114,13 @@ if {![info exists l1pro_data]} {
   trace remove variable pro_var write pro_var_changed
   trace add variable pro_var write pro_var_changed
 
-  trace remove variable plot_settings(cmin) write ud
-  trace remove variable plot_settings(cmax) write ud
-  trace remove variable cdelta write ud
+  trace remove variable plot_settings(cmin) write cbar_trace
+  trace remove variable plot_settings(cmax) write cbar_trace
+  trace remove variable cdelta write cbar_trace
 
-  trace add variable plot_settings(cmin) write ud
-  trace add variable plot_settings(cmax) write ud
-  trace add variable cdelta write ud
+  trace add variable plot_settings(cmin) write cbar_trace
+  trace add variable plot_settings(cmax) write cbar_trace
+  trace add variable cdelta write cbar_trace
 }
 
 # Some of the l1pro packages require the above variables, so this must come
@@ -219,7 +219,7 @@ proc display_type_by_index {index} {
     [lindex [dict values $::l1pro_data(mode_mapping)] $index]
 }
 
-proc ud { a b c } {
+proc cbar_trace { a b c } {
   set cmin [scan $::plot_settings(cmin) %f]
   set cmax [scan $::plot_settings(cmax) %f]
   set cdel [scan $::cdelta %f]
