@@ -167,8 +167,14 @@ connect=) {
     if(numberof(how))
       write, format="%s", "\n";
 
-    if(connect)
+    if(connect) {
+      // Not all segmenting methods will put the points in a line graph
+      // friendly order. Ordering by rx makes sure the line graph looks nice.
+      srt = sort(rx);
+      rx = rx(srt);
+      z = z(srt);
       plg, z, rx, color=color;
+    }
     plmk, z, rx, color=color, msize=msize, width=10, marker=marker;
   }
 
