@@ -40,14 +40,14 @@ func transect_history(void) {
     return;
   }
   write, format="%s\n", "First recall= will never change for a given line.";
-  write, format="%s\n", "Second recall= changes as new transects are added to the history";
+  write, format="%s\n", "Second recall= changes as new transects are added to the history.";
   count = dimsof(_transect_history)(3);
   for(idx1 = 1; idx1 <= count; idx1++) {
     idx2 = idx1 - count;
     line = transect_recall(idx1);
     dist = long(sqrt(line([1,3])(dif)^2 + line([2,4])(dif)^2)(1)+.5);
     line = long(line+.5);
-    write, format="recall=%-2d  recall=%-3d  (%6d,%7d) to (%6d,%7d)  length %d\n",
+    write, format="recall=%-2d  recall=%-3d  (%6d,%7d) to (%6d,%7d)  length %dm\n",
       idx1, idx2, line(1), line(2), line(3), line(4), dist;
   }
 }
@@ -265,6 +265,8 @@ xfma=, mode=, msize=, marker=, plot=, showline=, showpts=) {
     write, format="Drag to draw transect line in window %d\n", iwin;
     line = mouse(1, 2, "")(1:4);
     grow, _transect_history, [line];
+    write, format="Added line to history as recall=%d\n",
+      dimsof(_transect_history)(3);
     window_select, wbkp;
 
     if(showline)
