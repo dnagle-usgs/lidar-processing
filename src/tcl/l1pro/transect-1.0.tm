@@ -109,7 +109,8 @@ namespace eval l1pro::transect {
                 -textvariable ${var}(msize)
         ttk::checkbutton $f.utm -text "UTM" \
                 -variable ${var}(utm)
-        ttk::button $f.history -text "Show History" -width 0
+        ttk::button $f.history -text "Show History" -width 0 \
+                -command l1pro::transect::do_show_history
         ttk::button $f.add_row -text "Add Row" -width 0 \
                 -command l1pro::transect::gui_add_row
 
