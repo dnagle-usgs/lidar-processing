@@ -57,7 +57,7 @@ func make_fs_bath(d, rrr, avg_surf=, sample_interval=) {
 
   if(logger(debug)) logger, debug, log_id+"Total rasters to process: "+pr1(len);
   for (i=1; i<=len; i++) {
-    if(logger(trace)) logger, trace, log_id+"Raster "+pr1(i);
+    if(logger(trace)) logger, trace, log_id+"Raster #"+pr1(i)+": "+pr1(raster(1,i));
     offset(*) = 0.;
     // code added by AN (12/03/04) to make all surface returns across a raster
     // to be the average of the fresnel reflections.  the surface return is
