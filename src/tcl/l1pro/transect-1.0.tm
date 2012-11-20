@@ -123,6 +123,30 @@ namespace eval l1pro::transect {
 
         pack $f.septop $f.bottom -in $f -side top -fill both -expand 1
         pack $f.septop -pady 2
+
+        ::tooltip::tooltip $f.show_track \
+                "Plots a track line."
+        ::tooltip::tooltip $f.var \
+                "Specifies the track variable to use."
+        ::tooltip::tooltip $f.skip \
+                "Specifies the skip factor to use when plotting the track. A\
+                \nskip of 5 means that every fifth point will be used.."
+        ::tooltip::tooltip $f.color \
+                "Specifies the color to plot the track with."
+        ::tooltip::tooltip $f.win \
+                "Specifies the window to plot the track in."
+        ::tooltip::tooltip $f.size \
+                "Specifies the size to use for the plotted markers."
+        ::tooltip::tooltip $f.utm \
+                "If enabled, plot in UTM coordinates. If disabled, plot in\
+                \nlat/long coordinates."
+        ::tooltip::tooltip $f.history \
+                "Displays the transect history in the console window."
+        ::tooltip::tooltip $f.add_row \
+                "Adds a new Transect row. Rows will be numbered with\
+                \nincreasing integers. If you delete a row, that row's number\
+                \nwill not be re-added unless you close the GUI and open it\
+                \nafresh."
     }
 
     proc init_settings {row} {
@@ -285,6 +309,170 @@ namespace eval l1pro::transect {
         foreach j {0 1 2 3 4 5 6 7} {
             grid ${p}sep$j -sticky ns -padx 2 -pady 0
         }
+
+        ::tooltip::tooltip ${p}transect \
+                "Extract and plot the transect data.\
+                \n\
+                \nThe extracted data for this row will be stored in variable\
+                \ntr$row. It will be added to the variable list in the Point\
+                \nCloud Plotting GUI and can be plotted like any other data\
+                \nvariable.\
+                \n\
+                \nThe start point of newly-drawn transect will be highlighted\
+                \nwith a blue marker and the end point will be highlighted\
+                \nwith a red marker. In the plotted transect, the X axis\
+                \nrepresents the distance along the transect line, where x=0\
+                \nis the location of the blue marker."
+        ::tooltip::tooltip ${p}var \
+                "Data variable to run the transect on."
+        ::tooltip::tooltip ${p}mode \
+                "Data mode to use for data.\
+                \n  fs = First Surface / First Return\
+                \n  be = Bare Earth / Topo Under Veg\
+                \n  ba = Bathymetry / Submerged Topo"
+        ::tooltip::tooltip ${p}userecall \
+                "If enabled, a previously selected transect line will be used.\
+                \n\
+                \nIf not enabled, you will be prompted to draw out a new\
+                \ntransect line. The new line will be added to the transect\
+                \nhistory for future re-use."
+        ::tooltip::tooltip ${p}recall \
+                "Specify which transect line from the history to use.\
+                \n\
+                \nIf this number is positive, it refers to the transect lines\
+                \nin the order they were acquired. 1 is the first transect\
+                \nline drawn, 2 is the second, and so forth. These numbers\
+                \nwill not change when future transects are drawn.\
+                \n\
+                \nIf this number is non-positive, it refers to the transect\
+                \nlines in the reverse order that they were acquired. 0 is the\
+                \nmost recently drawn transect, -1 is the second most recently\
+                \ndrawn transect, and so forth. The number associated with a\
+                \ngiven transect will change each time a new transect is\
+                \ndrawn, such that 0 is always the most recent.\
+                \n\
+                \nYou can type in any number from the transect history in this\
+                \nfield. You can view the transect history through the \"Show\
+                \nHistory\" button in the bottom right corner of this GUI. The\
+                \ndrop-down box will show the ten numbers you most recently\
+                \nused."
+        ::tooltip::tooltip ${p}width \
+                "The width of the transect, in meters.\
+                \n\
+                \nA width of 3.0 means that points within 1.5 meters on either\
+                \nside of the line will be used."
+        ::tooltip::tooltip ${p}iwin \
+                "Input window. This is the window where your point cloud is\
+                \nplotted (through the Point Cloud Plotting GUI). This is\
+                \nwhere you will be prompted to draw a transect (if\
+                \napplicable) and is where the transect line will be re-drawn\
+                \n(if applicable)."
+        ::tooltip::tooltip ${p}owin \
+                "Output window. This is where the transect is plotted. This is\
+                \nalso where you will be prompted to click when using the\
+                \n\"Examine\" button."
+        ::tooltip::tooltip ${p}marker \
+                "Marker style to use when plotting transect points."
+        ::tooltip::tooltip ${p}msize \
+                "Marker size to use when plotting transect points."
+        ::tooltip::tooltip ${p}connect \
+                "If enabled, the transect points for each segment will be\
+                \nconnected so as to draw a line."
+        ::tooltip::tooltip ${p}fma \
+                "If enabled, the transect plot will be cleared prior to\
+                \nplotting. If not enabled, new plots are made on top of\
+                \nprevious plots."
+        ::tooltip::tooltip ${p}showline \
+                "If enabled, the transect line will be replotted when using a\
+                \ntransect line from the history.\
+                \n\
+                \nThe transect line is ALWAYS drawn if you are dragging out a\
+                \nnew line. This setting only makes a different when using\
+                \nRecall."
+        ::tooltip::tooltip ${p}showpoints \
+                "If enabled, the points selected in the source point cloud\
+                \nwill be highlighted by drawing little X's on them."
+        ::tooltip::tooltip ${p}flight \
+                "If enabled, the points will be broken into sub-groups based\
+                \non which flight they appear to have come from. Each\
+                \nsub-group will be given a different color.\
+                \n\
+                \nIf other segmenting options are enabled, the effects are\
+                \ncummulative: segments will be sub-divided.\
+                \n\
+                \nThis option is redundant when \"line\" is enabled, as\
+                \n\"line\" effectively subdivides within the segments that\
+                \n\"flight\" would have created."
+        ::tooltip::tooltip ${p}line \
+                "If enabled, the points will be broken into sub-groups based\
+                \non which flight line they appear to have come from. Each\
+                \nsub-group will be given a different color.\
+                \n\
+                \nIf other segmenting options are enabled, the effects are\
+                \ncummulative: segments will be sub-divided.\
+                \n\
+                \nThe \"flight\" option is redundant when this option is\
+                \nenabled, as \"line\" effectively subdivides within the\
+                \nsegments that \"flight\" would have created."
+        ::tooltip::tooltip ${p}channel \
+                "If enabled, the points will be broken into sub-groups based\
+                \non which channel they use. Each sub-group will be given a\
+                \ndifferent color. (These colors will NOT necessarily match\
+                \nthe colors typically used for each channel in waveform\
+                \nplots.)\
+                \n\
+                \nIf other segmenting options are enabled, the effects are\
+                \ncummulative: segments will be sub-divided."
+        ::tooltip::tooltip ${p}digitizer \
+                "If enabled, the points will be broken into sub-groups based\
+                \non which digitizer they use. Each sub-group will be given a\
+                \ndifferent color.\
+                \n\
+                \nIf other segmenting options are enabled, the effects are\
+                \ncummulative: segments will be sub-divided.\
+                \n\
+                \nIn the text summary printed to the console, the two\
+                \ndigitizers will be arbitrarily numbered 1 and 2. However,\
+                \nthe notion of which digitizer is 1 and which digitzer is 2\
+                \nis arbitrary based on raster numbers. It is recommended that\
+                \nyou enable either \"line\" or \"flight\" when using this\
+                \noption with multi-flight data, since points from different\
+                \ndays may not have the same physical digitizer numbered the\
+                \nsame way."
+        ::tooltip::tooltip ${p}plotline \
+                "Plots the transect line specified under Recall.\
+                \n\
+                \nThe start point of the transect will be highlighted with a\
+                \nblue marker and the end point will be highlighted with a red\
+                \nmarker. In the plotted transect, the X axis represents the\
+                \ndistance along the transect line, where x=0 is the location\
+                \nof the blue marker."
+        ::tooltip::tooltip ${p}examine \
+                "This enters an interactive mode that lets you examine pixels\
+                \nin the plotted transect. This is effectively identical to\
+                \nthe \"Examine Pixels\" functionality in the Point Cloud\
+                \nProcessing GUI except that it operates on the transect plot\
+                \ninstead of a point cloud plot.\
+                \n\
+                \nThis uses the same settings as \"Examine Pixels\". To\
+                \nconfigure, use \"Utilities\" -> \"Examine Pixels Settings\".\
+                \nThat GUI will also be updated with the channel, raster, and\
+                \npulse of the points you select."
+        ::tooltip::tooltip ${p}delete \
+                "Delete this row of controls.\
+                \n\
+                \nClicking this button will remove the \"Transect $row\" line\
+                \nfrom your GUI. If other lines are also present, they will\
+                \nremain.\
+                \n\
+                \nNew lines can be added using \"Add Row\" at the bottom right\
+                \ncorner of the GUI. However, once you remove a given line\
+                \nnumber, you will not get it back until you close the GUI and\
+                \nre-open it. \"Add Row\" always adds a row with increasing\
+                \nindex numbers. So if you add a \"Transect 2\" row, then\
+                \ndelete it, then add a new row, the new row will be\
+                \n\"Transect 3\" even though there is no longer a \"Transect\
+                \n2\"."
     }
 
     proc gui_del_row {row} {
