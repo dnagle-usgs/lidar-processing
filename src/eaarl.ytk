@@ -130,16 +130,6 @@ proc load_ops_conf {} {
   }
 }
 
-proc path_exists { path } {
-# Test if a path exists, and pop up warning if not.
-  if { [ file isdirectory $path ]  == 0 } {
-    tk_messageBox \
-	-icon warning \
-	-type ok \
-	-message "$path doesn't exist."
-  }
-}
-
 proc load_cmd { start_dir } {
  global _ytk_fn y_codedir ytk_codedir _ytk_mrl _ytk_mrl_idx
   set _ytk_fn [ tk_getOpenFile \
