@@ -14,15 +14,6 @@
 
 package require sf
 
-proc center_win { win } {
-# Center a window.
- set lx [ expr [winfo screenwidth  $win]/2 - [winfo width  $win]/2 ]
- set ly [ expr [winfo screenheight $win]/2 - [winfo height $win]/2 ]
- wm geometry $win "+$lx+$ly"
- wm deiconify $win
- update
-}
-
 proc display_mission_constants { l } {
   global w1
   array set ary $l
@@ -90,7 +81,6 @@ proc load_dmars {} {
   }
 }
 
-
 proc load_ops_conf {} { 
   global data_path
       if { [ info exists data_path ] } {
@@ -126,37 +116,6 @@ proc load_ops_conf {} {
             expect ">"
                destroy .stby
          }
-    }
-  }
-}
-
-proc load_cmd { start_dir } {
- global _ytk_fn y_codedir ytk_codedir _ytk_mrl _ytk_mrl_idx
-  set _ytk_fn [ tk_getOpenFile \
-        -initialdir $start_dir \
-        -filetypes \
-        {
-           {{Yorick Programs} {.i}  }
-           {{Yorick or Tcl/tk program} {.i .ytk}  }
-           {{Yorick Specfic Tcl/Tk Programs} {.ytk} }
-           {{Tcl/Tk Programs} {.tcl .tk} }
-           {{All Files}       {*}   }
-        }  ]
-  if { $_ytk_fn != "" } {
-    switch [ file extension $_ytk_fn ] {
-    ".tcl" -
-    ".tk"  -
-    ".ytk" {
-            uplevel { source $_ytk_fn }
-           }
-    ".i"   {
-            set ycode_dir [ file dirname $_ytk_fn ]
-            cd $ycode_dir;
-            exp_send "cd, \"$ycode_dir\"\r"
-            exp_send "#include \"$_ytk_fn\"\r"
-            exp_send "cd, src_path\r"
-           }
-
     }
   }
 }
@@ -226,27 +185,9 @@ proc load_edb {} {
 # Set the source code path for this invocation.  It can 
 # then be used to load the other modules.
 #####################################################################
-   set data_path "/data/"
-   # send ytk process id to yorick global variable _pid.
-   ybkg require \"eaarl.i\"
-
-####   exp_send "#include \"edb_access.i\"\r"
-####   exp_send "#include \"map.i\"\r"
-
-   ybkg require \"rbgga.i\"
-
-#############
-#   Nav
-#############
-
-
- set gga_color black
-
- set clist "black red blue green cyan magenta yellow white"
-
-#############
-#   Deprecated
-#############
+set data_path "/data/"
+ybkg require \"eaarl.i\"
+ybkg require \"rbgga.i\"
 
 # Since ybkg is used, some output may go to the console (especially Yeti), so
 # this gives the user back their prompt.
