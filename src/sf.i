@@ -16,16 +16,6 @@ func sf_mediator_plot(win, soe, msize, marker, color, errcmd) {
   mission, load, loaded;
 }
 
-func sf_mediator_broadcast_somd(somd) {
-/* DOCUMENT sf_mediator_broadcast_somd, somd;
-  Intended to be used by functions that need to request that the SF viewers
-  sync to a somd value. Converts the somd to an soe so SF can use it.
-*/
-  extern soe_day_start;
-  soe = double(soe_day_start + somd);
-  tkcmd, swrite(format="::sf::mediator broadcast soe %.8f", soe);
-}
-
 func sf_mediator_raster(soe, errcmd) {
   extern pixelwfvars, rn;
   vars = pixelwfvars.ndrast;
@@ -61,18 +51,7 @@ func send_sod_to_sf(somd) {
   Wrapper around the Tcl command send_sod_to_sf
 */
   extern last_somd, soe_day_start;
-  tkcmd, swrite(format="send_sod_to_sf %d", somd);
   soe = int(soe_day_start + somd);
   tkcmd, swrite(format="::sf::mediator broadcast soe %d", soe);
-  last_somd = somd;
-}
-
-func send_tans_to_sf(somd, pitch, roll, heading) {
-/* DOCUMENT send_tans_to_sf, somd, pitch, roll, heading
-  Wrapper around the Tcl command send_tans_to_sf
-*/
-  extern last_somd;
-  tkcmd, swrite(format="send_tans_to_sf %d %f %f %f",
-    somd, pitch, roll, heading);
   last_somd = somd;
 }

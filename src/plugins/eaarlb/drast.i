@@ -86,7 +86,7 @@ autolims=, pulse=) {
   Option pulse= is passed through to show_rast and is just for initializing the
   GUI.
 */
-  extern aa, last_somd, pkt_sf;
+  extern aa, last_somd;
   default, graph, 1;
   default, sfsync, 1;
 
@@ -97,12 +97,6 @@ autolims=, pulse=) {
   somd = (r.soe - soe_day_start)(1);
   if (somd != last_somd && sfsync) {
     send_sod_to_sf, somd;
-    if (!is_void(pkt_sf)) {
-      idx = where((int)(pkt_sf.somd) == somd);
-      if (is_array(idx)) {
-        send_tans_to_sf, somd, tans(idx).pitch, tans(idx).roll, tans(idx).heading;
-      }
-    }
   }
   for (i=1; i<= npix; i++) {
     for (j=1; j<=4; j++) {

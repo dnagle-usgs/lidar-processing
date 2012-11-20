@@ -14,42 +14,6 @@
 
 package require sf
 
-package require comm
-set sf_a_id -1
-set cir_id -1
-
-proc send_sf { args } {
-# Send a message to sf_a.tcl safely
-    global sf_a_id
-    if { $sf_a_id != -1 } {
-        if { [catch { eval ::comm::comm send $sf_a_id $args }] } {
-            set sf_a_id -1
-        }
-    }
-}
-
-proc send_cir { args } {
-# Send a message to cir.tcl safely
-    global cir_id
-    if { $cir_id != -1 } {
-        if { [catch { eval ::comm::comm send $cir_id $args }] } {
-            set cir_id -1
-        }
-    }
-}
-
-proc sf_exists { } {
-# See if sf_a exists
-    global sf_a_id
-    return [expr {$sf_a_id != -1}]
-}
-
-proc cir_exists { } {
-# See if cir exists
-	global cir_id
-	return [expr {$cir_id != -1}]
-}
-
 proc center_win { win } {
 # Center a window.
  set lx [ expr [winfo screenwidth  $win]/2 - [winfo width  $win]/2 ]
@@ -166,25 +130,6 @@ proc load_ops_conf {} {
   }
 }
 
-proc send_sod_to_sf { somd } {
-  catch {
-   send_sf set timern sod
-   send_sf set hsr $somd
-   send_sf gotoImage
-  }
-  ybkg sf_mediator_broadcast_somd $somd
-}
-
-proc send_tans_to_sf {somd p r h} {
-   catch {
-    send_sf set pitch $p
-    send_sf set roll $r
-    send_sf set head $h
-    send_sf gotoImage
-   }
-}
-
-
 proc path_exists { path } {
 # Test if a path exists, and pop up warning if not.
   if { [ file isdirectory $path ]  == 0 } {
@@ -273,16 +218,6 @@ proc load_cmd { start_dir } {
   }
 }
 
-proc init_sf {} {
- global data_path
-    send_sf set dir $data_path
-}
-
-proc init_cir {} {
- global data_path
-    send_cir cirdir "$data_path/cir"
-}
-
 proc edb_loaded { } {
  global edb 
  if { [ info exists edb ] == 0 } {
@@ -340,9 +275,6 @@ proc load_edb {} {
   expect ">"
   after 2000 {
   edb_status
-  if { [sf_exists] } {
-     send_sf "set dir $data_path"
-  }
   }
 }
 
