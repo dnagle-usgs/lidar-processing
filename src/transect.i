@@ -130,30 +130,42 @@ connect=) {
   if(!is_void(win)) window, win;
   if(xfma) fma;
 
-  local x, y, z, rx, ry;
+  local x, y, z, rx, ry, rn;
   for(i = 1; i <= segs(*); i++) {
     color = colors(i % ncolors);
     seg = segs(noop(i));
     data2xyz, seg, x, y, z, mode=mode;
     project_points_to_line, line, x, y, rx, ry;
 
-    date = soe2date(seg.soe(1));
-    sodmin = soe2somd(seg.soe(1));
-    sodmax = soe2somd(seg.soe(0));
-    soddif = sodmax-sodmin;
-    hms = sod2hms(soe2sod(seg.soe(1)), str=1);
+    if(numberof(how))
+      write, format="%7s", color;
 
-    // If tans data is available, grab the heading
-    heading = 0.;
-    if(!is_void(tans)) {
-      tansdif = abs(tans.somd - sodmin);
-      w = tansdif(mnx);
-      if(tansdif(w) < 0.01)
-        heading = tans(w).heading;
+    if(anyof(how == "channel")) {
+      write, format=" chn%d", seg.channel(1);
     }
 
-    write, format="%s sod = %8.2f:%8.2f (%7.3f) utc=%s %5.1f %s\n",
-      date, sodmin, sodmax, soddif, hms, heading, color;
+    if(anyof(how == "digitizer")) {
+      parse_rn, seg.rn(1), rn;
+      write, format=" d%d", 2-(rn % 2);
+    }
+
+    if(anyof(how == "line") || anyof(how == "flight")) {
+      write, format=" %s", soe2iso8601(seg.soe(min));
+      write, format=" %8.2f", soe2sod(seg.soe(min));
+      write, format=" (%.2fs)", seg.soe(max)-seg.soe(min);
+
+      // If tans data is available, grab the heading
+      if(!is_void(tans)) {
+        tansdif = abs(tans.somd - soe2sod(seg.soe(min)));
+        w = tansdif(mnx);
+        if(tansdif(w) < 0.01) {
+          write, format=" %5.1f", tans(w).heading;
+        }
+      }
+    }
+
+    if(numberof(how))
+      write, format="%s", "\n";
 
     if(connect)
       plg, z, rx, color=color;
