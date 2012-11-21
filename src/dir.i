@@ -329,20 +329,6 @@ func file_relative(base, dest) {
   return result;
 }
 
-func test_extension( fname, ext ) {
-/* DOCUMENT test_extention(fname, ext)
-
-  Compares the end of string fname with ext, and if they agree returns 1, if
-  not it returns 0;  This function is intended to filter file names based on
-  their extension.  It is used by lsfiles.
-
-  DEPRECATED: Use strglob instead.
-
-  SEE ALSO: cd, mkdir, rmdir, get_cwd, get_home, lsdir, lsfiles
-*/
-  return strglob(swrite(format="*%s", ext), fname);
-}
-
 func find(path, glob=) {
 /* DOCUMENT find(path, glob=)
 
