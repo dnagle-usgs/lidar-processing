@@ -972,20 +972,12 @@ func struct_cast(&data, dest, verbose=, special=) {
         result.lx = result.fx;
         result.ly = result.fy;
         result.lz = result.fz;
-        // EAARL-A only
-        //result.channel = eaarl_intensity_channel(result.fint);
         result.nx = 1;
-      }
-      if(structeq(src, VEG__)) {
-        // EAARL-A only
-        //result.channel = eaarl_intensity_channel(result.lint);
       }
       if(structeq(src, GEO)) {
         result.lx = result.fx;
         result.ly = result.fy;
         result.lz = (data.elevation + data.depth) * 0.01;
-        // EAARL-A only
-        //result.channel = eaarl_intensity_channel(result.lint);
         result.nx = 2;
       }
     }
@@ -1260,19 +1252,4 @@ func sortdata(data, mode=, method=, desc=) {
   } else {
     return data(idx);
   }
-}
-
-func eaarl_intensity_channel(intensity) {
-/* DOCUMENT channel = intensity_channel(intensity)
-  Returns the channel associated with the given intensity.
-
-    channel = 1  if    0 <= intensity < 300
-    channel = 2  if  300 <= intensity < 600
-    channel = 3  if  600 <= intensity < 900
-    channel = 0  otherwise
-
-  Works for both scalars and arrays.
-*/
-// Original David Nagle 2009-07-21
-  return (digitize(intensity, [0,300,600,900])-1) % 4;
 }
