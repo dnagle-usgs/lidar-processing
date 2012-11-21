@@ -74,7 +74,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "batch_process.i";
   require, "class_deque.i";
   require, "colorbar.i";
-  require, "compare_transects.i";
   require, "comparison_fns.i";
   require, "cs.i";
   require, "cs_geotiff.i";
