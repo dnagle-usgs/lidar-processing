@@ -73,7 +73,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "asciixyz.i";
   require, "batch_process.i";
   require, "class_deque.i";
-  require, "class_mapobj.i";
   require, "colorbar.i";
   require, "compare_transects.i";
   require, "comparison_fns.i";

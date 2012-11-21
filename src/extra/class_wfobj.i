@@ -1,5 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+require, "extra/class_mapobj.i";
+
 // To avoid name collisions breaking help, some functions get temporarily named
 // with an underscore prefix.
 scratch = save(scratch, tmp, wfobj_xyzwrap, wfobj_summary, wfobj_index,
