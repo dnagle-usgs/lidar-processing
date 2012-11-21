@@ -96,7 +96,7 @@ func transect_plot_line(line, win=, recall=) {
 }
 
 func transect_plot_points(line, data, how=, win=, xfma=, msize=, marker=,
-connect=) {
+connect=, scolor=) {
 /* DOCUMENT transect_plot_points, line, data, how=, win=, xfma=, msize=,
    marker=, connect=
 
@@ -119,12 +119,27 @@ connect=) {
     msize= Size to use for plotted points.
     marker= Marker to use for plotted points.
     connect= Set to connect=1 to draw a polyline in addition to the points.
+    scolor= Sets the starting color. The colors used are black, red, blue,
+      green, magenta, yellow, and cyan (in that order). If you set the starting
+      color to blue, then blue will be the first color used, followed by green,
+      magenta, etc. If there are more than 7 colors, then colors will be reused
+      in a cyclic manner.
+        scolor="black"            Start with black (default)
 */
   // Break the data up into segments
   segs = split_data(data, how);
 
   colors = ["black", "red", "blue", "green", "magenta", "yellow", "cyan"];
   ncolors = numberof(colors);
+
+  // If scolor is specified, then shift the color array so that the specified
+  // color is first.
+  if(!is_void(scolor)) {
+    w = where(colors == scolor);
+    if(!numberof(w))
+      error, "Invalid scolor="+pr1(scolor);
+    colors = colors(long(roll(indgen(ncolors), 1-w(1))));
+  }
 
   wbkp = current_window();
   if(!is_void(win)) window, win;
@@ -182,9 +197,9 @@ connect=) {
 }
 
 func transect(data, line=, recall=, segment=, iwin=, owin=, width=, connect=,
-xfma=, mode=, msize=, marker=, plot=, showline=, showpts=) {
+xfma=, mode=, msize=, marker=, scolor=, plot=, showline=, showpts=) {
 /* DOCUMENT transect(data, line=, recall=, segment=, iwin=, owin=, width=,
-   connect=, xfma=, mode=, msize=, marker=, plot=, showline=, showpts=)
+   connect=, xfma=, mode=, msize=, marker=, scolor=, plot=, showline=, showpts=)
 
   Performs a transect operation against some data and plots the result.
 
@@ -229,6 +244,12 @@ xfma=, mode=, msize=, marker=, plot=, showline=, showpts=) {
         msize=0.1   Default
     marker= Marker to use for plotted points.
         marker=1    Default
+    scolor= Sets the starting color. The colors used are black, red, blue,
+      green, magenta, yellow, and cyan (in that order). If you set the starting
+      color to blue, then blue will be the first color used, followed by green,
+      magenta, etc. If there are more than 7 colors, then colors will be reused
+      in a cyclic manner.
+        scolor="black"            Start with black (default)
     plot= Specifies whether or not to plot the transect points.
         plot=0      Don't plot
         plot=1      Plot, default
@@ -294,7 +315,7 @@ xfma=, mode=, msize=, marker=, plot=, showline=, showpts=) {
 
   if(plot)
     transect_plot_points, line, data, how=segment, win=owin, xfma=xfma,
-      msize=msize, marker=marker, connect=connect;
+      msize=msize, marker=marker, scolor=scolor, connect=connect;
 
   // plot the actual points selected onto the input window
   if(showpts) {
