@@ -62,7 +62,7 @@ proc filter_remove {} {
     # for this gui is dependent on the index number of the selection.
     ::mixin::combobox .rem.06.type -textvariable remove_type -width 12 \
             -values [list "GEO or VEG__" "FS"] -state readonly
-    if {[display_type] == 0} {
+    if {$::plot_settings(display_mode) eq "fs"} {
         .rem.06.type setvalue @1
     } else {
         .rem.06.type setvalue @0

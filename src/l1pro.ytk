@@ -205,20 +205,6 @@ proc pro_var_changed {a b c} {
   }
 }
 
-proc display_type {} {
-  lsearch -exact [dict values $::l1pro_data(mode_mapping)] \
-    $::plot_settings(display_mode)
-}
-
-proc display_type_mode {} {
-  return $::plot_settings(display_mode)
-}
-
-proc display_type_by_index {index} {
-  set ::plot_settings(display_mode) \
-    [lindex [dict values $::l1pro_data(mode_mapping)] $index]
-}
-
 proc cbar_trace { a b c } {
   set cmin [scan $::plot_settings(cmin) %f]
   set cmax [scan $::plot_settings(cmax) %f]
