@@ -1,6 +1,35 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
 func split_data(data, how, varname=, timediff=, daythresh=, pulsecount=) {
+/* DOCUMENT segs = split_data(data, how, varname=, timediff=, daythresh=,
+   pulsecount=)
+
+  Splits DATA into segments using the methods specified by HOW. Return result
+  is an oxy group object.
+
+  Parameters:
+    data: An array of ALPS data (in an ALPS structure).
+    how: A string or array of strings containing one or more of "flight",
+      "line", "channel", and "digitizer". This specifies what to use as a basis
+      for splitting up the data.
+  Options:
+    varname= The name of the variable. This will be incorporated into the oxy
+      group object's key names.
+    timediff= Passed through to subsplit_by_flight and subsplit_by_line.
+    daythresh= Passed through to subsplit_by_flight.
+    pulsecount= Passed through to subsplit_by_flight.
+
+  The output oxy group object will use key names that reflect the splitting.
+  For example, if you use a how of "line" and there are 3 separate flight
+  lines, then you will get keys of "line1", "line2", and "line3". If you
+  specified vname="fs_all", then you would get keys of "line1_fs_all",
+  "line2_fs_all", "line3_fs_all".
+
+  Each value in the oxy group object will be an array of ALPS data, which is a
+  portion of the original DATA. Each source point will go into exactly one
+  segment array. The data is not guaranteed to be sorted in any partcular order
+  and may not match the ordering of the source data.
+*/
   segs = save();
   save, segs, string(0), data;
 
