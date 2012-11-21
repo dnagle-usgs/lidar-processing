@@ -6,6 +6,7 @@ package require imglib
 if {![namespace exists ::l1pro::drast]} {
     namespace eval ::l1pro::drast {
         namespace import ::misc::appendif
+        namespace import ::misc::tooltip
         namespace eval v {
             variable top .l1wid.rslider
             variable scale {}
@@ -141,11 +142,11 @@ proc ::l1pro::drast::gui_vcr f {
     grid configure $f.spacer -sticky ns
     grid rowconfigure $f 0 -weight 1
 
-    ::tooltip::tooltip $f.stepfwd "Step forward"
-    ::tooltip::tooltip $f.stepbwd "Step backward"
-    ::tooltip::tooltip $f.playfwd "Play forward"
-    ::tooltip::tooltip $f.playbwd "Play backward"
-    ::tooltip::tooltip $f.stop "Stop playing"
+    tooltip $f.stepfwd "Step forward"
+    tooltip $f.stepbwd "Step backward"
+    tooltip $f.playfwd "Play forward"
+    tooltip $f.playbwd "Play backward"
+    tooltip $f.stop "Stop playing"
 }
 
 proc ::l1pro::drast::gui_tools f {
@@ -160,8 +161,8 @@ proc ::l1pro::drast::gui_tools f {
     grid configure $f.spacer -sticky ns -padx 2
     grid rowconfigure $f 0 -weight 1
 
-    ::tooltip::tooltip $f.rn "Current raster number"
-    ::tooltip::tooltip $f.plot "Display currently selected plots"
+    tooltip $f.rn "Current raster number"
+    tooltip $f.plot "Display currently selected plots"
 
     bind $f.rn <Return> ${ns}::show_auto
 }
@@ -344,56 +345,49 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
     apply $labelgrid $f.autolims - $f.cbar -
     apply $labelgrid $f.rxtx -
 
-    foreach w [list $f.lblunits $f.units] {
-        ::tooltip::tooltip $w \
-            "Specifies the units to use for the y axis.\
-            \n\
-            \nThis setting is ignored for the georefenced rasters, as they\
-            \nalways plot in meters."
-    }
-    foreach w [list $f.lblrcfw $f.rcfw] {
-        ::tooltip::tooltip $w \
-            "Specifies a vertical window to use for the RCF filter when\
-            \ngeoreferencing the rasters. The RCF filter is applied to the\
-            \nelevation of the first sample of the waveform. Waveforms that do\
-            \nnot pass the filter are excluded from the plot.\
-            \n\
-            \nWithout this filtering, some of the waveforms will plot very\
-            \nfar offscale.\
-            \n\
-            \nThis option only applies to georeferenced rasters."
-    }
-    foreach w [list $f.lbleoffset $f.eoffset] {
-        ::tooltip::tooltip $w \
-            "Specifies a vertical (elevation) offset to apply to the y axis.\
-            \nThis simply shifts the plot up or down on the y axis.\
-            \n\
-            \nThis option only applies to georeferenced rasters."
-    }
-    ::tooltip::tooltip $f.autolims \
-            "If enabled, the limits of the plot will be reset each time so\
-            \nthat all plotted data is visible.\
-            \n\
-            \nIf disabled, the current limits of the plot will be maintained.\
-            \nHowever, since successive rasters alternate directions, the\
-            \nx-axis will be modified in a way that preserves the current\
-            \nview.  That is, if you are viewing rasters 100 to 80\
-            \n(descending) in the previous plot, the new limits will get set\
-            \nto 20 to 40."
-    ::tooltip::tooltip $f.cbar \
-            "If enabled, the colorbar will be automatically plotted to the\
-            \nright of the plot."
-    ::tooltip::tooltip $f.rxtx \
-            "If enabled, the transmit raster will be displayed in the same\
-            \nwindow as the return raster. It will be \"stacked\", appearing\
-            \nabove and separate from the return raster in the same plot.\
-            \n\
-            \nThe absolute units for the transmit raster on the Y axis will be\
-            \nwrong since they are offset to place it above the return raster.\
-            \nHowever, the relative units will be correct.\
-            \n\
-            \nThis setting will have no effect when plotting the transmit\
-            \nraster in its own window."
+    tooltip $f.lblunits $f.units \
+            "Specifies the units to use for the y axis.
+
+            This setting is ignored for the georefenced rasters, as they always
+            plot in meters."
+    tooltip $f.lblrcfw $f.rcfw \
+            "Specifies a vertical window to use for the RCF filter when
+            georeferencing the rasters. The RCF filter is applied to the
+            elevation of the first sample of the waveform. Waveforms that do
+            not pass the filter are excluded from the plot.
+
+            Without this filtering, some of the waveforms will plot very far
+            offscale.
+
+            This option only applies to georeferenced rasters."
+    tooltip $f.lbleoffset $f.eoffset \
+            "Specifies a vertical (elevation) offset to apply to the y axis.
+            This simply shifts the plot up or down on the y axis.
+
+            This option only applies to georeferenced rasters."
+    tooltip $f.autolims \
+            "If enabled, the limits of the plot will be reset each time so that
+            all plotted data is visible.
+
+            If disabled, the current limits of the plot will be maintained.
+            However, since successive rasters alternate directions, the x-axis
+            will be modified in a way that preserves the current view.  That
+            is, if you are viewing rasters 100 to 80 (descending) in the
+            previous plot, the new limits will get set to 20 to 40."
+    tooltip $f.cbar \
+            "If enabled, the colorbar will be automatically plotted to the
+            right of the plot."
+    tooltip $f.rxtx \
+            "If enabled, the transmit raster will be displayed in the same
+            window as the return raster. It will be \"stacked\", appearing
+            above and separate from the return raster in the same plot.
+
+            The absolute units for the transmit raster on the Y axis will be
+            wrong since they are offset to place it above the return raster.
+            However, the relative units will be correct.
+
+            This setting will have no effect when plotting the transmit raster
+            in its own window."
 }
 
 proc ::l1pro::drast::gui_opts_wf {f labelgrid} {

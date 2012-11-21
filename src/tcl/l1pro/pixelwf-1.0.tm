@@ -226,6 +226,8 @@ namespace eval ::l1pro::pixelwf::util {
 }
 
 namespace eval ::l1pro::pixelwf::gui {
+    namespace import ::misc::tooltip
+
     proc yorcmd {args} {
         if {$::l1pro::pixelwf::vars::selection::background} {
             ybkg {*}$args
@@ -377,7 +379,7 @@ namespace eval ::l1pro::pixelwf::gui {
 
         ttk::label $f.lblRadius -text Radius:
         helper_spinbox $f.spnRadius ${ns}::radius
-        ::tooltip::tooltip $f.spnRadius "Search radius in meters"
+        tooltip $f.spnRadius "Search radius in meters"
 
         ttk::label $f.lblVar -text Variable:
         ::mixin::combobox $f.cboVar -textvariable ::pro_var -state readonly \
@@ -391,32 +393,32 @@ namespace eval ::l1pro::pixelwf::gui {
         ttk::checkbutton $f.chkBg -text "Send commands in background" \
                 -variable ${ns}::background
 
-        ::tooltip::tooltip $f.chkLoad \
-                "When this is enabled, the mission day will automatically be\
-                \ndetermined from the point's SOE value and the appropriate\
-                \nmission day will be loaded prior to displaying plots. If\
-                \nyour data contains multiple mission days, this should\
-                \nprobably be enabled.\
-                \n\
-                \nWhen this is disabled, the mission data is used as currently\
-                \nexists in memory. This is useful for fine-tuning ops_conf\
-                \nand bathy configuration settings, but should only be used if\
-                \nyou are only working with a single mission day."
-        ::tooltip::tooltip $f.chkBg \
-                "When this is enabled, commands will be sent to Yorick in the\
-                \nbackground. This prevents the Pixel Analysis GUI from\
-                \nspamming your Yorick console. Unfortunately, if errors are\
-                \nencountered, it prevents you from seeing them.\
-                \n\
-                \nWhen this is disabled, commands will be sent to Yorick via\
-                \nthe command line. This will allow you to see errors if they\
-                \noccur. However, all of the configuration for Pixel Analysis\
-                \nwill still be performed in the background, so the commands\
-                \nyou see on the command line won't be that useful to call on\
-                \ntheir own outside of the GUI."
+        tooltip $f.chkLoad \
+                "When this is enabled, the mission day will automatically be
+                determined from the point's SOE value and the appropriate
+                mission day will be loaded prior to displaying plots. If your
+                data contains multiple mission days, this should probably be
+                enabled.
+
+                When this is disabled, the mission data is used as currently
+                exists in memory. This is useful for fine-tuning ops_conf and
+                bathy configuration settings, but should only be used if you
+                are only working with a single mission day."
+        tooltip $f.chkBg \
+                "When this is enabled, commands will be sent to Yorick in the
+                background. This prevents the Pixel Analysis GUI from spamming
+                your Yorick console. Unfortunately, if errors are encountered,
+                it prevents you from seeing them.
+
+                When this is disabled, commands will be sent to Yorick via the
+                command line. This will allow you to see errors if they occur.
+                However, all of the configuration for Pixel Analysis will still
+                be performed in the background, so the commands you see on the
+                command line won't be that useful to call on their own outside
+                of the GUI."
 
         ttk::button $f.btnGraph -text "Plot All" \
-            -command [list [namespace current]::yorcmd pixelwf_plot]
+                -command [list [namespace current]::yorcmd pixelwf_plot]
 
         ttk::button $f.btnMouse -text "Examine Pixels" \
                 -command [list exp_send "pixelwf_enter_interactive;\r"]

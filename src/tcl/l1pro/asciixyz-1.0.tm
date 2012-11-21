@@ -288,17 +288,17 @@ snit::widget ::l1pro::asciixyz::gui {
         grid columnconfigure $w {1 3} -weight 1
         grid rowconfigure $w {0 1 2 3} -uniform 1
 
-        ::tooltip::tooltip $w.vprefix \
-                "This field provides a prefix that will be prepended to each\
-                \nfile's variable name."
-        ::tooltip::tooltip $w.vmid \
-                "Each file will receive a variable name derived from the\
-                \nfile's name. If possible, that name will be a clean form of\
-                \nthe tile name encoded in the filename. Otherwise, the\
-                \nfilename without its extension is used."
-        ::tooltip::tooltip $w.vsuffix \
-                "This field provides a suffix that will be appended to each\
-                \nfile's variable name."
+        ::misc::tooltip $w.vprefix \
+                "This field provides a prefix that will be prepended to each
+                file's variable name."
+        ::misc::tooltip $w.vmid \
+                "Each file will receive a variable name derived from the file's
+                name. If possible, that name will be a clean form of the tile
+                name encoded in the filename. Otherwise, the filename without
+                its extension is used."
+        ::misc::tooltip $w.vsuffix \
+                "This field provides a suffix that will be appended to each
+                file's variable name."
 
         return $w
     }

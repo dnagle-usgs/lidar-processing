@@ -476,15 +476,15 @@ snit::widget ::l1pro::file::gui::load_las {
         ttk::checkbutton $win.chkRgbrn -text "Decode record number from RGB" \
                 -variable [myvar rgbrn]
 
-        ::tooltip::tooltip $win.chkFakemirror \
-                "If enabled, mirror coordinates will be faked; coordinates\
-                \nwill match point coordinates, plus 100m elevation.\
-                \nOtherwise, mirror coordinates are all 0."
-        ::tooltip::tooltip $win.chkRgbrn \
-                "If enabled, RGB values will be interpreted as record numbers\
-                \nthat were exported by ALPS. Otherwise, record number will be\
-                \nleft as 0. If there are no RGB values, then this setting is\
-                \nignored."
+        ::misc::tooltip $win.chkFakemirror \
+                "If enabled, mirror coordinates will be faked; coordinates will
+                match point coordinates, plus 100m elevation.  Otherwise,
+                mirror coordinates are all 0."
+        ::misc::tooltip $win.chkRgbrn \
+                "If enabled, RGB values will be interpreted as record numbers
+                that were exported by ALPS. Otherwise, record number will be
+                left as 0. If there are no RGB values, then this setting is
+                ignored."
 
         ttk::button $win.btnLoad -text "Load" -command [mymethod load]
         ttk::button $win.btnCancel -text "Cancel" -command [mymethod cancel]

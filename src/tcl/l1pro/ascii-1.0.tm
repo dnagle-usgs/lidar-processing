@@ -8,9 +8,11 @@ package require snit
 package require huddle
 package require struct::matrix
 package require json
+package require misc
 
 namespace eval l1pro::ascii {
     namespace import ::l1pro::asciixyz::sample
+    namespace import ::misc::tooltip
     namespace eval v {
         variable top .l1wid.ascii
     }
@@ -100,30 +102,26 @@ snit::widget ::l1pro::ascii::gui {
                 } \
                 -modifycmd [mymethod reload_preview_data]
 
-        foreach widget [list $w.detectlbl $w.detectcbo] {
-            ::tooltip::tooltip $widget \
-                    "This setting controls how columns are detected.\
-                    \n\
-                    \n\"Delimiter (collapse contiguous)\": This option expects\
-                    \nthat columns are delimited by a particular character or\
-                    \nset of characters and that any number of such characters\
-                    \nwill occur between columns. A typical example is a\
-                    \nwhitespace delimited file where columns are lined up\
-                    \nusing extra spaces.\
-                    \n\
-                    \n\"Delimiter (split contiguous)\": This option also\
-                    \nexpects that columns are delimited by a particular\
-                    \ncharacter. However, each instance of the character\
-                    \ndelimits a column. If there are several characters in a\
-                    \nrow, they denote empty columns. A typical example is a\
-                    \ncomma-delimited file.\
-                    \n\
-                    \n\"Fixed width\": This option expects that each column\
-                    \nhas a fixed width. In many cases, you can use the first\
-                    \noption to handle such data. However, if some of the\
-                    \ncolumns contain the character that would be otherwise\
-                    \nused for delimiting, you can use this option instead."
-        }
+        tooltip $w.detectlbl $w.detectcbo \
+                "This setting controls how columns are detected.
+
+                \"Delimiter (collapse contiguous)\": This option expects that
+                columns are delimited by a particular character or set of
+                characters and that any number of such characters will occur
+                between columns. A typical example is a whitespace delimited
+                file where columns are lined up using extra spaces.
+
+                \"Delimiter (split contiguous)\": This option also expects that
+                columns are delimited by a particular character. However, each
+                instance of the character delimits a column. If there are
+                several characters in a row, they denote empty columns. A
+                typical example is a comma-delimited file.
+
+                \"Fixed width\": This option expects that each column has a
+                fixed width. In many cases, you can use the first option to
+                handle such data. However, if some of the columns contain the
+                character that would be otherwise used for delimiting, you can
+                use this option instead."
 
         lower [ttk::frame $w.detect]
         grid $w.detectlbl $w.detectcbo \
@@ -152,17 +150,16 @@ snit::widget ::l1pro::ascii::gui {
             ::mixin::statevar $w.delim$item \
                     -statemap {delim normal marker normal width disabled} \
                     -statevariable [myvar options](-column_detect)
-            ::tooltip::tooltip $w.delim$item \
-                    "Specify the delimiter to use. These options are only\
-                    \nenabled if \"Detect columns using:\" is set to one of\
-                    \nthe two \"Delimiter\" options.\
-                    \n\
-                    \nThe first three radio buttons provide commonly-used\
-                    \ndelimiter values for easy-click use: space, comma, and\
-                    \ntab.\
-                    \n\
-                    \nThe final radio button allows you to specify a custom\
-                    \ndelimiter or delimiters."
+            tooltip $w.delim$item \
+                    "Specify the delimiter to use. These options are only
+                    enabled if \"Detect columns using:\" is set to one of the
+                    two \"Delimiter\" options.
+
+                    The first three radio buttons provide commonly-used
+                    delimiter values for easy-click use: space, comma, and tab.
+
+                    The final radio button allows you to specify a custom
+                    delimiter or delimiters."
         }
 
         lower [ttk::frame $w.delim]
@@ -184,27 +181,24 @@ snit::widget ::l1pro::ascii::gui {
                     numeric     4
                 } \
                 -modifycmd [mymethod reload_preview_data]
-        foreach widget [list $w.type $w.typelbl] {
-            ::tooltip::tooltip $widget \
-                    "Specify how to interpret column values.\
-                    \n\
-                    \n\"auto\": Automatically determine whether a column\
-                    \ncontains string values, integer values, or real values.\
-                    \nAny presence of something non-numerical will result in a\
-                    \nstring column.  Any presence of a floating-point value\
-                    \nin a non-string column will result in a real column.\
-                    \nOtherwise, it will be an integer value. Depending on\
-                    \nwhat you have selected for \"Result:\", each column may\
-                    \nend up with a different type.\
-                    \n\
-                    \n\"string\", \"integer\", \"real\": Coerces all values to\
-                    \nthe type specified. If a field cannot be coerced, then\
-                    \nit is given the \"Missing field value:\".\
-                    \n\
-                    \n\"numeric\": Coerces all values into either integers or\
-                    \nreals. Depending on the \"Result:\" setting, some\
-                    \ncolumns may end up with different types."
-        }
+        tooltip $w.type $w.typelbl \
+                "Specify how to interpret column values.
+
+                \"auto\": Automatically determine whether a column contains
+                string values, integer values, or real values.  Any presence of
+                something non-numerical will result in a string column.  Any
+                presence of a floating-point value in a non-string column will
+                result in a real column.  Otherwise, it will be an integer
+                value. Depending on what you have selected for \"Result:\",
+                each column may end up with a different type.
+
+                \"string\", \"integer\", \"real\": Coerces all values to the
+                type specified. If a field cannot be coerced, then it is given
+                the \"Missing field value:\".
+
+                \"numeric\": Coerces all values into either integers or reals.
+                Depending on the \"Result:\" setting, some columns may end up
+                with different types."
 
         ttk::label $w.resultlbl -text "Result:"
         ::mixin::combobox $w.result \
@@ -213,26 +207,23 @@ snit::widget ::l1pro::ascii::gui {
                 -textvariable [myvar options](-group) \
                 -values [list array pointers group] \
                 -modifycmd [mymethod reload_preview_data]
-        foreach widget [list $w.resultlbl $w.result] {
-            ::tooltip::tooltip $widget \
-                    "Specify what kind of result should be yielded.\
-                    \n\
-                    \n\"array\": Yield a two-dimensional array. Since an array\
-                    \ncan only be of a single type, this interacts with the\
-                    \n\"Value type:\" setting as follows. If any column\
-                    \ncontains strings, then all columns are interepreted as\
-                    \nstrings; otherwise if any column contains reals, then\
-                    \nall columns are interpreted as reals; otherwise all\
-                    \ncolumns are interpreted as integers.\
-                    \n\
-                    \n\"pointers\": Yield an array of pointers. Each pointer\
-                    \nwill point to an array for a column. Columns may have\
-                    \ndifferent types.\
-                    \n\
-                    \n\"group\": Yield an oxy group object. Each column will\
-                    \nbe stored anonymously in the group. Columns may have\
-                    \ndifferent types."
-        }
+        tooltip $w.resultlbl $w.result \
+                "Specify what kind of result should be yielded.
+
+                \"array\": Yield a two-dimensional array. Since an array can
+                only be of a single type, this interacts with the \"Value
+                type:\" setting as follows. If any column contains strings,
+                then all columns are interepreted as strings; otherwise if any
+                column contains reals, then all columns are interpreted as
+                reals; otherwise all columns are interpreted as integers.
+
+                \"pointers\": Yield an array of pointers. Each pointer will
+                point to an array for a column. Columns may have different
+                types.
+
+                \"group\": Yield an oxy group object. Each column will be
+                stored anonymously in the group. Columns may have different
+                types."
 
         ttk::label $w.columnlbl -text "Columns:"
         ttk::spinbox $w.column \
@@ -240,12 +231,9 @@ snit::widget ::l1pro::ascii::gui {
                 -width 4 \
                 -from 0 -to 1000 -increment 1 \
                 -command [mymethod reload_preview_data]
-        foreach widget [list $w.columnlbl $w.column] {
-            ::tooltip::tooltip $widget \
-                    "Specify how many columns exist in the file. If you leave\
-                    \nthis set to 0, the column count will be automatically\
-                    \ndetermined."
-        }
+        tooltip $w.columnlbl $w.column \
+                "Specify how many columns exist in the file. If you leave this
+                set to 0, the column count will be automatically determined."
 
         ttk::label $w.headerlbl -text "Header lines:"
         ttk::spinbox $w.header \
@@ -253,12 +241,10 @@ snit::widget ::l1pro::ascii::gui {
                 -width 4 \
                 -from 0 -to 1000 -increment 1 \
                 -command [mymethod reload_preview_data]
-        foreach widget [list $w.headerlbl $w.header] {
-            ::tooltip::tooltip $widget \
-                    "Specify how many lines at the top of the file are\
-                    \n\"header lines\". This many lines will be skipped before\
-                    \nstarting to read column data."
-        }
+        tooltip $w.headerlbl $w.header \
+                "Specify how many lines at the top of the file are \"header
+                lines\". This many lines will be skipped before starting to
+                read column data."
 
         ttk::label $w.widthlbl -text "Column width(s):"
         ttk::entry $w.width -width 0 \
@@ -269,38 +255,33 @@ snit::widget ::l1pro::ascii::gui {
             ::mixin::statevar $widget \
                     -statemap {delim disabled marker disabled width normal} \
                     -statevariable [myvar options](-column_detect)
-            ::tooltip::tooltip $widget \
-                    "Specify the width or widths of the columns. This option\
-                    \nis only available when \"Detect columns using:\" is set\
-                    \nto \"Fixed width\". You may provide a single integer\
-                    \nvalue if all columns are of the same width. If columns\
-                    \nhave different widths, you can provide a list of integer\
-                    \nvalues separated by commas."
         }
+        tooltip $w.widthlbl $w.width \
+                "Specify the width or widths of the columns. This option is
+                only available when \"Detect columns using:\" is set to \"Fixed
+                width\". You may provide a single integer value if all columns
+                are of the same width. If columns have different widths, you
+                can provide a list of integer values separated by commas."
 
         ttk::label $w.commentlbl -text "Comment characters:"
         ttk::entry $w.comment -width 0 \
                 -textvariable [myvar options](-comment) \
                 -validate focusout \
                 -validatecommand [mymethod reload_preview_data]
-        foreach widget [list $w.commentlbl $w.comment] {
-            ::tooltip::tooltip $widget \
-                    "Specify the comment character. Any line whose first\
-                    \nnon-blank character starts with this will be disregarded\
-                    \nas a column. (Note that a completely blank line is\
-                    \nalways disregarded as well.)"
-        }
+        tooltip $w.commentlbl $w.comment \
+                "Specify the comment character. Any line whose first non-blank
+                character starts with this will be disregarded as a column.
+                (Note that a completely blank line is always disregarded as
+                well.)"
 
         ttk::label $w.missinglbl -text "Missing field value:"
         ttk::entry $w.missing -width 0 \
                 -textvariable [myvar options](-missing) \
                 -validate focusout \
                 -validatecommand [mymethod reload_preview_data]
-        foreach widget [list $w.missinglbl $w.missing] {
-            ::tooltip::tooltip $widget \
-                    "Specifies the value to use for fields that are missing a\
-                    \nvalue."
-        }
+        tooltip $w.missinglbl $w.missing \
+                "Specifies the value to use for fields that are missing a
+                value."
 
         ttk::checkbutton $w.selcol -text "Select columns:" \
                 -variable [myvar options](-select_cols) \
@@ -309,14 +290,11 @@ snit::widget ::l1pro::ascii::gui {
                 -textvariable [myvar options](-selected_cols) \
                 -validate focusout \
                 -validatecommand [mymethod reload_preview_data]
-        foreach widget [list $w.selcol $w.selcolval] {
-            ::tooltip::tooltip $widget \
-                    "If enabled, then only the selected columns of the source\
-                    \ndata will be yielded in the result. This should be\
-                    \nprovided as a list of integer values separated by\
-                    \ncommas.  1 corresponds to the first column, 2 to the\
-                    \nsecond, and so forth."
-        }
+        tooltip $w.selcol $w.selcolval \
+                "If enabled, then only the selected columns of the source data
+                will be yielded in the result. This should be provided as a
+                list of integer values separated by commas.  1 corresponds to
+                the first column, 2 to the second, and so forth."
 
         ::mixin::statevar $w.selcolval \
                 -statemap {0 disabled 1 normal} \
@@ -327,22 +305,20 @@ snit::widget ::l1pro::ascii::gui {
                 -textvariable [myvar options](-vname) \
                 -validate focusout \
                 -validatecommand [mymethod reload_preview_data]
-        foreach widget [list $w.vnamelbl $w.vname] {
-            ::tooltip::tooltip $widget \
-                    "Specifies the variable to store the data in once loaded.\
-                    \nThis variable will also be added to the processing gui's\
-                    \nvariable list."
-        }
+        tooltip $w.vnamelbl $w.vname \
+                "Specifies the variable to store the data in once loaded. This
+                variable will also be added to the processing gui's variable
+                list."
 
         ttk::button $w.load -text "Load" \
                 -command [mymethod load]
-        ::tooltip::tooltip $w.load \
-                "Load the data using the current settings. This GUI will be\
-                \nclosed afterwards."
+        tooltip $w.load \
+                "Load the data using the current settings. This GUI will be
+                closed afterwards."
 
         ttk::button $w.dismiss -text "Dismiss" \
                 -command [list destroy $win]
-        ::tooltip::tooltip $w.dismiss \
+        tooltip $w.dismiss \
                 "Close the GUI without loading data."
 
         lower [ttk::frame $w.buttons]
@@ -372,22 +348,17 @@ snit::widget ::l1pro::ascii::gui {
 
         ttk::label $w.previewlbl -text "Preview of import:"
         preview $w.preview
-        foreach widget [list $w.previewlbl $w.preview] {
-            ::tooltip::tooltip $widget \
-                    "A preview of the data import will be displayed here as\
-                    \nsettings are tuned above. If nothing is shown here, then\
-                    \nthe settings above are incomplete or invalid."
-        }
+        tooltip $w.previewlbl $w.preview \
+                "A preview of the data import will be displayed here as
+                settings are tuned above. If nothing is shown here, then the
+                settings above are incomplete or invalid."
 
         ttk::label $w.samplelbl -text "Sample from file:"
         sample $w.sample
-        foreach widget [list $w.samplelbl $w.sample] {
-            ::tooltip::tooltip $widget \
-                    "A sample of the data from the file, as it appears in the\
-                    \nfile. If this is empty, then there was a problem\
-                    \naccessing the file you selected (or you haven't selected\
-                    \na file yet)."
-        }
+        tooltip $w.samplelbl $w.sample \
+                "A sample of the data from the file, as it appears in the file.
+                If this is empty, then there was a problem accessing the file
+                you selected (or you haven't selected a file yet)."
 
         grid $w.src -sticky ew -pady 2
         grid $w.detect -sticky ew -pady 2

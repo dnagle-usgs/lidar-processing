@@ -3,12 +3,15 @@
 # Implements the main GUI
 package provide l1pro::main 1.0
 package require l1pro::main::menu
+package require misc
 
 set ::status(progress) 0
 set ::status(time) ""
 set ::status(message) "Ready."
 
-namespace eval ::l1pro::main {}
+namespace eval ::l1pro::main {
+    namespace import ::misc::tooltip
+}
 
 proc ::l1pro::main::gui {} {
     set w .l1wid
@@ -84,19 +87,19 @@ proc ::l1pro::main::panel_cbar w {
     trace add variable ::cbar_locked write [list apply [list {v1 v2 op} $body]]
     set ::cbar_locked $::cbar_locked
 
-    ::tooltip::tooltip $f.constant \
-            "Toggle whether colorbars should be constant for all variables.\
-            \n  unlocked: each variable has its own colorbar\
-            \n  locked: colorbar shared by all variables"
-    ::tooltip::tooltip $f.maxlock \
-            "When locked, CMax will be automatically updated based on CDelta\
-            \nand CMin."
-    ::tooltip::tooltip $f.dltlock \
-            "When locked, CDelta will be automatically updated based on CMax\
-            \nand CMin."
-    ::tooltip::tooltip $f.minlock \
-            "When locked, CMin will be automatically updated based on CMax and\
-            \nCDelta."
+    tooltip $f.constant -wrap single \
+            "Toggle whether colorbars should be constant for all variables.
+            - unlocked: each variable has its own colorbar
+            - locked: colorbar shared by all variables"
+    tooltip $f.maxlock \
+            "When locked, CMax will be automatically updated based on CDelta
+            and CMin."
+    tooltip $f.dltlock \
+            "When locked, CDelta will be automatically updated based on CMax
+            and CMin."
+    tooltip $f.minlock \
+            "When locked, CMin will be automatically updated based on CMax and
+            CDelta."
 
     return $w
 }
@@ -173,19 +176,19 @@ proc ::l1pro::main::panel_plot w {
     unset cmd
     set ::pro_var $::pro_var
 
-    ::tooltip::tooltip $f.varbtn \
-            "Select the variable to plot in the box to the right. Or click\
-            \nthis button to bring up the variable manager."
+    tooltip $f.varbtn \
+            "Select the variable to plot in the box to the right. Or click this
+            button to bring up the variable manager."
 
-    ::tooltip::tooltip $f.winlock \
+    tooltip $f.winlock \
             "Toggles whether the window should be kept constant across\
-            \nvariables.\
-            \n  locked: all variables will use the same window\
-            \n  unlocked: each variable tracks its window separately"
+            \nvariables.
+            - locked: all variables will use the same window
+            - unlocked: each variable tracks its window separately"
 
-    ::tooltip::tooltip $f.lims \
-            "Reset the viewing area for the plot so that all data can be seen\
-            \nin the plot, optimally."
+    tooltip $f.lims \
+            "Reset the viewing area for the plot so that all data can be seen
+            in the plot, optimally."
 
     return $w
 }
@@ -295,18 +298,18 @@ proc ::l1pro::main::panel_tools w {
             -style Panel.TButton \
             -command {exp_send "show_grid_location, $::win_no\r"}
 
-    ::tooltip::tooltip $f.gridtype \
+    tooltip $f.gridtype \
             "Select the tiling system to use\ for \"Plot\" and \"Name\" below."
-    ::tooltip::tooltip $f.gridplot \
-            "Plots a grid showing tile boundaries for the currently selected\
-            \ntiling system."
-    ::tooltip::tooltip $f.gridname \
-            "After clicking this button, you will be prompted to click on the\
-            \ncurrent plotting window. You will then be told which tile\
-            \ncorresponds to the location you clicked."
-    ::tooltip::tooltip $f.griddata \
-            "NOTE: This tool requires that you have C-ALPS installed. If you\
-            \ndo not, it will not work!"
+    tooltip $f.gridplot \
+            "Plots a grid showing tile boundaries for the currently selected
+            tiling system."
+    tooltip $f.gridname \
+            "After clicking this button, you will be prompted to click on the
+            current plotting window. You will then be told which tile
+            corresponds to the location you clicked."
+    tooltip $f.griddata \
+            "NOTE: This tool requires that you have C-ALPS installed. If you do
+            not, it will not work!"
 
     grid $f.autocbar $f.pixelwf $f.histelv $f.datum $f.elvclip $f.rcf \
             $f.griddata $f.gridtype - -sticky news -padx 1 -pady 1
@@ -335,11 +338,11 @@ proc ::l1pro::main::panel_filter w {
                     default {error "Please Define Region."}
                 }
             }
-    ::tooltip::tooltip $w.copy \
-            "Copy points to 'workdata' using any of the following methods:\
-            \n  Rubberband Box\
-            \n  Points in Polygon\
-            \n  Single Pixel"
+    tooltip $w.copy \
+            "Copy points to 'workdata' using any of the following methods:
+            - Rubberband Box
+            - Points in Polygon
+            - Single Pixel"
 
     ::mixin::combobox $w.tools -text "Filter tools..." -width 16 \
             -values [list Keep Remove Replace] \
@@ -352,29 +355,26 @@ proc ::l1pro::main::panel_filter w {
                     default {error "Please Define Region."}
                 }
             }
-    ::tooltip::tooltip $w.tools "Choose any of the following tools:"
+    tooltip $w.tools "Choose any of the following tools:"
 
     ttk::label $w.memlbl -text "Memory Usage:"
     ttk::label $w.mem -textvariable ::l1pro::memory::current
-    foreach widget [list $w.memlbl $w.mem] {
-        ::tooltip::tooltip $widget \
-            "This displays the total memory currently in use by this\
-            \nALPS session, including Yorick, Tcl/Tk, and any other\
-            \ninvoked subprocesses. It is auto-refreshed as configured\
-            \nunder Utilities -> Memory usage indicator.\
-            \n\
-            \nThe first value is the total amount of memory in use, in\
-            \nKilobytes, Megabytes, or Gigabytes. The second value, in\
-            \nparentheses, is how much of the system's memory you are\
-            \nusing. So a value of 50% means you are using 50% of the\
-            \ntotal memory available on the machine.\
-            \n\
-            \nIf this says \"Unknown\", then the indicator is not set to\
-            \nauto-refresh.\
-            \n\
-            \nIf this says \"(Error)\", then your system is not presently\
-            \ncompatible with the memory monitoring code."
-    }
+    tooltip $w.memlbl $w.mem \
+            "This displays the total memory currently in use by this ALPS
+            session, including Yorick, Tcl/Tk, and any other invoked
+            subprocesses. It is auto-refreshed as configured under Utilities ->
+            Memory usage indicator.
+
+            The first value is the total amount of memory in use, in Kilobytes,
+            Megabytes, or Gigabytes. The second value, in parentheses, is how
+            much of the system's memory you are using. So a value of 50% means
+            you are using 50% of the total memory available on the machine.
+
+            If this says \"Unknown\", then the indicator is not set to
+            auto-refresh.
+
+            If this says \"(Error)\", then your system is not presently
+            compatible with the memory monitoring code."
 
     grid $w.filter $w.copy $w.tools x $w.memlbl $w.mem
     grid columnconfigure $w 3 -weight 1

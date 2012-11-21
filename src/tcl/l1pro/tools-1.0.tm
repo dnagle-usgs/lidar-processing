@@ -1,9 +1,11 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
 package provide l1pro::tools 1.0
+package require misc
 
 namespace eval ::l1pro::tools {
     namespace import ::misc::appendif
+    namespace import ::misc::tooltip
 }
 
 if {![namespace exists ::l1pro::tools::rcf]} {
@@ -118,6 +120,7 @@ proc ::l1pro::tools::rcf::filter {} {
 if {![namespace exists ::l1pro::tools::histelev]} {
     namespace eval ::l1pro::tools::histelev {
         namespace import ::misc::appendif
+        namespace import ::misc::tooltip
         namespace eval v {
             variable top .l1wid.histelev
             variable cbartop .l1wid.cbartool
@@ -304,16 +307,14 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
     ::misc::bind::label_to_checkbutton $f.lbllogy $f.logy
     ::misc::bind::label_to_checkbutton $f.lblautobin $f.autobin
 
-    foreach widget [list $f.autobin $f.lblautobin] {
-        ::tooltip::tooltip $widget \
-                "The automatic bin size is determined as thus:\
-                \n \u2022 Attempt to use a binsize that gives 50 bins.\
-                \n \u2022 If that binsize is < 0.25, then try to increase\
-                \n        binsize using 25 bins.\
-                \n \u2022 If that binsize is < 0.17, then try to increase\
-                \n        binsize using 20 bins.\
-                \n \u2022 If that binsize is < 0.10, then set binsize to 0.10."
-    }
+    tooltip $f.autobin $f.lblautobin -wrap none \
+            "The automatic bin size is determined as thus:\
+            \n \u2022 Attempt to use a binsize that gives 50 bins.\
+            \n \u2022 If that binsize is < 0.25, then try to increase\
+            \n        binsize using 25 bins.\
+            \n \u2022 If that binsize is < 0.17, then try to increase\
+            \n        binsize using 20 bins.\
+            \n \u2022 If that binsize is < 0.10, then set binsize to 0.10."
 
     return $f
 }
@@ -453,15 +454,13 @@ proc ::l1pro::tools::histelev::gui_kde {w labelsVar} {
     lappend labels $f.lblkernel $f.lblbandwidth $f.lblsample $f.lblcolor \
             $f.lblwidth $f.lbltype
 
-    foreach widget [list $f.lblautoband $f.autoband] {
-        ::tooltip::tooltip $widget \
+    tooltip $f.lblautoband $f.autoband -wrap none \
             "If enabled, then the bandwidth is set to try to give the\
             \nresulting graph a similar scale as the histogram line graph.\
             \nSpecifically:\
             \n \u2022 if kernel is gaussian, bandwith is set to half the\
             \n        binsize;
             \n \u2022 otherwise, bandwidth is set to the binsize."
-    }
 
     return $w
 }
@@ -667,6 +666,7 @@ proc ::l1pro::tools::colorbar {} {
 if {![namespace exists ::l1pro::tools::griddata]} {
     namespace eval ::l1pro::tools::griddata {
         namespace import ::misc::appendif
+        namespace import ::misc::tooltip
         namespace eval v {
             variable top .l1wid.griddata
             variable invar {}
@@ -762,12 +762,12 @@ proc ::l1pro::tools::griddata::gui {} {
 
     grid columnconfigure $w.f 2 -weight 1
 
-    ::tooltip::tooltip $f.tile \
-            "Enter the name of the tile here, either as a 2k, 10k, or qq tile,\
-            \nand the data will be restricted to the tile's boundaries. If you\
-            \ndo not known the tile's name, or do not wish to restrict by the\
-            \ntile's boundaries, then disable this. If it is not a valid tile\
-            \nname, an error will be generated."
+    tooltip $f.tile \
+            "Enter the name of the tile here, either as a 2k, 10k, or qq tile,
+            and the data will be restricted to the tile's boundaries. If you do
+            not known the tile's name, or do not wish to restrict by the tile's
+            boundaries, then disable this. If it is not a valid tile name, an
+            error will be generated."
 }
 
 proc ::l1pro::tools::griddata::griddata {} {
@@ -926,6 +926,7 @@ proc ::l1pro::tools::sortdata {method desc} {
 if {![namespace exists ::l1pro::tools::copy_limits]} {
     namespace eval ::l1pro::tools::copy_limits {
         namespace import ::misc::appendif
+        namespace import ::misc::tooltip
         namespace eval v {
             variable top .l1wid.copylimits
             variable src 5
@@ -969,17 +970,17 @@ proc ::l1pro::tools::copy_limits::gui {} {
 
     grid configure $f.srclbl -sticky e
 
-    ::tooltip::tooltip $f.btndst \
-            "Copies the limits from the first window (specified at the right\
-            \nof \"Copy from:\") to the second window (specified at the right\
-            \nof \"Apply to:\")."
-    ::tooltip::tooltip $f.btnall \
-            "Copies the limits from the first window (specified at the right\
-            \nof \"Copy from:\") to all open windows."
-    ::tooltip::tooltip $f.viz \
-            "Sets \"Copy from:\" to the current window in the Visualization\
-            \nsection of the Process EAARL Data GUI."
-    ::tooltip::tooltip $f.swap \
+    tooltip $f.btndst \
+            "Copies the limits from the first window (specified at the right of
+            \"Copy from:\") to the second window (specified at the right of
+            \"Apply to:\")."
+    tooltip $f.btnall \
+            "Copies the limits from the first window (specified at the right of
+            \"Copy from:\") to all open windows."
+    tooltip $f.viz \
+            "Sets \"Copy from:\" to the current window in the Visualization
+            section of the Process EAARL Data GUI."
+    tooltip $f.swap \
             "Swaps the \"Copy from:\" and \"Apply to:\" window settings."
 }
 

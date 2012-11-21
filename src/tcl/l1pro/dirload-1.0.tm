@@ -96,11 +96,11 @@ proc ::l1pro::dirload::gui {} {
             -command [list ${ns}::load_data finish]
     ttk::button $f.btnClose -text "Cancel" -command [list wm withdraw $v::top]
 
-    ::tooltip::tooltip $f.btnLoadCont \
-            "Loads the data, then leaves this GUI open. Useful if you're using\
-            \nsubsample to preview data before loading it again at a higher\
-            \ndensity for a specific subregion, for example."
-    ::tooltip::tooltip $f.btnLoadDism \
+    ::misc::tooltip $f.btnLoadCont \
+            "Loads the data, then leaves this GUI open. Useful if you're using
+            subsample to preview data before loading it again at a higher
+            density for a specific subregion, for example."
+    ::misc::tooltip $f.btnLoadDism \
             "Loads the data, then closes this GUI."
 
     grid $f.cboZone $f.lblSkip $f.spnSkip $f.lblUnique $f.chkUnique \

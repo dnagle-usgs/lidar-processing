@@ -30,6 +30,7 @@ proc ::l1pro::groundtruth {} {
 
 namespace eval ::l1pro::groundtruth {
     namespace export comparison_* widget_* popup_* gen_array_list
+    namespace import ::misc::tooltip
 }
 
 proc ::l1pro::groundtruth::gui {} {
@@ -145,19 +146,19 @@ proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns var} {
 
     bind $cbo <Return> "${ns}::comparison_add \[set $var\]"
 
-    ::tooltip::tooltip $cbo \
-            "Select an existing variable from the drop-down list. Variables\
-            \nare added to this list when you load data using the \"Load\"\
-            \nbutton (to the right) or when you extract comparisons using the\
-            \n\"Extract Comparisons\" button on the \"Extract\" tab.\
-            \n\
-            \nIf you have created a variable manually on the Yorick command\
-            \nline, you can type the variable name and hit <Enter> or <Return>\
-            \nto add it to the list.\
-            \n\
-            \nThis setting is shared across all panes, so changing the\
-            \ncomparison variable here will update all other panes."
-    ::tooltip::tooltip $btns.load \
+    tooltip $cbo \
+            "Select an existing variable from the drop-down list. Variables are
+            added to this list when you load data using the \"Load\" button (to
+            the right) or when you extract comparisons using the \"Extract
+            Comparisons\" button on the \"Extract\" tab.
+
+            If you have created a variable manually on the Yorick command line,
+            you can type the variable name and hit <Enter> or <Return> to add
+            it to the list.
+
+            This setting is shared across all panes, so changing the comparison
+            variable here will update all other panes."
+    tooltip $btns.load \
             "Load a comparison variable from a PBD file."
 }
 
@@ -169,21 +170,21 @@ proc ::l1pro::groundtruth::widget_comparison_state {v w name1 name2 op} {
     }
     if {[llength [set $v]]} {
         $w.save state !disabled
-        ::tooltip::tooltip $w.save \
-                "Save the currently selected comparison variable to a PBD\
-                \nfile."
+        tooltip $w.save \
+                "Save the currently selected comparison variable to a PBD
+                file."
         $w.del state !disabled
-        ::tooltip::tooltip $w.del \
+        tooltip $w.del \
                 "Delete the currently selected comparison variable."
     } else {
         $w.save state disabled
-        ::tooltip::tooltip $w.save \
-                "No comparison variable is selected. Select a comparison\
-                \nvariable to enable saving."
+        tooltip $w.save \
+                "No comparison variable is selected. Select a comparison
+                variable to enable saving."
         $w.del state disabled
-        ::tooltip::tooltip $w.del \
-                "No comparison variable is selected. Select a comparison\
-                \nvariable to enable deletion."
+        tooltip $w.del \
+                "No comparison variable is selected. Select a comparison
+                variable to enable deletion."
     }
 }
 
@@ -203,15 +204,15 @@ proc ::l1pro::groundtruth::widget_plots {f prefix label ns {plot plg}} {
     grid configure [{*}$w lbl] -sticky e
 
     if {$plot eq "plg"} {
-        ::tooltip::tooltip [{*}$w type] \
-                "Select the kind of line to display, or \"hide\" if you do not\
-                \nwish to plot this line."
+        tooltip [{*}$w type] \
+                "Select the kind of line to display, or \"hide\" if you do not
+                wish to plot this line."
         trace add variable [{*}$v type] write \
                 [list ${ns}::widget_plots_state $w $v line]
     } else {
-        ::tooltip::tooltip [{*}$w type] \
-                "Select the kind of markers to display, or \"hide\" if you do\
-                \nnot wish to plot these points."
+        tooltip [{*}$w type] \
+                "Select the kind of markers to display, or \"hide\" if you do
+                not wish to plot these points."
         trace add variable [{*}$v type] write \
                 [list ${ns}::widget_plots_state $w $v markers]
     }
@@ -227,18 +228,18 @@ proc ::l1pro::groundtruth::widget_plots_state {w v kind name1 name2 op} {
     if {[set [{*}$v type]] eq "hide"} {
         [{*}$w color] state disabled
         [{*}$w size] state disabled
-        ::tooltip::tooltip [{*}$w color] \
-                "This line is configured to not plot. Change the type to\
-                \nsomething other than \"hide\" to enable color selection."
-        ::tooltip::tooltip [{*}$w size] \
-                "This line is configured to not plot. Change the type to\
-                \nsomething other than \"hide\" to enable size selection."
+        tooltip [{*}$w color] \
+                "This line is configured to not plot. Change the type to
+                something other than \"hide\" to enable color selection."
+        tooltip [{*}$w size] \
+                "This line is configured to not plot. Change the type to
+                something other than \"hide\" to enable size selection."
     } else {
         [{*}$w color] state !disabled
         [{*}$w size] state !disabled
-        ::tooltip::tooltip [{*}$w color] \
+        tooltip [{*}$w color] \
                 "Select the color for this plot."
-        ::tooltip::tooltip [{*}$w size] \
+        tooltip [{*}$w size] \
                 "Select the size for the $kind used in this plot."
     }
 }
@@ -252,7 +253,7 @@ proc ::l1pro::groundtruth::popup_selection_menu {w varName} {
             -command [list ${cmd}flip $varName]
     foreach widget [list $w {*}[winfo descendents $w]] {
         bind $widget <Button-3> [list tk_popup $m %X %Y]
-        ::tooltip::tooltip $widget \
+        tooltip $widget \
             "Right click to select all, select none, or toggle selection."
     }
 }
@@ -289,6 +290,7 @@ proc ::l1pro::groundtruth::gen_array_list {varname list} {
 
 namespace eval ::l1pro::groundtruth::extract {
     namespace import [namespace parent]::*
+    namespace import ::misc::tooltip
 }
 
 if {![namespace exists ::l1pro::groundtruth::extract::v]} {
@@ -393,16 +395,12 @@ proc ::l1pro::groundtruth::extract::panel w {
         $mb add command -label "Plot current region (if possible)" \
                 -command [list ${ns}::region_plot $data]
 
-        foreach widget [list $f.chkmax $f.max] {
-            ::tooltip::tooltip $widget \
-                    "When enabled, only points with an elevation below this\
-                    \nthreshold will be used."
-        }
-        foreach widget [list $f.chkmin $f.min] {
-            ::tooltip::tooltip $widget \
-                    "When enabled, only points with an elevation above this\
-                    \nthreshold will be used."
-        }
+        tooltip $f.chkmax $f.max \
+                "When enabled, only points with an elevation below this
+                threshold will be used."
+        tooltip $f.chkmin $f.min \
+                "When enabled, only points with an elevation above this
+                threshold will be used."
     }
 
     set f $w
@@ -495,6 +493,7 @@ proc ::l1pro::groundtruth::extract::region_plot which {
 
 namespace eval ::l1pro::groundtruth::scatter {
     namespace import [namespace parent]::*
+    namespace import ::misc::tooltip
 }
 
 if {![namespace exists ::l1pro::groundtruth::scatter::v]} {
@@ -680,6 +679,7 @@ proc ::l1pro::groundtruth::scatter::pixelwf {} {
 
 namespace eval ::l1pro::groundtruth::hist {
     namespace import [namespace parent]::*
+    namespace import ::misc::tooltip
 }
 
 if {![namespace exists ::l1pro::groundtruth::hist::v]} {
@@ -806,17 +806,16 @@ proc ::l1pro::groundtruth::hist::panel w {
 
     grid columnconfigure $f 1 -weight 1
 
-    ::tooltip::tooltip $f.binsize \
-            "This specifies the width of the histogram bins. The histogram bar\
-            \ngraph will have bars of this width; the histogram line connects\
-            \nthe center of each bar with a line graph.\
-            \n\
-            \nThis setting is disabled when \"Automatic bin size\" is\
-            \nselected."
-    ::tooltip::tooltip $f.binauto \
-            "If selected, the bin size will be automatically calculated based\
-            \non the range of values found in the data and will be between\
-            \n0.10 and 0.30."
+    tooltip $f.binsize \
+            "This specifies the width of the histogram bins. The histogram bar
+            graph will have bars of this width; the histogram line connects the
+            center of each bar with a line graph.
+
+            This setting is disabled when \"Automatic bin size\" is selected."
+    tooltip $f.binauto \
+            "If selected, the bin size will be automatically calculated based
+            on the range of values found in the data and will be between 0.10
+            and 0.30."
 
     set f $w.kde
     ttk::labelframe $f -text "Kernel density estimate"
@@ -849,26 +848,26 @@ proc ::l1pro::groundtruth::hist::panel w {
     grid configure $f.lblkernel $f.lblband $f.lblsamples -sticky e
     grid columnconfigure $f 1 -weight 1
 
-    ::tooltip::tooltip $f.kernel \
+    tooltip $f.kernel \
             "Select the kernel to use for the kernel density estimation."
-    ::tooltip::tooltip $f.band \
-            "This specifies the bandwidth parameter for the kernel density\
-            \nestimation.\
-            \n\
-            \nThis setting is disabled when \"Match bandwidth to bin size\" is\
-            \nselected."
-    ::tooltip::tooltip $f.auto_band \
-            "If selected, the histogram bin size will be used for the\
-            \nbandwidth parameter."
-    ::tooltip::tooltip $f.samples \
-            "The kernel density estimation is a continuous function. This\
-            \nsetting specifies how many points it should be sampled at when\
-            \nconstructing the plot. Higher values result in a more accurate\
-            \ngraph but take longer to construct.\
-            \n\
-            \nWhen plotting, the estimate upsampled by a factor of 8 using\
-            \nspline interpolation to result in a smoother graph."
-    ::tooltip::tooltip $f.plot \
+    tooltip $f.band \
+            "This specifies the bandwidth parameter for the kernel density
+            estimation.
+
+            This setting is disabled when \"Match bandwidth to bin size\" is
+            selected."
+    tooltip $f.auto_band \
+            "If selected, the histogram bin size will be used for the bandwidth
+            parameter."
+    tooltip $f.samples \
+            "The kernel density estimation is a continuous function. This
+            setting specifies how many points it should be sampled at when
+            constructing the plot. Higher values result in a more accurate
+            graph but take longer to construct.
+
+            When plotting, the estimate upsampled by a factor of 8 using spline
+            interpolation to result in a smoother graph."
+    tooltip $f.plot \
             "Plot the profile for the current kernel."
 
     set f $w.topleft
@@ -956,6 +955,7 @@ proc ::l1pro::groundtruth::hist::plot {} {
 
 namespace eval ::l1pro::groundtruth::variables {
     namespace import [namespace parent]::*
+    namespace import ::misc::tooltip
 }
 
 if {![namespace exists ::l1pro::groundtruth::variables::v]} {
@@ -1080,6 +1080,7 @@ proc ::l1pro::groundtruth::variables::extract {} {
 
 namespace eval ::l1pro::groundtruth::report {
     namespace import [namespace parent]::*
+    namespace import ::misc::tooltip
 }
 
 if {![namespace exists ::l1pro::groundtruth::report::v]} {

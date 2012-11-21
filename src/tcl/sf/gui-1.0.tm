@@ -8,11 +8,13 @@ package require sf
 package require Img
 package require Iwidgets
 package require snit
-package require tooltip
 package require getstring
 package require imglib
+package require misc
 
-namespace eval ::sf {}
+namespace eval ::sf {
+    namespace import ::misc::tooltip
+}
 
 ################################################################################
 #                               Class ::sf::gui                                #
@@ -428,11 +430,10 @@ snit::widget ::sf::gui {
             $f tag add $t 1.0
         }
 
-        ::tooltip::tooltip $f -tag date "Date, formatted as YYYY-MM-DD."
-        ::tooltip::tooltip $f -tag hms \
-                "GMT time, 24-hour clock, formatted as HH:MM:SS."
-        ::tooltip::tooltip $f -tag sod "Seconds of the day"
-        ::tooltip::tooltip $f -tag soe "Seconds of the epoch"
+        tooltip $f -tag date "Date, formatted as YYYY-MM-DD."
+        tooltip $f -tag hms "GMT time, 24-hour clock, formatted as HH:MM:SS."
+        tooltip $f -tag sod "Seconds of the day"
+        tooltip $f -tag soe "Seconds of the epoch"
 
         $f configure -font TkTextFont
     }
@@ -445,7 +446,7 @@ snit::widget ::sf::gui {
         #   -command [mymethod controller jump position]
         ttk::scale $f -from 0 -to 1 -variable [myvar options(-fraction)] \
                 -orient horizontal -command [mymethod controller jump position]
-        ::tooltip::tooltip $f \
+        tooltip $f -wrap none \
                 "Indicates the image's relative position in the sequence of\
                 \nframes.
                 \n \u2022 Left-click and drag on the slider to browse by\
@@ -514,11 +515,11 @@ snit::widget ::sf::gui {
         grid configure $f.spacer -sticky ns
         grid rowconfigure $f 0 -weight 1
 
-        ::tooltip::tooltip $f.stepfwd "Step forward"
-        ::tooltip::tooltip $f.stepbwd "Step backward"
-        ::tooltip::tooltip $f.playfwd "Play forward"
-        ::tooltip::tooltip $f.playbwd "Play backward"
-        ::tooltip::tooltip $f.stop "Stop playing images"
+        tooltip $f.stepfwd "Step forward"
+        tooltip $f.stepbwd "Step backward"
+        tooltip $f.playfwd "Play forward"
+        tooltip $f.playbwd "Play backward"
+        tooltip $f.stop "Stop playing images"
     }
 
     # Create toolbar settings <f>
@@ -544,14 +545,14 @@ snit::widget ::sf::gui {
         grid $f.interval $f.increment $f.offset $f.sync
         grid rowconfigure $f 0 -weight 1
 
-        ::tooltip::tooltip $f.interval \
+        tooltip $f.interval \
                 "Delay between frames during playback (in seconds)"
-        ::tooltip::tooltip $f.increment \
+        tooltip $f.increment \
                 "Number of frames to advance by for stepping and playback"
-        ::tooltip::tooltip $f.offset \
+        tooltip $f.offset \
                 "An offset in seconds to apply to the timestamp of each image."
-        ::tooltip::tooltip $f.sync \
-                "If enabled, will stay synchronized with other enabled viewers\
+        tooltip $f.sync \
+                "If enabled, will stay synchronized with other enabled viewers
                 and external calls."
     }
 
@@ -572,20 +573,20 @@ snit::widget ::sf::gui {
         grid $f.band $f.enhancement
         grid rowconfigure $f 0 -weight 1
 
-        ::tooltip::tooltip $f.band \
-                "Specifies which color band should be\ displayed. \"Red\" is\
-                \nactually band 1, \"Green\" is actually band 2, and \"Blue\"\
-                \nis actually band 3. Thus, for CIR images, select \"Red\" for\
-                \nnear-infrared, \"Green\" for actual red, and \"Blue\" for\
-                \nactual green.\
-                \n\
-                \nThe \"CIR\" entry is special and will juggle the bands to\
-                \nprovide a pseudo-truecolor estimation of the image based on\
-                \nthe existing bands."
-        ::tooltip::tooltip $f.enhancement \
-                "The kind of image enhancement to apply, if any. If all bands\
-                \nare selected, then normalize and equalize will operate on\
-                \neach band independently."
+        tooltip $f.band \
+                "Specifies which color band should be\ displayed. \"Red\" is
+                actually band 1, \"Green\" is actually band 2, and \"Blue\" is
+                actually band 3. Thus, for CIR images, select \"Red\" for
+                near-infrared, \"Green\" for actual red, and \"Blue\" for
+                actual green.
+
+                The \"CIR\" entry is special and will juggle the bands to
+                provide a pseudo-truecolor estimation of the image based on
+                the existing bands."
+        tooltip $f.enhancement \
+                "The kind of image enhancement to apply, if any. If all bands
+                are selected, then normalize and equalize will operate on each
+                band independently."
     }
 
     # Create toolbar jumper <f>
@@ -605,13 +606,13 @@ snit::widget ::sf::gui {
         bind $f.value <KP_Enter> +[mymethod controller jump user]
         bind $f.value <Return> +[mymethod controller jump user]
 
-        ::tooltip::tooltip $f.value \
-                "The value to jump to. Use the combobox to the right to specify\
-                \nwhat this value represents. Hit <Enter> or <Return> while in\
-                \nthe entry to jump to the specified frame."
-        ::tooltip::tooltip $f.type \
-                "The kind of jump to make. This specifies how to interpret the\
-                \nvalue entered in the entry to the left."
+        tooltip $f.value \
+                "The value to jump to. Use the combobox to the right to specify
+                what this value represents. Hit <Enter> or <Return> while in
+                the entry to jump to the specified frame."
+        tooltip $f.type \
+                "The kind of jump to make. This specifies how to interpret the
+                value entered in the entry to the left."
     }
 
     # Create toolbar alps <f>
@@ -629,8 +630,8 @@ snit::widget ::sf::gui {
         grid $f.plot $f.raster
         grid rowconfigure $f 0 -weight 1
 
-        ::tooltip::tooltip $f.plot "Plot the location of the current frame."
-        ::tooltip::tooltip $f.raster "Display the raster for the current frame."
+        tooltip $f.plot "Plot the location of the current frame."
+        tooltip $f.raster "Display the raster for the current frame."
     }
 
     # Methods used post-creation ...............................................
