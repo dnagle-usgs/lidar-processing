@@ -329,49 +329,6 @@ func file_relative(base, dest) {
   return result;
 }
 
-func split_path( fn, idx, ext= ) {
-/* DOCUMENT split_path(fn,n, ext=);
-  Splits paths in various ways. Only works on scalars.
-
-  SEE ALSO: file_tail file_dirname file_extension file_rootname
-
- Examples:
-
-  split_path( "/data/0/7-14-01/eaarl/some_file.idx",  0)
-
-  result:  ["/data/0/7-14-01/eaarl/","some_file.idx"]
-
-
-
-  split_path( "/data/0/7-14-01/eaarl/some_file.idx", -1)
-
-  result: ["/data/0/7-14-01/","eaarl/some_file.idx"]
-
-
-
-  split_path( "/data/0/7-14-01/eaarl/some_file.idx", -2)
-
-  result: ["/data/0/","7-14-01/eaarl/some_file.idx"]
-
-
-if ext=1, the function splits at the extension i.e. at the position of the .(dot).
-
-*/
-  path = "";
-  t = *pointer( fn );
-  if (ext) {
-    n = (where(t == '.'))-1;
-  } else {
-    n = where( t == '/' );
-  }
-  if ( numberof( n ) > 0 ) {
-    path = string( &t(1: n(idx)) );
-    fn = string( &t(n(idx)+1:0 ));
-  }
-  return [path,fn];
-}
-
-
 func test_extension( fname, ext ) {
 /* DOCUMENT test_extention(fname, ext)
 
