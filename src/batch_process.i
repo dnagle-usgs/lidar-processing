@@ -303,14 +303,14 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
         }
 
         if (typ == 0)
-          new_file = split_path(pofn,0,ext=1)(1)+"_f.pbd";
+          new_file = file_rootname(pofn)+"_f.pbd";
         if (typ == 1)
-          new_file = split_path(pofn,0,ext=1)(1)+"_b.pbd";
+          new_file = file_rootname(pofn)+"_b.pbd";
         if (typ == 2)
-          new_file = split_path(pofn,0,ext=1)(1)+"_v.pbd";
+          new_file = file_rootname(pofn)+"_v.pbd";
 
         //does not work for typ=3
-        new_file = [split_path(new_file, 0)](0); // only file name (removed path);
+        new_file = file_tail(new_file); // only file name (removed path);
         scmd = swrite(format = "find %s -name '%s'",save_dir, new_file);
         nf = 0;
         s = array(string, 1);
@@ -417,13 +417,12 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
             edf_export, file_rootname(file_join(ofn(1), ofn(2)))+"_f.edf", fs_all;
           }
           if (pbd) {
-            new_ofn = split_path(ofn(2),0,ext=1);
-            t = *pointer(new_ofn(1));
+            t = *pointer(file_rootname(ofn(2)));
             nn = where(t == '_');
             date = string(&t(nn(0)+1:));
             vname = "fst_"+date+"_"+swrite(format="%d",i);
             write, format = "Writing pbd file for Region %d of %d\n",i,n;
-            f = createb(split_path(pofn,0,ext=1)(1)+"_f.pbd");
+            f = createb(file_rootname(pofn)+"_f.pbd");
             add_variable, f, -1, vname, structof(fs_all), dimsof(fs_all);
             get_member(f, vname) = fs_all;
             save, f, vname;
@@ -459,13 +458,12 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
               edf_export, file_rootname(file_join(ofn(1), ofn(2)))+"_b.edf", depth_all;
             }
             if (pbd) {
-              new_ofn = split_path(ofn(2),0,ext=1);
-              t = *pointer(new_ofn(1));
+              t = *pointer(file_rootname(ofn(2)));
               nn = where(t == '_');
               date = string(&t(nn(0)+1:));
               vname = "bat_"+date+"_"+swrite(format="%d",i);
               write, format = "Writing pbd file for Region %d of %d\n",i,n;
-              f = createb(split_path(pofn,0,ext=1)(1)+"_b.pbd");
+              f = createb(file_rootname(pofn)+"_b.pbd");
               add_variable, f, -1, vname, structof(depth_all), dimsof(depth_all);
               get_member(f, vname) = depth_all;
               save, f, vname;
@@ -487,13 +485,12 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
               edf_export, file_rootname(file_join(ofn(1), ofn(2)))+"_v.edf", veg_all;
             }
             if (pbd) {
-              new_ofn = split_path(ofn(2),0,ext=1);
-              t = *pointer(new_ofn(1));
+              t = *pointer(file_rootname(ofn(2)));
               nn = where(t == '_');
               date = string(&t(nn(0)+1:));
               vname = "bet_"+date+"_"+swrite(format="%d",i);
               write, format = "Writing pbd file for Region %d of %d\n",i,n;
-              f = createb(split_path(pofn,0,ext=1)(1)+"_v.pbd");
+              f = createb(file_rootname(pofn)+"_v.pbd");
               add_variable, f, -1, vname, structof(veg_all), dimsof(veg_all);
               get_member(f, vname) = veg_all;
               save, f, vname;
@@ -517,13 +514,12 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
             edf_export, file_rootname(file_join(ofn(1), ofn(2)))+"_b.edf", depth_all;
           }
           if (pbd) {
-            new_ofn = split_path(ofn(2),0,ext=1);
-            t = *pointer(new_ofn(1));
+            t = *pointer(file_rootname(ofn(2)));
             nn = where(t == '_');
             date = string(&t(nn(0)+1:));
             vname = "bat_"+date+"_"+swrite(format="%d",i);
             write, format = "Writing pbd file for Region %d of %d\n",i,n;
-            f = createb(split_path(pofn,0,ext=1)(1)+"_b.pbd");
+            f = createb(file_rootname(pofn)+"_b.pbd");
             add_variable, f, -1, vname, structof(depth_all), dimsof(depth_all);
             get_member(f, vname) = depth_all;
             save, f, vname;
@@ -543,13 +539,12 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
             edf_export, file_rootname(file_join(ofn(1), ofn(2)))+"_v.edf", veg_all;
           }
           if (pbd) {
-            new_ofn = split_path(ofn(2),0,ext=1);
-            t = *pointer(new_ofn(1));
+            t = *pointer(file_rootname(ofn(2)));
             nn = where(t == '_');
             date = string(&t(nn(0)+1:));
             vname = "bet_"+date+"_"+swrite(format="%d",i);
             write, format = "Writing pbd file for Region %d of %d\n",i,n;
-            f = createb(split_path(pofn,0,ext=1)(1)+"_v.pbd");
+            f = createb(file_rootname(pofn)+"_v.pbd");
             add_variable, f, -1, vname, structof(veg_all), dimsof(veg_all);
             get_member(f, vname) = veg_all;
             save, f, vname;
@@ -971,7 +966,7 @@ Added server/client support (2009-01) Richard Mitchell
   indx_path = array(string,n);
 
   for (i=1;i<=n;i++) {
-    if (cmdfile) indx_path(i) = (split_path(path(i),-1))(1);
+    if (cmdfile) indx_path(i) = file_dirname(file_dirname(path(i)))+"/";
     if (auto) {
       idx_e = long(10000 * long(min_e(i) / 10000));
       idx_n = long(10000 * long(1+(max_n(i) / 10000)));
@@ -985,8 +980,7 @@ Added server/client support (2009-01) Richard Mitchell
   mtdt_file = array(string, numberof(iidx_path));
   for (i=1;i<=numberof(iidx_path);i++) {
     mtdt_path(i) = indx_path(iidx_path(i));
-    indx_tile = split_path(mtdt_path(i), -1)(2);
-    indx_tile = strpart(indx_tile, 1:-1); // remove the trailing slash
+    indx_tile = file_tail(file_dirname(mtdt_path(i)));
     mtdt_file(i) = mtdt_path(i)+indx_tile+"_"+mdate+"_metadata.txt";
     if (cmdfile) {
       f = open(mtdt_file(i),"a");
@@ -1025,19 +1019,16 @@ Added server/client support (2009-01) Richard Mitchell
   }
   for (i=1;i<=n;i++) {
     if (cmdfile) {
-      ofn = split_path(path(i),0);
+      ofn = [file_dirname(path(i))+"/", file_tail(path(i))];
       if (mdate) {
-        new_ofn = split_path(ofn(2),0,ext=1);
-        ofn(2) = new_ofn(1)+mdate+new_ofn(2);
+        ofn(2) = file_rootname(ofn(2))+mdate+file_extension(ofn(2));
       }
       if (pbd) {
-        new_ofn = split_path(ofn(2),0, ext=1);
-        ofn(2) = new_ofn(1)+".pbd";
+        ofn(2) = file_rootname(ofn(2))+".pbd";
         pofn = ofn(1)+ofn(2);
       }
       if (edf) {
-        new_ofn = split_path(ofn(2),0,ext=1);
-        ofn(2) = new_ofn(1)+".edf";
+        ofn(2) = file_rootname(ofn(2))+".edf";
       }
     }
     write, format = "Selecting Region %d of %d\n",i,n;
@@ -1404,12 +1395,9 @@ Original amar nayegandhi. Started 12/06/02.
     all_dir    = array(string, numberof(fn_all));
     tile_fname = array(string, numberof(fn_all));
     for (ti = 1; ti <= numberof(fn_all); ti++) {
-      tile_split = split_path(fn_all(ti), -1);
-      t = *pointer(tile_split(2));
-      n = where(t == '/');
-      tile_dir(ti) = string(&t(1:n(1)));
-      tile_fname(ti) = string(&t(n(1)+1:0));
-      all_dir(ti) = (split_path(fn_all(ti),0))(1);
+      tile_fname(ti) = file_tail(fn_all(ti));
+      file_dir(ti) = file_tail(file_dirname(fn_all(ti)))+"/";
+      all_dir(ti) = file_dirname(fn_all(ti))+"/";
     }
     uidx = unique(tile_dir);
     ndirname = array(string, numberof(uidx));
@@ -1450,13 +1438,12 @@ Original amar nayegandhi. Started 12/06/02.
   }
 
   for (i=1;i<=nfiles;i++) {
-    fn_split = split_path(fn_all(i), 0);
+    fn_split = [file_dirname(fn_all(i))+"/", file_tail(fn_all(i))];
     eaarl = [];
     vnametag = "";
     fnametag = "";
     if (onlyupdate) {
       fn = fn_all(i);
-      oldfn = split_path(fn,1,ext=1);
       if (merge) fnametag = "_merged";
       if ((mode == 1) && (strglob("*_v*",fn))) fnametag = fnametag+"_fs";
       if (rcfmode >=1) {
@@ -1467,16 +1454,15 @@ Original amar nayegandhi. Started 12/06/02.
       }
       if (meta) {
         metakey = swrite(format="_b%d_w%d_n%d",buf,w,no_rcf);
-        new_fn = oldfn(1)+metakey+fnametag+oldfn(2);
+        new_fn = file_rootname(fn)+metakey+file_extension(fn);
       } else {
-        new_fn = oldfn(1)+fnametag+oldfn(2);
+        new_fn = file_rootname(fn)+fnametag+file_extension(fn);
       }
-      res = split_path(new_fn, 0);
-      sp_new_fn = split_path(res(2),0,ext=1);
+      res = [file_dirname(new_fn)+"/", file_tail(new_fn)];
       if (writepbd)
-      ofn = res(1)+sp_new_fn(1)+".pbd";
+      ofn = res(1)+file_rootname(res(2))+".pbd";
       if (writeedf) {
-        res(2) = sp_new_fn(1)+".edf";
+        res(2) = file_rootname(res(2))+".edf";
         ofn = res(1)+res(2);
       }
       if (is_array(where(oldfiles == ofn))) {
@@ -1628,19 +1614,17 @@ Original amar nayegandhi. Started 12/06/02.
       if (!is_array(rcf_eaarl)) continue;
       fn = fn_all(i);
       write, "Writing resulting data array to file...\n"
-      oldfn = split_path(fn,1,ext=1);
       if (meta) {
         metakey = swrite(format="_b%d_w%d_n%d",buf,w,no_rcf);
-        new_fn = oldfn(1)+metakey+fnametag+oldfn(2);
+        new_fn = file_rootname(fn)+metakey+file_extension(fn);
       } else {
-        new_fn = oldfn(1)+fnametag+oldfn(2);
+        new_fn = file_rootname(fn)+fnametag+file_extension(fn);
       }
-      res = split_path(new_fn, 0);
-      sp_new_fn = split_path(res(2),0,ext=1);
+      res = [file_dirname(new_fn)+"/", file_tail(new_fn)];
       if (writepbd)
-      ofn = res(1)+sp_new_fn(1)+".pbd";
+      ofn = res(1)+file_rootname(res(2))+".pbd";
       if (writeedf) {
-        res(2) = sp_new_fn(1)+".edf";
+        res(2) = file_rootname(res(2))+".edf";
         ofn = res(1)+res(2);
       }
 
@@ -2576,10 +2560,10 @@ ignore_none_found=) {
 func show_setup ( junk ) {
   write, format="EDB\n  %s\n", edb_filename;
   write, format="\n%s\n  %s\n  %s\n", "PNAV",
-    split_path(pnav_filename,0)(1);
-    split_path(pnav_filename,0)(0);
+    [file_dirname(pnav_filename)+"/", file_tail(pnav_filename)](1);
+    [file_dirname(pnav_filename)+"/", file_tail(pnav_filename)](0);
   write, format="\n%s\n  %s\n  %s\n", "INS",
-    split_path(ins_filename,0)(1);
-    split_path(ins_filename,0)(0);
+    [file_dirname(ins_filename)+"/", file_tail(ins_filename)](1);
+    [file_dirname(ins_filename)+"/", file_tail(ins_filename)](0);
   write, format="\nDATA PATH\n  %s\n", data_path;
 }

@@ -5,7 +5,7 @@ func file_dirname(re, fn) {
   Returns everything in the path except the last part. Similar to Tcl's "file
   dirname". Works on arrays.
 
-  SEE ALSO: file_tail file_extension file_rootname split_path
+  SEE ALSO: file_tail file_extension file_rootname
 */
   match = [];
   regmatch, re, fn, , match;
@@ -32,7 +32,7 @@ func file_tail(re, fn) {
   Returns the last part of the path (the file's name). Similar to Tcl's "file
   tail". Works on arrays.
 
-  SEE ALSO: file_dirname file_extension file_rootname split_path
+  SEE ALSO: file_dirname file_extension file_rootname
 */
   slash = match = [];
   regmatch, re, fn, , slash, match;
@@ -49,7 +49,7 @@ func file_extension(re, fn) {
   element in name, or the empty string. Similar to Tcl's "file extension".
   Works on arrays.
 
-  SEE ALSO: file_dirname file_tail file_rootname split_path
+  SEE ALSO: file_dirname file_tail file_rootname
 */
   match = [];
   regmatch, re, file_tail(fn), , match;
@@ -63,7 +63,7 @@ func file_rootname(re, fn) {
   in the last component of fn. If it doesn't contain a dot, then it returns
   fn. Similar to Tcl's "file rootname". Works on arrays.
 
-  SEE ALSO: dir_dirname file_tail file_extension split_path
+  SEE ALSO: dir_dirname file_tail file_extension
   */
   match = dot = [];
   regmatch, re, fn, , match, dot;

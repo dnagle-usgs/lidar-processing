@@ -81,15 +81,15 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=, only_if_mf=, 
     } 
 
     for (i=1;i<=nfiles;i++) {
-        fn_split = split_path(fn_all(i), 1, ext=1);
+        fn_split = [file_rootname(fn_all(i)), file_extension(fn_all(i))];
         eaarl = [];
         vnametag = [];
         fnametag = "_energy";
         new_fn = fn_split(1)+fnametag+fn_split(2);
-        fn_split = split_path(fn_all(i), 0);
+        fn_split = [file_dirname(fn_all(i))+"/", file_tail(fn_all(i))];
         if (opath) {
 	   fn1 = fn_split(2);
-  	   fn_split = split_path(fn1, 1, ext=1);
+       fn_split = [file_rootname(fn1), file_extension(fn1)];
  	   new_fn = opath+fn_split(1)+fnametag+fn_split(2);
         }
         if (onlyupdate) {
@@ -228,7 +228,7 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
 
     for (i=1;i<=nfiles;i++) {
 	write, format="Processing %d of %d\n", i, nfiles;
-        fn_split = split_path(fn_all(i), 1, ext=1);
+        fn_split = [file_rootname(fn_all(i)), file_extension(fn_all(i))];
         eaarl = [];
         vnametag = [];
         fnametag = "_mets";
@@ -237,14 +237,14 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
            if (is_array(where(old_fn == new_fn))) continue;
 	}
         if (opath) {
-           fn_split = split_path(fn_all(i), 0);
+           fn_split = [file_dirname(fn_all(i))+"/", file_tail(fn_all(i))];
 	   fn1 = fn_split(2);
-  	   fn_split = split_path(fn1, 1, ext=1);
+       fn_split = [file_rootname(fn1), file_extension(fn1)];
  	   new_fn = opath+fn_split(1)+fnametag+fn_split(2);
         }
 	// look for bare earth files if use_be = 1
   	if (use_be) {
-           fn_split = split_path(fn_all(i),0);
+           fn_split = [file_dirname(fn_all(i))+"/", file_tail(fn_all(i))];
            s_east = strpart(fn_split(2), 4:9);
            s_north = strpart(fn_split(2), 12:18);
            east = north = 0;
@@ -252,7 +252,7 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
            sread, s_north, format="%d",north;
            be_file = [];
            if (is_void(be_path)) {
-	      fn_split = split_path(fn_all(i),0);
+	      fn_split = [file_dirname(fn_all(i))+"/", file_tail(fn_all(i))];
               be_dir = fn_split(1);
            } else {
               be_dir = be_path;
@@ -278,7 +278,7 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
            idx = where(!strmatch(be_file, "_fs"));
            be_file = be_file(idx);
 	   if (numberof(be_file) > 1) {
-	       fn_split = split_path(fn_all(i),0);
+	       fn_split = [file_dirname(fn_all(i))+"/", file_tail(fn_all(i))];
               // search for be_file for the same data tile
               if (strmatch(fn_split(2), "t_e")) {
                  teast_north = "";
@@ -307,7 +307,7 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
            }
 	   write,format="current be file is %s", be_file;
         }
-        fn_split = split_path(fn_all(i),0);
+        fn_split = [file_dirname(fn_all(i))+"/", file_tail(fn_all(i))];
         s_east = strpart(fn_split(2), 4:9);
         s_north = strpart(fn_split(2), 12:18);
         east = north = 0;
@@ -430,7 +430,7 @@ func batch_merge_veg_energy(ipath, opath=, searchstr=) {
   fn_path = array(string, numberof(fn_all));
   fn_file = array(string, numberof(fn_all));
   for (i=1;i<=numberof(fn_all);i++) {
-      path = split_path(fn_all(i), 0)
+      path = [file_dirname(fn_all(i))+"/", file_tail(fn_all(i))];
       fn_path(i) = path(1);
       fn_file(i) = path(2);
   }
@@ -459,12 +459,12 @@ func batch_merge_veg_energy(ipath, opath=, searchstr=) {
     close, f;
     outveg1 = outveg;
     fcount = 1;
-    fn_split = split_path(fn_all(1), 1, ext=1);
+    fn_split = [file_rootname(fn_all(1)), file_extension(fn_all(1))];
     fnametag = "_merged";
     new_fn = fn_split(1)+fnametag+fn_split(2);
     if (opath) {
-       fn_split = split_path(fn_all(1), 0);
-       fn_split1 = split_path(fn_split(2), 1, ext=1);
+       fn_split = [file_dirname(fn_all(1))+"/", file_tail(fn_all(1))];
+       fn_split1 = [file_rootname(fn_split(2)), file_extension(fn_split(2))];
        new_fn = opath+fn_split1(1)+fnametag+fn_split1(2);
     }
        
@@ -561,8 +561,8 @@ func write_pbd_to_gdf(ipath=, opath=, fname=, searchstr=, remove_buffer=) {
            write, "Removing buffer data around tile..."
            // conform the tile to the 2k by 2k format.
            min_e = max_n = 0;
-           sread, strpart(split_path(fn_all(i), 0)(2), 4:9), min_e;
-           sread, strpart(split_path(fn_all(i), 0)(2), 12:18), max_n;
+           sread, strpart(file_tail(fn_all(i)), 4:9), min_e;
+           sread, strpart(file_tail(fn_all(i)), 12:18), max_n;
            max_e = int(min_e + 2000 - binsize);
            min_n = int(max_n - 2000 + binsize);
            num = int(2000/binsize);		// remove extra row/col
@@ -603,7 +603,7 @@ func write_pbd_to_gdf(ipath=, opath=, fname=, searchstr=, remove_buffer=) {
           mets_pos = [[min_e, min_n],[max_e, max_n]];
         }
            
-        fn_split = split_path(fn_all(i), 1, ext=1);
+        fn_split = [file_rootname(fn_all(i)), file_extension(fn_all(i))];
 	outf = fn_split(1)+".gdf";
         f = open(outf,"w+b");
         i86_primitives, f;
@@ -664,15 +664,15 @@ if (is_void(remove_buffer)) remove_buffer=1;
 
   for (i=1;i<=nfiles;i++) {
      write, format="Converting %d of %d\n", i, nfiles;
-     fn_split = split_path(fn_all(i), 1, ext=1);
+     fn_split = [file_rootname(fn_all(i)), file_extension(fn_all(i))];
 
      new_fn = fn_split(1)+"_asc.txt";
 
-     fn_split = split_path(fn_all(i),0);
+     fn_split = [file_dirname(fn_all(i))+"/", file_tail(fn_all(i))];
 
      if (opath) {
         fn1 = fn_split(2);
-        fn_split = split_path(fn1, 1, ext=1);
+        fn_split = [file_rootname(fn1), file_extension(fn1)];
         new_fn = opath+fn_split(1)+"_asc.txt";
      }
      // find corresponding energy file
@@ -712,7 +712,7 @@ if (is_void(remove_buffer)) remove_buffer=1;
          print, "No composite footprint energy file available for this tile.  No ascii metrics created for this tile."
               error1();
      }
-     fn_split = split_path(fn_all(i),0);
+     fn_split = [file_dirname(fn_all(i))+"/", file_tail(fn_all(i))];
      s_east = strpart(fn_split(2), 4:9);
      s_north = strpart(fn_split(2), 12:18);
      east = north = 0;

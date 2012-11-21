@@ -42,8 +42,7 @@ func rbtans( junk, fn= ) {
  extern tans_filename;
  if ( !is_void( fn ) ) {
     ifn = fn;
-    ff = split_path( ifn, -1 );
-    data_path = ff(1);
+    data_path = file_dirname(file_dirname(ifn))+"/";
  } else {
  path = data_path+"/tans/"
 if ( _ytk ) {
@@ -51,8 +50,7 @@ if ( _ytk ) {
     if (strmatch(ifn, "ybin") == 0) {
           exit, "NO FILE CHOSEN, PLEASE TRY AGAIN\r";
     }
-    ff = split_path( ifn, -1 );
-    data_path = ff(1);
+    data_path = file_dirname(file_dirname(ifn))+"/";
  } else {
  if ( is_void(data_path) )
    data_path = rdline(prompt="Enter data path:");
