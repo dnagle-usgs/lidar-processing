@@ -246,15 +246,6 @@ proc cbar_trace { a b c } {
   }
 }
 
-proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utmarg} {
-  global mnlon mxlon mnlat mxlat utm
-  set mnlon $minlon
-  set mxlon $maxlon
-  set mnlat $minlat
-  set mxlat $maxlat
-  set utm $armarg
-}
-
 proc display_data args {
   array set opts [list -var $::pro_var -win $::win_no -fma $::l1pro_fma]
   array set opts $args
