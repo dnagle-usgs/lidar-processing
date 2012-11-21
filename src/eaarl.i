@@ -72,11 +72,8 @@ if(is_void(__eaarl_includes_included__)) {
   require, "ascii_encode.i";
   require, "asciixyz.i";
   require, "batch_process.i";
-  require, "class_clsobj.i";
   require, "class_deque.i";
   require, "class_mapobj.i";
-  require, "class_pcobj.i";
-  require, "class_wfobj.i";
   require, "colorbar.i";
   require, "compare_transects.i";
   require, "comparison_fns.i";
@@ -124,8 +121,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "nad832navd88.i";
   require, "obj_show.i";
   require, "parse.i";
-  require, "pcobj_export.i";
-  require, "pcobj_import.i";
   require, "pip.i";
   require, "plugins.i";
   require, "polyfit_smooth.i";
@@ -149,7 +144,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "util_str.i";
   require, "wf_analysis.i";
   require, "wf_filter.i";
-  require, "wf_process.i";
   require, "wgs842nad83.i";
   require, "window.i";
   require, "ytime.i";

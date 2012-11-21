@@ -1,5 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+require, "extra/class_clsobj.i";
+
 // scratch stores the values of scratch and tmp so that we can restore them
 // when we're done, leaving things as we found them.
 scratch = save(scratch, tmp, pcobj_summary, pcobj_index, pcobj_sort,
