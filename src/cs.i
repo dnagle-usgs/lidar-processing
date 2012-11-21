@@ -321,5 +321,8 @@ local current_cs;
 /* DOCUMENT current_cs
   This is a global variable that defines your current coordinate system. At
   start-up, this will be WGS-84 with lat/long.
+
+  Note that, at present, this isn't really used (except by extra/class_pcobj.i
+  and extra/class_wfobj.i).
 */
 if(is_void(current_cs)) current_cs = cs_wgs84();
