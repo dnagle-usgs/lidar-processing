@@ -1,34 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-// The functions in this file are used to filter waveforms or wfobj objects,
-// either by returning a subset of the data or by modifying the data in some
-// way.
-
-func wfobj_filter_bias(wf, which=, method=, lim=) {
-/* DOCUMENT wf = wfobj_filter_bias(wf, which=, method=, lim=)
-  Modifies the waveforms in the given wfobj object WF to remove bias. WF should
-  be a waveform object. WHICH specifies which waveform to modify and is usually
-  "rx" but can also be "tx". METHOD specifies the method to use for determining
-  the bias. See wf_filter_bias for details on METHOD.
-
-  Note: This does not do any type conversions. If your wavesforms are of type
-  CHAR, you should cast them to SHORT prior to passing it to this function.
-*/
-  default, which, "rx";
-  default, method, "first";
-  default, lim, 1e1000;
-  if(!am_subroutine())
-    wf = wf(index, 1:wf.count);
-
-  // Use rx to store the waveforms, which are usually rx
-  rx = wf(noop(which));
-
-  for(i = 1; i <= wf.count; i++)
-    rx(i) = &wf_filter_bias(*rx(i), method=method, lim=lim);
-
-  save, wf, noop(which), rx;
-  return wf;
-}
+// The functions in this file are used to filter waveforms, either by returning
+// a subset of the data or by modifying the data in some way.
 
 func wf_filter_bias(wf, &bias, method=, lim=) {
 /* DOCUMENT wf = wf_filter_bias(wf, &bias, which=, method=, lim=)
