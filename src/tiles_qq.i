@@ -313,18 +313,18 @@ func extract_for_qq(east, north, zone, qq, buffer=) {
   return where(dist <= buffer + 0.001);
 }
 
-func calculate_qq_extents(qqdir, mode=, glob=, remove_buffers=) {
-/* DOCUMENT calculate_qq_extents(qqdir, mode=, glob=, remove_buffers=)
+func calculate_qq_extents(qqdir, mode=, searchstr=, remove_buffers=) {
+/* DOCUMENT calculate_qq_extents(qqdir, mode=, searchstr=, remove_buffers=)
   Calculates the lat/lon extents for a each quarter quad using the given
   directory of qq pbd files. Returns a Yeti hash with the results.
 */
   local n, e;
   fix_dir, qqdir;
-  default, glob, "*.pbd";
+  default, searchstr, "*.pbd";
   default, remove_buffers, 1;
 
   // Source files
-  files = find(qqdir, searchstr=glob);
+  files = find(qqdir, searchstr=searchstr);
 
   qqs = h_new();
 

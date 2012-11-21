@@ -947,7 +947,7 @@ func qqtiff_gms_prep(tif_dir, pbd_dir, mode, outfile, tif_glob=, pbd_glob=) {
   files = find(tif_dir, searchstr=tif_glob);
 
   // Scan pbds for exents
-  extents = calculate_qq_extents(pbd_dir, mode=mode, glob=pbd_glob);
+  extents = calculate_qq_extents(pbd_dir, mode=mode, searchstr=pbd_glob);
 
   qqcodes = h_new();
 
