@@ -449,16 +449,6 @@ func lsdirs(dir, glob=) {
   return subdirs;
 }
 
-func set_data_path( junk ) {
-/* DOCUMENT set_data_path
-
-  Prompt the user for a new data path.  The user can use
-  ^d to see the directories.
-*/
-  data_path = rdline(prompt="Set data_path to:");
-  return data_path;
-}
-
 func fix_dir(&idir) {
 /* DOCUMENT fix_dir, dir
         new_dir = fix_dir(old_dir)
