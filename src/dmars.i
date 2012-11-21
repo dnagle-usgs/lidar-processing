@@ -219,35 +219,6 @@ func load_ins(fn, &head) {
   return nav;
 }
 
-func gen_cir_nav( offset_secs, verbose= ) {
-  extern iex_nav, iex_nav1hz;
-  default, verbose, 1;
-  if ( is_void( iex_nav) ) return -8;
-  ins_rate = iex_nav(1:2).somd(dif)(1)
-  iticks = int(offset_secs*1000.0/int(ins_rate*1000.0001));
-  startIndex = where( (iex_nav(1:int(1/ins_rate)).somd % 1) == 0.0 )(1);
-  startIndex += iticks;
-  tmp = iex_nav(startIndex:0:int(1/ins_rate));
-  tmp.somd = tmp.somd % 86400;
-  utmx = fll2utm(tmp.lat, tmp.lon);
-  iex_nav1hz = array(IEX_ATTITUDEUTM, dimsof(utmx)(3));
-  iex_nav1hz.somd = tmp.somd;
-  iex_nav1hz.lat = tmp.lat;
-  iex_nav1hz.lon = tmp.lon;
-  iex_nav1hz.alt = tmp.alt;
-  iex_nav1hz.roll = tmp.roll;
-  iex_nav1hz.pitch = tmp.pitch;
-  iex_nav1hz.heading = tmp.heading;
-  iex_nav1hz.northing = utmx(1,);
-  iex_nav1hz.easting = utmx(2,);
-  iex_nav1hz.zone = utmx(3,);
-  if(verbose) {
-    write, format="%d %d %20.6f\n", startIndex, iticks, iex_nav(startIndex).somd;
-  }
-  return 1;
-}
-
-
 func load_raw_dmars(fn=) {
 // extern engr_dmars;
  extern dmars_ntptime;
@@ -358,21 +329,6 @@ func convert_raw_dmars_2_engr(dmars) {
    engr_dmars.sensor(j,) = dmars.sensor(j,) * as;
  }
  return engr_dmars;
-}
-
-
-
-func plot_z( junk ) {
-r = 1:-1
-window,0
-fma
-limits,,,-5,5
-plg, dmars.sensor(6,1000:-1),
-     dmars.soe(1000:-1)
-plg, dmars_ntptime(r) - (stime(3,r)/200.0+tdiff),
-      dmars_ntptime(r),
-      color="red",
-      width=6.0
 }
 
 struct IEX_HEADER {
