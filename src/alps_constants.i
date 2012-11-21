@@ -11,7 +11,7 @@ RAD2DEG = 180./pi;
 local MPS2KN, KN2MPS;
 /* DOCUMENT
   MPS2KN -- constant for converting meters per second to knots
-  KN2MPS -- cosntant for converting knots to meters per second
+  KN2MPS -- constant for converting knots to meters per second
 */
 MPS2KN = 1.943844;
 KN2MPS = 0.514444;
