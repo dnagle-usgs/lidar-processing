@@ -3,9 +3,11 @@
 package provide misc 1.0
 package require imglib
 package require snit
+package require textutil::adjust
+package require textutil::split
 
 namespace eval ::misc {
-    namespace export appendif idle menulabel safeafter search soe
+    namespace export appendif idle menulabel safeafter search soe tooltip
 }
 
 # ::misc::extend
@@ -61,6 +63,116 @@ proc ::misc::menulabel {txt} {
         return [list -label $label]
     } else {
         return [list -label $label -underline $pos]
+    }
+}
+
+
+# ::misc::tooltip path [path ...] [option arg ...] message
+# This is a wrapper around ::tooltip::tooltip.
+#
+# ::tooltip::tooltip only accepts one path. This wrapper accepts multiple
+# paths. All paths must be first, preceding any options and preceding the
+# message. (Paths are detected as paths using [winfo exists <path>].) This lets
+# you easily apply a tooltip to several related widgets (such as an entry box
+# and its label).
+#
+# ::misc::tooltip accepts one extra option that ::tooltip::tooltip does not:
+# -wrap. The -wrap option specifies what kind of wrapping to perform on the
+# given message string and defaults to "double". Valid options:
+#       -wrap double    Paragraphs are separated by double newlines
+#       -wrap single    Paragraphs are separated by single newlines
+#       -wrap none      Do not perform any automatic wrapping
+# Wrapping is performed by breaking the input text apart into paragraphs. Then
+# each paragraph is word-wrapped to line lengths of 72 characters.
+#
+# Two details to be aware of with wrapping:
+# - Any leading or trailing whitespace will be stripped from each paragraph.
+# - When using double, any single newlines are stripped out.
+#
+# Most of the time, double should be sufficient. However, single is useful when
+# you need to include a list within your tooltip.
+#
+# A few examples:
+#
+#       ::misc::tooltip .foo \
+#               "This is a tooltip example! Notice that it does not use any
+#               line continuation characters.
+#
+#               This paragraph will be separate from the above paragraph,
+#               because they are separated by a double newlines."
+#
+#       ::misc::tooltip .foo -wrap single \
+#               "This is another tooltip example! Notice that line\
+#               continuation characters are used. This is necessary to avoid\
+#               having newlines in the paragraph, which could cause it to be\
+#               treated as a series of paragraphs since -wrap is single.
+#
+#               This will be a separate paragraph from the above. It will be\
+#               separated by double newlines in the output. Here's an example\
+#               of why -wrap single can be useful:
+#               - This is a list!
+#               - Notice it lacks line continuation characters.
+#               - Each list item will remain distinct.
+#               Without -wrap single, they would have been rolled into a\
+#               single paragraph instead.
+#
+#               It is actually permissible to omit the line continuation
+#               characters. This will prevent automatic wrapping on the
+#               paragraphs. However, if your lines exceed 72 characters in
+#               length, they will get wrapped line by line which will not look
+#               good."
+#
+#       ::misc::tooltip .foo -wrap none \
+#               "This is an example of a tooltip with -wrap none. No automatic\
+#               \nwrapping is done. Notice how each line is terminated with a\
+#               \nline continuation character, and each line starts with a\
+#               \nnewline.\
+#               \n\
+#               \nNotice also how the empty line between paragraphs has to be\
+#               \nmade explicit. All formating is handled manually. Otherwise,\
+#               \nthe tooltip with either be way too wide, or it will look\
+#               \nstrange with lots of big blank gaps."
+#
+#       ::misc::tooltip .foo .bar .baz \
+#               "These three widgets all share a common tooltip."
+#
+#       ::misc::tooltip .foo -tag bar \
+#               "The options accepted by ::tooltip::tooltip are also accepted
+#               by ::misc::tooltip. In this case, the tooltip is associated
+#               with the \"bar\" tag within the text widget .foo."
+proc ::misc::tooltip {args} {
+    if {[llength $args] < 2} {
+        error "::misc::tooltip requires at least two args: path msg"
+    }
+    set message [lindex $args end]
+    set args [lrange $args 0 end-1]
+    set i 0
+    while {[winfo exists [lindex $args $i]]} {incr i}
+    set paths [lrange $args 0 [expr {$i-1}]]
+    set args [lrange $args $i end]
+
+    if {[dict exists $args -wrap]} {
+        set wrap [dict get $args -wrap]
+        set args [dict remove $args -wrap]
+    } else {
+        set wrap double
+    }
+
+    if {$wrap ne "none"} {
+        switch -- $wrap {
+            single  {set sep \n}
+            double  {set sep \n\n}
+            default {error "Unknown -wrap"}
+        }
+        set newmsg [list]
+        foreach line [textutil::split::splitx $message $sep] {
+            lappend newmsg [::textutil::adjust::adjust $line]
+        }
+        set message [join $newmsg $sep]
+    }
+
+    foreach path $paths {
+        ::tooltip::tooltip $path {*}$args $message
     }
 }
 
