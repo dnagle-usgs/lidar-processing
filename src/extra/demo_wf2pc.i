@@ -3,7 +3,7 @@
 func batch_wf2pc(dir, outdir=, searchstr=, files=) {
    default, searchstr, "*.pbd";
    if(is_void(files)) {
-      files = find(dir, glob=searchstr);
+      files = find(dir, searchstr=searchstr);
    }
 
    outfiles = file_rootname(files) + "_pc.pbd";

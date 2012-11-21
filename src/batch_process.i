@@ -1343,7 +1343,7 @@ Original amar nayegandhi. Started 12/06/02.
         }
       }
       // write, format="DIRNAME: %s%s\n", dirname, ss;
-      fn_all = find(dirname, glob=ss);
+      fn_all = find(dirname, searchstr=ss);
     }
   }
   if (!is_array(fn_all))
@@ -1843,7 +1843,7 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
   }
 
   if(is_void(files))
-    files = find(dir, glob=searchstr);
+    files = find(dir, searchstr=searchstr);
   count = numberof(files);
 
   if(!count) {
@@ -2189,7 +2189,7 @@ func batch_automerge_tiles(path, searchstr=, verbose=, update=) {
   default, update, 0;
 
   // Locate files and split into dirs/tails
-  files = find(path, glob=searchstr);
+  files = find(path, searchstr=searchstr);
   dirs = file_dirname(files);
   tails = file_tail(files);
 
@@ -2392,7 +2392,7 @@ verbose=, update=) {
   default, verbose, 1;
   default, update, 0;
 
-  files_in = find(path, glob=searchstr);
+  files_in = find(path, searchstr=searchstr);
   if(is_void(files_in)) {
     if(verbose)
       write, "No files found. Giving up!";
@@ -2482,8 +2482,8 @@ ignore_none_found=) {
   default, ignore_none_found, 0;
   default, progress, 1;
 
-  v_files = find(path, glob=veg_ss);
-  b_files = find(path, glob=bathy_ss);
+  v_files = find(path, searchstr=veg_ss);
+  b_files = find(path, searchstr=bathy_ss);
 
   if(!numberof(v_files) && !numberof(b_files)) {
     write, "No veg or bathy files found. Aborting.";

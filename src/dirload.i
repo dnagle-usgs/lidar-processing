@@ -80,7 +80,7 @@ files=, filter=, verbose=) {
 
   // Generate list of input files
   if(is_void(files))
-    files = find(dir, glob=searchstr);
+    files = find(dir, searchstr=searchstr);
 
   // filter file list ...
   __dirload_apply_filter, files, h_new(), filter, "files";
@@ -238,7 +238,7 @@ func dircopy(dir, outdir, searchstr=, files=, filter=, verbose=) {
 
   // Generate list of input files
   if(is_void(files))
-    files = find(dir, glob=searchstr);
+    files = find(dir, searchstr=searchstr);
 
   // filter file list ...
   __dirload_apply_filter, files, h_new(), filter, "files";
@@ -329,7 +329,7 @@ func dircopydiff(src, ref, dest, searchstr=, files=, verbose=) {
 
   // Generate list of input files
   if(is_void(files))
-    files = find(src, glob=searchstr);
+    files = find(src, searchstr=searchstr);
 
   if(is_void(files)) {
     if(verbose)

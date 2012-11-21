@@ -259,9 +259,9 @@ func navd88_geoid_file_coverage(lon, lat, geoid, gdata_dir=) {
 
   // Get list of candidate GEOID files
   files = [];
-  grow, files, find(gdata_dir, glob="*.pbd");
-  grow, files, find(gdata_dir, glob="*.bin");
-  grow, files, find(gdata_dir, glob="*.geo");
+  grow, files, find(gdata_dir, searchstr="*.pbd");
+  grow, files, find(gdata_dir, searchstr="*.bin");
+  grow, files, find(gdata_dir, searchstr="*.geo");
 
   if(!numberof(files)) {
     write, "No GEOID files found, aborting.";
@@ -696,7 +696,7 @@ func import_geoid_grid(g, searchstr=) {
     if(file_isfile(g)) {
       g = geoid_load(g);
     } else {
-      files = find(g, glob=searchstr);
+      files = find(g, searchstr=searchstr);
       grids = array(ZGRID, numberof(files));
       for(i = 1; i <= numberof(files); i++)
         grids(i) = import_geoid_grid(files(i));

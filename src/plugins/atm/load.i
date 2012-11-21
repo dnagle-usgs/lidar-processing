@@ -309,7 +309,7 @@ func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=, maxcount=, verbose=)
   default, verbose, 1;
 
   if(is_void(files))
-    files = find(srcdir, glob=searchstr);
+    files = find(srcdir, searchstr=searchstr);
   count = numberof(files);
   if(!count)
     error, "No files found.";

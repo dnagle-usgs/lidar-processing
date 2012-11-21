@@ -146,7 +146,7 @@ func batch_fix_zones(dir, glob=, ignore_zeros=) {
   default, glob, "*.pbd";
   default, ignore_zeroes, 0;
 
-  files = find(dir, glob=glob);
+  files = find(dir, searchstr=glob);
   files = files(sort(file_tail(files)));
   for(i = 1; i <= numberof(files); i++) {
     basefile = file_tail(files(i));

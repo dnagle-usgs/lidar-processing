@@ -725,7 +725,7 @@ verify_tiles=) {
   default, verify_tiles, (buffer > 0);
 
   // Locate files
-  files = find(srcdir, glob=searchstr);
+  files = find(srcdir, searchstr=searchstr);
 
   // Get zones
   zones = tile2uz(file_tail(files));
@@ -891,7 +891,7 @@ remove_buffers=, dtlength=, dtprefix=, qqprefix=, mode=, verbose=) {
     scheme = aliases(scheme);
 
   if(is_void(files))
-    files = find(dir, glob=searchstr);
+    files = find(dir, searchstr=searchstr);
 
   count = numberof(files);
   file_tiles = extract_tile(file_tail(files));
@@ -996,7 +996,7 @@ func tile_extent_shapefile(fn, dir, searchstr=, files=, usedirnames=, restrict=)
   default, usedirnames, 0;
 
   if(is_void(files))
-    files = find(dir, glob=searchstr);
+    files = find(dir, searchstr=searchstr);
   if(!numberof(files))
     error, "No files found";
   tiles = extract_tile(file_tail(files), dtlength="short", dtprefix=1);

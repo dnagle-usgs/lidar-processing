@@ -28,7 +28,7 @@ func batch_kml_mission(datadir, outdir, searchstr=, outfile=, webdest=) {
 
   jsons = paths = [];
   for(i = 1; i <= numberof(datadir); i++) {
-    cur = find(datadir(i), glob=searchstr);
+    cur = find(datadir(i), searchstr=searchstr);
     grow, jsons, cur;
     grow, paths, file_dirname(file_relative(datadir(i), cur));
   }

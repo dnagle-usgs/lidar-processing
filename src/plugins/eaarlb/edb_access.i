@@ -574,7 +574,7 @@ func edb_summary(path, searchstr=) {
 */
   if(is_scalar(path) && file_isdir(path)) {
     default, searchstr, "*.idx";
-    path = find(path, glob=searchstr);
+    path = find(path, searchstr=searchstr);
   }
 
   records = seconds = pixels = tldcount = 0;

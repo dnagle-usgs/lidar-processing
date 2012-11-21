@@ -29,7 +29,7 @@ which=) {
   default, searchstr, "*.pbd";
   default, which, "last";
   if(is_void(files))
-    files = find(dir, glob=searchstr);
+    files = find(dir, searchstr=searchstr);
 
   suffix = (which == "last") ? "_lr" : "_fr";
 
@@ -103,7 +103,7 @@ func batch_las_split_by_class(dir, searchstr=, files=, outdir=, update=) {
   local tstamp;
   default, searchstr, "*.pbd";
   if(is_void(files))
-    files = find(dir, glob=searchstr);
+    files = find(dir, searchstr=searchstr);
 
   count = numberof(files);
   timer_init, tstamp;

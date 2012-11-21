@@ -950,7 +950,7 @@ Rewrote David Nagle 2010-03-11
   default, extension, (ESRI ? ".txt" : ".xyz");
 
   if(is_void(files))
-    files = find(dirname, glob=searchstr);
+    files = find(dirname, searchstr=searchstr);
 
   if(is_void(files)) {
     write, "No files found, aborting.";
@@ -1093,7 +1093,7 @@ columns=, types=, preset=, latlon=) {
   default, vprefix, string(0);
   default, vsuffix, string(0);
 
-  fn_all = find(dirname, glob=ss);
+  fn_all = find(dirname, searchstr=ss);
 
   if(!numberof(fn_all)) {
     write, "No files found.";

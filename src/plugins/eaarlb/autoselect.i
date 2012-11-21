@@ -230,7 +230,7 @@ func autoselect_iexpbd(dir, options=) {
       dir = file_join(dir, "trajectories");
     }
   }
-  candidates = find(dir, glob="*-ins.pbd");
+  candidates = find(dir, searchstr="*-ins.pbd");
   if(!numberof(candidates)) return options ? [] : [string(0)];
   patterns = [
     "*-p-*-fwd-ins.pbd",
@@ -287,7 +287,7 @@ func autoselect_pnav(dir, options=) {
       dir = file_join(dir, "trajectories");
     }
   }
-  candidates = find(dir, glob="*-pnav.ybin");
+  candidates = find(dir, searchstr="*-pnav.ybin");
   if(!numberof(candidates)) return options ? [] : [string(0)];
   patterns = [
     "*-p-*-cmb-pnav.ybin",

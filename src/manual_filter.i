@@ -604,7 +604,7 @@ fudge=, mode=, native=, verbose=) {
   if(strlen(vname_append) && strpart(vname_append, 1:1) != "_")
     vname_append = "_" + vname_append;
 
-  files = find(srcdir, glob=src_searchstr);
+  files = find(srcdir, searchstr=src_searchstr);
 
   if(numberof(files) > 1)
     sizes = file_size(files)(cum)(2:);
@@ -908,7 +908,7 @@ func batch_scale_be_to_bathy(srcdir, outdir=, searchstr=) {
 */
   local vname;
   default, searchstr, "*.pbd";
-  srcfiles = find(srcdir, glob=searchstr);
+  srcfiles = find(srcdir, searchstr=searchstr);
   dstfiles = file_rootname(srcfiles) + "_spol.pbd";
   if(!is_void(outdir))
     dstfiles = file_join(outdir, file_tail(dstfiles));
@@ -1004,7 +1004,7 @@ func batch_snell_be_to_bathy(srcdir, outdir=, searchstr=) {
 */
   local vname;
   default, searchstr, "*.pbd";
-  srcfiles = find(srcdir, glob=searchstr);
+  srcfiles = find(srcdir, searchstr=searchstr);
   dstfiles = file_rootname(srcfiles) + "_snell.pbd";
   if(!is_void(outdir))
     dstfiles = file_join(outdir, file_tail(dstfiles));

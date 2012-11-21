@@ -74,7 +74,7 @@ daystart=, update=, verbose=, interval=) {
   default, interval, 10;
 
   if(is_void(files))
-    files = find(tlddir, glob=searchstr);
+    files = find(tlddir, searchstr=searchstr);
 
   outfiles = file_rootname(files) + ".pbd";
   if(!is_void(outdir))

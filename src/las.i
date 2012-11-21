@@ -222,7 +222,7 @@ header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
   t0 = array(double, 3);
   timer, t0;
 
-  files_pbd = find(dir_pbd, glob=searchstr);
+  files_pbd = find(dir_pbd, searchstr=searchstr);
   if(is_void(files_pbd))
     error, "No files found.";
   files_las = file_rootname(files_pbd);
@@ -695,7 +695,7 @@ shorten_fn=, update=, files=, date=, geo=, zone=) {
   timer, t0;
 
   if(is_void(files))
-    files_las = find(dir_las, glob=searchstr);
+    files_las = find(dir_las, searchstr=searchstr);
   else
     files_las = unref(files);
   if(is_void(files_las))
@@ -1103,7 +1103,7 @@ func batch_las_header(dir, searchstr=, files=, outfile=, toscreen=) {
   default, searchstr, "*.las";
   default, toscreen, 0;
   if(is_void(files)) {
-    files = find(dir, glob=searchstr);
+    files = find(dir, searchstr=searchstr);
     files = files(sort(files));
   }
   count = numberof(files);
@@ -1165,7 +1165,7 @@ func batch_las_header_summarize(dir, searchstr=, files=, outfile=, list_files=) 
   default, list_files, 0;
 
   if(is_void(files)) {
-    files = find(dir, glob=searchstr);
+    files = find(dir, searchstr=searchstr);
     files = files(sort(files));
   }
   count = numberof(files);

@@ -342,7 +342,7 @@ buffer=, ndivide=, nrand=, xy=) {
   default, xy, "uniform";
 
   if(is_void(files))
-    files = find(dir, glob=searchstr);
+    files = find(dir, searchstr=searchstr);
 
   if(xy == "random")
     suffix = "_pfr_";

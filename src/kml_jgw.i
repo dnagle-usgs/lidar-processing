@@ -27,7 +27,7 @@ func kml_jgw_make_levels(dir, levels=, searchstr=, update=, fast=, quality=) {
   SEE ALSO: kml_jgw_make_levels_single, jpg_shrink
 */
   default, searchstr, "*-cir.jpg";
-  files = find(dir, glob=searchstr);
+  files = find(dir, searchstr=searchstr);
   num = numberof(files);
   t0 = array(double, 3);
   timer, t0;
@@ -185,7 +185,7 @@ timediff=, name=, cir_soe_offset=) {
   timer, t0all;
 
   // Find files, calculate timestamps
-  files = find(dir, glob=searchstr);
+  files = find(dir, searchstr=searchstr);
   soes = cir_to_soe(file_rootname(file_tail(files))+".jpg", offset=cir_soe_offset);
   numfiles = numberof(files);
 
@@ -413,7 +413,7 @@ func batch_kml_jgw(dir, zone, levels=, searchstr=) {
   each image. This function is deprecated in favor of kml_jgw_build_product/
 */
   default, searchstr, "*.jgw";
-  files = find(dir, glob=searchstr);
+  files = find(dir, searchstr=searchstr);
   t0 = array(double, 3);
   timer, t0;
   tp = t0;
@@ -488,7 +488,7 @@ func kml_jgw_image(jgw, zone, &params, levels=, root=) {
 
   // If levels is not provided, then determine based on available images
   if(is_void(levels)) {
-    ljpgs = find(file_dirname(jgw), file_rootname(file_tail(jgw))+"_d*.jpg");
+    ljpgs = find(file_dirname(jgw), searchstr=file_rootname(file_tail(jgw))+"_d*.jpg");
     levels = numberof(ljpgs);
     ljpgs = [];
   }

@@ -526,7 +526,7 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=, clean=) {
   dst_geoid = regsub("^g", dst_geoid, "");
 
   if(is_void(files)) {
-    files = find(indir, glob=searchstr);
+    files = find(indir, searchstr=searchstr);
     if(!is_void(excludestr)) {
       w = where(!strglob(excludestr, file_tail(files)));
       if(numberof(w))
@@ -766,7 +766,7 @@ func batch_gen_prj(dir, files=, searchstr=, zone=, datum=, vert=) {
   default, vert, 0;
   wkt = vert ? wkt_cmpd : wkt_horz;
   if(is_void(files))
-    files = find(dir, glob=searchstr);
+    files = find(dir, searchstr=searchstr);
   for(i = 1; i <= numberof(files); i++) {
     tail = file_tail(files(i));
     czone = zone ? zone : tile2uz(tail);

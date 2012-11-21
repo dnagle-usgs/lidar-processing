@@ -329,33 +329,33 @@ func file_relative(base, dest) {
   return result;
 }
 
-func find(path, glob=) {
-/* DOCUMENT find(path, glob=)
+func find(path, searchstr=) {
+/* DOCUMENT find(path, searchstr=)
 
-  Finds all files in path that match the pattern(s) in glob. Glob defaults to
-  "*" and can be an array of patterns, in which case files that match any
-  pattern will be returned (it uses "or", not "and").
+  Finds all files in PATH that match the pattern(s) in SEARCHSTR. SEARCHSTR
+  defaults to "*" and can be an array of patterns, in which case files that
+  match any pattern will be returned (it uses "or", not "and").
 
   Full path and filename will be returned for each file.
 */
   fix_dir, path;
-  default, glob, "*";
-  if(numberof(glob) > 1)
-    glob=glob(:); // Seems to improve performance for some reason
+  default, searchstr, "*";
+  if(numberof(searchstr) > 1)
+    searchstr=searchstr(:); // Seems to improve performance for some reason
   results = subdirs = [];
   files = lsdir(path, subdirs);
   if(files == 0)
     return [];
   if(numberof(files)) {
     idx = array(0, numberof(files));
-    for(i = 1; i <= numberof(glob); i++)
-      idx |= strglob(glob(i), files);
+    for(i = 1; i <= numberof(searchstr); i++)
+      idx |= strglob(searchstr(i), files);
     if(anyof(idx))
       results = path+files(where(idx));
   }
   if(numberof(subdirs))
     for(i = 1; i <= numberof(subdirs); i++)
-      grow, results, find(path+subdirs(i), glob=glob);
+      grow, results, find(path+subdirs(i), searchstr=searchstr);
   return results;
 }
 

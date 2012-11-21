@@ -64,7 +64,7 @@ norun=) {
   default, forcelocal, 0;
 
   // Locate files and split into dirs/tails
-  files = find(path, glob=searchstr);
+  files = find(path, searchstr=searchstr);
   dirs = file_dirname(files);
   tails = file_tail(files);
 
@@ -321,7 +321,7 @@ makeflow_fn=, forcelocal=, norun=) {
   }
 
   if(is_void(files))
-    files = find(dir, glob=searchstr);
+    files = find(dir, searchstr=searchstr);
   count = numberof(files);
 
   if(!count) {

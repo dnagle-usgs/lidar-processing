@@ -491,7 +491,7 @@ func batch_pbd2edf(dirname, files=, searchstr=, outdir=, update=, type=, words=)
   default, update, 0;
 
   if(is_void(files))
-    files = find(dirname, glob=searchstr);
+    files = find(dirname, searchstr=searchstr);
 
   pbds = unref(files);
   edfs = file_rootname(pbds) + ".edf";
@@ -552,7 +552,7 @@ func batch_edf2pbd(dirname, files=, searchstr=, outdir=, update=) {
   default, update, 0;
 
   if(is_void(files))
-    files = find(dirname, glob=searchstr);
+    files = find(dirname, searchstr=searchstr);
 
   edfs = unref(files);
   pbds = file_rootname(edfs) + ".pbd";

@@ -36,7 +36,7 @@ func batch_kml_extents(datadir, outdir, searchstr=, name=, desc=,
 
   if (is_void(name)) autoname = 1;
 
-  cur = find(datadir, glob=searchstr);
+  cur = find(datadir, searchstr=searchstr);
   if (numberof(cur) == 0) 
     write, "\nNo _tile_extents.xyz files found!\n";
 

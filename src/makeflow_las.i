@@ -135,7 +135,7 @@ norun=) {
   t0 = array(double, 3);
   timer, t0;
 
-  files_pbd = find(dir_pbd, glob=searchstr);
+  files_pbd = find(dir_pbd, searchstr=searchstr);
   if(is_void(files_pbd))
     error, "No files found.";
   files_las = file_rootname(files_pbd);
@@ -406,7 +406,7 @@ norun=) {
   timer, t0;
 
   if(is_void(files))
-    files_las = find(dir_las, glob=searchstr);
+    files_las = find(dir_las, searchstr=searchstr);
   else
     files_las = unref(files);
   if(is_void(files_las))

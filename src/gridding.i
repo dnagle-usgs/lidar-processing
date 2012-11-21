@@ -73,7 +73,7 @@ powerwt=) {
   default, toarc, 0;
   default, method, "triangle";
 
-  files = find(dir, glob=searchstr);
+  files = find(dir, searchstr=searchstr);
 
   if(!numberof(files)) {
     write, "Nothing to do: no files found.";
@@ -569,7 +569,7 @@ func batch_write_arc_grid(dir, searchstr=, outdir=) {
   extension to .asc.
 */
   default, searchstr, "*_grid.pbd";
-  files = find(dir, glob=searchstr);
+  files = find(dir, searchstr=searchstr);
 
   t0 = array(double, 3);
   timer, t0;
@@ -771,7 +771,7 @@ predictor=, tiled=, usetcl=) {
         usetcl=1    Uses Tcl
 */
   default, searchstr, "*.asc";
-  files = find(dir, glob=searchstr);
+  files = find(dir, searchstr=searchstr);
   t0 = array(double, 3);
   timer, t0;
   tp = t0;
@@ -944,7 +944,7 @@ func qqtiff_gms_prep(tif_dir, pbd_dir, mode, outfile, tif_glob=, pbd_glob=) {
   default, pbd_glob, "*.pbd";
 
   // Source files
-  files = find(tif_dir, glob=tif_glob);
+  files = find(tif_dir, searchstr=tif_glob);
 
   // Scan pbds for exents
   extents = calculate_qq_extents(pbd_dir, mode=mode, glob=pbd_glob);

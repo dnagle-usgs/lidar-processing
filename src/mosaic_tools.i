@@ -180,7 +180,7 @@ func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=, search
     mission, read, conf_file;
 
   write, format="Locating images...%s", "\n";
-  photo_files = find(photo_dir, glob=searchstr);
+  photo_files = find(photo_dir, searchstr=searchstr);
   if(!numberof(photo_files))
     error, "No files found.";
 
@@ -579,7 +579,7 @@ func jgw_remove_missing(dir, dryrun=, to_file=) {
     f = open(to_file, "w");
   else
     f = [];
-  jpg_files = find(dir, glob="*.jpg");
+  jpg_files = find(dir, searchstr="*.jpg");
   jgw_files = file_rootname(jpg_files) + ".jgw";
   has_jgw = file_exists(unref(jgw_files));
   w = where(! has_jgw);
@@ -993,7 +993,7 @@ func extract_against_pbd_data(easting, northing, pbd_dir, searchstr=, mode=) {
   default, searchstr, "*.pbd";
   default, mode, "be";
 
-  pbd_files = find(pbd_dir, glob=searchstr);
+  pbd_files = find(pbd_dir, searchstr=searchstr);
   if(!numberof(pbd_files))
     error, "No pbd files found.";
 
@@ -1275,7 +1275,7 @@ func png_make_zips(src_dir, dst_dir, searchstr=) {
 */
 // Original David Nagle 2009-06-18
   default, searchstr, "*.png";
-  files = find(src_dir, glob=searchstr);
+  files = find(src_dir, searchstr=searchstr);
   timer_init, tstamp;
   for(i = 1; i <= numberof(files); i++) {
     timer_tick, tstamp, i, numberof(files);

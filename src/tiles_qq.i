@@ -324,7 +324,7 @@ func calculate_qq_extents(qqdir, mode=, glob=, remove_buffers=) {
   default, remove_buffers, 1;
 
   // Source files
-  files = find(qqdir, glob=glob);
+  files = find(qqdir, searchstr=glob);
 
   qqs = h_new();
 

@@ -1017,7 +1017,7 @@ suffix_remove=, suffix=) {
   default, suffix_remove, ".pbd";
   default, suffix, ".pbd";
   if(is_void(files)) {
-    files = find(dir, glob=searchstr);
+    files = find(dir, searchstr=searchstr);
     if(is_void(files)) {
       write, "No files found.";
       return;
