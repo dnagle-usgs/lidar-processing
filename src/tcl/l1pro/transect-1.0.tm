@@ -32,6 +32,7 @@ namespace eval l1pro::transect {
                 Cross2      6
                 Triangle2   7
             }
+            variable colors {black red blue green magenta yellow cyan}
 
             variable recalls [list 0 -1 -2 -3 1 2 3]
         }
@@ -74,10 +75,10 @@ namespace eval l1pro::transect {
             ${p}data - x \
             ${p}recall - x \
             ${p}width ${p}iwin ${p}owin x \
-            ${p}marker - x \
+            ${p}marker - - x \
             ${p}options \
             -padx 2 -pady 2
-        grid ${p}seph - - - - - - - - - - - - - - - - - - - - - \
+        grid ${p}seph - - - - - - - - - - - - - - - - - - - - - - \
                 -padx 2 -pady 0 -sticky ew
 
         gui_add_row
@@ -160,6 +161,7 @@ namespace eval l1pro::transect {
         set settings($row,owin) 2
         set settings($row,marker) 1
         set settings($row,msize) 0.1
+        set settings($row,scolor) "black"
         set settings($row,connect) 0
         set settings($row,xfma) 1
         set settings($row,showline) 0
@@ -185,8 +187,8 @@ namespace eval l1pro::transect {
     proc get_settings {row} {
         set result [list]
         foreach key {
-            var userecall recall width iwin owin marker msize connect xfma
-            showline showpts flight line channel digitizer mode
+            var userecall recall width iwin owin marker msize scolor connect
+            xfma showline showpts flight line channel digitizer mode
         } {
             dict set result $key $v::settings($row,$key)
         }
@@ -213,7 +215,7 @@ namespace eval l1pro::transect {
         ttk::checkbutton ${p}userecall -text "" \
                 -variable ${var}($row,userecall) \
                 -style NoLabel.TCheckbutton
-        ::mixin::combobox ${p}recall -text 0 -width 4 \
+        ::mixin::combobox ${p}recall -width 4 \
                 -textvariable ${var}($row,recall) \
                 -listvariable ::l1pro::transect::v::recalls
         ttk::spinbox ${p}width -width 4 \
@@ -228,6 +230,10 @@ namespace eval l1pro::transect {
                 -mapping $v::marker_mapping
         ttk::spinbox ${p}msize -text 1.0 -width 3 \
                 -textvariable ${var}($row,msize)
+        ::mixin::combobox ${p}scolor \
+                -width 7 -state readonly \
+                -textvariable ${var}($row,scolor) \
+                -values $v::colors
         ttk::checkbutton ${p}connect -text "Connect" \
                 -variable ${var}($row,connect) \
                 -style Small.TCheckbutton
@@ -294,14 +300,14 @@ namespace eval l1pro::transect {
                 ${p}sep3 \
                 ${p}width ${p}iwin ${p}owin \
                 ${p}sep4 \
-                ${p}marker ${p}msize \
+                ${p}marker ${p}msize ${p}scolor \
                 ${p}sep5 \
                 ${p}options \
                 ${p}sep6 \
                 ${p}plotline ${p}examine ${p}delete \
                 ${p}sep7 \
                 -padx 2 -pady 2
-        grid ${p}seph - - - - - - - - - - - - - - - - - - - - - \
+        grid ${p}seph - - - - - - - - - - - - - - - - - - - - - - \
                 -padx 2 -pady 0 -sticky ew
 
         grid ${p}var -sticky ew
@@ -375,6 +381,28 @@ namespace eval l1pro::transect {
                 "Marker style to use when plotting transect points."
         ::tooltip::tooltip ${p}msize \
                 "Marker size to use when plotting transect points."
+        ::tooltip::tooltip ${p}scolor \
+                "Starting color to use when plotting transect points. When\
+                \nthere are multiple segments (as determined by \"Segment by\"\
+                \nsettings), each segment will be colored differently. There\
+                \nare seven colors that are cycled through:\
+                \n  black\
+                \n  red\
+                \n  blue\
+                \n  green\
+                \n  magenta\
+                \n  yellow\
+                \n  cyan\
+                \nThis option specifies which color to start with in that\
+                \nlist.\
+                \n\
+                \nThis might be useful, for example, when comparing points to\
+                \ngroundtruth data. You can make the groundtruth data plot all\
+                \nin black (by disabling all segmenting options and leaving\
+                \nthis option set to black). You can then make the lidar data\
+                \nstart at red, and then it will be more visible against the\
+                \nblack points (provided there are not so many segments that\
+                \nit cycles back to black)."
         ::tooltip::tooltip ${p}connect \
                 "If enabled, the transect points for each segment will be\
                 \nconnected so as to draw a line."
@@ -517,18 +545,19 @@ namespace eval l1pro::transect {
 
             set cmd "tr$row = transect($var, mode=\"$mode\""
             appendif cmd \
-                    $userecall          ", recall=$recall" \
-                    {$segment ne ""}    ", segment=$segment" \
-                    {$width != 3}       ", width=$width" \
-                    {$iwin != 5}        ", iwin=$iwin" \
-                    {$owin != 2}        ", owin=$owin" \
-                    $xfma               ", xfma=1" \
-                    {$marker != 1}      ", marker=$marker" \
-                    {$msize != 0.1}     ", msize=$msize" \
-                    $connect            ", connect=1" \
-                    $showline           ", showline=2" \
-                    $showpts            ", showpts=1" \
-                    1                   ")"
+                    $userecall              ", recall=$recall" \
+                    {$segment ne ""}        ", segment=$segment" \
+                    {$width != 3}           ", width=$width" \
+                    {$iwin != 5}            ", iwin=$iwin" \
+                    {$owin != 2}            ", owin=$owin" \
+                    $xfma                   ", xfma=1" \
+                    {$marker != 1}          ", marker=$marker" \
+                    {$msize != 0.1}         ", msize=$msize" \
+                    {$scolor ne "black"}    ", scolor=\"$scolor\"" \
+                    $connect                ", connect=1" \
+                    $showline               ", showline=2" \
+                    $showpts                ", showpts=1" \
+                    1                       ")"
             exp_send "$cmd;\r"
 
             append_varlist tr$row
