@@ -577,8 +577,8 @@ func iex_ascii2pbd(fn) {
     iex_temp.roll = temp(5,);
     iex_temp.pitch = temp(6,);
     iex_temp.heading = temp(7,);
-    iex_nav(chunk) = &iex_temp;
-    grow, iex_nav, &iex_temp;
+    // Force a copy
+    iex_nav(chunk) = &iex_temp(:);
   };
   close, f;
   iex_temp.somd = temp(1,);
@@ -588,7 +588,8 @@ func iex_ascii2pbd(fn) {
   iex_temp.roll = temp(5,);
   iex_temp.pitch = temp(6,);
   iex_temp.heading = temp(7,);
-  grow, iex_nav, &iex_temp(1:n/7);
+  array_allocate, iex_nav, ++chunk;
+  iex_nav(chunk) = &iex_temp(1:n/7);
   write, "\n";
   iex_nav = merge_pointers(iex_nav);
   info, iex_nav;
