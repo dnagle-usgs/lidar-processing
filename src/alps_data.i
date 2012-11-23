@@ -738,7 +738,7 @@ func struct_cast(&data, dest, verbose=, special=) {
   By default, this function is silent. Use verbose=1 to make it chatty.
 */
 // Original David Nagle 2010-02-05
-  local x, y, z;
+  local x, y, z, raster, pulse;
 
   default, verbose, 0;
   default, special, 1;
@@ -981,6 +981,17 @@ func struct_cast(&data, dest, verbose=, special=) {
         result.nx = 2;
       }
     }
+  }
+
+  // If result has RN and unpopulated RASTER/PULSE, then populate RASTER/PULSE.
+  if(
+    has_member(result, "rn") &&
+    has_member(result, "raster") && has_member(result, "pulse") &&
+    anyof(result.rn) && noneof(result.raster) && noneof(result.pulse)
+  ) {
+    parse_rn, result.rn, raster, pulse;
+    result.raster = raster;
+    result.pulse = pulse;
   }
 
   if(am_subroutine())

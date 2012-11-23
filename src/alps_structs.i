@@ -59,23 +59,26 @@ local FS;
   first returns.)
 
   struct FS {
-    long rn;             raster + pulse << 24
-    long mnorth;         mirror northing
-    long meast;          mirror east
-    long melevation;     mirror elevation
-    long north;          surface north
-    long east;           surface east
-    long elevation;      surface elevation (m)
-    short intensity;     surface return intensity
-    double soe;          seconds of the epoch
-    char channel;        channel used if forced; 0 if auto chosen
+    long rn;            raster + pulse << 24
+    long raster;        raster
+    short pulse;        pulse
+    long mnorth;        mirror northing
+    long meast;         mirror east
+    long melevation;    mirror elevation
+    long north;         surface north
+    long east;          surface east
+    long elevation;     surface elevation (m)
+    short intensity;    surface return intensity
+    double soe;         seconds of the epoch
+    char channel;       channel used if forced; 0 if auto chosen
   };
 
   SEE ALSO: R, VEG__, GEO
 */
 
 struct FS {
-  long rn;
+  long rn, raster;
+  short pulse;
   long mnorth, meast, melevation;
   long north, east, elevation;
   short intensity;
@@ -92,6 +95,8 @@ local VEG__, VEG_, VEG;
 
   struct VEG__ {
     long rn;          raster + pulse << 24
+    long raster;      raster
+    short pulse;      pulse
     long north;       surface northing (cm)
     long east;        surface easting (cm)
     long elevation;   surface elevation (cm)
@@ -137,7 +142,8 @@ local VEG__, VEG_, VEG;
 */
 
 struct VEG__ {
-  long rn;
+  long rn, raster;
+  short pulse;
   long north, east, elevation;
   long mnorth, meast, melevation;
   long lnorth, least, lelv;
@@ -172,26 +178,29 @@ local GEO;
   Point structure for bathymetry.
 
   struct GEO {
-    long rn;             raster + pulse << 24
-    long north;          surface northing in cm
-    long east;           surface easting in cm
-    short sr2;           slant range first to last return in ns*10
-    long elevation;      first surface elevation in cm
-    long mnorth;         mirror northing
-    long meast;          mirror easting
-    long melevation;     mirror elevation
-    short bottom_peak;   peak amplitude of bottom return signal
-    short first_peak;    peak amplitude of first surface return signal
-    long bath;           unused?
-    short depth;         water depth in cm
-    double soe;          seconds of the epoch
-    char channel;        channel used if forced; 0 if auto chosen
+    long rn;            raster + pulse << 24
+    long raster;        raster
+    short pulse;        pulse
+    long north;         surface northing in cm
+    long east;          surface easting in cm
+    short sr2;          slant range first to last return in ns*10
+    long elevation;     first surface elevation in cm
+    long mnorth;        mirror northing
+    long meast;         mirror easting
+    long melevation;    mirror elevation
+    short bottom_peak;  peak amplitude of bottom return signal
+    short first_peak;   peak amplitude of first surface return signal
+    long bath;          unused?
+    short depth;        water depth in cm
+    double soe;         seconds of the epoch
+    char channel;       channel used if forced; 0 if auto chosen
   }
 
   SEE ALSO: GEOALL, R, VEG__
 */
 struct GEO {
-  long rn;
+  long rn, raster;
+  short pulse;
   long north, east;
   short sr2;
   long elevation;
