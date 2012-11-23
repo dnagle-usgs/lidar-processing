@@ -188,6 +188,48 @@ struct ENGR_DMARS {
   float sensor(6);
 };
 
+local IEX_ATTITUDE;
+/* DOCUMENT
+  Structure used for storing processed DMARS data.
+
+  struct IEX_ATTITUDE {
+    double somd;
+    double lat;
+    double lon;
+    float alt;
+    float roll;
+    float pitch;
+    float heading;
+  };
+*/
+struct IEX_ATTITUDE {
+  double somd, lat, lon;
+  float alt, roll, pitch, heading;
+};
+
+local IEX_ATTITUDEUTM;
+/* DOCUMENT
+  Structure used for storing processed DMARS data that has been converted to
+  UTM.
+
+  struct IEX_ATTITUDEUTM {
+    double somd;
+    double lat;
+    double lon;
+    double northing;
+    double easting;
+    double zone;
+    float alt;
+    float roll;
+    float pitch;
+    float heading;
+  };
+*/
+struct IEX_ATTITUDEUTM {
+  double somd, lat, lon, northing, easting, zone;
+  float alt, roll, pitch, heading;
+};
+
 func load_iexpbd(fn, verbose=) {
 /* DOCUMENT load_iexpbd, fn, verbose=
   Loads INS (IMU/IEX/DMARS) data into the global variables iex_nav and
@@ -441,30 +483,6 @@ func load_iex(fn) {
     "------------------------------------------------------------------";
   write, format="Variable \"iex\", %dmb, is ready\n", int(sizeof(iex)/1e6);
 }
-
-struct IEX_ATTITUDE {
-  double somd
-  double lat
-  double lon
-  float  alt
-  float  roll
-  float  pitch
-  float  heading
-};
-
-
-struct IEX_ATTITUDEUTM {
-  double somd
-  double lat
-  double lon
-  double northing
-  double easting
-  double zone
-  float  alt
-  float  roll
-  float  pitch
-  float  heading
-};
 
 func iex2tans(void) {
 /* DOCUMENT iex2tans;
