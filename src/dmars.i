@@ -130,7 +130,6 @@ pitch/roll/heading and other information.
 
 */
 
-G = 9.80665;
 GS = 90.0/double(2^15);
 as = (19.6/double(2^15));
 
