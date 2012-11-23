@@ -106,37 +106,6 @@ func mouse_click_is(query, click) {
   return match ? 1 : 0;
 }
 
-func mouse_measure(sys, style, prompt, win=) {
-/* DOCUMENT mouse_measure(sys, style, prompt, win=)
-  -or- mouse_measure, sys, style, prompt, win=
-
-  Prompts the user to click and drag in the current window to measure a
-  distance. If called as a function, the distance will be returned. If called
-  as a subroutine, the distance will be written to the screen.
-
-  Arguments SYS, STYLE, and PROMPT are passed through to the mouse function
-  and default to 1, 2, and "Click and drag in window %d to measure",
-  respectively. WIN is the window the user should click in and defaults to the
-  current window.
-*/
-  default, sys, 1;
-  default, style, 2;
-  default, win, window();
-  default, prompt, swrite(format="Click and drag in window %d to measure", win);
-
-  wbkp = current_window();
-  window, win;
-
-  click = mouse(sys, style, prompt);
-  dist = ppdist(click(1:2), click(3:4));
-
-  window_select, win;
-
-  if(am_subroutine())
-    write, format=" Distance: %.10g\n", dist;
-  return dist;
-}
-
 func mouse_bounds(&xmin, &ymin, &xmax, &ymax, sys=, style=, prompt=, win=) {
 /* DOCUMENT mouse_bounds(sys=, style=, prompt=, win=)
   -or- mouse_bounds, xmin, ymin, xmax, ymax, sys=, style=, prompt=, win=
@@ -203,7 +172,7 @@ func mdist(&click, units=, win=, plot=, verbose=, nox=, noy=) {
   Returns:
     Scalar distance in meters.
 
-  SEE ALSO: lldist, mouse_measure
+  SEE ALSO: lldist
 */
   default, units, "m";
   default, win, window();
