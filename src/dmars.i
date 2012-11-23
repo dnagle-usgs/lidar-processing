@@ -332,12 +332,12 @@ func load_raw_dmars(fn=) {
    }
 
  }
- write,"\n\n"
- write,format="\nTotal Recs; DMARS::%d SYSTIME:%d\n", total_dmars, total_time
- write,format="Computed GMT time diff is: %d secs\n", tdiff
  dmars_ntptime = stime(1,) + stime(2,)*1.0e-6;
  tdiff = stime(1,-1000) - stime(3,-1000)/200.0;
  tdiff = int(tdiff);
+ write,"\n\n"
+ write,format="\nTotal Recs; DMARS::%d SYSTIME:%d\n", total_dmars, total_time
+ write,format="Computed GMT time diff is: %d secs\n", tdiff
  return dmars;
 }
 
