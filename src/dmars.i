@@ -141,7 +141,7 @@ local IEX;
 
   struct IEX {
     double sow;       Seconds of the GPS week
-    int sensors(6);   Sensor array values
+    int sensor(6);    Sensor array values
   }
 
   The sensor array is:
@@ -150,7 +150,7 @@ local IEX;
 */
 struct IEX {
   double sow;
-  int sensors(6);
+  int sensor(6);
 };
 
 local RAW_DMARS_IMU;
@@ -306,9 +306,9 @@ func load_raw_dmars(fn=) {
   loop = 1;
   tspo = int();
   status = char();
-  sensor = array(short,6);
+  sensor = array(short, 6);
   dmars = RAW_DMARS_IMU();
-  la = array(int,2);
+  la = array(int, 2);
 
   if(catch(0x02)) {
     grow, stime, systime(,1:j);
@@ -445,7 +445,7 @@ func load_iex(fn) {
     iex_header.nrecs
 
   add_member, f, "IEX",  0, "sow", double;
-  add_member, f, "IEX", -1, "sensors", int, 6;
+  add_member, f, "IEX", -1, "sensor", int, 6;
   install_struct, f, "IEX";
   iex = array(IEX, iex_header.nrecs);
   _read, f, 512, iex;
