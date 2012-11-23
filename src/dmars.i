@@ -2,6 +2,7 @@
 
 require, "yeti_regex.i";
 require, "util_basic.i";
+require, "util_container.i";
 
 extern dmars_i
 /* DOCUMENT dmars_i
@@ -501,6 +502,12 @@ func iex_ascii2pbd(fn) {
   This is called via the iex_ascii2pbd command line script.
 */
 // Original: W. Wright 12/27/2003
+  // Calculate file size
+  size = sizeof(open(fn, "rb"));
+
+  // Estimate number of lines in file. Data lines are generally ~124
+  // chars/line. This gives a pretty conservative estimate.
+  est_lines = size / 100;
 
   // Calculate header length
   num_re = "-?[0-9]+\.[0-9]+";
@@ -521,18 +528,30 @@ func iex_ascii2pbd(fn) {
   // Extract header
   f = open(fn);
   i = 0;
-  iex_head=rdline(f, count);
-  write,iex_head;
-  write,"\n";
+  iex_head = rdline(f, count);
+  write, iex_head;
+  write, "\n";
 
-  // Extract data
+  // BSZ is the number of lines to read in at a time. Reading the data in as
+  // chunks instead of line-by-line is more efficient.
   BSZ = 100000;
-  iex_nav = [];
+
+  // Estimate number of chunks needed:
+  est_chunks = long(ceil(double(est_lines) / BSZ)) + 1;
+
+  // Current chunk number
+  chunk = 0;
+
+  // Storage for data as its being read in
+  iex_nav = array(pointer, est_chunks);
+
   iex_temp = array(IEX_ATTITUDE, BSZ);
   temp = array(double, 7, BSZ);
   while((n = read(f,format="%lf", temp)) == 7*BSZ) {
-    i++;
-    write,format="  Processing %d\r", i;
+    // Make sure there's enough space
+    array_allocate, iex_nav, ++chunk;
+
+    write, format="  Processing %d\r", chunk;
     iex_temp.somd = temp(1,);
     iex_temp.lat = temp(2,);
     iex_temp.lon = temp(3,);
@@ -540,7 +559,8 @@ func iex_ascii2pbd(fn) {
     iex_temp.roll = temp(5,);
     iex_temp.pitch = temp(6,);
     iex_temp.heading = temp(7,);
-    grow, iex_nav, iex_temp;
+    iex_nav(chunk) = &iex_temp;
+    grow, iex_nav, &iex_temp;
   };
   close, f;
   iex_temp.somd = temp(1,);
@@ -550,8 +570,9 @@ func iex_ascii2pbd(fn) {
   iex_temp.roll = temp(5,);
   iex_temp.pitch = temp(6,);
   iex_temp.heading = temp(7,);
-  grow, iex_nav, iex_temp(1:n/7);
+  grow, iex_nav, &iex_temp(1:n/7);
   write, "\n";
+  iex_nav = merge_pointers(iex_nav);
   info, iex_nav;
 
   // Save to PBD
@@ -560,7 +581,7 @@ func iex_ascii2pbd(fn) {
   of = createb(ofn);
   save, of, iex_head, iex_nav;
   close, of;
-  write,format="Created: %s\n", ofn;
+  write, format="Created: %s\n", ofn;
 }
 
 func parse_iex_basestations(header) {
