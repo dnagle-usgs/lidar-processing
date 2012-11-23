@@ -134,36 +134,58 @@ local dmars_GS, dmars_as;
 /* DOCUMENT
   Constants used to convert DMARS sensor values
     dmars_GS - converts DMARS sensor values to angles
-    dmars_as - converts DMARS sensor values to velocities
+    dmars_as - converts DMARS sensor values to accelerations
 */
 dmars_GS = 90.0/double(2^15);
 dmars_as = (19.6/double(2^15));
 
-/*
-   The sensor array is as follows:
+local IEX;
+/* DOCUMENT
+  Structure for DMARS sensor data.
 
-    1     X gyro
-    2     Y Gyro
-    3     Z Gyro
-    4     X Accel
-    5     Y Accel
-    6     Z Acces ( this one is very close to gravity)
+  struct IEX {
+    double sow;       Seconds of the GPS week
+    int sensors(6);   Sensor array values
+  }
+
+  The sensor array is:
+    [X gyro, Y gyro, Z gyro, X accel, Y accel, Z accel]
+  Z accel will be very close to gravity. Units are DMARS-specific.
 */
-
 struct IEX {
   double sow;
   int sensors(6);
 };
 
+local RAW_DMARS_IMU;
+/* DOCUMENT RAW_DMARS_IMU
+  struct RAW_DMARS_IMU {
+    int tspo;         Time since power on
+    char status;      Status byte
+    short sensor(6);  Sensor array values (see IEX)
+  }
+
+  The sensor array is:
+    [X gyro, Y gyro, Z gyro, X accel, Y accel, Z accel]
+  Z accel will be very close to gravity.
+*/
 struct RAW_DMARS_IMU {
-  int tspo;    // time since power on
-  char status;   // status byte
-  short sensor(6); // IMU sensor data
+  int tspo;
+  char status;
+  short sensor(6);
 };
 
-/*
-   This data is in engineering units of degrees/second
-   and "G".
+local ENGR_DMARS
+/* DOCUMENT
+  struct ENGR_DMARS {
+    double soe;       Seconds of the epoch
+    float sensor(6);  Sensor array values (see IEX)
+  }
+
+  The sensor array is:
+    [X gyro, Y gyro, Z gyro, X accel, Y accel, Z accel]
+  Z accel will be very close to gravity. Units are in degrees/second and in
+  units of g-force.
 */
 struct ENGR_DMARS {
   double soe;
