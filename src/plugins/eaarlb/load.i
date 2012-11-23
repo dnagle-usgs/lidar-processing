@@ -17,6 +17,7 @@ include, base + "edb_access.i";
 include, base + "geo_bath.i";
 include, base + "irg.i";
 include, base + "makeflow_eaarl.i";
+include, base + "manual_filter.i";
 include, base + "mission.i";
 include, base + "mission_constants.i";
 include, base + "mosaic_biases.i";
