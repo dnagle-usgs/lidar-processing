@@ -83,7 +83,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "dirload.i";
   require, "dmars.i";
   require, "edf.i";
-  require, "fp.i";
+  require, "flight_planning.i";
   require, "geometry.i";
   require, "geotiff_tags.i";
   require, "gridding.i";
