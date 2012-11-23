@@ -61,8 +61,8 @@ if(is_void(__eaarl_includes_included__)) {
   require, "logger.i";
   require, "assert.i";
   require, "alps_constants.i";
-  require, "eaarl_structs.i";
   require, "alps_data.i";
+  require, "alps_structs.i";
   require, "util_basic.i";
   require, "general.i";
   require, "util_obj.i";
