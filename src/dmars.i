@@ -351,10 +351,8 @@ func convert_raw_dmars_2_engr(dmars) {
 // using a time defference determined from near the end of the
 // data set.
  engr_dmars.soe = dmars.tspo/200.0 + tdiff;
- for (i=1, j=4; i<=3; i++,j++ ) {
-   engr_dmars.sensor(i,) = dmars.sensor(i,) * dmars_GS;
-   engr_dmars.sensor(j,) = dmars.sensor(j,) * dmars_as;
- }
+ engr_dmars.sensor(1:3,) = dmars.sensor(1:3,) * dmars_GS;
+ engr_dmars.sensor(4:6,) = dmars.sensor(4:6,) * dmars_as;
  return engr_dmars;
 }
 
