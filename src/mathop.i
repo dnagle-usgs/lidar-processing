@@ -24,7 +24,7 @@ local mathop;
   name and it is stored in a variable, you must wrap the variable's name in
   noop():
     ref = mathop(noop(VARNAME))
-    result = matho(noop(VARNAME), a, b)
+    result = mathop(noop(VARNAME), a, b)
 
   Also, if you wish to use the symbol to reference the function, you must pass
   it as a string since it is not a valid Yorick bare variable name.
