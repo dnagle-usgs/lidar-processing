@@ -23,11 +23,6 @@ proc copy_points_using_pip {} {
     }
 }
 
-proc copy_points_using_pix {} {
-    exp_send "workdata = select_points($::pro_var, win=$::win_no);\r"
-    expect ">"
-}
-
 proc copy_points_using_tile {} {
     set selection [tk_messageBox -icon info -type okcancel -message \
             "Select a cell (250m by 250m) region by dragging a region in\
@@ -70,7 +65,7 @@ proc filter_remove {} {
 
     ::mixin::combobox .rem.1 -width 18 -state readonly \
             -text "Remove points using..." \
-            -values [list "Rubberband Box" "Points in Polygon" "Single Pixel" \
+            -values [list "Rubberband Box" "Points in Polygon" \
                     "Pip-Thresh"] \
             -modifycmd {
                 set removemode [.rem.1 getvalue]
@@ -92,8 +87,7 @@ proc filter_remove {} {
     ::tooltip::tooltip .rem.1 \
             "Remove points from 'workdata' using any of the following methods:\
             \n  Rubberband Box\
-            \n  Points in Polygon\
-            \n  Single Pixel"
+            \n  Points in Polygon"
     Label .rem.07.a -text "Min. Threshold:"
     Label .rem.08.a -text "Max. Threshold:"
     Label .rem.09.a -text "WARNING: Cannot undo action." -justify center
@@ -147,16 +141,6 @@ proc filter_remove {} {
             }
         }
         if {$selr == 2} {
-            set selection [tk_messageBox  -icon info -type okcancel -message \
-                    "Select points to remove from window $win_no"]
-            if {$selection == "ok"} {
-                exp_send "croppeddata=\[\];\
-                        $rmv_var = select_points($rmv_var, win=$win_no,\
-                        exclude=1);\r"
-                expect ">"
-            }
-        }
-        if {$selr == 3} {
             if {[.rem.06.type getvalue] == 1} {
                 set val [.rem.06.type getvalue]
             } else {
@@ -212,7 +196,7 @@ proc filter_keep {} {
 
     ::mixin::combobox .sel.1 -state readonly -width 16 \
             -text "Keep points using..." \
-            -values {{Rubberband Box} {Points in Polygon} {Single Pixel}} \
+            -values {{Rubberband Box} {Points in Polygon}} \
             -modifycmd {
                 global sels keep_in_var keep_out_var grow_keep
                 set sels [.sel.1 getvalue]
@@ -226,8 +210,7 @@ proc filter_keep {} {
     ::tooltip::tooltip .sel.1 \
             "Keep points from 'workdata' using any of the following methods:\
             \n  Rubberband Box\
-            \n  Points in Polygon\
-            \n  Single Pixel"
+            \n  Points in Polygon"
 
     checkbutton .sel.grow -text "Grow output variable" -variable grow_keep
     LabelEntry .sel.15 -relief sunken -label "Output Variable:" \
@@ -268,21 +251,6 @@ proc filter_keep {} {
                 } else {
                     exp_send "grow, $keep_out_var,\
                             sel_data_rgn($keep_in_var, mode=3, win=$win_no);\r"
-                    expect ">"
-                }
-            }
-        }
-        if {$sels == 2} {
-            set selection [tk_messageBox -icon info -type okcancel -message \
-                    "Select points to keep from window $win_no"]
-            if {$selection == "ok"} {
-                if {$grow_keep == 0} {
-                    exp_send "$keep_out_var =\
-                            select_points($keep_in_var, win=$win_no);\r"
-                    expect ">"
-                } else {
-                    exp_send "grow, $keep_out_var,\
-                            select_points($keep_in_var, win=$win_no));\r"
                     expect ">"
                 }
             }
