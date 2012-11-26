@@ -225,6 +225,9 @@ func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
   if(logger(trace)) {
     logger, trace, log_id+"  Full contents of q:";
     logger, trace, log_id+"    "+print(q);
+    logger, trace, log_id+"ops_conf="+print(ops_conf)(sum);
+    logger, trace, log_id+"bath_ctl="+print(bath_ctl)(sum);
+    logger, trace, log_id+"bath_ctl_chn4="+print(bath_ctl_chn4)(sum);
   }
 
   extern tans, pnav;
