@@ -135,11 +135,13 @@ func __logger(level, msg) {
   level = swrite(format="%5s", strpart(level, 1:5));
   prefix = soe2iso8601(getsoe()) + " ["+level+"] <yor>";
 
-  parts = [string(0), msg];
-  do {
-    parts = strtok(parts(2), "\n");
-    write, __logfh, format="%s %s\n", prefix, parts(1);
-  } while(parts(2));
+  for(i = 1; i <= numberof(msg); i++) {
+    parts = [string(0), msg(i)];
+    do {
+      parts = strtok(parts(2), "\n");
+      write, __logfh, format="%s %s\n", prefix, parts(1);
+    } while(parts(2));
+  }
   fflush, __logfh;
 }
 
