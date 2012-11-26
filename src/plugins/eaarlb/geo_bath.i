@@ -214,12 +214,17 @@ func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
   log_id = logger_id();
   if(logger(debug)) {
     logger, debug, log_id+"Entering make_bathy";
+    logger, debug, log_id+"Flight loaded: "+mission.data.loaded;
     logger, debug, log_id+"Parameters:";
     logger, debug, log_id+"  latutm="+pr1(latum);
     logger, debug, log_id+"  q="+pr1(q);
     logger, debug, log_id+"  info(q)="+info(q)(sum);
     logger, debug, log_id+"  avg_surf="+pr1(avg_surf);
     logger, debug, log_id+"  forcechannel="+pr1(forcechannel);
+  }
+  if(logger(trace)) {
+    logger, trace, log_id+"  Full contents of q:";
+    logger, trace, log_id+"    "+print(q);
   }
 
   extern tans, pnav;
