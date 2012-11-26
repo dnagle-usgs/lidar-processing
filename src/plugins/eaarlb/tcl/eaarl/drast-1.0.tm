@@ -1,10 +1,10 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
-package provide l1pro::drast 1.0
+package provide eaarl::drast 1.0
 package require imglib
 
-if {![namespace exists ::l1pro::drast]} {
-    namespace eval ::l1pro::drast {
+if {![namespace exists ::eaarl::drast]} {
+    namespace eval ::eaarl::drast {
         namespace import ::misc::appendif
         namespace import ::misc::tooltip
         namespace eval v {
@@ -76,7 +76,7 @@ if {![namespace exists ::l1pro::drast]} {
     }
 }
 
-proc ::l1pro::drast::gui {} {
+proc ::eaarl::drast::gui {} {
     set ns [namespace current]
     set w $v::top
     destroy $w
@@ -105,7 +105,7 @@ proc ::l1pro::drast::gui {} {
     bind $f <Visibility> ${ns}::gui_refresh
 }
 
-proc ::l1pro::drast::gui_slider f {
+proc ::eaarl::drast::gui_slider f {
     set ns [namespace current]
     ttk::frame $f -relief groove -padding 1 -borderwidth 2
     ttk::scale $f.scale -from 1 -to $v::maxrn \
@@ -118,7 +118,7 @@ proc ::l1pro::drast::gui_slider f {
     set v::scale $f.scale
 }
 
-proc ::l1pro::drast::gui_vcr f {
+proc ::eaarl::drast::gui_vcr f {
     set ns [namespace current]
     ttk::frame $f -relief groove -padding 1 -borderwidth 2
     ttk::button $f.stepfwd -style Toolbutton \
@@ -149,7 +149,7 @@ proc ::l1pro::drast::gui_vcr f {
     tooltip $f.stop "Stop playing"
 }
 
-proc ::l1pro::drast::gui_tools f {
+proc ::eaarl::drast::gui_tools f {
     set ns [namespace current]
     ttk::frame $f -relief groove -padding 1 -borderwidth 2
     ttk::entry $f.rn -textvariable ${ns}::v::rn -width 8
@@ -167,7 +167,7 @@ proc ::l1pro::drast::gui_tools f {
     bind $f.rn <Return> ${ns}::show_auto
 }
 
-proc ::l1pro::drast::gui_opts f {
+proc ::eaarl::drast::gui_opts f {
     ::ttk::frame $f
 
     set labels_left {}
@@ -258,7 +258,7 @@ proc ::l1pro::drast::gui_opts f {
     grid columnconfigure $f 0 -weight 1
 }
 
-proc ::l1pro::drast::gui_opts_play {f labelgrid} {
+proc ::eaarl::drast::gui_opts_play {f labelgrid} {
     set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Playback"
     set f [$f interior]
@@ -290,7 +290,7 @@ proc ::l1pro::drast::gui_opts_play {f labelgrid} {
     apply $labelgrid $f.autoptc -
 }
 
-proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
+proc ::eaarl::drast::gui_opts_rast {f labelgrid} {
     set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Raster"
     set f [$f interior]
@@ -390,7 +390,7 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
             in its own window."
 }
 
-proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
+proc ::eaarl::drast::gui_opts_wf {f labelgrid} {
     set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Waveforms"
     $f fastcollapse
@@ -422,7 +422,7 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
     apply $labelgrid $f.winwftransmit "Transmit win:" $f.use0 -
 }
 
-proc ::l1pro::drast::gui_opts_sline {f labelgrid} {
+proc ::eaarl::drast::gui_opts_sline {f labelgrid} {
     set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Scanline"
     $f fastcollapse
@@ -448,7 +448,7 @@ proc ::l1pro::drast::gui_opts_sline {f labelgrid} {
     apply $labelgrid $f.styles "Plot style:"
 }
 
-proc ::l1pro::drast::gui_opts_export {f labelgrid} {
+proc ::eaarl::drast::gui_opts_export {f labelgrid} {
     set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Export"
     $f fastcollapse
@@ -470,11 +470,11 @@ proc ::l1pro::drast::gui_opts_export {f labelgrid} {
     apply $labelgrid $f.dest "Destination:"
 }
 
-proc ::l1pro::drast::send_rastunits {} {
+proc ::eaarl::drast::send_rastunits {} {
     ybkg set_depth_scale \"$v::rastunits\"
 }
 
-proc ::l1pro::drast::gui_refresh {} {
+proc ::eaarl::drast::gui_refresh {} {
     set maxrn [yget total_edb_records]
     if {[string is integer -strict $maxrn]} {
         set v::maxrn $maxrn
@@ -482,9 +482,9 @@ proc ::l1pro::drast::gui_refresh {} {
     $v::scale configure -to $v::maxrn
 }
 
-proc ::l1pro::drast::show_auto {} {
+proc ::eaarl::drast::show_auto {} {
     if {$v::sfsync} {
-        exp_send "tkcmd, swrite(format=\"::l1pro::drast::mediator::broadcast_soe\
+        exp_send "tkcmd, swrite(format=\"::eaarl::drast::mediator::broadcast_soe\
                 %.8f\", edb.seconds($v::rn)+edb.fseconds($v::rn)*1.6e-6);\r"
     }
     if {$v::autolidar} {
@@ -501,10 +501,10 @@ proc ::l1pro::drast::show_auto {} {
             show_$name
         }
     }
-    exp_send "tkcmd, \"set ::l1pro::drast::v::playwait 0\";\r"
+    exp_send "tkcmd, \"set ::eaarl::drast::v::playwait 0\";\r"
 }
 
-proc ::l1pro::drast::show_rast {} {
+proc ::eaarl::drast::show_rast {} {
     set base "show_rast, $v::rn"
     appendif base \
         $v::rastusecmin         ", cmin=$v::rastcmin" \
@@ -550,7 +550,7 @@ proc ::l1pro::drast::show_rast {} {
     }
 }
 
-proc ::l1pro::drast::show_sline {} {
+proc ::eaarl::drast::show_sline {} {
     set cmd "window, $v::slinewin"
     appendif cmd \
             1                                "; rast_scanline" \
@@ -572,7 +572,7 @@ proc ::l1pro::drast::show_sline {} {
     exp_send "$cmd\r"
 }
 
-proc ::l1pro::drast::show_wf {} {
+proc ::eaarl::drast::show_wf {} {
     if {$v::wfchan1 || $v::wfchan2 || $v::wfchan3 || $v::wfchan4} {
         set cmd "window, $v::wfwin; show_wf, $v::rn, $v::pulse"
         appendif cmd \
@@ -589,19 +589,19 @@ proc ::l1pro::drast::show_wf {} {
     }
 }
 
-proc ::l1pro::drast::apply_style_geo {style} {
+proc ::eaarl::drast::apply_style_geo {style} {
     foreach channel {1 2 3 4} {
         if {![set v::geochan${channel}]} continue
-        ::l1pro::drast::apply_style v::geowin${channel} $style
+        ::eaarl::drast::apply_style v::geowin${channel} $style
     }
 }
 
-proc ::l1pro::drast::apply_style {winvar style} {
+proc ::eaarl::drast::apply_style {winvar style} {
     set cmd "window, [set $winvar], style=\"${style}.gs\""
     exp_send "$cmd\r"
 }
 
-proc ::l1pro::drast::step dir {
+proc ::eaarl::drast::step dir {
     # forward backward
     switch -exact -- $dir {
         forward {
@@ -622,7 +622,7 @@ proc ::l1pro::drast::step dir {
 }
 
 
-proc ::l1pro::drast::play opt {
+proc ::eaarl::drast::play opt {
     set v::playwait 0
     switch -exact -- $opt {
         forward {
@@ -643,7 +643,7 @@ proc ::l1pro::drast::play opt {
     }
 }
 
-proc ::l1pro::drast::play_tick {} {
+proc ::eaarl::drast::play_tick {} {
     after cancel $v::playcancel
     set ns [namespace current]
     set delay [expr {int($v::playint * 1000)}]
@@ -683,23 +683,23 @@ proc ::l1pro::drast::play_tick {} {
     }
 }
 
-proc ::l1pro::drast::jump pos {
+proc ::eaarl::drast::jump pos {
     set v::rn [expr {round($pos)}]
 }
 
-namespace eval ::l1pro::drast::mediator {
+namespace eval ::eaarl::drast::mediator {
     proc jump_soe soe {
-        if {$::l1pro::drast::v::sfsync} {
+        if {$::eaarl::drast::v::sfsync} {
             ybkg drast_set_soe $soe
         }
     }
 
     proc broadcast_soe soe {
-        if {$::l1pro::drast::v::sfsync} {
+        if {$::eaarl::drast::v::sfsync} {
             ::sf::mediator broadcast soe $soe \
-                    -exclude [list ::l1pro::drast::mediator::jump_soe]
+                    -exclude [list ::eaarl::drast::mediator::jump_soe]
         }
     }
 }
 
-::sf::mediator register [list ::l1pro::drast::mediator::jump_soe]
+::sf::mediator register [list ::eaarl::drast::mediator::jump_soe]

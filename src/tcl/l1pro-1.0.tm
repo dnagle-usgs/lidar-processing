@@ -7,7 +7,6 @@ namespace eval ::l1pro {}
 package require l1pro::ascii
 package require l1pro::asciixyz
 package require l1pro::dirload
-package require l1pro::drast
 package require l1pro::eaarlb
 package require l1pro::file
 package require l1pro::filter

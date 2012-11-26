@@ -882,7 +882,7 @@ func drast_set_soe(soe) {
       rnsoes = edb.seconds(w) + edb.fseconds(w)*1.6e-6;
       closest = abs(rnsoes - soe)(mnx);
       rn = w(closest);
-      tksetval, "::l1pro::drast::v::rn", rn;
+      tksetval, "::eaarl::drast::v::rn", rn;
     }
   }
   return found;

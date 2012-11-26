@@ -282,7 +282,7 @@ proc menu_window_raise {mb which} {
 proc menu_utilities mb {
     menu $mb
     $mb add command {*}[menulabel "Browse &Rasters"] \
-            -command ::l1pro::drast::gui
+            -command ::eaarl::drast::gui
     $mb add command {*}[menulabel "Examine Pixels Settings"] \
             -command [list ::l1pro::pixelwf::gui::launch_full_panel .pixelwf]
     $mb add command {*}[menulabel "Histogram Elevations Settings"] \
