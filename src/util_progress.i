@@ -180,7 +180,7 @@ func timer_finished(t0, fmt=) {
 }
 
 scratch = save(scratch, tmp, status_start, status_progress, status_finished,
-    status_msg);
+    status_msg, status_noop);
 tmp = save(start, progress, finished, cache, msg);
 
 func status_start(count=, interval=, msg=) {
@@ -246,6 +246,12 @@ func status_msg(current, count) {
 }
 msg = status_msg;
 
+func status_noop(a, b, count=, interval=, msg=) {}
+
+if(!_ytk) {
+  start = progress = finished = msg = status_noop;
+}
+
 cache = save();
 
 local status; status = restore(tmp); restore, scratch;
@@ -284,4 +290,6 @@ local status; status = restore(tmp); restore, scratch;
     Used to reset the status when processing is finished. The status text will
     be set to "Ready.", the time remaining will be cleared, and the progress
     bar will be emptied.
+
+  If YTK is not available at startup, all of these functions will be no-ops.
 */
