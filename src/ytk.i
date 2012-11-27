@@ -57,9 +57,9 @@ func open_tky_fifo(fn) {
 /*******************************************************************************
  * Handling for Tcl "ybkg" command
  */
-scratch = save(scratch, temp, tky_bg_stdout, tky_bg_handler, tky_bg_pop,
-  tky_bg_append);
-temp = save(fragment, data, stdout, handler, pop, append);
+scratch = save(scratch, temp, tky_bg_stdout, tky_decode, tky_bg_handler,
+  tky_bg_pop, tky_bg_append);
+temp = save(fragment, data, stdout, decode, handler, pop, append);
 fragment = [];
 data = save();
 func tky_bg_stdout(msg) {
@@ -77,7 +77,7 @@ func tky_bg_stdout(msg) {
       cmd = strpart(line, 1:3);
       data = strpart(line, 5:);
       if(cmd == "bkg") {
-        data = strchar(base64_decode(data));
+        data = self(decode, data);
         if(logger && logger(trace))
           logger, trace, "Received background command: "+data;
         self, append, data;
@@ -91,6 +91,16 @@ func tky_bg_stdout(msg) {
   after, 0, self, handler;
 }
 stdout = tky_bg_stdout;
+
+func tky_decode(data) {
+  if(catch(0x10)) {
+    if(logger && logger(error))
+      logger, error, "Error encountered decoding background command: "+data;
+    return "";
+  }
+  return strchar(base64_decode(data));
+}
+decode = tky_decode;
 
 func tky_bg_handler {
   self = use();
