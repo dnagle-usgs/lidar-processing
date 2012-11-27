@@ -1,13 +1,13 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
-package provide l1pro::pixelwf 1.0
+package provide eaarl::pixelwf 1.0
 
 package require struct::set
 package require misc
 package require sf
 
-if {![namespace exists ::l1pro::pixelwf]} {
-    # Initialization and Traces only happen first time ::l1pro::pixelwf is
+if {![namespace exists ::eaarl::pixelwf]} {
+    # Initialization and Traces only happen first time ::eaarl::pixelwf is
     # created.
 
 ################################################################################
@@ -15,7 +15,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
 ################################################################################
     ybkg require \"pixelwf.i\"
 
-    namespace eval ::l1pro::pixelwf {
+    namespace eval ::eaarl::pixelwf {
         namespace eval vars {
             namespace eval selection {
                 variable background 1
@@ -170,7 +170,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
 ################################################################################
 
     # Keep Yorick updated for all variables in the specified namespaces
-    namespace eval ::l1pro::pixelwf::vars {
+    namespace eval ::eaarl::pixelwf::vars {
         foreach ns {
             selection fit_gauss ex_bath ex_veg show_wf show_wf_transmit
             geo_rast ndrast
@@ -190,21 +190,21 @@ if {![namespace exists ::l1pro::pixelwf]} {
     tky_tie append broadcast ::win_no to pixelwfvars.selection.win \
         -initialize 1
 
-}; # (end of: if {![namespace exists ::l1pro::pixelwf]})
+}; # (end of: if {![namespace exists ::eaarl::pixelwf]})
 
 ################################################################################
 #                               Core Procedures                                #
 ################################################################################
-namespace eval ::l1pro::pixelwf::util {
+namespace eval ::eaarl::pixelwf::util {
     proc helper_valid {type var} {
         # Not intended to be called directly... called by valid_*
         set var [uplevel 2 namespace which -variable $var]
-        if {![string match ::l1pro::pixelwf::vars::?*::?* $var]} {
+        if {![string match ::eaarl::pixelwf::vars::?*::?* $var]} {
             return
         }
         set varname [namespace tail $var]
         set nsname [namespace tail [namespace qualifiers $var]]
-        dict for {valid data} [set ::l1pro::pixelwf::constants::valid_$type] {
+        dict for {valid data} [set ::eaarl::pixelwf::constants::valid_$type] {
             if {[dict exists $data $nsname]} {
                 set vars [dict get $data $nsname]
                 if {[lsearch $vars $varname] >= 0} {
@@ -219,17 +219,17 @@ namespace eval ::l1pro::pixelwf::util {
     proc valid_values var {helper_valid values $var}
 
     proc restore_defaults {} {
-        dict for {vname value} $::l1pro::pixelwf::vars::defaults {
+        dict for {vname value} $::eaarl::pixelwf::vars::defaults {
             set $vname $value
         }
     }
 }
 
-namespace eval ::l1pro::pixelwf::gui {
+namespace eval ::eaarl::pixelwf::gui {
     namespace import ::misc::tooltip
 
     proc yorcmd {args} {
-        if {$::l1pro::pixelwf::vars::selection::background} {
+        if {$::eaarl::pixelwf::vars::selection::background} {
             ybkg {*}$args
         } else {
             exp_send "$args;\r"
@@ -238,7 +238,7 @@ namespace eval ::l1pro::pixelwf::gui {
 
     proc helper_output_dest {cboAction entVariable ns} {
         set vals [list]
-        foreach item $::l1pro::pixelwf::constants::output_possibilities {
+        foreach item $::eaarl::pixelwf::constants::output_possibilities {
             lappend vals $item
         }
 
@@ -251,7 +251,7 @@ namespace eval ::l1pro::pixelwf::gui {
     }
 
     proc helper_spinbox {w v} {
-        set range [::l1pro::pixelwf::util::valid_range $v]
+        set range [::eaarl::pixelwf::util::valid_range $v]
         lappend range 1
         lassign $range from to increment
         ttk::spinbox $w -textvariable $v -width 0 \
@@ -260,7 +260,7 @@ namespace eval ::l1pro::pixelwf::gui {
 
     proc helper_combobox {w v} {
         ::mixin::combobox $w -state readonly -textvariable $v -width 0 \
-                -values [::l1pro::pixelwf::util::valid_values $v]
+                -values [::eaarl::pixelwf::util::valid_values $v]
     }
 
     proc default_sticky args {
@@ -279,7 +279,7 @@ namespace eval ::l1pro::pixelwf::gui {
     }
 
     proc set_default_enabled {} {
-        set ns ::l1pro::pixelwf::vars
+        set ns ::eaarl::pixelwf::vars
         set ${ns}::fit_gauss::enabled 0
         set ${ns}::show_wf::enabled 1
         set ${ns}::show_wf_transmit::enabled 0
@@ -332,7 +332,7 @@ namespace eval ::l1pro::pixelwf::gui {
             set f $mf.lfr_$type
             ::mixin::labelframe::collapsible $f \
                     -text "Enable [dict get $titles $type]" \
-                    -variable ::l1pro::pixelwf::vars::${type}::enabled
+                    -variable ::eaarl::pixelwf::vars::${type}::enabled
             grid $f -sticky new
 
             $type [$f interior]
@@ -344,24 +344,24 @@ namespace eval ::l1pro::pixelwf::gui {
     }
 
     proc helper_update_days {} {
-        set ::l1pro::pixelwf::gui::missionday_list [::mission::get]
+        set ::eaarl::pixelwf::gui::missionday_list [::mission::get]
     }
 
     proc makemenu mb {
         menu $mb
         $mb add command -label "Reset all options to defaults" \
-                -command ::l1pro::pixelwf::util::restore_defaults
+                -command ::eaarl::pixelwf::util::restore_defaults
     }
 
     proc selection f {
-        set ns ::l1pro::pixelwf::vars::selection
+        set ns ::eaarl::pixelwf::vars::selection
         ttk::frame $f
 
         ttk::label $f.lblFlight -text Flight:
         ::mixin::combobox $f.cboFlight -textvariable ${ns}::missionday \
                 -state readonly -width 0 \
-                -listvariable ::l1pro::pixelwf::gui::missionday_list \
-                -postcommand ::l1pro::pixelwf::gui::helper_update_days
+                -listvariable ::eaarl::pixelwf::gui::missionday_list \
+                -postcommand ::eaarl::pixelwf::gui::helper_update_days
 
         ttk::label $f.lblChannel -text Channel:
         helper_spinbox $f.spnChannel ${ns}::channel
@@ -448,7 +448,7 @@ namespace eval ::l1pro::pixelwf::gui {
     }
 
     proc fit_gauss f {
-        set ns ::l1pro::pixelwf::vars::fit_gauss
+        set ns ::eaarl::pixelwf::vars::fit_gauss
 
         ttk::label $f.lblWindow -text Window:
         helper_spinbox $f.spnWindow ${ns}::win
@@ -476,7 +476,7 @@ namespace eval ::l1pro::pixelwf::gui {
     }
 
     proc ex_bath f {
-        set ns ::l1pro::pixelwf::vars::ex_bath
+        set ns ::eaarl::pixelwf::vars::ex_bath
 
         ttk::label $f.lblWindow -text Window:
         helper_spinbox $f.spnWindow ${ns}::win
@@ -513,7 +513,7 @@ namespace eval ::l1pro::pixelwf::gui {
     }
 
     proc ex_veg f {
-        set ns ::l1pro::pixelwf::vars::ex_veg
+        set ns ::eaarl::pixelwf::vars::ex_veg
 
         ttk::label $f.lblWindow -text Window:
         helper_spinbox $f.spnWindow ${ns}::win
@@ -556,7 +556,7 @@ namespace eval ::l1pro::pixelwf::gui {
     }
 
     proc show_wf f {
-        set ns ::l1pro::pixelwf::vars::show_wf
+        set ns ::eaarl::pixelwf::vars::show_wf
 
         ttk::label $f.lblWindow -text Window:
         helper_spinbox $f.spnWindow ${ns}::win
@@ -585,7 +585,7 @@ namespace eval ::l1pro::pixelwf::gui {
     }
 
     proc show_wf_transmit f {
-        set ns ::l1pro::pixelwf::vars::show_wf_transmit
+        set ns ::eaarl::pixelwf::vars::show_wf_transmit
 
         ttk::label $f.lblWindow -text Window:
         helper_spinbox $f.spnWindow ${ns}::win
@@ -604,7 +604,7 @@ namespace eval ::l1pro::pixelwf::gui {
     }
 
     proc geo_rast f {
-        set ns ::l1pro::pixelwf::vars::geo_rast
+        set ns ::eaarl::pixelwf::vars::geo_rast
 
         ttk::label $f.lblWindow -text Window:
         helper_spinbox $f.spnWindow ${ns}::win
@@ -629,7 +629,7 @@ namespace eval ::l1pro::pixelwf::gui {
     }
 
     proc ndrast f {
-        set ns ::l1pro::pixelwf::vars::ndrast
+        set ns ::eaarl::pixelwf::vars::ndrast
 
         ttk::label $f.lblWindow -text Window:
         helper_spinbox $f.spnWindow ${ns}::win
@@ -656,19 +656,19 @@ namespace eval ::l1pro::pixelwf::gui {
     }
 }
 
-namespace eval ::l1pro::pixelwf::mediator {
+namespace eval ::eaarl::pixelwf::mediator {
    proc jump_soe soe {
-      if {$::l1pro::pixelwf::vars::selection::sfsync} {
+      if {$::eaarl::pixelwf::vars::selection::sfsync} {
          ybkg pixelwf_set_soe $soe
       }
    }
 
    proc broadcast_soe soe {
-      if {$::l1pro::pixelwf::vars::selection::sfsync} {
+      if {$::eaarl::pixelwf::vars::selection::sfsync} {
          ::sf::mediator broadcast soe $soe \
-                -exclude [list ::l1pro::pixelwf::mediator::jump_soe]
+                -exclude [list ::eaarl::pixelwf::mediator::jump_soe]
       }
    }
 }
 
-::sf::mediator register [list ::l1pro::pixelwf::mediator::jump_soe]
+::sf::mediator register [list ::eaarl::pixelwf::mediator::jump_soe]

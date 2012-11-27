@@ -284,7 +284,7 @@ proc menu_utilities mb {
     $mb add command {*}[menulabel "Browse &Rasters"] \
             -command ::eaarl::drast::gui
     $mb add command {*}[menulabel "Examine Pixels Settings"] \
-            -command [list ::l1pro::pixelwf::gui::launch_full_panel .pixelwf]
+            -command [list ::eaarl::pixelwf::gui::launch_full_panel .pixelwf]
     $mb add command {*}[menulabel "Histogram Elevations Settings"] \
             -command ::l1pro::tools::histelev::gui
     $mb add command {*}[menulabel "Groundtruth Analysis"] \

@@ -12,7 +12,6 @@ package require l1pro::filter
 package require l1pro::groundtruth
 package require l1pro::main
 package require l1pro::memory
-package require l1pro::pixelwf
 package require l1pro::tools
 package require l1pro::transect
 package require l1pro::vars
