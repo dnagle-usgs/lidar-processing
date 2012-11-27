@@ -159,7 +159,7 @@ proc menu_mission_settings_ops mb {
 proc menu_mission_eaarlb mb {
     menu $mb
     $mb add command {*}[menulabel "&JSON Log Explorer"] \
-            -command l1pro::eaarlb::json_log::launch
+            -command eaarl::jsonlog::launch
     return $mb
 }
 

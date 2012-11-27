@@ -66,9 +66,9 @@ func json_log_key_summary(data) {
 
 func tky_json_log_summary(cmd, data) {
 /* DOCUMENT tky_json_log_summary, cmd, data;
-  Glue function for l1pro::eaarlb::json_log::gui that sends summary data for a
-  json log file to a Laser Log Explorer GUI using the given Tcl command prefix.
-  Data is sent in JSON format.
+  Glue function for eaarl::json_log::gui that sends summary data for a json log
+  file to a Laser Log Explorer GUI using the given Tcl command prefix. Data is
+  sent in JSON format.
 */
   summary = json_log_key_summary(data);
   json = json_encode(summary);

@@ -1,6 +1,6 @@
-package provide l1pro::eaarlb 1.0
+package provide eaarl::json_log 1.0
 
-namespace eval l1pro::eaarlb::json_log {
+namespace eval eaarl::jsonlog {
 
     proc launch {} {gui .%AUTO%}
 

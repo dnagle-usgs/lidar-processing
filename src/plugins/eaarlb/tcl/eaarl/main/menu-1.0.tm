@@ -38,7 +38,7 @@ namespace eval ::eaarl::main::menu {
                 -command [namespace code load_ground_pnav2fs]
         $mb add separator
         $mb add command {*}[menulabel "&JSON Log Explorer"] \
-                -command l1pro::eaarlb::json_log::launch
+                -command eaarl::jsonlog::launch
         return $mb
     }
 
