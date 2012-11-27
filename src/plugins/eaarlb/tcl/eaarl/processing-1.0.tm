@@ -1,6 +1,6 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
-package provide l1pro::processing 1.0
+package provide eaarl::processing 1.0
 
 set forcechannel_1 0
 set forcechannel_2 0
@@ -8,27 +8,27 @@ set forcechannel_3 0
 set forcechannel_4 0
 set forcechannel_A 0
 
-namespace eval ::l1pro::processing {
+namespace eval ::eaarl::processing {
     namespace import ::misc::appendif
     namespace import ::l1pro::file::prefix
 }
 
-proc ::l1pro::processing::define_region_box {} {
+proc ::eaarl::processing::define_region_box {} {
     exp_send "q = pnav_sel_rgn(win=$::_map(window));\r"
 }
 
-proc ::l1pro::processing::define_region_poly {} {
+proc ::eaarl::processing::define_region_poly {} {
     exp_send "q = pnav_sel_rgn(win=$::_map(window), mode=\"pip\");\r"
 }
 
-proc ::l1pro::processing::define_region_rect {} {
+proc ::eaarl::processing::define_region_rect {} {
     define_region_rect::gui [prefix]%AUTO%
 }
 
-namespace eval ::l1pro::processing::define_region_rect {
+namespace eval ::eaarl::processing::define_region_rect {
     namespace import ::l1pro::file::prefix
 }
-snit::widget ::l1pro::processing::define_region_rect::gui {
+snit::widget ::eaarl::processing::define_region_rect::gui {
     hulltype toplevel
     delegate method * to hull
     delegate option * to hull
@@ -97,7 +97,7 @@ snit::widget ::l1pro::processing::define_region_rect::gui {
     }
 }
 
-proc ::l1pro::processing::process {} {
+proc ::eaarl::processing::process {} {
     set ::pro_var $::pro_var_next
 
     set cmd ""
@@ -121,7 +121,7 @@ proc ::l1pro::processing::process {} {
                 set cmd "$::pro_var = \[\]"
             }
             set forced 1
-            append cmd "; [::l1pro::processing::process_channel $channel]"
+            append cmd "; [::eaarl::processing::process_channel $channel]"
         }
     }
 
@@ -174,7 +174,7 @@ proc ::l1pro::processing::process {} {
     append_varlist $::pro_var
 }
 
-proc ::l1pro::processing::process_channel {channel} {
+proc ::eaarl::processing::process_channel {channel} {
     switch -- $::processing_mode {
         fs {
             set cmd "grow, $::pro_var, &make_fs(latutm=1, q=q, ext_bad_att=1,\

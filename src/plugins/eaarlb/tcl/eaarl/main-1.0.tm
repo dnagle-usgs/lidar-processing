@@ -20,7 +20,7 @@ proc ::eaarl::main::gui {} {
     grid $f -sticky news
     grid columnconfigure $w 0 -weight 1
 
-    set ns ::l1pro::processing
+    set ns ::eaarl::processing
     set m [menu $f.regionmenu]
     $m add command -label "Rubberband box" \
             -command ${ns}::define_region_box
