@@ -1,15 +1,20 @@
 #!/opt/alps/bin/yorick -batch
-#include "/opt/alps/lidar-processing/src/dmars.i"
+
+cwd = pwd();
+
+cd, "/opt/alps/lidar-processing/src/";
+#include "dmars.i"
+#include "dir.i"
 
 cmdline = get_argv();  /* strips -batch cmdline.i */
 if (numberof(cmdline) == 2) {
   /* convert from ascii to pdb binary format */
   cmdline(1);
   cmdline(2);
-  iex_ascii2pbd, cmdline(2);
+  fn = file_join(cwd, cmdline(2));
+  iex_ascii2pbd, fn;
 } else {
-  write, "Usage: yorick -batch cmdline.i infile ";
+  write, "Usage: yorick -batch cmdline.i infile";
 }
 
 quit;
-
