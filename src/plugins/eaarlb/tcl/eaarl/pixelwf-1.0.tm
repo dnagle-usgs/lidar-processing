@@ -13,8 +13,6 @@ if {![namespace exists ::eaarl::pixelwf]} {
 ################################################################################
 #                                Initialization                                #
 ################################################################################
-    ybkg require \"pixelwf.i\"
-
     namespace eval ::eaarl::pixelwf {
         namespace eval vars {
             namespace eval selection {
