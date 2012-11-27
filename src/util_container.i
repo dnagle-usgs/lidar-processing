@@ -331,12 +331,9 @@ func pbd_load(file, &err, &vname) {
 
   data = get_member(f, vname);
 
-  // Compatibility -- if loading in old data that doesn't have the raster
-  // field, attempt to add it and auto-populate.
-  if(anyof(nameof(structof(data)) == ["FS","VEG__","GEO"])) {
-    if(!has_member(data, "raster"))
-      data = struct_cast(data, symbol_def(nameof(structof(data))));
-  }
+  // Compatibility -- re-cast the data against its own struct. If the struct
+  // has had new fields added, this will make sure they get included.
+  data = struct_cast(data, symbol_def(nameof(structof(data))));
 
   return unref(data);
 }
