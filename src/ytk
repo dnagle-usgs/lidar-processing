@@ -43,7 +43,6 @@ proc app_root_dir {} {
 }
 
 ::tcl::tm::path add [file join [app_root_dir] tcl]
-::tcl::tm::path add [file join [app_root_dir] plugins eaarlb tcl]
 
 # Ensures that programs in .../eaarl/bin are detected and take precedence when
 # using auto_execok
