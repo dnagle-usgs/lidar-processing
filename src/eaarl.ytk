@@ -162,7 +162,6 @@ proc load_edb {} {
 #####################################################################
 set data_path "/data/"
 ybkg require \"eaarl.i\"
-ybkg require \"rbgga.i\"
 
 # Since ybkg is used, some output may go to the console (especially Yeti), so
 # this gives the user back their prompt.
