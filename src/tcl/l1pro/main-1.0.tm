@@ -269,6 +269,11 @@ proc ::l1pro::main::panel_tools w {
     ttk::button $f.pixelwf -text " Examine \n Pixels " -width 0 \
             -style Panel.TButton \
             -command {exp_send "pixelwf_enter_interactive\r"}
+    $f.pixelwf state disabled
+    ::misc::tooltip $f.pixelwf "Requires an EAARL plugin"
+    lappend ::l1pro::on_eaarl_load [list $f.pixelwf state !disabled]
+    lappend ::l1pro::on_eaarl_load [list ::misc::tooltip $f.pixelwf ""]
+
     ttk::button $f.histelv -text " Histogram \n Elevations " -width 0 \
             -style Panel.TButton \
             -command ::l1pro::tools::histelev
