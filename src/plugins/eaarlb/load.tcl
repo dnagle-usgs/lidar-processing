@@ -1,4 +1,7 @@
 package require plugins
+
+::tcl::tm::path add [file join [app_root_dir] plugins eaarlb tcl]
+
 package require eaarl
 
 package require mission::eaarl
