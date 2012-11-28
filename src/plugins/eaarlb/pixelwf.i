@@ -44,7 +44,7 @@ if(is_void(pixelwfvars)) {
     ),
     show_wf=h_new(
       enabled=1,     //bool
-      win=7,
+      win=9,
       c1=1,          //bool; channel 1
       c2=1,          //bool; channel 2
       c3=1,          //bool; channel 3
@@ -56,13 +56,13 @@ if(is_void(pixelwfvars)) {
     ),
     geo_rast=h_new(
       enabled=1,  //bool
-      win=2,
+      win=21,
       verbose=0,
       eoffset=0.  //?
     ),
     ndrast=h_new(
       enabled=1,
-      win=1,
+      win=11,
       units="ns",
       dest_action=0,
       dest_variable="",
