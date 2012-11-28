@@ -582,6 +582,11 @@ func gt_vars_bound(data, which, win, bound) {
 
 func gt_pixelwf_interactive(vname, which, win) {
   extern pixelwfvars;
+  if(is_void(pixelwfvars)) {
+    write, "EAARL plugin has not been loaded, aborting.";
+    return;
+  }
+
   data = var_expr_get(vname);
 
   wbkp = current_window();
@@ -617,6 +622,11 @@ func gt_pixelwf_interactive(vname, which, win) {
 
 func gt_pixelwf_find_point(spot, data, which) {
   extern pixelwfvars;
+  if(is_void(pixelwfvars)) {
+    write, "EAARL plugin has not been loaded, aborting.";
+    return;
+  }
+
   vars = pixelwfvars.selection;
   radius = vars.radius;
 

@@ -18,6 +18,11 @@ func sf_mediator_plot(win, soe, msize, marker, color, errcmd) {
 
 func sf_mediator_raster(soe, errcmd) {
   extern pixelwfvars, rn;
+  if(is_void(pixelwfvars)) {
+    tkcmd, swrite(format="%s {EAARL plugin has not been loaded}", errcmd);
+    return;
+  }
+
   vars = pixelwfvars.ndrast;
 
   loaded = mission.data.loaded;

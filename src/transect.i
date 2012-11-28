@@ -337,6 +337,12 @@ func transect_pixelwf_interactive(vname, line, recall=, win=, mode=) {
   with respect to, and WIN should be the window they're plotted in. RECALL can
   be used to recall an existing line from the transect history.
 */
+  extern pixelwfvars;
+  if(is_void(pixelwfvars)) {
+    write, "EAARL plugin has not been loaded, aborting.";
+    return;
+  }
+
   if(is_void(win)) win = window();
   data = var_expr_get(vname);
 
@@ -390,6 +396,11 @@ func transect_pixelwf_find_point(spot, data, x, y) {
   closest point to SPOT.
 */
   extern pixelwfvars;
+  if(is_void(pixelwfvars)) {
+    write, "EAARL plugin has not been loaded, aborting.";
+    return;
+  }
+
   vars = pixelwfvars.selection;
   radius = vars.radius;
 
