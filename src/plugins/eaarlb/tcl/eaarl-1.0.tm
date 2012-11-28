@@ -11,3 +11,11 @@ package require eaarl::processing
 package require eaarl::pixelwf
 package require eaarl::rasters
 package require eaarl::settings
+
+namespace eval ::eaarl {
+   proc on_load {} {
+      foreach script $::l1pro::on_eaarl_load {
+         catch [list uplevel #0 $script]
+      }
+   }
+}

@@ -14,3 +14,5 @@ proc ::plugins::eaarlb::menu_postload {mb} {
     $mb add command -label "Processing GUI" \
             -command ::eaarl::main::gui
 }
+
+eaarl::on_load

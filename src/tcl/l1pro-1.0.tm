@@ -2,7 +2,11 @@
 
 package provide l1pro 1.0
 
-namespace eval ::l1pro {}
+namespace eval ::l1pro {
+   # List of scripts to evaluate when an EAARL plugin is loaded. This is
+   # primarily intended to be used to enable disabled GUI elements.
+   variable on_eaarl_load {}
+}
 
 package require l1pro::ascii
 package require l1pro::asciixyz
