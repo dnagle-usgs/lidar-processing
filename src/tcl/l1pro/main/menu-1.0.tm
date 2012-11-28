@@ -282,9 +282,13 @@ proc menu_window_raise {mb which} {
 proc menu_utilities mb {
     menu $mb
     $mb add command {*}[menulabel "Browse &Rasters"] \
+            -state disabled \
             -command ::eaarl::drast::gui
+    lappend ::l1pro::on_eaarl_load [list $mb entryconfigure 0 -state normal]
     $mb add command {*}[menulabel "Examine Pixels Settings"] \
+            -state disabled \
             -command [list ::eaarl::pixelwf::gui::launch_full_panel .pixelwf]
+    lappend ::l1pro::on_eaarl_load [list $mb entryconfigure 1 -state normal]
     $mb add command {*}[menulabel "Histogram Elevations Settings"] \
             -command ::l1pro::tools::histelev::gui
     $mb add command {*}[menulabel "Groundtruth Analysis"] \
