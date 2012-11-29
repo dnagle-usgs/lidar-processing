@@ -391,6 +391,9 @@ proc menu_ytk mb {
     $mb add command {*}[menulabel "&Background Command History"] \
             -command [list wm deiconify .tx]
     $mb add separator
+    $mb add command {*}[menulabel "&Show log file path"] \
+            -command ::logger::dlg_logfile
+    $mb add separator
     $mb add checkbutton {*}[menulabel "&Help goes in new window"] \
             -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
     return $mb
