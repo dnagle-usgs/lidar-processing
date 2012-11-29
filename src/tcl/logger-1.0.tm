@@ -63,8 +63,8 @@ package provide logger 1.0
 # Note that the logger framework as currently written will ONLY work within Ytk.
 
 namespace eval ::logger {
-    variable fn
-    variable fh
+    variable fn ""
+    variable fh ""
     variable id 0
 
     proc datetime {soe} {
@@ -75,6 +75,11 @@ namespace eval ::logger {
         variable dir
         variable fn
         variable fh
+
+        # Only init if we haven't already done so
+        if {$fh ne ""} {
+            return
+        }
 
         if {[info exists ::_starttime]} {
             set ts [datetime $::_starttime]
