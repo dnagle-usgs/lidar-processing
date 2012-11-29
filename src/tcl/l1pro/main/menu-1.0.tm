@@ -394,6 +394,9 @@ proc menu_ytk mb {
     $mb add command {*}[menulabel "&Show log file path"] \
             -command ::logger::dlg_logfile
     $mb add separator
+    $mb add command {*}[menulabel "&Nudge Yorick in background"] \
+            -command ybkg_nudge
+    $mb add separator
     $mb add checkbutton {*}[menulabel "&Help goes in new window"] \
             -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
     return $mb

@@ -139,6 +139,23 @@ proc ybkg args {
     while {$::__ybkg__wait} {sleep 1}
 }
 
+# ybkg_nudge
+#   Sends a simple message in the background to "nudge" Yorick. If background
+#   handling has gotten goofed up, this sometimes will get it working again.
+proc ybkg_nudge {} {
+    ybkg write {"Yorick has been successfully nudged."}
+    # Needs to be "after idle" to make sure the write statement shows up first
+    after idle [list tk_messageBox -type ok \
+            -icon info \
+            -title "Yorick Background Nudge" \
+            -message "Yorick has been nudged in the background. If you see a\
+                message in your Yorick console window that says \"Yorick has\
+                been succesfully nudged\", then it has been. If you don't,\
+                then it hasn't and your Yorick is probably frozen."]
+    # Give the user a clean prompt back
+    after idle [list exp_send \r]
+}
+
 proc yget yvar {
 ##
 # set val [yget yvar]
