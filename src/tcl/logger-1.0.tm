@@ -182,6 +182,8 @@ namespace eval ::logger {
         grid $f.lbl $f.ent -sticky ew -padx 2 -pady 2
         grid $f.btn - -padx 2 -pady 2
         grid columnconfigure $f 1 -weight 1
+
+        ::misc::idle [list ::misc::raise_win .logfile]
     }
 }
 ::logger::init
