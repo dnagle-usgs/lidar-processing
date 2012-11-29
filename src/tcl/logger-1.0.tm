@@ -160,5 +160,28 @@ namespace eval ::logger {
         variable id
         return "([incr id 2])"
     }
+
+    proc dlg_logfile {} {
+        variable fn
+        destroy .logfile
+
+        toplevel .logfile
+        wm title .logfile "ALPS log file"
+        wm resizable .logfile 1 0
+
+        set f [ttk::frame .logfile.f]
+        pack $f -fill both -expand 1
+
+        ttk::label $f.lbl -text "Log file:"
+        ttk::entry $f.ent
+        $f.ent insert end $fn
+        $f.ent configure -width [string length $fn]
+        $f.ent state readonly
+        ttk::button $f.btn -text "Close" -command [list destroy .logfile]
+
+        grid $f.lbl $f.ent -sticky ew -padx 2 -pady 2
+        grid $f.btn - -padx 2 -pady 2
+        grid columnconfigure $f 1 -weight 1
+    }
 }
 ::logger::init
