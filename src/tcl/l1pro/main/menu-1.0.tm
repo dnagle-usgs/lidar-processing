@@ -71,8 +71,10 @@ proc menu_file mb {
     $mb add command {*}[menulabel "&Capture a display..."] \
             -command ::misc::xwd
     $mb add separator
-    $mb add command {*}[menulabel "&Dismiss"] \
+    $mb add command {*}[menulabel "&Hide GUI"] \
             -command [list wm withdraw [get_top $mb]]
+    $mb add command {*}[menulabel "&Quit ALPS"] \
+            -command exit
     return $mb
 }
 
