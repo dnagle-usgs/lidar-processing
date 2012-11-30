@@ -129,7 +129,7 @@ func bath_ctl_load(filename) {
 }
 
 func run_bath(nil, start=, stop=, center=, delta=, last=, forcechannel=,
-graph=, pse=, msg=) {
+graph=, pse=, msg=, verbose=) {
   log_id = logger_id();
   if(logger(debug)) {
     logger, debug, log_id+"Entering run_bath";
@@ -179,7 +179,8 @@ graph=, pse=, msg=) {
   status, start, msg=msg;
   for(j=1, rn=start; rn <= stop; j++, rn++) {
     for(pulse=1; pulse<=120; pulse++) {
-      depths(pulse,j) = ex_bath(rn, pulse, last=last, forcechannel=forcechannel, graph=graph);
+      depths(pulse,j) = ex_bath(rn, pulse, last=last, verbose=verbose,
+        forcechannel=forcechannel, graph=graph);
       pause, pse;
     }
     status, progress, j, count;

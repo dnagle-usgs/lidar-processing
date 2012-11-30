@@ -3,8 +3,8 @@
    For processing bathymetry data using the topographic georectification.
 */
 
-func make_fs_bath(d, rrr, avg_surf=, sample_interval=) {
-/* DOCUMENT make_fs_bath (d, rrr, avg_surf=, sample_interval=)
+func make_fs_bath(d, rrr, avg_surf=, sample_interval=, verbose=) {
+/* DOCUMENT make_fs_bath (d, rrr, avg_surf=, sample_interval=, verbose=)
 
   This function makes a depth or bathymetric image using the georectification
   of the first surface return. The parameters are as follows:
@@ -37,6 +37,7 @@ func make_fs_bath(d, rrr, avg_surf=, sample_interval=) {
   // d is the depth array from bathy.i
   // rrr is the topo array from surface_topo.i
   default, avg_surf, 0;
+  default, verbose, 1;
 
   if(dimsof(d)(3) < numberof(rrr))
     rrr = rrr(:dimsof(d)(3));
@@ -68,7 +69,8 @@ func make_fs_bath(d, rrr, avg_surf=, sample_interval=) {
       iidx = where((rrr(i).intensity > 220) & (abs(60 - pulse(,i)) < pulse_window));
       if(!is_array(iidx)) {
         if(logger(trace)) logger, trace, log_id+"  -- no fresnel";
-        write,format= "No water surface Fresnel reflection in raster rn = %d\n", raster(1,i);
+        if(verbose)
+          write, format= "No water surface Fresnel reflection in raster rn = %d\n", raster(1,i);
       } else {
         elvs = median(rrr(i).elevation(iidx));
         if(logger(trace)) logger, trace, log_id+"  -- elvs="+pr1(elvs);
@@ -191,8 +193,8 @@ func compute_depth(data, sample_interval=) {
   return data;
 }
 
-func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
-/* DOCUMENT make_bathy(latutm=, q=, avg_surf=, forcechannel=)
+func make_bathy(latutm=, q=, avg_surf=, forcechannel=, verbose=) {
+/* DOCUMENT make_bathy(latutm=, q=, avg_surf=, forcechannel=, verbose=)
   This function allows a user to define a region on the gga plot of flightlines
   (usually window 6) to write out a 'level 1' file and plot a depth image
   defined in that region.
@@ -229,6 +231,8 @@ func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
     logger, trace, log_id+"bath_ctl="+print(bath_ctl)(sum);
     logger, trace, log_id+"bath_ctl_chn4="+print(bath_ctl_chn4)(sum);
   }
+
+  default, verbose, 1;
 
   extern tans, pnav;
   depth_all = [];
@@ -273,7 +277,7 @@ func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
       pause, 1; // make sure Yorick shows output
       status, start, msg=msg;
       depth = run_bath(start=raster_starts(i), stop=raster_stops(i),
-        forcechannel=forcechannel, msg=msg);
+        forcechannel=forcechannel, msg=msg, verbose=verbose);
       if(depth == 0) {
         status, finished;
         if(logger(debug)) logger, debug, log_id+"Aborting make_bathy (run_bath failed)";
@@ -281,22 +285,28 @@ func make_bathy(latutm=, q=, avg_surf=, forcechannel=) {
       }
 
       msg = msg_prefix + "Step 2/3: Processing surface...";
-      write, "Processing for first_surface...";
-      pause, 1; // make sure Yorick shows output
+      if(verbose) {
+        write, "Processing for first_surface...";
+        pause, 1; // make sure Yorick shows output
+      }
       status, start, msg=msg;
       surface = first_surface(start=raster_starts(i), stop=raster_stops(i),
-        usecentroid=1, forcechannel=forcechannel, msg=msg);
+        usecentroid=1, forcechannel=forcechannel, msg=msg, verbose=verbose);
 
       msg = msg_prefix + "Step 3/3: Merging and correcting depths...";
       status, start, msg=msg;
-      write, "Using make_fs_bath for submerged topography...";
-      pause, 1; // make sure Yorick shows output
-      depth = make_fs_bath(depth, surface, avg_surf=avg_surf,
+      if(verbose) {
+        write, "Using make_fs_bath for submerged topography...";
+        pause, 1; // make sure Yorick shows output
+      }
+      depth = make_fs_bath(depth, surface, avg_surf=avg_surf, verbose=verbose,
         sample_interval=sample_interval);
 
       // make depth correction using compute_depth
-      write, "Correcting water depths for Snells law...";
-      pause, 1; // make sure Yorick shows output
+      if(verbose) {
+        write, "Correcting water depths for Snells law...";
+        pause, 1; // make sure Yorick shows output
+      }
       grow, depth_all, compute_depth(depth, sample_interval=sample_interval);
     }
   }
