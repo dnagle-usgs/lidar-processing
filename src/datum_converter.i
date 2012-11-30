@@ -3,11 +3,11 @@
 // modified charlene sullivan 09/25/06
 
 func datum_convert_data(&data_in, zone=, src_datum=, src_geoid=, dst_datum=,
-dst_geoid=, verbose=) {
+dst_geoid=, verbose=, clean=) {
 /* DOCUMENT converted = datum_convert_data(data, zone=, src_datum=, src_geoid=,
-    dst_datum=, dst_geoid=)
+    dst_datum=, dst_geoid=, clean=)
   datum_convert_data, data, zone=, src_datum=, src_geoid=, dst_datum=,
-    dst_geoid=
+    dst_geoid=, clean=
 
   Converts data from one datum to another. The following transformations are
   possible:
@@ -64,6 +64,7 @@ dst_geoid=, verbose=) {
   SEE ALSO: datum_convert_utm, datum_convert_geo, datum_convert_pnav
 */
   default, verbose, 1;
+  default, clean, 1;
   extern curzone;
   if(is_void(zone)) {
     if(curzone) {
@@ -83,7 +84,7 @@ dst_geoid=, verbose=) {
     data_out = data_in;
   }
 
-  if (!structeq(structof(data_out), LFP_VEG)) {
+  if (clean && !structeq(structof(data_out), LFP_VEG)) {
     data_out = test_and_clean(data_out);
   }
 
@@ -718,7 +719,8 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=, clean=) {
     }
 
     datum_convert_data, data, zone=cur_zone, src_datum=cur_src_datum,
-      src_geoid=cur_src_geoid, dst_datum=dst_datum, dst_geoid=dst_geoid;
+      src_geoid=cur_src_geoid, dst_datum=dst_datum, dst_geoid=dst_geoid,
+      clean=0;
 
     if(is_void(data)) {
       write, " WARNING!!! Datum conversion eliminated the data!!!";
