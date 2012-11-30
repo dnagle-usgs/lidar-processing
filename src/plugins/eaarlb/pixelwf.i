@@ -273,8 +273,26 @@ func pixelwf_selected_info(nearest, vname=) {
     write, format="Corresponds to %s(%d)\n", vname, nearest.index;
   }
 
-  if(pixelwfvars.selection.extended && is_array(tans) && is_array(pnav)) {
+  if(pixelwfvars.selection.extended) {
     write, "";
+    // Leaving units in cm because units don't matter, as long as they are
+    // consistent.
+
+    // calculate distance along surface plane from mirror point
+    dist = sqrt(double(point.east-point.meast)^2 +
+      double(point.north-point.mnorth)^2);
+    // calculate elevation difference
+    ht = abs(point.melevation - point.elevation);
+    if(ht == 0) {
+      write, format="%s\n", "Cannot calculate angle of incidence (0 height)";
+    } else {
+      // calculate angle of incidence
+      aoi = atan(dist, ht) * RAD2DEG;
+      write, format="Angle of incidence= %.4f degrees\n", aoi;
+    }
+  }
+
+  if(pixelwfvars.selection.extended && is_array(tans) && is_array(pnav)) {
     somd = point.soe - soe_day_start;
     gns_idx = abs(pnav.sod - somd)(mnx);
     gns = pnav(gns_idx);
