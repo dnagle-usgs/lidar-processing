@@ -462,7 +462,7 @@ w=, n=, prefilter_min=, prefilter_max=, verbose=) {
 
   // Apply rcf filter
   data = rcf_filter_eaarl(unref(data), buf=buf, w=w, n=n, mode=mode,
-      rcfmode=rcfmode);
+      rcfmode=rcfmode, clean=0);
 
   if(is_void(data)) {
     if(verbose)
