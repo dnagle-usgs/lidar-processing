@@ -482,7 +482,10 @@ pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
       if(las_global_encoding(stream.header).gps_soe) {
         stream.points.gps_time = utc_epoch_to_gps_epoch(data.soe) - 1e9;
       } else {
-        stream.points.gps_time = soe2gpssow(utc_epoch_to_gps_epoch(data.soe));
+        if(allof(data.soe < 1000000))
+          stream.points.gps_time = data.soe;
+        else
+          stream.points.gps_time = soe2gpssow(utc_epoch_to_gps_epoch(data.soe));
       }
     } else {
       stream.points.gps_time = soe2gpssow(utc_epoch_to_gps_epoch(data.soe));
