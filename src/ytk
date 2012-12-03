@@ -543,7 +543,7 @@ proc spawn_yorick {} {
     set rlterm [expr {$_ytk(use_rlterm) eq "Yes"}]
     set rlwrap [expr {$_ytk(use_rlwrap) eq "Yes"}]
     set result [::yorick::spawn $ytk_fifo_name $tky_fifo_name \
-            -rlwrap $rlwrap -rlterm $rlterm]
+            -rlwrap $rlwrap -rlterm $rlterm -log 1]
 
     if {$result ne ""} {
         # Make this expect session the default

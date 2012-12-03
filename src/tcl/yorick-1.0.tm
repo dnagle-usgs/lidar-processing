@@ -4,6 +4,7 @@ package provide yorick 1.0
 package require Expect
 package require fileutil
 package require snit
+package require logger
 
 namespace eval ::yorick {
     namespace export ystr
@@ -91,7 +92,7 @@ proc ::yorick::destroy_fifos {args} {
 }
 
 proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
-    array set opts {-rlterm 0 -rlwrap 0}
+    array set opts {-rlterm 0 -rlwrap 0 -log 0}
     array set opts $args
 
     set spawner {cmd {
@@ -114,6 +115,11 @@ proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
 
     if {$yorick eq ""} {
         error "Unable to find Yorick"
+    }
+
+    if {$opts(-log)} {
+        set logfn ${::logger::fn}.tscp
+        set yorick [list ./logtranscript $logfn {*}$yorick]
     }
 
     lappend yorick -i ytk.i $yor_tcl_fn $tcl_yor_fn
