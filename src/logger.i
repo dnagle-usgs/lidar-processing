@@ -336,7 +336,7 @@ func logger_purge(days) {
     user = get_user();
   if(!user) return;
   if(logger(debug)) logger, debug, logid+"restricting to user="+user;
-  w = where(strglob("*."+user, files));
+  w = where(strglob("*."+user+"*", files));
   if(!numberof(w)) return;
   files = files(w);
 
