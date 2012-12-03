@@ -1,0 +1,57 @@
+#!/bin/sh
+# \
+exec tclsh "$0" ${1+"$@"}
+# vim: set syntax=tcl ts=4 sts=4 sw=4 ai sr et:
+
+# Creates a logged transcript of the input/output exchanged with a particular
+# program. For example:
+#
+#       ./logtranscript logfile yorick
+#
+# will start a Yorick session. Everything you see on the screen will get logged
+# to the file. You might also wish to do this:
+#
+#       rlwrap ./logtranscript logfile yorick
+#
+# This will let you see the input/output -as Yorick sees it-. That means that
+# if rlwrap is doing something goofy, you'll be able to view the log file to
+# see what Yorick was actually getting/sending.
+#
+# The program's usage is thus:
+#
+#       ./logtranscript <logfile> <command with arguments>
+
+proc on_cmd_stdout {} {
+    if {![eof $::cmdfh]} {
+        set char [read $::cmdfh 1]
+        puts -nonewline $::logfh $char
+        puts -nonewline stdout $char
+    } else {
+        exit
+    }
+}
+
+proc on_caller_stdin {} {
+    if {![eof stdin]} {
+        set char [read stdin 1]
+        puts -nonewline $::logfh $char
+        puts -nonewline $::cmdfh $char
+    } else {
+        exit
+    }
+}
+
+set logfile [lindex $argv 0]
+set cmd [lrange $argv 1 end]
+
+set logfh [open $logfile w]
+set cmdfh [open "|$cmd 2>@1" r+]
+
+foreach chan [list $logfh $cmdfh stdout stdin] {
+    fconfigure $chan -blocking 0 -buffering none -translation binary
+}
+
+fileevent $cmdfh readable on_cmd_stdout
+fileevent stdin readable on_caller_stdin
+
+vwait forever
