@@ -187,8 +187,8 @@ func pixelwf_geo_rast(void) {
 
   channel = max(1, channel);
 
-  geo_rast, raster, channel=channe, win=vars.win, eoffset=vars.eoffset,
-    verbose=vars.verbose;
+  show_rast, raster, channel=channel, pulse=pulse, win=vars.win,
+    units=vars.units, geo=1, eoffset=vars.eoffset;
 }
 
 func pixelwf_ndrast(void) {
@@ -202,15 +202,13 @@ func pixelwf_ndrast(void) {
 
   channel = max(1, channel);
 
-  win = current_window();
-  window, vars.win;
-  fma;
+  show_rast, raster, channel=channel, pulse=pulse, win=vars.win,
+    units=vars.units;
 
-  result = ndrast(raster, channel=channel, graph=1, win=vars.win,
-    units=vars.units, sfsync=0, pulse=pulse);
-  pixelwf_handle_result, vars, result;
-
-  window_select, win;
+  if(vars.dest_action) {
+    result = ndrast(raster, channel=channel, graph=0, sfsync=0);
+    pixelwf_handle_result, vars, result;
+  }
 }
 
 func pixelwf_enter_interactive(void) {
