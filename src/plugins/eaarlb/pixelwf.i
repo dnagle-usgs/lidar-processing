@@ -57,8 +57,7 @@ if(is_void(pixelwfvars)) {
     geo_rast=h_new(
       enabled=1,  //bool
       win=21,
-      verbose=0,
-      eoffset=0.  //?
+      eoffset=0.
     ),
     ndrast=h_new(
       enabled=1,

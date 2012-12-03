@@ -67,7 +67,6 @@ if {![namespace exists ::eaarl::pixelwf]} {
             namespace eval geo_rast {
                 variable enabled 0
                 variable win 21
-                variable verbose 0
                 variable eoffset 0
             }
             namespace eval ndrast {
@@ -142,7 +141,7 @@ if {![namespace exists ::eaarl::pixelwf]} {
                             hard_surface}
                     show_wf {enabled c1 c2 c3 c4}
                     show_wf {enabled}
-                    geo_rast {enabled verbose}
+                    geo_rast {enabled}
                     ndrast {enabled}
                 }
                 {0 1 2} {
@@ -613,14 +612,12 @@ namespace eval ::eaarl::pixelwf::gui {
         ttk::button $f.btnGraph -text Plot \
                 -command [list [namespace current]::yorcmd pixelwf_geo_rast]
 
-        ttk::checkbutton $f.chkVerbose -text Verbose -variable ${ns}::verbose
-
         grid $f.lblWindow $f.spnWindow $f.lblEOff $f.spnEOff
-        grid $f.chkVerbose - $f.btnGraph -
+        grid x x $f.btnGraph -
 
         default_sticky \
                 $f.lblWindow $f.spnWindow $f.lblEOff $f.spnEOff \
-                $f.btnGraph $f.chkVerbose
+                $f.btnGraph
 
         grid columnconfigure $f {0 2} -weight 0 -uniform 2
         grid columnconfigure $f {1 3} -weight 1 -uniform 1
