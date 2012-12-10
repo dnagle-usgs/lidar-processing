@@ -430,19 +430,4 @@ func ytk_startup(void) {
     tkcmd, "ytk_alps_update_required";
 }
 
-func ytkquit {
-/* DOCUMENT ytkquit
-  Exit YTK. This tells TCL to exit, which in turn automatically shuts down
-  Yorick. (This is safer than exiting Yorick directly and hoping that Tcl
-  takes the hint.)
-
-  The Yorick built-in command quit was renamed to __quit if you need it.
-*/
-  tkcmd, "ytk_exit 0";
-  __quit;
-}
-__quit = quit;
-// Disabled for now. This was preventing command history from saving.
-//quit = ytkquit;
-
 ytk_startup;
