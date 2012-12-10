@@ -185,5 +185,15 @@ namespace eval ::logger {
 
         ::misc::idle [list ::misc::raise_win .logfile]
     }
+
+    proc exit {args} {
+        ybkg quit
+        ::misc::idle [list ::logger::__real_exit {*}$args]
+    }
+
+    if {[info commands ::logger::__real_exit] eq ""} {
+        rename ::exit ::logger::__real_exit
+        interp alias {} ::exit {} ::logger::exit
+    }
 }
 ::logger::init
