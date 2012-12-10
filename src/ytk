@@ -129,6 +129,15 @@ proc ybkg args {
 #   Also, do not send any input that includes newlines. It just doesn't work
 #   yet.
 ##
+    if {[chan names $::tky_fifo] eq ""} {
+        logger warn "Call to ybkg after Yorick termination, redefining ybkg"
+        proc ybkg args {
+            set cmd [eval concat $args]
+            logger trace "Skipping background command: $cmd"
+        }
+        ybkg {*}$args
+        return
+    }
     set cmd [eval concat $args]
     set ::__ybkg__wait 1
     fifo_log yor $cmd
