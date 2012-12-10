@@ -176,6 +176,20 @@ func logger_level(cmd, level) {
 logger_level = closure(logger_level, __logger);
 restore, scratch;
 
+func logger_term(void) {
+/* DOCUMENT logger_term
+  Terminates logging and compresses the log files. This should be called
+  immediately prior to exiting ALPS. It should -not- be called if any further
+  logging will be done.
+*/
+  if(logger(info)) logger, info, "Terminating logging";
+  if(_ytk) tkcmd, "logger::level none"
+  logger_level, "none";
+
+  fn = logger_logfn();
+  system, "gzip -q '"+fn+"'*";
+}
+
 /*
   Implementation note:
 
@@ -354,4 +368,17 @@ func logger_purge(days) {
         logger, debug, logid+"unable to delete old log: "+fn;
     }
   }
+}
+
+func logger_quit(void) {
+/* DOCUMENT quit
+  Exit YMainLoop when current task finishes.
+  Normally this terminates the program.
+*/
+  logger_term;
+  __logger_quit_real;
+}
+if(is_void(__logger_quit_real)) {
+  __logger_quit_real = quit;
+  quit = logger_quit;
 }
