@@ -187,7 +187,7 @@ func logger_term(void) {
   logger_level, "none";
 
   fn = logger_logfn();
-  system, "gzip -q '"+fn+"'*";
+  system, "gzip -q '"+fn+"'* &";
 }
 
 /*
