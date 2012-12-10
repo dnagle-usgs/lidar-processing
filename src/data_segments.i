@@ -143,7 +143,7 @@ func split_by_flight(data, timediff=, daythresh=, pulsecount=) {
 
 func split_by_line(data, timediff=) {
   default, timediff, 60;
-  data = sortdata(test_and_clean(data), method="soe");
+  data = sortdata(data, method="soe");
   ptr = split_sequence_by_gaps(data.soe, gap=timediff);
   for(i = 1; i <= numberof(ptr); i++)
     ptr(i) = &data(*ptr(i));
@@ -151,7 +151,6 @@ func split_by_line(data, timediff=) {
 }
 
 func split_by_channel(data) {
-  data = test_and_clean(data);
   if(has_member(data, "channel")) {
     chans = set_remove_duplicates(data.channel);
     num = numberof(chans);
@@ -167,7 +166,6 @@ func split_by_channel(data) {
 }
 
 func split_by_digitizer(data) {
-  data = test_and_clean(data);
   dig = data.rn % 2;
   ptr = [];
   if(anyof(dig))

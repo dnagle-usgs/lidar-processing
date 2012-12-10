@@ -281,12 +281,6 @@ xfma=, mode=, msize=, marker=, scolor=, plot=, showline=, showpts=) {
     return;
   }
 
-  data = test_and_clean(data);
-  if(is_void(data)) {
-    write, "test_and_clean removed all data";
-    return;
-  }
-
   if(is_void(line) && is_void(recall)) {
     window, iwin;
     write, format="Drag to draw transect line in window %d\n", iwin;

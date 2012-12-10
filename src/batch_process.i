@@ -36,7 +36,6 @@ func package_rcf (ofn) {
   write, format="no_rcf      = %d\n", no_rcf;
   write, format="mode        = %d\n", mode;
   write, format="merge       = %d\n", merge;
-  write, format="clean       = %d\n", clean;
   write, format="rcfmode     = %d\n", rcfmode;
   write, format="onlyupdate  = %d\n", onlyupdate;
   write, format="write_merge = %d\n", write_merge;
@@ -217,7 +216,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
       tile_id = swrite(format="t_e%6.0f_n%7.0f_%s_rcf",
         min_e, max_n, zone_s);
 
-      batch_rcf, mypath, buf=buf, w=w, no_rcf=no_rcf, mode=typ+1, merge=merge, clean=clean, rcfmode=rcfmode, onlyupdate=update, write_merge=write_merge, tile_id=tile_id;
+      batch_rcf, mypath, buf=buf, w=w, no_rcf=no_rcf, mode=typ+1, merge=merge, rcfmode=rcfmode, onlyupdate=update, write_merge=write_merge, tile_id=tile_id;
     }
 
     if ( ! strmatch(host, "localhost") ) {
@@ -603,12 +602,12 @@ func batch_process {};
 func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
 onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
 only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=, w=, no_rcf=,
-mode=, merge=, clean=, rcfmode=, write_merge=, forcechannel=, shapefile=,
-shp_buffer=) {
+mode=, merge=, rcfmode=, write_merge=, forcechannel=, shapefile=, shp_buffer=)
+{
 /* DOCUMENT mbatch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=,
   n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=,
   only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=,
-  w=, no_rcf=, mode=, merge=, clean=, rcfmode=, write_merge=, forcechannel=,
+  w=, no_rcf=, mode=, merge=, rcfmode=, write_merge=, forcechannel=,
   shapefile=, shp_buffer=
 
   batch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
@@ -729,7 +728,6 @@ The following are pass thru variables needed for batch_rcf
   no_rcf=      :
   mode=        :
   merge=       :
-  clean=       :
   rcfmode=     :
   write_merge= :
 
@@ -747,8 +745,8 @@ Added server/client support (2009-01) Richard Mitchell
         pbd=pbd, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ,
         only_bathy=only_bathy, only_veg=only_veg, update=update,
         avg_surf=avg_surf, conf_file=conf_file, now=now, b_rcf=b_rcf, buf=buf,
-        w=w, no_rcf=no_rcf, mode=mode, merge=merge, clean=clean,
-        rcfmode=rcfmode, write_merge=write_merge, forcechannel=forcechannel(i),
+        w=w, no_rcf=no_rcf, mode=mode, merge=merge, rcfmode=rcfmode,
+        write_merge=write_merge, forcechannel=forcechannel(i),
         shapefile=shapefile, shp_buffer=shp_buffer;
     }
     return;
@@ -1122,9 +1120,10 @@ func batch_cleanup ( junk ) {
 // process an output directory instead of a flightline.
 // this will mostly be used for batch_rcf.
 
-func mbatch_process_dir( dirname, buf=, w=, no_rcf=, mode=, merge=, clean=, rcfmode=, update=, onlyupdate=, write_merge=, searchstr=, selectmode=, win= ) {
+func mbatch_process_dir( dirname, buf=, w=, no_rcf=, mode=, merge=, rcfmode=,
+update=, onlyupdate=, write_merge=, searchstr=, selectmode=, win= ) {
 /* DOCUMENT
-func mbatch_process_dir( dirname, buf=, w=, no_rcf=, mode=, merge=, clean=,
+func mbatch_process_dir( dirname, buf=, w=, no_rcf=, mode=, merge=,
                  rcfmode=, update=, onlyupdate=, write_merge=,
                  searchstr=, selectmode=, win= )
 
@@ -1206,10 +1205,10 @@ func show_files(files=, str=) {
   }
 }
 
-func batch_rcf(dirname, fname=, buf=, w=, tw=, fbuf=, fw=, no_rcf=, mode=, meta=, prefilter_min=, prefilter_max=, clean=, merge=, write_merge=, readedf=, readpbd=, writeedf=, writepbd=, rcfmode=, datum=, fsmode=, wfs=, searchstr=, bmode=, interactive=, onlyupdate=, selectmode=, tile_id=) {
+func batch_rcf(dirname, fname=, buf=, w=, tw=, fbuf=, fw=, no_rcf=, mode=, meta=, prefilter_min=, prefilter_max=, merge=, write_merge=, readedf=, readpbd=, writeedf=, writepbd=, rcfmode=, datum=, fsmode=, wfs=, searchstr=, bmode=, interactive=, onlyupdate=, selectmode=, tile_id=) {
 /* DOCUMENT
 func batch_rcf(dirname, fname=, buf=, w=, tw=, fbuf=, fw=, no_rcf=, mode=,
-          meta=, prefilter_min=, prefilter_max=, clean=, merge=, write_merge=,
+          meta=, prefilter_min=, prefilter_max=, merge=, write_merge=,
           readedf=, readpbd=, writeedf=, writepbd=, rcfmode=, datum=, fsmode=,
           wfs=, searchstr=, bmode=, interactive=, onlyupdate=)
 
@@ -1247,10 +1246,6 @@ Input:
 
   prefilter_min= : Minimum allowable elevation to be used before
              filtering (in meters)
-
-  clean=   : Set to 1 to eliminate data points that have already
-         been determined as erroneous for one of the data
-         structure fields.
 
   merge=   : Set to 0 to not merge all the files in directory
          dirname before filtering (as defined by searchstr).
@@ -1311,7 +1306,6 @@ Original amar nayegandhi. Started 12/06/02.
   if (!w) w = 200;
   if (!no_rcf) no_rcf = 3;
   if (!meta) meta = 1;
-  if (!clean) clean = 1;
   default, dorcf, 1;
   if (!mode) mode=2;
   default, bmode,   1;
@@ -1415,8 +1409,6 @@ Original amar nayegandhi. Started 12/06/02.
         write, "merging all eaarl pbd data";
         show_files(files=fn_arr, str="Merge");
         all_eaarl = dirload(files=fn_arr);
-        if(clean)
-          test_and_clean, all_eaarl;
       }
     }
   }
@@ -1519,8 +1511,6 @@ Original amar nayegandhi. Started 12/06/02.
     }
     if (readedf)
       grow, eaarl, data_edf;
-    if(clean && !(merged && readpbd))
-      test_and_clean, eaarl;
     data_edf = [];
     if (bmode == 1 && ! (merge && readpbd)) {
       fmeast = fmnorth = 0;
@@ -1688,11 +1678,10 @@ Original amar nayegandhi. Started 12/06/02.
   //batch_test_rcf(dirname, mode, datum=datum, testpbd=writepbd, testedf=writeedf, buf=buf, w=w, no_rcf=no_rcf);
 }
 
-func new_batch_rcf(dir, searchstr=, merge=, files=, update=, mode=, clean=,
+func new_batch_rcf(dir, searchstr=, merge=, files=, update=, mode=,
 prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
 /* DOCUMENT new_batch_rcf, dir, searchstr=, merge=, files=, update=, mode=,
-  clean=, prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=,
-  verbose=
+  prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=
 
   This is a rewritten batch_rcf function. It iterates over each file in a set
   of files and applies an RCF filter to its data.
@@ -1735,11 +1724,6 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
         mode="fs"   First surface (default)
         mode="be"   Bare earth
         mode="ba"   Bathymetry (submerged topo)
-
-    clean= Specifies whether the data should be cleaned first using
-      test_and_clean. Settings:
-        clean=0     Do not clean the data.
-        clean=1     Clean the data. (default)
 
     prefilter_min= Specifies a minimum value for the elevation values, in
       meters. Points below this value are discarded prior to filtering.
@@ -1810,7 +1794,6 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
   default, buf, 700;
   default, w, 200;
   default, n, 3;
-  default, clean, 1;
   default, meta, 1;
   default, mode, "fs";
   default, rcfmode, "grcf";
@@ -1886,9 +1869,9 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
       continue;
     }
 
-    rcf_filter_eaarl_file, file_in, file_out, mode=mode, clean=clean,
-        rcfmode=rcfmode, buf=buf, w=w, n=n, prefilter_min=prefilter_min,
-        prefilter_max=prefilter_max, verbose=(verbose > 1);
+    rcf_filter_eaarl_file, file_in, file_out, mode=mode, rcfmode=rcfmode,
+      buf=buf, w=w, n=n, prefilter_min=prefilter_min,
+      prefilter_max=prefilter_max, verbose=(verbose > 1);
     status, progress, sizes(i), sizes(0);
   }
   status, finished;
@@ -2001,7 +1984,7 @@ func batch_test_rcf(dir, mode, datum=, testpbd=, testedf=, buf=, w=, no_rcf=, re
     if (mode == 1) fmode = 3;
     if (!no_rcf) (no_rcf=3);
     for (i=1;i<=numberof(missingdirs);i++) {
-      batch_rcf, missingdirs(i), buf=buf, w=w, no_rcf=no_rcf, mode=fmode, meta=1, clean=1, merge=1, readpbd=1, writeedf=1, writepbd=1, dorcf=1, datum="w84", fsmode=(mode == 1) || (mode == 3);
+      batch_rcf, missingdirs(i), buf=buf, w=w, no_rcf=no_rcf, mode=fmode, meta=1, merge=1, readpbd=1, writeedf=1, writepbd=1, dorcf=1, datum="w84", fsmode=(mode == 1) || (mode == 3);
     }
   }
 

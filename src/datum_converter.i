@@ -3,11 +3,11 @@
 // modified charlene sullivan 09/25/06
 
 func datum_convert_data(&data_in, zone=, src_datum=, src_geoid=, dst_datum=,
-dst_geoid=, verbose=, clean=) {
+dst_geoid=, verbose=) {
 /* DOCUMENT converted = datum_convert_data(data, zone=, src_datum=, src_geoid=,
-    dst_datum=, dst_geoid=, clean=)
+    dst_datum=, dst_geoid=)
   datum_convert_data, data, zone=, src_datum=, src_geoid=, dst_datum=,
-    dst_geoid=, clean=
+    dst_geoid=
 
   Converts data from one datum to another. The following transformations are
   possible:
@@ -64,7 +64,6 @@ dst_geoid=, verbose=, clean=) {
   SEE ALSO: datum_convert_utm, datum_convert_geo, datum_convert_pnav
 */
   default, verbose, 1;
-  default, clean, 1;
   extern curzone;
   if(is_void(zone)) {
     if(curzone) {
@@ -82,10 +81,6 @@ dst_geoid=, verbose=, clean=) {
     data_in = [];
   } else {
     data_out = data_in;
-  }
-
-  if (clean && !structeq(structof(data_out), LFP_VEG)) {
-    data_out = test_and_clean(data_out);
   }
 
   defns = h_new(
@@ -445,7 +440,7 @@ func datum_convert_guess_geoid(w84, n88, zone=, geoids=) {
 }
 
 func batch_datum_convert(indir, files=, searchstr=, zone=, outdir=, update=,
-excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=, clean=) {
+excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
 /* DOCUMENT batch_datum_convert, indir, files=, searchstr=, zone=, outdir=,
   update=, excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=
 
@@ -479,9 +474,6 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=, clean=) {
         force=1   - Always convert, even when issues are detected. This may
                 result in incorrect conversions!
       Use of force=1 can cause major issues. Use with caution!!!
-    clean= Specifies whether to use test_and_clean on the data. Settings:
-        clean=0  - Do not clean data.
-        clean=1  - Clean data. (default)
 
   The following additional options are more extensively documented in
   datum_convert_data, but have special additional properties here:
@@ -520,7 +512,6 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=, clean=) {
   default, dst_datum, "n88";
   default, dst_geoid, "09";
   default, force, 0;
-  default, clean, 1;
 
   if(!is_void(src_geoid))
     src_geoid = regsub("^g", src_geoid, "");
@@ -710,17 +701,8 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=, clean=) {
       continue;
     }
 
-    if(clean)
-      data = test_and_clean(unref(data));
-    if(is_void(data)) {
-      write, " WARNING!!! test_and_clean eliminated all the data!!!";
-      write, " This isn't supposed to happen!!! Skipping...";
-      continue;
-    }
-
     datum_convert_data, data, zone=cur_zone, src_datum=cur_src_datum,
-      src_geoid=cur_src_geoid, dst_datum=dst_datum, dst_geoid=dst_geoid,
-      clean=0;
+      src_geoid=cur_src_geoid, dst_datum=dst_datum, dst_geoid=dst_geoid;
 
     if(is_void(data)) {
       write, " WARNING!!! Datum conversion eliminated the data!!!";

@@ -191,11 +191,11 @@ norun=) {
 }
 
 func mf_batch_rcf(dir, searchstr=, merge=, files=, update=, mode=,
-clean=, prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=,
-makeflow_fn=, forcelocal=, norun=) {
+prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, makeflow_fn=,
+forcelocal=, norun=) {
 /* DOCUMENT new_batch_rcf, dir, searchstr=, merge=, files=, update=, mode=,
-   clean=, prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=,
-   makeflow_fn=, forcelocal=, norun=
+   prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, makeflow_fn=,
+   forcelocal=, norun=
 
   This iterates over each file in a set of files and applies an RCF filter to
   its data.
@@ -240,11 +240,6 @@ makeflow_fn=, forcelocal=, norun=) {
         mode="be"   Bare earth
         mode="ba"   Bathymetry (submerged topo)
 
-    clean= Specifies whether the data should be cleaned first using
-      test_and_clean. Settings:
-        clean=0     Do not clean the data.
-        clean=1     Clean the data. (default)
-
     prefilter_min= Specifies a minimum value for the elevation values, in
       meters. Points below this value are discarded prior to filtering.
 
@@ -286,7 +281,6 @@ makeflow_fn=, forcelocal=, norun=) {
   default, buf, 700;
   default, w, 200;
   default, n, 3;
-  default, clean, 1;
   default, meta, 1;
   default, mode, "fs";
   default, rcfmode, "grcf";
@@ -358,7 +352,6 @@ makeflow_fn=, forcelocal=, norun=) {
       "file-in", file_in,
       "file-out", file_out,
       mode=mode,
-      clean=swrite(format="%d", clean),
       rcfmode=rcfmode,
       buf=swrite(format="%d", buf),
       w=swrite(format="%d", w),

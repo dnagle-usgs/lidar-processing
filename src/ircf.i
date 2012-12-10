@@ -38,10 +38,6 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
   default, distthresh, 200;
   default, datawin, 5;
 
-  // if data array is in raster format (R, GEOALL, VEGALL), then covert to
-  // non raster format (FS, GEO, VEG).
-  test_and_clean, eaarl;
-
   //crop region to within user-specified elevation limits
   if(!is_void(prefilter_min) || !is_void(prefilter_max))
     eaarl = filter_bounded_elv(unref(eaarl), lbound=prefilter_min,
@@ -99,10 +95,6 @@ func ircf_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactiv
   timer, t0;
 
   // PRELIMINARIES....
-
-  // if data array is in raster format (R, GEOALL, VEGALL), then covert to
-  // non raster format (FS, GEO, VEG).
-  test_and_clean, eaarl;
 
   write, format="RCF'ing data set with window size = %d, and elevation width = %d meters...\n", fbuf, fw;
 

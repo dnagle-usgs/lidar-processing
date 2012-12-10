@@ -291,10 +291,9 @@ func gridded_rcf(x, y, z, w, buf, n, progress=) {
   return where(keep);
 }
 
-func rcf_filter_eaarl(eaarl, mode=, clean=, rcfmode=, buf=, w=, n=, idx=,
-progress=) {
-/* DOCUMENT filtered = rcf_filter_eaarl(data, mode=, clean=, rcfmode=, buf=,
-  w=, n=, idx=, progress=)
+func rcf_filter_eaarl(eaarl, mode=, rcfmode=, buf=, w=, n=, idx=, progress=) {
+/* DOCUMENT filtered = rcf_filter_eaarl(data, mode=, rcfmode=, buf=, w=, n=,
+   idx=, progress=)
   Applies an RCF filter to eaarl data.
 
   Parameter:
@@ -306,11 +305,6 @@ progress=) {
         mode="fs"   First surface (default)
         mode="be"   Bare earth
         mode="ba"   Bathymetry (submerged topo)
-
-    clean= Specifies whether the data should be cleaned first using
-      test_and_clean. Settings:
-        clean=0     Do not clean the data
-        clean=1     Clean the data (default)
 
     rcfmode= Specifies which rcf filter function to use. Possible settings:
         rcfmode="grcf"    Use gridded_rcf (default)
@@ -326,9 +320,7 @@ progress=) {
       order to count as successful. Default is 3.
 
     idx= Specifies that the index into the data should be returned instead of
-      the filtered data itself. Note that this setting is incompatible with
-      clean=1 and will cause it to default to clean=0. Forcibly setting
-      idx=1 and clean=1 is an error. Settings:
+      the filtered data itself. Settings:
         idx=0    Return the filtered data (default)
         idx=1    Return the index into the data
 
@@ -341,13 +333,6 @@ progress=) {
   default, n, 3;
   default, rcfmode, "grcf";
   default, idx, 0;
-  default, clean, !idx;
-
-  if(clean && idx)
-    error, "You cannot set clean=1 and idx=1 together.";
-
-  if(clean)
-    eaarl = test_and_clean(unref(eaarl));
 
   data2xyz, eaarl, x, y, z, mode=mode;
 
@@ -369,10 +354,10 @@ progress=) {
   return numberof(keep) ? eaarl(keep) : [];
 }
 
-func rcf_filter_eaarl_file(file_in, file_out, mode=, clean=, rcfmode=, buf=,
-w=, n=, prefilter_min=, prefilter_max=, verbose=) {
-/* DOCUMENT rcf_filter_eaarl_file(file_in, file_out, mode=, clean=, rcfmode=,
-  buf=, w=, n=, prefilter_min=, prefilter_max=, verbose=)
+func rcf_filter_eaarl_file(file_in, file_out, mode=, rcfmode=, buf=, w=, n=,
+prefilter_min=, prefilter_max=, verbose=) {
+/* DOCUMENT rcf_filter_eaarl_file(file_in, file_out, mode=, rcfmode=, buf=, w=,
+   n=, prefilter_min=, prefilter_max=, verbose=)
 
   Applies the RCF filter to a file.
 
@@ -397,11 +382,6 @@ w=, n=, prefilter_min=, prefilter_max=, verbose=) {
         mode="fs"   First surface (default)
         mode="be"   Bare earth
         mode="ba"   Bathymetry (submerged topo)
-
-    clean= Specifies whether the data should be cleaned first using
-      test_and_clean. Settings:
-        clean=0     Do not clean the data.
-        clean=1     Clean the data. (default)
 
     prefilter_min= Specifies a minimum value for the elevation values, in
       meters. Points below this value are discarded prior to filtering.
@@ -431,7 +411,6 @@ w=, n=, prefilter_min=, prefilter_max=, verbose=) {
   default, buf, 700;
   default, w, 200;
   default, n, 3;
-  default, clean, 1;
   default, mode, "fs";
   default, rcfmode, "grcf";
 
@@ -446,12 +425,6 @@ w=, n=, prefilter_min=, prefilter_max=, verbose=) {
     return;
   }
 
-  if(clean) {
-    if(verbose)
-      write, format=" %s", "cleaning...";
-    data = test_and_clean(unref(data));
-  }
-
   if(verbose)
     write, format=" %s", "filtering...";
 
@@ -462,7 +435,7 @@ w=, n=, prefilter_min=, prefilter_max=, verbose=) {
 
   // Apply rcf filter
   data = rcf_filter_eaarl(unref(data), buf=buf, w=w, n=n, mode=mode,
-      rcfmode=rcfmode, clean=0);
+      rcfmode=rcfmode);
 
   if(is_void(data)) {
     if(verbose)

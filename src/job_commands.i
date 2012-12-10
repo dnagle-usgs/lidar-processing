@@ -113,7 +113,6 @@ func job_rcf_eaarl(conf) {
     --file-in         corresponds to  file_in
     --file-out        corresponds to  file_out
     --mode            corresponds to  mode=
-    --clean           corresponds to  clean=
     --rcfmode         corresponds to  rcfmode=
     --buf             corresponds to  buf=
     --w               corresponds to  w=
@@ -125,7 +124,6 @@ func job_rcf_eaarl(conf) {
   require, "util_str.i";
   keyrequire, conf, file=;
   keyrequire, conf.file, in=, out=;
-  clean = pass_void(atoi, conf.clean);
   buf = pass_void(atoi, conf.buf);
   w = pass_void(atoi, conf.w);
   n = pass_void(atoi, conf.n);
@@ -139,8 +137,8 @@ func job_rcf_eaarl(conf) {
 
   require, "rcf.i";
   rcf_filter_eaarl_file, conf.file.in, conf.file.out, mode=conf.mode,
-      clean=clean, rcfmode=conf.rcfmode, buf=buf, w=w, n=n,
-      prefilter_min=prefilter_min, prefilter_max=prefilter_max, verbose=0;
+      rcfmode=conf.rcfmode, buf=buf, w=w, n=n, prefilter_min=prefilter_min,
+      prefilter_max=prefilter_max, verbose=0;
 }
 
 func job_georef_eaarl(conf) {

@@ -2,10 +2,10 @@
 
 func write_ascii_xyz(data, fn, mode=, intensity_mode=, ESRI=, header=, footer=,
 delimit=, indx=, intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=,
-clean=, verbose=) {
+verbose=) {
 /* DOCUMENT write_ascii_xyz, data, fn, mode=, intensity_mode=, ESRI=, header=,
   footer=, delimit=, indx=, intensity=, rn=, soe=, zclip=, latlon=, split=,
-  zone=, chunk=, clean=, verbose=
+  zone=, chunk=, verbose=
 
   Writes an ASCII file using the given data.
 
@@ -39,10 +39,6 @@ clean=, verbose=) {
     zone= The UTM zone of the data. Only needed if latlon=1.
         zone=curzone      (default)
         zone=18           Specify zone 18
-    clean= Specifies whether test_and_clean should be applied to the data.
-      Ignored if data is numerical.
-        clean=1     Use test_and_clean (default)
-        clean=0     Use struct_cast
 
   Options that affect output file content:
     ESRI= Toggles ESRI compatibility mode on. Changes the defaults for
@@ -125,7 +121,6 @@ clean=, verbose=) {
   default, latlon, 0;
   default, split, 0;
   default, chunk, 1000;
-  default, clean, 1;
   default, verbose, 1;
 
   if(latlon && is_void(zone)) {
@@ -181,15 +176,6 @@ clean=, verbose=) {
   w = where(![indx, 1, 1, intensity, rn, soe]);
   if(numberof(w))
     seps(w) = string(0);
-
-  // Make sure the data is in a clean one-dimensional array format so that our
-  // counts don't get confused.
-  if(!is_numerical(data)) {
-    if(clean)
-      test_and_clean, data;
-    else
-      struct_cast, data;
-  }
 
   // If zclip is in effect, filter the data
   if(numberof(zclip) == 2) {
@@ -870,11 +856,11 @@ soe=, indx=, columns=, mapping=, types=, preset=, latlon=) {
 
 func batch_write_xyz(dirname, outdir=, files=, searchstr=, buffer=, update=,
 extension=, mode=, intensity_mode=, ESRI=, header=, footer=, delimit=, indx=,
-intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=, clean=) {
+intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=) {
 /* DOCUMENT batch_write_xyz, dirname, outdir=, files=, searchstr=, buffer=,
   update=, extension=, mode=, intensity_mode=, ESRI=, header=, footer=,
   delimit=, indx=, intensity=, rn=, soe=, zclip=, latlon=, split=, zone=,
-  chunk=, clean=
+  chunk=
 
   Batch creates xyz files for specified files. This is a batch wrapper around
   write_ascii_xyz.
@@ -933,7 +919,6 @@ intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=, clean=) {
       zone using the zone encoded in the filename, then falls back to
       curzone.
     chunk=
-    clean=
 */
 /*
 amar nayegandhi 10/06/03.
@@ -1030,7 +1015,7 @@ Rewrote David Nagle 2010-03-11
       intensity_mode=intensity_mode, ESRI=ESRI, header=header,
       footer=footer, delimit=delimit, indx=indx, intensity=intensity, rn=rn,
       soe=soe, zclip=zclip, latlon=latlon, split=split, zone=fzone,
-      chunk=chunk, clean=clean, verbose=0;
+      chunk=chunk, verbose=0;
 
     timer_remaining, t0, sizes(i), sizes(0);
   }

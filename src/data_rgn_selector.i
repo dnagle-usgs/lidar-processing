@@ -49,7 +49,6 @@ INPUT:
 
   if (is_void(nosort)) nosort = 0;
   if (is_void(data)) return [];
-  if (!nosort) data = test_and_clean(data);
 
   default, type, structof(data);
   default, silent, 0;
@@ -252,7 +251,6 @@ amar nayegandhi 06/26/03.
     point = [result(1), result(2)];
   }
 
-  data = test_and_clean(data);
   window, win;
   //  plmk, point(2), point(1), color="black", msize=msize, marker=2
   if (!radius) radius = 1.0;
