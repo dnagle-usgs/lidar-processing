@@ -115,5 +115,8 @@ if(_ytk)
 // Purge old log files if everything is in order to allow it.
 if(is_hash(alpsrc) && is_numerical(alpsrc.log_keep) && is_func(logger_purge))
   logger_purge, alpsrc.log_keep;
-if(is_hash(alpsrc) && is_string(alpsrc.log_level) && is_func(logger_level))
+if(is_hash(alpsrc) && is_string(alpsrc.log_level) && is_func(logger_level)) {
   logger_level, alpsrc.log_level;
+  if(_ytk)
+    tkcmd, "::logger::level {"+alpsrc.log_level+"}";
+}
