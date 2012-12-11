@@ -359,9 +359,11 @@ proc menu_plugins mb {
 }
 
 proc menu_settings mb {
-    menu $mb
+    menu $mb -postcommand ::alpsrc::update
     $mb add checkbutton {*}[menulabel "&Help goes in new window"] \
             -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
+    $mb add checkbutton {*}[menulabel "Use &Makeflow"] \
+            -variable ::alpsrc(makeflow_enable)
     $mb add cascade {*}[menulabel "Memory usage indicator..."] \
             -menu [menu_settings_memory $mb.mem]
     return $mb
