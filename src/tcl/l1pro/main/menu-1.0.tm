@@ -31,14 +31,14 @@ proc build mb {
             -menu [menu_window $mb.window]
     $mb add cascade {*}[menulabel &Utilities] \
             -menu [menu_utilities $mb.util]
-    $mb add cascade {*}[menulabel &Help] \
-            -menu [menu_cmdline $mb.cmd]
     $mb add cascade {*}[menulabel &Plugins] \
             -menu [menu_plugins $mb.plugins]
     $mb add cascade {*}[menulabel &Settings] \
             -menu [menu_settings $mb.settings]
     $mb add cascade {*}[menulabel &Debug] \
             -menu [menu_debug $mb.debug]
+    $mb add cascade {*}[menulabel &Help] \
+            -menu [menu_cmdline $mb.cmd]
     return $mb
 }
 
