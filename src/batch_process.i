@@ -434,7 +434,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
     if (typ == 1) {
       if ((get_typ && !only_veg) || (!get_typ)) {
         write, format = "Processing Region %d of %d for Bathymetry\n",i,n;
-        depth_all = make_bathy(latutm = 1, q = q,avg_surf=avg_surf, forcechannel=forcechannel);
+        depth_all = make_bathy(latutm = 1, q = q,avg_surf=avg_surf, forcechannel=forcechannel, verbose=0);
         if (is_array(depth_all)){
           test_and_clean, depth_all;
           if (is_array(depth_all)) {
@@ -504,7 +504,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
       if ((get_typ && !only_veg) || (!get_typ)) {
       //process for bathy
       write, format = "Processing Region %d of %d for Bathymetry\n",i,n;
-      depth_all = make_bathy(latutm = 1, q = q, forcechannel=forcechannel);
+      depth_all = make_bathy(latutm = 1, q = q, forcechannel=forcechannel, verbose=0);
       if (is_array(depth_all)){
         test_and_clean, depth_all;
         if (is_array(depth_all)) {
