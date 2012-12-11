@@ -143,7 +143,7 @@ proc ::eaarl::processing::process {} {
             }
             bathy {
                 set cmd "$::pro_var = make_bathy(latutm = 1, q = q,\
-                        avg_surf=$::avg_surf, verbose=0)"
+                        avg_surf=$::avg_surf)"
                 }
             veg {
                 set cmd "$::pro_var = make_veg(latutm=1, q=q, ext_bad_att=1,\
@@ -182,7 +182,7 @@ proc ::eaarl::processing::process_channel {channel} {
         }
         bathy {
             set cmd "grow, $::pro_var, &make_bathy(latutm = 1, q = q,\
-                    avg_surf=$::avg_surf, forcechannel=$channel, verbose=0)"
+                    avg_surf=$::avg_surf, forcechannel=$channel)"
             }
         veg {
             set cmd "grow, $::pro_var, &make_veg(latutm=1, q=q, ext_bad_att=1,\
