@@ -313,9 +313,6 @@ proc menu_utilities mb {
     $mb add separator
     $mb add cascade {*}[menulabel "Launch statistics by..."] \
             -menu [menu_utilities_statistics $mb.stat]
-    $mb add separator
-    $mb add cascade {*}[menulabel "Memory usage indicator..."] \
-        -menu [menu_utilities_memory $mb.mem]
 
     return $mb
 }
@@ -335,30 +332,6 @@ proc menu_utilities_statistics mb {
         $mb add command {*}[menulabel [join $how ", "]] \
                 -command [list segment_stat_launcher $how]
     }
-    return $mb
-}
-
-proc menu_utilities_memory mb {
-    menu $mb
-    foreach delay {
-        0 1 5 15 60
-    } name {
-        "Disable auto-refresh"
-        "Refresh every second"
-        "Refresh every 5 seconds"
-        "Refresh every 15 seconds"
-        "Refresh every minute"
-    } {
-        $mb add radiobutton \
-            -command ::l1pro::memory::autorefresh \
-            -label $name \
-            -variable ::l1pro::memory::refresh \
-            -value $delay
-    }
-    $mb add separator
-    $mb add command {*}[menulabel "Memory monitor"] \
-        -command ::l1pro::memory::launch_monitor
-
     return $mb
 }
 
@@ -389,6 +362,29 @@ proc menu_settings mb {
     menu $mb
     $mb add checkbutton {*}[menulabel "&Help goes in new window"] \
             -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
+    $mb add cascade {*}[menulabel "Memory usage indicator..."] \
+            -menu [menu_settings_memory $mb.mem]
+    return $mb
+}
+
+proc menu_settings_memory mb {
+    menu $mb
+    foreach delay {
+        0 1 5 15 60
+    } name {
+        "Disable auto-refresh"
+        "Refresh every second"
+        "Refresh every 5 seconds"
+        "Refresh every 15 seconds"
+        "Refresh every minute"
+    } {
+        $mb add radiobutton \
+            -command ::l1pro::memory::autorefresh \
+            -label $name \
+            -variable ::l1pro::memory::refresh \
+            -value $delay
+    }
+
     return $mb
 }
 
@@ -407,6 +403,9 @@ proc menu_debug mb {
     $mb add separator
     $mb add command {*}[menulabel "&Nudge Yorick in background"] \
             -command ybkg_nudge
+    $mb add separator
+    $mb add command {*}[menulabel "Memory monitor"] \
+            -command ::l1pro::memory::launch_monitor
     return $mb
 }
 
