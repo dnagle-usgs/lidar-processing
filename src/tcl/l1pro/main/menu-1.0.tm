@@ -35,8 +35,10 @@ proc build mb {
             -menu [menu_cmdline $mb.cmd]
     $mb add cascade {*}[menulabel &Plugins] \
             -menu [menu_plugins $mb.plugins]
-    $mb add cascade {*}[menulabel &Ytk] \
-            -menu [menu_ytk $mb.ytk]
+    $mb add cascade {*}[menulabel &Settings] \
+            -menu [menu_settings $mb.settings]
+    $mb add cascade {*}[menulabel &Debug] \
+            -menu [menu_debug $mb.debug]
     return $mb
 }
 
@@ -383,7 +385,14 @@ proc menu_plugins mb {
     return $mb
 }
 
-proc menu_ytk mb {
+proc menu_settings mb {
+    menu $mb
+    $mb add checkbutton {*}[menulabel "&Help goes in new window"] \
+            -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
+    return $mb
+}
+
+proc menu_debug mb {
     menu $mb
     $mb add command {*}[menulabel "&Load a Yorick/Ytk program file..."] \
             -command select_ytk_fn
@@ -398,9 +407,6 @@ proc menu_ytk mb {
     $mb add separator
     $mb add command {*}[menulabel "&Nudge Yorick in background"] \
             -command ybkg_nudge
-    $mb add separator
-    $mb add checkbutton {*}[menulabel "&Help goes in new window"] \
-            -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
     return $mb
 }
 
