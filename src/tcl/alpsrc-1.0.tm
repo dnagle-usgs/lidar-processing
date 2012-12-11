@@ -53,7 +53,7 @@ namespace eval ::alpsrc {
         dict set conf gdal_bin [file join [pwd] .. .. gdal bin]
         dict set conf cctools_bin [file join [pwd] .. .. cctools bin]
         dict set conf makeflow_opts "-N alps -T local"
-        dict set conf makeflow_enable 1
+        dict set conf makeflow_enable 0
         dict set conf memory_autorefresh 5
         dict set conf log_dir /tmp/alps.log/
         dict set conf log_level debug
