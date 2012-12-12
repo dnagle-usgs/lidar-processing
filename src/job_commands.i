@@ -135,6 +135,8 @@ func job_rcf_eaarl(conf) {
     if(conf.prefilter(*,"max")) prefilter_max = atod(conf.prefilter("max"));
   }
 
+  require, "alps_data.i";
+  require, "dir.i";
   require, "rcf.i";
   rcf_filter_eaarl_file, conf.file.in, conf.file.out, mode=conf.mode,
       rcfmode=conf.rcfmode, buf=buf, w=w, n=n, prefilter_min=prefilter_min,
