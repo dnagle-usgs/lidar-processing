@@ -127,6 +127,80 @@ func makeflow_run(conf, fn, norun=, interval=) {
   write, format="%s", "Jobs completed.\n";
 }
 
+func makeflow_parse_log(fn) {
+/* DOCUMENT makeflow_parse_log(fn)
+  Parses a makeflow log and returns oxy group with the information parsed from
+  it. All fields are integers. Times are unix time in microseconds. There
+  are two sets of fields. At the top level are:
+
+    status - Current status of makeflow process. Possible values:
+        0 - running
+        1 - completed
+        2 - aborted
+        3 - failed
+    started - Time when the makeflow was started.
+    ended - Time when the makeflow ended.
+    log - An array of struct MAKEFLOW_LOG containing the log entries.
+
+  The second set of fields are the contents of result.log, as noted above, an
+  array of struct MAKEFLOW_LOG. (The MAKEFLOW_LOG struct is not externally
+  defined and is created on-the-fly.) All field are again integers, as follows.
+
+    timestamp
+    node_id
+    new_state
+    job_id
+    nodes_waiting
+    nodes_running,
+    nodes_complete
+    nodes_failed
+    nodes_aborted
+    node_id_counter
+
+  These fields are as described in the Makeflow manual at:
+    http://www.nd.edu/~ccl/software/manuals/makeflow.html
+*/
+  lines = rdfile(fn);
+  started = ended = status = 0;
+
+  w = where(strpart(lines, 1:9) == "# STARTED");
+  if(numberof(w) == 1) {
+    null = string(0);
+    sread, lines(w(1)), format="# %s %d", null, started;
+  }
+
+  if(strpart(lines(0), 1:1) == "#") {
+    key = strpart(lines(0), 3:11);
+    status = where(key == ["COMPLETED", "ABORTED  ", "FAILED   "]);
+    status = numberof(status) ? status(1) : 0;
+    if(status) {
+      null = string(0);
+      sread, lines(0), format="# %s %d", null, ended;
+    }
+  }
+
+  w = where(strpart(lines, 1:1) != "#");
+  count = numberof(w);
+  if(!count) return;
+  lines = lines(w);
+
+  // Clobbering builtin timestamp, make sure not to put this at global scope
+  timestamp = node_id = new_state = job_id = nodes_waiting = nodes_running =
+    nodes_complete = nodes_failed = nodes_aborted = node_id_counter =
+    array(long, count);
+
+  sread, lines, format="%d %d %d %d %d %d %d %d", timestamp, node_id, new_state,
+    job_id, nodes_waiting, nodes_running, nodes_complete, nodes_failed,
+    nodes_aborted, node_id_counter;
+
+  // Clobbering builtin log, make sure not to put this at global scope
+  log = obj2struct(save(timestamp, node_id, new_state, job_id, nodes_waiting,
+    nodes_running, nodes_complete, nodes_failed, nodes_aborted,
+    node_id_counter), name="MAKEFLOW_LOG", ary=1);
+
+  return save(status, started, ended, log);
+}
+
 func makeflow_conf_to_script(conf, fn) {
 /* DOCUMENT makeflow_conf_to_script, conf, fn
   script = makeflow_conf_to_script(conf)
