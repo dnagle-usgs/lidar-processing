@@ -151,7 +151,7 @@ func makeflow_parse_log(fn) {
     new_state
     job_id
     nodes_waiting
-    nodes_running,
+    nodes_running
     nodes_complete
     nodes_failed
     nodes_aborted
@@ -170,8 +170,8 @@ func makeflow_parse_log(fn) {
   }
 
   if(strpart(lines(0), 1:1) == "#") {
-    key = strpart(lines(0), 3:11);
-    status = where(key == ["COMPLETED", "ABORTED  ", "FAILED   "]);
+    key = strtok(strpart(lines(0), 3:))(1);
+    status = where(key == ["COMPLETED", "ABORTED", "FAILED"]);
     status = numberof(status) ? status(1) : 0;
     if(status) {
       null = string(0);
