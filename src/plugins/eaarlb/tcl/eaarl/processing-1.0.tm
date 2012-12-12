@@ -7,6 +7,7 @@ set forcechannel_2 0
 set forcechannel_3 0
 set forcechannel_4 0
 set forcechannel_A 0
+set ext_bad_att 20
 
 namespace eval ::eaarl::processing {
     namespace import ::misc::appendif
@@ -138,15 +139,18 @@ proc ::eaarl::processing::process {} {
     if {$::forcechannel_A} {
         switch -- $::processing_mode {
             fs {
-                set cmd "$::pro_var = make_fs(latutm=1, q=q, ext_bad_att=1,\
+                set cmd "$::pro_var = make_fs(latutm=1, q=q,\
+                        ext_bad_att=$::ext_bad_att,\
                         usecentroid=$::usecentroid)"
             }
             bathy {
-                set cmd "$::pro_var = make_bathy(latutm = 1, q = q,\
+                set cmd "$::pro_var = make_bathy(latutm=1, q=q,\
+                        ext_bad_att=$::ext_bad_att,\
                         avg_surf=$::avg_surf)"
                 }
             veg {
-                set cmd "$::pro_var = make_veg(latutm=1, q=q, ext_bad_att=1,\
+                set cmd "$::pro_var = make_veg(latutm=1, q=q,\
+                        ext_bad_att=$::ext_bad_att,\
                         use_centroid=$::usecentroid)"
             }
             cveg {
@@ -177,16 +181,19 @@ proc ::eaarl::processing::process {} {
 proc ::eaarl::processing::process_channel {channel} {
     switch -- $::processing_mode {
         fs {
-            set cmd "grow, $::pro_var, &make_fs(latutm=1, q=q, ext_bad_att=1,\
-                    usecentroid=$::usecentroid, forcechannel=$channel)"
+            set cmd "grow, $::pro_var, &make_fs(latutm=1, q=q,\
+                    ext_bad_att=$::ext_bad_att, usecentroid=$::usecentroid,\
+                    forcechannel=$channel)"
         }
         bathy {
-            set cmd "grow, $::pro_var, &make_bathy(latutm = 1, q = q,\
-                    avg_surf=$::avg_surf, forcechannel=$channel)"
+            set cmd "grow, $::pro_var, &make_bathy(latutm=1, q=q,\
+                    ext_bad_att=$::ext_bad_att, avg_surf=$::avg_surf,\
+                    forcechannel=$channel)"
             }
         veg {
-            set cmd "grow, $::pro_var, &make_veg(latutm=1, q=q, ext_bad_att=1,\
-                    use_centroid=$::usecentroid, forcechannel=$channel)"
+            set cmd "grow, $::pro_var, &make_veg(latutm=1, q=q,\
+                    ext_bad_att=$::ext_bad_att, use_centroid=$::usecentroid,\
+                    forcechannel=$channel)"
         }
         default {
             error "Invalid processing mode: $::processing_mode"

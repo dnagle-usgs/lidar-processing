@@ -17,9 +17,9 @@
 */
 
 func first_surface(nil, start=, stop=, center=, delta=, usecentroid=,
-use_highelv_echo=, forcechannel=, verbose=, msg=) {
+use_highelv_echo=, forcechannel=, verbose=, msg=, ext_bad_att=) {
 /* DOCUMENT first_surface(start=, stop=, center=, delta=, usecentroid=,
-   use_highelv_echo=, forcechannel=, verbose=)
+   use_highelv_echo=, forcechannel=, verbose=, ext_bad_att=)
 
   Project the EAARL threshold trigger point to the surface.
 
@@ -33,6 +33,8 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
         range gate.
     verbose= By default, progress/info output is enabled (verbose=1). Set
         verbose=0 to silence it.
+    ext_bad_att= A value in meters. Points less than this close to the mirror
+      (in elevation) are excluded by setting their north and east values to 0.
 
   This returns an array of type "R" which will contain the xyz of the mirror
   "track point" and the xyz of the "first surface threshold trigger point" or
@@ -58,6 +60,7 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
     logger, debug, log_id+"  forcechannel="+pr1(forcechannel);
     logger, debug, log_id+"  verbose="+pr1(verbose);
     logger, debug, log_id+"  msg="+pr1(msg);
+    logger, debug, log_id+"  ext_bad_att="+pr1(ext_bad_att);
   }
   default, verbose, 1;
   sample_interval = 1.0;
@@ -92,7 +95,8 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
       j = min(stop, i + maxcount - 1);
       parts(interval) = &first_surface(start=i, stop=j,
         usecentroid=usecentroid, use_highelv_echo=use_highelv_echo,
-        forcechannel=forcechannel, verbose=verbose, msg=msg);
+        forcechannel=forcechannel, ext_bad_att=ext_bad_att, verbose=verbose,
+        msg=msg);
     }
     if(logger(debug)) logger, debug, log_id+"Leaving first_surface";
     return merge_pointers(parts);
@@ -243,6 +247,13 @@ use_highelv_echo=, forcechannel=, verbose=, msg=) {
     mirang, scan_angles, mag,
     mx, my, mz, px, py, pz;
 
+  if(ext_bad_att) {
+    bad = where(mz - pz < ext_bad_att);
+    if(numberof(bad)) {
+      px(bad) = py(bad) = 0;
+    }
+  }
+
   if(logger(debug)) logger, debug, log_id+"Populating R structure";
   surface = array(R, count);
   surface.meast  =     mx * 100.0;
@@ -294,6 +305,9 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=, forcechannel=, verbose=) {
 /* DOCUMENT make_fs(latutm=, q=, ext_bad_att=, usecentroid=, forcechannel=, verbose=)
   This function prepares data to write/plot first surface topography for a
   selected region of flightlines.
+
+  ext_bad_att is a value in meters. Points within that distance from the mirror
+  are eliminated. Set to 0 to disable this filtering.
 */
 // Original amar nayegandhi 09/18/02
   extern ops_conf, tans, pnav;
@@ -334,7 +348,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=, forcechannel=, verbose=) {
       status, start, msg=msg;
       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i),
           usecentroid=usecentroid, forcechannel=forcechannel, msg=msg,
-          verbose=verbose);
+          verbose=verbose, ext_bad_att=ext_bad_att);
       // Must call again since first_surface will clear it:
       status, start, msg=msg;
       fs_all(i) = &rrr;
@@ -343,28 +357,6 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=, forcechannel=, verbose=) {
   }
   status, finished;
   fs_all = merge_pointers(fs_all);
-
-  // if ext_bad_att is set, eliminate points within 20m of mirror
-  if(is_array(fs_all) && ext_bad_att) {
-    msg = "Extracting and writing false first points";
-    if(verbose) write, msg;
-    status, start, msg=msg;
-    // compare rrr.elevation within 20m  of rrr.melevation
-    ba_indx = where(fs_all.melevation - fs_all.elevation < 2000);
-    if(numberof(ba_indx)) {
-      ba_count += numberof(ba_indx);
-      // fs_all.east(ba_indx) cannot be assigned to (not an l-value), so must
-      // jump through hoops instead
-      tmp = fs_all.east;
-      tmp(ba_indx) = 0;
-      fs_all.east = tmp;
-      tmp = fs_all.north;
-      tmp(ba_indx) = 0;
-      fs_all.north = tmp;
-      tmp = [];
-    }
-    status, finished;
-  }
 
   if(verbose) {
     write, "\nStatistics: \r";

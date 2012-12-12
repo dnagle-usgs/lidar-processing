@@ -259,7 +259,8 @@ func make_fs_veg(d, rrr) {
   return geoveg;
 }
 
-func make_veg(latutm=, q=, ext_bad_att=, use_centroid=, use_highelv_echo=, multi_peaks=, alg_mode=, forcechannel=) {
+func make_veg(latutm=, q=, ext_bad_att=, use_centroid=, use_highelv_echo=,
+multi_peaks=, alg_mode=, forcechannel=) {
 /* DOCUMENT make_veg(latutm=, q=, ext_bad_att=, use_centroid=, use_highelv_echo=, multi_peaks=, alg_mode=, forcechannel=)
  This function allows a user to define a region on the gga plot of
  flightlines (usually window 6) to  process data using the vegetation
@@ -267,7 +268,7 @@ func make_veg(latutm=, q=, ext_bad_att=, use_centroid=, use_highelv_echo=, multi
 
 Inputs are:
 
- ext_bad_att   Eliminate points within 20m of mirror.
+ ext_bad_att   Eliminate points within ext_bad_att meters of mirror.
 
 Returns:
  veg_all       This function returns the array veg_all of type VEG_ALL_
@@ -323,7 +324,9 @@ Returns:
       write, msg;
       pause, 1; // make sure Yorick shows output
       status, start, msg=msg;
-      rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid, use_highelv_echo=use_highelv_echo, forcechannel=forcechannel, msg=msg);
+      rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i),
+        usecentroid=use_centroid, use_highelv_echo=use_highelv_echo,
+        ext_bad_att=ext_bad_att, forcechannel=forcechannel, msg=msg);
       msg = swrite(format="Processing segment %d of %d for vegetation", i, no_t);
       write, msg;
       pause, 1; // make sure Yorick shows output
@@ -346,37 +349,6 @@ Returns:
       tot_count += numberof(veg.elevation);
       pause, 1; // make sure Yorick shows output
     }
-  }
-
-  // if ext_bad_att is set, eliminate all points within 20m of mirror
-  if ((ext_bad_att==1) && (is_array(veg_all))) {
-    msg = "Eliminating false first return points";
-    write, msg;
-    status, start, msg=msg;
-    // compare veg.elevation within 20m of veg.melevation
-    ba_indx = where(veg_all.melevation - veg_all.elevation < 2000);
-    ba_count += numberof(ba_indx);
-
-    if (is_array(ba_indx)) {
-      tmp = veg_all.east;
-      tmp(ba_indx) = 0;
-      veg_all.east = tmp;
-      tmp = veg_all.north;
-      tmp(ba_indx) = 0;
-      veg_all.north = tmp;
-      if (!multi_peaks) {
-        tmp = veg_all.least;
-        tmp(ba_indx) = 0;
-        veg_all.least = tmp;
-        tmp = veg_all.lnorth;
-        tmp(ba_indx) = 0;
-        veg_all.lnorth = tmp;
-        bd_indx = where(veg_all.lelv == 0 | veg_all.lelv == veg_all.melevation);
-        bd_count += numberof(bd_indx);
-      }
-      tmp = [];
-    }
-    status, finished;
   }
 
   write, "\nStatistics: \r";

@@ -92,7 +92,7 @@ func save_vars (filename, tile=) {
   if ( b_rcf == 1 ) {
     save,  f, b_rcf, buf, w, no_rcf, mode, merge, clean, rcfmode, write_merge;
   }
-  save, f, forcechannel, bath_ctl, bath_ctl_chn4;
+  save, f, ext_bad_att, forcechannel, bath_ctl, bath_ctl_chn4;
 
   close, f;
   // This makes sure the file is completely written before batcher.tcl has a chance
@@ -180,11 +180,11 @@ func load_vars(fn) {
 
 func call_process_tile( junk=, host= ) {
   // write, format="t_e%6.0f_n%7.0f_%s\n", min_e, max_n, zone_s;
-  uber_process_tile,q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, host=host, rcf_only=rcf_only, forcechannel=forcechannel;
+  uber_process_tile,q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, host=host, rcf_only=rcf_only, ext_bad_att=ext_bad_att, forcechannel=forcechannel;
 }
 
 
-func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf_only=, forcechannel= ) {
+func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf_only=, ext_bad_att=, forcechannel= ) {
   extern ofn;
   default, rcf_only, 0;
 
@@ -195,7 +195,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
 
     if ( rcf_only == 0 ) {
       // process_tile will return 0 if the tile needs to be updated
-      update = process_tile (q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, update=update, host=host, forcechannel=forcechannel );
+      update = process_tile (q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, update=update, host=host, ext_bad_att=ext_bad_att, forcechannel=forcechannel );
     }
 
       mypath = ofn(1);
@@ -232,7 +232,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
   }
 }
 
-func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, forcechannel= ) {
+func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, ext_bad_att=, forcechannel= ) {
   extern ofn, _hgid, get_typ, auto;
   log_id = logger_id();
   if(logger(debug)) {
@@ -247,7 +247,8 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
     logger, debug, log_id+"  max_n="+pr1(max_n);
     logger, debug, log_id+"  host="+pr1(host);
     logger, debug, log_id+"  update="+pr1(update);
-    logger, debug, log_id+"  forcechannel="+pr1(typ);
+    logger, debug, log_id+"  ext_bad_att="+pr1(ext_bad_att);
+    logger, debug, log_id+"  forcechannel="+pr1(forcechannel);
     logger, debug, log_id+"Externs:";
     logger, debug, log_id+"  ofn="+pr1(ofn);
     logger, debug, log_id+"  _hgid="+pr1(_hgid);
@@ -407,7 +408,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
 
     if (typ == 0) {
       write, format = "Processing Region %d of %d for First Surface Only\n",i,n;
-      fs_all = make_fs(latutm = 1, q = q,  ext_bad_att=1, usecentroid=1, forcechannel=forcechannel );
+      fs_all = make_fs(latutm = 1, q = q,  ext_bad_att=ext_bad_att, usecentroid=1, forcechannel=forcechannel );
       if (is_array(fs_all)) {
         test_and_clean, fs_all;
         if (is_array(fs_all)) {
@@ -434,7 +435,8 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
     if (typ == 1) {
       if ((get_typ && !only_veg) || (!get_typ)) {
         write, format = "Processing Region %d of %d for Bathymetry\n",i,n;
-        depth_all = make_bathy(latutm = 1, q = q,avg_surf=avg_surf, forcechannel=forcechannel, verbose=0);
+        depth_all = make_bathy(latutm=1, q=q, avg_surf=avg_surf,
+          ext_bad_att=ext_bad_att, forcechannel=forcechannel, verbose=0);
         if (is_array(depth_all)){
           test_and_clean, depth_all;
           if (is_array(depth_all)) {
@@ -475,7 +477,8 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
     if (typ == 2) {
       if ((get_typ && !only_bathy) || (!get_typ)) {
         write, format = "Processing Region %d of %d for Vegetation\n",i,n;
-        veg_all = make_veg(latutm = 1, q = q, ext_bad_att=1, use_centroid=1, forcechannel=forcechannel);
+        veg_all = make_veg(latutm=1, q=q, ext_bad_att=ext_bad_att,
+          use_centroid=1, forcechannel=forcechannel);
         if (is_array(veg_all))  {
           test_and_clean, veg_all;
           if (is_array(veg_all)) {
@@ -504,7 +507,8 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
       if ((get_typ && !only_veg) || (!get_typ)) {
       //process for bathy
       write, format = "Processing Region %d of %d for Bathymetry\n",i,n;
-      depth_all = make_bathy(latutm = 1, q = q, forcechannel=forcechannel, verbose=0);
+      depth_all = make_bathy(latutm=1, q=q, ext_bad_att=ext_bad_att,
+        forcechannel=forcechannel, verbose=0);
       if (is_array(depth_all)){
         test_and_clean, depth_all;
         if (is_array(depth_all)) {
@@ -529,7 +533,8 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
     }
     if ((get_typ && !only_bathy) || (!get_typ)) {
       write, format = "Processing Region %d of %d for Vegetation\n",i,n;
-      veg_all = make_veg(latutm = 1, q = q, ext_bad_att=1, use_centroid=1, forcechannel=forcechannel);
+      veg_all = make_veg(latutm=1, q=q, ext_bad_att=ext_bad_att,
+        use_centroid=1, forcechannel=forcechannel);
       if (is_array(veg_all))  {
         test_and_clean, veg_all;
         if (is_array(veg_all)) {
@@ -602,18 +607,19 @@ func batch_process {};
 func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
 onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
 only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=, w=, no_rcf=,
-mode=, merge=, rcfmode=, write_merge=, forcechannel=, shapefile=, shp_buffer=)
+mode=, merge=, rcfmode=, write_merge=, ext_bad_att=, forcechannel=, shapefile=,
+shp_buffer=)
 {
 /* DOCUMENT mbatch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=,
   n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=,
   only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=,
-  w=, no_rcf=, mode=, merge=, rcfmode=, write_merge=, forcechannel=,
-  shapefile=, shp_buffer=
+  w=, no_rcf=, mode=, merge=, rcfmode=, write_merge=, ext_bad_att=,
+  forcechannel=, shapefile=, shp_buffer=
 
   batch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
   onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
-  only_veg=, update=, avg_surf=,conf_file=, now=, forcechannel=, shapefile=,
-  shp_buffer=
+  only_veg=, update=, avg_surf=,conf_file=, now=, ext_bad_att=, forcechannel=,
+  shapefile=, shp_buffer=
 
 This function is used to batch process several regions for a given data set.
 The regions are either defined by a command file or automatically choosen by
@@ -678,6 +684,10 @@ Input:
             separate computer, "batcher.tcl HOST" where host is the
             name of the server computer.
 
+  ext_bad_att= Threshold in meters that specifies the minimum distance a point
+            must be (in elevation) from the mirror to be considered valid. Set
+            to 0 to disable. Default is 20 meters.
+
   forcechannel= : Set to 1, 2, 3, or 4 to force the use of the specified
             channel. The mdate will have _chan1 or similar automatically
             appended to it if "_chan" is not already present in mdate.
@@ -738,6 +748,7 @@ Ex: curzone=18
 amar nayegandhi started (10/04/02) Lance Mosher
 Added server/client support (2009-01) Richard Mitchell
 */
+  default, ext_bad_att, 20.;
   if(numberof(forcechannel) > 1) {
     for(i = 1; i <= numberof(forcechannel); i++) {
       mbatch_process, typ=typ, save_dir=save_dir, shem=shem, zone=zone,
@@ -746,8 +757,9 @@ Added server/client support (2009-01) Richard Mitchell
         only_bathy=only_bathy, only_veg=only_veg, update=update,
         avg_surf=avg_surf, conf_file=conf_file, now=now, b_rcf=b_rcf, buf=buf,
         w=w, no_rcf=no_rcf, mode=mode, merge=merge, rcfmode=rcfmode,
-        write_merge=write_merge, forcechannel=forcechannel(i),
-        shapefile=shapefile, shp_buffer=shp_buffer;
+        write_merge=write_merge, ext_bad_att=ext_bad_att,
+        forcechannel=forcechannel(i), shapefile=shapefile,
+        shp_buffer=shp_buffer;
     }
     return;
   }
@@ -1050,7 +1062,7 @@ Added server/client support (2009-01) Richard Mitchell
             file_join(alpsrc.batcher_dir, "waiter.pl"));
           package_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i) )
         } else {
-          uber_process_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i), host=host, forcechannel=forcechannel )
+          uber_process_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i), host=host, ext_bad_att=ext_bad_att, forcechannel=forcechannel )
         }
       }
     }
@@ -1082,15 +1094,15 @@ Added server/client support (2009-01) Richard Mitchell
 
 func batch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
 onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
-only_veg=, update=, avg_surf=,conf_file=, now=, forcechannel=, shapefile=,
-shp_buffer=) {
+only_veg=, update=, avg_surf=,conf_file=, now=, ext_bad_att=, forcechannel=,
+shapefile=, shp_buffer=) {
   default, now, 1;
   mbatch_process, typ=typ, save_dir=save_dir, shem=shem, zone=zone,
     dat_tag=dat_tag, cmdfile=cmdfile, n=n, onlyplot=onlyplot, mdate=mdate,
     pbd=pbd, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ,
     only_bathy=only_bathy, only_veg=only_veg, update=update,
-    avg_surf=avg_surv,conf_file=conf_file, now=now, forcechannel=forcechannel,
-    shapefile=shapefile, shp_buffer=shp_buffer;
+    avg_surf=avg_surv,conf_file=conf_file, now=now, ext_bad_att=ext_bad_att,
+    forcechannel=forcechannel, shapefile=shapefile, shp_buffer=shp_buffer;
 }
 
 

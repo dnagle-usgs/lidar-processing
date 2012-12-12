@@ -38,6 +38,15 @@ proc ::eaarl::main::gui {} {
                 -variable ::forcechannel_$chan
     }
 
+    ttk::label $f.minhtlbl -text "Minimum height:"
+    ttk::spinbox $f.minht -from 0 -to 1000 -increment 1 \
+            -width 2 -textvariable ::ext_bad_att
+
+    ::misc::tooltip $f.minht $f.minhtlbl \
+            "Specify the minimum flying height of the aircraft in meters.
+            Points less than this distance from the mirror will be discarded as
+            invalid points."
+
     ttk::label $f.modelbl -text "Process for:"
     ::mixin::combobox::mapping $f.mode \
             -state readonly \
@@ -68,6 +77,7 @@ proc ::eaarl::main::gui {} {
 
     grid $f.f1 - -sticky ew -padx 2 -pady 1
     grid $f.channels $f.f2 -sticky ew -padx 2 -pady 1
+    grid $f.minhtlbl $f.minht -sticky ew -padx 2 -pady 1
     grid $f.modelbl $f.mode -sticky ew -padx 2 -pady 1
     grid $f.varlbl $f.var -sticky ew -padx 2 -pady 1
     grid $f.process - -padx 2 -pady 1 -sticky ew
