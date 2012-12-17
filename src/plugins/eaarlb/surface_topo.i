@@ -1,21 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-/*
-  the a array has an array of RTRS structures;
-  struct RTRS {
-  int raster;
-  double soe(120);
-  short irange(120);
-  short intensity(120);
-  short sa(120);
-}
-*/
-
-/*
-  Structure used to hold laser return vector information. All the
- values are in air-centimeters.
-*/
-
 func first_surface(nil, start=, stop=, center=, delta=, usecentroid=,
 use_highelv_echo=, forcechannel=, verbose=, msg=, ext_bad_att=) {
 /* DOCUMENT first_surface(start=, stop=, center=, delta=, usecentroid=,
