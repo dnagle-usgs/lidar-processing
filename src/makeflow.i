@@ -75,14 +75,13 @@ func makeflow_run(conf, fn, norun=, interval=) {
   extern alpsrc;
   default, norun, 0;
 
-  makeflow_exe = monitor_exe = "";
+  makeflow_exe = "";
 
   if(alpsrc.makeflow_enable) {
     makeflow_exe = file_join(alpsrc.cctools_bin, "makeflow");
-    monitor_exe = file_join(alpsrc.cctools_bin, "makeflow_monitor");
   }
 
-  if(!file_exists(makeflow_exe) || !file_exists(monitor_exe)) {
+  if(!file_exists(makeflow_exe)) {
     sans_makeflow, conf, interval=interval;
     return;
   }
@@ -106,7 +105,6 @@ func makeflow_run(conf, fn, norun=, interval=) {
 
   cmd_makeflow = swrite(format="%s %s %s > /dev/null",
     makeflow_exe, alpsrc.makeflow_opts, fn);
-  cmd_monitor = swrite(format="%s -H %s", monitor_exe, makeflow_log);
 
   if(file_exists(makeflow_log))
     remove, makeflow_log;
@@ -114,8 +112,16 @@ func makeflow_run(conf, fn, norun=, interval=) {
   f = popen(cmd_makeflow, 0);
   do {
     pause, 10;
-  } while(!file_exists(fn+".makeflowlog"));
-  system, cmd_monitor;
+  } while(!file_exists(makeflow_log));
+  do {
+    pause, 250;
+    status = makeflow_parse_log(makeflow_log);
+    last = status.log(0);
+    write,
+      format="Waiting: %d  Running: %d  Complete: %d  Failed: %d  Aborted: %d\n",
+      last.nodes_waiting, last.nodes_running, last.nodes_complete,
+      last.nodes_failed, last.nodes_aborted;
+  } while(!status.status);
   close, f;
 
   if(!is_void(tempdir)) {
