@@ -69,7 +69,7 @@ proc filter_remove {} {
                     "Pip-Thresh"] \
             -modifycmd {
                 set removemode [.rem.1 getvalue]
-                if {$removemode == 3} {
+                if {$removemode == 2} {
                     pack forget .rem.2 .rem.3 .rem.4
                     pack .rem.08 .rem.07
                     pack .rem.07.a .rem.07.min .rem.07.minthresh -side left
