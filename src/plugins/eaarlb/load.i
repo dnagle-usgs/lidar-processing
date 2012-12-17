@@ -5,6 +5,7 @@ scratch = save(scratch, base);
 // the current file.
 base = file_dirname(current_include())+"/";
 include, base + "autoselect.i";
+include, base + "batch_process.i";
 include, base + "batch_veg_energy.i";
 include, base + "bathy.i";
 include, base + "centroid.i";
