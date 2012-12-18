@@ -117,7 +117,7 @@ namespace eval ::eaarl::main::menu {
                 -command [list ::eaarl::pixelwf::gui::launch_full_panel .pixelwf]
         $mb add separator
         $mb add command {*}[menulabel "Check and correct EDB time"] \
-                -command ts_check
+                -command eaarl::tscheck::launch
         $mb add separator
         $mb add command {*}[menulabel "Show &Flightlines with No Raster Data..."] \
                 -command {exp_send "plot_no_raster_fltlines(gga, edb);\r"}
