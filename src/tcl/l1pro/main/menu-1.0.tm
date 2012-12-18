@@ -303,9 +303,6 @@ proc menu_utilities mb {
     $mb add cascade {*}[menulabel "Launch segments by..."] \
             -menu [menu_utilities_segments $mb.seg]
     $mb add separator
-    $mb add command {*}[menulabel "Check and correct EDB time"] \
-            -command ts_check
-    $mb add separator
     $mb add command {*}[menulabel "Show &Flightlines with No Raster Data..."] \
             -command {exp_send "plot_no_raster_fltlines(gga, edb);\r"}
     $mb add command {*}[menulabel "S&how Flightlines with No TANS Data..."] \
