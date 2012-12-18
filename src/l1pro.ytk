@@ -264,4 +264,3 @@ if {![winfo exists .l1wid]} {
 
 source [file join $src_path plot.ytk]
 source [file join $src_path data_segments.ytk]
-source [file join $src_path ts_check.ytk]
