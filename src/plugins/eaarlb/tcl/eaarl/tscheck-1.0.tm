@@ -107,9 +107,9 @@ namespace eval eaarl::tscheck {
         }
 
         method load {} {
-            set last [expr {$first + $count - 1}]
+            set last [expr {$first + $count}]
             exp_send "rtrs = irg($first, $last); "
-            replot
+            $self replot
         }
 
         method replot {} {
