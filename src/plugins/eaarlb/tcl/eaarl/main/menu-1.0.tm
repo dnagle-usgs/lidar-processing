@@ -45,13 +45,11 @@ namespace eval ::eaarl::main::menu {
     proc menu_data_load {mb} {
         menu $mb
         $mb add command {*}[menulabel "&EDB Data..."] \
-                -command load_edb
-        $mb add command {*}[menulabel "&TANS Data..."] \
-                -command {exp_send "tans = rbtans();\r"}
-        $mb add command {*}[menulabel "&DMARS PBD Data..."] \
-                -command load_dmars
+                -command eaarl::load::edb
+        $mb add command {*}[menulabel "&INS PBD Data..."] \
+                -command eaarl::load::ins
         $mb add command {*}[menulabel "&PNAV Data..."] \
-                -command {exp_send "pnav = rbpnav();\r"}
+                -command eaarl::load::pnav
         $mb add command {*}[menulabel "&Bathymetry Settings..."] \
                 -command bathctl::gui
         return $mb
@@ -60,7 +58,7 @@ namespace eval ::eaarl::main::menu {
     proc menu_data_settings {mb} {
         menu $mb
         $mb add command {*}[menulabel "&Load ops_conf..."] \
-                -command load_ops_conf
+                -command eaarl::load::ops_conf
         $mb add command {*}[menulabel "&Configure ops_conf..."] \
                 -command ::eaarl::settings::ops_conf::gui
         $mb add command {*}[menulabel "&Save ops_conf..."] \
