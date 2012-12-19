@@ -25,12 +25,10 @@ proc build mb {
     menu $mb
     $mb add cascade {*}[menulabel &File] \
             -menu [menu_file $mb.file]
-    $mb add cascade {*}[menulabel &Mission] \
-            -menu [menu_mission $mb.mission]
+    $mb add cascade {*}[menulabel &Tools] \
+            -menu [menu_tools $mb.tools]
     $mb add cascade {*}[menulabel &Window] \
             -menu [menu_window $mb.window]
-    $mb add cascade {*}[menulabel &Utilities] \
-            -menu [menu_utilities $mb.util]
     $mb add cascade {*}[menulabel &Plugins] \
             -menu [menu_plugins $mb.plugins]
     $mb add cascade {*}[menulabel &Settings] \
@@ -51,32 +49,53 @@ proc menu_file mb {
             -command ::l1pro::file::load_pbd
     $mb add command {*}[menulabel "&Save ALPS data..."] \
             -command ::l1pro::file::save_pbd
-    $mb add separator
-    $mb add command {*}[menulabel "L&oad ALPS data as..."] \
-            -command ::l1pro::file::load_pbd_as
     $mb add command {*}[menulabel "Load ALPS data &directory..."] \
             -command ::l1pro::dirload
-    $mb add command {*}[menulabel "Save ALPS data &as..."] \
-            -command ::l1pro::file::save_pbd_as
+    $mb add cascade {*}[menulabel "Custom load/save ALPS data..."] \
+            -menu [menu_file_alps $mb.alps]
     $mb add separator
     $mb add command {*}[menulabel "&Import ASPRS LAS..."] \
             -command ::l1pro::file::load_las
+    $mb add cascade {*}[menulabel "&ASCII"] \
+            -menu [menu_file_ascii $mb.ascii]
+    $mb add cascade {*}[menulabel "&PNAV"] \
+            -menu [menu_file_pnav $mb.pnav]
+    $mb add cascade {*}[menulabel "&Variables..."] \
+            -menu [menu_file_variables $mb.vars]
+    $mb add separator
+    $mb add command {*}[menulabel "&Hide GUI"] \
+            -command [list wm withdraw [get_top $mb]]
+    $mb add command {*}[menulabel "&Quit ALPS"] \
+            -command exit
+    return $mb
+}
+
+proc menu_file_alps mb {
+    menu $mb
+    $mb add command {*}[menulabel "L&oad ALPS data as..."] \
+            -command ::l1pro::file::load_pbd_as
+    $mb add command {*}[menulabel "Save ALPS data &as..."] \
+            -command ::l1pro::file::save_pbd_as
+    return $mb
+}
+
+proc menu_file_ascii mb {
+    menu $mb
     $mb add command {*}[menulabel "Import ASCII as a&rray..."] \
             -command ::l1pro::ascii::launch
     $mb add command {*}[menulabel "I&mport ASCII as ALPS structure..."] \
             -command ::l1pro::asciixyz::launch
     $mb add command {*}[menulabel "E&xport ASCII..."] \
             -command ::l1pro::file::export_ascii
-    $mb add separator
-    $mb add cascade {*}[menulabel "&Variables..."] \
-            -menu [menu_file_variables $mb.vars]
-    $mb add command {*}[menulabel "&Capture a display..."] \
-            -command ::misc::xwd
-    $mb add separator
-    $mb add command {*}[menulabel "&Hide GUI"] \
-            -command [list wm withdraw [get_top $mb]]
-    $mb add command {*}[menulabel "&Quit ALPS"] \
-            -command exit
+    return $mb
+}
+
+proc menu_file_pnav mb {
+    menu $mb
+    $mb add command {*}[menulabel "Load &Ground PNAV (gt_pnav) data..."] \
+            -command [namespace code load_ground_pnav]
+    $mb add command {*}[menulabel "Load Ground PNAV2&FS (gt_fs) data..."] \
+            -command [namespace code load_ground_pnav2fs]
     return $mb
 }
 
@@ -89,22 +108,62 @@ proc menu_file_variables mb {
     return $mb
 }
 
-proc menu_mission mb {
+proc menu_tools mb {
     menu $mb
     $mb add command {*}[menulabel "&Mission configuration manager"] \
             -command ::mission::launch
     $mb add command {*}[menulabel "&Plotting tool"] \
             -command ::plot::menu
     $mb add separator
+    $mb add command {*}[menulabel "Browse &Rasters"] \
+            -state disabled \
+            -command ::eaarl::drast::gui
+    lappend ::l1pro::on_eaarl_load [list $mb entryconfigure 0 -state normal]
+    $mb add command {*}[menulabel "Examine Pixels Settings"] \
+            -state disabled \
+            -command [list ::eaarl::pixelwf::gui::launch_full_panel .pixelwf]
+    lappend ::l1pro::on_eaarl_load [list $mb entryconfigure 1 -state normal]
+    $mb add command {*}[menulabel "Histogram Elevations Settings"] \
+            -command ::l1pro::tools::histelev::gui
+    $mb add command {*}[menulabel "Groundtruth Analysis"] \
+            -command ::l1pro::groundtruth::gui
+    $mb add separator
+    $mb add command {*}[menulabel "Transect Tool"] \
+            -command ::l1pro::transect::gui
+    $mb add cascade {*}[menulabel "Launch segments by..."] \
+            -menu [menu_tools_segments $mb.seg]
+    $mb add separator
+    $mb add command {*}[menulabel "Show &Flightlines with No Raster Data..."] \
+            -command {exp_send "plot_no_raster_fltlines(gga, edb);\r"}
+    $mb add command {*}[menulabel "S&how Flightlines with No TANS Data..."] \
+            -command {exp_send "plot_no_tans_fltlines(tans, gga);\r"}
+    $mb add separator
     $mb add command {*}[menulabel "Launch new SF &viewer..."] \
             -command [list ::sf::controller %AUTO%]
-    $mb add separator
-    $mb add command {*}[menulabel "Load &Ground PNAV (gt_pnav) data..."] \
-            -command [namespace code load_ground_pnav]
-    $mb add command {*}[menulabel "Load Ground PNAV2&FS (gt_fs) data..."] \
-            -command [namespace code load_ground_pnav2fs]
+    $mb add cascade {*}[menulabel "Launch statistics by..."] \
+            -menu [menu_tools_statistics $mb.stat]
+
     return $mb
 }
+
+proc menu_tools_segments mb {
+    menu $mb
+    foreach how [::misc::combinations {flight line channel digitizer}] {
+        $mb add command {*}[menulabel [join $how ", "]] \
+                -command [list segment_data_launcher $how]
+    }
+    return $mb
+}
+
+proc menu_tools_statistics mb {
+    menu $mb
+    foreach how [::misc::combinations {flight line channel digitizer}] {
+        $mb add command {*}[menulabel [join $how ", "]] \
+                -command [list segment_stat_launcher $how]
+    }
+    return $mb
+}
+
 
 proc menu_window mb {
     menu $mb
@@ -124,6 +183,9 @@ proc menu_window mb {
             {*}[menulabel "Change current window to 100 DPI / 1100x850"] \
             -command {exp_send "change_window_style, \"landscape11x85\",\
                     dpi=100;\r"}
+    $mb add separator
+    $mb add command {*}[menulabel "&Capture a display..."] \
+            -command ::misc::xwd
     $mb add separator
     $mb add cascade {*}[menulabel Palette...] \
             -menu [menu_window_palette $mb.pal]
@@ -220,55 +282,6 @@ proc menu_window_raise {mb which} {
         $mb add command -label [wm title $top] -command \
                 [list ::misc::raise_win $top]
     }
-}
-
-proc menu_utilities mb {
-    menu $mb
-    $mb add command {*}[menulabel "Browse &Rasters"] \
-            -state disabled \
-            -command ::eaarl::drast::gui
-    lappend ::l1pro::on_eaarl_load [list $mb entryconfigure 0 -state normal]
-    $mb add command {*}[menulabel "Examine Pixels Settings"] \
-            -state disabled \
-            -command [list ::eaarl::pixelwf::gui::launch_full_panel .pixelwf]
-    lappend ::l1pro::on_eaarl_load [list $mb entryconfigure 1 -state normal]
-    $mb add command {*}[menulabel "Histogram Elevations Settings"] \
-            -command ::l1pro::tools::histelev::gui
-    $mb add command {*}[menulabel "Groundtruth Analysis"] \
-            -command ::l1pro::groundtruth::gui
-    $mb add separator
-    $mb add command {*}[menulabel "Transect Tool"] \
-            -command ::l1pro::transect::gui
-    $mb add cascade {*}[menulabel "Launch segments by..."] \
-            -menu [menu_utilities_segments $mb.seg]
-    $mb add separator
-    $mb add command {*}[menulabel "Show &Flightlines with No Raster Data..."] \
-            -command {exp_send "plot_no_raster_fltlines(gga, edb);\r"}
-    $mb add command {*}[menulabel "S&how Flightlines with No TANS Data..."] \
-            -command {exp_send "plot_no_tans_fltlines(tans, gga);\r"}
-    $mb add separator
-    $mb add cascade {*}[menulabel "Launch statistics by..."] \
-            -menu [menu_utilities_statistics $mb.stat]
-
-    return $mb
-}
-
-proc menu_utilities_segments mb {
-    menu $mb
-    foreach how [::misc::combinations {flight line channel digitizer}] {
-        $mb add command {*}[menulabel [join $how ", "]] \
-                -command [list segment_data_launcher $how]
-    }
-    return $mb
-}
-
-proc menu_utilities_statistics mb {
-    menu $mb
-    foreach how [::misc::combinations {flight line channel digitizer}] {
-        $mb add command {*}[menulabel [join $how ", "]] \
-                -command [list segment_stat_launcher $how]
-    }
-    return $mb
 }
 
 proc menu_cmdline mb {
