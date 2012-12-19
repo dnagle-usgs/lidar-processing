@@ -96,13 +96,6 @@ proc menu_mission mb {
     $mb add command {*}[menulabel "&Plotting tool"] \
             -command ::plot::menu
     $mb add separator
-    $mb add cascade {*}[menulabel "&Load mission data"] \
-            -menu [menu_mission_load $mb.load]
-    $mb add cascade {*}[menulabel "&Settings"] \
-            -menu [menu_mission_settings $mb.settings]
-    $mb add separator
-    $mb add command {*}[menulabel "&EDB Status"] \
-            -command edb_status
     $mb add command {*}[menulabel "Launch new SF &viewer..."] \
             -command [list ::sf::controller %AUTO%]
     $mb add separator
@@ -110,60 +103,6 @@ proc menu_mission mb {
             -command [namespace code load_ground_pnav]
     $mb add command {*}[menulabel "Load Ground PNAV2&FS (gt_fs) data..."] \
             -command [namespace code load_ground_pnav2fs]
-    $mb add separator
-    $mb add cascade {*}[menulabel "EAARL-&B"] \
-            -menu [menu_mission_eaarlb $mb.eaarlb]
-    return $mb
-}
-
-proc menu_mission_load mb {
-    menu $mb
-    $mb add command {*}[menulabel "&EDB Data..."] \
-            -command load_edb
-    $mb add command {*}[menulabel "&TANS Data..."] \
-            -command {exp_send "tans = rbtans();\r"}
-    $mb add command {*}[menulabel "&DMARS PBD Data..."] \
-            -command load_dmars
-    $mb add command {*}[menulabel "&PNAV Data..."] \
-            -command {exp_send "pnav = rbpnav();\r"}
-    $mb add command {*}[menulabel "&Bathymetry Settings..."] \
-            -command bathctl::gui
-    return $mb
-}
-
-proc menu_mission_settings mb {
-    menu $mb
-    $mb add command {*}[menulabel "&Load ops_conf..."] \
-            -command load_ops_conf
-    $mb add command {*}[menulabel "&Configure ops_conf..."] \
-            -command ::eaarl::settings::ops_conf::gui
-    $mb add command {*}[menulabel "&Save ops_conf..."] \
-            -command ::eaarl::settings::ops_conf::save
-    $mb add cascade {*}[menulabel "&Display..."] \
-            -menu [menu_mission_settings_ops $mb.ops]
-    $mb add separator
-    $mb add command {*}[menulabel "&Bathymetry Settings..."] \
-            -command ::eaarl::settings::bath_ctl::gui_main
-    return $mb
-}
-
-proc menu_mission_settings_ops mb {
-    menu $mb
-    $mb add command {*}[menulabel "&Current"] \
-            -command {exp_send "display_mission_constants, \"ops_conf\", ytk=1;\r"}
-    $mb add command {*}[menulabel "&TANS default"] \
-            -command {exp_send "display_mission_constants, \"ops_tans\", ytk=1;\r"}
-    $mb add command {*}[menulabel "&DMARS default"] \
-            -command {exp_send "display_mission_constants, \"ops_IMU2\", ytk=1;\r"}
-    $mb add command {*}[menulabel "&Applanix 510 default"] \
-            -command {exp_send "display_mission_constants, \"ops_IMU1\", ytk=1;\r"}
-    return $mb
-}
-
-proc menu_mission_eaarlb mb {
-    menu $mb
-    $mb add command {*}[menulabel "&JSON Log Explorer"] \
-            -command eaarl::jsonlog::launch
     return $mb
 }
 
