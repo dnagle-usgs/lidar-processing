@@ -879,8 +879,6 @@ namespace eval ::mission {
         variable top
         variable flight_name
         variable detail_type
-        variable detail_value
-        variable detail_filetypes
 
         if {[has $flight_name "data_path dir"]} {
             set path [get $flight_name "data_path dir"]
