@@ -110,7 +110,7 @@ namespace eval ::eaarl::main::menu {
     proc menu_utilities mb {
         menu $mb
         $mb add command {*}[menulabel "Browse &Rasters"] \
-                -command ::l1pro::drast::gui
+                -command ::eaarl::drast::gui
         $mb add command {*}[menulabel "Examine Pixels Settings"] \
                 -command [list ::eaarl::pixelwf::gui::launch_full_panel .pixelwf]
         $mb add separator
