@@ -64,6 +64,7 @@ package require yorick
 package require alpsrc
 # alpsrc must come before logger
 package require logger
+package require hook
 
 wm withdraw .
 
