@@ -42,6 +42,16 @@ namespace eval ::hook {
         dict set hooks $hook_name [lreplace $cmds $idx $idx]
     }
 
+    proc query {hook_name} {
+        variable hooks
+        if {![dict exists $hooks $hook_name]} return {}
+        dict get $hooks $hook_name
+    }
+
+    proc has {hook_name} {
+        expr {[llength [query $hook_name]] > 0}
+    }
+
     proc invoke {hook_name args} {
         variable hooks
         if {![dict exists $hooks $hook_name]} return

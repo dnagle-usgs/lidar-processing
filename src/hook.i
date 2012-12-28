@@ -76,6 +76,25 @@ func hook_remove(hooks, hook_name, func_name) {
   save, hooks, noop(hook_name), tmp(w);
 }
 
+func hook_query(hooks, hook_name) {
+/* DOCUMENT hook_query("<hook_name>")
+  Returns a list of all hook functions defines for this hook name.
+*/
+  // If there are no hooks for this hook name, return empty array.
+  if(!hooks(*,hook_name)) return;
+
+  // Otherwise, return hooks for this hook name.
+  return hooks(noop(hook_name));
+}
+
+func hook_has(hook_name) {
+/* DOCUMENT hook_has("<hook_name>")
+  Returns a boolean indicating whether the named hook has any hook functions
+  associated with it at present.
+*/
+  return (numberof(hook_query(hook_name)) > 0);
+}
+
 func hook_invoke(hooks, hook_name, &env) {
 /* DOCUMENT hook_invoke, "<hook_name>", env
   Invokes a hook. This will result in all functions attached to that hook being
@@ -113,5 +132,6 @@ func hook_invoke(hooks, hook_name, &env) {
 
 hook_add = closure(hook_add, hooks);
 hook_remove = closure(hook_remove, hooks);
+hook_query = closure(hook_query, hooks);
 hook_invoke = closure(hook_invoke, hooks);
 restore, scratch;
