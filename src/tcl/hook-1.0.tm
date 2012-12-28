@@ -17,7 +17,9 @@ package provide hook 1.0
 #     reduces the need to pass arguments.
 
 namespace eval ::hook {
-    variable hooks {}
+    if {![info exists hooks]} {
+        variable hooks {}
+    }
 
     proc add {hook_name cmd} {
         variable hooks
