@@ -291,6 +291,7 @@ proc __tky_tie_read {tkvar yvar name1 name2 op} {
 
 proc tky_set {varName val} {
 # Used by ytk.i's tksetval.
+    logger trace "tky_set: {$varName} {$val}"
     upvar $varName var
 
     if {[string match {"*"} $val]} {
