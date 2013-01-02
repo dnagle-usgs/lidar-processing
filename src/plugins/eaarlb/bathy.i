@@ -512,7 +512,7 @@ func bathy_detect_bottom(wf, first, last, thresh, &bottom_peak, &msg) {
   offset = first - 1;
 
   last_new = offset + remove_noisy_tail(wf(first:last), thresh=thresh,
-      verbose=verbose, idx=1);
+      verbose=0, idx=1);
   if(last_new - first < 4) {
     msg = "Waveform too short after removing noisy tail";
     return;
