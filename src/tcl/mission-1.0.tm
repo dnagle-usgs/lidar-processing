@@ -30,6 +30,11 @@ if {![namespace exists ::mission]} {
         tky_tie add read ::mission::cache_mode \
                 from mission.data.cache_mode -initialize 1
 
+        # Corresponds to mission.data.cache_what; read-only.
+        variable cache_what ""
+        tky_tie add read ::mission::cache_what \
+                from mission.data.cache_what -initialize 1
+
         variable commands
         array set commands {
             initialize_path_mission {}
@@ -164,6 +169,7 @@ namespace eval ::mission {
         set ::mission::path $::mission::path
         set ::mission::loaded $::mission::loaded
         set ::mission::cache_mode $::mission::cache_mode
+        set ::mission::cache_what $::mission::cache_what
     }
 
     # Launch the GUI
@@ -1222,7 +1228,7 @@ namespace eval ::mission {
         }
 
         proc clear {mb} {
-            destroy [winfo children $mb]
+            destroy {*}[winfo children $mb]
             $mb delete 0 end
         }
 
@@ -1260,8 +1266,10 @@ namespace eval ::mission {
 
         proc menu_cache {mb} {
             clear $mb
-            $mb add cascade {*}[menulabel "Caching &mode..."] \
+            $mb add cascade {*}[menulabel "Cache &mode..."] \
                     -menu [postmenu $mb.mode menu_cache_mode]
+            $mb add cascade {*}[menulabel "Cache &what..."] \
+                    -menu [postmenu $mb.what menu_cache_what]
             $mb add separator
             $mb add command {*}[menulabel "Preload cache"] \
                     -command [list exp_send "mission, cache, preload;\r"]
@@ -1278,6 +1286,19 @@ namespace eval ::mission {
                         -value $mode \
                         -command [list exp_send \
                                 "mission, data, cache_mode=\"$mode\";\r"]
+            }
+        }
+
+        proc menu_cache_what {mb} {
+            clear $mb
+            foreach what {settings everything} {
+                $mb add radiobutton \
+                        -label $what \
+                        -variable ::mission::cache_what \
+                        -value $what \
+                        -command [list exp_send \
+                                "mission, data, cache_what=\"$what\";\
+                                mission, cache, check;\r"]
             }
         }
     }
