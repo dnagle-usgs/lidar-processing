@@ -89,15 +89,21 @@ local mission_data;
       loaded, the current's flight data is cached as it currently is for future
       retrieval. Note that changing this setting does NOT change what's
       currently stored in the cache. It may be advisable to use 'mission,
-      cache, "clear"' and/or 'mission, cache, "preload"' after changing this
+      cache, clear' and/or 'mission, cache, preload' after changing this
       setting.
 
-    The above three settings can be queried as they are shown. They can also be
+    mission.data.cache_what - Scalar string specifying what should be cached.
+      This can be one of two values:
+        "everything" - all data will be cached
+        "settings" - only the settings will be cached (ops_conf + bath_ctl)
+
+    The above four settings can be queried as they are shown. They can also be
     modified directly:
     
       mission, data, plugins=["eaarlb"]
       mission, data, path="/data/0/EAARL/raw/Example"
       mission, data, cache_mode="onload"
+      mission, data, cache_what="everything"
 
     mission.data.loaded - Scalar string specifying which flight is loaded. This
       will be the empty string if no flights are loaded. This should not be
@@ -122,6 +128,7 @@ data = save(
   path="",
   loaded="",
   cache_mode="onchange",  // disabled | onload | onchange
+  cache_what="everything",  // everything | settings
   conf=save(),
   cache=save()
 );

@@ -172,11 +172,33 @@ func mission_load(flight) {
   if(!strlen(flight))
     return;
 
+  // What was restored from the cache?
+  cached = "none";
+
   // Load from cache, if there is cached data present and caching is enabled.
   if(mission.data.cache_mode != "disabled" && mission.data.cache(*,flight)) {
-    mission, unwrap, mission.data.cache(noop(flight));
-    return;
+    cached = mission(unwrap, mission.data.cache(noop(flight)));
   }
+
+  // If we loaded everything from cache and we wanted to load everything from
+  // cache, then nothing else needs to be done.
+  if(cached == "everything" && mission.data.cache_what == "everything") return;
+
+  // At this point:
+  // If cached=="everything" && mission.data.cache_what=="settings" then:
+  //    - all data items should be reloaded (don't want what was cached)
+  //    - settings should not be reloaded
+  // If cached=="settings" && mission.data.cache_what=="everything" then:
+  //    - all data items need to be loaded (weren't cached)
+  //    - settings do not need to be loaded (were cached)
+  // If cached=="settings" && mission.data.cache_what="settings" then:
+  //    - all data items need to be loaded
+  //    - settings do not need to be loaded
+  // if cached=="none" then:
+  //    - all data items need to be loaded
+  //    - all settings need to be loaded
+  // Thus, all data items always need to be loaded at this point. The settings
+  // items only need to be loaded if cached=="none".
 
   // soe_bounds information is used to speed up query_soe and query_soe_rn.
   // These shouldn't change much, so they are perma-cached regardless of cache
@@ -192,15 +214,25 @@ func mission_load(flight) {
   if(mission(has, flight, "data_path dir"))
     data_path = mission(get, flight, "data_path dir");
 
-  // ops_conf -- neds to come first since some other sources depend on it
-  extern ops_conf, ops_conf_filename;
-  if(mission(has, flight, "ops_conf file")) {
-    ops_conf_filename = mission(get, flight, "ops_conf file");
-    ops_conf = load_ops_conf(ops_conf_filename);
-  } else {
-    write, "WARNING: no ops_conf file defined for "+pr1(flight);
-    write, "         (using EAARL-B defaults)";
-    ops_conf = ops_eaarlb;
+  // If cached is not "none", then settings were restored from the cache
+  // (cached == "everything" or cached == "settings").
+  if(cached == "none") {
+    // ops_conf -- neds to come first since some other sources depend on it
+    extern ops_conf, ops_conf_filename;
+    if(mission(has, flight, "ops_conf file")) {
+      ops_conf_filename = mission(get, flight, "ops_conf file");
+      ops_conf = load_ops_conf(ops_conf_filename);
+    } else {
+      write, "WARNING: no ops_conf file defined for "+pr1(flight);
+      write, "         (using EAARL-B defaults)";
+      ops_conf = ops_eaarlb;
+    }
+
+    if(mission(has, flight, "bath_ctl file")) {
+      bath_ctl_load, mission(get, flight, "bath_ctl file");
+    } else {
+      write, "WARNING: no bath_ctl file defined for "+pr1(flight);
+    }
   }
 
   // edb -- defines a few variables (such as soe_day_start) that are needed by
@@ -252,12 +284,6 @@ func mission_load(flight) {
     write, "WARNING: no ins file defined for "+pr1(flight);
   }
 
-  if(mission(has, flight, "bath_ctl file")) {
-    bath_ctl_load, mission(get, flight, "bath_ctl file");
-  } else {
-    write, "WARNING: no bath_ctl file defined for "+pr1(flight);
-  }
-
   if(anyof(mission.data.cache_mode == ["onload","onchange"]))
     save, mission.data.cache, mission.data.loaded, mission(wrap,);
 }
@@ -301,6 +327,8 @@ func mission_wrap(void) {
   restored with "mission, unwrap, <data>" instead of "restore, <data>" as there
   may be additional routines to call after restoration.
 
+  The specific variables wrapped will depend on the cache_what setting.
+
   This is intended for internal use for caching.
 */
   extern data_path;
@@ -311,23 +339,32 @@ func mission_wrap(void) {
   extern ops_conf, ops_conf_filename;
   extern bath_ctl, bath_ctl_chn4;
 
-  return save(
-    data_path,
-    edb, edb_filename, edb_files, total_edb_records, soe_day_start,
-      eaarl_time_offset,
-    pnav, gga, pnav_filename,
-    iex_nav, iex_head, tans, ins_filename,
+  wrapped = save(
+    cache_what=mission.data.cache_what,
     ops_conf, ops_conf_filename,
     bath_ctl, bath_ctl_chn4
   );
+
+  if(mission.data.cache_what == "everything") {
+    save, wrapped,
+      data_path,
+      edb, edb_filename, edb_files, total_edb_records, soe_day_start,
+        eaarl_time_offset,
+      pnav, gga, pnav_filename,
+      iex_nav, iex_head, tans, ins_filename;
+  }
+
+  return wrapped;
 }
 
 func mission_unwrap(data) {
-/* DOCUMENT mission, unwrap, <data>
-  Restores data that was wrapped by mission(wrap,).
+/* DOCUMENT mission(unwrap, <data>)
+  Restores data that was wrapped by mission(wrap,). Returns the value of
+  cache_what used when caching was done.
 
   This is intended for internal use for caching.
 */
+  local cache_what;
   extern data_path;
   extern edb, edb_filename, edb_files, total_edb_records, soe_day_start,
     eaarl_time_offset;
@@ -337,7 +374,9 @@ func mission_unwrap(data) {
   extern bath_ctl, bath_ctl_chn4;
 
   restore, data;
-  iex2tans;
+  if(cache_what == "everything") iex2tans;
+
+  return cache_what;
 }
 
 func mission_auto(path, strict=) {
