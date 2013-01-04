@@ -159,8 +159,9 @@ restore, scratch;
   mission, cache, <cmd>
 */
 
-scratch = save(scratch, cmds, mission_cache_clear);
-cmds = save(__help, clear, preload);
+scratch = save(scratch, cmds, mission_cache_clear, mission_cache_preload,
+  mission_cache_check);
+cmds = save(__help, clear, preload, check);
 
 __help = "Contains subcommands for working with the cache.";
 
@@ -191,6 +192,44 @@ func mission_cache_preload {
     mission, load, loaded;
 }
 preload = mission_cache_preload;
+
+func mission_cache_check {
+/* DOCUMENT mission, cache, check
+  Checks the cache to see if any changes need to be made due to modified
+  settings (cache_mode and cache_what). If necessary, the cache will be
+  refreshed or cleared.
+*/
+  if(mission.data.cache_mode == "disabled") {
+    mission, cache, clear;
+    return;
+  }
+
+  // If we want everything cached, then any existing caching is okay to keep.
+  if(mission.data.cache_what == "everything") return;
+
+  flights = mission.data.cache(*,);
+  count = numberof(flights);
+  if(!count) return;
+
+  // cache_what=="settings" if we made it here; if any wrapped data is
+  // cache_what="everything", then...
+  //      throw it away if cache_mode=="onload"
+  //      reload it if cache_mode=="onupdate"
+  loaded = mission.data.loaded;
+  for(i = 1; i <= count; i++) {
+    wrapped = mission.data.cache(flights(i));
+    if(wrapped.cache_what == "settings") continue;
+    if(mission.data.cache_mode == "onchange")
+      mission, load, flights(i);
+    else
+      mission, data, cache=obj_delete(mission.data.cache, flights(i));
+  }
+
+  if(mission.data.cache_mode == "onchange") {
+    mission, load, loaded;
+  }
+}
+check = mission_cache_check
 
 cache = restore(cmds);
 restore, scratch;
