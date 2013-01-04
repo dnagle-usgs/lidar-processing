@@ -293,7 +293,7 @@ func mission_unload(void) {
   Unloads all currently loaded data. *If cache_mode is "onchange", then the
   data is cached first.
 */
-  if(mission.data.cache_mode == "onchange")
+  if(mission.data.cache_mode == "onchange" && mission.data.loaded != "")
     save, mission.data.cache, mission.data.loaded, mission(wrap,);
 
   mission, data, loaded="";
