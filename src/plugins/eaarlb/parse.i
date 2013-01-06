@@ -57,7 +57,7 @@ func cir_to_soe(filename, offset=) {
       hms2sod(atod(m_th(w)), atod(m_tm(w)), off + atod(m_ts(w))));
   }
 
-  dmreg = "0[1-9]|1[12]";             // (date) month reg exp 01-12
+  dmreg = "0[1-9]|1[012]";            // (date) month reg exp 01-12
   dyreg = "20[1-6][0-9]";             // (date) year reg exp 10-69
   tfreg = "[0-9][0-9][0-9][0-9]";     // (time) fraction sec reg 0000 - 9999
 
