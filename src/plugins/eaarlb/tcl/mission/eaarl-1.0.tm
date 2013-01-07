@@ -339,8 +339,8 @@ namespace eval ::mission::eaarl {
                 set model [::sf::model::create::$driver -path $path]
                 set rel [::fileutil::relative $::mission::path \
                         [::mission::get $flight "data_path dir"]]
-                set dest [file join $dest $rel $subdir]
-                if {[::sf::tools::dump_model_images $model $dest]} {
+                set curdest [file join $dest $rel $subdir]
+                if {[::sf::tools::dump_model_images $model $curdest]} {
                     return
                 }
             }
