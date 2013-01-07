@@ -210,6 +210,9 @@ func make_bathy(latutm=, q=, avg_surf=, ext_bad_att=, forcechannel=, verbose=) {
   make_bathy. See rbpnav() and rbtans() for details. The structure BATH_CTL
   must be initialized as well. See define_bath_ctl().
 
+  Set verbose=0 for no console output, verbose=1 (default) for normal console
+  output, for verbose=2 for detailed console output.
+
   SEE ALSO: first_surface, run_bath, make_fs_bath, rbpnav, rbtans,
     define_bath_ctl
 */
@@ -278,7 +281,7 @@ func make_bathy(latutm=, q=, avg_surf=, ext_bad_att=, forcechannel=, verbose=) {
       pause, 1; // make sure Yorick shows output
       status, start, msg=msg;
       depth = run_bath(start=raster_starts(i), stop=raster_stops(i),
-        forcechannel=forcechannel, msg=msg, verbose=verbose);
+        forcechannel=forcechannel, msg=msg, verbose=max(0,verbose-1));
       if(depth == 0) {
         status, finished;
         if(logger(debug)) logger, debug, log_id+"Aborting make_bathy (run_bath failed)";
@@ -301,8 +304,8 @@ func make_bathy(latutm=, q=, avg_surf=, ext_bad_att=, forcechannel=, verbose=) {
         write, "Using make_fs_bath for submerged topography...";
         pause, 1; // make sure Yorick shows output
       }
-      depth = make_fs_bath(depth, surface, avg_surf=avg_surf, verbose=verbose,
-        sample_interval=sample_interval);
+      depth = make_fs_bath(depth, surface, avg_surf=avg_surf,
+        verbose=max(0,verbose-1), sample_interval=sample_interval);
 
       // make depth correction using compute_depth
       if(verbose) {
