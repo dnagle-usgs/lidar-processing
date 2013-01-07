@@ -286,11 +286,14 @@ wrap_args, mission_constants;
   ops_eaarlb.pitch_bias = 0;
   ops_eaarlb.yaw_bias = 0;
   ops_eaarlb.scan_bias = 0; // Needs to be calibrated
-  ops_eaarlb.range_biasM = 0; // Needs to be calibrated
-  ops_eaarlb.chn1_range_bias = -1.1;
-  ops_eaarlb.chn2_range_bias = 0.;
-  ops_eaarlb.chn3_range_bias = 0.9;
-  ops_eaarlb.chn4_range_bias = -7.9;
+  // range_biasM needs to remain at 0; bias is calculated per-channel instead
+  ops_eaarlb.range_biasM = 0;
+  // Following values were calculated by WW on 2012-01-07
+  // Biases were calibrated in meters, which were then converted to NS.
+  ops_eaarlb.chn1_range_bias = -13.480; // = -2.020 / NS2MAIR;
+  ops_eaarlb.chn2_range_bias = -12.105; // = -1.814 / NS2MAIR;
+  ops_eaarlb.chn3_range_bias = -10.564; // = -1.583 / NS2MAIR;
+  ops_eaarlb.chn4_range_bias = -18.985; // = -2.845 / NS2MAIR;
   ops_eaarlb.chn1_dx = -0.42;
   ops_eaarlb.chn1_dy = -1.67;
   ops_eaarlb.chn2_dx = 0.;
