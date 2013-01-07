@@ -119,7 +119,6 @@ proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
 
     if {$opts(-log)} {
         set logfn ${::logger::fn}.tscp
-        set yorick [list ./logtranscript $logfn {*}$yorick]
     }
 
     lappend yorick -i ytk.i $yor_tcl_fn $tcl_yor_fn
