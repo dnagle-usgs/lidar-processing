@@ -622,6 +622,10 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
       batch_automerge_tiles, dir, searchstr=searchstr, verbose=verbose > 0,
         update=update;
       searchstr = ss1 + "_b_merged.pbd";
+    } else if(ss2 == "*_f.pbd") {
+      batch_automerge_tiles, dir, searchstr=searchstr, verbose=verbose > 0,
+        update=update;
+      searchstr = ss1 + "_f_merged.pbd";
     } else {
       error, "Invalid setting for searchstr= with merge=1. See \
         documentation."
