@@ -68,10 +68,10 @@ func mission_constants(args) {
 
   Additionally, the following are given defaults as follows.
 
-    chn1_range_bias=-1.1
-    chn2_range_bias=0
-    chn3_range_bias=0.9
-    chn4_range_bias=-7.9
+    chn1_range_bias=-13.480
+    chn2_range_bias=-12.105
+    chn3_range_bias=-10.564
+    chn4_range_bias=-18.985
     max_sfc_sat=2
     tx_clean=8
     dmars_invert=0
@@ -160,10 +160,10 @@ func mission_constants(args) {
   }
   if(conf.type == "EAARL-B") {
     defaults = save(
-      chn1_range_bias=-1.1,
-      chn2_range_bias=0.,
-      chn3_range_bias=0.9,
-      chn4_range_bias=-7.9,
+      chn1_range_bias=-13.480,
+      chn2_range_bias=-12.105,
+      chn3_range_bias=-10.564,
+      chn4_range_bias=-18.985,
       chn1_dx=-0.42,
       chn1_dy=-1.67,
       chn2_dx=0.,
