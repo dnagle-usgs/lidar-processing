@@ -410,7 +410,8 @@ func gen_jgws_rough(photo_dir, conf_file=, elev=, camera=, cir_soe_offset=) {
 }
 
 func gen_jgws_with_lidar(photo_dir, pbd_dir, conf_file=, elev=, camera=,
-max_adjustments=, min_improvement=, buffer=, update=, cir_soe_offset=, mode=) {
+max_adjustments=, min_improvement=, buffer=, update=, cir_soe_offset=, mode=,
+searchstr=) {
 /* DOCUMENT gen_jgws_with_lidar, photo_dir, pbd_dir, conf_file=, elev=,
   camera=, max_adjustments=, min_improvement=, buffer=, update=, cir_soe_offset=
 
@@ -518,7 +519,7 @@ max_adjustments=, min_improvement=, buffer=, update=, cir_soe_offset=, mode=) {
       result = [];
       jgw_data = gen_jgw_with_lidar(cirdata.tans(idx(j)), pbd_dir, result,
         camera=camera, elev=elev, buffer=buffer, pbd_data=pbd_data,
-        mode=mode);
+        mode=mode, searchstr=searchstr);
 
       if(h_has(result, "nolidar")) {
         write, format="Image %d: Skipped, no PBD data.\n", processed;
