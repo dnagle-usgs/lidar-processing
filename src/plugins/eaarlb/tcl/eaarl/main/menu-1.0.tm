@@ -33,9 +33,9 @@ namespace eval ::eaarl::main::menu {
                 -command [list ::sf::controller %AUTO%]
         $mb add separator
         $mb add command {*}[menulabel "Load &Ground PNAV (gt_pnav) data..."] \
-                -command [namespace code load_ground_pnav]
+                -command ::l1pro::main::menu::load_ground_pnav
         $mb add command {*}[menulabel "Load Ground PNAV2&FS (gt_fs) data..."] \
-                -command [namespace code load_ground_pnav2fs]
+                -command ::l1pro::main::menu::load_ground_pnav2fs
         $mb add separator
         $mb add command {*}[menulabel "&JSON Log Explorer"] \
                 -command eaarl::jsonlog::launch
