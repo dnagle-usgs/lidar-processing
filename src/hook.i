@@ -29,26 +29,46 @@ scratch = save(scratch, hooks);
 // existing hooks. Otherwise, initialize hooks as an empty oxy object.
 hooks = (is_func(hook_add) == 5) ? hook_add.data : save();
 
-func hook_add(hooks, hook_name, func_name) {
+func hook_add(hooks, hook_name, func_name, priority) {
 /* DOCUMENT hook_add, "<hook_name>", "<func_name>"
+  -or- hook_add, "<hook_name>", "<func_name>", <priority>
   Adds a function to a hook. Functions are specified by name. Do -not- pass a
   function in as a function, always provide its name.
+  
+  If priority is given, it must be a numerical value and specifies when the
+  function should be invoked relative to other hooks for this function. Default
+  is 0. Functions to be invoked sooner should have lower values, functions to
+  be invoked later should have higher values. Functions with the same priority
+  will be invoked in an arbitrary order.
+
+  If the hook is already associated with the given function, then its priority
+  is updated.
+
   SEE ALSO: hook_remove, hook_invoke, hook_func
 */
+  if(is_void(priority)) priority = 0;
+  item = obj2struct(save(func_name, priority));
+
   // If there are no hooks for this hook name, then initialize it using the
   // specified hook function.
   if(!hooks(*,hook_name)) {
-    save, hooks, noop(hook_name), [func_name];
+    save, hooks, noop(hook_name), [item];
     return;
   }
 
-  // If the hook function is already set for this hook name, then there's
-  // nothing that needs done.
   tmp = hooks(noop(hook_name));
-  if(anyof(tmp == func_name)) return;
-
-  // Otherwise, add the hook function to the list for this hook name.
-  save, hooks, noop(hook_name), grow(tmp, func_name);
+  w = where(tmp.func_name == func_name);
+  // If the hook already exists, check to see if it has the right priority.
+  // Otherwise add it.
+  if(numberof(w)) {
+    w = w(1);
+    if(tmp(w).priority == priority) return;
+    tmp(w).priority = priority;
+  } else {
+    grow, tmp, item;
+  }
+  tmp = tmp(sort(tmp.priority));
+  save, hooks, noop(hook_name), tmp;
 }
 
 func hook_remove(hooks, hook_name, func_name) {
@@ -62,7 +82,7 @@ func hook_remove(hooks, hook_name, func_name) {
   // If the func name is not among the hooks for this hook name, then there's
   // nothing to remove.
   tmp = hooks(noop(hook_name));
-  if(noneof(tmp == func_name)) return;
+  if(noneof(tmp.func_name == func_name)) return;
 
   // If the func name is among the hooks but there's only one hook, then the
   // end result is no hooks.
@@ -72,19 +92,26 @@ func hook_remove(hooks, hook_name, func_name) {
   }
 
   // Otherwise, get rid of the specified hook function.
-  w = where(tmp != func_name);
+  w = where(tmp.func_name != func_name);
   save, hooks, noop(hook_name), tmp(w);
 }
 
-func hook_query(hooks, hook_name) {
+func hook_query(hooks, hook_name, full=) {
 /* DOCUMENT hook_query("<hook_name>")
-  Returns a list of all hook functions defines for this hook name.
+  -or- hook_query("<hook_name>", full=1)
+  Returns a list of all hook functions defined for this hook name.
+
+  If full=1, then it instead returns a list of structs such that
+  result.func_name are the functions and result.priority is the corresponding
+  priority.
 */
   // If there are no hooks for this hook name, return empty array.
   if(!hooks(*,hook_name)) return;
 
   // Otherwise, return hooks for this hook name.
-  return hooks(noop(hook_name));
+  result = hooks(noop(hook_name));
+  if(full) return result;
+  return result.func_name;
 }
 
 func hook_has(hook_name) {
@@ -123,7 +150,7 @@ func hook_invoke(hooks, hook_name, &env) {
 */
   if(!hooks(*,hook_name)) return env;
 
-  func_names = hooks(noop(hook_name));
+  func_names = hooks(noop(hook_name)).func_name;
   for(i = 1; i <= numberof(func_names); i++)
     env = symbol_def(func_names(i))(env);
 
