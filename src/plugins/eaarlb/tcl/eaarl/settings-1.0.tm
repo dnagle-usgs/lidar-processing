@@ -50,25 +50,44 @@ proc ::eaarl::settings::ops_conf::gui_refresh {} {
     }
 }
 
-proc ::eaarl::settings::ops_conf::gui_line {w text} {
-    set lbl [winfo parent $w].lbl[winfo name $w]
-    ttk::label $lbl -text $text
-    grid $lbl $w
-    grid $lbl -sticky e
-    grid $w -sticky ew
+proc ::eaarl::settings::ops_conf::applycmd {key old new} {
+    exp_send "var_expr_tkupdate, \"ops_conf.$key\", \"$new\";\
+            tkcmd, \"::eaarl::settings::ops_conf::gui_refresh\";\r"
+}
+
+proc ::eaarl::settings::ops_conf::gui_line {w key} {
+    set text "$key: "
+    ::mixin::revertable $w.$key \
+            -applycommand [list ::eaarl::settings::ops_conf::applycmd $key]
+    set lbl $w.lbl$key
+    ttk::label $w.lbl$key -text $text
+    ::misc::tooltip $w.$key $w.lbl$key \
+            "Press Enter to apply current changes to field. Press Escape to\
+            revert current changes to field."
+    ttk::button $w.app$key -text "\u2713" \
+            -style Toolbutton \
+            -command [list $w.$key apply]
+    ::misc::tooltip $w.app$key "Apply current changes to field"
+    ttk::button $w.rev$key -text "x" \
+            -style Toolbutton \
+            -command [list $w.$key revert]
+    ::misc::tooltip $w.rev$key "Revert current changes to field"
+    grid $w.lbl$key $w.$key $w.app$key $w.rev$key
+    grid $w.lbl$key -sticky e
+    grid $w.$key -sticky ew
 }
 
 proc ::eaarl::settings::ops_conf::gui_entry {w key} {
     set var [namespace which -variable v::ops_conf]
     ttk::entry $w.$key -textvariable ${var}($key)
-    gui_line $w.$key "$key: "
+    gui_line $w $key
 }
 
 proc ::eaarl::settings::ops_conf::gui_spinbox {w key from to inc} {
     set var [namespace which -variable v::ops_conf]
     ttk::spinbox $w.$key -textvariable ${var}($key) \
             -from $from -to $to -increment $inc
-    gui_line $w.$key "$key: "
+    gui_line $w $key
 }
 
 proc ::eaarl::settings::ops_conf::gui {} {
@@ -105,9 +124,10 @@ proc ::eaarl::settings::ops_conf::gui_init {fields} {
         } else {
             set val [list gui_entry]
         }
-        tky_tie add sync ${var}($key) with "ops_conf.$key" -initialize 1
+        tky_tie add read ${var}($key) from "ops_conf.$key" -initialize 1
         {*}[linsert $val 1 $v::fieldframe $key]
     }
+    ::misc::idle ::eaarl::settings::ops_conf::gui_refresh
     ::misc::idle {wm geometry .l1wid.opsconf ""}
 }
 
