@@ -57,6 +57,7 @@ median = quick_median;
 // top level
 require, "logger.i";
 require, "assert.i";
+require, "handler.i";
 require, "hook.i";
 require, "alps_constants.i";
 require, "alps_data.i";
