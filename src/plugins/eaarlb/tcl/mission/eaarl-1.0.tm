@@ -340,7 +340,9 @@ namespace eval ::mission::eaarl {
                 set rel [::fileutil::relative $::mission::path \
                         [::mission::get $flight "data_path dir"]]
                 set curdest [file join $dest $rel $subdir]
-                if {[::sf::tools::dump_model_images $model $curdest]} {
+                set stop [::sf::tools::dump_model_images $model $curdest]
+                $model destroy
+                if {$stop} {
                     return
                 }
             }
