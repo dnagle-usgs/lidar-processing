@@ -833,27 +833,32 @@ func split_cir_by_maxcount(cirdata, maxfiles) {
   h_set, cirdata, "chunks", chunks(:cidx);
 }
 
-func copy_cirdata_images(cirdata, dest) {
+func copy_cirdata_images(cirdata, dest, verbose=) {
 /* DOCUMENT copy_cirdata_images, cirdata, dest;
   Copies the images defined in cirdata to dest.
 */
+  default, verbose, 1;
   numfiles = numberof(cirdata.files);
   tstamp = [];
-  timer_init, tstamp;
+  if(verbose)
+    timer_init, tstamp;
   for(i = 1; i <= numfiles; i++) {
-    pause, 1; // short pause to ensure output shows up on screen
-    timer_tick, tstamp, i, numfiles;
+    if(verbose) {
+      timer_tick, tstamp, i, numfiles;
+      pause, 1; // short pause to ensure output shows up on screen
+    }
     mkdirp, dest;
     file_copy, cirdata.files(i), file_join(dest, file_tail(cirdata.files(i))),
       force=1;
   }
 }
 
-func copy_cirdata_images_by_flightline(cirdata, dest_dir) {
+func copy_cirdata_images_by_flightline(cirdata, dest_dir, verbose=) {
 /* DOCUMENT copy_cirdata_images_by_flightline, cirdata, dest_dir;
   Copies the images defined in cirdata to dest_dir, separating them by
   flightline.
 */
+  default, verbose, 1;
   split_cir_by_fltline, cirdata;
   flightlines = cirdata.flightlines;
   length = int(floor(log10(numberof(flightlines))+1));
@@ -862,7 +867,7 @@ func copy_cirdata_images_by_flightline(cirdata, dest_dir) {
   for(i = 1; i <= numberof(flightlines); i++) {
     curcirdata = filter_cirdata_by_index(cirdata, *flightlines(i));
     fltdir = file_join(dest_dir, swrite(format=fstr, i));
-    copy_cirdata_images, curcirdata, fltdir;
+    copy_cirdata_images, curcirdata, fltdir, verbose=verbose;
   }
 }
 
@@ -942,7 +947,7 @@ subdir=) {
       tiledir = file_join(tiledir, subdir);
 
     if(split_fltlines)
-      copy_cirdata_images_by_flightline, curcirdata, tiledir;
+      copy_cirdata_images_by_flightline, curcirdata, tiledir, verbose=0
     else
       copy_cirdata_images, curcirdata, tiledir;
   }
