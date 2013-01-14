@@ -258,8 +258,6 @@ func mission_load(flight) {
       save, mission.data.soe_bounds(noop(flight)), "gps",
         date2soe(mission(get, flight, "date"), pnav.sod(idx));
     }
-    save, mission.data.soe_bounds(noop(flight)), "edb",
-      edb.seconds(idx) + edb.fseconds(idx)*1.6e-6;
   } else {
     write, "WARNING: no pnav file defined for "+pr1(flight);
   }
