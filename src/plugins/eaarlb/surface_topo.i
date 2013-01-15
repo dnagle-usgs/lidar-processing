@@ -158,7 +158,7 @@ use_highelv_echo=, forcechannel=, verbose=, msg=, ext_bad_att=) {
 
   // Constants for mirror angle and laser angle
   mirang = -22.5;
-  lasang = 45.0;
+  lasang = 45.0 - .4;
   cyaw = 0.;
 
   if(verbose) write, "Projecting to the surface...";
