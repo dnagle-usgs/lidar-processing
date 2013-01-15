@@ -434,10 +434,12 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
               f = open(save_dir+swrite(format="i_e%d_n%d_%d/errors.txt", idx_e, idx_n, zone), "a");
               write, f, format="Data tile %9.2f %9.2f %9.2f %9.2f %s exceeded normal size.\n", min_e, max_e, min_n, max_n, mdate;
               write, f, format="	Tile size acctually: %9.2f %9.2f %9.2f %9.2f\n", min(depth_all.east)/100., max(depth_all.east)/100., min(depth_all.north)/100., max(depth_all.north/100.);
-              pldj, max_e, max_n, min_e, max_n, color="red";
-              pldj, min_e, min_n, max_e, min_n, color="red";
-              pldj, max_e, min_n, max_e, max_n, color="red";
-              pldj, min_e, min_n, min_e, max_n, color="red";
+              if (!batch()) {
+                pldj, max_e, max_n, min_e, max_n, color="red";
+                pldj, min_e, min_n, max_e, min_n, color="red";
+                pldj, max_e, min_n, max_e, max_n, color="red";
+                pldj, min_e, min_n, min_e, max_n, color="red";
+              }
               numend = numberof(data_box(depth_all.east, depth_all.north, (min_e-400)*100, (max_e+400)*100, (min_n-400)*100, (max_n+400)*100));
               write, f, format="# of points removed: %d of %d (That's %4.1f precent)\n", numstart-numend, numstart, ((((numstart-numend)*1.)/(numstart*1.))*100);
               close, f
