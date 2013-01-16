@@ -5,10 +5,8 @@ src_path = "/opt/alps/lidar-processing/src";
 
 cd(src_path);
 
-#include "/opt/alps/lidar-processing/src/general.i"
-#include "/opt/alps/lidar-processing/src/l1pro.i"
-#include "/opt/alps/lidar-processing/src/plugins/eaarlb/load.i"
-#include "/opt/alps/lidar-processing/src/batch_process.i"
+#include "/opt/alps/lidar-processing/src/eaarl.i"
+plugins_load, "eaarlb";
 
 cmdline = get_argv();  /* strips -batch cmdline.i */
 if (numberof(cmdline) == 3) {
