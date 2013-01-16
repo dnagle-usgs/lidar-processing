@@ -19,20 +19,42 @@ package provide hook 1.0
 namespace eval ::hook {
     if {![info exists hooks]} {
         variable hooks {}
+        variable priorities {}
     }
 
-    proc add {hook_name cmd} {
+    proc cmp {hook_name a b} {
+        variable priorities
+        set a1 [dict get $priorities $hook_name $a]
+        set b1 [dict get $priorities $hook_name $b]
+        expr {$a1 - $b1}
+        if {$a1 < $b1} {return -1}
+        expr {$a1 > $b1}
+    }
+
+    proc prioritize {hook_name} {
         variable hooks
+        dict set hooks $hook_name [lsort -real \
+                -command [list ::hook::cmp $hook_name] \
+                [dict get $hooks $hook_name]]
+    }
+
+    proc add {hook_name cmd {priority 0}} {
+        variable hooks
+        variable priorities
         if {
             ![dict exists $hooks $hook_name] ||
             $cmd ni [dict get $hooks $hook_name]
         } {
             dict lappend hooks $hook_name $cmd
         }
+        dict set priorities $hook_name $cmd $priority
+        prioritize $hook_name
     }
 
     proc remove {hook_name cmd} {
         variable hooks
+        variable priorities
+        dict unset priorities $hook_name $cmd
         if {![dict exists $hooks $hook_name]} return
         set cmds [dict get $hooks $hook_name]
         set idx [lsearch -exact $cmds $cmd]
@@ -42,6 +64,7 @@ namespace eval ::hook {
             return
         }
         dict set hooks $hook_name [lreplace $cmds $idx $idx]
+        prioritize $hook_name
     }
 
     proc query {hook_name} {
