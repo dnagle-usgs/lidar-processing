@@ -84,6 +84,13 @@ func expix_pixelwf_hook(env) {
   tksetval, "::eaarl::pixelwf::vars::selection::missionday", mission.data.loaded;
   rn = rp(1);
 
+  write, "";
+  write, format="Mission day: %s\n", mission.data.loaded;
+  if(has_member(point, "channel") && point.channel) {
+    write, format="channel= %d ; ", point.channel;
+  }
+  write, format="raster= %d ; pulse= %d\n", rp(1), rp(2);
+
   if(is_array(tans) && is_array(pnav)) {
     somd = point.soe - soe_day_start;
     gns_idx = abs(pnav.sod - somd)(mnx);
