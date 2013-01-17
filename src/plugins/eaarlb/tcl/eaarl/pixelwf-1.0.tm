@@ -5,6 +5,10 @@ package provide eaarl::pixelwf 1.0
 package require struct::set
 package require misc
 package require sf
+package require hook
+package require l1pro::expix
+
+hook::add "l1pro::expix::gui panels" ::eaarl::pixelwf::gui::panels_hook
 
 if {![namespace exists ::eaarl::pixelwf]} {
     # Initialization and Traces only happen first time ::eaarl::pixelwf is
@@ -221,6 +225,8 @@ namespace eval ::eaarl::pixelwf::util {
 
 namespace eval ::eaarl::pixelwf::gui {
     namespace import ::misc::tooltip
+    namespace import ::l1pro::expix::default_sticky
+    namespace import ::l1pro::expix::add_panel
 
     proc yorcmd {args} {
         if {$::eaarl::pixelwf::vars::selection::background} {
@@ -257,21 +263,6 @@ namespace eval ::eaarl::pixelwf::gui {
                 -values [::eaarl::pixelwf::util::valid_values $v]
     }
 
-    proc default_sticky args {
-        set stickiness [dict create TButton es TCheckbutton w TCombobox ew \
-                TEntry ew TLabel e TLabelframe ew TFrames ew TSpinbox ew]
-        foreach slave $args {
-            set class [winfo class $slave]
-            if {[dict exists $stickiness $class]} {
-                grid configure $slave -sticky [dict get $stickiness $class]
-            }
-            if {$class in {Frame Labelframe}} {
-                $slave configure -pady 2 -padx 2
-            }
-            grid configure $slave -padx 2 -pady 1
-        }
-    }
-
     proc set_default_enabled {} {
         set ns ::eaarl::pixelwf::vars
         set ${ns}::fit_gauss::enabled 0
@@ -290,25 +281,16 @@ namespace eval ::eaarl::pixelwf::gui {
         }
     }
 
-    proc launch_full_panel w {
+    proc panels_hook {w} {
         set_default_enabled
 
-        if {[winfo exists $w]} {destroy $w}
-        toplevel $w
-        wm title $w "Examine Pixels Settings"
-
-        set mf $w
-
-        set f $mf.lfr_selection
+        set f $w.lfr_selection
         ttk::labelframe $f -text Selection
-        grid $f -sticky new
+        add_panel $f
 
         set childsite $f.child
         selection $childsite
         grid $childsite -sticky news
-
-        grid columnconfigure $f 0 -weight 1
-        grid rowconfigure $f 0 -weight 1
 
         set titles {
             fit_gauss "Gaussian Decomposition"
@@ -323,28 +305,17 @@ namespace eval ::eaarl::pixelwf::gui {
         foreach type {
             fit_gauss ex_bath ex_veg show_wf show_wf_transmit ndrast geo_rast
         } {
-            set f $mf.lfr_$type
+            set f $w.lfr_$type
             ::mixin::labelframe::collapsible $f \
                     -text "Enable [dict get $titles $type]" \
                     -variable ::eaarl::pixelwf::vars::${type}::enabled
-            grid $f -sticky new
-
+            add_panel $f
             $type [$f interior]
         }
-        grid columnconfigure $mf 0 -weight 1
-
-        makemenu $mf.mb
-        bind $mf <Button-3> [list tk_popup $mf.mb %X %Y]
     }
 
     proc helper_update_days {} {
         set ::eaarl::pixelwf::gui::missionday_list [::mission::get]
-    }
-
-    proc makemenu mb {
-        menu $mb
-        $mb add command -label "Reset all options to defaults" \
-                -command ::eaarl::pixelwf::util::restore_defaults
     }
 
     proc selection f {
