@@ -82,6 +82,7 @@ require, "dir.i";
 require, "dirload.i";
 require, "dmars.i";
 require, "edf.i";
+require, "expix.i";
 require, "flight_planning.i";
 require, "geometry.i";
 require, "geotiff_tags.i";

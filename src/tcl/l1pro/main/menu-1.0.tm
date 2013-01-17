@@ -116,8 +116,7 @@ proc menu_tools mb {
             -command ::plot::menu
     $mb add separator
     $mb add command {*}[menulabel "Examine Pixels Settings"] \
-            -state disabled \
-            -command [list ::eaarl::pixelwf::gui::launch_full_panel .pixelwf]
+            -command ::l1pro::expix::gui
     lappend ::l1pro::on_eaarl_load \
             [list $mb entryconfigure [$mb index end] -state normal]
     $mb add command {*}[menulabel "Histogram Elevations Settings"] \

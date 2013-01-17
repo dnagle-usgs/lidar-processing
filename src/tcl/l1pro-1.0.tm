@@ -11,6 +11,7 @@ namespace eval ::l1pro {
 package require l1pro::ascii
 package require l1pro::asciixyz
 package require l1pro::dirload
+package require l1pro::expix
 package require l1pro::file
 package require l1pro::filter
 package require l1pro::groundtruth
