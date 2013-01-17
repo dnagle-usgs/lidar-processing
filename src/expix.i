@@ -82,16 +82,16 @@ func expix_show(nearest) {
   spot = nearest.spot;
   point = nearest.point;
 
-  write, format="Location clicked: %9.2f %10.2f\n", spot(1), spot(2);
-  write, format="   Nearest point: %9.2f %10.2f (%.2fm away)\n",
+  write, format="Location clicked: %.2f %.2f\n", spot(1), spot(2);
+  write, format="   Nearest point: %.2f %.2f (%.2fm away)\n",
     nearest.xp, nearest.yp, nearest.distance;
-  write, format="    first return: %9.2f\n", point.elevation/100.;
+  write, format="    first return: %.2f\n", point.elevation/100.;
   if(has_member(point, "lelv")) {
-    write, format="     last return: %9.2f\n", point.lelv/100.;
-    write, format="    first - last: %9.2f\n", (point.elevation-point.lelv)/100.;
+    write, format="     last return: %.2f\n", point.lelv/100.;
+    write, format="    first - last: %.2f\n", (point.elevation-point.lelv)/100.;
   } else if(has_member(point, "depth")) {
-    write, format="   bottom return: %9.2f\n", (point.elevation+point.depth)/100.;
-    write, format="  first - bottom: %9.2f\n", -1 * point.depth/100.;
+    write, format="   bottom return: %.2f\n", (point.elevation+point.depth)/100.;
+    write, format="  first - bottom: %.2f\n", -1 * point.depth/100.;
   }
   write, format="%s", "\n";
   write, format="Timestamp: %s\n", soe2iso8601(point.soe);
