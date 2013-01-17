@@ -9,9 +9,6 @@ if(is_void(pixelwfvars)) {
       raster=1,
       pulse=1,
       missionday="",
-      radius=10.00,
-      win=5,
-      pro_var="fs_all",
       extended=0,
       sfsync=0,
       missionload=1

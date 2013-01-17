@@ -21,7 +21,6 @@ if {![namespace exists ::eaarl::pixelwf]} {
                 variable raster 1
                 variable pulse 1
                 variable missionday {}
-                variable radius 10.00
                 variable extended 0
                 variable sfsync 0
                 variable missionload 1
@@ -123,7 +122,7 @@ if {![namespace exists ::eaarl::pixelwf]} {
                     ndrast win
                 }
                 {-1000 1000 0.01} {geo_rast eoffset}
-                {0.01 100 0.5} {selection radius}
+                {0.01 100 0.5} {selection}
             }
             # valid_values is a dict. It is used to restrict a variable's value to
             # a list of values.
@@ -182,8 +181,6 @@ if {![namespace exists ::eaarl::pixelwf]} {
         unset ns
     }
     # Special cases:
-    tky_tie append broadcast ::pro_var to pixelwfvars.selection.pro_var \
-        -initialize 1
     tky_tie append broadcast ::win_no to pixelwfvars.selection.win \
         -initialize 1
 
@@ -374,14 +371,6 @@ namespace eval ::eaarl::pixelwf::gui {
         ttk::spinbox $f.spnWindow -text Window: -textvariable ::win_no \
                 -from 0 -to 63 -increment 1 -width 0
 
-        ttk::label $f.lblRadius -text Radius:
-        helper_spinbox $f.spnRadius ${ns}::radius
-        tooltip $f.spnRadius "Search radius in meters"
-
-        ttk::label $f.lblVar -text Variable:
-        ::mixin::combobox $f.cboVar -textvariable ::pro_var -state readonly \
-                -width 0 -listvariable ::varlist
-
         ttk::checkbutton $f.chkSync -text "Sync" -variable ${ns}::sfsync
         ttk::checkbutton $f.chkExt -text "Extended output" \
                 -variable ${ns}::extended
@@ -421,10 +410,8 @@ namespace eval ::eaarl::pixelwf::gui {
                 -command [list exp_send "pixelwf_enter_interactive;\r"]
 
         grid $f.lblFlight $f.cboFlight - -
-        grid $f.lblVar $f.cboVar - -
         grid $f.lblChannel $f.spnChannel $f.lblWindow $f.spnWindow
-        grid $f.lblRaster  $f.spnRaster  $f.lblRadius $f.spnRadius
-        grid $f.lblPulse   $f.spnPulse
+        grid $f.lblRaster  $f.spnRaster  $f.lblPulse  $f.spnPulse
         grid $f.chkExt - $f.chkSync -
         grid $f.chkLoad - - -
         grid $f.chkBg - - -
@@ -434,8 +421,8 @@ namespace eval ::eaarl::pixelwf::gui {
                 $f.lblFlight $f.cboFlight \
                 $f.lblChannel $f.spnChannel \
                 $f.lblRaster $f.spnRaster $f.lblPulse $f.spnPulse \
-                $f.lblWindow $f.spnWindow $f.lblVar $f.cboVar $f.chkSync \
-                $f.lblRadius $f.spnRadius $f.btnMouse $f.btnGraph \
+                $f.lblWindow $f.spnWindow $f.chkSync \
+                $f.btnMouse $f.btnGraph \
                 $f.chkExt $f.chkLoad $f.chkBg
 
         grid configure $f.btnMouse -sticky w
