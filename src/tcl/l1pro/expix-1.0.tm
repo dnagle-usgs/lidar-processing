@@ -67,14 +67,39 @@ namespace eval ::l1pro::expix {
         ttk::button $f.btnPoints -text "Point Cloud" \
                 -command ::l1pro::expix::point_cloud
         ttk::button $f.btnTransect -text "Transect"
-        ttk::button $f.btnGround -text "Groundtruth"
+        $f.btnTransect state disabled
+        ttk::button $f.btnGround -text "Groundtruth" \
+                -command ::l1pro::groundtruth::scatter::expix
         grid $f.btnPoints $f.btnTransect $f.btnGround -in $f.fraButtons
 
         tooltip $f.lblRadius $f.spnRadius \
                 "The radius in meters to search around the point you click."
+        tooltip $f.btnPoints \
+                "Enters an interactive mode where the user can click on a point
+                cloud to query points. This button is exactly identical in
+                functionality to the \"Examine Pixels\" button in the main
+                \"ALPS - Point Cloud Plotting\" GUI.
 
-        $f.btnTransect state disabled
-        $f.btnGround state disabled
+
+                This button relies on the settings in the \"ALPS - Point Cloud
+                Plotting\" GUI and is here merely as a convenience. Make sure
+                you have data plotted in the window selected in that GUI prior
+                to using this button."
+        tooltip $f.btnTransect \
+                "To query points in a transect plot, please use the \"Transect
+                Tool\". A convenience button cannot be provided here because
+                the \"Transect Tool\" can handle multiple transects at a time."
+        tooltip $f.btnGround \
+                "Enters an interactive mode where the user can click on a
+                groundtruth scatter plot to query points. This button is
+                exactly identical in functionality to the \"Examine Pixels\"
+                button on the \"Scatterplot\" tab of the \"Groundtruth
+                Analysis\" GUI.
+
+                This button relies on the settings in the \"Groundtruth
+                Analysis\" GUI and is here merely as a convenience. Make sure
+                you have data plotting in the window selected in that GUI prior
+                to using this button."
 
         grid $f.lblRadius $f.spnRadius
         grid $f.fraButtons - - -
