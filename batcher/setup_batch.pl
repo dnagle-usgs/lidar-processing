@@ -36,7 +36,6 @@ my $ETC           = "$EAARL/etc";
 my $MASTER_file   = "$ETC/ALPS_master";
 my $SCREEN_master = "$ETC/.screenrc-batch-master";
 my $SCREEN_slave  = "$ETC/.screenrc-batch-slave";
-my $SCREEN_start  = "$EAARL/lidar-processing/bin/screen_batch";
 my $NCPU          = `grep -c "^vendor" /proc/cpuinfo`;
 my $SCREEN        = "/usr/bin/screen";
 my $RUN="";
@@ -203,6 +202,13 @@ screen -t tcsh
 next
 multiuser on
 acladd wright
+acladd mitchell
+acladd rmitchel
+acladd rtroche
+acladd dnagle
+acladd ckranenburg
+acladd afredericks
+acladd mpal
 
 # detach
 # invoke as : screen -d -m -c ~/.screenrc_batch_master
@@ -253,7 +259,7 @@ if ( $update ) {
 
 if ( $initd ) {
 
-  my $hostname = `hostname`;
+  my $hostname = `hostname -s`;
   my $rc;
   chop $hostname;
   
@@ -272,5 +278,6 @@ if ( $initd ) {
     printf("Starting slave\n")  if ( $verbose );
     print `$RUN $SCREEN -d -m -c $ETC/.screenrc-batch-slave`;
   }
-    printf("exiting\n") if ( $verbose );
+  system("(echo -n screen -x amps/; screen -ls | grep Multi | cut --fields=2) > $EAARL/screen.sh");
+  printf("exiting\n") if ( $verbose );
 }
