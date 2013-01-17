@@ -574,7 +574,8 @@ namespace eval l1pro::transect {
             } else {
                 set rec 0
             }
-            exp_send "transect_pixelwf_interactive, \"tr$row\", mode=\"$mode\", recall=$rec, win=$owin;\r"
+            exp_send "expix_transect, \"tr$row\", mode=\"$mode\", recall=$rec,\
+                    win=$owin, radius=$::l1pro::expix::radius;\r"
         }
     }
 

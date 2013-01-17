@@ -580,13 +580,7 @@ func gt_vars_bound(data, which, win, bound) {
     return [];
 }
 
-func gt_pixelwf_interactive(vname, which, win) {
-  extern pixelwfvars;
-  if(is_void(pixelwfvars)) {
-    write, "EAARL plugin has not been loaded, aborting.";
-    return;
-  }
-
+func expix_groundtruth(vname, which, win, radius=, mode=) {
   data = var_expr_get(vname);
 
   wbkp = current_window();
@@ -599,18 +593,31 @@ func gt_pixelwf_interactive(vname, which, win) {
     spot = mouse(1, 1, "");
 
     if(mouse_click_is("left", spot)) {
+
+      bbox = spot([1,1,2,2]) + radius * [-1,1,-1,1];
+      w = data_box(data(noop(which)), data.model, bbox);
+
+      distance = index = point = [];
+      if(numberof(w)) {
+        x = data(noop(which))(w);
+        y = data.model(w);
+        d = sqrt((x-spot(1))^2 + (y-spot(2))^2);
+        if(d(min) <= radius) {
+          distance = d(min);
+          index = w(d(mnx));
+          point = data.data(index);
+          xp = x(d(mnx));
+          yp = y(d(mnx));
+        }
+      }
+
       write, format="\n-----\n\n%s", "";
-      nearest = gt_pixelwf_find_point(spot, data, which);
-      if(is_void(nearest.point)) {
+      if(is_void(point)) {
         write, format="Location clicked: %9.2f %10.2f\n", spot(1), spot(2);
-        write, format="No point found within search radius (%.2fm).\n",
-          pixelwfvars.selection.radius;
+        write, format="No point found within search radius (%.2fm).\n", radius;
       } else {
-        pixelwf_set_point, nearest.point;
-        plmk, nearest.y, nearest.x, msize=0.004, color="red",
-          marker=[[0,1,0,1,0,-1,0,-1,0],[0,1,0,-1,0,-1,0,1,0]];
-        tkcmd, "::misc::idle {ybkg pixelwf_plot}";
-        pixelwf_selected_info, nearest, vname=vname;
+        expix_highlight, yp, xp;
+        expix_show, save(vname, mode, spot, distance, index, point, xp, yp);
       }
     } else {
       continue_interactive = 0;
@@ -618,34 +625,4 @@ func gt_pixelwf_interactive(vname, which, win) {
   }
 
   window_select, wbkp;
-}
-
-func gt_pixelwf_find_point(spot, data, which) {
-  extern pixelwfvars;
-  if(is_void(pixelwfvars)) {
-    write, "EAARL plugin has not been loaded, aborting.";
-    return;
-  }
-
-  vars = pixelwfvars.selection;
-  radius = vars.radius;
-
-  bbox = spot([1,1,2,2]) + radius * [-1,1,-1,1];
-  w = data_box(data(noop(which)), data.model, bbox);
-
-  dist = index = nearest = [];
-  if(numberof(w)) {
-    x = data(noop(which))(w);
-    y = data.model(w);
-    d = sqrt((x-spot(1))^2 + (y-spot(2))^2);
-    if(d(min) <= radius) {
-      dist = d(min);
-      index = w(d(mnx));
-      nearest = data.data(index);
-      nx = x(d(mnx));
-      ny = y(d(mnx));
-    }
-  }
-
-  return h_new(point=nearest, index=index, distance=dist, spot=spot, x=nx, y=ny);
 }

@@ -323,20 +323,16 @@ xfma=, mode=, msize=, marker=, scolor=, plot=, showline=, showpts=) {
   return data;
 }
 
-func transect_pixelwf_interactive(vname, line, recall=, win=, mode=) {
-/* DOCUMENT transect_pixelwf_interactive, vname, line, win=
-  Enters an interactive query mode similar to pixelwf_interactive, except that
+func expix_transect(vname, line, recall=, win=, mode=, radius=) {
+/* DOCUMENT expix_transect, vname, line, win=, mode=, radius=
+  Enters an interactive query mode similar to expix_pointcloud, except that
   it queries a transect plot. VNAME should be the name of the variable
   containing the points plotted, LINE should be the transect they're plotted
   with respect to, and WIN should be the window they're plotted in. RECALL can
-  be used to recall an existing line from the transect history.
+  be used to recall an existing line from the transect history. MODE is the
+  data mode for VNAME. RADIUS is the radius about the point clicked to search
+  within.
 */
-  extern pixelwfvars;
-  if(is_void(pixelwfvars)) {
-    write, "EAARL plugin has not been loaded, aborting.";
-    return;
-  }
-
   if(is_void(win)) win = window();
   data = var_expr_get(vname);
 
@@ -361,18 +357,28 @@ func transect_pixelwf_interactive(vname, line, recall=, win=, mode=) {
     spot = mouse(1, 1, "");
 
     if(mouse_click_is("left", spot)) {
+      distance = index = point = [];
+      bbox = spot([1,1,2,2]) + radius * [-1,1,-1,1];
+      w = data_box(rx, z, bbox);
+
+      if(numberof(w)) {
+        d = sqrt((rx(w)-spot(1))^2 + (z(w)-spot(2))^2);
+        if(d(min) <= radius) {
+          distance = d(min);
+          index = w(d(mnx));
+          point = data(index);
+          xp = rx(index);
+          yp = z(index);
+        }
+      }
+
       write, format="\n-----\n\n%s", "";
-      nearest = transect_pixelwf_find_point(spot, data, rx, z);
-      if(is_void(nearest.point)) {
+      if(is_void(point)) {
         write, format="Location clicked: %9.2f %10.2f\n", spot(1), spot(2);
-        write, format="No point found within search radius (%.2fm).\n",
-          pixelwfvars.selection.radius;
+        write, format="No point found within search radius (%.2fm).\n", radius;
       } else {
-        pixelwf_set_point, nearest.point;
-        plmk, nearest.y, nearest.x, msize=0.004, color="red",
-          marker=[[0,1,0,1,0,-1,0,-1,0],[0,1,0,-1,0,-1,0,1,0]];
-        tkcmd, "::misc::idle {ybkg pixelwf_plot}";
-        pixelwf_selected_info, nearest, vname=vname;
+        expix_highlight, yp, xp;
+        expix_show, save(vname, mode, spot, distance, index, point, xp, yp);
       }
     } else {
       continue_interactive = 0;
@@ -380,38 +386,4 @@ func transect_pixelwf_interactive(vname, line, recall=, win=, mode=) {
   }
 
   window_select, wbkp;
-}
-
-func transect_pixelwf_find_point(spot, data, x, y) {
-/* DOCUMENT transect_pixelwf_find_point(spot, data, x, y)
-  Utility function for transect_pixelwf_interactive. Given SPOT (a mouse click
-  result), DATA (a point cloud), and X,Y (the coordiantes in the plot that
-  correspond to the points in DATA), this returns a various info about the
-  closest point to SPOT.
-*/
-  extern pixelwfvars;
-  if(is_void(pixelwfvars)) {
-    write, "EAARL plugin has not been loaded, aborting.";
-    return;
-  }
-
-  vars = pixelwfvars.selection;
-  radius = vars.radius;
-
-  bbox = spot([1,1,2,2]) + radius * [-1,1,-1,1];
-  w = data_box(x, y, bbox);
-
-  distance = index = point = [];
-  if(numberof(w)) {
-    d = sqrt((x(w)-spot(1))^2 + (y(w)-spot(2))^2);
-    if(d(min) <= radius) {
-      distance = d(min);
-      index = w(d(mnx));
-      point = data(index);
-      nx = x(d(mnx));
-      ny = y(d(mnx));
-    }
-  }
-
-  return save(point, index, distance, spot, x=nx, y=ny);
 }

@@ -620,8 +620,8 @@ proc ::l1pro::groundtruth::scatter::panel w {
     ttk::button $f.plot -text Plot -command ${ns}::plot
     ttk::checkbutton $f.fma -text "Clear before plotting" \
             -variable ${ns}::v::dofma
-    ttk::button $f.pixelwf -text "Pixel Waveform" -command ${ns}::pixelwf
-    grid x $f.plot $f.fma $f.pixelwf x {*}$ew
+    ttk::button $f.expix -text "Examine Pixels" -command ${ns}::expix
+    grid x $f.plot $f.fma $f.expix x {*}$ew
     grid columnconfigure $f {0 4} -weight 1
 
     grid $w.general $w.metrics {*}$news
@@ -672,8 +672,10 @@ proc ::l1pro::groundtruth::scatter::plot {} {
     exp_send "$cmd;\r"
 }
 
-proc ::l1pro::groundtruth::scatter::pixelwf {} {
-    set cmd "gt_pixelwf_interactive, \"$v::comparison\", \"t_$v::data\", $v::win"
+proc ::l1pro::groundtruth::scatter::expix {} {
+    set cmd "expix_groundtruth, \"$v::comparison\", \"t_$v::data\",\
+            $v::win, mode=\"$::l1pro::groundtruth::extract::v::model_mode\",\
+            radius=$::l1pro::expix::radius"
     exp_send "$cmd;\r"
 }
 
