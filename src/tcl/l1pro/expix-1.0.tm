@@ -9,7 +9,7 @@ hook::add "l1pro::expix::gui panels" l1pro::expix::panel_interactive -100
 
 namespace eval ::l1pro::expix {
     namespace import ::misc::appendif ::misc::tooltip
-    namespace export default_sticky
+    namespace export default_sticky add_panel
 
     if {![info exists radius]} {
         variable radius 10.0
