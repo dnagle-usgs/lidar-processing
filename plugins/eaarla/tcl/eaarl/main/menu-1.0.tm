@@ -112,7 +112,7 @@ namespace eval ::eaarl::main::menu {
         $mb add command {*}[menulabel "Browse &Rasters"] \
                 -command ::eaarl::drast::gui
         $mb add command {*}[menulabel "Examine Pixels Settings"] \
-                -command [list ::eaarl::pixelwf::gui::launch_full_panel .pixelwf]
+                -command ::l1pro::expix::gui
         $mb add separator
         $mb add command {*}[menulabel "Check and correct EDB time"] \
                 -command eaarl::tscheck::launch
