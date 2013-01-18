@@ -8,8 +8,6 @@ package require sf
 package require hook
 package require l1pro::expix
 
-hook::add "l1pro::expix::gui panels" ::eaarl::pixelwf::gui::panels_hook
-
 if {![namespace exists ::eaarl::pixelwf]} {
     # Initialization and Traces only happen first time ::eaarl::pixelwf is
     # created.
@@ -620,3 +618,5 @@ namespace eval ::eaarl::pixelwf::mediator {
 }
 
 ::sf::mediator register [list ::eaarl::pixelwf::mediator::jump_soe]
+hook::add "l1pro::expix::gui panels" ::eaarl::pixelwf::gui::panels_hook
+::misc::idle ::l1pro::expix::reload_gui
