@@ -19,7 +19,8 @@ namespace eval ::l1pro::expix {
     proc point_cloud {} {
         variable radius
         exp_send "expix_pointcloud, \"$::pro_var\",\
-            mode=\"$::processing_mode\", win=$::win_no, radius=$radius;\r"
+                mode=\"$::plot_settings(display_mode)\", win=$::win_no,\
+                radius=$radius;\r"
     }
 
     # If GUI is open, recreates it (to account for plugins)
