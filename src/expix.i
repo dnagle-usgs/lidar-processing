@@ -4,6 +4,7 @@ func expix_pointcloud(vname, radius=, win=, mode=) {
 /* DOCUMENT expix_pointcloud, "<vname>", radius=, win=, mode=
 */
   if(!is_string(vname)) error, "must provide vname as string";
+  if(!symbol_exists(vname)) error, "variable "+vname+" does not exist";
 
   default, radius, 10.;
   default, win, 5;
@@ -11,6 +12,7 @@ func expix_pointcloud(vname, radius=, win=, mode=) {
 
   local x, y;
   data = symbol_def(vname);
+  if(is_void(data)) error, "variable "+vname+" contains no data";
   data2xyz, data, x, y, mode=mode;
   
   continue_interactive = 1;
