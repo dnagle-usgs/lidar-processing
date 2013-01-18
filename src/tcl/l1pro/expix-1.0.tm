@@ -22,6 +22,15 @@ namespace eval ::l1pro::expix {
             mode=\"$::processing_mode\", win=$::win_no, radius=$radius;\r"
     }
 
+    # If GUI is open, recreates it (to account for plugins)
+    # Otherwise, does nothing
+    proc reload_gui {} {
+        variable top
+        if {[winfo exists $top]} {
+            gui
+        }
+    }
+
     proc gui {} {
         variable top
         set geo {}
