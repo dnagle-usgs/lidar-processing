@@ -377,26 +377,21 @@ namespace eval ::eaarl::pixelwf::gui {
         ttk::button $f.btnGraph -text "Plot All" \
                 -command [list [namespace current]::yorcmd pixelwf_plot]
 
-        ttk::button $f.btnMouse -text "Examine Pixels" \
-                -command [list exp_send "pixelwf_enter_interactive;\r"]
-
         grid $f.lblFlight $f.cboFlight - -
         grid $f.lblChannel $f.spnChannel $f.lblWindow $f.spnWindow
         grid $f.lblRaster  $f.spnRaster  $f.lblPulse  $f.spnPulse
         grid $f.chkExt - $f.chkSync -
         grid $f.chkLoad - - -
         grid $f.chkBg - - -
-        grid $f.btnMouse - $f.btnGraph -
+        grid x x $f.btnGraph -
 
         default_sticky \
                 $f.lblFlight $f.cboFlight \
                 $f.lblChannel $f.spnChannel \
                 $f.lblRaster $f.spnRaster $f.lblPulse $f.spnPulse \
                 $f.lblWindow $f.spnWindow $f.chkSync \
-                $f.btnMouse $f.btnGraph \
+                $f.btnGraph \
                 $f.chkExt $f.chkLoad $f.chkBg
-
-        grid configure $f.btnMouse -sticky w
 
         grid columnconfigure $f {0 2} -weight 0 -uniform 2
         grid columnconfigure $f {1 3} -weight 1 -uniform 1
