@@ -117,8 +117,6 @@ proc menu_tools mb {
     $mb add separator
     $mb add command {*}[menulabel "Examine Pixels Settings"] \
             -command ::l1pro::expix::gui
-    lappend ::l1pro::on_eaarl_load \
-            [list $mb entryconfigure [$mb index end] -state normal]
     $mb add command {*}[menulabel "Histogram Elevations Settings"] \
             -command ::l1pro::tools::histelev::gui
     $mb add command {*}[menulabel "Groundtruth Analysis"] \
