@@ -102,7 +102,7 @@ func plugins_list(void, verbose=) {
 */
   extern src_path;
   default, verbose, 0;
-  manifests = find(file_join(src_path, "plugins"), searchstr="manifest.json");
+  manifests = find(file_join(src_path, "../plugins"), searchstr="manifest.json");
   names = file_tail(file_dirname(manifests));
   if(!am_subroutine())
     return names;
@@ -180,7 +180,8 @@ func plugins_load(name, force=) {
   if(name == "eaarla") name = "eaarlb";
   if(!force && anyof(__plugins__.loaded == name))
     return;
-  manifest = find(file_join(src_path, "plugins", name), searchstr="manifest.json");
+  manifest = find(file_join(src_path, "../plugins", name),
+    searchstr="manifest.json");
   if(numberof(manifest) != 1)
     error, "unable to locate manifest for"+pr1(name);
   manifest = manifest(1);
@@ -222,7 +223,7 @@ func plugins_autoload(void) {
       logger, warn, "plugins_autoload: autoloads were already processed";
     return;
   }
-  manifests = find(file_join(src_path, "plugins"), searchstr="manifest.json");
+  manifests = find(file_join(src_path, "../plugins"), searchstr="manifest.json");
   for(i = 1; i <= numberof(manifests); i++) {
     data = json_decode(rdfile(manifests(i)));
     base = file_dirname(manifests(i));

@@ -11,8 +11,8 @@ if {![namespace exists plugins]} {
 
 proc ::plugins::plugins_list {} {
     set result {}
-    foreach plugin [lsort [glob plugins/*/manifest.json]] {
-        lappend result [lindex [split $plugin /] 1]
+    foreach plugin [lsort [glob ../plugins/*/manifest.json]] {
+        lappend result [lindex [split $plugin /] 2]
     }
     return $result
 }
