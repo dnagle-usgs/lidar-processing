@@ -1,5 +1,5 @@
 {
-  "description": "EAARL-B processing",
+  "description": "EAARL-A processing",
   "yorick": {
     "load": "load.i"
   },
@@ -7,6 +7,6 @@
     "load": "load.tcl"
   },
   "conflicts": [
-    "eaarla"
+    "eaarlb"
   ]
 }
