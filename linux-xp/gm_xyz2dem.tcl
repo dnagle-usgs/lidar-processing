@@ -50,7 +50,7 @@ set ::options {
    {gui                    "Launch the GUI, even if the parameters are given."}
 }
 
-set ::usage "\n$::overview\nUsage:\n gm_xyz2dem.tcl \[options] indir outdir \[scriptfile]\n\nOptions:"
+set ::usage "\n$::overview\nUsage:\n gm_xyz2dem.tcl \[options] indir outdir scriptfile\n\nOptions:"
 
 proc cmdline_error {msg} {
    puts "ERROR: $msg\n"
@@ -63,8 +63,8 @@ proc parse_params { } {
    if {[catch {array set params [::cmdline::getoptions ::argv $::options $::usage]}]} {
       cmdline_error "Invalid options encountered"
    }
-   if {[llength $::argv] == 1 && !$params(gui)} {
-      cmdline_error "No outdir specified"
+   if {[llength $::argv] in {1 2} && !$params(gui)} {
+      cmdline_error "Must provide all of indir, outdir, and scriptfile unless using -gui"
    }
    if {[llength $::argv] > 3} {
       cmdline_error "Too many parameters given"
@@ -109,11 +109,13 @@ proc parse_params { } {
       set ::gui 1
    }
 
-   if {[llength $::argv] in {2 3}} {
+   if {[llength $::argv]} {
       set ::xyz_dir [string trim [lindex $::argv 0]]
+   }
+   if {[llength $::argv] >= 2} {
       set ::tiff_dir [string trim [lindex $::argv 1]]
    }
-   if {[llength $::argv] == 3} {
+   if {[llength $::argv] >= 3} {
       set ::outfile [string trim [lindex $::argv 2]]
    }
 }
