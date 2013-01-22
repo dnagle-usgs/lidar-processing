@@ -301,9 +301,9 @@ proc parse_filename {fn} {
 
 # Generates a list of required projections for the dataset, suitable for
 # feeding into generate_projections
-proc gather_xyz_projs { } {
+proc gather_xyz_projs {xyzs} {
    set projections [list]
-   foreach xyz [fileutil::findByPattern $::xyz_dir -glob -- *.xyz] {
+   foreach xyz $xyzs {
       set parsed [parse_filename $xyz]
       dict with parsed {
          ::struct::set include projections [list $datum $zone]
@@ -313,8 +313,8 @@ proc gather_xyz_projs { } {
 }
 
 # Generates the projection portion of the GMS script (returns as string)
-proc generate_projections {} {
-   set proj_info [gather_xyz_projs]
+proc generate_projections {xyzs} {
+   set proj_info [gather_xyz_projs $xyzs]
    set projections ""
    foreach proj $proj_info {
       set datum [lindex $proj 0]
@@ -333,10 +333,10 @@ proc generate_projections {} {
 
 # Generates the conversion (XYZ->TIF) portion of the GMS script (returns as
 # string)
-proc generate_conversions { } {
+proc generate_conversions {xyzs} {
    set nddm [expr {$::threshold/($::resolution * sqrt(2))}]
    set conversions ""
-   foreach xyz [fileutil::findByPattern $::xyz_dir -glob -- *.xyz] {
+   foreach xyz $xyzs {
       set parsed [parse_filename $xyz]
       dict with parsed {
          set new_c $::gms_conversion
@@ -355,9 +355,11 @@ proc generate_conversions { } {
 
 # Generates the GMS script
 proc generate_gms {} {
+   set xyzs [fileutil::findByPattern $::xyz_dir -glob -- *.xyz]
+
    set output $::gms_header
-   append output [generate_projections]
-   append output [generate_conversions]
+   append output [generate_projections $xyzs]
+   append output [generate_conversions $xyzs]
    append output $::gms_footer
 
    set fh [open $::gms_file "w"]
