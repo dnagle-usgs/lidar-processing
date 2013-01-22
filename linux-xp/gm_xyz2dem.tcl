@@ -353,9 +353,17 @@ proc generate_conversions {xyzs} {
    return $conversions
 }
 
+proc file_size_cmp {fn1 fn2} {
+   expr {[file size $fn1] - [file size $fn2]}
+}
+
 # Generates the GMS script
 proc generate_gms {} {
    set xyzs [fileutil::findByPattern $::xyz_dir -glob -- {*.xyz *.xyz.gz}]
+   if {![llength $xyzs]} {
+      err_msg "No xyz files found"
+   }
+   set xyzs [lsort -command file_size_cmp -decreasing $xyzs]
 
    set output $::gms_header
    append output [generate_projections $xyzs]
@@ -370,6 +378,8 @@ proc generate_gms {} {
 proc err_msg {msg} {
    if {$::gui} {
       tk_messageBox -icon error -message $msg -parent . -title "Error" -type ok
+      # causes err_msg to act like return in its calling context
+      return -code 2
    } else {
       cmdline_error $msg
       exit
