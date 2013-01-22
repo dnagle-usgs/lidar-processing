@@ -313,7 +313,8 @@ proc gather_xyz_projs { } {
 }
 
 # Generates the projection portion of the GMS script (returns as string)
-proc generate_projections { proj_info } {
+proc generate_projections {} {
+   set proj_info [gather_xyz_projs]
    set projections ""
    foreach proj $proj_info {
       set datum [lindex $proj 0]
@@ -355,7 +356,7 @@ proc generate_conversions { } {
 # Generates the GMS script
 proc generate_gms {} {
    set output $::gms_header
-   append output [generate_projections [gather_xyz_projs]]
+   append output [generate_projections]
    append output [generate_conversions]
    append output $::gms_footer
 
