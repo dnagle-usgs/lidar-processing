@@ -31,10 +31,9 @@ set zone_override 0
 set datum_mask 2
 set overwrite 0
 set gui 0
-set outfile ""
 set xyz_dir ""
-set tiff_dir ""
-set outfile ""
+set tif_dir ""
+set gms_file ""
 
 set ::options {
    {resolution.arg   1     "Desired spatial resolution. Short form: -r."}
@@ -113,10 +112,10 @@ proc parse_params { } {
       set ::xyz_dir [file normalize [string trim [lindex $::argv 0]]]
    }
    if {[llength $::argv] >= 2} {
-      set ::tiff_dir [file normalize [string trim [lindex $::argv 1]]]
+      set ::tif_dir [file normalize [string trim [lindex $::argv 1]]]
    }
    if {[llength $::argv] >= 3} {
-      set ::outfile [file normalize [string trim [lindex $::argv 2]]]
+      set ::gms_file [file normalize [string trim [lindex $::argv 2]]]
    }
 }
 
@@ -125,7 +124,7 @@ proc parse_params { } {
 proc launch_gui { } {
    package require Tk 8.4
    package require BWidget
-   # resolution threshold zone_override overwrite datum_mask xyz_dir tiff_dir outfile
+   # resolution threshold zone_override overwrite datum_mask xyz_dir tif_dir gms_file
 
    label .lblResolution -text "Resolution"
    spinbox .spnResolution -from 0.1 -to 100.00 -increment 0.1 -format %.1f -width 5 \
@@ -170,15 +169,15 @@ proc launch_gui { } {
    }
 
    label .lblTiff -text "GeoTiff Directory"
-   entry .entTiff -textvariable ::tiff_dir
-   button .butTiff -text "Choose" -command { choose_directory "GeoTiff output" ::tiff_dir 0 }
+   entry .entTiff -textvariable ::tif_dir
+   button .butTiff -text "Choose" -command { choose_directory "GeoTiff output" ::tif_dir 0 }
    grid .lblTiff .entTiff .butTiff
    foreach widget [list .entTiff .butTiff] {
       DynamicHelp::add $widget -type balloon -text "Specify the directory where the GeoTiffs should be created."
    }
 
    label .lblOut -text "Script Destination"
-   entry .entOut -textvariable ::outfile
+   entry .entOut -textvariable ::gms_file
    button .butOut -text "Choose" -command choose_file
    grid .lblOut .entOut .butOut
    foreach widget [list .entOut .butOut] {
@@ -204,9 +203,9 @@ proc choose_directory { title pathVar mustexist } {
 
 proc choose_file { } {
    set temp [tk_getSaveFile -title "Choose the GMS script destination" -parent . \
-      -initialdir [file dirname $::outfile] -initialfile $::outfile \
+      -initialdir [file dirname $::gms_file] -initialfile $::gms_file \
       -filetypes {{"Global Mapper Script" *.gms}}]
-   if {[string length $temp]} { set ::outfile $temp }
+   if {[string length $temp]} { set ::gms_file $temp }
 }
 
 # DEFINE TEMPLATES
@@ -348,7 +347,7 @@ proc generate_conversions { } {
       dict with parsed {
          set new_c $::gms_conversion
          template new_c FILEIN      [string map {\\ \\\\} [file nativename $xyz]]
-         template new_c FILEOUT     [string map {\\ \\\\} [file nativename [file join [file normalize $::tiff_dir] [file rootname [file tail $xyz]]_dem.tif]]]
+         template new_c FILEOUT     [string map {\\ \\\\} [file nativename [file join [file normalize $::tif_dir] [file rootname [file tail $xyz]]_dem.tif]]]
          template new_c NDDM        $nddm
          template new_c RES         $::resolution
          template new_c PROJ        [zone_datum_projname $zone $datum]
@@ -367,7 +366,7 @@ proc generate_gms {} {
    append output [generate_conversions]
    append output $::gms_footer
 
-   set fh [open $::outfile "w"]
+   set fh [open $::gms_file "w"]
    puts $fh $output
    close $fh
 }
@@ -386,9 +385,9 @@ proc do_gms {} {
       err_msg "You must specify an input XYZ directory."
    } elseif {![file isdirectory $::xyz_dir]} {
       err_msg "Input XYZ directory does not exist."
-   } elseif {![string length $::tiff_dir]} {
+   } elseif {![string length $::tif_dir]} {
       err_msg "You must provide an output GeoTiff directory."
-   } elseif {![string length $::outfile]} {
+   } elseif {![string length $::gms_file]} {
       err_msg "You must provide an output script file."
    } else {
       if {$::gui} {
@@ -396,7 +395,7 @@ proc do_gms {} {
       }
       set ::datum_mask [expr {$::datum_mask > 0}]
       generate_gms
-      file mkdir $::tiff_dir
+      file mkdir $::tif_dir
       if {$::gui} {
          tk_messageBox -icon info -type ok -parent . -message "Your script has been created."
       }
