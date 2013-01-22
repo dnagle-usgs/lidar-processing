@@ -358,19 +358,13 @@ proc file_size_cmp {fn1 fn2} {
 }
 
 # Generates the GMS script
-proc generate_gms {} {
-   set xyzs [fileutil::findByPattern $::xyz_dir -glob -- {*.xyz *.xyz.gz}]
-   if {![llength $xyzs]} {
-      err_msg "No xyz files found"
-   }
-   set xyzs [lsort -command file_size_cmp -decreasing $xyzs]
-
+proc generate_gms {xyzs fn} {
    set output $::gms_header
    append output [generate_projections $xyzs]
    append output [generate_conversions $xyzs]
    append output $::gms_footer
 
-   set fh [open $::gms_file "w"]
+   set fh [open $fn "w"]
    puts $fh $output
    close $fh
 }
@@ -399,7 +393,15 @@ proc do_gms {} {
       if {$::gui} {
          wm withdraw .
       }
-      generate_gms
+
+      set xyzs [fileutil::findByPattern $::xyz_dir -glob -- {*.xyz *.xyz.gz}]
+      if {![llength $xyzs]} {
+         err_msg "No xyz files found"
+      }
+      set xyzs [lsort -command file_size_cmp -decreasing $xyzs]
+
+      generate_gms $xyzs $::gms_file
+
       file mkdir $::tif_dir
       if {$::gui} {
          tk_messageBox -icon info -type ok -parent . -message "Your script has been created."
