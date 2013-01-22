@@ -456,8 +456,6 @@ proc do_gms {} {
 proc run {} {
    parse_params
    if {$::gui} {
-      package require Tk 8.4
-      package require BWidget
       launch_gui
    } else {
       do_gms
