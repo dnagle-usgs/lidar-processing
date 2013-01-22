@@ -334,25 +334,16 @@ proc generate_conversions { } {
    return $conversions
 }
 
-# Generates the GMS script (returns as string)
-proc generate_gms { } {
+# Generates the GMS script
+proc generate_gms {} {
    set output $::gms_header
-   set output "$output[generate_projections [gather_xyz_projs]]"
-   set output "$output[generate_conversions]"
-   set output "$output$::gms_footer"
-   return $output
-}
+   append output [generate_projections [gather_xyz_projs]]
+   append output [generate_conversions]
+   append output $::gms_footer
 
-# Given output, it will display to STDOUT or write to a file depending on
-# whether a file was specified for output
-proc do_output { output } {
-   if { [string length $::outfile] } {
-      set gms_out [open $::outfile "w"]
-      puts $gms_out $output
-      close $gms_out
-   } else {
-      puts $output
-   }
+   set fh [open $::outfile "w"]
+   puts $fh $output
+   close $fh
 }
 
 proc err_msg {msg} {
@@ -376,7 +367,7 @@ proc do_gms {} {
    } else {
       wm withdraw .
       set ::datum_mask [expr {$::datum_mask > 0}]
-      do_output [generate_gms]
+      generate_gms
       file mkdir $::tiff_dir
       if {$::gui} {
          tk_messageBox -icon info -type ok -parent . -message "Your script has been created."
