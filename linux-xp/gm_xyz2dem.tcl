@@ -258,9 +258,9 @@ proc zone_falsenorth { zone } { lindex [list 10000000 0] [expr {$zone > 0}] }
 
 # Returns the datum/spheroid information for a projection; 0 is WGS84 and 1 is NAD83
 proc datum_datum { datum } {
-   lindex [list \
-      {"WGS84",SPHEROID["WGS84",6378137,298.257223560493]} \
-      {"NAD83",SPHEROID["GRS 1980",6378137,298.2572220960423]} \
+   dict get [list \
+      wgs84 {"WGS84",SPHEROID["WGS84",6378137,298.257223560493]} \
+      nad83 {"NAD83",SPHEROID["GRS 1980",6378137,298.2572220960423]} \
    ] $datum
 }
 
@@ -281,15 +281,41 @@ proc template { varName key val } {
    regsub -all -- %%$key%% $var $val var
 }
 
+proc parse_filename {fn {key {}}} {
+   set result [regexp {^t_e(\d*000)_n(\d*000)_(\d?\d)_} [file tail $fn] - east north zone]
+   if {!$result} {
+      err_msg "Encountered file that is not in long-form 2km tile format, aborting\nFilename: $fn"
+   }
+   if {$::zone_override || ![string is integer -strict $zone]} {
+      set zone $::zone_override
+   }
+   set output [dict create east $east north $north zone $zone]
+   if {$::datum_mask == 2} {
+      if {[string match "*n88*" $xyz] || [string match "*n83*" $xyz]} {
+         dict set output datum nad83
+      } else {
+         dict set output datum wgs84
+      }
+   } elseif {$::datum_mask == 0} {
+      dict set output datum wgs84
+   } elseif {$::datum_mask == 1} {
+      dict set output datum nad83
+   }
+   if {$key ne ""} {
+      set output [dict get $output $key]
+   }
+   return $output
+}
+
 # Generates a list of required projections for the dataset, suitable for
 # feeding into generate_projections
 proc gather_xyz_projs { } {
    set projections [list]
    foreach xyz [fileutil::findByPattern $::xyz_dir -glob -- *.xyz] {
-      set datum [expr {[regexp "_n88_" $xyz] * $::datum_mask}]
-      set result [regexp {^t_e\d*_n\d*_(\d\d)_} [file tail $xyz] - zone]
-      set zone [expr {$::zone_override ? $::zone_override : $zone}]
-      ::struct::set include projections [list $datum $zone]
+      set parsed [parse_filename $xyz]
+      dict with parsed {
+         ::struct::set include projections [list $datum $zone]
+      }
    }
    return $projections
 }
@@ -318,18 +344,18 @@ proc generate_conversions { } {
    set nddm [expr {$::threshold/($::resolution * sqrt(2))}]
    set conversions ""
    foreach xyz [fileutil::findByPattern $::xyz_dir -glob -- *.xyz] {
-      set datum [expr {[regexp "_n88_" $xyz] * $::datum_mask}]
-      regexp {^t_e(\d*)_n(\d*)_(\d\d)_} [file tail $xyz] - east north zone
-      set zone [expr {$::zone_override ? $::zone_override : $zone}]
-      set new_c $::gms_conversion
-      template new_c FILEIN      [string map {\\ \\\\} [file nativename $xyz]]
-      template new_c FILEOUT     [string map {\\ \\\\} [file nativename [file join [file normalize $::tiff_dir] [file rootname [file tail $xyz]]_dem.tif]]]
-      template new_c NDDM        $nddm
-      template new_c RES         $::resolution
-      template new_c PROJ        [zone_datum_projname $zone $datum]
-      template new_c BOUNDS      [ne_bounds $north $east]
-      template new_c OVERWRITE   $::overwrite
-      set conversions "$conversions$new_c"
+      set parsed [parse_filename $xyz]
+      dict with parsed {
+         set new_c $::gms_conversion
+         template new_c FILEIN      [string map {\\ \\\\} [file nativename $xyz]]
+         template new_c FILEOUT     [string map {\\ \\\\} [file nativename [file join [file normalize $::tiff_dir] [file rootname [file tail $xyz]]_dem.tif]]]
+         template new_c NDDM        $nddm
+         template new_c RES         $::resolution
+         template new_c PROJ        [zone_datum_projname $zone $datum]
+         template new_c BOUNDS      [ne_bounds $north $east]
+         template new_c OVERWRITE   $::overwrite
+         set conversions "$conversions$new_c"
+      }
    }
    return $conversions
 }
