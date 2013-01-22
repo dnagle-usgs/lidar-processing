@@ -28,7 +28,7 @@ Overview:
 set resolution 1
 set threshold 5
 set zone_override 0
-set datum_mask 2
+set datum_override auto
 set overwrite 0
 set gui 0
 set xyz_dir ""
@@ -93,11 +93,11 @@ proc parse_params { } {
    set ::overwrite $params(overwrite)
 
    if { $params(wgs84) > 0 } {
-      set ::datum_mask 0
+      set ::datum_override 0
    }
 
    if { $params(nad83) > 0 } {
-      set ::datum_mask 1
+      set ::datum_override 1
    }
 
    if {$params(gui)} {
@@ -124,7 +124,6 @@ proc parse_params { } {
 proc launch_gui { } {
    package require Tk 8.4
    package require BWidget
-   # resolution threshold zone_override overwrite datum_mask xyz_dir tif_dir gms_file
 
    label .lblResolution -text "Resolution"
    spinbox .spnResolution -from 0.1 -to 100.00 -increment 0.1 -format %.1f -width 5 \
@@ -150,9 +149,9 @@ proc launch_gui { } {
    DynamicHelp::add .chkOverwrite -type balloon -text "Specify whether existing files should be overwritten by Global Mapper."
 
    label .lblDatum -text "Datum"
-   radiobutton .radDatumA -value 2 -text "Auto Detect" -variable ::datum_mask
-   radiobutton .radDatumW -value 0 -text "WGS84" -variable ::datum_mask
-   radiobutton .radDatumN -value 1 -text "NAD83" -variable ::datum_mask
+   radiobutton .radDatumA -value auto -text "Auto Detect" -variable ::datum_override
+   radiobutton .radDatumW -value wgs84 -text "WGS84" -variable ::datum_override
+   radiobutton .radDatumN -value nad83 -text "NAD83" -variable ::datum_override
    grid .lblDatum .radDatumA -
    grid x .radDatumW - 
    grid x .radDatumN -
@@ -289,16 +288,13 @@ proc parse_filename {fn {key {}}} {
       set zone $::zone_override
    }
    set output [dict create east $east north $north zone $zone]
-   if {$::datum_mask == 2} {
-      if {[string match "*n88*" $xyz] || [string match "*n83*" $xyz]} {
+   dict set output datum $::datum_override
+   if {$::datum_override eq "auto"} {
+      if {[string match "*n88*" $fn] || [string match "*n83*" $fn]} {
          dict set output datum nad83
       } else {
          dict set output datum wgs84
       }
-   } elseif {$::datum_mask == 0} {
-      dict set output datum wgs84
-   } elseif {$::datum_mask == 1} {
-      dict set output datum nad83
    }
    if {$key ne ""} {
       set output [dict get $output $key]
@@ -393,7 +389,6 @@ proc do_gms {} {
       if {$::gui} {
          wm withdraw .
       }
-      set ::datum_mask [expr {$::datum_mask > 0}]
       generate_gms
       file mkdir $::tif_dir
       if {$::gui} {
