@@ -133,7 +133,7 @@ proc parse_params { } {
 
 proc launch_gui { } {
    package require Tk 8.4
-   package require BWidget
+   package require tooltip
 
    label .lblCores -text "Cores"
    spinbox .spnCores -from 1 -to 128 -increment 1 -width 5 \
@@ -144,24 +144,24 @@ proc launch_gui { } {
    spinbox .spnResolution -from 0.1 -to 100.00 -increment 0.1 -format %.1f -width 5 \
       -justify center -textvariable ::resolution
    grid .lblResolution .spnResolution -
-   DynamicHelp::add .spnResolution -type balloon -text "The resolution of the DEM, in meters."
+   tooltip::tooltip .spnResolution "The resolution of the DEM, in meters."
 
    label .lblThreshold -text "Threshold"
    spinbox .spnThreshold -from 0.0 -to 100.00 -increment 0.1 -format %.1f -width 5 \
       -justify center -textvariable ::threshold
    grid .lblThreshold .spnThreshold -
-   DynamicHelp::add .spnThreshold -type balloon -text "The threshold of the DEM, in meters. However, 0 means to use all data."
+   tooltip::tooltip .spnThreshold "The threshold of the DEM, in meters. However, 0 means to use all data."
 
    label .lblZone -text "Zone"
    spinbox .spnZone -from 0 -to 60 -increment 1 -format %.0f -width 5 \
       -justify center -textvariable ::zone_override
    grid .lblZone .spnZone -
-   DynamicHelp::add .spnZone -type balloon -text "The zone of the data. However, 0 means to determine from the file names (recommended)."
+   tooltip::tooltip .spnZone "The zone of the data. However, 0 means to determine from the file names (recommended)."
 
    label .lblOverwrite -text "Overwrite?"
    checkbutton .chkOverwrite -variable ::overwrite
    grid .lblOverwrite .chkOverwrite -
-   DynamicHelp::add .chkOverwrite -type balloon -text "Specify whether existing files should be overwritten by Global Mapper."
+   tooltip::tooltip .chkOverwrite "Specify whether existing files should be overwritten by Global Mapper."
 
    label .lblDatum -text "Datum"
    radiobutton .radDatumA -value auto -text "Auto Detect" -variable ::datum_override
@@ -171,7 +171,7 @@ proc launch_gui { } {
    grid x .radDatumW - 
    grid x .radDatumN -
    foreach widget [list .radDatumA .radDatumW .radDatumN] {
-      DynamicHelp::add $widget -type balloon -text "Specify the dataset's datum. Auto Detect determines by file name, and is recommended."
+      tooltip::tooltip $widget "Specify the dataset's datum. Auto Detect determines by file name, and is recommended."
    }
 
    label .lblXYZ -text "XYZ Directory"
@@ -179,7 +179,7 @@ proc launch_gui { } {
    button .butXYZ -text "Choose" -command { choose_directory "XYZ input" ::xyz_dir 1 }
    grid .lblXYZ .entXYZ .butXYZ
    foreach widget [list .entXYZ .butXYZ] {
-      DynamicHelp::add $widget -type balloon -text "Specify the XYZ file directory, as input."
+      tooltip::tooltip $widget "Specify the XYZ file directory, as input."
    }
 
    label .lblTiff -text "GeoTiff Directory"
@@ -187,7 +187,7 @@ proc launch_gui { } {
    button .butTiff -text "Choose" -command { choose_directory "GeoTiff output" ::tif_dir 0 }
    grid .lblTiff .entTiff .butTiff
    foreach widget [list .entTiff .butTiff] {
-      DynamicHelp::add $widget -type balloon -text "Specify the directory where the GeoTiffs should be created."
+      tooltip::tooltip $widget "Specify the directory where the GeoTiffs should be created."
    }
 
    label .lblOut -text "Script Destination"
@@ -195,7 +195,7 @@ proc launch_gui { } {
    button .butOut -text "Choose" -command choose_file
    grid .lblOut .entOut .butOut
    foreach widget [list .entOut .butOut] {
-      DynamicHelp::add $widget -type balloon -text "Specify the Global Mapper script you would like to create."
+      tooltip::tooltip $widget "Specify the Global Mapper script you would like to create."
    }
 
    foreach widget [lsearch -inline -all [winfo children .] .lbl*] {
