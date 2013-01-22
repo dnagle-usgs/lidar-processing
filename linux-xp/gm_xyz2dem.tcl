@@ -222,7 +222,7 @@ END_DEFINE_PROJ
 # Template for converting the XYZ to TIF
 set gms_conversion {UNLOAD_ALL
 IMPORT_ASCII FILENAME="%%FILEIN%%" \ 
-   TYPE="ELEVATION" NO_DATA_DIST_MULT=%%NDDM%% SPATIAL_RES=%%RES%%,%%RES%% PROJ_NAME="%%PROJ%%"
+   TYPE="ELEVATION" NO_DATA_DIST_MULT=%%NDDM%% SPATIAL_RES=%%RES%%,%%RES%% PROJ_NAME="%%PROJ%%" COORD_ORDER=X_FIRST
 EXPORT_ELEVATION FILENAME="%%FILEOUT%%" \ 
    TYPE="GEOTIFF" ELEV_UNITS="METERS" SPATIAL_RES=%%RES%%,%%RES%% \ 
    FORCE_SQUARE_PIXELS="YES" FILL_GAPS="NO" BYTES_PER_SAMPLE=4 \ 
@@ -355,7 +355,7 @@ proc generate_conversions {xyzs} {
 
 # Generates the GMS script
 proc generate_gms {} {
-   set xyzs [fileutil::findByPattern $::xyz_dir -glob -- *.xyz]
+   set xyzs [fileutil::findByPattern $::xyz_dir -glob -- {*.xyz *.xyz.gz}]
 
    set output $::gms_header
    append output [generate_projections $xyzs]
