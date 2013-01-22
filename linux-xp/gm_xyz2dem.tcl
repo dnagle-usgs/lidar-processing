@@ -279,7 +279,7 @@ proc template { varName key val } {
    regsub -all -- %%$key%% $var $val var
 }
 
-proc parse_filename {fn {key {}}} {
+proc parse_filename {fn} {
    set result [regexp {^t_e(\d*000)_n(\d*000)_(\d?\d)_} [file tail $fn] - east north zone]
    if {!$result} {
       err_msg "Encountered file that is not in long-form 2km tile format, aborting\nFilename: $fn"
@@ -295,9 +295,6 @@ proc parse_filename {fn {key {}}} {
       } else {
          dict set output datum wgs84
       }
-   }
-   if {$key ne ""} {
-      set output [dict get $output $key]
    }
    return $output
 }
