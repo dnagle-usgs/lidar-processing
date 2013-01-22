@@ -354,9 +354,16 @@ proc generate_conversions {xyzs} {
    foreach xyz $xyzs {
       set parsed [parse_filename $xyz]
       dict with parsed {
+         set tif_fn [file join [file normalize $::tif_dir] [file tail $xyz]]
+         # Strip off .gz if it's present
+         if {[file extension $tif_fn] eq ".gz"} {
+            set tif_fn [file rootname $tif_fn]
+         }
+         # Now strip of .xyz and append _dem.tif
+         set tif_fn [file rootname $tif_fn]_dem.tif
          set new_c $::gms_conversion
          template new_c FILEIN      [string map {\\ \\\\} [file nativename $xyz]]
-         template new_c FILEOUT     [string map {\\ \\\\} [file nativename [file join [file normalize $::tif_dir] [file rootname [file tail $xyz]]_dem.tif]]]
+         template new_c FILEOUT     [string map {\\ \\\\} $tif_fn]
          template new_c NDDM        $nddm
          template new_c RES         $::resolution
          template new_c PROJ        [zone_datum_projname $zone $datum]
