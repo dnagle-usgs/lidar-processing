@@ -190,7 +190,7 @@ proc launch_gui { } {
       grid $widget -sticky w
    }
 
-   button .butRun -text "Create Script" -command gui_run
+   button .butRun -text "Create Script" -command do_gms
    grid .butRun - -
 }
 
@@ -353,40 +353,44 @@ proc do_output { output } {
    }
 }
 
-proc gui_error { msg } {
-   tk_messageBox -icon error -message $msg -parent . -title "Error" -type ok
-}
-
-proc gui_run { } {
-   if {![string length $::xyz_dir]} {
-      gui_error "You must provide an input XYZ directory."
-   } elseif {![string length $::tiff_dir]} {
-      gui_error "You must provide an output GeoTiff directory."
-   } elseif {![string length $::outfile]} {
-      gui_error "You must provide an output script file."
+proc err_msg {msg} {
+   if {$::gui} {
+      tk_messageBox -icon error -message $msg -parent . -title "Error" -type ok
    } else {
-      wm withdraw .
-      set ::datum_mask [expr {$::datum_mask > 0}]
-      cmd_run
-      tk_messageBox -icon info -type ok -parent . -message "Your script has been created."
+      cmdline_error $msg
       exit
    }
 }
 
-# Wrapper to generate the script and output it
-proc cmd_run { } {
-   do_output [generate_gms]
-   file mkdir $::tiff_dir
+proc do_gms {} {
+   if {![string length $::xyz_dir]} {
+      err_msg "You must specify an input XYZ directory."
+   } elseif {![file isdirectory $::xyz_dir]} {
+      err_msg "Input XYZ directory does not exist."
+   } elseif {![string length $::tiff_dir]} {
+      err_msg "You must provide an output GeoTiff directory."
+   } elseif {![string length $::outfile]} {
+      err_msg "You must provide an output script file."
+   } else {
+      wm withdraw .
+      set ::datum_mask [expr {$::datum_mask > 0}]
+      do_output [generate_gms]
+      file mkdir $::tiff_dir
+      if {$::gui} {
+         tk_messageBox -icon info -type ok -parent . -message "Your script has been created."
+      }
+      exit
+   }
 }
 
-proc run { } {
+proc run {} {
    parse_params
    if {$::gui} {
       package require Tk 8.4
       package require BWidget
       launch_gui
    } else {
-      cmd_run
+      do_gms
    }
 }
 
