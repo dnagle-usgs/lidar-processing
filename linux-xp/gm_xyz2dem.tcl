@@ -34,6 +34,11 @@ set gui 0
 set xyz_dir ""
 set tif_dir ""
 set gms_file ""
+set cores 1
+
+if {[info exists env(NUMBER_OF_PROCESSORS)]} {
+   set cores $env(NUMBER_OF_PROCESSORS)
+}
 
 set ::options {
    {resolution.arg   1     "Desired spatial resolution. Short form: -r."}
@@ -46,6 +51,7 @@ set ::options {
    {nad83                  "Data is in the NAD-83 datum. By default, determined from filenames."}
    {overwrite              "Global Mapper should overwrite existing files. By default, it will not. Short form: -ow."}
    {ow.secret              "Shortcut for overwrite."}
+   {cores.arg        0     "Number of cores to use (more than 1 results in multiple script files), 0 to autodetect"}
    {gui                    "Launch the GUI, even if the parameters are given."}
 }
 
@@ -100,6 +106,10 @@ proc parse_params { } {
       set ::datum_override 1
    }
 
+   if { $params(cores) > 0 } {
+      set ::cores $params(cores)
+   }
+
    if {$params(gui)} {
       set ::gui 1
    } 
@@ -124,6 +134,11 @@ proc parse_params { } {
 proc launch_gui { } {
    package require Tk 8.4
    package require BWidget
+
+   label .lblCores -text "Cores"
+   spinbox .spnCores -from 1 -to 128 -increment 1 -width 5 \
+      -justify center -textvariable ::cores
+   grid .lblCores .spnCores -
 
    label .lblResolution -text "Resolution"
    spinbox .spnResolution -from 0.1 -to 100.00 -increment 0.1 -format %.1f -width 5 \
@@ -380,6 +395,24 @@ proc err_msg {msg} {
    }
 }
 
+proc split_files_for_cores {xyzs} {
+   if {$::cores <= 1} {
+      return [list $xyzs]
+   }
+
+   set xyzlist [dict create]
+   set digits [string length $::cores]
+   set counter 0
+   foreach xyz $xyzs {
+      incr counter
+      set core [expr {($counter % $::cores) + 1}]
+      set key [format "%${digits}d" $core]
+      dict lappend xyzlists $key $xyz
+   }
+
+   return $xyzlists
+}
+
 proc do_gms {} {
    if {![string length $::xyz_dir]} {
       err_msg "You must specify an input XYZ directory."
@@ -400,7 +433,17 @@ proc do_gms {} {
       }
       set xyzs [lsort -command file_size_cmp -decreasing $xyzs]
 
-      generate_gms $xyzs $::gms_file
+      if {$::cores <= 1} {
+         generate_gms $xyzs $::gms_file
+      } else {
+         set base [file rootname $::gms_file]
+         set ext [file extension $::gms_file]
+         set xyzlists [split_files_for_cores $xyzs]
+         dict for {core xyzs} $xyzlists {
+            set fn "${base}_${core}${ext}"
+            generate_gms $xyzs $fn
+         }
+      }
 
       file mkdir $::tif_dir
       if {$::gui} {
