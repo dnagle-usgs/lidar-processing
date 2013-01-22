@@ -3,6 +3,10 @@
 exec tclsh "$0" ${1+"$@"}
 # vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
+package require cmdline
+package require fileutil
+package require struct::set
+
 # Hint: For help information, run ./gm_xyz2dem.tcl -help
 
 set ::overview {
@@ -237,22 +241,6 @@ proc ne_bounds { north east } {
 
 # DEFINE OTHER PROCS
 
-# Nicely handles package requirements
-proc require_test { pkg {ver {}} } {
-   set flag 0
-   if {[string length $ver]} {
-      set flag [catch {package require $pkg $ver}]
-   } else {
-      set flag [catch {package require $pkg}]
-   }
-   if {$flag} {
-      puts "Error: Could not find required package $pkg $ver"
-      puts ""
-      puts [::cmdline::usage $::options $::usage]
-      exit
-   }
-}
-
 # Helper function that simplifies regsub calls
 proc template { varName key val } {
    upvar $varName var
@@ -360,17 +348,13 @@ proc cmd_run { } {
 }
 
 proc run { } {
-   require_test cmdline
-   require_test fileutil
-   require_test struct::set
-
    # Can't just test length of argv since it sometimes has a list of just \r
    if {[string length [string trim [lindex $::argv 0]]]} {
       parse_params
       cmd_run
    } else {
-      require_test Tk 8.4
-      require_test BWidget
+      package require Tk 8.4
+      package require BWidget
       launch_gui
    }
 }
