@@ -110,13 +110,13 @@ proc parse_params { } {
    }
 
    if {[llength $::argv]} {
-      set ::xyz_dir [string trim [lindex $::argv 0]]
+      set ::xyz_dir [file normalize [string trim [lindex $::argv 0]]]
    }
    if {[llength $::argv] >= 2} {
-      set ::tiff_dir [string trim [lindex $::argv 1]]
+      set ::tiff_dir [file normalize [string trim [lindex $::argv 1]]]
    }
    if {[llength $::argv] >= 3} {
-      set ::outfile [string trim [lindex $::argv 2]]
+      set ::outfile [file normalize [string trim [lindex $::argv 2]]]
    }
 }
 
