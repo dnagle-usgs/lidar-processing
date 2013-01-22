@@ -365,7 +365,9 @@ proc do_gms {} {
    } elseif {![string length $::outfile]} {
       err_msg "You must provide an output script file."
    } else {
-      wm withdraw .
+      if {$::gui} {
+         wm withdraw .
+      }
       set ::datum_mask [expr {$::datum_mask > 0}]
       generate_gms
       file mkdir $::tiff_dir
