@@ -138,46 +138,46 @@ proc launch_gui { } {
    label .lblCores -text "Cores"
    spinbox .spnCores -from 1 -to 128 -increment 1 -width 5 \
       -justify center -textvariable ::cores
-   grid .lblCores .spnCores -
+   grid .lblCores .spnCores
 
    label .lblResolution -text "Resolution"
    spinbox .spnResolution -from 0.1 -to 100.00 -increment 0.1 -format %.1f -width 5 \
       -justify center -textvariable ::resolution
-   grid .lblResolution .spnResolution -
+   grid .lblResolution .spnResolution
    tooltip::tooltip .spnResolution "The resolution of the DEM, in meters."
 
    label .lblThreshold -text "Threshold"
    spinbox .spnThreshold -from 0.0 -to 100.00 -increment 0.1 -format %.1f -width 5 \
       -justify center -textvariable ::threshold
-   grid .lblThreshold .spnThreshold -
+   grid .lblThreshold .spnThreshold
    tooltip::tooltip .spnThreshold "The threshold of the DEM, in meters. However, 0 means to use all data."
 
    label .lblZone -text "Zone"
    spinbox .spnZone -from 0 -to 60 -increment 1 -format %.0f -width 5 \
       -justify center -textvariable ::zone_override
-   grid .lblZone .spnZone -
+   grid .lblZone .spnZone
    tooltip::tooltip .spnZone "The zone of the data. However, 0 means to determine from the file names (recommended)."
 
    label .lblOverwrite -text "Overwrite?"
    checkbutton .chkOverwrite -variable ::overwrite
-   grid .lblOverwrite .chkOverwrite -
+   grid .lblOverwrite .chkOverwrite
    tooltip::tooltip .chkOverwrite "Specify whether existing files should be overwritten by Global Mapper."
 
    label .lblDatum -text "Datum"
    radiobutton .radDatumA -value auto -text "Auto Detect" -variable ::datum_override
    radiobutton .radDatumW -value wgs84 -text "WGS84" -variable ::datum_override
    radiobutton .radDatumN -value nad83 -text "NAD83" -variable ::datum_override
-   grid .lblDatum .radDatumA -
-   grid x .radDatumW - 
-   grid x .radDatumN -
+   grid .lblDatum .radDatumA
+   grid x .radDatumW
+   grid x .radDatumN
    foreach widget [list .radDatumA .radDatumW .radDatumN] {
       tooltip::tooltip $widget "Specify the dataset's datum. Auto Detect determines by file name, and is recommended."
    }
 
    label .lblXYZ -text "XYZ Directory"
-   entry .entXYZ -textvariable ::xyz_dir
+   entry .entXYZ -textvariable ::xyz_dir -width 30
    button .butXYZ -text "Choose" -command { choose_directory "XYZ input" ::xyz_dir 1 }
-   grid .lblXYZ .entXYZ .butXYZ
+   grid .lblXYZ .entXYZ - .butXYZ
    foreach widget [list .entXYZ .butXYZ] {
       tooltip::tooltip $widget "Specify the XYZ file directory, as input."
    }
@@ -185,7 +185,7 @@ proc launch_gui { } {
    label .lblTiff -text "GeoTiff Directory"
    entry .entTiff -textvariable ::tif_dir
    button .butTiff -text "Choose" -command { choose_directory "GeoTiff output" ::tif_dir 0 }
-   grid .lblTiff .entTiff .butTiff
+   grid .lblTiff .entTiff - .butTiff
    foreach widget [list .entTiff .butTiff] {
       tooltip::tooltip $widget "Specify the directory where the GeoTiffs should be created."
    }
@@ -193,7 +193,7 @@ proc launch_gui { } {
    label .lblOut -text "Script Destination"
    entry .entOut -textvariable ::gms_file
    button .butOut -text "Choose" -command choose_file
-   grid .lblOut .entOut .butOut
+   grid .lblOut .entOut - .butOut
    foreach widget [list .entOut .butOut] {
       tooltip::tooltip $widget "Specify the Global Mapper script you would like to create."
    }
@@ -201,12 +201,17 @@ proc launch_gui { } {
    foreach widget [lsearch -inline -all [winfo children .] .lbl*] {
       grid $widget -sticky e
    }
-   foreach widget [lsearch -inline -all -regexp [winfo children .] {^\.(spn|chk|rad|ent)}] {
+   foreach widget [lsearch -inline -all -regexp [winfo children .] {^\.(chk|rad)}] {
       grid $widget -sticky w
+   }
+   foreach widget [lsearch -inline -all -regexp [winfo children .] {^\.(ent|spn)}] {
+      grid $widget -sticky ew
    }
 
    button .butRun -text "Create Script" -command do_gms
-   grid .butRun - -
+   grid .butRun - - -
+
+   grid columnconfigure . 2 -weight 1
 }
 
 proc choose_directory { title pathVar mustexist } {
