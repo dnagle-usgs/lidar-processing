@@ -52,11 +52,25 @@ set ::options {
 
 set ::usage "\n$::overview\nUsage:\n gm_xyz2dem.tcl \[options] indir outdir \[scriptfile]\n\nOptions:"
 
+proc cmdline_error {msg} {
+   puts "ERROR: $msg\n"
+   puts [::cmdline::usage $::options $::usage]
+   exit
+}
+
 # Parse command-line parameters and set globals
 proc parse_params { } {
-   if { [catch {array set params [::cmdline::getoptions ::argv $::options $::usage]}] || [llength $::argv] == 1 || [llength $::argv] > 3 } {
-      puts [::cmdline::usage $::options $::usage]
-      exit
+   if {[catch {array set params [::cmdline::getoptions ::argv $::options $::usage]}]} {
+      cmdline_error "Invalid options encountered"
+   }
+   if {[llength $::argv] == 1 && !$params(gui)} {
+      cmdline_error "No outdir specified"
+   }
+   if {[llength $::argv] > 3} {
+      cmdline_error "Too many parameters given"
+   }
+   if {$params(wgs84) && $params(nad83)} {
+      cmdline_error "You can only supply one of -wgs84 or -nad83"
    }
 
    if { $params(r) > 0 } {
@@ -81,7 +95,9 @@ proc parse_params { } {
 
    if { $params(wgs84) > 0 } {
       set ::datum_mask 0
-   } else {
+   }
+
+   if { $params(nad83) > 0 } {
       set ::datum_mask 1
    }
 
