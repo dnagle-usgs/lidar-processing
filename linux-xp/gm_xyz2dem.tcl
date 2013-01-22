@@ -341,7 +341,7 @@ proc generate_projections {xyzs} {
       template new_p DATUM       [datum_datum $datum]
       template new_p MERIDIAN    [zone_meridian $zone]
       template new_p FALSENORTH  [zone_falsenorth $zone]
-      set projections "$projections$new_p"
+      append projections $new_p
    }
    return $projections
 }
@@ -369,7 +369,7 @@ proc generate_conversions {xyzs} {
          template new_c PROJ        [zone_datum_projname $zone $datum]
          template new_c BOUNDS      [ne_bounds $north $east]
          template new_c OVERWRITE   $::overwrite
-         set conversions "$conversions$new_c"
+         append conversions $new_c
       }
    }
    return $conversions
