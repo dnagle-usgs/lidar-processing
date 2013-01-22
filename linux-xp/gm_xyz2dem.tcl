@@ -19,10 +19,22 @@ Overview:
  This script must be run on the Windows machine where the Global Mapper Script
  will be executed, since it contains absolute path names.
 
- If run without any arguments, this will launch a GUI version of itself.
+ If indir and outdir are omitted or if -gui is specified, a GUI will be
+ launched. Otherwise, the output is immediately generated.
 }
 
 # PROCESS COMMAND LINE / SET GLOBALS
+
+set resolution 1
+set threshold 5
+set zone_override 0
+set datum_mask 2
+set overwrite 0
+set gui 0
+set outfile ""
+set xyz_dir ""
+set tiff_dir ""
+set outfile ""
 
 set ::options {
    {resolution.arg   1     "Desired spatial resolution. Short form: -r."}
@@ -35,13 +47,14 @@ set ::options {
    {nad83                  "Data is in the NAD-83 datum. By default, determined from filenames."}
    {overwrite              "Global Mapper should overwrite existing files. By default, it will not. Short form: -ow."}
    {ow.secret              "Shortcut for overwrite."}
+   {gui                    "Launch the GUI, even if the parameters are given."}
 }
 
 set ::usage "\n$::overview\nUsage:\n gm_xyz2dem.tcl \[options] indir outdir \[scriptfile]\n\nOptions:"
 
 # Parse command-line parameters and set globals
 proc parse_params { } {
-   if { [catch {array set params [::cmdline::getoptions ::argv $::options $::usage]}] || [llength $::argv] < 2 || [llength $::argv] > 3 } {
+   if { [catch {array set params [::cmdline::getoptions ::argv $::options $::usage]}] || [llength $::argv] == 1 || [llength $::argv] > 3 } {
       puts [::cmdline::usage $::options $::usage]
       exit
    }
@@ -72,12 +85,20 @@ proc parse_params { } {
       set ::datum_mask 1
    }
 
-   set ::xyz_dir [string trim [lindex $::argv 0]]
-   set ::tiff_dir [string trim [lindex $::argv 1]]
-   if { [llength $::argv] == 3 } {
+   if {$params(gui)} {
+      set ::gui 1
+   } 
+
+   if {![llength $::argv]} {
+      set ::gui 1
+   }
+
+   if {[llength $::argv] in {2 3}} {
+      set ::xyz_dir [string trim [lindex $::argv 0]]
+      set ::tiff_dir [string trim [lindex $::argv 1]]
+   }
+   if {[llength $::argv] == 3} {
       set ::outfile [string trim [lindex $::argv 2]]
-   } else {
-      set ::outfile ""
    }
 }
 
@@ -88,34 +109,29 @@ proc launch_gui { } {
    package require BWidget
    # resolution threshold zone_override overwrite datum_mask xyz_dir tiff_dir outfile
 
-   set ::resolution 1
    label .lblResolution -text "Resolution"
    spinbox .spnResolution -from 0.1 -to 100.00 -increment 0.1 -format %.1f -width 5 \
       -justify center -textvariable ::resolution
    grid .lblResolution .spnResolution -
    DynamicHelp::add .spnResolution -type balloon -text "The resolution of the DEM, in meters."
 
-   set ::threshold 5
    label .lblThreshold -text "Threshold"
    spinbox .spnThreshold -from 0.0 -to 100.00 -increment 0.1 -format %.1f -width 5 \
       -justify center -textvariable ::threshold
    grid .lblThreshold .spnThreshold -
    DynamicHelp::add .spnThreshold -type balloon -text "The threshold of the DEM, in meters. However, 0 means to use all data."
 
-   set ::zone_override 0
    label .lblZone -text "Zone"
    spinbox .spnZone -from 0 -to 60 -increment 1 -format %.0f -width 5 \
       -justify center -textvariable ::zone_override
    grid .lblZone .spnZone -
    DynamicHelp::add .spnZone -type balloon -text "The zone of the data. However, 0 means to determine from the file names (recommended)."
 
-   set ::overwrite 0
    label .lblOverwrite -text "Overwrite?"
    checkbutton .chkOverwrite -variable ::overwrite
    grid .lblOverwrite .chkOverwrite -
    DynamicHelp::add .chkOverwrite -type balloon -text "Specify whether existing files should be overwritten by Global Mapper."
 
-   set ::datum_mask 2
    label .lblDatum -text "Datum"
    radiobutton .radDatumA -value 2 -text "Auto Detect" -variable ::datum_mask
    radiobutton .radDatumW -value 0 -text "WGS84" -variable ::datum_mask
@@ -348,14 +364,13 @@ proc cmd_run { } {
 }
 
 proc run { } {
-   # Can't just test length of argv since it sometimes has a list of just \r
-   if {[string length [string trim [lindex $::argv 0]]]} {
-      parse_params
-      cmd_run
-   } else {
+   parse_params
+   if {$::gui} {
       package require Tk 8.4
       package require BWidget
       launch_gui
+   } else {
+      cmd_run
    }
 }
 
