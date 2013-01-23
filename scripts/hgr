@@ -1,0 +1,62 @@
+#!/usr/bin/perl -w
+# hgr: starting from the 'hg root' of the cwd, find hg repositories
+# by searching for .hg and then run 'hg' with the supplied arguments there.
+
+use strict;
+use warnings;
+
+use Cwd;
+use File::Basename;
+
+my $args = join ' ', @ARGV;
+
+if($args eq "") {
+  print <<HELP;
+Recursive Mercurial
+
+This command works much like "hg", except it works in a recursive fashion. The
+command will operate on the current repository as well as all other
+repositories found under its root (as found by "hg root").
+
+Note that this tool works very differently than Mercurial's built-in
+subrepository feature. The optional subrepository feature tracks nested
+repositories in a parent repository. Recursive Mercurial does not require that
+subrepositories be configured; it works on each subrepository independently.
+
+A good example of how they differ is "hg stat" versus "hgr stat". Suppose we
+have a system of subrepositories set up so that "code" is our parent with
+subrepositories "code/core" and "code/lib". Suppose that we make some changes
+within "code/core" and commit them to "code/core". Suppose that we also make
+some changes within "code/lib" but we do not commit them. If we run "hg stat"
+from "core", it will list all the files that had been changed from both
+"code/core" and "code/lib" as having been modified because none of those
+changes are reflected in the parent repository's tracking. If you run "hgr
+stat", you will receive that same information from the "code" parent
+repository, but you will also get a separate result from "code/lib" showing
+that it has uncommitted files; you will not get a result from "code/core"
+because from its perspective everything has been committed.
+HELP
+
+  exit 0;
+}
+
+my $root = `hg root`;
+chomp $root;
+chdir $root;
+
+my $start = cwd();
+my @lines = `find . -name .hg`;
+
+foreach my $line (sort @lines) {
+  chomp $line;
+  my $mydir = dirname($line);
+
+  chdir $mydir;
+  my $res = `hg $args`;
+  if($res ne  "") {
+    print "[$mydir]\n$res\n";
+  }
+  chdir $start;
+}
+
+exit 0;
