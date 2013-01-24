@@ -331,9 +331,14 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
           write, f, format="   batch processed on %s as %s\n", get_host(), get_user();
         if(!is_void(_hgid))
           write, f, format="   using repository revision %s\n", _hgid;
-        if (!is_array(conf_file_lines)) {
+        if(is_string(pnav_filename))
           write, f, format="PNAV FILE: %s\n",pnav_filename;
+        if(is_string(ins_filename))
           write, f, format="INS FILE: %s\n",ins_filename;
+        if(is_string(edb_filename))
+          write, f, format="EDB FILE: %s\n", edb_filename;
+        if(is_string(ops_conf_filename))
+          write, f, format="OPS_CONF FILE: %s\n", ops_conf_filename;
         write_ops_conf, f;
         if (typ == 1) {
           write, f, "Bathymetry Settings";
@@ -565,19 +570,19 @@ func check_space(wmark=, dir=) {
 func batch_process {};
 func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
 onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
-only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=, w=, no_rcf=,
+only_veg=, update=, avg_surf=, now=, b_rcf=, buf=, w=, no_rcf=,
 mode=, merge=, rcfmode=, write_merge=, ext_bad_att=, forcechannel=, shapefile=,
 shp_buffer=)
 {
 /* DOCUMENT mbatch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=,
   n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=,
-  only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=,
+  only_bathy=, only_veg=, update=, avg_surf=, now=, b_rcf=, buf=,
   w=, no_rcf=, mode=, merge=, rcfmode=, write_merge=, ext_bad_att=,
   forcechannel=, shapefile=, shp_buffer=
 
   batch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
   onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
-  only_veg=, update=, avg_surf=,conf_file=, now=, ext_bad_att=, forcechannel=,
+  only_veg=, update=, avg_surf=, now=, ext_bad_att=, forcechannel=,
   shapefile=, shp_buffer=
 
 This function is used to batch process several regions for a given data set.
@@ -685,10 +690,6 @@ are REQUIRED:
   schem=     : Set to 1 if the data is in the southern hemisphere.
           Required to properly define the utm zone letter.
 
-  conf_file= : Puts the .conf file parameters into the meta-data
-          files.  Set to be the path of the .conf file used
-          in quotes.
-
   b_rcf=     : 1 - invokes batch_rcf after normal batch processing
 
 The following are pass thru variables needed for batch_rcf
@@ -714,7 +715,7 @@ Added server/client support (2009-01) Richard Mitchell
         dat_tag=dat_tag, cmdfile=cmdfile, n=n, onlyplot=onlyplot, mdate=mdate,
         pbd=pbd, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ,
         only_bathy=only_bathy, only_veg=only_veg, update=update,
-        avg_surf=avg_surf, conf_file=conf_file, now=now, b_rcf=b_rcf, buf=buf,
+        avg_surf=avg_surf, now=now, b_rcf=b_rcf, buf=buf,
         w=w, no_rcf=no_rcf, mode=mode, merge=merge, rcfmode=rcfmode,
         write_merge=write_merge, ext_bad_att=ext_bad_att,
         forcechannel=forcechannel(i), shapefile=shapefile,
@@ -777,15 +778,6 @@ Added server/client support (2009-01) Richard Mitchell
     f = open(cmdfile, "r");
     read, f, format="%s %f %f %f %f", path, min_e, max_e, min_n, max_n;
     close, f;
-  }
-  conf_file_lines=[];
-  if (is_array(conf_file)) {
-    cfile = open(conf_file);
-    conf_file_lines = array(string,6);
-    for (i=1;i<=6;i++) {
-      conf_file_lines(i) = rdline(cfile);
-    }
-    close, cfile;
   }
   if(!is_void(shapefile))
     pick = 2;
@@ -1037,14 +1029,14 @@ Added server/client support (2009-01) Richard Mitchell
 
 func batch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
 onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
-only_veg=, update=, avg_surf=,conf_file=, now=, ext_bad_att=, forcechannel=,
+only_veg=, update=, avg_surf=, now=, ext_bad_att=, forcechannel=,
 shapefile=, shp_buffer=) {
   default, now, 1;
   mbatch_process, typ=typ, save_dir=save_dir, shem=shem, zone=zone,
     dat_tag=dat_tag, cmdfile=cmdfile, n=n, onlyplot=onlyplot, mdate=mdate,
     pbd=pbd, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ,
     only_bathy=only_bathy, only_veg=only_veg, update=update,
-    avg_surf=avg_surv,conf_file=conf_file, now=now, ext_bad_att=ext_bad_att,
+    avg_surf=avg_surv, now=now, ext_bad_att=ext_bad_att,
     forcechannel=forcechannel, shapefile=shapefile, shp_buffer=shp_buffer;
 }
 
