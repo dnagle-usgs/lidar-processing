@@ -374,12 +374,14 @@ func write_ops_conf(fn, conf=) {
   f = [];
   if(is_string(fn))
     f = open(fn, "w");
+  else if(typeof(fn) == "text_stream")
+    f = fn;
   if(f) {
     write, f, format="// Exported from ALPS on %s\n", soe2date(getsoe());
     write, f, format="%s", "ops_conf = ";
   }
   write, f, format="mission_constants(\n  %s\n)\n", params;
-  if(f) close, f;
+  if(is_string(fn)) close, f;
 }
 
 func ops_conf_validate(&conf) {
