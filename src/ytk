@@ -888,7 +888,8 @@ proc launch_gui {} {
 proc init_hgid {} {
     global HGID
     set hg [auto_execok hg]
-    if {$hg ne ""} {
+    set root [file dirname [app_root_dir]]
+    if {$hg ne "" && [file isdirectory [file join $root .hg]]} {
         set HGID [exec {*}$hg identify [file dirname [app_root_dir]]]
     } else {
         set HGID "--"
