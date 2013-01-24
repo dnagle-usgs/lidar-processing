@@ -867,11 +867,11 @@ func copy_metadata_files(dir, outdir) {
 
 func batch_write_xyz(dirname, outdir=, files=, searchstr=, buffer=, update=,
 extension=, mode=, intensity_mode=, ESRI=, header=, footer=, delimit=, indx=,
-intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=) {
+intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=, copymeta=) {
 /* DOCUMENT batch_write_xyz, dirname, outdir=, files=, searchstr=, buffer=,
   update=, extension=, mode=, intensity_mode=, ESRI=, header=, footer=,
   delimit=, indx=, intensity=, rn=, soe=, zclip=, latlon=, split=, zone=,
-  chunk=
+  chunk=, copymeta=
 
   Batch creates xyz files for specified files. This is a batch wrapper around
   write_ascii_xyz.
@@ -909,6 +909,11 @@ intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=) {
       data2xyz for details.
         mode="fs"   (default)
         mode="be"
+        mode="ba"
+    copymeta= Specifies whether the metadata files should get copied to the
+      output directory. If no outdir is provided, this is ignored.
+        copymeta=1    Copy metadata files (default)
+        copymeta=0    Don't copy
 
   Options that are passed to write_ascii_xyz (see its documentation for full
   usage information):
@@ -944,6 +949,7 @@ Rewrote David Nagle 2010-03-11
   default, ESRI, 0;
   default, latlon, 0;
   default, extension, (ESRI ? ".txt" : ".xyz");
+  default, copymeta, 1;
 
   if(is_void(files))
     files = find(dirname, searchstr=searchstr);
@@ -1030,6 +1036,12 @@ Rewrote David Nagle 2010-03-11
 
     timer_remaining, t0, sizes(i), sizes(0);
   }
+
+  if(!is_void(outdir) && copymeta) {
+    write, "Copying metadata files...";
+    copy_metadata_files, dirname, outdir;
+  }
+
   timer_finished, t0;
 }
 
