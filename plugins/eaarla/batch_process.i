@@ -334,43 +334,11 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
         if (!is_array(conf_file_lines)) {
           write, f, format="PNAV FILE: %s\n",pnav_filename;
           write, f, format="INS FILE: %s\n",ins_filename;
-        }
+        write_ops_conf, f;
         if (typ == 1) {
-          bconf = (forcechannel == 4) ? bath_ctl_chn4 : bath_ctl;
-          write, f, "Bathymetry Constants: "
-          write, f, format="Laser: %f\n",bconf.laser;
-          write, f, format="Water: %f\n",bconf.water;
-          write, f, format="AGC  : %f\n",bconf.agc;
-          write, f, format="Threshold: %f\n",bconf.thresh;
-          write, f, format="First : %d\n",bconf.first;
-          write, f, format="Last : %d\n",bconf.last;
-          write, f, format="Surface Last : %d\n",bconf.sfc_last;
-          write, f, format="Max Sat : %d\n",bconf.maxsat;
-          write, f, format="Left Wing Dist: %d\n",bconf.lwing_dist;
-          write, f, format="Right Wing Dist: %d\n",bconf.rwing_dist;
-          write, f, format="Left Wing Factor: %f\n",bconf.lwing_factor;
-          write, f, format="Right Wing Factor: %f\n",bconf.rwing_factor;
+          write, f, "Bathymetry Settings";
+          bath_ctl_save, f;
         }
-        if (is_array(conf_file_lines)) {
-          write, f, "Conf File settings\n";
-          write, f, format="    from file: %s\n",conf_file;
-          write, f, format="EDB FILE:      %s\n",conf_file_lines(1);
-          write, f, format="PNAV FILE:     %s\n",conf_file_lines(2);
-          write, f, format="IMU FILE:      %s\n",conf_file_lines(3);
-          write, f, format="OPS_CONF FILE: %s\n",conf_file_lines(6);
-        }
-        write, f, "\nops_conf constants: ";
-        write, f, format="y_offset: %f\n",ops_conf.y_offset;
-        write, f, format="x_offset: %f\n",ops_conf.x_offset;
-        write, f, format="z_offset: %f\n",ops_conf.z_offset;
-        write, f, format="roll_bias: %f\n",ops_conf.roll_bias;
-        write, f, format="pitch_bias: %f\n",ops_conf.pitch_bias;
-        write, f, format="yaw_bias: %f\n",ops_conf.yaw_bias;
-        write, f, format="scan_bias: %f\n",ops_conf.scan_bias;
-        write, f, format="range_biasM: %f\n",ops_conf.range_biasM;
-        write, f, format="chn1_range_bias: %f\n", ops_conf.chn1_range_bias;
-        write, f, format="chn2_range_bias: %f\n", ops_conf.chn2_range_bias;
-        write, f, format="chn3_range_bias: %f\n", ops_conf.chn3_range_bias;
 
         close, f;
       }
@@ -991,29 +959,13 @@ Added server/client support (2009-01) Richard Mitchell
         write, f, format="   using repository revision %s\n", _hgid;
       write, f, format="PNAV FILE: %s\n",pnav_filename;
       if (typ == 0) write, f, "Processing for First Surface Returns"
-      if (typ == 1) {
-        bconf = (forcechannel == 4) ? bath_ctl_chn4 : bath_ctl;
-        write, f, "\nProcessing for Bathymetry";
-        write, f, "Bathymetry Constants: ";
-        write, f, format="Laser: %f\n",bconf.laser;
-        write, f, format="Water: %f\n",bconf.water;
-        write, f, format="AGC  : %f\n",bconf.agc;
-        write, f, format="Threshold: %f\n",bconf.thresh;
-        write, f, format="Last : %d\n",bconf.last;
-      }
       if (typ == 2) write, f, "Processing for topography under vegetation ie. (Bare Earth)"
-      write, f, "\nops_conf constants: ";
-      write, f, format="y_offset: %f\n",ops_conf.y_offset;
-      write, f, format="x_offset: %f\n",ops_conf.x_offset;
-      write, f, format="z_offset: %f\n",ops_conf.z_offset;
-      write, f, format="roll_bias: %f\n",ops_conf.roll_bias;
-      write, f, format="pitch_bias: %f\n",ops_conf.pitch_bias;
-      write, f, format="yaw_bias: %f\n",ops_conf.yaw_bias;
-      write, f, format="scan_bias: %f\n",ops_conf.scan_bias;
-      write, f, format="range_biasM: %f\n",ops_conf.range_biasM;
-      write, f, format="chn1_range_bias: %f\n", ops_conf.chn1_range_bias;
-      write, f, format="chn2_range_bias: %f\n", ops_conf.chn2_range_bias;
-      write, f, format="chn3_range_bias: %f\n", ops_conf.chn3_range_bias;
+
+      write_ops_conf, f;
+      if (typ == 1) {
+        write, f, "Bathymetry Settings";
+        bath_ctl_save, f;
+      }
 
       close, f;
     }
