@@ -854,6 +854,17 @@ soe=, indx=, columns=, mapping=, types=, preset=, latlon=) {
   return data;
 }
 
+func copy_metadata_files(dir, outdir) {
+/* DOCUMENT copy_metadata_files, dir, outdir
+  Copies all metadata files (*metadata.txt) to another directory.
+*/
+  files = find(dir, searchstr=["*metadata.txt", "*metadata.txt.gz", "*.metadata.txt.gz2"]);
+  mkdirp, outdir;
+  for(i = 1; i <= numberof(files); i++) {
+    file_copy, files(i), file_join(outdir, file_tail(files(i))), force=1;
+  }
+}
+
 func batch_write_xyz(dirname, outdir=, files=, searchstr=, buffer=, update=,
 extension=, mode=, intensity_mode=, ESRI=, header=, footer=, delimit=, indx=,
 intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=) {
