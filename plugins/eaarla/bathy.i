@@ -71,9 +71,13 @@ func bath_ctl_save(filename) {
     )
   );
   json = json_encode(data, indent=2);
-  f = open(filename, "w");
+  if(is_string(filename))
+    f = open(filename, "w");
+  else if(typeof(filename) == "text_stream")
+    f = filename;
   write, f, format="%s\n", json;
-  close, f;
+  if(is_string(filename))
+    close, f;
 }
 
 func bath_ctl_load(filename) {
