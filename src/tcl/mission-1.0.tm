@@ -377,9 +377,10 @@ namespace eval ::mission {
                 -columns name \
                 -displaycolumns name \
                 -show {} \
-                -selectmode browse
+                -selectmode browse \
+                -yscroll [list $f.vsbFlights set]
         set flights $f.tvwFlights
-        ttk::scrollbar $f.vsbFlights -orient vertical
+        ttk::scrollbar $f.vsbFlights -orient vertical -command [list $f.tvwFlights yview]
 
         grid $f.fraToolbar $f.tvwFlights $f.vsbFlights -in $f.fraFlights
         grid columnconfigure $f.fraFlights 1 -weight 1
@@ -441,13 +442,14 @@ namespace eval ::mission {
                 -columns {field value} \
                 -displaycolumns {field value} \
                 -show headings \
-                -selectmode browse
+                -selectmode browse \
+                -yscroll [list $f.vsbDetails set]
         set details $f.tvwDetails
         $details heading field -text "Field"
         $details column field -width 100 -stretch 0
         $details heading value -text "Value"
         $details column value -width 400 -stretch 1
-        ttk::scrollbar $f.vsbDetails -orient vertical
+        ttk::scrollbar $f.vsbDetails -orient vertical -command [list $f.tvwDetails yview]
 
         grid $f.fraToolbar $f.tvwDetails $f.vsbDetails -in $f.fraDetails
         grid columnconfigure $f.fraDetails 1 -weight 1
