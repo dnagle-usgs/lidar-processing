@@ -350,6 +350,7 @@ namespace eval ::mission {
         grid $f.lfrFlight - -
         grid $f.fraBottom - -
         grid columnconfigure $f 1 -weight 1
+        grid rowconfigure $f 3 -weight 1
 
         set f $f.lfrFlight
 
@@ -384,6 +385,7 @@ namespace eval ::mission {
 
         grid $f.fraToolbar $f.tvwFlights $f.vsbFlights -in $f.fraFlights
         grid columnconfigure $f.fraFlights 1 -weight 1
+        grid rowconfigure $f.fraFlights 0 -weight 1
 
         ttk::label $f.lblField -text "Flight name:"
         ttk::entry $f.entField
@@ -415,6 +417,7 @@ namespace eval ::mission {
         grid $f.fraButtons - - -
         grid $f.lfrDetails - - -
         grid columnconfigure $f 1 -weight 1
+        grid rowconfigure $f {0 3} -weight 1
 
         set f $f.lfrDetails
 
@@ -453,6 +456,7 @@ namespace eval ::mission {
 
         grid $f.fraToolbar $f.tvwDetails $f.vsbDetails -in $f.fraDetails
         grid columnconfigure $f.fraDetails 1 -weight 1
+        grid rowconfigure $f.fraDetails 0 -weight 1
 
         ttk::label $f.lblType -text "Detail type:"
         mixin::combobox $f.cboType \
@@ -493,6 +497,7 @@ namespace eval ::mission {
         grid $f.lblValue $f.entValue $f.btnValueApply $f.btnValueRevert
         grid $f.fraButtons - - -
         grid columnconfigure $f 1 -weight 1
+        grid rowconfigure $f 0 -weight 1
 
         set padx [list -padx 2]
         set pady [list -pady 2]
