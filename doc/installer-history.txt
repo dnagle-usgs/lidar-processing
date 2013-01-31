@@ -2,6 +2,43 @@ This file documents the changes made to the ALPS installer package. These
 installer packages are typically available on lidar.net under
 /mnt/alps/install/.
 
+2013-01-31
+    - Removed old lidar-processing repository
+    - Reworked installer repository to use subrepositories to link to other
+      sources; using installer at tip 555a8d1b7480
+    - Added NAVD88 GEOID12A data files
+    - Hard linked identitical GEOID files between GEOID12 and GEOID12A and
+      between GEOID03 and GEOID03dep to save space
+    - Upgraded cctools to 3.6.1
+    - Upgraded GDAL to 1.9.2
+    - Upgraded ImageMagick to 6.8.1-10
+    - Python changes:
+        - Upgraded Python to 2.7.3
+        - Upgraded distribute to 0.6.34
+        - Upgraded mercurial to 2.4.2
+        - Upgraded Twisted to 12.3.0
+        - Upgraded zope.interface to 4.0.3
+    - Tcl changes:
+        - Upgraded Tcl/Tk to 8.6.0
+        - Upgraded Expect to CVS revision as of 2013-01-24
+        - Upgraded tcllib to CVS revision as of 2013-01-24
+        - Upgraded tclvfs to CVS revision as of 2013-01-24
+        - Upgraded tclx to CVS revision as of 2013-01-24
+        - Upgraded tkcon to CVS revision as of 2013-01-24
+        - Upgraded tkimg to SVN revision as of 2013-01-24
+        - Upgraded tklib to CVS revision as of 2013-01-24
+        - Upgraded tktreectrl to 2.4.1
+        - Upgraded tcl to CVS revision as of 2013-01-24
+        - Upgraded trofs to 0.4.6
+    - Yorick changes:
+        - Upgraded Yorick to Git revision as of 2013-01-29 (tip 4399acc)
+        - Corrected directory for yorick-imutil to reflect it is at Git
+          revision as of 2011-04-13 (tip 7a54e37); no actual update
+        - Corrected directory for yorick-yutils to reflect it is at Git
+          revision as of 2011-09-02 (tip 86317c7); no actual update
+        - Corrected directory for yorick-z to reflect it is at Git revision as
+          of 2011-04-02 (tip b5c6b21); no actual update
+
 2012-07-17
     - Added NAVD88 GEOID12 data files
     - Upgraded cctools to 3.5.1
