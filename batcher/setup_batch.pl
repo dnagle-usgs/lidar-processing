@@ -278,6 +278,6 @@ if ( $initd ) {
     printf("Starting slave\n")  if ( $verbose );
     print `$RUN $SCREEN -d -m -c $ETC/.screenrc-batch-slave`;
   }
-  system("(echo -n screen -x amps/; screen -ls | grep Multi | cut --fields=2) > $EAARL/screen.sh");
+  system("(echo -n screen -x amps/; screen -ls | grep Multi | cut --fields=2) > $ETC/screen.sh");
   printf("exiting\n") if ( $verbose );
 }
