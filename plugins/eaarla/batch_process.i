@@ -47,6 +47,7 @@ func save_vars (filename, tile=) {
   f = createb( tfn );
   if ( ! get_typ ) get_typ = 0;
   default, initialdir, "/data/0";
+  save, f, plugins="eaarla";
   if ( tile == 1 ) {      // stuff for batch_process
     save, f, user_pc_NAME;
     save, f, q, r, min_e, max_e, min_n, max_n;
