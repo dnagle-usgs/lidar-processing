@@ -6,7 +6,15 @@ src_path = "/opt/alps/lidar-processing/src";
 cd(src_path);
 
 #include "/opt/alps/lidar-processing/src/eaarl.i"
-plugins_load, "eaarlb";
+
+// Need to peek inside of the cmd file to see what plugins to load
+f = openb(cmdline(2));
+if(has_member(f, "plugins")) {
+  plugins_load, f.plugins;
+} else {
+  plugins_load, "eaarlb";
+}
+close, f;
 
 cmdline = get_argv();  /* strips -batch cmdline.i */
 if (numberof(cmdline) == 3) {
