@@ -102,8 +102,6 @@ namespace eval ::eaarl::main::menu {
                 -label "Use channel 3"
         $mb add checkbutton -variable ::forcechannel_4 \
                 -label "Use channel 4"
-        $mb add checkbutton -variable ::forcechannel_A \
-                -label "Use EAARL-A channel handling"
         return $mb
     }
 

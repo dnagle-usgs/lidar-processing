@@ -32,7 +32,7 @@ proc ::eaarl::main::gui {} {
             -style Panel.TMenubutton
 
     ttk::label $f.channels -text "Channel:"
-    foreach chan {1 2 3 4 A} {
+    foreach chan {1 2 3 4} {
         ttk::checkbutton $f.chan$chan \
                 -text $chan \
                 -variable ::forcechannel_$chan
@@ -72,7 +72,7 @@ proc ::eaarl::main::gui {} {
     grid columnconfigure $f.f1 2 -weight 1
 
     lower [ttk::frame $f.f2]
-    grid $f.chan1 $f.chan2 $f.chan3 $f.chan4 $f.chanA \
+    grid $f.chan1 $f.chan2 $f.chan3 $f.chan4 \
             -in $f.f2 -sticky w -padx 2
 
     grid $f.f1 - -sticky ew -padx 2 -pady 1

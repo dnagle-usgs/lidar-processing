@@ -6,7 +6,6 @@ set forcechannel_1 0
 set forcechannel_2 0
 set forcechannel_3 0
 set forcechannel_4 0
-set forcechannel_A 0
 set ext_bad_att 20
 
 namespace eval ::eaarl::processing {
@@ -105,16 +104,6 @@ proc ::eaarl::processing::process {} {
     set forced 0
     foreach channel {1 2 3 4} {
         if {[set ::forcechannel_$channel]} {
-            if {$::forcechannel_A} {
-                tk_messageBox \
-                        -type ok \
-                        -icon error \
-                        -message "You cannot select \"A\" processing and\
-                            specific channels at the same time. \"A\" is for\
-                            EAARL-A only. Specific channel selection is for\
-                            EAARL-B only."
-                return
-            }
             if {$::processing_mode ni {fs bathy veg}} {
                 error "Invalid processing mode: $::processing_mode"
             }
@@ -126,53 +115,21 @@ proc ::eaarl::processing::process {} {
         }
     }
 
-    if {!$forced && !$::forcechannel_A} {
+    if {!$forced} {
         tk_messageBox \
                 -type ok \
                 -icon error \
                 -message "You must select channel processing options. Select\
-                    \"A\" for EAARL-A processing. Select one or more specific\
-                    channels for EAARL-B."
+                        one or more specific channels."
         return
     }
 
-    if {$::forcechannel_A} {
-        switch -- $::processing_mode {
-            fs {
-                set cmd "$::pro_var = make_fs(latutm=1, q=q,\
-                        ext_bad_att=$::ext_bad_att,\
-                        usecentroid=$::usecentroid)"
-            }
-            bathy {
-                set cmd "$::pro_var = make_bathy(latutm=1, q=q,\
-                        ext_bad_att=$::ext_bad_att,\
-                        avg_surf=$::avg_surf)"
-                }
-            veg {
-                set cmd "$::pro_var = make_veg(latutm=1, q=q,\
-                        ext_bad_att=$::ext_bad_att,\
-                        use_centroid=$::usecentroid)"
-            }
-            cveg {
-                set cmd "$::pro_var = make_veg(latutm=1, q=q,\
-                        use_centroid=$::usecentroid, multi_peaks=1)"
-            }
-            default {
-                error "Unknown processing mode: $::processing_mode"
-            }
-        }
-    }
-
     if {$cmd ne ""} {
-        if {$forced} {
-            append cmd  "; $::pro_var = merge_pointers($::pro_var)"
-        }
+        append cmd  "; $::pro_var = merge_pointers($::pro_var)"
         if {$::autoclean_after_process} {
             append cmd "; test_and_clean, $::pro_var"
         }
-        if {$forced} {
-            append cmd "; $::pro_var = sortdata($::pro_var, method=\"soe\")"
-        }
+        append cmd "; $::pro_var = sortdata($::pro_var, method=\"soe\")"
         exp_send "$cmd;\r"
     }
     append_varlist $::pro_var
