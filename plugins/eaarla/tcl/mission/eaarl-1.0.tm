@@ -18,7 +18,6 @@ namespace eval ::mission::eaarl {
         "rgb dir"
         "rgb file"
         "cir dir"
-        "nir dir"
     }
 
     set ::mission::detail_filetypes {
@@ -73,15 +72,11 @@ namespace eval ::mission::eaarl {
                 -command ::mission::eaarl::menu_load_rgb
         $mb add command {*}[menulabel "Launch CIR"] \
                 -command ::mission::eaarl::menu_load_cir
-        $mb add command {*}[menulabel "Launch NIR"] \
-                -command ::mission::eaarl::menu_load_nir
         $mb add separator
         $mb add command {*}[menulabel "Dump RGB"] \
                 -command ::mission::eaarl::menu_dump_rgb
         $mb add command {*}[menulabel "Dump CIR"] \
                 -command ::mission::eaarl::menu_dump_cir
-        $mb add command {*}[menulabel "Dump NIR"] \
-                -command ::mission::eaarl::menu_dump_nir
         $mb add separator
         $mb add cascade {*}[menulabel "Generate KMZ"] \
                 -menu $mb.kmz
@@ -120,7 +115,6 @@ namespace eval ::mission::eaarl {
         set row 0
         set has_rgb 0
         set has_cir 0
-        set has_nir 0
         foreach flight [::mission::get] {
             incr row
             ttk::label $f.lbl$row -text $flight
@@ -130,11 +124,9 @@ namespace eval ::mission::eaarl {
                     -command [list ::mission::eaarl::load_rgb $flight]
             ttk::button $f.cir$row -text "CIR" -width 0 \
                     -command [list ::mission::eaarl::load_cir $flight]
-            ttk::button $f.nir$row -text "NIR" -width 0 \
-                    -command [list ::mission::eaarl::load_nir $flight]
-            grid $f.lbl$row $f.load$row $f.rgb$row $f.cir$row $f.nir$row -padx 2 -pady 2
+            grid $f.lbl$row $f.load$row $f.rgb$row $f.cir$row -padx 2 -pady 2
             grid $f.lbl$row -sticky w
-            grid $f.load$row $f.rgb$row $f.cir$row $f.nir$row -sticky ew
+            grid $f.load$row $f.rgb$row $f.cir$row -sticky ew
 
             if {
                 [::mission::has $flight "rgb dir"] ||
@@ -145,12 +137,10 @@ namespace eval ::mission::eaarl {
                 $f.rgb$row state disabled
             }
 
-            foreach type {cir nir} {
-                if {[::mission::has $flight "$type dir"]} {
-                    set has_$type 1
-                } else {
-                    $f.$type$row state disabled
-                }
+            if {[::mission::has $flight "cir dir"]} {
+                set has_cir 1
+            } else {
+                $f.cir$row state disabled
             }
         }
 
@@ -159,14 +149,11 @@ namespace eval ::mission::eaarl {
                 -command ::mission::eaarl::menu_load_rgb
         ttk::button $f.btnCIR -text "All CIR" -width 0 \
                 -command ::mission::eaarl::menu_load_cir
-        ttk::button $f.btnNIR -text "All NIR" -width 0 \
-                -command ::mission::eaarl::menu_load_nir
-        grid x $f.btnRGB $f.btnCIR $f.btnNIR -padx 2 -pady 2
+        grid x $f.btnRGB $f.btnCIR -padx 2 -pady 2
         grid columnconfigure $f {0 4} -weight 1
 
         if {!$has_rgb} {$f.btnRGB state disabled}
         if {!$has_cir} {$f.btnCIR state disabled}
-        if {!$has_nir} {$f.btnNIR state disabled}
 
         set f [ttk::frame $extra.f2]
         ttk::button $f.btnPro -text "Processing GUI" -width 0 \
@@ -214,16 +201,6 @@ namespace eval ::mission::eaarl {
             set cir [sf::controller %AUTO%]
             $cir load $driver -path $path
             ybkg set_sf_bookmark \"$cir\" \"[ystr $flight]\"
-        }
-    }
-
-    proc load_nir {flight} {
-        if {[::mission::has $flight "nir dir"]} {
-            set path [::mission::get $flight "nir dir"]
-            set driver cir::f2010::tarpath
-            set nir [sf::controller %AUTO%]
-            $nir load $driver -path $path
-            ybkg set_sf_bookmark \"$nir\" \"[ystr $flight]\"
         }
     }
 
@@ -284,20 +261,6 @@ namespace eval ::mission::eaarl {
         }
     }
 
-    proc menu_load_nir {} {
-        set paths [list]
-        foreach flight [::mission::get] {
-            if {[::mission::has $flight "nir dir"]} {
-                lappend paths [::mission::get $flight "nir dir"]
-            }
-        }
-        if {[llength $paths]} {
-            set nir [sf::controller %AUTO%]
-            $nir load cir::f2010::tarpaths -paths $paths
-            ybkg set_sf_bookmarks \"$nir\"
-        }
-    }
-
     proc menu_dump_rgb {} {
         set outdir [tk_chooseDirectory \
                 -title "Select destination for RGB imagery" \
@@ -315,16 +278,6 @@ namespace eval ::mission::eaarl {
         if {$outdir ne ""} {
             dump_imagery "cir dir" cir::f2010::tarpath $outdir \
                     -subdir photos/cir
-        }
-    }
-
-    proc menu_dump_nir {} {
-        set outdir [tk_chooseDirectory \
-                -title "Select destination for NIR imagery" \
-                -initialdir $::mission::path]
-        if {$outdir ne ""} {
-            dump_imagery "nir dir" cir::f2010::tarpath $outdir \
-                    -subdir photos/nir
         }
     }
 

@@ -462,7 +462,6 @@ func mission_flights_auto(flight, path, strict=) {
     "bath_ctl file",
     "rgb dir",
     "rgb file",
-    "nir dir",
     "cir dir"
   ];
 
@@ -521,8 +520,6 @@ func mission_details_autolist(flight, key, path) {
     return autoselect_rgb_dir(path, options=1);
   else if(key == "rgb file")
     return autoselect_rgb_tar(path, options=1);
-  else if(key == "nir dir")
-    return autoselect_nir_dir(path, options=1);
   else if(key == "cir dir")
     return autoselect_cir_dir(path, options=1);
   else

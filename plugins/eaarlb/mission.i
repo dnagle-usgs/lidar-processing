@@ -462,8 +462,7 @@ func mission_flights_auto(flight, path, strict=) {
     "bath_ctl file",
     "rgb dir",
     "rgb file",
-    "nir dir",
-    "cir dir"
+    "nir dir"
   ];
 
   // Auto-detect the value for each key, but only add it if there's actually
@@ -523,8 +522,6 @@ func mission_details_autolist(flight, key, path) {
     return autoselect_rgb_tar(path, options=1);
   else if(key == "nir dir")
     return autoselect_nir_dir(path, options=1);
-  else if(key == "cir dir")
-    return autoselect_cir_dir(path, options=1);
   else
     return [string(0)];
 }

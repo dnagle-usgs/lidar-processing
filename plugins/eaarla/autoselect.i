@@ -126,27 +126,6 @@ func autoselect_cir_dir(dir, options=) {
   return options ? results : results(1);
 }
 
-func autoselect_nir_dir(dir, options=) {
-/* DOCUMENT nir_dir = autoselect_nir_dir(dir, options=)
-  This function attempts to determine the EAARL cir directory to load for a
-  dataset. The dir parameter should be the path to the mission day directory.
-
-  If a subdirectory "nir" exists, it will be returned. Otherwise, string(0) is
-  returned.
-
-  If options=1, then an array of all possibilities that meet the criteria above
-  is returned instead. If no possiblities are found, then [string(0)] is
-  returned.
-*/
-  results = [];
-  cir_dir = file_join(dir, "nir");
-  if(file_isdir(cir_dir))
-    grow, results, cir_dir;
-  if(is_void(results))
-    results = [string(0)];
-  return options ? results : results(1);
-}
-
 func autoselect_rgb_dir(dir, options=) {
 /* DOCUMENT rgb_dir = autoselect_rgb_dir(dir, options=)
   This function attempts to determine the EAARL rgb directory to load for a
