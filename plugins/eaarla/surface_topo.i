@@ -171,13 +171,13 @@ use_highelv_echo=, forcechannel=, verbose=, msg=, ext_bad_att=) {
     if(logger(debug)) logger, debug, log_id+"Using scan angle fixes";
     write, "Using scan angle fixes...";
 
-    if(rtrs(1).sa(1) > rtrs(1).sa(118))
+    if(rtrs.sa(1,1) > rtrs.sa(118,1))
       fix=fix_sa1(start:stop);
     else
       fix=fix_sa2(start:stop);
 
     for(i = 1; i <= count; i++)
-      scan_bias(i) = rtrs(i).sa(1) - fix(i);
+      scan_bias(i) = rtrs.sa(1,i) - fix(i);
   }
 
   // Calculate scan angles
@@ -246,7 +246,7 @@ use_highelv_echo=, forcechannel=, verbose=, msg=, ext_bad_att=) {
   surface.east   =     px * 100.0;
   surface.north  =     py * 100.0;
   surface.elevation =  pz * 100.0;
-  surface.rn = (rtrs.raster&0xffffff)(-,);
+  surface.rn = (rtrs.raster&0xffffff);
   surface.intensity = rtrs.intensity;
   surface.fs_rtn_centroid = rtrs.fs_rtn_centroid;
   surface.rn += (indgen(120)*2^24)(,-);
@@ -257,7 +257,7 @@ use_highelv_echo=, forcechannel=, verbose=, msg=, ext_bad_att=) {
   if(count >= 100 && (verbose || logger(debug))) {
     sample = swrite(format="%5d %8.1f %6.2f %6.2f %6.2f\n",
       indgen(100:count:100),
-      rtrs(100:count:100).soe(60)%86400,
+      rtrs.soe(60,100:count:100)%86400,
       palt(60,100:count:100),
       roll(60,100:count:100),
       pitch(60,100:count:100));

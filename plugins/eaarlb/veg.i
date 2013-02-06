@@ -439,7 +439,7 @@ func ex_veg_all(rn, pulse_number, last=, graph=, pse=, thresh=, win=, verbose=,h
   default, thresh, 4.0;
 
   // check if global variable irg_a contains the current raster number (rn)
-  if (is_void(irg_a) || !is_array(where(irg_a.raster == rn))) {
+  if (is_void(irg_a) || !is_array(where(irg_a.raster(1,) == rn))) {
     irg_a = irg(rn,rn, usecentroid=1, msg=0);
   }
   this_irg = irg_a(where(rn==irg_a.raster));

@@ -19,15 +19,15 @@ local RTRS;
   carying it as a float, we don't have to scale it.
 */
 struct RTRS {
-  int raster;             // Raster number
-  double soe(120);        // Seconds of the epoch for each pulse
-  float irange(120);      // Integer range counter values
-  short intensity(120);   // Laser return intensity
-  short sa(120);          // Scan angle counts
+  int raster;         // Raster number
+  double soe;         // Seconds of the epoch for each pulse
+  float irange;       // Integer range counter values
+  short intensity;    // Laser return intensity
+  short sa;           // Scan angle counts
   // The location within the return waveform of the first return centroid.
   // This is to used to subtract from the depth idx to get true depth.
-  short fs_rtn_centroid(120);
-  char dropout(120);      // Specifies whether the tx/rx dropout flags are set
+  short fs_rtn_centroid;
+  char dropout;       // Specifies whether the tx/rx dropout flags are set
 };
 
 func irg(start, stop, inc=, delta=, usecentroid=, use_highelv_echo=,
@@ -115,8 +115,8 @@ highelv_thresh=, forcechannel=, skip=, verbose=, msg=) {
   count = numberof(rasters);
 
   // Initialize output
-  rtrs = array(RTRS, count);
-  rtrs.raster = unref(rasters);
+  rtrs = array(RTRS, 120, count);
+  rtrs.raster = unref(rasters)(-,);
 
   // Determine if ytk popup status dialogs are used.
   use_ytk = _ytk && count >= 10;
@@ -135,10 +135,10 @@ highelv_thresh=, forcechannel=, skip=, verbose=, msg=) {
   if (msg)
     status, start, msg=msg;
   for(i = 1; i <= count; i++) {
-    raster = decode_raster(rn=rtrs(i).raster);
-    rtrs(i).soe = raster.offset_time;
-    rtrs(i).sa = raster.sa;
-    rtrs(i).dropout = long(raster.irange) >> 14;
+    raster = decode_raster(rn=rtrs.raster(1,i));
+    rtrs.soe(,i) = raster.offset_time;
+    rtrs.sa(,i) = raster.sa;
+    rtrs.dropout(,i) = long(raster.irange) >> 14;
 
     if(usecentroid == 1) {
       for(pulse = 1; pulse <= raster.npixels(1); pulse++) {
@@ -151,14 +151,14 @@ highelv_thresh=, forcechannel=, skip=, verbose=, msg=) {
           continue;
         centroid_values = pcr(raster, pulse, forcechannel=forcechannel);
         if(numberof(centroid_values)) {
-          rtrs(i).irange(pulse) = centroid_values(1);
-          rtrs(i).intensity(pulse) = centroid_values(2);
-          rtrs(i).fs_rtn_centroid(pulse) = centroid_values(3);
+          rtrs.irange(pulse,i) = centroid_values(1);
+          rtrs.intensity(pulse,i) = centroid_values(2);
+          rtrs.fs_rtn_centroid(pulse,i) = centroid_values(3);
         }
       }
     } else {
       // This section processes basic irange
-      rtrs(i).irange = raster.irange;
+      rtrs.irange(,i) = raster.irange;
     }
 
     if (msg)
