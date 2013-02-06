@@ -103,6 +103,7 @@ proc ::l1pro::tools::rcf::gui args {
 }
 
 proc ::l1pro::tools::rcf::filter {} {
+    if {[catch {yorick::util::check_vname v::outvar}]} {return}
     set cmd "$v::outvar = rcf_filter_eaarl($v::invar"
     append cmd ", mode=\"$v::mode\""
     append cmd ", buf=$v::buf"
@@ -643,6 +644,7 @@ proc ::l1pro::tools::histclip::gui {} {
 }
 
 proc ::l1pro::tools::histclip::clip {} {
+    if {[catch {yorick::util::check_vname v::outvar}]} {return}
     set cmd "$v::outvar = filter_bounded_elv($v::invar"
 
     appendif cmd \
@@ -772,6 +774,7 @@ proc ::l1pro::tools::griddata::gui {} {
 }
 
 proc ::l1pro::tools::griddata::griddata {} {
+    if {[catch {yorick::util::check_vname v::outvar}]} {return}
     set cmd "$v::outvar = data_triangle_grid($v::invar"
 
     appendif cmd \
@@ -886,6 +889,7 @@ proc ::l1pro::tools::datum::gui {} {
 }
 
 proc ::l1pro::tools::datum::convert {} {
+    if {[catch {yorick::util::check_vname v::outvar}]} {return}
     set cmd "$v::outvar = datum_convert_data($v::invar"
 
     appendif cmd \

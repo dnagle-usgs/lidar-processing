@@ -1,6 +1,7 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
 package provide l1pro::dirload 1.0
+package require yorick::util
 
 # Global ::data_file_path
 if {![namespace exists ::l1pro::dirload]} {
@@ -160,6 +161,8 @@ proc ::l1pro::dirload::region_plot {} {
 }
 
 proc ::l1pro::dirload::load_data termaction {
+    if {[catch {yorick::util::check_vname v::vname}]} {return}
+
     if {![file isdirectory $::data_file_path]} {
         error "Data path is not a directory: $::data_file_path"
     }
