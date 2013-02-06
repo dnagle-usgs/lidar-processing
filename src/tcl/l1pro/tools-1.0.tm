@@ -2,6 +2,7 @@
 
 package provide l1pro::tools 1.0
 package require misc
+package require yorick::util
 
 namespace eval ::l1pro::tools {
     namespace import ::misc::appendif
@@ -1056,6 +1057,7 @@ namespace eval ::l1pro::tools::varmanage {
     }
 
     proc bind_add_enter {} {
+        if {[catch {yorick::util::check_vname v::var_add}]} {return}
         append_varlist $v::var_add
         set v::var_add ""
     }
