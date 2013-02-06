@@ -7,6 +7,8 @@ cd(src_path);
 
 #include "/opt/alps/lidar-processing/src/eaarl.i"
 
+cmdline = get_argv();  /* strips -batch cmdline.i */
+
 // Need to peek inside of the cmd file to see what plugins to load
 f = openb(cmdline(2));
 if(has_member(f, "plugins")) {
@@ -16,7 +18,6 @@ if(has_member(f, "plugins")) {
 }
 close, f;
 
-cmdline = get_argv();  /* strips -batch cmdline.i */
 if (numberof(cmdline) == 3) {
   /* convert from ascii to pdb binary format */
   cmdline(1);
