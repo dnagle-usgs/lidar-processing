@@ -1,6 +1,7 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
 package provide eaarl::processing 1.0
+package require yorick::util
 
 set forcechannel_1 0
 set forcechannel_2 0
@@ -98,6 +99,7 @@ snit::widget ::eaarl::processing::define_region_rect::gui {
 }
 
 proc ::eaarl::processing::process {} {
+    if {[catch {yorick::util::check_vname ::pro_var_next}]} {return}
     set ::pro_var $::pro_var_next
 
     set cmd ""
