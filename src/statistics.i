@@ -99,7 +99,7 @@ func r_squared(y, x) {
 */
   c = poly1_fit(y, x, 1);
   yp = poly1(x, c);
-  return pearson_correlation(y, yp);
+  return pearson_correlation(y, yp)^2;
 }
 
 func root_mean_square(x) {
