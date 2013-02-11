@@ -2,6 +2,11 @@ This file documents the changes made to the ALPS installer package. These
 installer packages are typically available on lidar.net under
 /mnt/alps/install/.
 
+2013-02-11
+    - Updated installer to tip 6e48dcd97bd0
+    - Replaced "share" folder with "static" folder (with contents that unroll
+      to $(prefix)/share); no actual change in data
+
 2013-01-31
     - Removed old lidar-processing repository
     - Reworked installer repository to use subrepositories to link to other
