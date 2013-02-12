@@ -3,7 +3,7 @@
 // This file expects that the main mission.i has already been loaded.
 
 scratch = save(scratch, mission_query_soe_rn, mission_query_soe, mission_auto,
-  mission_flights_auto, mission_details_auto, mission_details_autolist);
+  mission_flights_auto);
 
 func mission_query_soe_rn(soe, rn) {
 /* DOCUMENT mission(query_soe_rn, <soe>, <rn>)
@@ -471,59 +471,35 @@ func mission_flights_auto(flight, path, strict=) {
 
 save, mission.flights, auto=mission_flights_auto;
 
-func mission_details_auto(flight, key, path, strict=) {
-/* DOCUMENT mission, details, auto, "<flight>", "<key>", "<path>", strict=
-  Automatically initializes a specific key-value pair for a flight. The path
-  given should be the path to the flight (NOT to any of the data-specific
-  subdirectories in the flight).
-
-  If the function is unable to determine an appropriate value for the key, then
-  the result will depend on strict=. When strict=1, the key is deleted from the
-  flight. When strict=0, the key is set to "". The default is strict=0.
+hook_add, "mission_details_autolist", "eaarl_mission_details_autolist";
+func eaarl_mission_details_autolist(env) {
+/* DOCUMENT eaarl_mission_details_autolist(env)
+  Hook function for mission_details_autolist.
+  SEE ALSO: mission_details_autolist
 */
-  val = mission(details, autolist, flight, key, path);
-  if(numberof(val)) val = val(1);
-  if(!is_string(val)) val = "";
-  if(strlen(val)) {
-    mission, details, set, flight, key, val;
-  } else if(strict) {
-    mission, details, remove, flight, key;
-  } else {
-    mission, details, set, flight, key, "";
-  }
-}
-
-func mission_details_autolist(flight, key, path) {
-/* DOCUMENT mission(details, autolist, "<flight>", "<key>", "<path>")
-  Returns a list of candidates values autodetected for the give flight-key-path
-  combination. Candidates are ordered from "best guess" to "worst guess". If no
-  candidates are autodetected, then [string(0)] is returned.
-*/
+  key = env.key;
+  path = env.path;
   if(key == "data_path dir")
-    return [path];
+    env, result=[path];
   else if(key == "date")
-    return [get_date(file_tail(path))];
+    env, result=[get_date(file_tail(path))];
   else if(key == "edb file")
-    return autoselect_edb(path, options=1);
+    env, result=autoselect_edb(path, options=1);
   else if(key == "pnav file")
-    return autoselect_pnav(path, options=1);
+    env, result=autoselect_pnav(path, options=1);
   else if(key == "ins file")
-    return autoselect_iexpbd(path, options=1);
+    env, result=autoselect_iexpbd(path, options=1);
   else if(key == "ops_conf file")
-    return autoselect_ops_conf(path, options=1);
+    env, result=autoselect_ops_conf(path, options=1);
   else if(key == "bath_ctl file")
-    return autoselect_bath_ctl(path, options=1);
+    env, result=autoselect_bath_ctl(path, options=1);
   else if(key == "rgb dir")
-    return autoselect_rgb_dir(path, options=1);
+    env, result=autoselect_rgb_dir(path, options=1);
   else if(key == "rgb file")
-    return autoselect_rgb_tar(path, options=1);
+    env, result=autoselect_rgb_tar(path, options=1);
   else if(key == "cir dir")
-    return autoselect_cir_dir(path, options=1);
-  else
-    return [string(0)];
+    env, result=autoselect_cir_dir(path, options=1);
+  return env;
 }
-
-save, mission.details, auto=mission_details_auto,
-  autolist=mission_details_autolist;
 
 restore, scratch;

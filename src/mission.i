@@ -236,10 +236,6 @@ restore, scratch;
 
 /*******************************************************************************
   mission, flights, <cmd>
-
-  Plugins are encouraged to add a subcommand "auto" that will auto-initialize
-  all flights given a directory name:
-    mission_flights_auto(data, path)
 */
 
 scratch = save(scratch, cmds, mission_flights_add, mission_flights_remove,
@@ -376,19 +372,14 @@ restore, scratch;
 
 /*******************************************************************************
   mission, details, <cmd>
-
-  Subcommands should have a call signature thus:
-    mission_details_<SUBCMD>(data, flight, p1, p2)
-
-  Plugins are encouraged to add a subcommand "auto" that will auto-initialize
-  the flight given a directory name:
-    mission_details_auto(data, flight, path, nil)
 */
 
 scratch = save(scratch, mission_details_set, mission_details_rename,
   mission_details_remove, mission_details_swap, mission_details_raise,
-  mission_details_lower, mission_details_clear);
-cmds = save(__help, set, rename, remove, swap, raise, lower, clear);
+  mission_details_lower, mission_details_clear, mission_details_auto,
+  mission_details_autolist);
+cmds = save(__help, set, rename, remove, swap, raise, lower, clear, auto,
+  autolist);
 
 __help = "Contains subcommands for modifying the configuration details for a\
 given fight."
@@ -584,6 +575,42 @@ func mission_details_clear(flight) {
   mission, tksync;
 }
 clear = mission_details_clear;
+
+func mission_details_auto(flight, key, path, strict=) {
+/* DOCUMENT mission, details, auto, "<flight>", "<key>", "<path>", strict=
+  Automatically initializes a specific key-value pair for a flight. The path
+  given should be the path to the flight (NOT to any of the data-specific
+  subdirectories in the flight).
+
+  If the function is unable to determine an appropriate value for the key, then
+  the result will depend on strict=. When strict=1, the key is deleted from the
+  flight. When strict=0, the key is set to "". The default is strict=0.
+*/
+  val = mission(details, autolist, flight, key, path);
+  if(numberof(val)) val = val(1);
+  if(!is_string(val)) val = "";
+  if(strlen(val)) {
+    mission, details, set, flight, key, val;
+  } else if(strict) {
+    mission, details, remove, flight, key;
+  } else {
+    mission, details, set, flight, key, "";
+  }
+}
+auto = mission_details_auto;
+
+func mission_details_autolist(flight, key, path) {
+/* DOCUMENT mission(details, autolist, "<flight>", "<key>", "<path>")
+  Returns a list of candidates values autodetected for the give flight-key-path
+  combination. Candidates are ordered from "best guess" to "worst guess". If no
+  candidates are autodetected, then [string(0)] is returned.
+*/
+  result = [string(0)];
+  restore, hook_invoke("mission_details_autolist",
+    save(flight, key, path, result));
+  return result;
+}
+autolist = mission_details_autolist;
 
 details = restore(cmds);
 restore, scratch;
