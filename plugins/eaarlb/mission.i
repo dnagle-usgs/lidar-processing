@@ -2,7 +2,7 @@
 
 // This file expects that the main mission.i has already been loaded.
 
-scratch = save(scratch, mission_query_soe_rn, mission_query_soe, mission_auto);
+scratch = save(scratch, mission_query_soe_rn, mission_query_soe);
 
 func mission_query_soe_rn(soe, rn) {
 /* DOCUMENT mission(query_soe_rn, <soe>, <rn>)
@@ -375,43 +375,7 @@ func eaarl_mission_unwrap(env) {
   return env;
 }
 
-func mission_auto(path, strict=) {
-/* DOCUMENT mission, auto, "<path>", strict=
-  Automatically initializes a mission based on the given path. The path should
-  be the top-level directory of the mission and should contain subdirectories
-  for each flight.
-
-  This command will clobber any configuration that is already defined.
-
-  The strict= option controls whether non-lidar flights are included. When
-  strict=1, only flights that contain an "edb file" will be defined. When
-  strict=0, flights will be created as long as at least one key can be detected
-  for a subdirectory. This defaults to strict=0.
-*/
-  default, strict, 0;
-  mission, flights, clear;
-  mission, data, path=path;
-
-  // Mission flight directories should always start with a date in their names.
-  dirs = lsdirs(path);
-  days = get_date(dirs);
-  w = where(days);
-  if(!numberof(w))
-    return;
-  dirs = dirs(w);
-
-  // Ensure a stable ordering.
-  dirs = dirs(sort(dirs));
-
-  for(i = 1; i <= numberof(dirs); i++) {
-    mission, flights, auto, dirs(i), file_join(path, dirs(i)), strict=strict;
-    if(!strict && !mission.data.conf(noop(dirs(i)))(*))
-      mission, flights, remove, dirs(i);
-  }
-}
-
-save, mission, query_soe_rn=mission_query_soe_rn, query_soe=mission_query_soe,
-  auto=mission_auto;
+save, mission, query_soe_rn=mission_query_soe_rn, query_soe=mission_query_soe;
 
 hook_add, "mission_flights_auto_critical",
   "eaarl_mission_flights_auto_critical";

@@ -41,12 +41,13 @@ local mission;
 */
 
 scratch = save(scratch, tmp, mission_plugins, mission_cache, mission_flights,
-  mission_details, mission_get, mission_has, mission_load_soe,
-  mission_load_soe_rn, mission_load, mission_unload,
-  mission_wrap, mission_unwrap, mission_json, mission_save,
-  mission_read, mission_tksync, mission_help);
-tmp = save(__help, data, plugins, cache, flights, details, get, has, load_soe,
-  load_soe_rn, load, unload, wrap, unwrap, json, save, read, tksync, help);
+  mission_details, mission_auto, mission_get, mission_has, mission_load_soe,
+  mission_load_soe_rn, mission_load, mission_unload, mission_wrap,
+  mission_unwrap, mission_json, mission_save, mission_read, mission_tksync,
+  mission_help);
+tmp = save(__help, data, plugins, cache, flights, details, auto, get, has,
+  load_soe, load_soe_rn, load, unload, wrap, unwrap, json, save, read, tksync,
+  help);
 
 __help = "\
 Store and manages the mission configuration. This is an oxy object and thus \
@@ -664,6 +665,42 @@ autolist = mission_details_autolist;
 
 details = restore(cmds);
 restore, scratch;
+
+func mission_auto(path, strict=) {
+/* DOCUMENT mission, auto, "<path>", strict=
+  Automatically initializes a mission based on the given path. The path should
+  be the top-level directory of the mission and should contain subdirectories
+  for each flight.
+
+  This command will clobber any configuration that is already defined.
+
+  The strict= option controls whether flights lacking critical data are
+  included. When strict=1, only flights containing critical data will be
+  defined. When strict=0, flights will be created as long as at least one key
+  can be detected for a subdirectory. This defaults to strict=0.
+*/
+  default, strict, 0;
+  mission, flights, clear;
+  mission, data, path=path;
+
+  // Mission flight directories should always start with a date in their names.
+  dirs = lsdirs(path);
+  days = get_date(dirs);
+  w = where(days);
+  if(!numberof(w))
+    return;
+  dirs = dirs(w);
+
+  // Ensure a stable ordering.
+  dirs = dirs(sort(dirs));
+
+  for(i = 1; i <= numberof(dirs); i++) {
+    mission, flights, auto, dirs(i), file_join(path, dirs(i)), strict=strict;
+    if(!strict && !mission.data.conf(noop(dirs(i)))(*))
+      mission, flights, remove, dirs(i);
+  }
+}
+auto = mission_auto;
 
 /*******************************************************************************
   mission(get,)
