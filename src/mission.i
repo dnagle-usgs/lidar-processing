@@ -41,9 +41,9 @@ local mission;
 */
 
 scratch = save(scratch, tmp, mission_plugins, mission_cache, mission_flights,
-  mission_details, mission_get, mission_has, mission_load_soe_stub,
-  mission_load_soe_rn_stub, mission_load_stub, mission_unload_stub,
-  mission_wrap_stub, mission_unwrap_stub, mission_json, mission_save,
+  mission_details, mission_get, mission_has, mission_load_soe,
+  mission_load_soe_rn, mission_load, mission_unload,
+  mission_wrap, mission_unwrap, mission_json, mission_save,
   mission_read, mission_tksync, mission_help);
 tmp = save(__help, data, plugins, cache, flights, details, get, has, load_soe,
   load_soe_rn, load, unload, wrap, unwrap, json, save, read, tksync, help);
@@ -676,58 +676,125 @@ has = mission_has;
   mission(wrap,)
   mission, unwrap, <data>
 
-  All of these functions are stubs. Plugins must replace these functions with
-  their own versions that are actually implemented.
+  All of these functions use handlers. Plugins should provide handlers for
+  each. The handler names are:
+    - mission_load_soe_rn
+    - mission_load_soe
+    - mission_load
+    - mission_unload
+    - mission_wrap
+    - mission_unwrap
 
-  Example of replacing one of them:
-
-    func mission_load(flight) {
-      // do stuff here
-    }
-    save, mission, load=mission_load;
+  See handler.i for details on handlers. See each function's code for details
+  on what its handler receives.
 */
 
-func mission_load_soe_rn_stub(soe, rn) {
-  write, "WARNING: 'mission, load_soe_rn' is not properly implemented";
-  write, "         Most likely this means you didn't load a configuration";
-  write, "         No data loaded";
-}
-load_soe_rn = mission_load_soe_rn_stub;
+func mission_load_soe_rn(soe, rn) {
+/* DOCUMENT mission, load_soe_rn, <soe>, <rn>
+  Loads the flight that contains the specified SOE (seconds-of-the-epoch) and
+  RN (raster number).
 
-func mission_load_soe_stub(soe) {
-  write, "WARNING: 'mission, load_soe' is not properly implemented";
-  write, "         Most likely this means you didn't load a configuration";
-  write, "         No data loaded";
+  See "mission, help, query_soe_rn" for details on how the flight is determined
+  from the SOE and RN.
+*/
+  if(handler_has("mission_load_soe_rn")) {
+    restore, handler_invoke("mission_load_soe_rn", save(soe, rn));
+  } else {
+    write, "WARNING: 'mission, load_soe_rn' is not properly implemented";
+    write, "         Most likely this means you didn't load a configuration";
+    write, "         No data loaded";
+  }
 }
-load_soe = mission_load_soe_stub;
+load_soe_rn = mission_load_soe_rn;
 
-func mission_load_stub(flight) {
-  write, "WARNING: 'mission, load' is not properly implemented";
-  write, "         Most likely this means you didn't load a configuration";
-  write, "         No data loaded";
-}
-load = mission_load_stub;
+func mission_load_soe(soe) {
+/* DOCUMENT mission, load_soe, <soe>
+  Loads the flight that contains the specified SOE (seconds-of-the-epoch).
 
-func mission_unload_stub(void) {
-  write, "WARNING: 'mission, unload' is not properly implemented";
-  write, "         Most likely this means you didn't load a configuration";
-  write, "         No data unloaded";
+  See "mission, help, query_soe" for details on how the flight is determined
+  from the SOE.
+*/
+  if(handler_has("mission_load_soe")) {
+    restore, handler_invoke("mission_load_soe", save(soe));
+  } else {
+    write, "WARNING: 'mission, load_soe' is not properly implemented";
+    write, "         Most likely this means you didn't load a configuration";
+    write, "         No data loaded";
+  }
 }
-unload = mission_unload_stub;
+load_soe = mission_load_soe;
 
-func mission_wrap_stub(void) {
-  write, "WARNING: 'mission(wrap,)' is not properly implemented";
-  write, "         Most likely this means you didn't load a configuration";
-  write, "         No data wrapped";
+func mission_load(flight) {
+/* DOCUMENT mission, load, "<flight>"
+  Loads the data for the specified flight. If the flight given is "", then all
+  data will just be unloaded.
+*/
+  if(handler_has("mission_load")) {
+    restore, handler_invoke("mission_load", save(flight));
+  } else {
+    write, "WARNING: 'mission, load' is not properly implemented";
+    write, "         Most likely this means you didn't load a configuration";
+    write, "         No data loaded";
+  }
 }
-wrap = mission_wrap_stub;
+load = mission_load;
 
-func mission_unwrap_stub(data) {
-  write, "WARNING: 'mission, unwrap' is not properly implemented";
-  write, "         Most likely this means you didn't load a configuration";
-  write, "         No data unwrapped";
+func mission_unload(void) {
+/* DOCUMENT mission, unload
+  Unloads all currently loaded data. *If cache_mode is "onchange", then the
+  data is cached first.
+*/
+  if(handler_has("mission_unload")) {
+    restore, handler_invoke("mission_unload", save());
+  } else {
+    write, "WARNING: 'mission, unload' is not properly implemented";
+    write, "         Most likely this means you didn't load a configuration";
+    write, "         No data unloaded";
+  }
 }
-unwrap = mission_unwrap_stub;
+unload = mission_unload;
+
+func mission_wrap(void) {
+/* DOCUMENT data = mission(wrap,)
+  Saves all of the relevant variables to an oxy group object for the currently
+  loaded dataset. The group object is then returned. The group object should be
+  restored with "mission, unwrap, <data>" instead of "restore, <data>" as there
+  may be additional routines to call after restoration.
+
+  The specific variables wrapped will depend on the cache_what setting.
+
+  This is intended for internal use for caching.
+*/
+  wrapped = save();
+  if(handler_has("mission_wrap")) {
+    restore, handler_invoke("mission_wrap", save(wrapped));
+  } else {
+    write, "WARNING: 'mission(wrap,)' is not properly implemented";
+    write, "         Most likely this means you didn't load a configuration";
+    write, "         No data wrapped";
+  }
+  return wrapped;
+}
+wrap = mission_wrap;
+
+func mission_unwrap(data) {
+/* DOCUMENT mission(unwrap, <data>)
+  Restores data that was wrapped by mission(wrap,). Returns the value of
+  cache_what used when caching was done.
+
+  This is intended for internal use for caching.
+*/
+  cache_what = [];
+  if(handler_has("mission_unwrap")) {
+    restore, handler_invoke("mission_unwrap", save(data, cache_what));
+  } else {
+    write, "WARNING: 'mission, unwrap' is not properly implemented";
+    write, "         Most likely this means you didn't load a configuration";
+    write, "         No data unwrapped";
+  }
+  return cache_what;
+}
+unwrap = mission_unwrap;
 
 /*******************************************************************************
   mission, json, "<jsondata>"
