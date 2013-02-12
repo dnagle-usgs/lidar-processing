@@ -240,8 +240,8 @@ restore, scratch;
 
 scratch = save(scratch, cmds, mission_flights_add, mission_flights_remove,
   mission_flights_rename, mission_flights_swap, mission_flights_raise,
-  mission_flights_lower, mission_flights_clear);
-cmds = save(__help, add, remove, rename, swap, raise, lower, clear);
+  mission_flights_lower, mission_flights_clear, mission_flights_auto);
+cmds = save(__help, add, remove, rename, swap, raise, lower, clear, auto);
 
 __help = "Contains subcommands for modifying the configuration for flights.";
 
@@ -366,6 +366,52 @@ func mission_flights_clear {
   mission, tksync;
 }
 clear = mission_flights_clear;
+
+func mission_flights_auto(flight, path, strict=) {
+/* DOCUMENT mission, flights, auto, "<flight>", "<path>", strict=
+  Automatically initializes the specified flight based on the given path. The
+  path should be the flight's directory.
+
+  This command will clobber any configuration that is already defined.
+
+  The strict= option controls whether flights will be initialized if critical
+  data is mission. This is often determined based on the presence/absence of
+  lidar data, but plugins can choose to handle this as they will. If strict=1,
+  the flight will only be generated when critical data is present. If strict=0,
+  it will always be generated with as much info as possible. This defaults to
+  strict=0.
+
+  If strict=1 and no critical data is found, the flight will be entirely
+  removed from the configuration. If strict=0 and no data is found, the flight
+  be remain but will have no details defined for it.
+*/
+  // Make sure the flight exists
+  if(!mission(has, flight))
+    mission, flights, add, flight;
+
+  // Clear any details that are already present
+  mission, details, clear, flight;
+
+  // If strict=1, the flight should only be generated if there's critical data.
+  if(strict) {
+    has_critical = 1;
+    restore, hook_invoke("mission_flights_auto_critical",
+      save(has_critical, flight, path));
+    if(!has_critical) return;
+  }
+
+  // Keys will be added in the order specified below
+  keys = ["data_path dir", "date"];
+  restore, hook_invoke("mission_flights_auto_keys", save(keys));
+
+  // Auto-detect the value for each key, but only add it if there's actually
+  // something detected.
+  count = numberof(keys);
+  for(i = 1; i <= count; i++)
+    mission, details, auto, flight, keys(i), path, strict=1;
+
+}
+auto = mission_flights_auto;
 
 flights = restore(cmds);
 restore, scratch;

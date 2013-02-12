@@ -2,8 +2,7 @@
 
 // This file expects that the main mission.i has already been loaded.
 
-scratch = save(scratch, mission_query_soe_rn, mission_query_soe, mission_auto,
-  mission_flights_auto);
+scratch = save(scratch, mission_query_soe_rn, mission_query_soe, mission_auto);
 
 func mission_query_soe_rn(soe, rn) {
 /* DOCUMENT mission(query_soe_rn, <soe>, <rn>)
@@ -414,44 +413,27 @@ func mission_auto(path, strict=) {
 save, mission, query_soe_rn=mission_query_soe_rn, query_soe=mission_query_soe,
   auto=mission_auto;
 
-func mission_flights_auto(flight, path, strict=) {
-/* DOCUMENT mission, flights, auto, "<flight>", "<path>", strict=
-  Automatically initializes the specified flight based on the given path. The
-  path should be the flight's directory.
-
-  This command will clobber any configuration that is already defined.
-
-  The strict= option controls whether flight without lidar data will be
-  initialized. If strict=1, the flight will only be generated when lidar data
-  is present. If strict=0, it will always be generated with as much info as
-  possible. This defaults to strict=0.
-
-  If strict=1 and no lidar data is found, the flight will be entirely removed
-  from the configuration. If strict=0 and no data is found, the flight be
-  remain but will have no details defined for it.
+hook_add, "mission_flights_auto_critical",
+  "eaarl_mission_flights_auto_critical";
+func eaarl_mission_flights_auto_critical(env) {
+/* DOCUMENT eaarl_mission_flights_auto_critical(env)
+  Hook function for "mission_flights_auto_critical" used by
+  mission_flights_auto.
+  SEE ALSO: mission_flights_auto
 */
-  // Make sure the flight exists
-  if(!mission(has, flight))
-    mission, flights, add, flight;
+  edbs = mission(details, autolist, env.flight, "edb file", env.path);
+  env, has_critical=(numberof(edbs) > 0);
+  return env;
+}
 
-  // Clear any details that are already present
-  mission, details, clear, flight;
-
-  // If strict=1, the flight should only be generated if there's lidar data,
-  // which is detected by the presence of an EAARL index file.
-  if(strict) {
-    mission, details, auto, flight, "edb file", path, strict=1;
-    if(!mission.data.conf(noop(flight), *, "edb file")) {
-      mission, flights, remove, flight;
-      return;
-    }
-    mission, details, clear, flight;
-  }
-
-  // Keys will be added in the order specified below
-  keys = [
-    "data_path dir",
-    "date",
+hook_add, "mission_flights_auto_keys", "eaarl_mission_flights_auto_keys";
+func eaarl_mission_flights_auto_keys(env) {
+/* DOCUMENT eaarl_mission_flights_auto_keys(env)
+  Hook function for "mission_flights_auto_keys" used by mission_flights_auto.
+  SEE ALSO: mission_flights_auto
+*/
+  keys = env.keys;
+  grow, keys, [
     "edb file",
     "pnav file",
     "ins file",
@@ -461,15 +443,9 @@ func mission_flights_auto(flight, path, strict=) {
     "rgb file",
     "cir dir"
   ];
-
-  // Auto-detect the value for each key, but only add it if there's actually
-  // something detected.
-  count = numberof(keys);
-  for(i = 1; i <= count; i++)
-    mission, details, auto, flight, keys(i), path, strict=1;
+  save, env, keys;
+  return env;
 }
-
-save, mission.flights, auto=mission_flights_auto;
 
 hook_add, "mission_details_autolist", "eaarl_mission_details_autolist";
 func eaarl_mission_details_autolist(env) {
