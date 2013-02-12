@@ -66,7 +66,7 @@ func handler_get(handlers, handler_name) {
   return handlers(noop(handler_name));
 }
 
-func handler_has(handle_name) {
+func handler_has(handler_name) {
 /* DOCUMENT handler_has("<handler_name>")
   Returns 1 if the specified handler name has a function set; 0 otherwise.
 
