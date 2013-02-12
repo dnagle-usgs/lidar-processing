@@ -479,11 +479,7 @@ func eaarl_mission_details_autolist(env) {
 */
   key = env.key;
   path = env.path;
-  if(key == "data_path dir")
-    env, result=[path];
-  else if(key == "date")
-    env, result=[get_date(file_tail(path))];
-  else if(key == "edb file")
+  if(key == "edb file")
     env, result=autoselect_edb(path, options=1);
   else if(key == "pnav file")
     env, result=autoselect_pnav(path, options=1);

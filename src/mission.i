@@ -606,6 +606,10 @@ func mission_details_autolist(flight, key, path) {
   candidates are autodetected, then [string(0)] is returned.
 */
   result = [string(0)];
+  if(key == "data_path dir")
+    result = [path];
+  else if(key == "date")
+    result = [get_date(file_tail(path))];
   restore, hook_invoke("mission_details_autolist",
     save(flight, key, path, result));
   return result;
