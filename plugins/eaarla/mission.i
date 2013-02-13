@@ -38,28 +38,21 @@ func mission_query_soe_rn(soe, rn) {
   return flights(dist(mnx));
 }
 
-func mission_query_soe(soe) {
-/* DOCUMENT mission(query_soe, <soe>)
-  Returns the flight name that contains the specified SOE
-  (seconds-of-the-epoch).
+handler_set, "mission_query_soe", "eaarl_mission_query_soe";
+func eaarl_mission_query_soe(env) {
+/* DOCUMENT eaarl_mission_query_soe(env)
+  Handler function for mission_query_soe.
 
-  A flight can contain several different sources of time information: EAARL
-  index file (EDB), gps trajectory, and ins trajectory. Also, some flights may
-  overlap.
-
-  This function determines the flight as follows:
+  This function determines the flight using time as follows:
     1. Attempts to uniquely determine using EDB
     2. Attempts to uniquely determine using GPS
     3. Attempts to uniquely determine using INS
     4. If multiple matches were found, returns an array of matches that all of
       them agreed on. (If no matches are found for a source, it is excluded.)
 
-  This will return either a scalar or array result, containing the string names
-  of the flights. If no match is found, it will return [].
-
-  Note that this may call on "mission, load" to cycle through flights.
-  Depending on your cache mode, this may result in unwanted side effects.
+  SEE ALSO: mission_query_soe
 */
+  soe = env.soe;
   loaded = mission.data.loaded;
 
   if(!mission.data(*,"soe_bounds"))
@@ -90,18 +83,21 @@ func mission_query_soe(soe) {
   // If no edb match but exactly one gps, use it.
   // If no edb or gps but exactly one ins, use it.
   if(numberof(edb_match) == 1) {
-    return edb_match(1);
+    env, match=edb_match(1);
+    return env;
   } else if(!numberof(edb_match)) {
     if(numberof(gps_match) == 1) {
-      return gps_match(1);
+      env, match=gps_match(1);
+      return env;
     } else if(!numberof(gps_match) && numberof(ins_match) == 1) {
-      return ins_match(1);
+      env, match=ins_match(1);
+      return env;
     }
   }
 
   // List of all flights that matched anything
   all_match = set_remove_duplicates(grow(edb_match, gps_match, ins_match));
-  if(!numberof(all_match)) return [];
+  if(!numberof(all_match)) return env;
 
   // Winnow list down to just those that appeared on each list of results where
   // we actually had results.
@@ -112,7 +108,8 @@ func mission_query_soe(soe) {
   if(numberof(ins_match))
     all_match = set_intersection(all_match, ins_match);
 
-  return all_match;
+  env, match=all_match;
+  return env;
 }
 
 handler_set, "mission_load_soe_rn", "eaarl_mission_load_soe_rn";

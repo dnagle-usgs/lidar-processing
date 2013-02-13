@@ -42,12 +42,12 @@ local mission;
 
 scratch = save(scratch, tmp, mission_plugins, mission_cache, mission_flights,
   mission_details, mission_auto, mission_get, mission_has, mission_load_soe,
-  mission_load_soe_rn, mission_load, mission_unload, mission_wrap,
-  mission_unwrap, mission_json, mission_save, mission_read, mission_tksync,
-  mission_help);
+  mission_load_soe_rn, mission_query_soe, mission_load, mission_unload,
+  mission_wrap, mission_unwrap, mission_json, mission_save, mission_read,
+  mission_tksync, mission_help);
 tmp = save(__help, data, plugins, cache, flights, details, auto, get, has,
-  load_soe, load_soe_rn, load, unload, wrap, unwrap, json, save, read, tksync,
-  help);
+  load_soe, load_soe_rn, query_soe, load, unload, wrap, unwrap, json, save,
+  read, tksync, help);
 
 __help = "\
 Store and manages the mission configuration. This is an oxy object and thus \
@@ -701,6 +701,33 @@ func mission_auto(path, strict=) {
   }
 }
 auto = mission_auto;
+
+func mission_query_soe(soe) {
+/* DOCUMENT mission(query_soe, <soe>)
+  Returns the flight name that contains the specified SOE.
+
+  A flight can contain several different sources of time information. EAARL
+  flights generally contain an EAARL index file (EDB), a gps trajectory, and an
+  ins trajectory. Also, some flights may overlap (if multiple flights are flown
+  at the same time).
+
+  This will return either a scalar or array result, containing the string names
+  of the flights. If no match is found, it will return [].
+
+  Note that this may call on "mission, load" to cycle through flights.
+  Depending on your cache mode, this may result in unwanted side effects.
+*/
+  match = [];
+  if(handler_has("mission_query_soe")) {
+    restore, handler_invoke("mission_query_soe", save(soe, match));
+  } else {
+    write, "WARNING: no handler defined for 'mission_query_soe'";
+    write, "         Most likely this means you didn't load a configuration";
+    write, "         Unable to lookup soe";
+  }
+  return match;
+}
+query_soe = mission_query_soe;
 
 /*******************************************************************************
   mission(get,)
