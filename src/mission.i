@@ -42,12 +42,12 @@ local mission;
 
 scratch = save(scratch, tmp, mission_plugins, mission_cache, mission_flights,
   mission_details, mission_auto, mission_get, mission_has, mission_load_soe,
-  mission_load_soe_rn, mission_query_soe, mission_load, mission_unload,
-  mission_wrap, mission_unwrap, mission_json, mission_save, mission_read,
-  mission_tksync, mission_help);
+  mission_load_soe_rn, mission_query_soe, mission_query_soe_rn, mission_load,
+  mission_unload, mission_wrap, mission_unwrap, mission_json, mission_save,
+  mission_read, mission_tksync, mission_help);
 tmp = save(__help, data, plugins, cache, flights, details, auto, get, has,
-  load_soe, load_soe_rn, query_soe, load, unload, wrap, unwrap, json, save,
-  read, tksync, help);
+  load_soe, load_soe_rn, query_soe, query_soe_rn, load, unload, wrap, unwrap,
+  json, save, read, tksync, help);
 
 __help = "\
 Store and manages the mission configuration. This is an oxy object and thus \
@@ -701,6 +701,40 @@ func mission_auto(path, strict=) {
   }
 }
 auto = mission_auto;
+
+func mission_query_soe_rn(soe, rn) {
+/* DOCUMENT mission(query_soe_rn, <soe>, <rn>)
+  Returns the flight name that contains the specified SOE and RN.
+
+  If the flight can be uniquely determined using just SOE, then RN is ignored.
+
+  If multiple flights contain a given SOE, then the RN (raster number) will be
+  used to attempt to determine which flight matches best. This can happen if
+  multiple planes are surveying concurrently. In order for a flight to match,
+  the SOE of the given RN must be within 0.01 seconds of the given SOE. If
+  multiple flights match, then the one with the closest SOE value is returned.
+
+  If no match is found, [] is returned.
+
+  Note that this may call on "mission, load" to cycle through flights, which
+  may have unwanted side effects depending on your cache mode.
+*/
+  flights = mission(query_soe, soe);
+  if(numberof(flights) <= 1) return flights;
+
+  match = [];
+  if(handler_has("mission_query_soe_rn")) {
+    restore, handler_invoke("mission_query_soe_rn",
+      save(flights, soe, rn, match));
+  } else {
+    write, "WARNING: no handler defined for 'mission_query_soe_rn'";
+    write, "         Most likely this means you didn't load a configuration";
+    write, "         Multiple flights matched SOE, but unable to use RN";
+    write, "         Returning []";
+  }
+  return match;
+}
+query_soe_rn = mission_query_soe_rn;
 
 func mission_query_soe(soe) {
 /* DOCUMENT mission(query_soe, <soe>)

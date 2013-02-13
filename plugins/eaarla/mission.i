@@ -1,41 +1,24 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-// This file expects that the main mission.i has already been loaded.
-
-scratch = save(scratch, mission_query_soe_rn, mission_query_soe);
-
-func mission_query_soe_rn(soe, rn) {
-/* DOCUMENT mission(query_soe_rn, <soe>, <rn>)
-  Returns the flight name that contains the specified SOE
-  (seconds-of-the-epoch) and RN (raster number).
-
-  This attempts to uniquely identify the flight using mission(query_soe,<soe>).
-  If the flight can be uniquely determined that way, then that flight is
-  returned and no checks are made on the raster number.
-
-  Sometimes, multiple flights might match an SOE value. This might happen if
-  multiple planes are surveying concurrently. In this case, the raster number
-  is used to attempt to pinpoint the flight. For each matching flight day, the
-  SOE value of the given RN is checked and compared to the given SOE. If one or
-  more match within 0.01 seconds, then the closest match is returned.
-
-  If no match is found, [] is returned.
-
-  Note that this may call on "mission, load" to cycle through flights.
-  Depending on your cache mode, this may result in unwanted side effects.
+handler_set, "mission_query_soe_rn", "eaarl_mission_query_soe_rn";
+func eaarl_mission_query_soe_rn(env) {
+/* DOCUMENT eaarl_mission_query_soe_rn(env)
+  Handler function for mission_query_soe_rn.
+  SEE ALSO: mission_query_soe_rn
 */
-  flights = mission(query_soe, soe);
-  if(numberof(flights) <= 1) return flights;
+  flights = env.flights;
+  rn = env.rn;
 
   count = numberof(flights);
   dist = array(10000., count);
   for(i = 1; i <= count; i++) {
     mission, load, flights(i);
     if(!is_void(edb) && rn <= numberof(edb))
-      dist(i) = abs(soe - edb(rn).seconds - edb(rn).fseconds*1.6e-6);
+      dist(i) = abs(env.soe - edb(rn).seconds - edb(rn).fseconds*1.6e-6);
   }
-  if(dist(min) > 0.01) return [];
-  return flights(dist(mnx));
+  if(dist(min) <= 0.01) env, match=flights(dist(mnx));
+
+  return env;
 }
 
 handler_set, "mission_query_soe", "eaarl_mission_query_soe";
@@ -372,8 +355,6 @@ func eaarl_mission_unwrap(env) {
   return env;
 }
 
-save, mission, query_soe_rn=mission_query_soe_rn, query_soe=mission_query_soe;
-
 hook_add, "mission_flights_auto_critical",
   "eaarl_mission_flights_auto_critical";
 func eaarl_mission_flights_auto_critical(env) {
@@ -434,5 +415,3 @@ func eaarl_mission_details_autolist(env) {
     env, result=autoselect_cir_dir(path, options=1);
   return env;
 }
-
-restore, scratch;
