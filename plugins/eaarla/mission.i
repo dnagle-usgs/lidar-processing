@@ -16,7 +16,7 @@ func eaarl_mission_query_soe_rn(env) {
     if(!is_void(edb) && rn <= numberof(edb))
       dist(i) = abs(env.soe - edb(rn).seconds - edb(rn).fseconds*1.6e-6);
   }
-  if(dist(min) <= 0.01) env, match=flights(dist(mnx));
+  if(dist(min) <= 1) env, match=flights(dist(mnx));
 
   return env;
 }
