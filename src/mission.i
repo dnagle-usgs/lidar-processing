@@ -129,7 +129,7 @@ data = save(
   path="",
   loaded="",
   cache_mode="onchange",  // disabled | onload | onchange
-  cache_what="everything",  // everything | settings
+  cache_what="settings",  // everything | settings
   conf=save(),
   cache=save()
 );
