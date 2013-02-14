@@ -47,7 +47,7 @@ namespace eval ::handler {
         if {![dict exists $handlers $handler_name]} {
             error "no handler set for $handler_name"
         }
-        set cmd [dict get $handlers $handler_name]
+        ::set cmd [dict get $handlers $handler_name]
         uplevel 1 [list {*}$cmd {*}$args]
     }
 
