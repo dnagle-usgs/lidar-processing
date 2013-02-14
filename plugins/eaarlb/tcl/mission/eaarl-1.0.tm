@@ -60,12 +60,6 @@ namespace eval ::mission::eaarl {
     set ::mission::commands(initialize_path_flight) \
             ::mission::eaarl::initialize_path_flight
 
-    proc load_data {flight} {
-        set flight [ystr $flight]
-        exp_send "mission, load, \"$flight\";\r"
-    }
-    set ::mission::commands(load_data) ::mission::eaarl::load_data
-
     proc menu_actions {mb} {
         $mb add separator
         $mb add command {*}[menulabel "Launch RGB"] \
