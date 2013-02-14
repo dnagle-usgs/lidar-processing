@@ -4,6 +4,8 @@ package provide mission 1.0
 package require imglib
 package require style
 package require fileutil
+package require handler
+package require hook
 
 if {![namespace exists ::mission]} {
     namespace eval ::mission {
@@ -34,14 +36,6 @@ if {![namespace exists ::mission]} {
         variable cache_what ""
         tky_tie add read ::mission::cache_what \
                 from mission.data.cache_what -initialize 1
-
-        variable commands
-        array set commands {
-            initialize_path_mission {}
-            initialize_path_flight {}
-            menu_actions {}
-            refresh_load {}
-        }
 
         # List of all known detail types; used to populate the dropdown box for
         # "Detail type:". This should get set by a plugin.
@@ -329,10 +323,6 @@ namespace eval ::mission {
                 -command [list exp_send "mission, plugins, load;\r"]
         ttk::button $f.btnInitialize -text "Initialize Mission by Path" \
                 -command ::mission::initialize_path_mission
-        ::mixin::statevar $f.btnInitialize \
-                -statemap {"" disabled} \
-                -statedefault {!disabled} \
-                -statevariable ::mission::commands(initialize_path_mission)
         grid x $f.btnLoad $f.btnInitialize -in $f.fraButtons
         grid columnconfigure $f.fraButtons {0 3} -weight 1
 
@@ -403,10 +393,6 @@ namespace eval ::mission {
                 -command ::mission::editview_load_data
         ttk::button $f.btnInitialize -text "Initialize Flight by Path" \
                 -command ::mission::initialize_path_flight
-        ::mixin::statevar $f.btnInitialize \
-                -statemap {"" disabled} \
-                -statedefault {!disabled} \
-                -statevariable ::mission::commands(initialize_path_flight)
         grid x $f.btnLoad $f.btnInitialize -in $f.fraButtons
         grid columnconfigure $f.fraButtons {0 3} -weight 1
 
@@ -664,7 +650,7 @@ namespace eval ::mission {
     # Automatically initializes the dataset using the current mission.data.path
     # (or prompts for one if not defined).
     proc initialize_path_mission {} {
-        if {$::mission::commands(initialize_path_mission) eq ""} {
+        if {![handler::has "mission_initialize_path_mission"]} {
             tk_messageBox -icon error \
                     -parent $::mission::top \
                     -type ok \
@@ -707,14 +693,14 @@ namespace eval ::mission {
         }
 
         if {$choice eq "yes"} {
-            {*}$::mission::commands(initialize_path_mission) $path
+            handler::invoke "mission_initialize_path_mission" $path
         }
     }
 
     # Automatically initializes a flight using data_path (or prompts if none
     # present)
     proc initialize_path_flight {} {
-        if {$::mission::commands(initialize_path_flight) eq ""} {
+        if {![handler::has "mission_initialize_path_flight"]} {
             tk_messageBox -icon error \
                     -parent $::mission::top \
                     -type ok \
@@ -773,7 +759,7 @@ namespace eval ::mission {
         }
 
         if {$choice eq "yes"} {
-            {*}$::mission::commands(initialize_path_flight) $flight_name $path
+            handler::invoke "mission_initialize_path_flight" $flight_name $path
         }
 
     }
@@ -1076,7 +1062,6 @@ namespace eval ::mission {
     proc refresh_load {} {
         variable load_flights
         variable load_extra
-        variable commands
 
         foreach child [winfo children $load_flights] {
             destroy $child
@@ -1085,11 +1070,14 @@ namespace eval ::mission {
             destroy $child
         }
 
-        if {$commands(refresh_load) ne ""} {
-            {*}$commands(refresh_load) $load_flights $load_extra
-            return
-        }
+        handler::invoke "mission_refresh_load" $load_flights $load_extra
+    }
 
+    if {![handler::has "mission_refresh_load"]} {
+        handler::set "mission_refresh_load" \
+                [namespace current]::refresh_load_default
+    }
+    proc refresh_load_default {load_flights load_extra} {
         set f $load_flights
         set row 0
         foreach flight [get] {
@@ -1265,10 +1253,7 @@ namespace eval ::mission {
             clear $mb
             $mb add command {*}[menulabel "Initialize mission from path"] \
                     -command ::mission::initialize_path_mission
-
-            if {$::mission::commands(menu_actions) ne ""} {
-                {*}$::mission::commands(menu_actions) $mb
-            }
+            hook::invoke "mission_menu_actions" $mb
         }
 
         proc menu_cache {mb} {
