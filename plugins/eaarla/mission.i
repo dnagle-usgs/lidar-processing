@@ -115,7 +115,7 @@ func eaarl_mission_load_soe_rn(env) {
 }
 
 handler_set, "mission_load_soe", "eaarl_mission_load_soe";
-func eaarl_mission_load_soe(soe) {
+func eaarl_mission_load_soe(env) {
 /* DOCUMENT eaarl_mission_load_soe(env)
   Handler for mission_load_soe.
   SEE ALSO: mission_load_soe
