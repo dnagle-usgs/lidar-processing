@@ -6,6 +6,7 @@ package require mission
 namespace eval ::mission::eaarl {
     namespace import ::yorick::ystr
     namespace import ::misc::menulabel
+    namespace import ::misc::tooltip
 
     set ::mission::detail_types {
         "data_path dir"
@@ -139,6 +140,11 @@ namespace eval ::mission::eaarl {
             } else {
                 $f.cir$row state disabled
             }
+
+            tooltip $f.load$row \
+                    "Loads data for flight \"$flight\". Depending on your
+                    caching mode, data will either be loaded from file or
+                    loaded from the cache."
         }
 
         set f [ttk::frame $extra.f1]

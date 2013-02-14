@@ -87,6 +87,7 @@ if {![namespace exists ::mission]} {
 
 namespace eval ::mission {
     namespace import ::yorick::ystr
+    namespace import ::misc::tooltip
 
     # ::mission::has behaves like Yorick mission(has,)
     #   [::mission::has $flight] -> 0|1 is flight present?
@@ -1099,6 +1100,11 @@ namespace eval ::mission {
             grid $f.lbl$row $f.btn$row -padx 2 -pady 2
             grid $f.lbl$row -sticky w
             grid $f.btn$row -sticky ew
+
+            tooltip $f.btn$row \
+                    "Loads data for flight \"$flight\". Depending on your
+                    caching mode, data will either be loaded from file or
+                    loaded from the cache."
         }
     }
 
