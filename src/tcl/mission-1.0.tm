@@ -621,6 +621,17 @@ namespace eval ::mission {
             set plugins "\[\"[join $plugins {", "}]\"\]"
         }
         exp_send "mission, data, plugins=$plugins; mission, tksync\r"
+        if {$plugin ni $::plugins::loaded} {
+            set result [tk_messageBox -icon info \
+                    -parent $::mission::top \
+                    -type yesno \
+                    -title "Load plugin?" \
+                    -message "The plugin \"$plugin\" does not appear to be\
+                        loaded. Would you like to load it now?"]
+            if {$result eq "yes"} {
+                exp_send "plugins_load, \"$plugin\";\r"
+            }
+        }
     }
 
     # Prompt the user to browse to a path, which is then set for
