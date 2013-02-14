@@ -1095,16 +1095,22 @@ namespace eval ::mission {
         foreach flight [get] {
             incr row
             ttk::label $f.lbl$row -text $flight
-            ttk::button $f.btn$row -text "Load" -command \
+            ttk::button $f.load$row -text "Load" -command \
                     [list exp_send "mission, load, \"[ystr $flight]\";\r"]
-            grid $f.lbl$row $f.btn$row -padx 2 -pady 2
+            ttk::button $f.reload$row -text "Reload" -command \
+                    [list exp_send "mission, reload, \"[ystr $flight]\";\r"]
+            grid $f.lbl$row $f.load$row $f.reload$row -padx 2 -pady 2
             grid $f.lbl$row -sticky w
-            grid $f.btn$row -sticky ew
+            grid $f.load$row $f.reload$row -sticky ew
 
-            tooltip $f.btn$row \
+            tooltip $f.load$row \
                     "Loads data for flight \"$flight\". Depending on your
                     caching mode, data will either be loaded from file or
                     loaded from the cache."
+            tooltip $f.reload$row \
+                    "Reloads data for flight \"$flight\". This will always load
+                    the data from the source files defined in the
+                    configuration, ignoring the cache."
         }
     }
 

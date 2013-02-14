@@ -118,13 +118,16 @@ namespace eval ::mission::eaarl {
             ttk::label $f.lbl$row -text $flight
             ttk::button $f.load$row -text "Load" -width 0 -command \
                     [list exp_send "mission, load, \"[ystr $flight]\";\r"]
+            ttk::button $f.reload$row -text "Reload" -width 0 -command \
+                    [list exp_send "mission, reload, \"[ystr $flight]\";\r"]
             ttk::button $f.rgb$row -text "RGB" -width 0 \
                     -command [list ::mission::eaarl::load_rgb $flight]
             ttk::button $f.nir$row -text "NIR" -width 0 \
                     -command [list ::mission::eaarl::load_nir $flight]
-            grid $f.lbl$row $f.load$row $f.rgb$row $f.nir$row -padx 2 -pady 2
+            grid $f.lbl$row $f.load$row $f.reload$row $f.rgb$row $f.nir$row \
+                    -padx 2 -pady 2
             grid $f.lbl$row -sticky w
-            grid $f.load$row $f.rgb$row $f.nir$row -sticky ew
+            grid $f.load$row $f.reload$row $f.rgb$row $f.nir$row -sticky ew
 
             if {
                 [::mission::has $flight "rgb dir"] ||
@@ -145,6 +148,10 @@ namespace eval ::mission::eaarl {
                     "Loads data for flight \"$flight\". Depending on your
                     caching mode, data will either be loaded from file or
                     loaded from the cache."
+            tooltip $f.reload$row \
+                    "Reloads data for flight \"$flight\". This will always load
+                    the data from the source files defined in the
+                    configuration, ignoring the cache."
         }
 
         set f [ttk::frame $extra.f1]
