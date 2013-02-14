@@ -43,11 +43,11 @@ local mission;
 scratch = save(scratch, tmp, mission_plugins, mission_cache, mission_flights,
   mission_details, mission_auto, mission_get, mission_has, mission_load_soe,
   mission_load_soe_rn, mission_query_soe, mission_query_soe_rn, mission_load,
-  mission_unload, mission_wrap, mission_unwrap, mission_json, mission_save,
-  mission_read, mission_tksync, mission_help);
+  mission_reload, mission_unload, mission_wrap, mission_unwrap, mission_json,
+  mission_save, mission_read, mission_tksync, mission_help);
 tmp = save(__help, data, plugins, cache, flights, details, auto, get, has,
-  load_soe, load_soe_rn, query_soe, query_soe_rn, load, unload, wrap, unwrap,
-  json, save, read, tksync, help);
+  load_soe, load_soe_rn, query_soe, query_soe_rn, load, reload, unload, wrap,
+  unwrap, json, save, read, tksync, help);
 
 __help = "\
 Store and manages the mission configuration. This is an oxy object and thus \
@@ -903,6 +903,9 @@ func mission_load(flight) {
 /* DOCUMENT mission, load, "<flight>"
   Loads the data for the specified flight. If the flight given is "", then all
   data will just be unloaded.
+
+  This will load either from file or from the cache, depending on the caching
+  mode and whether it's already been loaded previously.
 */
   if(handler_has("mission_load")) {
     restore, handler_invoke("mission_load", save(flight));
@@ -913,6 +916,22 @@ func mission_load(flight) {
   }
 }
 load = mission_load;
+
+func mission_reload(flight) {
+/* DOCUMENT mission, reload, "<flight>"
+  Reloads the data for the specified flight. If the flight given is "", then
+  all data will just be unloaded.
+
+  Unlike 'mission, load', this will always load everything from file. It
+  completely ignores cache settings.
+*/
+  // Deleting the cached data will force 'mission, load' to load from file for
+  // everything.
+  mission, unload;
+  save, mission.data.cache, noop(flight), save();
+  mission, load, flight;
+}
+reload = mission_reload;
 
 func mission_unload(void) {
 /* DOCUMENT mission, unload
