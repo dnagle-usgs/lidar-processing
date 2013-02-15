@@ -37,6 +37,11 @@ if {![namespace exists ::mission]} {
         tky_tie add read ::mission::cache_what \
                 from mission.data.cache_what -initialize 1
 
+        # Corresponds to mission.data.missing_file; read-only.
+        variable missing_file ""
+        tky_tie add read ::mission::missing_file \
+                from mission.data.missing_file -initialize 1
+
         # List of all known detail types; used to populate the dropdown box for
         # "Detail type:". This should get set by a plugin.
         variable detail_types {}
@@ -1290,6 +1295,9 @@ namespace eval ::mission {
                     -menu [postmenu $mb.mode menu_settings_cache_mode]
             $mb add cascade {*}[menulabel "Cache &what..."] \
                     -menu [postmenu $mb.what menu_settings_cache_what]
+            $mb add separator
+            $mb add cascade {*}[menulabel "&Missing files..."] \
+                    -menu [postmenu $mb.miss menu_settings_missing]
         }
 
         proc menu_settings_cache_mode {mb} {
@@ -1315,6 +1323,22 @@ namespace eval ::mission {
                                 "mission, data, cache_what=\"$what\";\
                                 mission, cache, check;\r"]
             }
+        }
+
+        proc menu_settings_missing {mb} {
+            clear $mb
+            $mb add radiobutton \
+                    -label "Throw an error" \
+                    -variable ::mission::missing_file \
+                    -value "error" \
+                    -command [list exp_send \
+                            "mission, data, missing_file=\"error\";\r"]
+            $mb add radiobutton \
+                    -label "Issue a warning" \
+                    -variable ::mission::missing_file \
+                    -value "warn" \
+                    -command [list exp_send \
+                            "mission, data, missing_file=\"warn\";\r"]
         }
     }
 }
