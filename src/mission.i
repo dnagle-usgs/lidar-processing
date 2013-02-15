@@ -1048,6 +1048,7 @@ func mission_json_import(versions, json) {
   This is used internally by calls to 'mission, json, "<jsondata>"'. It imports
   a mission configuration from JSON data.
 */
+  mission, unload;
   mission, cache, "clear";
   data = json_decode(json, objects="");
 
