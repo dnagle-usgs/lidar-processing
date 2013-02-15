@@ -363,7 +363,8 @@ func mission_flights_clear {
 /* DOCUMENT mission, flights, clear
   Removes all flights (which means it clears the entire mission configuration).
 */
-  mission, data, conf=save(), cache=save();
+  mission, unload;
+  mission, data, conf=save(), cache=save(), soe_bounds=save();
   mission, tksync;
 }
 clear = mission_flights_clear;
@@ -1048,8 +1049,7 @@ func mission_json_import(versions, json) {
   This is used internally by calls to 'mission, json, "<jsondata>"'. It imports
   a mission configuration from JSON data.
 */
-  mission, unload;
-  mission, cache, "clear";
+  mission, flights, clear;
   data = json_decode(json, objects="");
 
   // Prior to 2012-09-27, there was no mcversion field; this is treated as
@@ -1075,8 +1075,7 @@ func mission_json_import(versions, json) {
     write, "Attempting to use anyway, but errors may ensue...";
   }
 
-  mission, data, conf=data.flights, cache=save(), plugins=data.plugins,
-    soe_bounds=save(), loaded="";
+  mission, data, conf=data.flights;
 }
 
 scratch = save(scratch, versions);
