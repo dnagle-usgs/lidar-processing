@@ -134,12 +134,44 @@ func eaarl_mission_load_soe(env) {
   return env;
 }
 
+func eaarl_mission_load_test_key(flight, key) {
+/* DOCUMENT eaarl_mission_load_test_key(flight, key)
+  Utility function for mission_eaarl_load.
+  - Tests to see if the key exists. If not, warning issued.
+  - Tests to see if defined file exists. If not:
+    - Warning if mission.data.missing_file="warn"
+    - Error otherwise
+  - Returns 0 if any warning was issued.
+  - Returns 1 if everything is okay.
+*/
+  if(mission(has, flight, key)) {
+    fn = mission(get, flight, key);
+    if(file_exists(fn)) {
+      return 1;
+    } else {
+      msg = pr1(key)+" defined for "+pr1(flight)+" doesn't exist";
+      if(mission.data.missing_file == "warn") {
+        write, "WARNING: "+msg;
+        return 0;
+      } else {
+        error, msg;
+      }
+    }
+  } else {
+    write, "WARNING: no "+pr1(key)+" defined for "+pr1(flight);
+    return 0;
+  }
+}
+
 handler_set, "mission_load", "eaarl_mission_load";
 func eaarl_mission_load(env) {
 /* DOCUMENT eaarl_mission_load(env)
   Handler for mission_load.
   SEE ALSO: mission_load
 */
+  // Local alias for convenience
+  test_key = eaarl_mission_load_test_key;
+
   // Start by clearing any currently loaded data. (This also triggers onchange
   // caching.)
   mission, unload;
@@ -195,21 +227,18 @@ func eaarl_mission_load(env) {
   // If cached is not "none", then settings were restored from the cache
   // (cached == "everything" or cached == "settings").
   if(cached == "none") {
-    // ops_conf -- neds to come first since some other sources depend on it
+    // ops_conf -- needs to come first since some other sources depend on it
     extern ops_conf, ops_conf_filename;
-    if(mission(has, env.flight, "ops_conf file")) {
+    if(test_key(env.flight, "ops_conf file")) {
       ops_conf_filename = mission(get, env.flight, "ops_conf file");
       ops_conf = load_ops_conf(ops_conf_filename);
     } else {
-      write, "WARNING: no ops_conf file defined for "+pr1(env.flight);
       write, "         (using EAARL-B defaults)";
       ops_conf = ops_eaarlb;
     }
 
-    if(mission(has, env.flight, "bath_ctl file")) {
+    if(test_key(env.flight, "bath_ctl file")) {
       bath_ctl_load, mission(get, env.flight, "bath_ctl file");
-    } else {
-      write, "WARNING: no bath_ctl file defined for "+pr1(env.flight);
     }
   }
 
@@ -217,17 +246,15 @@ func eaarl_mission_load(env) {
   // things that follow
   extern edb;
   soes = [];
-  if(mission(has, env.flight, "edb file")) {
+  if(test_key(env.flight, "edb file")) {
     load_edb, fn=mission(get, env.flight, "edb file"), verbose=0;
     idx = [1, numberof(edb)];
     save, mission.data.soe_bounds(env.flight), "edb",
       edb.seconds(idx) + edb.fseconds(idx)*1.6e-6;
-  } else {
-    write, "WARNING: no edb file defined for "+pr1(env.flight);
   }
 
   extern pnav, curzone;
-  if(mission(has, env.flight, "pnav file")) {
+  if(test_key(env.flight, "pnav file")) {
     pnav = rbpnav(fn=mission(get, env.flight, "pnav file"), verbose=0);
     if(!curzone && has_member(pnav, "lat") && has_member(pnav, "lon"))
       auto_curzone, pnav.lat, pnav.lon;
@@ -236,12 +263,10 @@ func eaarl_mission_load(env) {
       save, mission.data.soe_bounds(env.flight), "gps",
         date2soe(mission(get, env.flight, "date"), pnav.sod(idx));
     }
-  } else {
-    write, "WARNING: no pnav file defined for "+pr1(env.flight);
   }
 
   extern ins_filename, iex_nav, iex_head, tans;
-  if(mission(has, env.flight, "ins file")) {
+  if(test_key(env.flight, "ins file")) {
     ins_filename = mission(get, env.flight, "ins file");
     if(file_extension(ins_filename) == ".pbd") {
       load_iexpbd, ins_filename, verbose=0;
@@ -256,8 +281,6 @@ func eaarl_mission_load(env) {
     }
     if(!curzone && has_member(tans, "lat") && has_member(tans, "lon"))
       auto_curzone, tans.lat, tans.lon;
-  } else {
-    write, "WARNING: no ins file defined for "+pr1(env.flight);
   }
 
   if(anyof(mission.data.cache_mode == ["onload","onchange"]))
