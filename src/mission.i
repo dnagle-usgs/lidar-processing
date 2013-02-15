@@ -98,6 +98,11 @@ local mission_data;
         "everything" - all data will be cached
         "settings" - only the settings will be cached (ops_conf + bath_ctl)
 
+    mission.data.missing_file - Specifies how to handle missing files when
+      loading data.
+        "warn" - Warn the user, but don't throw an error
+        "error" - Throw an error.
+
     The above four settings can be queried as they are shown. They can also be
     modified directly:
     
@@ -130,6 +135,7 @@ data = save(
   loaded="",
   cache_mode="onchange",  // disabled | onload | onchange
   cache_what="settings",  // everything | settings
+  missing_file="error",
   conf=save(),
   cache=save()
 );
