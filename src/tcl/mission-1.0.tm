@@ -1256,8 +1256,8 @@ namespace eval ::mission {
                     -menu [postmenu $mb.file menu_file]
             $mb add cascade {*}[menulabel &Actions] \
                     -menu [postmenu $mb.actions menu_actions]
-            $mb add cascade {*}[menulabel &Cache] \
-                    -menu [postmenu $mb.cache menu_cache]
+            $mb add cascade {*}[menulabel &Settings] \
+                    -menu [postmenu $mb.cache menu_settings]
             return $mb
         }
 
@@ -1276,23 +1276,23 @@ namespace eval ::mission {
             clear $mb
             $mb add command {*}[menulabel "Initialize mission from path"] \
                     -command ::mission::initialize_path_mission
-            hook::invoke "mission_menu_actions" $mb
-        }
-
-        proc menu_cache {mb} {
-            clear $mb
-            $mb add cascade {*}[menulabel "Cache &mode..."] \
-                    -menu [postmenu $mb.mode menu_cache_mode]
-            $mb add cascade {*}[menulabel "Cache &what..."] \
-                    -menu [postmenu $mb.what menu_cache_what]
             $mb add separator
             $mb add command {*}[menulabel "Preload cache"] \
                     -command [list exp_send "mission, cache, preload;\r"]
             $mb add command {*}[menulabel "Clear cache"] \
                     -command [list exp_send "mission, cache, clear;\r"]
+            hook::invoke "mission_menu_actions" $mb
         }
 
-        proc menu_cache_mode {mb} {
+        proc menu_settings {mb} {
+            clear $mb
+            $mb add cascade {*}[menulabel "Cache &mode..."] \
+                    -menu [postmenu $mb.mode menu_settings_cache_mode]
+            $mb add cascade {*}[menulabel "Cache &what..."] \
+                    -menu [postmenu $mb.what menu_settings_cache_what]
+        }
+
+        proc menu_settings_cache_mode {mb} {
             clear $mb
             foreach mode {disabled onload onchange} {
                 $mb add radiobutton \
@@ -1304,7 +1304,7 @@ namespace eval ::mission {
             }
         }
 
-        proc menu_cache_what {mb} {
+        proc menu_settings_cache_what {mb} {
             clear $mb
             foreach what {settings everything} {
                 $mb add radiobutton \
