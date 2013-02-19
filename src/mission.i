@@ -369,7 +369,7 @@ func mission_flights_clear {
 /* DOCUMENT mission, flights, clear
   Removes all flights (which means it clears the entire mission configuration).
 */
-  mission, unload;
+  if(mission.data.loaded != "") mission, unload;
   mission, data, conf=save(), cache=save(), soe_bounds=save();
   mission, tksync;
 }
