@@ -1081,7 +1081,7 @@ func mission_json_import(versions, json) {
     write, "Attempting to use anyway, but errors may ensue...";
   }
 
-  mission, data, conf=data.flights;
+  mission, data, conf=data.flights, plugins=data.plugins;
 }
 
 scratch = save(scratch, versions);
