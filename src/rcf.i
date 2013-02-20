@@ -102,6 +102,60 @@ func rcf(jury, w, mode=) {
   }
 }
 
+func rcf_2d(x, z, buf, fw) {
+/* DOCUMENT idx = rcf_2d(x, z, buf, fw)
+  Two-dimensional RCF. Each point (x,z) looks at a neighborhood of points
+  within a window of size BUF along the x-axis to see if the z coordinate falls
+  within the winning jury selected using RCF against the Z coordiantes using a
+  filter width of FW.
+
+  Parameters:
+    x: Coordinates along x-axis
+    z: Coordinates along z-axis
+    buf: Buffer size along x-axis. (Points within +/-(buf/2) of x coordinate
+      considered for jury.)
+    fw: Filter width. This is the width along the z-axis that the RCF searched
+      for a winning jury.
+
+  Returns:
+    idx, an index into X and Z of the points that passed the filter
+*/
+  // Edge cases
+  if(!numberof(x)) return [];
+  if(numberof(x) == 1) return [1];
+
+  if(numberof(x) != numberof(z) || dimsof(x)(1) != dimsof(z)(1))
+    error, "X and Z input must have matching dimensions and size"
+
+  // Cut buf in half, so that it's +/- point
+  buf = buf/2.;
+
+  // Sort input along X-axis for efficiency
+  srt = sort(x);
+  x = x(srt);
+  z = z(srt);
+
+  b0 = b1 = 1;
+  count = numberof(x);
+  keep = array(short(0), count);
+  for(i = 1; i <= count; i++) {
+    // Find the bounds along x-axis for this point
+    while(x(b0) < x(i) - buf) b0++;
+    while(b1 <= count && x(b1) <= x(i) + buf) b1++;
+    b1--;
+
+    // Apply RCF filter and see if z-coordinate is in the winning jury window
+    zmin = rcf(z(b0:b1), fw, mode=0)(1);
+    if(zmin <= z(i) && z(i) <= zmin+fw)
+      keep(i) = 1;
+  }
+
+  // Need to invert sorting to match original ordering of coordinates
+  result = array(short, count);
+  result(srt) = keep;
+  return where(result);
+}
+
 func moving_rcf(yy, fw, n) {
 /* DOCUMENT moving_rcf(yy, fw, n)
   This function filters a vector of data (yy) with rcf using a filter width of
