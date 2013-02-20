@@ -239,6 +239,10 @@ func eaarl_mission_load(env) {
 
     if(test_key(env.flight, "bath_ctl file")) {
       bath_ctl_load, mission(get, env.flight, "bath_ctl file");
+    } else {
+      write, "         (using null defaults)";
+      default, bath_ctl, BATH_CTL();
+      default, bath_ctl_chn4, BATH_CTL();
     }
   }
 
