@@ -298,6 +298,9 @@ xfma=, verbose=) {
   saturated = wf == maxint;
   numsat = numberof(where(saturated));
 
+  restore, hook_invoke("ex_bath_wf",
+    save(wf, channel, maxint, saturated, numsat));
+
   if(!wflen)
     return result;
 
