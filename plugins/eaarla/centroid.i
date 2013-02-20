@@ -70,8 +70,9 @@ func pcr(rast, pulse, forcechannel=) {
     This would go in the first "if" statement below.
   */
 
-
+  channel = 0;
   if(!is_void(forcechannel)) {
+    channel = forcechannel;
     rx = *rast.rx(pulse,forcechannel);
     if(!numberof(rx)) return;
     rx_centroid = cent(rx);
@@ -84,6 +85,7 @@ func pcr(rast, pulse, forcechannel=) {
   } else {
     rx = rast.rx(pulse,);
     if((numberof(where((*rx(1))(1:np) < 5))) <= ops_conf.max_sfc_sat) {
+      channel = 1;
       rx_centroid = cent(*rx(1));
       // Must be water column only return.
       if(rx_centroid(3) < -90) {
@@ -94,15 +96,20 @@ func pcr(rast, pulse, forcechannel=) {
       }
       rx_centroid(1:2) += ops_conf.chn1_range_bias;
     } else if(numberof(where((*rx(2))(1:np) < 5)) <= ops_conf.max_sfc_sat) {
+      channel = 2;
       rx_centroid = cent(*rx(2));
       rx_centroid(1:2) += ops_conf.chn2_range_bias;
       rx_centroid(3) += 300;
     } else {
+      channel = 3;
       rx_centroid = cent(*rx(3));
       rx_centroid(1:2) += ops_conf.chn3_range_bias;
       rx_centroid(3) += 600;
     }
   }
+
+  restore, hook_invoke("pcr_centroids",
+    save(rx_centroid, tx_centroid, rast, pulse, channel));
 
   // Now compute the actual range value in sample counts
   result(1) = float(rast.irange(pulse)) - tx_centroid(1) + rx_centroid(1);
