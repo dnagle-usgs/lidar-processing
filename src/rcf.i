@@ -453,8 +453,8 @@ prefilter_min=, prefilter_max=, verbose=) {
     write, "done";
 }
 
-func rcf_2d(z, w, buf, n, nodata=, mask=, action=) {
-/* DOCUMENT rcf_2d(z, w, buf, n, nodata=, mask=, action=)
+func rcf_grid(z, w, buf, n, nodata=, mask=, action=) {
+/* DOCUMENT rcf_grid(z, w, buf, n, nodata=, mask=, action=)
   Runs a gridded RCF filter over a 2-dimensional array of values, an array
   where dimsof(z) is [2,NCOLS,NROWS].
 
