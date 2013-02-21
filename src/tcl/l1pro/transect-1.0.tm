@@ -16,6 +16,7 @@ namespace eval l1pro::transect {
 
             variable hide_marker 0
             variable hide_options 0
+            variable hide_rcf 1
 
             variable track
             array set track {
@@ -72,6 +73,7 @@ namespace eval l1pro::transect {
         ttk::label ${p}owin -text "oWin"
         ttk::label ${p}marker -text "Marker"
         ttk::label ${p}options -text "Options"
+        ttk::label ${p}rcf -text "RCF"
         ttk::separator ${p}seph -orient horizontal
 
         grid \
@@ -80,9 +82,10 @@ namespace eval l1pro::transect {
             ${p}recall - x \
             ${p}width ${p}iwin ${p}owin x \
             ${p}marker - - x \
-            ${p}options \
+            ${p}options x \
+            ${p}rcf - - \
             -padx 2 -pady 2
-        grid ${p}seph - - - - - - - - - - - - - - - - - - - - - - \
+        grid ${p}seph -columnspan 27 \
                 -padx 2 -pady 0 -sticky ew
 
         gui_add_row
@@ -123,6 +126,10 @@ namespace eval l1pro::transect {
                 -style Small.TCheckbutton \
                 -variable ::l1pro::transect::v::hide_options \
                 -command l1pro::transect::gui_hide_or_show
+        ttk::checkbutton $f.hide_rcf -text "Hide RCF" \
+                -style Small.TCheckbutton \
+                -variable ::l1pro::transect::v::hide_rcf \
+                -command l1pro::transect::gui_hide_or_show
         ttk::separator $f.sep2 -orient vertical
         ttk::button $f.history -text "Show History" -width 0 \
                 -command l1pro::transect::do_show_history
@@ -133,7 +140,8 @@ namespace eval l1pro::transect {
         pack $f.show_track $f.var $f.lblskip $f.skip $f.lblcolor $f.color \
             $f.lblwin $f.win $f.lblsize $f.size $f.utm $f.sep1 \
             -in $f.bottom -padx 2 -pady 2 -side left
-        pack $f.history $f.add_row $f.sep2 $f.hide_options $f.hide_marker \
+        pack $f.history $f.add_row $f.sep2 $f.hide_rcf $f.hide_options \
+            $f.hide_marker \
             -in $f.bottom -padx 2 -pady 2 -side right
         pack configure $f.sep1 $f.sep2 -fill y
 
@@ -166,6 +174,10 @@ namespace eval l1pro::transect {
                 "If enabled, the \"Options\" column of the GUI will be hidden.
                 Any options set there will still apply. This just hides them to
                 make the GUI smaller."
+        tooltip $f.hide_rcf \
+                "If enabled, the \"RCF\" column of the GUI will be hidden.
+                Any options set there will still apply. This just hides them to
+                make the GUI smaller."
         tooltip $f.history \
                 "Displays the transect history in the console window."
         tooltip $f.add_row \
@@ -194,6 +206,9 @@ namespace eval l1pro::transect {
         set settings($row,line) 1
         set settings($row,channel) 0
         set settings($row,digitizer) 0
+        set settings($row,usercf) 0
+        set settings($row,rcfbuf) 1.0
+        set settings($row,rcffw) 1.0
 
         switch -- $::plot_settings(display_mode) {
             be - ch {
@@ -213,6 +228,7 @@ namespace eval l1pro::transect {
         foreach key {
             var userecall recall width iwin owin marker msize scolor connect
             xfma showline showpts flight line channel digitizer mode
+            usercf rcfbuf rcffw
         } {
             dict set result $key $v::settings($row,$key)
         }
@@ -284,6 +300,12 @@ namespace eval l1pro::transect {
         ttk::checkbutton ${p}digitizer -text "digitizer" \
                 -variable ${var}($row,digitizer) \
                 -style Small.TCheckbutton
+        ttk::checkbutton ${p}usercf -text "" \
+                -variable ${var}($row,usercf)
+        ttk::spinbox ${p}rcfbuf -width 3 \
+                -textvariable ${var}($row,rcfbuf)
+        ttk::spinbox ${p}rcffw -width 3 \
+                -textvariable ${var}($row,rcffw)
         ttk::button ${p}plotline -text "Line" -width 0 \
                 -command [list l1pro::transect::do_line $row]
         ttk::button ${p}examine -text "Examine" -width 0 \
@@ -297,8 +319,14 @@ namespace eval l1pro::transect {
         ::mixin::statevar ${p}plotline \
                 -statemap {0 disabled 1 !disabled} \
                 -statevariable ${var}($row,userecall)
+        ::mixin::statevar ${p}rcfbuf \
+                -statemap {0 disabled 1 !disabled} \
+                -statevariable ${var}($row,usercf)
+        ::mixin::statevar ${p}rcffw \
+                -statemap {0 disabled 1 !disabled} \
+                -statevariable ${var}($row,usercf)
 
-        foreach j {0 1 2 3 4 5 6 7} {
+        foreach j {0 1 2 3 4 5 6 7 8} {
             ttk::separator ${p}sep$j -orient vertical
         }
         ttk::separator ${p}seph -orient horizontal
@@ -328,15 +356,16 @@ namespace eval l1pro::transect {
                 ${p}sep5 \
                 ${p}options \
                 ${p}sep6 \
-                ${p}plotline ${p}examine ${p}delete \
+                ${p}usercf ${p}rcfbuf ${p}rcffw \
                 ${p}sep7 \
+                ${p}plotline ${p}examine ${p}delete \
+                ${p}sep8 \
                 -padx 2 -pady 2
-        grid ${p}seph - - - - - - - - - - - - - - - - - - - - - - \
-                -padx 2 -pady 0 -sticky ew
+        grid ${p}seph -columnspan 27 -padx 2 -pady 0 -sticky ew
 
         grid ${p}var -sticky ew
 
-        foreach j {0 1 2 3 4 5 6 7} {
+        foreach j {0 1 2 3 4 5 6 7 8} {
             grid ${p}sep$j -sticky ns -padx 2 -pady 0
         }
 
@@ -489,6 +518,30 @@ namespace eval l1pro::transect {
                 \"line\" or \"flight\" when using this option with multi-flight
                 data, since points from different days may not have the same
                 physical digitizer numbered the same way."
+        set rcf_common \
+                "This RCF filter works along the transect. The points are
+                projected from 3D space (x,y,z) into 2D space (xp,z). Each
+                point is examined using a neighborhood with a width specified
+                by the buffer centered on the point to see if it falls within
+                the vertical window specified by the filter width as chosen by
+                the RCF filter. Thus it is a type of \"sliding\" RCF."
+        tooltip ${p}usercf \
+                "Enables RCF filtering along the transect.
+
+                $rcf_common"
+        tooltip ${p}rcfbuf \
+                "Specifies the horizontal buffer to use along the transect, in
+                meters. This buffer will be centered on each point. (Thus,
+                points with plus or minus half this buffer will be considered
+                as its neighborhood.)
+
+                $rcf_common"
+        tooltip ${p}rcffw \
+                "Specifies the vertical filter width to use, in meters. The RCF
+                filter will look for the vertical window of this size with the
+                most points.
+
+                $rcf_common"
         tooltip ${p}plotline \
                 "Plots the transect line specified under Recall.
 
@@ -546,6 +599,11 @@ namespace eval l1pro::transect {
                 hdr options
                 row {options sep6}
             }
+            rcf {
+                var v::hide_rcf
+                hdr rcf
+                row {usercf rcfbuf rcffw sep7}
+            }
         }
 
         set rows $v::top.f.rows
@@ -584,7 +642,6 @@ namespace eval l1pro::transect {
         set v::recalls [lrange $newlist 0 9]
     }
 
-    # Dummy for debugging for now
     proc do_transect {row} {
         set settings [get_settings $row]
         dict with settings {
@@ -618,6 +675,8 @@ namespace eval l1pro::transect {
                     $connect                ", connect=1" \
                     $showline               ", showline=2" \
                     $showpts                ", showpts=1" \
+                    $usercf                 ", rcf_buf=$rcfbuf" \
+                    $usercf                 ", rcf_fw=$rcffw" \
                     1                       ")"
             exp_send "$cmd;\r"
 
