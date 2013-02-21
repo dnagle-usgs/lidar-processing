@@ -140,6 +140,8 @@ namespace eval l1pro::transect {
         pack $f.septop $f.bottom -in $f -side top -fill both -expand 1
         pack $f.septop -pady 2
 
+        gui_hide_or_show
+
         tooltip $f.show_track \
                 "Plots a track line."
         tooltip $f.var \
@@ -337,6 +339,8 @@ namespace eval l1pro::transect {
         foreach j {0 1 2 3 4 5 6 7} {
             grid ${p}sep$j -sticky ns -padx 2 -pady 0
         }
+
+        gui_hide_or_show
 
         tooltip ${p}transect \
                 "Extract and plot the transect data.
