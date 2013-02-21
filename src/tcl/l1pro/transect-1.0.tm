@@ -14,6 +14,9 @@ namespace eval l1pro::transect {
             variable maxrow 0
             variable settings
 
+            variable hide_marker 0
+            variable hide_options 0
+
             variable track
             array set track {
                 var     pnav
@@ -111,6 +114,16 @@ namespace eval l1pro::transect {
                 -textvariable ${var}(msize)
         ttk::checkbutton $f.utm -text "UTM" \
                 -variable ${var}(utm)
+        ttk::separator $f.sep1 -orient vertical
+        ttk::checkbutton $f.hide_marker -text "Hide marker" \
+                -style Small.TCheckbutton \
+                -variable ::l1pro::transect::v::hide_marker \
+                -command l1pro::transect::gui_hide_or_show
+        ttk::checkbutton $f.hide_options -text "Hide options" \
+                -style Small.TCheckbutton \
+                -variable ::l1pro::transect::v::hide_options \
+                -command l1pro::transect::gui_hide_or_show
+        ttk::separator $f.sep2 -orient vertical
         ttk::button $f.history -text "Show History" -width 0 \
                 -command l1pro::transect::do_show_history
         ttk::button $f.add_row -text "Add Row" -width 0 \
@@ -118,10 +131,11 @@ namespace eval l1pro::transect {
 
         lower [ttk::frame $f.bottom]
         pack $f.show_track $f.var $f.lblskip $f.skip $f.lblcolor $f.color \
-            $f.lblwin $f.win $f.lblsize $f.size $f.utm \
+            $f.lblwin $f.win $f.lblsize $f.size $f.utm $f.sep1 \
             -in $f.bottom -padx 2 -pady 2 -side left
-        pack $f.history $f.add_row \
+        pack $f.history $f.add_row $f.sep2 $f.hide_options $f.hide_marker \
             -in $f.bottom -padx 2 -pady 2 -side right
+        pack configure $f.sep1 $f.sep2 -fill y
 
         pack $f.septop $f.bottom -in $f -side top -fill both -expand 1
         pack $f.septop -pady 2
@@ -142,6 +156,14 @@ namespace eval l1pro::transect {
         tooltip $f.utm \
                 "If enabled, plot in UTM coordinates. If disabled, plot in
                 lat/long coordinates."
+        tooltip $f.hide_marker \
+                "If enabled, the \"Marker\" column of the GUI will be hidden.
+                Any options set there will still apply. This just hides them to
+                make the GUI smaller."
+        tooltip $f.hide_options \
+                "If enabled, the \"Options\" column of the GUI will be hidden.
+                Any options set there will still apply. This just hides them to
+                make the GUI smaller."
         tooltip $f.history \
                 "Displays the transect history in the console window."
         tooltip $f.add_row \
@@ -504,6 +526,46 @@ namespace eval l1pro::transect {
         foreach child [winfo children $f] {
             if {[string match ${p}* $child]} {
                 destroy $child
+            }
+        }
+    }
+
+    proc gui_hide_or_show {} {
+        set sets {
+            marker {
+                var v::hide_marker
+                hdr marker
+                row {marker msize scolor sep5}
+            }
+            options {
+                var v::hide_options
+                hdr options
+                row {options sep6}
+            }
+        }
+
+        set rows $v::top.f.rows
+
+        dict for {key fields} $sets {
+            dict with fields {
+                if {[set $var]} {
+                    set cmd {grid remove}
+                } else {
+                    set cmd grid
+                }
+
+                foreach name $hdr {
+                    {*}${cmd} $rows.labels_$name
+                }
+                foreach child [winfo children $rows] {
+                    set chname [winfo name $child]
+                    foreach name $row {
+                        set pat row*_$name
+                        if {[string match $pat $chname]} {
+                            {*}${cmd} $child
+                        }
+                    }
+                }
             }
         }
     }
