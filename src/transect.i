@@ -30,6 +30,31 @@ func data_transect(data, line, width=, mode=) {
   return data_in_poly(data, ply, mode=mode);
 }
 
+func transect_rcf(data, line, mode=, buf=, fw=) {
+/* DOCUMENT transect_rcf(data, line, mode=, buf=, fw=)
+  Applies the RCF filter to the transect. The points are projected against the
+  line, and the RCF filters them in two dimensions (along-the-transect and
+  elevation).
+
+  Parameters:
+    data: An array of ALPS data.
+    line: An array [x0,y0,x1,y1] specifying the start and end points of the
+      transect line.
+  Options:
+    mode= Data mode to use.
+    buf= Buffer to use for along-the-transect dimension. This is the buffer's
+      total width, so it's plus and minus buf/2 from the point.
+    fw= Filter width, the vertical window size. The window of this size with
+      the most points is selected. If the point is in that window, it is kept.
+      Otherwise, it is not.
+*/
+  local x, y, z, rx, ry;
+  data2xyz, data, x, y, z, mode=mode;
+  project_points_to_line, line, x, y, rx, ry;
+  idx = rcf_2d(rx, z, buf, fw);
+  return data(idx);
+}
+
 func transect_history(void) {
 /* DOCUMENT transect_history
   Shows a list of all transects currently defined in the transect history.
@@ -95,9 +120,9 @@ func transect_plot_line(line, win=, recall=) {
   window_select, wbkp;
 }
 
-func transect_plot_points(line, data, how=, win=, xfma=, msize=, marker=,
-connect=, scolor=) {
-/* DOCUMENT transect_plot_points, line, data, how=, win=, xfma=, msize=,
+func transect_plot_points(line, data, mode=, how=, win=, xfma=, msize=,
+marker=, connect=, scolor=) {
+/* DOCUMENT transect_plot_points, line, data, mode=, how=, win=, xfma=, msize=,
    marker=, connect=
 
   Plots the points from DATA as they appear along the transect LINE. Points
@@ -108,6 +133,7 @@ connect=, scolor=) {
     data: The points along LINE (as determined by transect)
 
   Options:
+    mode= Data mode.
     how= A string or array of strings containing any of "flight", "line",
       "channel", or "digitizer". This specifies how DATA will be broken up into
       segments. Each segment gets its own color.
@@ -196,10 +222,12 @@ connect=, scolor=) {
   window_select, wbkp;
 }
 
-func transect(data, line=, recall=, segment=, iwin=, owin=, width=, connect=,
-xfma=, mode=, msize=, marker=, scolor=, plot=, showline=, showpts=) {
-/* DOCUMENT transect(data, line=, recall=, segment=, iwin=, owin=, width=,
-   connect=, xfma=, mode=, msize=, marker=, scolor=, plot=, showline=, showpts=)
+func transect(data, line=, recall=, segment=, rcf_buf=, rcf_fw=, iwin=, owin=,
+width=, connect=, xfma=, mode=, msize=, marker=, scolor=, plot=, showline=,
+showpts=) {
+/* DOCUMENT transect(data, line=, recall=, segment=, rcf_buf=, rcf_fw=, iwin=,
+   owin=, width=, connect=, xfma=, mode=, msize=, marker=, scolor=, plot=,
+   showline=, showpts=)
 
   Performs a transect operation against some data and plots the result.
 
@@ -220,6 +248,10 @@ xfma=, mode=, msize=, marker=, scolor=, plot=, showline=, showpts=) {
       will happen and plot will be in one color.
         segment="line"                Segment by line
         segment=["line", "channel"]   Segment by line and channel
+    rcf_buf= Applies transect_rcf filter with buf=rcf_buf. If this is used,
+      rcf_fw= must also be used. See transect_rcf for details on buf=.
+    rcf_fw= Applies transect_rcf filter with fw=rcf_fw. If this is used,
+      rcf_buf must also be used. See transect_rcf for details on fw=.
     iwin= "Input" window, where the point cloud to transect is plotted. This
       window is used when prompting the user to draw a transect. It is also
       used to plot the transect line (if showline=1 or =2) and to highligh the
@@ -274,6 +306,11 @@ xfma=, mode=, msize=, marker=, scolor=, plot=, showline=, showpts=) {
   default, showline, 1;
   default, showpts, 0;
 
+  if(!is_void(rcf_fw) && is_void(rcf_buf))
+    error, "rcf_buf= must be provided when using rcf_fw=";
+  if(!is_void(rcf_buf) && is_void(rcf_fw))
+    error, "rcf_fw= must be provided when using rcf_buf=";
+
   wbkp = current_window();
 
   if(is_void(data)) {
@@ -306,10 +343,17 @@ xfma=, mode=, msize=, marker=, scolor=, plot=, showline=, showpts=) {
     write, "no data along transect";
     return;
   }
+  if(!is_void(rcf_buf) && !is_void(rcf_fw)) {
+    data = transect_rcf(data, line, mode=mode, buf=rcf_buf, fw=rcf_fw);
+    if(is_void(data)) {
+      write, "RCF filter removed all data";
+      return;
+    }
+  }
 
   if(plot)
-    transect_plot_points, line, data, how=segment, win=owin, xfma=xfma,
-      msize=msize, marker=marker, scolor=scolor, connect=connect;
+    transect_plot_points, line, data, mode=mode, how=segment, win=owin,
+      xfma=xfma, msize=msize, marker=marker, scolor=scolor, connect=connect;
 
   // plot the actual points selected onto the input window
   if(showpts) {
