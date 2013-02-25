@@ -76,38 +76,41 @@ extern profiler;
       given search string (or array of search strings).
 */
 
-scratch = save(scratch, tmp, profiler_enter, profiler_leave, profiler_report,
-  profiler_clear);
+//scratch = save(scratch, tmp, profiler_enter, profiler_leave, profiler_report,
+//  profiler_clear);
 
-tmp = save(data, enter, leave, report, clear);
+//tmp = save(data, enter, leave, report, clear);
 
-if(is_obj(profiler) && profiler(*,"data") && is_hash(profiler.data)) {
-  data = profiler.data;
-} else {
-  data = h_new();
-}
+//if(is_obj(profiler) && profiler(*,"data") && is_hash(profiler_data)) {
+//  data = profiler_data;
+//} else {
+//  data = h_new();
+//}
+
+profiler_data = h_new();
 
 func profiler_enter(name) {
+  extern profiler_data;
   start = array(double, 3);
   timer, start;
   if(catch(0x08)) {
-    h_set, profiler.data, name, h_new(start=start, time=[0.,0.,0.], calls=0);
+    h_set, profiler_data, name, h_new(start=start, time=[0.,0.,0.], calls=0);
     return;
   }
-  h_set, profiler.data(name), start=start;
+  h_set, profiler_data(name), start=start;
 }
-enter = profiler_enter;
 
 func profiler_leave(name) {
+  extern profiler_data;
   stop = array(double, 3);
   timer, stop;
-  cur = profiler.data(name);
+  cur = profiler_data(name);
   h_set, cur, time=cur.time + stop - cur.start, calls=cur.calls + 1;
 }
-leave = profiler_leave;
 
 func profiler_report(names, srt=, searchstr=) {
-  if(is_void(names)) names = h_keys(profiler.data);
+  extern profiler_data;
+  if(is_void(names)) names = h_keys(profiler_data);
 
   count = numberof(names);
   if(!count) return;
@@ -126,34 +129,34 @@ func profiler_report(names, srt=, searchstr=) {
       key = names;
     } else if(srt == "calls") {
       for(i = 1; i <= count; i++) {
-        key(i) = profiler.data(names(i)).calls;
+        key(i) = profiler_data(names(i)).calls;
       }
     } else if(srt == "cpu") {
       for(i = 1; i <= count; i++) {
-        key(i) = profiler.data(names(i)).time(1);
+        key(i) = profiler_data(names(i)).time(1);
       }
     } else if(srt == "system") {
       for(i = 1; i <= count; i++) {
-        key(i) = profiler.data(names(i)).time(2);
+        key(i) = profiler_data(names(i)).time(2);
       }
     } else if(srt == "wall") {
       for(i = 1; i <= count; i++) {
-        key(i) = profiler.data(names(i)).time(3);
+        key(i) = profiler_data(names(i)).time(3);
       }
     } else if(srt == "avg cpu") {
       for(i = 1; i <= count; i++) {
-        calls = profiler.data(names(i)).calls;
-        key(i) = calls ? profiler.data(names(i)).time(1)/calls : 0;
+        calls = profiler_data(names(i)).calls;
+        key(i) = calls ? profiler_data(names(i)).time(1)/calls : 0;
       }
     } else if(srt == "avg system") {
       for(i = 1; i <= count; i++) {
-        calls = profiler.data(names(i)).calls;
-        key(i) = calls ? profiler.data(names(i)).time(2)/calls : 0;
+        calls = profiler_data(names(i)).calls;
+        key(i) = calls ? profiler_data(names(i)).time(2)/calls : 0;
       }
     } else if(srt == "avg wall") {
       for(i = 1; i <= count; i++) {
-        calls = profiler.data(names(i)).calls;
-        key(i) = calls ? profiler.data(names(i)).time(3)/calls : 0;
+        calls = profiler_data(names(i)).calls;
+        key(i) = calls ? profiler_data(names(i)).time(3)/calls : 0;
       }
     }
     names = names(msort(key, names));
@@ -161,11 +164,11 @@ func profiler_report(names, srt=, searchstr=) {
 
   for(i = 1; i <= numberof(names); i++) {
     write, format="%s\n", names(i);
-    if(!h_has(profiler.data, names(i))) {
+    if(!h_has(profiler_data, names(i))) {
       write, format="  %d calls\n", 0;
       continue;
     }
-    cur = profiler.data(names(i));
+    cur = profiler_data(names(i));
     write, format="  %d calls\n", cur.calls;
     if(!cur.calls) continue;
     write, format="  %s:\n", "CPU";
@@ -179,12 +182,8 @@ func profiler_report(names, srt=, searchstr=) {
     write, format="    %g seconds/call\n", cur.time(3)/cur.calls;
   }
 }
-report = profiler_report;
 
 func profiler_clear(void) {
-  save, profiler, data=h_new();
+  extern profiler_data;
+  profiler_data=h_new();
 }
-clear = profiler_clear;
-
-profiler = restore(tmp);
-restore, scratch;
