@@ -81,33 +81,33 @@ scratch = save(scratch, tmp, profiler_enter, profiler_leave, profiler_report,
 
 tmp = save(data, enter, leave, report, clear);
 
-if(is_obj(profiler) && profiler(*,"data") && is_obj(profiler.data)) {
+if(is_obj(profiler) && profiler(*,"data") && is_hash(profiler.data)) {
   data = profiler.data;
 } else {
-  data = save();
+  data = h_new();
 }
 
 func profiler_enter(name) {
   start = array(double, 3);
   timer, start;
   if(catch(0x08)) {
-    save, profiler.data, noop(name), save(start, time=[0.,0.,0.], calls=0);
+    h_set, profiler.data, name, h_new(start=start, time=[0.,0.,0.], calls=0);
     return;
   }
-  save, profiler.data(noop(name)), start;
+  h_set, profiler.data(name), start=start;
 }
 enter = profiler_enter;
 
 func profiler_leave(name) {
   stop = array(double, 3);
   timer, stop;
-  cur = profiler.data(noop(name));
-  save, cur, time=cur.time + stop - cur.start, calls=cur.calls + 1;
+  cur = profiler.data(name);
+  h_set, cur, time=cur.time + stop - cur.start, calls=cur.calls + 1;
 }
 leave = profiler_leave;
 
 func profiler_report(names, srt=, searchstr=) {
-  if(is_void(names)) names = profiler.data(*,);
+  if(is_void(names)) names = h_keys(profiler.data);
 
   count = numberof(names);
   if(!count) return;
@@ -161,7 +161,7 @@ func profiler_report(names, srt=, searchstr=) {
 
   for(i = 1; i <= numberof(names); i++) {
     write, format="%s\n", names(i);
-    if(!profiler.data(*,names(i))) {
+    if(!h_has(profiler.data, names(i))) {
       write, format="  %d calls\n", 0;
       continue;
     }
@@ -182,7 +182,7 @@ func profiler_report(names, srt=, searchstr=) {
 report = profiler_report;
 
 func profiler_clear(void) {
-  save, profiler, data=save();
+  save, profiler, data=h_new();
 }
 clear = profiler_clear;
 
