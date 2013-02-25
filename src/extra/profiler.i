@@ -88,25 +88,21 @@ if(is_obj(profiler) && profiler(*,"data") && is_obj(profiler.data)) {
 }
 
 func profiler_enter(name) {
-  data = profiler.data;
-  if(!data(*,name)) {
-    save, profiler.data, noop(name),
-      save(start=[0.,0.,0.], time=[0.,0.,0.], calls=0);
-  }
   start = array(double, 3);
   timer, start;
+  if(catch(0x08)) {
+    save, profiler.data, noop(name), save(start, time=[0.,0.,0.], calls=0);
+    return;
+  }
   save, profiler.data(noop(name)), start;
 }
 enter = profiler_enter;
 
 func profiler_leave(name) {
-  if(!profiler.data(*,name)) error, name+" not started";
-  cur = profiler.data(noop(name));
   stop = array(double, 3);
   timer, stop;
-  time = cur.time + (stop - cur.start);
-  calls = cur.calls + 1;
-  save, profiler.data(noop(name)), time, calls;
+  cur = profiler.data(noop(name));
+  save, cur, time=cur.time + stop - cur.start, calls=cur.calls + 1;
 }
 leave = profiler_leave;
 
