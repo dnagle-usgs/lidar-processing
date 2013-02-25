@@ -71,6 +71,9 @@ extern profiler;
         srt="avg wall"    By average wall seconds per call
       All sorting is in ascending order. That means that for everything except
       "alpha", the "worst" items will be at the bottom.
+
+    searchstr= Allows you to restrict output to profiling names that match a
+      given search string (or array of search strings).
 */
 
 scratch = save(scratch, tmp, profiler_enter, profiler_leave, profiler_report,
@@ -107,11 +110,19 @@ func profiler_leave(name) {
 }
 leave = profiler_leave;
 
-func profiler_report(names, srt=) {
+func profiler_report(names, srt=, searchstr=) {
   if(is_void(names)) names = profiler.data(*,);
-  if(is_void(names)) return;
 
   count = numberof(names);
+  if(!count) return;
+
+  if(!is_void(searchstr)) {
+    keep = array(0, count);
+    for(i = 1; i <= numberof(searchstr); i++)
+      keep |= strglob(searchstr(i), names);
+    names = names(where(keep));
+    count = numberof(names);
+  }
 
   if(srt) {
     key = double(indgen(count));
