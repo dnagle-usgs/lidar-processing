@@ -16,6 +16,11 @@
 // disadvantage.
 //
 // As of 2012-09-28, the bug in funcdef has been reported to Dave Munro.
+//
+// This bug was fixed in the GitHub version of Yorick as of 2012-09-29.
+// The updated version of Yorick was included in the ALPS installer as of
+// 2013-01-31. This patch is thus deprecated and should be removed after
+// 2013-07-31 (to give everybody a chance to upgrade).
 
 if(is_void(yor_funcset)) yor_funcset = funcset;
 
