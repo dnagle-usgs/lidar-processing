@@ -56,6 +56,21 @@ extern profiler;
     }
 
   To clear current profiler data, use "profiler, clear".
+
+  The "profiler, report" command accepts a few options:
+
+    srt= Allows you to specify how to sort the output information. Valid values
+      are:
+        srt="alpha"       Alphabetical by name
+        srt="calls"       By number of calls made
+        srt="cpu"         By CPU seconds
+        srt="system"      By system seconds
+        srt="wall         By wall seconds
+        srt="avg cpu"     By average CPU seconds per call
+        srt="avg system"  By average system seconds per call
+        srt="avg wall"    By average wall seconds per call
+      All sorting is in ascending order. That means that for everything except
+      "alpha", the "worst" items will be at the bottom.
 */
 
 scratch = save(scratch, tmp, profiler_enter, profiler_leave, profiler_report,
@@ -92,9 +107,51 @@ func profiler_leave(name) {
 }
 leave = profiler_leave;
 
-func profiler_report(names) {
+func profiler_report(names, srt=) {
   if(is_void(names)) names = profiler.data(*,);
-  if(!is_void(names)) names = names(sort(names));
+  if(is_void(names)) return;
+
+  count = numberof(names);
+
+  if(srt) {
+    key = double(indgen(count));
+    if(srt == "alpha") {
+      key = names;
+    } else if(srt == "calls") {
+      for(i = 1; i <= count; i++) {
+        key(i) = profiler.data(names(i)).calls;
+      }
+    } else if(srt == "cpu") {
+      for(i = 1; i <= count; i++) {
+        key(i) = profiler.data(names(i)).time(1);
+      }
+    } else if(srt == "system") {
+      for(i = 1; i <= count; i++) {
+        key(i) = profiler.data(names(i)).time(2);
+      }
+    } else if(srt == "wall") {
+      for(i = 1; i <= count; i++) {
+        key(i) = profiler.data(names(i)).time(3);
+      }
+    } else if(srt == "avg cpu") {
+      for(i = 1; i <= count; i++) {
+        calls = profiler.data(names(i)).calls;
+        key(i) = calls ? profiler.data(names(i)).time(1)/calls : 0;
+      }
+    } else if(srt == "avg system") {
+      for(i = 1; i <= count; i++) {
+        calls = profiler.data(names(i)).calls;
+        key(i) = calls ? profiler.data(names(i)).time(2)/calls : 0;
+      }
+    } else if(srt == "avg wall") {
+      for(i = 1; i <= count; i++) {
+        calls = profiler.data(names(i)).calls;
+        key(i) = calls ? profiler.data(names(i)).time(3)/calls : 0;
+      }
+    }
+    names = names(msort(key, names));
+  }
+
   for(i = 1; i <= numberof(names); i++) {
     write, format="%s\n", names(i);
     if(!profiler.data(*,names(i))) {
