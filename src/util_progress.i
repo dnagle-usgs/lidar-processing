@@ -1,49 +1,6 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "yeti_regex.i";
 
-local timer_track_init, timer_track_start, timer_track_stop;
-/* DOCUMENT
-  timer_track_init, &tp, &seconds;
-  timer_track_start, &tp;
-  timer_track_stop, tp, &seconds;
-
-  These three functions can be used to help troubleshoot how much time is being
-  spent in a specific block of code that is called repeatedly. As a simple
-  example:
-
-    timer_init, t0;
-    timer_track_init, track_tp, track_seconds;
-    for(i = 1; i <= 10000; i++) {
-      // Do something
-      foo = bar();
-
-      // Track -just- this part
-      timer_track_start, track_tp;
-      foo = bar();
-      timer_track_stop, track_tp, track_seconds;
-
-      // Do something else
-      foo = bar();
-    }
-    timer_finished, t0;
-
-  Suppose the above gives an output that says the full works took 117.3
-  seconds. Then you manually interrogate the value of track_seconds and
-  discover that it is 1.9 seconds. This tells you that only 1.9 seconds out of
-  the 117.3 were spent in the block of code tracked by timer_track_*. Thus, if
-  you suspected that this block of code was slowing things down, you now know
-  that your suspicion was wrong and you can explore other blocks of code
-  instead.
-
-  Generally speaking, these three functions should only be used temporarily for
-  troubleshooting. They should not be permanently added to functions.
-*/
-func timer_track_init(&tp, &seconds) { tp = array(double, 3); seconds = 0.; }
-func timer_track_start(&tp) { timer, tp; }
-func timer_track_stop(tp, &seconds) {
-  t0 = array(double, 3); timer, t0; seconds += (t0(3) - tp(3));
-}
-
 func timer_init(&tstamp) {
 /* DOCUMENT timer_init, &tstamp
   Initializes timer for use with timer_tick.
