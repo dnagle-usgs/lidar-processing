@@ -200,3 +200,51 @@ func profiler_clear(void, places=, maxdepth=) {
     profiler_init, places;
   }
 }
+
+func profiler_calibrate(count, places=, maxdepth=) {
+/* DOCUMENT profiler_calibrate, count, places=, maxdepth=
+  Calibrates the profiler overhead. COUNT specifies how many times we should
+  loop to determine that value. If omitted, COUNT defaults to 10000. However, a
+  value like 1000000 (or larger) would be better.
+
+  For convenience, places= and maxdepth= are passed through to profiler_clear
+  if they are provided.
+*/
+  extern profiler_overhead;
+  profiler_clear, places=places, maxdepth=maxdepth;
+  profiler_overhead = 0;
+  default, count, 10000;
+
+  // Calculate the overhead of two calls to profiler_ticks + a loop of COUNT
+  start = profiler_ticks();
+  for(i = 1; i <= count; i++) {}
+  stop = profiler_ticks();
+  loop_ticks = stop - start;
+
+  // Calculate the overhead of the above loop + COUNT * 5 profilings
+  // (Using nested profiling to depth 5 to at least partially account for
+  // potential variance due to depth)
+  start = profiler_ticks();
+  for(i = 1; i <= count; i++) {
+    profiler_enter, "calibration";
+    profiler_enter, "calibration";
+    profiler_enter, "calibration";
+    profiler_enter, "calibration";
+    profiler_enter, "calibration";
+    profiler_leave, "calibration";
+    profiler_leave, "calibration";
+    profiler_leave, "calibration";
+    profiler_leave, "calibration";
+    profiler_leave, "calibration";
+  }
+  stop = profiler_ticks();
+  prof_ticks = stop - start;
+
+  ticks_per_prof = double(prof_ticks - loop_ticks)/count/5;
+  profiler_overhead = long(ticks_per_prof);
+
+  write, format="Ticks per profiling: %g\n", ticks_per_prof;
+  write, format="Set profiler_overhead to: %d\n", profiler_overhead;
+
+  profiler_clear;
+}
