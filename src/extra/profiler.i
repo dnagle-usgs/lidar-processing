@@ -76,7 +76,7 @@ extern profiler;
       given search string (or array of search strings).
 */
 
-profiler_data = h_new();
+if(!is_hash(profiler_data)) profiler_data = h_new();
 
 func profiler_enter(name) {
   extern profiler_data;
