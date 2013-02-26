@@ -38,6 +38,17 @@ void Y_profiler_init(int nArgs)
   ypush_nil();
 }
 
+void Y_profiler_lastinit(int nArgs)
+{
+  long places = 0, sec = profiler_sec;
+  while(sec > 1) {
+    places++;
+    sec /= 10;
+  }
+
+  ypush_long(places);
+}
+
 void Y_profiler_reset(int nArgs)
 {
   struct timespec current;

@@ -220,6 +220,11 @@ extern profiler_init;
   If not called, then by default PLACES=0.
 */
 
+extern profiler_lastinit;
+/* DOCUMENT profiler_lastinit()
+  Returns the value specified for the last call to profiler_init.
+*/
+
 extern profiler_reset;
 /* DOCUMENT profiler_reset
   Resets the profiler ticker. The "time" returned by profiler_ticks subtracts
@@ -249,6 +254,6 @@ __calps_backup = save(
   _yset_intersect_long, _yset_intersect_double,
   _ymergeuniq_L, _ymergeuniq_D,
   get_pid,
-  profiler_init, profiler_reset, profiler_ticks
+  profiler_init, profiler_lastinit, profiler_reset, profiler_ticks
 );
 

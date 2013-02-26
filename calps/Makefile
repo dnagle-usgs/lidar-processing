@@ -22,13 +22,13 @@ PKG_NAME=calps
 PKG_I=calps.i
 
 OBJS=triangle.o triangle_y.o geometry.o gridding.o region.o lines.o \
-	ll2utm.o navd88.o set.o set_uniq.o linux.o profile.o
+	ll2utm.o navd88.o set.o set_uniq.o linux.o profiler.o
 
 # change to give the executable a name other than yorick
 PKG_EXENAME=yorick
 
 # PKG_DEPLIBS=-Lsomedir -lsomelib   for dependencies of this package
-# -lrt is required for ytime.h in profile.c
+# -lrt is required for ytime.h in profiler.c
 PKG_DEPLIBS=-lrt
 # set compiler (or rarely loader) flags specific to this package
 PKG_CFLAGS=
