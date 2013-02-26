@@ -11,74 +11,31 @@ extern profiler;
   of this functionality should occur in commited code. It is intended for
   temporary use during development.
 
-  Typical usage is to bracket code segments of interest like so:
+  Typical use is to bracket code segments of interest like so:
 
     profiler, enter, "section 1";
     // code to examine
     profiler, leave, "section 1";
 
-  Where "section 1" is whatever descriptive name you like. Then you can get a
-  report with:
+  You can then receive a report using "profiler, report".
 
-    profiler, report
+  Before using the profiler, you should use profiler_calibrate. You can use
+  this to set the precision you need for the timing as well as to set the
+  calibration constant to remove the profiling overhead from its timings. (You
+  should also call it again if you ever change the places= value.)
 
-  Or, to see just selected items:
+  Before any act of profiling, you should use profiler_clear to reset all
+  tracked data. (Otherwise, subsequent profilings will stack on each other.)
+*/
 
-    profiler, report, "section 1";
-    profiler, report, ["section 1", "section 2"];
+extern profiler_enter, profiler_leave;
+/* DOCUMENT
+  profiler_enter, "<name>"
+  profiler_leave, "<name>"
 
-  This can be used to profile entire functions in one of two ways. If your
-  function only has one point of return, you can easily put the profiling at
-  the start and end of the function. Here is a contrived and inefficient
-  example.
-
-    func sum_min_max(ary) {
-      profiler, enter, "sum_min_max";
-      result = [];
-      if(numberof(ary)) {
-        result = ary(*)(min) + ary(*)(max);
-      }
-      profiler, leave, "sum_min_max";
-      return result;
-    }
-
-  If your code has multiple points of exit, you will have to put a
-  profiler,leave call before each point of exit. Alternately, you can also put
-  the profiler,enter profiler,leave calls around a function call instead.
-
-    func sum_min_max(ary) {
-      if(!numberof(ary)) return [];
-      return ary(*)(min) + ary(*)(max);
-    }
-
-    bigarray = indgen(100000);
-    total = 0;
-    for(i = 1; i <= 100; i++) {
-      bigarray = bigarray(sort(bigarray));
-      profiler, enter, "sum_min_max";
-      total += sum_min_max(bigarray);
-      profiler, leave, "sum_min_max";
-    }
-
-  To clear current profiler data, use "profiler, clear".
-
-  The "profiler, report" command accepts a few options:
-
-    srt= Allows you to specify how to sort the output information. Valid values
-      are:
-        srt="alpha"       Alphabetical by name
-        srt="calls"       By number of calls made
-        srt="cpu"         By CPU seconds
-        srt="system"      By system seconds
-        srt="wall         By wall seconds
-        srt="avg cpu"     By average CPU seconds per call
-        srt="avg system"  By average system seconds per call
-        srt="avg wall"    By average wall seconds per call
-      All sorting is in ascending order. That means that for everything except
-      "alpha", the "worst" items will be at the bottom.
-
-    searchstr= Allows you to restrict output to profiling names that match a
-      given search string (or array of search strings).
+  Tells the profiler that you are entering or leaving a section code described
+  by the given NAME. Profiler will count this as a call to that name and tally
+  the time taken.
 */
 
 if(!is_hash(profiler_data)) profiler_data = h_new();
@@ -87,6 +44,7 @@ if(is_void(profiler_counts)) profiler_counts = array(0, 100);
 if(is_void(profiler_overhead)) profiler_overhead = 0;
 
 func profiler_enter(name) {
+// Documented above
   extern profiler_data, profiler_depth, profiler_counts;
   profiler_depth++;
   profiler_counts(:profiler_depth)++;
@@ -99,6 +57,7 @@ func profiler_enter(name) {
 }
 
 func profiler_leave(name) {
+// Documented above
   extern profiler_data, profiler_depth, profiler_counts, profiler_overhead;
   stop = profiler_ticks();
   cur = profiler_data(name);
@@ -183,7 +142,10 @@ func profiler_clear(void, places=, maxdepth=) {
 
   Options:
     places= If provided, profiler_init will be called with this as an argument.
-      Otherwise, profiler_reset is called.
+      Otherwise, profiler_reset is called. PLACES specifies how many decimal
+      places you want in your integer time value. Using places=9 means time
+      will be tracked in nanoseconds; places=3 means time will be tracked in
+      milliseconds. (By default, places=0.)
     maxdepth= If provided, this will change the maximum profiling depth for
       nested profiling. Default depth is 100. If you exceed the maximum profile
       depth, you'll get an error.
