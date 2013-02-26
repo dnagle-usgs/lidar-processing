@@ -205,6 +205,37 @@ extern get_pid;
   Returns the process ID for the current Yorick process.
 */
 
+// *** defined in profiler.c
+
+extern profiler_init;
+/* DOCUMENT profiler_init, places
+  Initializes the profiler ticker. PLACES is an integer between 0 and 9 and
+  specifies how many sub-second places to include. 0 means that profiler_ticks
+  will report values in seconds. 9 means that profiler_ticks will report values
+  in nanoseconds. Users on 32-bit systems will need to use lower values for
+  places to avoid overflowing the size of long integers.
+
+  This also resets the offset used, just as with profiler_reset.
+
+  If not called, then by default PLACES=0.
+*/
+
+extern profiler_reset;
+/* DOCUMENT profiler_reset
+  Resets the profiler ticker. The "time" returned by profiler_ticks subtracts
+  an offset that is set by profiler_reset to help avoid overflowing the time
+  result. So profiler_reset should be called prior to profiling.
+*/
+
+extern profiler_ticks;
+/* DOCUMENT profiler_ticks()
+  Returns an integer time value. This time value has meaning as defined via
+  profiler_init and profiler_reset. However, it should be treated as an
+  arbitrary time measurement used for interval comparison, as in profiling.
+
+  The time measured is wall time.
+*/
+
 __calps_backup = save(
   calps_compatibility,
   _ytriangulate, triangulate,
@@ -216,5 +247,8 @@ __calps_backup = save(
   _yll2utm, _yutm2ll,
   calps_n88_interp_qfit2d, calps_n88_interp_spline2d,
   _yset_intersect_long, _yset_intersect_double,
-  _ymergeuniq_L, _ymergeuniq_D
+  _ymergeuniq_L, _ymergeuniq_D,
+  get_pid,
+  profiler_init, profiler_reset, profiler_ticks
 );
+
