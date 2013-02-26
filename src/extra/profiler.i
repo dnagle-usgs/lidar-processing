@@ -110,6 +110,24 @@ func profiler_leave(name) {
 }
 
 func profiler_report(names, srt=, searchstr=) {
+/* DOCUMENT profiler_report, names, srt=, searchstr=
+  Provides a profiling report.
+
+  NAMES is optional and specifies which profiling names to display. If omitted,
+  all names are used.
+
+  srt= Allows you to specify how to sort the output information. Valid values
+    are:
+      srt="alpha"       Alphabetical by name
+      srt="calls"       By number of calls made
+      srt="ticks"       By ticks
+      srt="avg ticks"   By average ticks per call
+    All sorting is in ascending order. That means that for everything except
+    "alpha", the "worst" items will be at the bottom.
+
+  searchstr= Allows you to restrict output to profiling names that match a
+    given search string (or array of search strings).
+*/
   extern profiler_data;
   if(is_void(names)) names = h_keys(profiler_data);
 
@@ -132,11 +150,11 @@ func profiler_report(names, srt=, searchstr=) {
       for(i = 1; i <= count; i++) {
         key(i) = profiler_data(names(i)).calls;
       }
-    } else if(srt == "clicks") {
+    } else if(srt == "ticks") {
       for(i = 1; i <= count; i++) {
         key(i) = profiler_data(names(i)).time;
       }
-    } else if(srt == "avg clicks") {
+    } else if(srt == "avg ticks") {
       for(i = 1; i <= count; i++) {
         calls = profiler_data(names(i)).calls;
         key(i) = calls ? profiler_data(names(i)).time/calls : 0;
