@@ -82,9 +82,14 @@ extern profiler;
 */
 
 if(!is_hash(profiler_data)) profiler_data = h_new();
+if(is_void(profiler_depth)) profiler_depth = 0;
+if(is_void(profiler_counts)) profiler_counts = array(0, 100);
+if(is_void(profiler_overhead)) profiler_overhead = 0;
 
 func profiler_enter(name) {
-  extern profiler_data;
+  extern profiler_data, profiler_depth, profiler_counts;
+  profiler_depth++;
+  profiler_counts(:profiler_depth)++;
   start = profiler_ticks();
   if(catch(0x08)) {
     h_set, profiler_data, name, h_new(start=start, time=0, calls=0);
@@ -94,10 +99,14 @@ func profiler_enter(name) {
 }
 
 func profiler_leave(name) {
-  extern profiler_data;
+  extern profiler_data, profiler_depth, profiler_counts, profiler_overhead;
   stop = profiler_ticks();
   cur = profiler_data(name);
-  h_set, cur, time=cur.time + stop - cur.start, calls=cur.calls + 1;
+  h_set, cur, calls=cur.calls + 1,
+    time=cur.time + (stop - cur.start) -
+      profiler_counts(profiler_depth) * profiler_overhead;
+  profiler_counts(profiler_depth) = 0;
+  profiler_depth--;
 }
 
 func profiler_report(names, srt=, searchstr=) {
@@ -150,8 +159,26 @@ func profiler_report(names, srt=, searchstr=) {
   }
 }
 
-func profiler_clear(void) {
-  extern profiler_data;
-  profiler_reset;
+func profiler_clear(void, places=, maxdepth=) {
+/* DOCUMENT profiler_clear, places=, maxdepth=
+  Clears current profiling data. Also resets the offset for timing data.
+
+  Options:
+    places= If provided, profiler_init will be called with this as an argument.
+      Otherwise, profiler_reset is called.
+    maxdepth= If provided, this will change the maximum profiling depth for
+      nested profiling. Default depth is 100. If you exceed the maximum profile
+      depth, you'll get an error.
+*/
+  extern profiler_data, profiler_counts, profiler_depth, profiler_overhead;
+  default, maxdepth, 100;
   profiler_data=h_new();
+  profiler_counts = array(0, maxdepth);
+  profiler_depth = 0;
+  if(is_void(places)) {
+    profiler_reset;
+  } else {
+    profiler_overhead = 0;
+    profiler_init, places;
+  }
 }
