@@ -76,17 +76,6 @@ extern profiler;
       given search string (or array of search strings).
 */
 
-//scratch = save(scratch, tmp, profiler_enter, profiler_leave, profiler_report,
-//  profiler_clear);
-
-//tmp = save(data, enter, leave, report, clear);
-
-//if(is_obj(profiler) && profiler(*,"data") && is_hash(profiler_data)) {
-//  data = profiler_data;
-//} else {
-//  data = h_new();
-//}
-
 profiler_data = h_new();
 
 func profiler_enter(name) {
