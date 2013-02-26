@@ -1,5 +1,10 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+// This requires C-ALPS functionality.
+require, "calps.i";
+
+if(!is_func(profiler_ticks)) error, "you need to update C-ALPS";
+
 extern profiler;
 /* DOCUMENT profiler
   This is intended to aid a programmer in profiling code execution times. None
@@ -80,10 +85,9 @@ if(!is_hash(profiler_data)) profiler_data = h_new();
 
 func profiler_enter(name) {
   extern profiler_data;
-  start = array(double, 3);
-  timer, start;
+  start = profiler_ticks();
   if(catch(0x08)) {
-    h_set, profiler_data, name, h_new(start=start, time=[0.,0.,0.], calls=0);
+    h_set, profiler_data, name, h_new(start=start, time=0, calls=0);
     return;
   }
   h_set, profiler_data(name), start=start;
@@ -91,8 +95,7 @@ func profiler_enter(name) {
 
 func profiler_leave(name) {
   extern profiler_data;
-  stop = array(double, 3);
-  timer, stop;
+  stop = profiler_ticks();
   cur = profiler_data(name);
   h_set, cur, time=cur.time + stop - cur.start, calls=cur.calls + 1;
 }
@@ -120,32 +123,14 @@ func profiler_report(names, srt=, searchstr=) {
       for(i = 1; i <= count; i++) {
         key(i) = profiler_data(names(i)).calls;
       }
-    } else if(srt == "cpu") {
+    } else if(srt == "clicks") {
       for(i = 1; i <= count; i++) {
-        key(i) = profiler_data(names(i)).time(1);
+        key(i) = profiler_data(names(i)).time;
       }
-    } else if(srt == "system") {
-      for(i = 1; i <= count; i++) {
-        key(i) = profiler_data(names(i)).time(2);
-      }
-    } else if(srt == "wall") {
-      for(i = 1; i <= count; i++) {
-        key(i) = profiler_data(names(i)).time(3);
-      }
-    } else if(srt == "avg cpu") {
+    } else if(srt == "avg clicks") {
       for(i = 1; i <= count; i++) {
         calls = profiler_data(names(i)).calls;
-        key(i) = calls ? profiler_data(names(i)).time(1)/calls : 0;
-      }
-    } else if(srt == "avg system") {
-      for(i = 1; i <= count; i++) {
-        calls = profiler_data(names(i)).calls;
-        key(i) = calls ? profiler_data(names(i)).time(2)/calls : 0;
-      }
-    } else if(srt == "avg wall") {
-      for(i = 1; i <= count; i++) {
-        calls = profiler_data(names(i)).calls;
-        key(i) = calls ? profiler_data(names(i)).time(3)/calls : 0;
+        key(i) = calls ? profiler_data(names(i)).time/calls : 0;
       }
     }
     names = names(msort(key, names));
@@ -160,19 +145,13 @@ func profiler_report(names, srt=, searchstr=) {
     cur = profiler_data(names(i));
     write, format="  %d calls\n", cur.calls;
     if(!cur.calls) continue;
-    write, format="  %s:\n", "CPU";
-    write, format="    %g seconds\n", cur.time(1);
-    write, format="    %g seconds/call\n", cur.time(1)/cur.calls;
-    write, format="  %s:\n", "System";
-    write, format="    %g seconds\n", cur.time(2);
-    write, format="    %g seconds/call\n", cur.time(2)/cur.calls;
-    write, format="  %s:\n", "Wall";
-    write, format="    %g seconds\n", cur.time(3);
-    write, format="    %g seconds/call\n", cur.time(3)/cur.calls;
+    write, format="  %d ticks\n", cur.time;
+    write, format="  %d ticks/call\n", cur.time/cur.calls;
   }
 }
 
 func profiler_clear(void) {
   extern profiler_data;
+  profiler_reset;
   profiler_data=h_new();
 }
