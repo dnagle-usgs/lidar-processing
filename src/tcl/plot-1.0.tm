@@ -19,7 +19,7 @@ if {![namespace exists ::plot]} {
       # Constants
       namespace eval c {
          variable markerShapes [list None Square Cross Triangle Circle \
-            Diamond Cross45 Inverted-Triangle]
+            Diamond Cross45 Inv-Triangle]
          variable markerSizes [list .1 .2 .3 .4 .5 .6 .7 1.0 1.5 2.0 2.5 \
             3.0 5.0 10.0]
          variable mapPath "/data/"
@@ -282,19 +282,15 @@ proc ::plot::menu {} {
    labelframe $f -text "Window settings"
    grid $f -sticky wen
 
-   label $f.labWindow -text "In Window:"
+   label $f.labWindow -text "Window:"
    ttk::spinbox $f.spnWindow -justify center -textvariable ::_map(window) \
-      -from 0 -to 63 -increment 1
-   grid $f.labWindow $f.spnWindow
-   grid $f.labWindow -sticky e
-
-   label $f.labWinSize -text "Window Size:"
+      -from 0 -to 63 -increment 1 -width 3
+   label $f.labWinSize -text " Size:"
    ::mixin::combobox $f.cboWinSize -values $::plot::c::windowSizes \
-      -textvariable ::plot::g::windowSize -state readonly
-   grid $f.labWinSize $f.cboWinSize
-   grid $f.labWinSize -sticky e
-
-   grid columnconfigure $f 0 -weight 1
+      -textvariable ::plot::g::windowSize -state readonly -width 1
+   grid $f.labWindow $f.spnWindow $f.labWinSize $f.cboWinSize -sticky ew
+   grid columnconfigure $f 1 -weight 1
+   grid columnconfigure $f 3 -weight 3
 
    set f $pane.lfrSf
    labelframe $f -text "SF plot settings"
@@ -302,21 +298,21 @@ proc ::plot::menu {} {
 
    label $f.labColor -text "Color:" -anchor e
    ::mixin::combobox $f.cboColor -values $::plot::c::colors \
-      -textvariable ::plot::g::markColor -state readonly
-   grid $f.labColor $f.cboColor
-   grid $f.labColor -sticky e
+      -textvariable ::plot::g::markColor -state readonly \
+      -width 7
 
-   label $f.labShape -text "Shape:" -anchor e
+   label $f.labShape -text " Shape:" -anchor e
    ::mixin::combobox $f.cboShape -values $::plot::c::markerShapes \
-      -textvariable ::plot::g::markShape -state readonly
-   grid $f.labShape $f.cboShape
-   grid $f.labShape -sticky e
+      -textvariable ::plot::g::markShape -state readonly \
+      -width 7
 
-   label $f.labSize -text "Size:" -anchor e
+   label $f.labSize -text " Size:" -anchor e
    ::mixin::combobox $f.cboSize -values $::plot::c::markerSizes \
-      -textvariable ::plot::g::markSize -state readonly
-   grid $f.labSize $f.cboSize
-   grid $f.labSize -sticky e
+      -textvariable ::plot::g::markSize -state readonly \
+      -width 4
+
+   grid $f.labColor $f.cboColor $f.labShape $f.cboShape $f.labSize $f.cboSize \
+      -sticky ew
 
    grid columnconfigure $f 0 -weight 1
 
