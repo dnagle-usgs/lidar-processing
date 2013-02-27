@@ -101,7 +101,7 @@ proc ::plot::gui {} {
 
    foreach {pane label} {
       interact Interact
-      poly Polygons
+      poly Polys
       pnav PNAV
       img Image
       shp Shapefile
