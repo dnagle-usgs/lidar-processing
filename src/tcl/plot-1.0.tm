@@ -340,39 +340,39 @@ proc ::plot::pane_poly {pane} {
 
    grid columnconfigure $f 1 -weight 1
 
-   Button $pane.butAddGon -text "Add polygon" \
+   ttk::button $pane.butAddGon -text "Add polygon" \
       -command [list ::plot::poly_add 1]
 
-   Button $pane.butAddLine -text "Add polyline" \
+   ttk::button $pane.butAddLine -text "Add polyline" \
       -command [list ::plot::poly_add 0]
 
    grid $pane.butAddGon $pane.butAddLine -sticky ew
 
-   Button $pane.butRemove -text "Remove poly" \
+   ttk::button $pane.butRemove -text "Remove poly" \
       -command ::plot::poly_remove
 
-   Button $pane.butRename -text "Rename poly" \
+   ttk::button $pane.butRename -text "Rename poly" \
       -command ::plot::poly_rename
 
    grid $pane.butRemove $pane.butRename -sticky ew
 
-   Button $pane.butPlot -text "Plot polys" -command ::plot::poly_plot
+   ttk::button $pane.butPlot -text "Plot polys" -command ::plot::poly_plot
 
-   Button $pane.butHlite -text "Highlight poly" -command ::plot::poly_highlight
+   ttk::button $pane.butHlite -text "Highlight poly" -command ::plot::poly_highlight
 
    grid $pane.butPlot $pane.butHlite -sticky ew
 
-   Button $pane.butSort -text "Sort polys" -command ::plot::poly_sort
+   ttk::button $pane.butSort -text "Sort polys" -command ::plot::poly_sort
 
-   Button $pane.butClean -text "Clean/Sanitize" \
+   ttk::button $pane.butClean -text "Clean/Sanitize" \
       -command ::plot::poly_cleanup
 
    grid $pane.butSort $pane.butClean -sticky ew
 
-   Button $pane.butSave -text "Save ASCII shapefile" \
+   ttk::button $pane.butSave -text "Save ASCII shapefile" \
       -command ::plot::poly_write
 
-   Button $pane.butLoad -text "Load ASCII shapefile" \
+   ttk::button $pane.butLoad -text "Load ASCII shapefile" \
       -command ::plot::poly_read
 
    grid $pane.butSave $pane.butLoad -sticky ew
@@ -403,14 +403,14 @@ proc ::plot::pane_shp {pane} {
    grid $pane.labLineColor -sticky w
    grid $pane.cboLineColor -sticky ew
 
-   Button $pane.butAdd -text "Add ASCII shapefile" -command ::plot::shp_add
+   ttk::button $pane.butAdd -text "Add ASCII shapefile" -command ::plot::shp_add
    grid $pane.butAdd - -sticky ew
 
-   Button $pane.butRemove -text "Remove selected shapefile" \
+   ttk::button $pane.butRemove -text "Remove selected shapefile" \
       -command ::plot::shp_remove
    grid $pane.butRemove - -sticky ew
 
-   Button $pane.butPlot -text "Plot shapefiles" -command ::plot::shp_plot
+   ttk::button $pane.butPlot -text "Plot shapefiles" -command ::plot::shp_plot
    grid $pane.butPlot - -sticky ew
 
    grid rowconfigure $pane 0 -weight 1
@@ -466,12 +466,12 @@ proc ::plot::pane_pnav {pane} {
    grid $f.labMarkerSize $f.cboMarkerSize
    grid $f.labMarkerSize -sticky e
 
-   Button $f.butLoad -text "Load Track" -command ::plot::track_load
+   ttk::button $f.butLoad -text "Load Track" -command ::plot::track_load
    Entry $f.entLoad -textvariable ::plot::g::pnav_file
    grid $f.butLoad $f.entLoad
    ::plot::readonly $f.entLoad
 
-   Button $f.butPlot -text "Plot Track" -command ::plot::track_plot
+   ttk::button $f.butPlot -text "Plot Track" -command ::plot::track_plot
    grid $f.butPlot -columnspan 2
 
    grid rowconfigure $pane 0 -weight 1
@@ -488,15 +488,15 @@ proc ::plot::pane_img {pane} {
       -hscrollmode dynamic -vscrollmode dynamic -height 5
    grid $g::imageListBox - -sticky news
 
-   Button $pane.butAddImage -text "Add referenced image" \
+   ttk::button $pane.butAddImage -text "Add referenced image" \
       -command ::plot::image_add
    grid $pane.butAddImage - -sticky ew
 
-   Button $pane.butRemove -text "Remove selected image" \
+   ttk::button $pane.butRemove -text "Remove selected image" \
       -command ::plot::image_remove
    grid $pane.butRemove - -sticky ew
 
-   Button $pane.butPlot -text "Plot Images" -command ::plot::image_plot
+   ttk::button $pane.butPlot -text "Plot Images" -command ::plot::image_plot
    grid $pane.butPlot - -sticky ew
 
    ttk::label $pane.labSkip -text "Skip factor:"
@@ -531,14 +531,14 @@ proc ::plot::pane_map {pane} {
    grid $f.labLineColor $f.cboLineColor
    grid $f.labLineColor -sticky e
 
-   Button $pane.butAdd -text "Add coastline map" -command ::plot::map_add
+   ttk::button $pane.butAdd -text "Add coastline map" -command ::plot::map_add
    grid $pane.butAdd -sticky ew
 
-   Button $pane.butRemove -text "Remove selected map" \
+   ttk::button $pane.butRemove -text "Remove selected map" \
       -command ::plot::map_remove
    grid $pane.butRemove -sticky ew
 
-   Button $pane.butPlot -text "Plot coastline maps" -command ::plot::map_plot
+   ttk::button $pane.butPlot -text "Plot coastline maps" -command ::plot::map_plot
    grid $pane.butPlot -sticky ew
 
    grid rowconfigure $pane 0 -weight 1
@@ -556,14 +556,14 @@ proc ::plot::pane_plan {pane} {
       -hscrollmode dynamic -vscrollmode dynamic -height 5
    grid $g::planListBox -sticky news
 
-   Button $pane.butAdd -text "Add flight plan" -command ::plot::plan_add
+   ttk::button $pane.butAdd -text "Add flight plan" -command ::plot::plan_add
    grid $pane.butAdd -sticky ew
 
-   Button $pane.butRemove -text "Remove selected flight plan" \
+   ttk::button $pane.butRemove -text "Remove selected flight plan" \
       -command ::plot::plan_remove
    grid $pane.butRemove -sticky ew
 
-   Button $pane.butPlot -text "Plot flight plans" -command ::plot::plan_plot
+   ttk::button $pane.butPlot -text "Plot flight plans" -command ::plot::plan_plot
    grid $pane.butPlot -sticky ew
 
    grid rowconfigure $pane 0 -weight 1
