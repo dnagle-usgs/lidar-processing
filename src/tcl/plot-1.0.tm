@@ -100,7 +100,6 @@ proc ::plot::gui {} {
    ttk::notebook $nb
 
    foreach {pane label} {
-      settings Settings
       interact Interact
       poly Polygons
       pnav PNAV
@@ -123,207 +122,186 @@ proc ::plot::gui {} {
 proc ::plot::pane_interact {pane} {
    ttk::frame $pane
 
-   set f $pane.fraButtons
-   ttk::frame $f
-   grid $f -sticky ewn
-
-   Button $f.butPlot -text "Plot" -command ::plot::plot_all
-   grid $f.butPlot -sticky ew
-
-   Button $f.butReplot -text "Clear and Plot" -command ::plot::replot_all
-   grid $f.butReplot -sticky ew
-   
-   Button $f.butJump -text "SF Jump" -command ::plot::jump
-   grid $f.butJump -sticky ew
-
-   grid columnconfigure $f 0 -weight 1
-
-   ttk::frame $pane.fraGrids
-   grid $pane.fraGrids -sticky ewn
-
-   set f $pane.fraGrids.lfrUtmGrid
-   ttk::labelframe $f -text "UTM Grid"
-
-   Button $f.butOverlay -text "Overlay" -command ::plot::utm_grid_overlay
-   grid $f.butOverlay -sticky ew
-
-   Button $f.butName -text "Show Name" -command ::plot::utm_grid_show_name
-   grid $f.butName -sticky ew
-
-   grid columnconfigure $f 0 -weight 1
-
-   set f $pane.fraGrids.lfrQQGrid
-   ttk::labelframe $f -text "QQ Grid"
-
-   Button $f.butOverlay -text "Overlay" -command ::plot::qq_grid_overlay
-   grid $f.butOverlay -sticky ew
-
-   Button $f.butName -text "Show Name" -command ::plot::qq_grid_show_name
-   grid $f.butName -sticky ew
-
-   grid columnconfigure $f 0 -weight 1
-
-   grid $pane.fraGrids.lfrUtmGrid $pane.fraGrids.lfrQQGrid \
-      -sticky ewn
-
-   grid columnconfigure $pane.fraGrids 0 -weight 1
-   grid columnconfigure $pane.fraGrids 1 -weight 1
-
-   set f $pane.fraLimits
-   ttk::labelframe $f -text "Reset limits to..."
-   grid $f -sticky ewn
-   
-   Button $f.butLimits -text "All Data" -command ::plot::limits
-
-   Button $f.butLimitsShapes -text "Shapefiles" \
-      -command ::plot::limits_shapefiles
-
-   Button $f.butLimitsTracks -text "PNAV Trackline" \
-      -command ::plot::limits_tracklines
-
-   grid $f.butLimits \
-      $f.butLimitsShapes \
-      $f.butLimitsTracks -sticky ew
-
-   grid columnconfigure $f 0 -weight 1
-   grid columnconfigure $f 1 -weight 1
-   grid columnconfigure $f 2 -weight 1
-
-   set f $pane.fraCopyLimits
-   ttk::labelframe $f -text "Copy limits..."
-   grid $f -sticky ewn
-
-   ttk::label $f.labWinFrom -text "From:"
-   ttk::spinbox $f.spnWinFrom -justify center -width 4 \
-      -from 0 -to 63 -increment 1 \
-      -textvariable ::plot::g::limits_copy_from
-   ttk::label $f.labWinTo -text "To:"
-   ttk::spinbox $f.spnWinTo -justify center -width 4 \
-      -from 0 -to 63 -increment 1 \
-      -textvariable ::plot::g::limits_copy_to
-   Button $f.butApply -text "Apply" -command ::plot::copy_limits
-
-   grid $f.labWinFrom $f.spnWinFrom \
-      $f.labWinTo $f.spnWinTo $f.butApply \
-      -sticky wen
-
-   grid columnconfigure $f 1 -weight 3
-   grid columnconfigure $f 3 -weight 3
-   grid columnconfigure $f 4 -weight 2
-
-   grid rowconfigure $pane 3 -weight 1
-   grid columnconfigure $pane 0 -weight 1
-
-   return $pane
-}
-
-proc ::plot::pane_settings {pane} {
-   ttk::frame $pane
-
+   # Settings
    set f $pane.lfrSettings
-   ttk::labelframe $f -text "Coordinate settings"
-   grid $f -sticky nwe
+   ttk::labelframe $f -text "Settings"
 
-   ttk::label $f.labCoord -text "Coordinates:" -anchor e
-   ::mixin::combobox $f.cboCoord -values {"UTM" "Lat/Lon"} \
-      -textvariable ::plot::g::coordType -state readonly
-   ::tooltip::tooltip $f.cboCoord \
-      "Specify what kind of coordinates you want to use."
-   grid $f.labCoord $f.cboCoord - - -sticky ew
+   ttk::label $f.lblCoord -text "Coordinates:" -anchor e
+   ::mixin::combobox $f.cboCoord \
+         -values {"UTM" "Lat/Lon"} \
+         -width 7 \
+         -textvariable ::plot::g::coordType -state readonly
+   misc::tooltip $f.lblCoord $f.cboCoord \
+         "Specify what kind of coordinates you want to use."
 
-   ttk::label $f.labUTMZone -text "UTM Zone:" -anchor e
-   ttk::spinbox $f.spnUTMZone -justify center \
-      -from 0 -to 60 -increment 1
-   ::mixin::revertable $f.spnUTMZone \
-      -textvariable ::curzone \
-      -applycommand ::plot::curzone_apply
-   ttk::button $f.appUTMZone -text "\u2713" \
-      -style Toolbutton \
-      -command [list $f.spnUTMZone apply]
-   ttk::button $f.revUTMZone -text "x" \
-      -style Toolbutton \
-      -command [list $f.spnUTMZone revert]
-   misc::tooltip $f.labUTMZone $f.spnUTMZone $f.appUTMZone $f.revUTMZone \
-      "This setting is tied to Yorick's curzone variable.
+   ttk::label $f.lblZone -text "Zone:" -anchor e
+   ttk::spinbox $f.spnZone \
+         -justify center \
+         -width 3 \
+         -from 0 -to 60 -increment 1
+   ::mixin::revertable $f.spnZone \
+         -textvariable ::curzone \
+         -applycommand ::plot::curzone_apply
+   ttk::button $f.appZone -text "\u2713" \
+         -style Toolbutton \
+         -command [list $f.spnZone apply]
+   ttk::button $f.revZone -text "x" \
+         -style Toolbutton \
+         -command [list $f.spnZone revert]
+   misc::tooltip $f.lblZone $f.spnZone $f.appZone $f.revZone \
+         "This setting is tied to Yorick's curzone variable.
 
-      Changes made here will not be applied until you hit <Enter> or click on
-      the checkmark button to apply them. You can also revert back to the
-      orginal value with <Escape> or the X button.
+         Changes made here will not be applied until you hit <Enter> or click
+         on the checkmark button to apply them. You can also revert back to the
+         orginal value with <Escape> or the X button.
 
-      Changes made to curzone in Yorick will not immediately show here.
-      However, the setting should update immediately when you interact with the
-      window afterwards."
-   grid $f.labUTMZone $f.spnUTMZone $f.appUTMZone $f.revUTMZone -sticky ew
+         Changes made to curzone in Yorick will not immediately show here.
+         However, the setting should update immediately when you interact with
+         the window afterwards."
 
-   grid columnconfigure $f 1 -weight 1
+   ttk::label $f.lblWindow -text "Window:"
+   ttk::spinbox $f.spnWindow -justify center -textvariable ::_map(window) \
+      -from 0 -to 63 -increment 1 -width 3
+   ::mixin::combobox $f.cboWinSize -values $::plot::c::windowSizes \
+      -textvariable ::plot::g::windowSize -state readonly -width 1
+
+   grid $f.lblCoord $f.cboCoord - $f.lblZone $f.spnZone $f.appZone $f.revZone \
+         -sticky ew -padx 2 -pady 2
+   grid $f.lblWindow $f.spnWindow $f.cboWinSize - - - - \
+         -sticky ew -padx 2 -pady 2
+   grid configure $f.appZone $f.revZone -padx 0
+   grid configure $f.lblCoord $f.lblWindow -sticky e
+
+   grid columnconfigure $f {1 4} -weight 1
+   grid columnconfigure $f 2 -weight 2
+
+   # Data to plot
+   set f $pane.lfrData
+   ttk::labelframe $f -text "Data to plot" -padding 2
+
+   ttk::checkbutton $f.chkImages -text "Images" \
+         -variable ::plot::g::enable_plot_images
+   ttk::checkbutton $f.chkMap -text "Coastline Maps" \
+         -variable ::plot::g::enable_plot_maps
+   ttk::checkbutton $f.chkShape -text "Shapefiles" \
+         -variable ::plot::g::enable_plot_shapes
+   ttk::checkbutton $f.chkPlan -text "Flight plans" \
+         -variable ::plot::g::enable_plot_plans
+   ttk::checkbutton $f.chkPoly -text "Polygons" \
+         -variable ::plot::g::enable_plot_polys
+   ttk::checkbutton $f.chkTrack -text "PNAV flight track" \
+         -variable ::plot::g::enable_plot_pnav
+
+   grid $f.chkImages $f.chkShape $f.chkPoly -sticky w
+   grid $f.chkMap $f.chkPlan $f.chkTrack -sticky w
+
+   grid columnconfigure $f {0 1 2} -weight 1
+
+   # Plotting
+   set f $pane.lfrPlot
+   ttk::labelframe $f -text "Plotting"
+
+   ttk::button $f.btnPlot -text "Plot" -command ::plot::plot_all
+   ttk::button $f.btnReplot -text "Clear and Plot" -command ::plot::replot_all
+
+   grid $f.btnPlot -sticky ew -padx 2 -pady 2
+   grid $f.btnReplot -sticky ew -padx 2 -pady 2
+
+   grid columnconfigure $f 0 -weight 1
+
+   # Grid
+   set f $pane.lfrGrid
+   ttk::labelframe $f -text "Grid"
+
+   ::mixin::combobox::mapping $f.cboType -width 1 \
+         -state readonly \
+         -altvariable ::gridtype \
+         -mapping {
+            "UTM Grid" grid
+            "QQ Grid" qq_grid
+         }
+   ttk::button $f.btnPlot -text "Plot" -width 1 \
+         -command {exp_send "draw_${::gridtype}, $::_map(window);\r"}
+   ttk::button $f.btnName -text "Name" -width 1 \
+         -command {exp_send "show_grid_location, $::_map(window);\r"}
+
+   grid $f.cboType - -sticky ew -padx 2 -pady 2
+   grid $f.btnPlot $f.btnName -sticky ew -padx 2 -pady 2
+   grid columnconfigure $f {0 1} -weight 1
+
+   # Limits
+   set f $pane.lfrLimits
+   ttk::labelframe $f -text "Reset limits to..."
+   
+   ttk::button $f.btnLimits -text "All Data" \
+         -command ::plot::limits
+   ttk::button $f.btnLimitsShapes -text "Shapefiles" \
+         -command ::plot::limits_shapefiles
+   ttk::button $f.btnLimitsTracks -text "PNAV Trackline" \
+         -command ::plot::limits_tracklines
+
+   grid $f.btnLimits $f.btnLimitsShapes $f.btnLimitsTracks \
+         -sticky ew -padx 2 -pady 2
+   grid columnconfigure $f {0 1 2} -weight 1
+
+   # SF/Sync
+   set f $pane.lfrSFSync
+   ttk::labelframe $f -text "SF/Sync"
+
+   ttk::label $f.lblPlot -text "Plot:"
+   ::mixin::combobox $f.cboColor -values $::plot::c::colors \
+         -textvariable ::plot::g::markColor -state readonly \
+         -width 7
+   ::mixin::combobox $f.cboShape -values $::plot::c::markerShapes \
+         -textvariable ::plot::g::markShape -state readonly \
+         -width 7
+   ::mixin::combobox $f.cboSize -values $::plot::c::markerSizes \
+         -textvariable ::plot::g::markSize -state readonly \
+         -width 4
+   ttk::separator $f.sep -orient vertical
+   ttk::button $f.btnJump -text "Jump" -command ::plot::jump
+
+   grid $f.lblPlot $f.cboColor $f.cboShape $f.cboSize $f.sep $f.btnJump \
+         -sticky ew -padx 2 -pady 2
+   grid configure $f.sep -sticky ns -pady 0
+   grid columnconfigure $f {1 2 3} -weight 1
+
+   # Copy Limits
+   set f $pane.lfrLimitsCopy
+   ttk::labelframe $f -text "Copy Limits"
+
+   ttk::label $f.lblFrom -text "From:"
+   ttk::spinbox $f.spnFrom -justify center -width 4 \
+         -from 0 -to 63 -increment 1 \
+         -textvariable ::plot::g::limits_copy_from
+   ttk::button $f.btnApply -text "Apply to:" \
+         -command ::plot::copy_limits
+   ttk::spinbox $f.spnTo -justify center -width 4 \
+         -from 0 -to 63 -increment 1 \
+         -textvariable ::plot::g::limits_copy_to
+   ttk::button $f.btnSwap -text "Swap" \
+         -width 0 -command ::plot::limits_swap
+   ttk::button $f.btnApplyAll -text "Apply to all" \
+         -command ::plot::copy_limits_all
+
+   grid $f.lblFrom $f.spnFrom $f.btnApply $f.spnTo $f.btnSwap $f.btnApplyAll \
+         -sticky ew -padx 2 -pady 2
+   grid columnconfigure $f {1 3} -weight 1
+
+   # Frames
+   grid $pane.lfrPlot $pane.lfrGrid -sticky news -padx 2 -pady 2
+   grid $pane.lfrLimits - -sticky ew -padx 2 -pady 2
+   grid $pane.lfrSettings - -sticky ew -padx 2 -pady 2
+   grid $pane.lfrData - -sticky ew -padx 2 -pady 2
+   grid $pane.lfrSFSync - -sticky ew -padx 2 -pady 2
+   grid $pane.lfrLimitsCopy - -sticky ew -padx 2 -pady 2
 
    bind $pane <Enter> {set ::curzone $::curzone}
    bind $pane <Visibility> {set ::curzone $::curzone}
 
-   set f $pane.lfrData
-   ttk::labelframe $f -text "Data to plot by default"
-   grid $f -sticky wen
-
-   ttk::checkbutton $f.chkImages -text "Images" \
-      -variable ::plot::g::enable_plot_images
-   ttk::checkbutton $f.chkMap -text "Coastline Maps" \
-      -variable ::plot::g::enable_plot_maps
-   ttk::checkbutton $f.chkShape -text "Shapefiles" \
-      -variable ::plot::g::enable_plot_shapes
-   ttk::checkbutton $f.chkPlan -text "Flight plans" \
-      -variable ::plot::g::enable_plot_plans
-   ttk::checkbutton $f.chkPoly -text "Polygons" \
-      -variable ::plot::g::enable_plot_polys
-   ttk::checkbutton $f.chkTrack -text "PNAV flight track" \
-      -variable ::plot::g::enable_plot_pnav
-
-   grid $f.chkImages $f.chkPlan -sticky w
-   grid $f.chkMap $f.chkPoly -sticky w
-   grid $f.chkShape $f.chkTrack -sticky w
-
-   grid columnconfigure $f 0 -weight 1
-   grid columnconfigure $f 1 -weight 1
-
-   set f $pane.lfrWindow
-   ttk::labelframe $f -text "Window settings"
-   grid $f -sticky wen
-
-   ttk::label $f.labWindow -text "Window:"
-   ttk::spinbox $f.spnWindow -justify center -textvariable ::_map(window) \
-      -from 0 -to 63 -increment 1 -width 3
-   ttk::label $f.labWinSize -text " Size:"
-   ::mixin::combobox $f.cboWinSize -values $::plot::c::windowSizes \
-      -textvariable ::plot::g::windowSize -state readonly -width 1
-   grid $f.labWindow $f.spnWindow $f.labWinSize $f.cboWinSize -sticky ew
-   grid columnconfigure $f 1 -weight 1
-   grid columnconfigure $f 3 -weight 3
-
-   set f $pane.lfrSf
-   ttk::labelframe $f -text "SF plot settings"
-   grid $f -sticky wen
-
-   ttk::label $f.labColor -text "Color:" -anchor e
-   ::mixin::combobox $f.cboColor -values $::plot::c::colors \
-      -textvariable ::plot::g::markColor -state readonly \
-      -width 7
-
-   ttk::label $f.labShape -text " Shape:" -anchor e
-   ::mixin::combobox $f.cboShape -values $::plot::c::markerShapes \
-      -textvariable ::plot::g::markShape -state readonly \
-      -width 7
-
-   ttk::label $f.labSize -text " Size:" -anchor e
-   ::mixin::combobox $f.cboSize -values $::plot::c::markerSizes \
-      -textvariable ::plot::g::markSize -state readonly \
-      -width 4
-
-   grid $f.labColor $f.cboColor $f.labShape $f.cboShape $f.labSize $f.cboSize \
-      -sticky ew
-
-   grid columnconfigure $f 0 -weight 1
-
-   grid rowconfigure $pane 3 -weight 1
-   grid columnconfigure $pane 0 -weight 1
+   grid rowconfigure $pane 100 -weight 1
+   grid columnconfigure $pane 0 -weight 2
+   grid columnconfigure $pane 1 -weight 1
 
    return $pane
 }
@@ -700,6 +678,18 @@ proc ::plot::copy_limits {} {
    ::plot::window_restore
 }
 
+proc ::plot::copy_limits_all {} {
+   ::plot::window_store
+   exp_send "copy_limits, $g::limits_copy_from;\r"
+   ::plot::window_restore
+}
+
+proc ::plot::limits_swap {} {
+   set tmp $g::limits_from_to
+   set g::limits_copy_to $g::limits_copy_from
+   set g::limits_copy_from $tmp
+}
+
 proc ::plot::window_set { } {
    exp_send "window, $::_map(window)\r"
 }
@@ -714,22 +704,6 @@ proc ::plot::window_restore { } {
    if {$c::windows_track} {
       exp_send "window_select, wsav\r"
    }
-}
-
-proc ::plot::utm_grid_overlay { } {
-   exp_send "draw_grid, $::_map(window)\r"
-}
-
-proc ::plot::utm_grid_show_name { } {
-   exp_send "show_grid_location, $::_map(window)\r"
-}
-
-proc ::plot::qq_grid_overlay {} {
-   exp_send "draw_qq_grid, $::_map(window)\r"
-}
-
-proc ::plot::qq_grid_show_name {} {
-   exp_send "show_grid_location, $::_map(window)\r"
 }
 
 proc ::plot::mark_time_pos { sod } {
