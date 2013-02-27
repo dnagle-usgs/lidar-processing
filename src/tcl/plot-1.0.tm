@@ -97,18 +97,9 @@ proc ::plot::menu {} {
    wm title $w "Plotting Tool"
 
    set nb $w.nb
-   NoteBook $nb
-   
-   $nb insert end settings -text "Settings"
-   $nb insert end interact -text "Interact"
-   $nb insert end poly -text "Polygons"
-   $nb insert end pnav -text "PNAV"
-   $nb insert end img -text "Image"
-   $nb insert end shp -text "Shapefile"
-   $nb insert end map -text "Coastline"
-   $nb insert end plan -text "Flight Plan"
+   ttk::notebook $nb
 
-   set pane [$nb getframe interact]
+   set pane [ttk::frame $nb.interact]
 
    set f $pane.fraButtons
    ttk::frame $f
@@ -201,7 +192,7 @@ proc ::plot::menu {} {
    grid rowconfigure $pane 3 -weight 1
    grid columnconfigure $pane 0 -weight 1
 
-   set pane [$nb getframe settings]
+   set pane [ttk::frame $nb.settings]
 
    set f $pane.lfrSettings
    ttk::labelframe $f -text "Coordinate settings"
@@ -320,7 +311,7 @@ proc ::plot::menu {} {
    grid columnconfigure $pane 0 -weight 1
 
 
-   set pane [$nb getframe poly]
+   set pane [ttk::frame $nb.poly]
    
    set g::polyListBox $pane.slbPolys
 
@@ -379,7 +370,7 @@ proc ::plot::menu {} {
    grid columnconfigure $pane 0 -weight 1
    grid columnconfigure $pane 1 -weight 1
 
-   set pane [$nb getframe shp]
+   set pane [ttk::frame $nb.shp]
    
    set g::shpListBox $pane.slbShapes
 
@@ -411,7 +402,7 @@ proc ::plot::menu {} {
    grid columnconfigure $pane 1 -weight 1
 
 
-   set pane [$nb getframe pnav]
+   set pane [ttk::frame $nb.pnav]
 
    set f $pane.fraMain
    ttk::frame $f
@@ -467,7 +458,7 @@ proc ::plot::menu {} {
 
    grid rowconfigure $pane 0 -weight 1
 
-   set pane [$nb getframe img]
+   set pane [ttk::frame $nb.img]
    set g::imageListBox $pane.slbImages
 
    iwidgets::scrolledlistbox $g::imageListBox \
@@ -495,7 +486,7 @@ proc ::plot::menu {} {
    grid columnconfigure $pane 1 -weight 1
 
 
-   set pane [$nb getframe map]
+   set pane [ttk::frame $nb.map]
 
    set g::mapListBox $pane.slbMaps
 
@@ -528,7 +519,7 @@ proc ::plot::menu {} {
    grid columnconfigure $pane 0 -weight 1
 
 
-   set pane [$nb getframe plan]
+   set pane [ttk::frame $nb.plan]
    
    set g::planListBox $pane.slbPlans
 
@@ -549,10 +540,19 @@ proc ::plot::menu {} {
    grid rowconfigure $pane 0 -weight 1
    grid columnconfigure $pane 0 -weight 1
 
+   $nb add $nb.settings -text "Settings"
+   $nb add $nb.interact -text "Interact"
+   $nb add $nb.poly -text "Polygons"
+   $nb add $nb.pnav -text "PNAV"
+   $nb add $nb.img -text "Image"
+   $nb add $nb.shp -text "Shapefile"
+   $nb add $nb.map -text "Coastline"
+   $nb add $nb.plan -text "Flight Plan"
+
    grid $nb -sticky news
    grid rowconfigure $w 0 -weight 1
    grid columnconfigure $w 0 -weight 1
-   $nb raise settings
+   $nb select 0
 
    ::misc::idle [list wm geometry $w ""]
 }
