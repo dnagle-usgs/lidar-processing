@@ -557,6 +557,8 @@ proc ::plot::menu {} {
    grid rowconfigure $w 0 -weight 1
    grid columnconfigure $w 0 -weight 1
    $nb raise settings
+
+   ::misc::idle [list wm geometry $w ""]
 }
 
 proc ::plot::curzone_apply {old new} {
