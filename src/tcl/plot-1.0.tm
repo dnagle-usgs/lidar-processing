@@ -49,6 +49,7 @@ if {![namespace exists ::plot]} {
 
       # GUI variables
       namespace eval g {
+         variable fma 0
          # gga(llu)   utm = 1 or 0
          variable coordType "UTM"
          # gga(linewidth)
@@ -201,19 +202,20 @@ proc ::plot::pane_interact {pane} {
    set f $pane.lfrPlot
    ttk::labelframe $f -text "Plotting"
 
-   ttk::button $f.btnPlot -text "Plot" -command ::plot::plot_all
-   ttk::button $f.btnReplot -text "Clear and Plot" -command ::plot::replot_all
+   ttk::button $f.btnPlot -text " Plot " -width 0 \
+         -command ::plot::plot_all
+   ttk::checkbutton $f.chkFma -text "Auto clear" \
+         -variable ::plot::g::fma
 
-   grid $f.btnPlot -sticky ew -padx 1 -pady 1
-   grid $f.btnReplot -sticky ew -padx 1 -pady 1
+   grid $f.btnPlot $f.chkFma -sticky ew -padx 1 -pady 1
 
-   grid columnconfigure $f 0 -weight 1
+   grid columnconfigure $f 0 -weight 1 -uniform 1
 
    # Grid
    set f $pane.lfrGrid
    ttk::labelframe $f -text "Grid"
 
-   ::mixin::combobox::mapping $f.cboType -width 1 \
+   ::mixin::combobox::mapping $f.cboType -width 9 \
          -state readonly \
          -altvariable ::gridtype \
          -mapping {
@@ -234,10 +236,13 @@ proc ::plot::pane_interact {pane} {
    ttk::labelframe $f -text "Reset limits to..."
    
    ttk::button $f.btnLimits -text "All Data" \
+         -width 0 \
          -command ::plot::limits
    ttk::button $f.btnLimitsShapes -text "Shapefiles" \
+         -width 0 \
          -command ::plot::limits_shapefiles
    ttk::button $f.btnLimitsTracks -text "PNAV Trackline" \
+         -width 0 \
          -command ::plot::limits_tracklines
 
    grid $f.btnLimits $f.btnLimitsShapes $f.btnLimitsTracks \
@@ -263,7 +268,7 @@ proc ::plot::pane_interact {pane} {
 
    grid $f.lblPlot $f.cboColor $f.cboShape $f.cboSize $f.sep $f.btnJump \
          -sticky ew -padx 1 -pady 1
-   grid configure $f.sep -sticky ns -pady 0
+   grid configure $f.sep -sticky ns -padx 3
    grid columnconfigure $f {1 2 3} -weight 1
 
    # Copy Limits
@@ -289,19 +294,29 @@ proc ::plot::pane_interact {pane} {
    grid columnconfigure $f {1 3} -weight 1
 
    # Frames
-   grid $pane.lfrPlot $pane.lfrGrid -sticky news -padx 1 -pady 1
-   grid $pane.lfrLimits - -sticky ew -padx 1 -pady 1
-   grid $pane.lfrSettings - -sticky ew -padx 1 -pady 1
-   grid $pane.lfrData - -sticky ew -padx 1 -pady 1
-   grid $pane.lfrSFSync - -sticky ew -padx 1 -pady 1
-   grid $pane.lfrLimitsCopy - -sticky ew -padx 1 -pady 1
+   lower [ttk::frame $pane.row1]
+   grid $pane.lfrPlot $pane.lfrLimits \
+         -in $pane.row1 \
+         -sticky news -padx 1 -pady 1
+   grid columnconfigure $pane.row1 0 -weight 1
+
+   lower [ttk::frame $pane.row2]
+   grid $pane.lfrSettings $pane.lfrGrid \
+         -in $pane.row2 \
+         -sticky news -padx 1 -pady 1
+   grid columnconfigure $pane.row2 {0 1} -weight 1
+
+   grid $pane.row1 -sticky news
+   grid $pane.row2 -sticky news
+   grid $pane.lfrData  -sticky news -padx 1 -pady 1
+   grid $pane.lfrSFSync  -sticky news -padx 1 -pady 1
+   grid $pane.lfrLimitsCopy  -sticky news -padx 1 -pady 1
 
    bind $pane <Enter> {set ::curzone $::curzone}
    bind $pane <Visibility> {set ::curzone $::curzone}
 
    grid rowconfigure $pane 100 -weight 1
-   grid columnconfigure $pane 0 -weight 2
-   grid columnconfigure $pane 1 -weight 1
+   grid columnconfigure $pane 0 -weight 1
 
    return $pane
 }
@@ -561,12 +576,10 @@ proc ::plot::curzone_apply {old new} {
    exp_send "curzone = $new;\r"
 }
 
-proc ::plot::replot_all { } {
-   ::plot::fma
-   ::plot::plot_all
-}
-
-proc ::plot::plot_all { } {
+proc ::plot::plot_all {} {
+   if {$g::fma} {
+      ::plot::fma
+   }
    # Make sure squared limits are applied
    exp_send "limits, square=1\r"
    # Plot images first
