@@ -90,7 +90,7 @@ if {![namespace exists ::plot]} {
 }
 ybkg tksetsym \"::plot::c::mapPath\" \"alpsrc.maps_dir\"
 
-proc ::plot::menu {} {
+proc ::plot::gui {} {
    set w .plotmenu
    destroy $w
    toplevel $w

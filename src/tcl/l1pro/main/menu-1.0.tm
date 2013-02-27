@@ -113,7 +113,7 @@ proc menu_tools mb {
     $mb add command {*}[menulabel "&Mission configuration manager"] \
             -command ::mission::launch
     $mb add command {*}[menulabel "&Plotting tool"] \
-            -command ::plot::menu
+            -command ::plot::gui
     $mb add separator
     $mb add command {*}[menulabel "Examine Pixels Settings"] \
             -command ::l1pro::expix::gui
