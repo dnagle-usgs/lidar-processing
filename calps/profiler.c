@@ -11,6 +11,10 @@ static long profiler_offset = 0L;
 static long profiler_sec = 1L;
 static long profiler_nsec = NANOSECONDS;
 
+// Initializes profiler_sec and profiler_nsec
+// Resets profiler_offset
+// Accepts one argument, places
+// Returns nothing
 void Y_profiler_init(int nArgs)
 {
   long places;
@@ -38,6 +42,7 @@ void Y_profiler_init(int nArgs)
   ypush_nil();
 }
 
+// Returns value last passed into Y_profiler_init
 void Y_profiler_lastinit(int nArgs)
 {
   long places = 0, sec = profiler_sec;
@@ -49,6 +54,8 @@ void Y_profiler_lastinit(int nArgs)
   ypush_long(places);
 }
 
+// Resets profiler_offset
+// Returns nothing
 void Y_profiler_reset(int nArgs)
 {
   struct timespec current;
@@ -57,6 +64,9 @@ void Y_profiler_reset(int nArgs)
   ypush_nil();
 }
 
+// Returns current clock ticks
+// Meaning of "clock ticks" is dependent on places value and last offset but
+// are always good for measuring relative time (as in profiling)
 void Y_profiler_ticks(int nArgs)
 {
   struct timespec current;
