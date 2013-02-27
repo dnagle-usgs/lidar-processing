@@ -107,7 +107,7 @@ proc ::plot::gui {} {
       img Image
       shp Shapefile
       map Coastline
-      plan "Flight PLan"
+      plan "Flight Plan"
    } {
       $nb add [pane_$pane $nb.$pane] -text $label
    }
@@ -266,27 +266,16 @@ proc ::plot::pane_settings {pane} {
 
    ttk::checkbutton $f.chkImages -text "Images" \
       -variable ::plot::g::enable_plot_images
-   #grid $f.chkImages -sticky w
-
    ttk::checkbutton $f.chkMap -text "Coastline Maps" \
       -variable ::plot::g::enable_plot_maps
-   #grid $f.chkMap -sticky w
-
    ttk::checkbutton $f.chkShape -text "Shapefiles" \
       -variable ::plot::g::enable_plot_shapes
-   #grid $f.chkShape -sticky w
-
    ttk::checkbutton $f.chkPlan -text "Flight plans" \
       -variable ::plot::g::enable_plot_plans
-   #grid $f.chkPlan -sticky w
-
    ttk::checkbutton $f.chkPoly -text "Polygons" \
       -variable ::plot::g::enable_plot_polys
-   #grid $f.chkPoly -sticky w
-
    ttk::checkbutton $f.chkTrack -text "PNAV flight track" \
       -variable ::plot::g::enable_plot_pnav
-   #grid $f.chkTrack -sticky w
 
    grid $f.chkImages $f.chkPlan -sticky w
    grid $f.chkMap $f.chkPoly -sticky w
