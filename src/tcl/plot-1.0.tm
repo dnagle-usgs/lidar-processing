@@ -335,7 +335,7 @@ proc ::plot::pane_poly {pane} {
    grid $f - -sticky wen
 
    ttk::label $f.labName -text "Next poly's name:" -anchor e
-   Entry $f.entName -textvariable ::plot::g::poly_next_name
+   ttk::entry $f.entName -textvariable ::plot::g::poly_next_name
    grid $f.labName $f.entName -sticky ew
 
    grid columnconfigure $f 1 -weight 1
@@ -467,7 +467,7 @@ proc ::plot::pane_pnav {pane} {
    grid $f.labMarkerSize -sticky e
 
    ttk::button $f.butLoad -text "Load Track" -command ::plot::track_load
-   Entry $f.entLoad -textvariable ::plot::g::pnav_file
+   ttk::entry $f.entLoad -textvariable ::plot::g::pnav_file
    grid $f.butLoad $f.entLoad
    ::plot::readonly $f.entLoad
 
