@@ -12,7 +12,7 @@ package provide plot 1.0
 if {![info exists curzone]} {
    set curzone 0
 }
-tky_tie add sync ::curzone to curzone -initialize 1
+tky_tie add read ::curzone from curzone -initialize 1
 
 if {![namespace exists ::plot]} {
    namespace eval ::plot {
@@ -90,7 +90,7 @@ if {![namespace exists ::plot]} {
 }
 ybkg tksetsym \"::plot::c::mapPath\" \"alpsrc.maps_dir\"
 
-proc ::plot::menu { } {
+proc ::plot::menu {} {
    set w .plotmenu
    destroy $w
    toplevel $w
@@ -212,18 +212,33 @@ proc ::plot::menu { } {
       -textvariable ::plot::g::coordType -state readonly
    ::tooltip::tooltip $f.cboCoord \
       "Specify what kind of coordinates you want to use."
-   grid $f.labCoord $f.cboCoord
+   grid $f.labCoord $f.cboCoord - - -sticky ew
 
    label $f.labUTMZone -text "UTM Zone:" -anchor e
    ttk::spinbox $f.spnUTMZone -justify center \
-      -from 0 -to 60 -increment 1 \
-      -textvariable ::curzone
-   ::tooltip::tooltip $f.spnUTMZone \
-      "This setting is tied to Yorick's curzone variable. Changes made here\
-      \nwill get sent (transparently) to Yorick. Changes made in Yorick will NOT\
-      \nshow up here immediately; however, it should update immediately when
-      \nyou next interact with this window."
-   grid $f.labUTMZone $f.spnUTMZone
+      -from 0 -to 60 -increment 1
+   ::mixin::revertable $f.spnUTMZone \
+      -textvariable ::curzone \
+      -applycommand ::plot::curzone_apply
+   ttk::button $f.appUTMZone -text "\u2713" \
+      -style Toolbutton \
+      -command [list $f.spnUTMZone apply]
+   ttk::button $f.revUTMZone -text "x" \
+      -style Toolbutton \
+      -command [list $f.spnUTMZone revert]
+   misc::tooltip $f.labUTMZone $f.spnUTMZone $f.appUTMZone $f.revUTMZone \
+      "This setting is tied to Yorick's curzone variable.
+
+      Changes made here will not be applied until you hit <Enter> or click on
+      the checkmark button to apply them. You can also revert back to the
+      orginal value with <Escape> or the X button.
+
+      Changes made to curzone in Yorick will not immediately show here.
+      However, the setting should update immediately when you interact with the
+      window afterwards."
+   grid $f.labUTMZone $f.spnUTMZone $f.appUTMZone $f.revUTMZone -sticky ew
+
+   grid columnconfigure $f 1 -weight 1
 
    bind $pane <Enter> {set ::curzone $::curzone}
    bind $pane <Visibility> {set ::curzone $::curzone}
@@ -542,6 +557,10 @@ proc ::plot::menu { } {
    grid rowconfigure $w 0 -weight 1
    grid columnconfigure $w 0 -weight 1
    $nb raise settings
+}
+
+proc ::plot::curzone_apply {old new} {
+   exp_send "curzone = $new;\r"
 }
 
 proc ::plot::replot_all { } {
