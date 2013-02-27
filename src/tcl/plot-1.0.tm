@@ -7,6 +7,8 @@ package require misc
 package require tooltip
 package require getstring
 
+package provide plot 1.0
+
 if {![info exists curzone]} {
    set curzone 0
 }

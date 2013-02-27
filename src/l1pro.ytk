@@ -262,5 +262,5 @@ if {![winfo exists .l1wid]} {
   ::l1pro::main::gui
 }
 
-source [file join $src_path plot.ytk]
+package require plot
 source [file join $src_path data_segments.ytk]

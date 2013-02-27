@@ -18,8 +18,8 @@ local alpsrc;
 
     maps_dir = ../../share/maps
       Defines the directory in which map files can be found. File reefs.i
-      will use this to find fla-reefs.dat, and plot.ytk will use it as a
-      default directory for the maps.
+      will use this to find fla-reefs.dat, and the plotting tool will use it as
+      a default directory for the maps.
 
     batcher_dir = ../batcher
       Defines the directory where the batcher scripts can be found.
