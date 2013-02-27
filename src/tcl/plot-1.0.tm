@@ -111,7 +111,7 @@ proc ::plot::menu {} {
    set pane [$nb getframe interact]
 
    set f $pane.fraButtons
-   frame $f
+   ttk::frame $f
    grid $f -sticky ewn
 
    Button $f.butPlot -text "Plot" -command ::plot::plot_all
@@ -125,11 +125,11 @@ proc ::plot::menu {} {
 
    grid columnconfigure $f 0 -weight 1
 
-   frame $pane.fraGrids
+   ttk::frame $pane.fraGrids
    grid $pane.fraGrids -sticky ewn
 
    set f $pane.fraGrids.lfrUtmGrid
-   labelframe $f -text "UTM Grid"
+   ttk::labelframe $f -text "UTM Grid"
 
    Button $f.butOverlay -text "Overlay" -command ::plot::utm_grid_overlay
    grid $f.butOverlay -sticky ew
@@ -140,7 +140,7 @@ proc ::plot::menu {} {
    grid columnconfigure $f 0 -weight 1
 
    set f $pane.fraGrids.lfrQQGrid
-   labelframe $f -text "QQ Grid"
+   ttk::labelframe $f -text "QQ Grid"
 
    Button $f.butOverlay -text "Overlay" -command ::plot::qq_grid_overlay
    grid $f.butOverlay -sticky ew
@@ -157,7 +157,7 @@ proc ::plot::menu {} {
    grid columnconfigure $pane.fraGrids 1 -weight 1
 
    set f $pane.fraLimits
-   labelframe $f -text "Reset limits to..."
+   ttk::labelframe $f -text "Reset limits to..."
    grid $f -sticky ewn
    
    Button $f.butLimits -text "All Data" -command ::plot::limits
@@ -177,7 +177,7 @@ proc ::plot::menu {} {
    grid columnconfigure $f 2 -weight 1
 
    set f $pane.fraCopyLimits
-   labelframe $f -text "Copy limits..."
+   ttk::labelframe $f -text "Copy limits..."
    grid $f -sticky ewn
 
    label $f.labWinFrom -text "From:"
@@ -204,7 +204,7 @@ proc ::plot::menu {} {
    set pane [$nb getframe settings]
 
    set f $pane.lfrSettings
-   labelframe $f -text "Coordinate settings"
+   ttk::labelframe $f -text "Coordinate settings"
    grid $f -sticky nwe
 
    label $f.labCoord -text "Coordinates:" -anchor e
@@ -244,7 +244,7 @@ proc ::plot::menu {} {
    bind $pane <Visibility> {set ::curzone $::curzone}
 
    set f $pane.lfrData
-   labelframe $f -text "Data to plot by default"
+   ttk::labelframe $f -text "Data to plot by default"
    grid $f -sticky wen
 
    checkbutton $f.chkImages -text "Images" \
@@ -279,7 +279,7 @@ proc ::plot::menu {} {
    grid columnconfigure $f 1 -weight 1
 
    set f $pane.lfrWindow
-   labelframe $f -text "Window settings"
+   ttk::labelframe $f -text "Window settings"
    grid $f -sticky wen
 
    label $f.labWindow -text "Window:"
@@ -293,7 +293,7 @@ proc ::plot::menu {} {
    grid columnconfigure $f 3 -weight 3
 
    set f $pane.lfrSf
-   labelframe $f -text "SF plot settings"
+   ttk::labelframe $f -text "SF plot settings"
    grid $f -sticky wen
 
    label $f.labColor -text "Color:" -anchor e
@@ -329,7 +329,7 @@ proc ::plot::menu {} {
    grid $g::polyListBox - -sticky news
 
    set f $pane.fraNextName
-   frame $f
+   ttk::frame $f
    grid $f - -sticky wen
 
    label $f.labName -text "Next poly's name:" -anchor e
@@ -414,7 +414,7 @@ proc ::plot::menu {} {
    set pane [$nb getframe pnav]
 
    set f $pane.fraMain
-   frame $f
+   ttk::frame $f
    grid $f -sticky new
 
    label $f.labLineWidth -text "Line Width:" -anchor e
@@ -504,7 +504,7 @@ proc ::plot::menu {} {
    grid $g::mapListBox -sticky news
 
    set f $pane.fraColor
-   frame $f
+   ttk::frame $f
    grid $f -sticky new
 
    label $f.labLineColor -text "Line Color:" -anchor e
