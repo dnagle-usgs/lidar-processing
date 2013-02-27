@@ -171,11 +171,11 @@ proc ::plot::menu {} {
    ttk::labelframe $f -text "Copy limits..."
    grid $f -sticky ewn
 
-   label $f.labWinFrom -text "From:"
+   ttk::label $f.labWinFrom -text "From:"
    ttk::spinbox $f.spnWinFrom -justify center -width 4 \
       -from 0 -to 63 -increment 1 \
       -textvariable ::plot::g::limits_copy_from
-   label $f.labWinTo -text "To:"
+   ttk::label $f.labWinTo -text "To:"
    ttk::spinbox $f.spnWinTo -justify center -width 4 \
       -from 0 -to 63 -increment 1 \
       -textvariable ::plot::g::limits_copy_to
@@ -198,14 +198,14 @@ proc ::plot::menu {} {
    ttk::labelframe $f -text "Coordinate settings"
    grid $f -sticky nwe
 
-   label $f.labCoord -text "Coordinates:" -anchor e
+   ttk::label $f.labCoord -text "Coordinates:" -anchor e
    ::mixin::combobox $f.cboCoord -values {"UTM" "Lat/Lon"} \
       -textvariable ::plot::g::coordType -state readonly
    ::tooltip::tooltip $f.cboCoord \
       "Specify what kind of coordinates you want to use."
    grid $f.labCoord $f.cboCoord - - -sticky ew
 
-   label $f.labUTMZone -text "UTM Zone:" -anchor e
+   ttk::label $f.labUTMZone -text "UTM Zone:" -anchor e
    ttk::spinbox $f.spnUTMZone -justify center \
       -from 0 -to 60 -increment 1
    ::mixin::revertable $f.spnUTMZone \
@@ -238,27 +238,27 @@ proc ::plot::menu {} {
    ttk::labelframe $f -text "Data to plot by default"
    grid $f -sticky wen
 
-   checkbutton $f.chkImages -text "Images" \
+   ttk::checkbutton $f.chkImages -text "Images" \
       -variable ::plot::g::enable_plot_images
    #grid $f.chkImages -sticky w
 
-   checkbutton $f.chkMap -text "Coastline Maps" \
+   ttk::checkbutton $f.chkMap -text "Coastline Maps" \
       -variable ::plot::g::enable_plot_maps
    #grid $f.chkMap -sticky w
 
-   checkbutton $f.chkShape -text "Shapefiles" \
+   ttk::checkbutton $f.chkShape -text "Shapefiles" \
       -variable ::plot::g::enable_plot_shapes
    #grid $f.chkShape -sticky w
 
-   checkbutton $f.chkPlan -text "Flight plans" \
+   ttk::checkbutton $f.chkPlan -text "Flight plans" \
       -variable ::plot::g::enable_plot_plans
    #grid $f.chkPlan -sticky w
 
-   checkbutton $f.chkPoly -text "Polygons" \
+   ttk::checkbutton $f.chkPoly -text "Polygons" \
       -variable ::plot::g::enable_plot_polys
    #grid $f.chkPoly -sticky w
 
-   checkbutton $f.chkTrack -text "PNAV flight track" \
+   ttk::checkbutton $f.chkTrack -text "PNAV flight track" \
       -variable ::plot::g::enable_plot_pnav
    #grid $f.chkTrack -sticky w
 
@@ -273,10 +273,10 @@ proc ::plot::menu {} {
    ttk::labelframe $f -text "Window settings"
    grid $f -sticky wen
 
-   label $f.labWindow -text "Window:"
+   ttk::label $f.labWindow -text "Window:"
    ttk::spinbox $f.spnWindow -justify center -textvariable ::_map(window) \
       -from 0 -to 63 -increment 1 -width 3
-   label $f.labWinSize -text " Size:"
+   ttk::label $f.labWinSize -text " Size:"
    ::mixin::combobox $f.cboWinSize -values $::plot::c::windowSizes \
       -textvariable ::plot::g::windowSize -state readonly -width 1
    grid $f.labWindow $f.spnWindow $f.labWinSize $f.cboWinSize -sticky ew
@@ -287,17 +287,17 @@ proc ::plot::menu {} {
    ttk::labelframe $f -text "SF plot settings"
    grid $f -sticky wen
 
-   label $f.labColor -text "Color:" -anchor e
+   ttk::label $f.labColor -text "Color:" -anchor e
    ::mixin::combobox $f.cboColor -values $::plot::c::colors \
       -textvariable ::plot::g::markColor -state readonly \
       -width 7
 
-   label $f.labShape -text " Shape:" -anchor e
+   ttk::label $f.labShape -text " Shape:" -anchor e
    ::mixin::combobox $f.cboShape -values $::plot::c::markerShapes \
       -textvariable ::plot::g::markShape -state readonly \
       -width 7
 
-   label $f.labSize -text " Size:" -anchor e
+   ttk::label $f.labSize -text " Size:" -anchor e
    ::mixin::combobox $f.cboSize -values $::plot::c::markerSizes \
       -textvariable ::plot::g::markSize -state readonly \
       -width 4
@@ -323,7 +323,7 @@ proc ::plot::menu {} {
    ttk::frame $f
    grid $f - -sticky wen
 
-   label $f.labName -text "Next poly's name:" -anchor e
+   ttk::label $f.labName -text "Next poly's name:" -anchor e
    Entry $f.entName -textvariable ::plot::g::poly_next_name
    grid $f.labName $f.entName -sticky ew
 
@@ -378,7 +378,7 @@ proc ::plot::menu {} {
       -hscrollmode dynamic -vscrollmode dynamic -height 5
    grid $g::shpListBox - -sticky news
 
-   label $pane.labLineColor -text "Line Color:" -anchor e
+   ttk::label $pane.labLineColor -text "Line Color:" -anchor e
    ::mixin::combobox $pane.cboLineColor \
       -values [concat randomize $::plot::c::colors] \
       -textvariable ::plot::g::shapeLineColor -state readonly
@@ -408,7 +408,7 @@ proc ::plot::menu {} {
    ttk::frame $f
    grid $f -sticky new
 
-   label $f.labLineWidth -text "Line Width:" -anchor e
+   ttk::label $f.labLineWidth -text "Line Width:" -anchor e
    ::mixin::combobox $f.cboLineWidth -values {1 3 5 7 10 13 15 20 25} \
       -textvariable ::plot::g::trackLineWidth -state readonly
    ::tooltip::tooltip $f.cboLineWidth \
@@ -416,14 +416,14 @@ proc ::plot::menu {} {
    grid $f.labLineWidth $f.cboLineWidth
    grid $f.labLineWidth -sticky e
 
-   label $f.labLineColor -text "Line Color:" -anchor e
+   ttk::label $f.labLineColor -text "Line Color:" -anchor e
    ::mixin::combobox $f.cboLineColor -values $::plot::c::colors \
       -textvariable ::plot::g::trackLineColor -state readonly
    ::tooltip::tooltip $f.cboLineColor "Specify the color to use for plotted lines."
    grid $f.labLineColor $f.cboLineColor
    grid $f.labLineColor -sticky e
 
-   label $f.labSkip -text "Points to Skip:" -anchor e
+   ttk::label $f.labSkip -text "Points to Skip:" -anchor e
    ::mixin::combobox $f.cboSkip -values {0 1 2 5 10 15 20 25 50 75 100} \
       -textvariable ::plot::g::trackSkip -state readonly
    ::tooltip::tooltip $f.cboSkip \
@@ -432,7 +432,7 @@ proc ::plot::menu {} {
    grid $f.labSkip $f.cboSkip
    grid $f.labSkip -sticky e
    
-   label $f.labMarkerShape -text "Marker Shape:" -anchor e
+   ttk::label $f.labMarkerShape -text "Marker Shape:" -anchor e
    ::mixin::combobox $f.cboMarkerShape -values $::plot::c::markerShapes \
       -textvariable ::plot::g::trackMarkerShape -state readonly
    ::tooltip::tooltip $f.cboMarkerShape \
@@ -440,7 +440,7 @@ proc ::plot::menu {} {
    grid $f.labMarkerShape $f.cboMarkerShape
    grid $f.labMarkerShape -sticky e
 
-   label $f.labMarkerSize -text "Marker size:" -anchor e
+   ttk::label $f.labMarkerSize -text "Marker size:" -anchor e
    ::mixin::combobox $f.cboMarkerSize -values $::plot::c::markerSizes \
       -textvariable ::plot::g::trackMarkerSize -state readonly
    ::tooltip::tooltip $f.cboMarkerSize \
@@ -476,7 +476,7 @@ proc ::plot::menu {} {
    Button $pane.butPlot -text "Plot Images" -command ::plot::image_plot
    grid $pane.butPlot - -sticky ew
 
-   label $pane.labSkip -text "Skip factor:"
+   ttk::label $pane.labSkip -text "Skip factor:"
    ttk::spinbox $pane.spnSkip -justify center -width 4 \
       -from 1 -to 10000 -increment 1 \
       -textvariable ::plot::g::imageSkip
@@ -498,7 +498,7 @@ proc ::plot::menu {} {
    ttk::frame $f
    grid $f -sticky new
 
-   label $f.labLineColor -text "Line Color:" -anchor e
+   ttk::label $f.labLineColor -text "Line Color:" -anchor e
    ::mixin::combobox $f.cboLineColor -values $::plot::c::colors \
       -textvariable ::plot::g::mapLineColor -state readonly
    ::tooltip::tooltip $f.cboLineColor "Specify the color to use for plotted lines."
