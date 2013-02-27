@@ -166,9 +166,9 @@ proc ::plot::pane_interact {pane} {
       -textvariable ::plot::g::windowSize -state readonly -width 1
 
    grid $f.lblCoord $f.cboCoord - $f.lblZone $f.spnZone $f.appZone $f.revZone \
-         -sticky ew -padx 2 -pady 2
+         -sticky ew -padx 1 -pady 1
    grid $f.lblWindow $f.spnWindow $f.cboWinSize - - - - \
-         -sticky ew -padx 2 -pady 2
+         -sticky ew -padx 1 -pady 1
    grid configure $f.appZone $f.revZone -padx 0
    grid configure $f.lblCoord $f.lblWindow -sticky e
 
@@ -204,8 +204,8 @@ proc ::plot::pane_interact {pane} {
    ttk::button $f.btnPlot -text "Plot" -command ::plot::plot_all
    ttk::button $f.btnReplot -text "Clear and Plot" -command ::plot::replot_all
 
-   grid $f.btnPlot -sticky ew -padx 2 -pady 2
-   grid $f.btnReplot -sticky ew -padx 2 -pady 2
+   grid $f.btnPlot -sticky ew -padx 1 -pady 1
+   grid $f.btnReplot -sticky ew -padx 1 -pady 1
 
    grid columnconfigure $f 0 -weight 1
 
@@ -225,8 +225,8 @@ proc ::plot::pane_interact {pane} {
    ttk::button $f.btnName -text "Name" -width 1 \
          -command {exp_send "show_grid_location, $::_map(window);\r"}
 
-   grid $f.cboType - -sticky ew -padx 2 -pady 2
-   grid $f.btnPlot $f.btnName -sticky ew -padx 2 -pady 2
+   grid $f.cboType - -sticky ew -padx 1 -pady 1
+   grid $f.btnPlot $f.btnName -sticky ew -padx 1 -pady 1
    grid columnconfigure $f {0 1} -weight 1
 
    # Limits
@@ -241,7 +241,7 @@ proc ::plot::pane_interact {pane} {
          -command ::plot::limits_tracklines
 
    grid $f.btnLimits $f.btnLimitsShapes $f.btnLimitsTracks \
-         -sticky ew -padx 2 -pady 2
+         -sticky ew -padx 1 -pady 1
    grid columnconfigure $f {0 1 2} -weight 1
 
    # SF/Sync
@@ -262,7 +262,7 @@ proc ::plot::pane_interact {pane} {
    ttk::button $f.btnJump -text "Jump" -command ::plot::jump
 
    grid $f.lblPlot $f.cboColor $f.cboShape $f.cboSize $f.sep $f.btnJump \
-         -sticky ew -padx 2 -pady 2
+         -sticky ew -padx 1 -pady 1
    grid configure $f.sep -sticky ns -pady 0
    grid columnconfigure $f {1 2 3} -weight 1
 
@@ -285,16 +285,16 @@ proc ::plot::pane_interact {pane} {
          -command ::plot::copy_limits_all
 
    grid $f.lblFrom $f.spnFrom $f.btnApply $f.spnTo $f.btnSwap $f.btnApplyAll \
-         -sticky ew -padx 2 -pady 2
+         -sticky ew -padx 1 -pady 1
    grid columnconfigure $f {1 3} -weight 1
 
    # Frames
-   grid $pane.lfrPlot $pane.lfrGrid -sticky news -padx 2 -pady 2
-   grid $pane.lfrLimits - -sticky ew -padx 2 -pady 2
-   grid $pane.lfrSettings - -sticky ew -padx 2 -pady 2
-   grid $pane.lfrData - -sticky ew -padx 2 -pady 2
-   grid $pane.lfrSFSync - -sticky ew -padx 2 -pady 2
-   grid $pane.lfrLimitsCopy - -sticky ew -padx 2 -pady 2
+   grid $pane.lfrPlot $pane.lfrGrid -sticky news -padx 1 -pady 1
+   grid $pane.lfrLimits - -sticky ew -padx 1 -pady 1
+   grid $pane.lfrSettings - -sticky ew -padx 1 -pady 1
+   grid $pane.lfrData - -sticky ew -padx 1 -pady 1
+   grid $pane.lfrSFSync - -sticky ew -padx 1 -pady 1
+   grid $pane.lfrLimitsCopy - -sticky ew -padx 1 -pady 1
 
    bind $pane <Enter> {set ::curzone $::curzone}
    bind $pane <Visibility> {set ::curzone $::curzone}
