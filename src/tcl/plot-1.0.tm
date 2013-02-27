@@ -99,7 +99,29 @@ proc ::plot::gui {} {
    set nb $w.nb
    ttk::notebook $nb
 
-   set pane [ttk::frame $nb.interact]
+   foreach {pane label} {
+      settings Settings
+      interact Interact
+      poly Polygons
+      pnav PNAV
+      img Image
+      shp Shapefile
+      map Coastline
+      plan "Flight PLan"
+   } {
+      $nb add [pane_$pane $nb.$pane] -text $label
+   }
+
+   grid $nb -sticky news
+   grid rowconfigure $w 0 -weight 1
+   grid columnconfigure $w 0 -weight 1
+   $nb select 0
+
+   ::misc::idle [list wm geometry $w ""]
+}
+
+proc ::plot::pane_interact {pane} {
+   ttk::frame $pane
 
    set f $pane.fraButtons
    ttk::frame $f
@@ -192,7 +214,11 @@ proc ::plot::gui {} {
    grid rowconfigure $pane 3 -weight 1
    grid columnconfigure $pane 0 -weight 1
 
-   set pane [ttk::frame $nb.settings]
+   return $pane
+}
+
+proc ::plot::pane_settings {pane} {
+   ttk::frame $pane
 
    set f $pane.lfrSettings
    ttk::labelframe $f -text "Coordinate settings"
@@ -310,8 +336,11 @@ proc ::plot::gui {} {
    grid rowconfigure $pane 3 -weight 1
    grid columnconfigure $pane 0 -weight 1
 
+   return $pane
+}
 
-   set pane [ttk::frame $nb.poly]
+proc ::plot::pane_poly {pane} {
+   ttk::frame $pane
    
    set g::polyListBox $pane.slbPolys
 
@@ -370,7 +399,11 @@ proc ::plot::gui {} {
    grid columnconfigure $pane 0 -weight 1
    grid columnconfigure $pane 1 -weight 1
 
-   set pane [ttk::frame $nb.shp]
+   return $pane
+}
+
+proc ::plot::pane_shp {pane} {
+   ttk::frame $pane
    
    set g::shpListBox $pane.slbShapes
 
@@ -401,8 +434,11 @@ proc ::plot::gui {} {
    grid rowconfigure $pane 0 -weight 1
    grid columnconfigure $pane 1 -weight 1
 
+   return $pane
+}
 
-   set pane [ttk::frame $nb.pnav]
+proc ::plot::pane_pnav {pane} {
+   ttk::frame $pane
 
    set f $pane.fraMain
    ttk::frame $f
@@ -458,7 +494,12 @@ proc ::plot::gui {} {
 
    grid rowconfigure $pane 0 -weight 1
 
-   set pane [ttk::frame $nb.img]
+   return $pane
+}
+
+proc ::plot::pane_img {pane} {
+   ttk::frame $pane
+
    set g::imageListBox $pane.slbImages
 
    iwidgets::scrolledlistbox $g::imageListBox \
@@ -485,8 +526,11 @@ proc ::plot::gui {} {
    grid rowconfigure $pane 0 -weight 1
    grid columnconfigure $pane 1 -weight 1
 
+   return $pane
+}
 
-   set pane [ttk::frame $nb.map]
+proc ::plot::pane_map {pane} {
+   ttk::frame $pane
 
    set g::mapListBox $pane.slbMaps
 
@@ -518,8 +562,11 @@ proc ::plot::gui {} {
    grid rowconfigure $pane 0 -weight 1
    grid columnconfigure $pane 0 -weight 1
 
+   return $pane
+}
 
-   set pane [ttk::frame $nb.plan]
+proc ::plot::pane_plan {pane} {
+   ttk::frame $pane
    
    set g::planListBox $pane.slbPlans
 
@@ -540,21 +587,7 @@ proc ::plot::gui {} {
    grid rowconfigure $pane 0 -weight 1
    grid columnconfigure $pane 0 -weight 1
 
-   $nb add $nb.settings -text "Settings"
-   $nb add $nb.interact -text "Interact"
-   $nb add $nb.poly -text "Polygons"
-   $nb add $nb.pnav -text "PNAV"
-   $nb add $nb.img -text "Image"
-   $nb add $nb.shp -text "Shapefile"
-   $nb add $nb.map -text "Coastline"
-   $nb add $nb.plan -text "Flight Plan"
-
-   grid $nb -sticky news
-   grid rowconfigure $w 0 -weight 1
-   grid columnconfigure $w 0 -weight 1
-   $nb select 0
-
-   ::misc::idle [list wm geometry $w ""]
+   return $pane
 }
 
 proc ::plot::curzone_apply {old new} {
