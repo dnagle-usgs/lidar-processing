@@ -73,8 +73,6 @@ func eaarl_decode_header(raw, offset) {
   it defaults to 1, which is appropriate when passed individual raster
   segments.
 */
-  extern eaarl_time_offset, tca;
-  local rasternbr, type, len;
   default, offset, 1;
   start = offset;
 
