@@ -451,11 +451,7 @@ func ex_veg_all(rn, pulse_number, last=, graph=, pse=, thresh=, win=, verbose=,h
   if (irange < 1) return rv;
 
   raw = get_erast(rn=rn);
-  if (is_void(header)) {
-    pulse = eaarl_decode_pulse(raw, pulse_number, wfs=1);
-  } else {
-    pulse = eaarl_decode_pulse(raw, pulse_number, header=header, wfs=1);
-  }
+  pulse = eaarl_decode_pulse(raw, pulse_number, header=header, wfs=1);
 
   rv.sa = pulse.shaft_angle;
   if (pulse.channel1_length == 0)
@@ -740,11 +736,7 @@ forcechannel=, header=) {
   }
 
   raw = get_erast(rn=rn);
-  if (is_void(header)) {
-    pulse = eaarl_decode_pulse(raw, pulse_number, wfs=1);
-  } else {
-    pulse = eaarl_decode_pulse(raw, pulse_number, header=header, wfs=1);
-  }
+  pulse = eaarl_decode_pulse(raw, pulse_number, header=header, wfs=1);
   irange = pulse.raw_irange;
 
   // setup the return struct
