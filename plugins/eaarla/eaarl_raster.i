@@ -54,6 +54,140 @@
   3   ?   ui8[?]  Array of char data with length given
 */
 
+struct EAARL_PULSE {
+  char digitizer, dropout;
+  short irange, scan_angle;
+  double soe;
+  pointer tx, rx(4);
+}
+
+func eaarl_decode_fast(fn, start, stop, wfs=, usestruct=) {
+/* DOCUMENT result = eaarl_decode_fast(fn, start, stop)
+  Decodes the data in the specified TLD file from offset START through offset
+  STOP.
+
+  This performs a faster decode than alternative functions because it pulls
+  only the data needed to populate the fields of EAARL_PULSE. These fields are
+  the ones typically needed during processing.
+
+  Parameters:
+    fn: Should be a full path to a TLD file.
+    start: The byte addres (1-based) where the first raster to decode starts.
+    stop: The byte address (1-based) where the last raster to decode ends. This
+      may also be 0, which means to decode to the end of the file.
+
+  Options:
+    wfs= By default, waveforms are included. Use wfs=0 to disable, which will
+      leave all the tx and rx fields empty.
+    usestruct= Specifies a struct to use for the output. By default, this is
+      EAARL_PULSE. If you provide another struct, it MUST include all of the
+      fields that EAARL_PULSE provides. (However, it may also contain
+      additional fields, which will be ignored.) Optionally, if wfs=0, then
+      usestruct= may provide a struct that omits the tx and rx fields.
+
+  Returns:
+    An array of EAARL_PULSE (or usestruct=, if provided). The array size will
+    be the number of pulses found.
+*/
+  default, wfs, 1;
+  default, usestruct, EAARL_PULSE;
+
+  f = open(fn, "rb");
+  add_variable, f, -1, "raw", char, sizeof(f);
+
+  // scan to see how many rasters there are
+  count = 0;
+  offset = start;
+  while(offset <= stop) {
+    rlen = u_cast(i24(f.raw, offset), long);
+    if(rlen >= 18 && f.raw(offset+3) == 5) {
+      count += (i16(f.raw, offset+16) & 0x7fff);
+    } else if(rlen <= 0) {
+      break;
+    }
+    offset += rlen;
+  }
+
+  result = array(EAARL_PULSE, count);
+
+  // pulse index into result
+  pidx = 0;
+
+  offset = start;
+  while(offset <= stop) {
+    rstart = offset;
+
+    rlen = u_cast(i24(f.raw, offset), long);
+    if(rlen < 18 || f.raw(offset+3) != 5) continue;
+
+    seconds = i32(f.raw, offset+4);
+    fseconds = i32(f.raw, offset+8);
+    soe = seconds + fseconds * 1.6e-6;
+
+    tmp = i16(f.raw, offset+16);
+    npulse = tmp & 0x7fff;
+    digitizer = (tmp >> 15) & 0x1;
+
+    offset += 18;
+    pulse_offsets = array(-1, npulse);
+    for(i = 1; i <= npulse; i++) {
+      if(offset + 15 > rstart + rlen - 1)
+        break;
+      pstart = offset;
+      pidx++;
+
+      result(pidx).digitizer = digitizer;
+
+      offset_time=i24(f.raw, offset);
+      result(pidx).soe = seconds + (fseconds + offset_time) * 1.6e-6;
+
+      result(pidx).scan_angle = i16(f.raw, offset+9);
+
+      tmp = i16(f.raw, offset+11);
+      result(pidx).irange = (tmp & 0x3fff);
+      result(pidx).dropout = ((tmp >> 14) & 0x3);
+      tmp = [];
+
+      if(!wfs) {
+        offset = pstart + 15 + i16(f.raw, pstart + 13);
+        continue;
+      }
+
+      // tx rx(4)
+      offset += 15;
+
+      transmit_length = f.raw(offset);
+      if(transmit_length <= 0) continue;
+      result(pidx).tx = &f.raw(offset+1:offset+transmit_length);
+
+      // See mission_constants for explanation of this code
+      if(has_member(ops_conf, "tx_clean") && ops_conf.tx_clean) {
+        tx = *result(pidx).tx;
+        if(numberof(tx) >= ops_conf.tx_clean) {
+          tx(ops_conf.tx_clean:) = tx(1);
+        }
+        result(pidx).tx = &tx;
+      }
+
+      offset += 1 + transmit_length;
+
+      for(j = 1; j <= 4; j++) {
+        chan_len = i16(f.raw, offset);
+        if(chan_len <= 0 || offset+1+chan_len > stop) continue;
+        result(pidx).rx(j) = &f.raw(offset+2:offset+1+chan_len);
+        offset += 2 + chan_len;
+      }
+
+      offset = pstart + 15 + i16(f.raw, pstart + 13);
+    }
+
+    offset = rstart + rlen;
+  }
+
+  close, f;
+  return result;
+}
+
 func eaarl_decode_header(raw, offset) {
 /* DOCUMENT eaarl_decode_header(raw, offset)
   Given the raw data for a raster, this will decode and return its header
