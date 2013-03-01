@@ -239,12 +239,17 @@ namespace eval ::eaarl::settings::bath_ctl::v {
             variable $var
             foreach {field -} $guilayout {
                 set ${var}($field) 0
-                tky_tie add sync ${ns}::${var}($field) \
-                        with "${var}.$field" -initalize 1
+                tky_tie add read ${ns}::${var}($field) \
+                        from "${var}.$field" -initalize 1
             }
         }
     }
     unset ns var field
+}
+
+proc ::eaarl::settings::bath_ctl::applycmd {var key old new} {
+    exp_send "var_expr_tkupdate, \"$var.$key\", \"$new\";\
+            tkcmd, \"::misc::idle ::eaarl::settings::bath_ctl::gui_refresh\";\r"
 }
 
 proc ::eaarl::settings::bath_ctl::gui_main {} {
@@ -275,7 +280,7 @@ proc ::eaarl::settings::bath_ctl::gui_main {} {
     $w.mb add cascade -label "Presets" -underline 0 -menu $w.mb.preset
     $w.mb.preset add cascade -label "Channels 1, 2, and 3" -menu $w.mb.preset.p1
     $w.mb.preset add cascade -label "Channel 4" -menu $w.mb.preset.p2
-    foreach {m var} [list p1 ${ns}::v::bath_ctl p2 ${ns}::v::bath_ctl_chn4] {
+    foreach {m var} [list p1 bath_ctl p2 bath_ctl_chn4] {
         foreach {preset -} $v::presets {
             $w.mb.preset.$m add command -label $preset \
                     -command [list ${ns}::preset $var $preset]
@@ -294,10 +299,24 @@ proc ::eaarl::settings::bath_ctl::gui_main {} {
             lassign $info name rmin rmax rinc fmt
             ttk::label $f.$var.lbl$key -text "${name}:"
             ttk::spinbox $f.$var.spn$key \
-                -width 8 \
-                -textvariable ${ns}::v::${var}($key) \
-                -from $rmin -to $rmax -increment $rinc
-            grid $f.$var.lbl$key $f.$var.spn$key -padx 2 -pady 2
+                    -width 8 \
+                    -textvariable ${ns}::v::${var}($key) \
+                    -from $rmin -to $rmax -increment $rinc
+            ::mixin::revertable $f.$var.spn$key -applycommand \
+                    [list ::eaarl::settings::bath_ctl::applycmd $var $key]
+            ::misc::tooltip $f.$var.lbl$key $f.$var.spn$key \
+                    "Press Enter to apply current changes to field. Press
+                    Escape to revert current changes to field."
+            ttk::button $f.$var.app$key -text "\u2713" \
+                    -style Toolbutton \
+                    -command [list $f.$var.spn$key apply]
+            ::misc::tooltip $f.$var.app$key "Apply current changes to field"
+            ttk::button $f.$var.rev$key -text "x" \
+                    -style Toolbutton \
+                    -command [list $f.$var.spn$key revert]
+            ::misc::tooltip $f.$var.rev$key "Revert current changes to field"
+            grid $f.$var.lbl$key $f.$var.spn$key $f.$var.app$key \
+                    $f.$var.rev$key -padx 2 -pady 2
             grid configure $f.$var.lbl$key -sticky e
             grid configure $f.$var.spn$key -sticky ew
         }
@@ -472,7 +491,10 @@ proc ::eaarl::settings::bath_ctl::load {} {
 }
 
 proc ::eaarl::settings::bath_ctl::preset {var preset} {
+    set cmd ""
     dict for {key val} [dict get $v::presets $preset] {
-        set ${var}($key) $val
+        append cmd "var_expr_tkupdate, \"$var.$key\", \"$val\"; "
     }
+    append cmd "tkcmd, \"::misc::idle ::eaarl::settings::bath_ctl::gui_refresh\";\r"
+    exp_send $cmd
 }
