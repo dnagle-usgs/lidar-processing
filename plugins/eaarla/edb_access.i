@@ -371,7 +371,7 @@ func decode_rasters(start, stop, wfs=, usestruct=) {
     // Retrieve results for this file
     fn = file_join(tld_dir, file_tail(edb_files(fidx)));
     result(i) = &eaarl_decode_fast(fn, offset_start, offset_stop, wfs=wfs,
-      usestruct=usestruct);
+      usestruct=usestruct, rnstart=rn_start);
   }
 
   if(numberof(result) == 1)

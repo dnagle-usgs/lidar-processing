@@ -55,13 +55,14 @@
 */
 
 struct EAARL_PULSE {
-  char digitizer, dropout;
-  short irange, scan_angle;
+  int8_t digitizer, dropout, pulse;
+  int16_t irange, scan_angle;
+  int32_t raster;
   double soe;
   pointer tx, rx(4);
 }
 
-func eaarl_decode_fast(fn, start, stop, wfs=, usestruct=) {
+func eaarl_decode_fast(fn, start, stop, rnstart=, wfs=, usestruct=) {
 /* DOCUMENT result = eaarl_decode_fast(fn, start, stop)
   Decodes the data in the specified TLD file from offset START through offset
   STOP.
@@ -77,6 +78,9 @@ func eaarl_decode_fast(fn, start, stop, wfs=, usestruct=) {
       may also be 0, which means to decode to the end of the file.
 
   Options:
+    rnstart= Starting raster number. If provided, then the raster field will be
+      populated treating the raster found at START as raster RNSTART and
+      numbering the ones that follow sequentially.
     wfs= By default, waveforms are included. Use wfs=0 to disable, which will
       leave all the tx and rx fields empty.
     usestruct= Specifies a struct to use for the output. By default, this is
@@ -84,6 +88,8 @@ func eaarl_decode_fast(fn, start, stop, wfs=, usestruct=) {
       fields that EAARL_PULSE provides. (However, it may also contain
       additional fields, which will be ignored.) Optionally, if wfs=0, then
       usestruct= may provide a struct that omits the tx and rx fields.
+      Optionally, if rnstart= is omitted, then usestruct= may provide a struct
+      that omits the raster field.
 
   Returns:
     An array of EAARL_PULSE (or usestruct=, if provided). The array size will
@@ -113,6 +119,9 @@ func eaarl_decode_fast(fn, start, stop, wfs=, usestruct=) {
   // pulse index into result
   pidx = 0;
 
+  // rn, if we're using it (if rnstart=[], then it's not used)
+  rn = rnstart;
+
   offset = start;
   while(offset <= stop) {
     rstart = offset;
@@ -136,6 +145,8 @@ func eaarl_decode_fast(fn, start, stop, wfs=, usestruct=) {
       pstart = offset;
       pidx++;
 
+      if(rn) result(pidx).raster = rn;
+      result(pidx).pulse = i;
       result(pidx).digitizer = digitizer;
 
       offset_time=i24(f.raw, offset);
@@ -181,6 +192,7 @@ func eaarl_decode_fast(fn, start, stop, wfs=, usestruct=) {
       offset = pstart + 15 + i16(f.raw, pstart + 13);
     }
 
+    if(rn) rn++;
     offset = rstart + rlen;
   }
 
