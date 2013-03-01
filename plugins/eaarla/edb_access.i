@@ -463,19 +463,6 @@ func get_erast(rn=, soe=, sod=, hms=, timeonly=) {
   return rast;
 }
 
-func decode_rasters(raw) {
-/* DOCUMENT rasts = decode_rasters(raw)
-  Given an array of pointers to raw raster data, this returns an array of RAST
-  with the decoded rasters. This is effectively a wrapper around decode_raster
-  for an array of pointers.
-*/
-  rasts = array(RAST, dimsof(raw));
-  count = numberof(raw);
-  for(i = 1; i <= count; i++)
-    rasts(i) = (decode_raster(*raw(i)))(1);
-  return rasts;
-}
-
 func decode_raster(raw, rn=) {
 /* DOCUMENT rast = decode_raster(raw, rn=)
   Decodes raw raster data (in a char array) into the RAST structure.
