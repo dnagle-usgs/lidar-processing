@@ -242,9 +242,10 @@ namespace eval ::eaarl::settings::bath_ctl::v {
                 tky_tie add read ${ns}::${var}($field) \
                         from "${var}.$field" -initalize 1
             }
+            unset field
         }
     }
-    unset ns var field
+    unset ns var
 }
 
 proc ::eaarl::settings::bath_ctl::applycmd {var key old new} {
@@ -380,7 +381,12 @@ snit::type ::eaarl::settings::bath_ctl::gui_embed {
             lassign $info name rmin rmax rinc fmt
             ttk::label $f.lbl$key -text "${name}:"
             ttk::spinbox $f.spn$key -width 3 \
-                -from $rmin -to $rmax -increment $rinc
+                    -from $rmin -to $rmax -increment $rinc
+            ::mixin::revertable $f.spn$key \
+                    -applycommand [mymethod ApplyCmd $key]
+            ::misc::tooltip $f.lbl$key $f.spn$key \
+                    "Press Enter to apply current changes to field. Press
+                    Escape to revert current changes to field."
         }
         ttk::button $f.replot -text "Replot" \
                 -command [mymethod replot]
@@ -442,6 +448,15 @@ snit::type ::eaarl::settings::bath_ctl::gui_embed {
         foreach {key -} [set ${ns}::v::guilayout] {
             $f.spn$key configure -textvariable ${var}($key)
         }
+    }
+
+    method ApplyCmd {key old new} {
+        if {$options(-channel) == 4} {
+            set var bath_ctl_chn4
+        } else {
+            set var bath_ctl
+        }
+        ::eaarl::settings::bath_ctl::applycmd $var $key $old $new
     }
 
     method id {} {
