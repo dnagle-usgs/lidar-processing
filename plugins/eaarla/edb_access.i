@@ -444,8 +444,17 @@ func decode_raster(raw, rn=) {
   extern eaarl_time_offset, tca;
   local rasternbr, type, len;
 
-  if(is_void(raw) && !is_void(rn))
-    raw = get_erast(rn=rn);
+  if(is_void(raw) && !is_void(rn)) {
+    if(numberof(rn) == 1) {
+      raw = get_erast(rn=rn);
+    } else {
+      result = array(RAST, numberof(rn));
+      for(i = 1; i <= numberof(rn); i++) {
+        result(i) = decode_raster(rn=rn(i));
+      }
+      return result;
+    }
+  }
 
   result = array(RAST,1);
   header = eaarl_decode_header(raw);
