@@ -323,6 +323,63 @@ func edb_update(time_correction) {
   }
 }
 
+func decode_rasters(start, stop, wfs=, usestruct=) {
+/* DOCUMENT pulses = decode_rasters(start, stop)
+  Retrieves decoded pulse data for the specified range of rasters. START is
+  the first raster number and STOP is the last.
+
+  Options:
+    wfs= By default, waveforms are included. Use wfs=0 to disable, which will
+      leave all the tx and rx fields empty.
+    usestruct= Specifies a struct to use for the output. By default, this is
+      EAARL_PULSE. If you provide another struct, it MUST include all of the
+      fields that EAARL_PULSE provides. (However, it may also contain
+      additional fields, which will be ignored.) Optionally, if wfs=0, then
+      usestruct= may provide a struct that omits the tx and rx fields.
+
+  Returns:
+    An array of EAARL_PULSE (or usestruct=, if provided). The array size will
+    be the number of pulses found.
+*/
+  extern edb, edb_files, edb_filename;
+  tld_dir = file_dirname(edb_filename);
+  wanted = edb(start:stop);
+
+  // get unique, sorted file numbers
+  file_nums = set_remove_duplicates(wanted.file_number);
+  nfn = numberof(file_nums);
+
+  result = array(pointer, nfn);
+  for(i = 1; i <= nfn; i++) {
+    // Focus on one TLD file at a time
+    fidx = file_nums(i);
+    w = where(wanted.file_number == fidx);
+
+    // Determine raster numbers for the range in this file
+    rn_start = w(1) + start - 1;
+    rn_stop = w(0) + start - 1;
+
+    // Determine offsets for these rasters in the TLD file
+    // edb offsets are zero based, we need them to be 1 based
+    offset_start = edb(rn_start).offset + 1;
+    if(rn_stop + 1 <= numberof(edb) && edb(rn_stop).file_number == fidx) {
+      offset_stop = edb(rn_stop + 1).offset;
+    } else {
+      offset_stop = 0;
+    }
+
+    // Retrieve results for this file
+    fn = file_join(tld_dir, file_tail(edb_files(fidx)));
+    result(i) = &eaarl_decode_fast(fn, offset_start, offset_stop, wfs=wfs,
+      usestruct=usestruct);
+  }
+
+  if(numberof(result) == 1)
+    return *result(1);
+  else
+    return merge_pointers(result);
+}
+
 func get_soe_rasts(start, stop) {
 /* DOCUMENT get_soe_rasts(start, stop)
   Given a START time and STOP time in seconds of the epoch, this will return
