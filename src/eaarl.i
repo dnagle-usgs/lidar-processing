@@ -59,6 +59,7 @@ require, "logger.i";
 require, "assert.i";
 require, "handler.i";
 require, "hook.i";
+require, "int_t.i";
 require, "alps_constants.i";
 require, "alps_data.i";
 require, "alps_structs.i";
