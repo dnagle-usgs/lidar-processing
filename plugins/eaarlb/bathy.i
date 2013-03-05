@@ -421,7 +421,7 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
 }
 
 func bathy_detect_surface(wf, maxint, thresh, sfc_last, &surface,
-&surface_intensity, &escale) {
+			  &surface_intensity, &escale, forcechannel=) {
 /* DOCUMENT bathy_detect_surface(wf, maxint, thresh, &surface,
  * &surface_intensity, &escale)
   Part of bathy algorithm. Detects the surface. However, this is not a -true-
@@ -448,14 +448,22 @@ func bathy_detect_surface(wf, maxint, thresh, sfc_last, &surface,
 
   // Else if no saturated first return is found...
   } else {
-    wfl = numberof(wf);
-    if(wfl > 18) {
-      wfl = 18;
-      surface = wf(1:min(10,wflen))(mxx);
+    if(forcechannel == 4) {
+      wantlen = 17;
     } else {
-      surface = min(10,wflen);
+      wantlen = 10;
     }
-    wfl = min(10, wfl);
+
+    wfl = numberof(wf);
+    if(wfl > wantlen + 8) {
+      wfl = wantlen + 8;
+      surface = wf(1:min(wantlen,wflen))(mxx);
+    } else {
+      surface = min(wantlen, wflen);
+    }
+
+    wfl = min(wantlen, wfl);
+
     escale = wf(1:wfl)(max) - 1;
   }
 
