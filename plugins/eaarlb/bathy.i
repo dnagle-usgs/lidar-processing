@@ -317,7 +317,7 @@ xfma=, verbose=) {
 
   local surface_sat_end, surface_intensity, escale;
   bathy_detect_surface, wf, maxint, conf.thresh, conf.sfc_last,
-      surface_sat_end, surface_intensity, escale;
+    surface_sat_end, surface_intensity, escale, forcechannel=forcechannel;
   result.first_peak = surface_intensity;
 
   thresh = conf.thresh;
@@ -418,6 +418,21 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
   wf = float(~raw_wf);
   maxint = 255 - long(wf(1));
   wf = wf - wf(1);
+
+  if(forcechannel == 4) {
+    wf1 = *raster.rx(pulse_number, 1);
+    wf1 = float(~wf1);
+    wf1 = wf1 - wf1(1);
+    wf1 = grow([0.,0,0,0], wf1);
+
+    wf2 = *raster.rx(pulse_number, 2);
+    wf2 = float(~wf2);
+    wf2 = wf2 - wf2(1);
+    wf2 = grow([0.,0,0,0], wf2);
+
+    fb = min(19, numberof(wf), numberof(wf1), numberof(wf2));
+    wf(:fb) += wf1(:fb) + wf2(:fb);
+  }
 }
 
 func bathy_detect_surface(wf, maxint, thresh, sfc_last, &surface,
