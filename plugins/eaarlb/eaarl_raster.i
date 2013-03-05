@@ -101,6 +101,8 @@ func eaarl_decode_fast(fn, start, stop, rnstart=, wfs=, usestruct=) {
   f = open(fn, "rb");
   add_variable, f, -1, "raw", char, sizeof(f);
 
+  if(!stop) stop = sizeof(f);
+
   // scan to see how many rasters there are
   count = 0;
   offset = start;
