@@ -1,5 +1,8 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+// NOTE: THIS IS BROKEN
+// obj_index was changed to index on LAST rather than FIRST index
+
 require, "extra/class_mapobj.i";
 
 // To avoid name collisions breaking help, some functions get temporarily named

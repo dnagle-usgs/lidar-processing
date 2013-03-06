@@ -389,7 +389,7 @@ func obj_index(this, idx, which=, ref=, size=, bymethod=, ignoremissing=) {
       ignoremissing=0 to raise errors instead.
 
   If any fields are multi-dimensional arrays, they are indexed along their
-  first dimension: field(idx,).
+  last dimension: field(.., idx).
 
   This function can be used as an object method by using a closure whose data
   item is 0:
@@ -494,11 +494,11 @@ func obj_index(this, idx, which=, ref=, size=, bymethod=, ignoremissing=) {
       if(is_array(result(which(i)))) {
         if(leading && dimsof(result(which(i)))(2) != leading)
           continue;
-        save, result, which(i), result(which(i),idx,..);
+        save, result, which(i), result(which(i),..,idx);
       } else if(is_obj(result(which(i)))) {
         if(leading && result(which(i))(*) != leading)
           continue;
-        save, result, which(i), obj_index(result(which(i)), idx);
+        save, result, which(i), obj_index(result(which(i)),..,idx);
       }
     } else if(!ignoremissing) {
       error, "Missing key: " + which(i);
