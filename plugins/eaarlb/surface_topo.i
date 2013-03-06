@@ -188,7 +188,9 @@ use_highelv_echo=, forcechannel=, verbose=, msg=, ext_bad_att=) {
   mag = rtrs.irange * NS2MAIR * sample_interval - ops_conf.range_biasM;
 
   // Edit out tx/rx dropouts and points with out-of-range centroid values
-  w = where(rtrs.dropout != 0 | rtrs.fs_rtn_centroid == 10000);
+  // The out-of-range centroid value is 10000. However, it gets modified by the
+  // channel range bias, so we throw out anything > 9000.
+  w = where(rtrs.dropout != 0 | rtrs.fs_rtn_centroid > 9000);
   if(!is_void(w))
     mag(w) = 0;
 
