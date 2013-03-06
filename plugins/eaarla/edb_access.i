@@ -323,6 +323,41 @@ func edb_update(time_correction) {
   }
 }
 
+func edb_raster_range_files(start, stop, &fnum, &fstart, &fstop) {
+/* DOCUMENT edb_raster_range_files, start, stop, fnum, fstart, fstop
+  Given a START and STOP raster (or arrays of START and STOP rasters with the
+  same size), this function will break them up into per-TLD file sub-ranges.
+  FNUM, FSTART, and FSTOP will be set as output arrays (all three of the same
+  size).  FNUM is the file number for a range, FSTART is the first raster, and
+  FSTOP is the last raster.
+*/
+  count = numberof(start);
+  fnum = fstart = fstop = array(pointer, count);
+  for(i = 1; i <= count; i++) {
+    wanted = edb.file_number(start(i):stop(i));
+    file_nums = indgen(wanted(1):wanted(0));
+    nfn = numberof(file_nums);
+
+    curfnum = curstart = curstop = array(long, nfn);
+    for(j = 1; j <= nfn; j++) {
+      fidx = file_nums(j);
+      w = where(wanted == fidx);
+
+      curfnum(j) = fidx;
+      curstart(j) = w(1) + start(i) - 1;
+      curstop(j) = w(0) + start(i) - 1;
+    }
+
+    fnum(i) = &curfnum;
+    fstart(i) = &curstart;
+    fstop(i)= &curstop;
+  }
+
+  fnum = merge_pointers(fnum);
+  fstart = merge_pointers(fstart);
+  fstop = merge_pointers(fstop);
+}
+
 func decode_rasters(start, stop, wfs=, usestruct=) {
 /* DOCUMENT pulses = decode_rasters(start, stop)
   Retrieves decoded pulse data for the specified range of rasters. START is
