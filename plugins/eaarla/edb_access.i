@@ -358,46 +358,40 @@ func edb_raster_range_files(start, stop, &fnum, &fstart, &fstop) {
   fstop = merge_pointers(fstop);
 }
 
-func decode_rasters(start, stop, wfs=, usestruct=) {
+func decode_rasters(start, stop, wfs=) {
 /* DOCUMENT pulses = decode_rasters(start, stop)
   Retrieves decoded pulse data for the specified range of rasters. START is
-  the first raster number and STOP is the last.
+  the first raster number and STOP is the last. START and STOP may also be
+  arrays of first/last raster values of the same size.
 
   Options:
     wfs= By default, waveforms are included. Use wfs=0 to disable, which will
-      leave all the tx and rx fields empty.
-    usestruct= Specifies a struct to use for the output. By default, this is
-      EAARL_PULSE. If you provide another struct, it MUST include all of the
-      fields that EAARL_PULSE provides. (However, it may also contain
-      additional fields, which will be ignored.) Optionally, if wfs=0, then
-      usestruct= may provide a struct that omits the tx and rx fields.
+      omit the tx and rx fields.
 
   Returns:
-    An array of EAARL_PULSE (or usestruct=, if provided). The array size will
-    be the number of pulses found.
+    An oxy object containing the same members as described by
+    eaarl_decode_fast.
 */
+  local fnum, fstart, fstop;
+  edb_raster_range_files, start, stop, fnum, fstart, fstop;
+
   extern edb, edb_files, edb_filename;
   tld_dir = file_dirname(edb_filename);
-  wanted = edb(start:stop);
 
-  // get unique, sorted file numbers
-  file_nums = set_remove_duplicates(wanted.file_number);
-  nfn = numberof(file_nums);
-
-  result = array(pointer, nfn);
+  nfn = numberof(fnum);
+  result = [];
   for(i = 1; i <= nfn; i++) {
     // Focus on one TLD file at a time
-    fidx = file_nums(i);
-    w = where(wanted.file_number == fidx);
+    fidx = fnum(i);
 
     // Determine raster numbers for the range in this file
-    rn_start = w(1) + start - 1;
-    rn_stop = w(0) + start - 1;
+    rn_start = fstart(i);
+    rn_stop = fstop(i);
 
     // Determine offsets for these rasters in the TLD file
     // edb offsets are zero based, we need them to be 1 based
     offset_start = edb(rn_start).offset + 1;
-    if(rn_stop + 1 <= numberof(edb) && edb(rn_stop).file_number == fidx) {
+    if(rn_stop + 1 <= numberof(edb) && edb(rn_stop + 1).file_number == fidx) {
       offset_stop = edb(rn_stop + 1).offset;
     } else {
       offset_stop = 0;
@@ -405,14 +399,17 @@ func decode_rasters(start, stop, wfs=, usestruct=) {
 
     // Retrieve results for this file
     fn = file_join(tld_dir, file_tail(edb_files(fidx)));
-    result(i) = &eaarl_decode_fast(fn, offset_start, offset_stop, wfs=wfs,
-      usestruct=usestruct, rnstart=rn_start);
+    current = eaarl_decode_fast(fn, offset_start, offset_stop, wfs=wfs,
+      rnstart=rn_start);
+
+    if(is_void(result)) {
+      result = current;
+    } else {
+      obj_grow, result, current;
+    }
   }
 
-  if(numberof(result) == 1)
-    return *result(1);
-  else
-    return merge_pointers(result);
+  return result;
 }
 
 func get_soe_rasts(start, stop) {
