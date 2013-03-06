@@ -445,6 +445,9 @@ func merge_pointers(pary) {
     return [];
   // Eliminate null pointers
   pary = pary(where(pary));
+  // Trivial case
+  if(numberof(pary) == 1)
+    return *pary(1);
 
   dims = [];
   count = numberof(pary);
