@@ -389,7 +389,7 @@ proc ::l1pro::main::panel_status w {
 
     ttk::label $w.status -textvariable ::status(message)
     ttk::label $w.time -textvariable ::status(time)
-    ttk::progressbar $w.progress -variable ::status(progress) -maximum 100 \
+    ttk::progressbar $w.progress -variable ::status(progress) -maximum 1 \
             -length 200
     grid $w.status $w.time $w.progress -sticky news -padx 2
     grid columnconfigure $w 0 -weight 1

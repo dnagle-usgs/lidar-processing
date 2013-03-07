@@ -137,8 +137,8 @@ func timer_finished(t0, fmt=) {
 }
 
 scratch = save(scratch, tmp, status_start, status_progress, status_finished,
-    status_msg, status_noop);
-tmp = save(start, progress, finished, cache, msg);
+    status_noop);
+tmp = save(start, progress, finished, cache);
 
 func status_start(count=, interval=, msg=) {
   use, cache;
@@ -150,63 +150,45 @@ func status_start(count=, interval=, msg=) {
   timer, t0;
   tp = t0;
 
-  save, cache, interval, msg, t0, tp, pct=0,
-      has_current=strglob("*CURRENT*", msg),
-      has_count=strglob("*COUNT*", msg);
+  save, cache, interval, t0, tp, pct=0.;
 
-  tkcmd, swrite(format="set ::status(message) {%s}", use(msg, 0, count));
-  tkcmd, "set ::status(time) {}";
-  tkcmd, "set ::status(progress) 0";
+  tkcmd, "::l1pro::status::start "+swrite(count)+" {"+msg+"}";
 }
 start = status_start;
 
 func status_progress(current, count) {
   use, cache;
-  bar_changed = 0;
-  pct = 100*double(current)/count;
-  if(abs(pct - cache.pct) > 0.5) {
+
+  update = 0;
+
+  pct = double(current)/count;
+  if(abs(pct - cache.pct) > 0.005) {
     save, cache, pct;
-    tkcmd, swrite(format="set ::status(progress) {%f}", pct);
-    bar_changed = 1;
+    update = 1;
   }
+
   t1 = cache.t0;
   timer, t1;
-  if(bar_changed || t1(3) - cache.tp(3) >= cache.interval) {
+  if(t1(3) - cache.tp(3) >= cache.interval) {
     save, cache, tp=t1;
-    elapsed = t1(3) - cache.t0(3);
-    remain = elapsed/double(current) * (count - current);
-    tkcmd, swrite(format="set ::status(message) {%s}", use(msg, current, count));
-    tkcmd, swrite(format="set ::status(time) {%s}", seconds2clocktime(remain));
+    update = 1;
   }
+
+  if(!update) return;
+
+  tkcmd, "::l1pro::status::progress "+swrite(current)+" "+swrite(count);
 }
 progress = status_progress;
 
 func status_finished {
-  tkcmd, "set ::status(message) {Ready.}";
-  tkcmd, "set ::status(time) {}";
-  tkcmd, "set ::status(progress) 0";
+  tkcmd, "::l1pro::status::finished";
 }
 finished = status_finished;
 
-func status_msg(current, count) {
-  use, cache;
-  msg = cache.msg;
-  if(cache.has_current) {
-    fmt = is_integer(current) ? "%d" : "%f";
-    msg = regsub("CURRENT", msg, swrite(format=fmt, current), all=1);
-  }
-  if(cache.has_count) {
-    fmt = is_integer(count) ? "%d" : "%f";
-    msg = regsub("COUNT", msg, swrite(format=fmt, count), all=1);
-  }
-  return msg;
-}
-msg = status_msg;
-
-func status_noop(a, b, count=, interval=, msg=) {}
+func status_noop(a, b, count=, interval=) {}
 
 if(!_ytk) {
-  start = progress = finished = msg = status_noop;
+  start = progress = finished = status_noop;
 }
 
 cache = save();
