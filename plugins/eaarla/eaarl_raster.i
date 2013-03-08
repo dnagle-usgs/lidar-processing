@@ -132,6 +132,7 @@ func eaarl_decode_fast(fn, start, stop, rnstart=, wfs=) {
 
     rlen = u_cast(i24(f.raw, offset), long);
     if(rlen < 18 || f.raw(offset+3) != 5) continue;
+    rstop = rstart + rlen - 1;
 
     seconds = i32(f.raw, offset+4);
     fseconds = i32(f.raw, offset+8);
@@ -146,6 +147,7 @@ func eaarl_decode_fast(fn, start, stop, rnstart=, wfs=) {
       if(offset + 15 > rstart + rlen - 1)
         break;
       pstart = offset;
+      pstop = pstart + 15 + i16(f.raw, pstart + 13) - 1;
       pidx++;
 
       if(rn) raster(pidx) = rn;
@@ -187,16 +189,17 @@ func eaarl_decode_fast(fn, start, stop, rnstart=, wfs=) {
 
       for(j = 1; j <= 4; j++) {
         chan_len = i16(f.raw, offset);
-        if(chan_len <= 0 || offset+1+chan_len > stop) continue;
-        rx(j,pidx) = &f.raw(offset+2:offset+1+chan_len);
+        wfend = offset+1+chan_len;
+        if(chan_len <= 0 || wfend > pstop || wfend > rstop) break;
+        rx(j,pidx) = &f.raw(offset+2:wfend);
         offset += 2 + chan_len;
       }
 
-      offset = pstart + 15 + i16(f.raw, pstart + 13);
+      offset = pstop + 1;
     }
 
     if(rn) rn++;
-    offset = rstart + rlen;
+    offset = rstop + 1;
   }
 
   close, f;
