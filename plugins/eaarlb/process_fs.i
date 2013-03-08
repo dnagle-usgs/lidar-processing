@@ -248,7 +248,9 @@ func eaarl_fs_rx_cent_eaarla(pulses) {
   extern ops_conf;
 
   npulses = numberof(pulses.tx);
-  frx = fint = fbias = array(float, npulses);
+  // 10000 is the "bad data" value that cent will return, match that
+  frx = array(float(10000), npulses);
+  fint = fbias = array(float, npulses);
   fchannel = array(char, npulses);
 
   // this is just to make the if() calls shorter & more readable
@@ -308,7 +310,9 @@ func eaarl_fs_rx_cent_eaarlb(pulses, channel) {
   extern ops_conf;
 
   npulses = numberof(pulses.tx);
-  frx = fint = array(float, npulses);
+  // 10000 is the "bad data" value that cent will return, match that
+  frx = array(float(10000), npulses);
+  fint = array(float, npulses);
   fchannel = array(char(channel), npulses);
   fbias = array(get_member(ops_conf,
     swrite(format="chn%d_range_bias", channel)), npulses);
