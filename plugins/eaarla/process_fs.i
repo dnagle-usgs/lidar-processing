@@ -322,7 +322,7 @@ func eaarl_fs_rx_cent_eaarlb(pulses, channel) {
 
     np = min(np, 12);
 
-    rx_cent = cent(rx);
+    rx_cent = cent(wf);
     if(numberof(rx_cent)) {
       frx(i) = rx_cent(1);
       fint(i) = rx_cent(3);
