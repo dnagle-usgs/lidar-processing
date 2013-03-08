@@ -128,7 +128,7 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
 */
   log_id = logger_id();
   if(logger(debug)) {
-    logger, debug, log_id+"Entering first_surface_new";
+    logger, debug, log_id+"Entering process_fs";
     logger, debug, log_id+"Parameters:";
     logger, debug, log_id+"  start="+pr1(start);
     logger, debug, log_id+"  stop="+pr1(stop);
@@ -248,7 +248,7 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
     pulses = obj_index(pulses, w);
   }
 
-  if(logger(debug)) logger, debug, log_id+"Leaving first_surface_new";
+  if(logger(debug)) logger, debug, log_id+"Leaving process_fs";
   return pulses;
 }
 
