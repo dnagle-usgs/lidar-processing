@@ -207,15 +207,15 @@ func process_fs(start, stop, ext_bad_att=, forcechannel=) {
     mirang, scan_angles, slant_range,
     mx, my, mz, fx, fy, fz;
 
+  // Add mirror and first return coordinates to pulses object
+  save, pulses, mx, my, mz, fx, fy, fz;
+
   // Get rid of points where mirror and surface are within ext_bad_att meters
   if(ext_bad_att) {
-    w = where(mz - fz >= ext_bad_att);
+    w = where(pulses.mz - pulses.fz >= ext_bad_att);
     if(!numberof(w)) return;
     pulses = obj_index(pulses, w);
   }
-
-  // Add mirror and first return coordinates to pulses object
-  save, pulses, mx, my, mz, fx, fy, fz;
 
   if(logger(debug)) logger, debug, log_id+"Leaving first_surface_new";
   return pulses;
