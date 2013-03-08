@@ -181,7 +181,7 @@ func obj_grow(util, this, .., ref=, size=, exclude=) {
 
   This is intended to be used on objects that have keyed members where some
   members are non-scalar arrays and other members may be scalars and/or
-  functions. The non-scalar arrays are expected to be of equal leading
+  functions. The non-scalar arrays are expected to be of equal trailing
   dimension size within an object. Such members from successive objects will
   be grown together into the result. If a member does not exist in the other
   object, it will be dummied out for growing so that the result remains
@@ -248,7 +248,7 @@ func obj_grow(util, this, .., ref=, size=, exclude=) {
         that_val = util(dummy_array, this_val, that_size);
       }
 
-      save, this, noop(key), tp_grow(this_val, that_val);
+      save, this, noop(key), grow(this_val, that_val);
     }
 
     for(j = 1; j <= that(*); j++) {
@@ -263,7 +263,7 @@ func obj_grow(util, this, .., ref=, size=, exclude=) {
         error, "Unable to grow \""+key+"\"";
       this_val = util(dummy_array, that_val, this_size);
 
-      save, this, noop(key), tp_grow(this_val, that_val);
+      save, this, noop(key), grow(this_val, that_val);
     }
 
     // Need to clear that_need to avoid having find_needed apply it to the
@@ -313,14 +313,14 @@ func obj_grow_find_needed(obj, ref, sizekey, exclude, &size, &need) {
     if(is_scalar(val) || !is_array(val))
       continue;
 
-    sizes(i) = dimsof(val)(2);
+    sizes(i) = dimsof(val)(0);
   }
 
   // Determine the size to use for growable members. If ref is present, it
   // determines. If size is present, it determines. Otherwise, we can only
   // grow if all growable members are the same size.
   if(!is_void(ref)) {
-    size = dimsof(obj(noop(ref)))(2);
+    size = dimsof(obj(noop(ref)))(0);
   } else if(is_string(sizekey)) {
     size = obj(noop(sizekey),);
   } else {
