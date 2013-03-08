@@ -24,6 +24,7 @@ include, base + "mission_constants.i";
 include, base + "mosaic_biases.i";
 include, base + "parse.i";
 include, base + "pixelwf.i";
+include, base + "process_fs.i";
 include, base + "sf.i";
 include, base + "surface_topo.i";
 include, base + "veg.i";
