@@ -1,7 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-func make_fs_new(q=, ply=, ext_bad_att=, forcechannel=, verbose=) {
-/* DOCUMENT fs_all = make_fs_new(q=, ply=, ext_bad_att=, forcechannel=,
+func make_fs_new(q=, ply=, ext_bad_att=, channel=, verbose=) {
+/* DOCUMENT fs_all = make_fs_new(q=, ply=, ext_bad_att=, channel=,
    verbose=)
 
   Processes selected region for first surface results.
@@ -16,7 +16,9 @@ func make_fs_new(q=, ply=, ext_bad_att=, forcechannel=, verbose=) {
   Options for processing:
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
-    forcechannel= Forces the use of a specific channel.
+    channel= Specifies which channel or channels to process. If omitted or set
+      to 0, EAARL-A style channel selection is used. Otherwise, this can be an
+      integer or array of integers for the channels to process.
 
   Other options:
     verbose= By default, displays some info to the console. Set to 0 to
@@ -64,8 +66,8 @@ func make_fs_new(q=, ply=, ext_bad_att=, forcechannel=, verbose=) {
         i, count, rn_start(i), rn_stop(i);
     }
     pause, 1; // make sure Yorick shows output
-    pulses = process_fs(rn_start(i), rn_stop(i),
-        forcechannel=forcechannel, ext_bad_att=ext_bad_att);
+    pulses = process_fs(rn_start(i), rn_stop(i), channel=channel,
+      ext_bad_att=ext_bad_att);
     fs_all(i) = &fs_struct_from_obj(pulses);
     status, progress, rn_counts(i), rn_counts(0);
   }
@@ -100,9 +102,9 @@ func fs_struct_from_obj(pulses) {
   return result;
 }
 
-func process_fs(start, stop, ext_bad_att=, forcechannel=) {
+func process_fs(start, stop, ext_bad_att=, channel=) {
 /* DOCUMENT result = process_fs(start, stop, ext_bad_att=,
-   forcechannel=)
+   channel=)
 
   Processes the given raster ranges for first return.
 
@@ -114,7 +116,9 @@ func process_fs(start, stop, ext_bad_att=, forcechannel=) {
   Options:
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
-    forcechannel= Forces the use of a specific channel.
+    channel= Specifies which channel or channels to process. If omitted or set
+      to 0, EAARL-A style channel selection is used. Otherwise, this can be an
+      integer or array of integers for the channels to process.
 
   Returns:
     An oxy group object containing these fields:
@@ -129,9 +133,11 @@ func process_fs(start, stop, ext_bad_att=, forcechannel=) {
     logger, debug, log_id+"  start="+pr1(start);
     logger, debug, log_id+"  stop="+pr1(stop);
     logger, debug, log_id+"  ext_bad_att="+pr1(ext_bad_att);
-    logger, debug, log_id+"  forcechannel="+pr1(forcechannel);
+    logger, debug, log_id+"  channel="+pr1(channel);
   }
+  local mx, my, mz, fx, fy, fz;
   default, stop, start;
+  default, channel, 0;
   sample_interval = 1.0;
 
   if(is_void(ops_conf))
@@ -141,7 +147,7 @@ func process_fs(start, stop, ext_bad_att=, forcechannel=) {
   fs_tx = eaarl_fs_tx_cent;
   fs_rx = eaarl_fs_rx_cent;
   fs_traj = eaarl_fs_trajectory;
-  if(forcechannel) {
+  if(channel(1)) {
     fs_spacing = eaarl_fs_spacing;
   } else {
     fs_spacing = noop;
@@ -160,17 +166,8 @@ func process_fs(start, stop, ext_bad_att=, forcechannel=) {
   if(numberof(w) < numberof(pulses.dropout))
     pulses = obj_index(pulses, w);
 
-  // Determine tx and rx offsets
-  // Adds: ftx, frx, fint, fchannel
+  // Determine tx offsets; adds ftx
   fs_tx, pulses;
-  fs_rx, pulses, forcechannel=forcechannel;
-
-  // Throw away bogus returns
-  // 10000 is the bogus return value
-  w = where(pulses.frx != 10000);
-  if(!numberof(w)) return;
-  if(numberof(w) < numberof(pulses.frx))
-    pulses = obj_index(pulses, w);
 
   // Interpolate trajectory
   traj = fs_traj(pulses.soe);
@@ -188,26 +185,61 @@ func process_fs(start, stop, ext_bad_att=, forcechannel=) {
   // Calculate scan angles
   scan_angles = SAD * (pulses.scan_angle + ops_conf.scan_bias);
 
-  // Calculate magnitude of vectors from mirror to ground
-  slant_range = NS2MAIR * sample_interval * (
-      pulses.irange + pulses.frx - pulses.ftx + pulses.fbias
-    ) - ops_conf.range_biasM;
+  result = [];
+  numchans = numberof(channel);
+  for(i = 1; i <= numchans; i++) {
+    if(i == numchans) {
+      curpulses = pulses;
+    } else {
+      curpulses = obj_copy(pulses);
+    }
+    curtraj = traj;
+    curlasang = lasang;
+    curscan = scan_angles;
 
-  // Calculate angles for channel spacing
-  fs_spacing, forcechannel, scan_angles, lasang;
+    // Determine rx offsets; adds frx, fint, fchannel
+    fs_rx, curpulses, channel=channel(i);
 
-  local mx, my, mz, fx, fy, fz;
-  eaarl_direct_vector,
-    traj.yaw, traj.pitch, traj.roll,
-    traj.easting, traj.northing, traj.alt,
-    dx, dy, dz,
-    cyaw,
-    lasang,
-    mirang, scan_angles, slant_range,
-    mx, my, mz, fx, fy, fz;
+    // Throw away bogus returns
+    // 10000 is the bogus return value
+    w = where(curpulses.frx != 10000);
+    if(!numberof(w)) continue;
 
-  // Add mirror and first return coordinates to pulses object
-  save, pulses, mx, my, mz, fx, fy, fz;
+    if(numberof(w) < numberof(curpulses.frx)) {
+      curpulses = obj_index(curpulses, w);
+      curtraj = obj_index(curtraj, w);
+      curscan = curscan(w);
+    }
+
+    // Calculate magnitude of vectors from mirror to ground
+    slant_range = NS2MAIR * sample_interval * (
+        curpulses.irange + curpulses.frx - curpulses.ftx + curpulses.fbias
+      ) - ops_conf.range_biasM;
+
+    // Calculate angles for channel spacing
+    fs_spacing, channel(i), curscan, curlasang;
+
+    eaarl_direct_vector,
+      curtraj.yaw, curtraj.pitch, curtraj.roll,
+      curtraj.easting, curtraj.northing, curtraj.alt,
+      dx, dy, dz,
+      cyaw,
+      curlasang,
+      mirang, curscan, slant_range,
+      mx, my, mz, fx, fy, fz;
+
+    // Add mirror and first return coordinates to pulses object
+    save, curpulses, mx, my, mz, fx, fy, fz;
+
+    if(is_void(result)) {
+      result = curpulses;
+    } else {
+      result = obj_grow(result, curpulses);
+    }
+  }
+  pulses = result;
+
+  if(is_void(pulses)) return;
 
   // Get rid of points where mirror and surface are within ext_bad_att meters
   if(ext_bad_att) {
@@ -338,15 +370,15 @@ func eaarl_fs_rx_cent_eaarlb(pulses, channel) {
   save, pulses, frx, fint, fchannel, fbias;
 }
 
-func eaarl_fs_rx_cent(pulses, forcechannel=) {
-/* DOCUMENT eaarl_fs_rx_cent, pulses, forcechannel=
+func eaarl_fs_rx_cent(pulses, channel=) {
+/* DOCUMENT eaarl_fs_rx_cent, pulses, channel=
   This is a temporary glue function. It calls either eaarl_fs_rx_eaarla or
   eaarl_fs_rx_eaarlb as appropriate.
 */
-  if(is_void(forcechannel))
+  if(!channel)
     eaarl_fs_rx_cent_eaarla, pulses;
   else
-    eaarl_fs_rx_cent_eaarlb, pulses, forcechannel;
+    eaarl_fs_rx_cent_eaarlb, pulses, channel;
 }
 
 func eaarl_fs_trajectory(soe) {
