@@ -411,26 +411,60 @@ func extract_corresponding_data(data, ref, soefudge=) {
   SEE ALSO: extract_unique_data, batch_extract_corresponding_data
 */
   default, soefudge, 0.001;
-  data = data(msort(data.rn, data.soe));
-  ref = ref(msort(ref.rn, ref.soe));
   keep = array(char(0), numberof(data));
 
   i = j = 1;
   ndata = numberof(data);
   nref = numberof(ref);
-  while(i <= ndata && j <= nref) {
-    if(data(i).rn < ref(j).rn) {
-      i++;
-    } else if(data(i).rn > ref(j).rn) {
-      j++;
-    } else if(data(i).soe < ref(j).soe - soefudge) {
-      i++;
-    } else if(data(i).soe > ref(j).soe + soefudge) {
-      j++;
-    } else {
-      keep(i) = 1;
-      i++;
-      j++;
+
+  if(
+    has_member(data, "channel") && has_member(data, "raster") &&
+    has_member(data, "pulse") &&
+    has_member(ref, "channel") && has_member(ref, "raster") &&
+    has_member(ref, "pulse")
+  ) {
+    data = data(msort(data.raster, data.channel, data.pulse, data.soe));
+    ref = ref(msort(ref.raster, ref.channel, ref.pulse, ref.soe));
+    while(i <= ndata && j <= nref) {
+      if(data(i).raster < ref(j).raster) {
+        i++;
+      } else if(data(i).raster > ref(j).raster) {
+        j++;
+      } else if(data(i).channel < ref(j).channel) {
+        i++;
+      } else if(data(i).channel > ref(j).channel) {
+        j++;
+      } else if(data(i).pulse < ref(j).pulse) {
+        i++;
+      } else if(data(i).pulse > ref(j).pulse) {
+        j++;
+      } else if(data(i).soe < ref(j).soe - soefudge) {
+        i++;
+      } else if(data(i).soe > ref(j).soe + soefudge) {
+        j++;
+      } else {
+        keep(i) = 1;
+        i++;
+        j++;
+      }
+    }
+  } else {
+    data = data(msort(data.rn, data.soe));
+    ref = ref(msort(ref.rn, ref.soe));
+    while(i <= ndata && j <= nref) {
+      if(data(i).rn < ref(j).rn) {
+        i++;
+      } else if(data(i).rn > ref(j).rn) {
+        j++;
+      } else if(data(i).soe < ref(j).soe - soefudge) {
+        i++;
+      } else if(data(i).soe > ref(j).soe + soefudge) {
+        j++;
+      } else {
+        keep(i) = 1;
+        i++;
+        j++;
+      }
     }
   }
 
@@ -543,26 +577,60 @@ func extract_unique_data(data, ref, soefudge=) {
   SEE ALSO: extract_corresponding_data
 */
   default, soefudge, 0.001;
-  data = data(msort(data.rn, data.soe));
-  ref = ref(msort(ref.rn, ref.soe));
   keep = array(char(1), numberof(data));
 
   i = j = 1;
   ndata = numberof(data);
   nref = numberof(ref);
-  while(i <= ndata && j <= nref) {
-    if(data(i).rn < ref(j).rn) {
-      i++;
-    } else if(data(i).rn > ref(j).rn) {
-      j++;
-    } else if(data(i).soe < ref(j).soe - soefudge) {
-      i++;
-    } else if(data(i).soe > ref(j).soe + soefudge) {
-      j++;
-    } else {
-      keep(i) = 0;
-      i++;
-      j++;
+
+  if(
+    has_member(data, "channel") && has_member(data, "raster") &&
+    has_member(data, "pulse") &&
+    has_member(ref, "channel") && has_member(ref, "raster") &&
+    has_member(ref, "pulse")
+  ) {
+    data = data(msort(data.raster, data.channel, data.pulse, data.soe));
+    ref = ref(msort(ref.raster, ref.channel, ref.pulse, ref.soe));
+    while(i <= ndata && j <= nref) {
+      if(data(i).raster < ref(j).raster) {
+        i++;
+      } else if(data(i).raster > ref(j).raster) {
+        j++;
+      } else if(data(i).channel < ref(j).channel) {
+        i++;
+      } else if(data(i).channel > ref(j).channel) {
+        j++;
+      } else if(data(i).pulse < ref(j).pulse) {
+        i++;
+      } else if(data(i).pulse > ref(j).pulse) {
+        j++;
+      } else if(data(i).soe < ref(j).soe - soefudge) {
+        i++;
+      } else if(data(i).soe > ref(j).soe + soefudge) {
+        j++;
+      } else {
+        keep(i) = 0;
+        i++;
+        j++;
+      }
+    }
+  } else {
+    data = data(msort(data.rn, data.soe));
+    ref = ref(msort(ref.rn, ref.soe));
+    while(i <= ndata && j <= nref) {
+      if(data(i).rn < ref(j).rn) {
+        i++;
+      } else if(data(i).rn > ref(j).rn) {
+        j++;
+      } else if(data(i).soe < ref(j).soe - soefudge) {
+        i++;
+      } else if(data(i).soe > ref(j).soe + soefudge) {
+        j++;
+      } else {
+        keep(i) = 0;
+        i++;
+        j++;
+      }
     }
   }
 
