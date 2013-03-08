@@ -128,7 +128,6 @@ func process_fs(start, stop, ext_bad_att=, forcechannel=) {
     logger, debug, log_id+"Parameters:";
     logger, debug, log_id+"  start="+pr1(start);
     logger, debug, log_id+"  stop="+pr1(stop);
-    logger, debug, log_id+"  usecentroid="+pr1(usecentroid);
     logger, debug, log_id+"  ext_bad_att="+pr1(ext_bad_att);
     logger, debug, log_id+"  forcechannel="+pr1(forcechannel);
   }
@@ -153,7 +152,7 @@ func process_fs(start, stop, ext_bad_att=, forcechannel=) {
     save(fs_tx, fs_rx, fs_traj, fs_spacing));
 
   // Retrieve rasters
-  pulses = decode_rasters(start, stop, wfs=usecentroid);
+  pulses = decode_rasters(start, stop);
 
   // Throw away dropouts
   w = where(!pulses.dropout);
