@@ -1,26 +1,44 @@
-// vim: set tabstop=2 softtabstop=2 shiftwidth=2 autoindent shiftround expandtab:
+// vim: set ts=2 sts=2 sw=2 ai sr et:
+
+/* This implements a function for interpolating angles. The call signature of
+ * the function in Yorick is:
+ *
+ *    yp = interp_angles(y, x, xp, rad=)
+ *
+ * Array X must be monotonic, either ascending or descending. In order to
+ * accommodate both sorting orders without an impact to performance, this file
+ * does some fancy #include calls to implement two versions (ascending and
+ * descending) of the functions that do all the interpolation work.
+ *
+ * If XP is sorted (ascending only), then the complexity of this algorithm is
+ * linear: O(N+M) (where N is numberof(xp) and M is numberof(x). If XP is not
+ * sorted (or is descending), then the complexity of the algorithm is
+ * log-linear: O(N log M).
+ */
 
 #ifndef SORT_ASC
 
 #include "yapi.h"
 #include <math.h>
-#include <stdio.h>
+
 #define PI 3.141592653589793238462643383279502884197
 #define DEG2RAD (PI/180.)
 #define RAD2DEG (180./PI)
 
+static int interp_sorted_desc(double *y, double *x, double *xp, double *yp,
+  long count, long countp, long *start, long *stop);
+static void interp_bisect_desc(double *y, double *x, double *xp, double *yp,
+  long count, long start, long stop);
+
+static int interp_sorted_asc(double *y, double *x, double *xp, double *yp,
+  long count, long countp, long *start, long *stop);
+static void interp_bisect_asc(double *y, double *x, double *xp, double *yp,
+  long count, long start, long stop);
+
 static double interp_ratio(double *y, double *x, double xp, long b1, long b2,
   long *lastb);
 
-#define SORT_ASC 1
-#include __FILE__
-#undef SORT_ASC
-
-#define SORT_ASC 0
-#include __FILE__
-#undef SORT_ASC
-
-// interp_angles(ang, x, xp, rad=)
+// interp_angles(yp, x, xp, rad=)
 #define INTERP_ANGLES_KEYCT 1
 void Y_interp_angles(int nArgs)
 {
@@ -85,10 +103,6 @@ void Y_interp_angles(int nArgs)
     yp = ypush_d(dims);
   }
 
-  // Determine whether reference data is ascending or descending so that we
-  // know how to make comparisons
-  // int asc = x[0] < x[count-1];
-
   long start = 0, stop = 0;
   if(x[0] < x[count-1]) {
     if(!interp_sorted_asc(y, x, xp, yp, count, countp, &start, &stop)) {
@@ -108,6 +122,23 @@ void Y_interp_angles(int nArgs)
   }
 }
 
+// interp_ratio
+//
+// Once interp_sorted_* or interp_bisect_* have determined which two entries in
+// X a given XP fall between, this function is used to calculate the
+// corresponding YP.
+//
+// Parameters:
+//  *y, *x - The input arrays as provided to Y_interp_angles
+//  xp - A specific value to interpolate for
+//  b1, b2 - The upper and lower bound around this xp. It should always be the
+//    case that b1 == b2 - 1.
+//  *lastb - This is used for caching. If trigonometric functions are used,
+//    their values are cached and the corresponding b1 value is stashed in
+//    *lastb. If the next call uses the same value for b1, the trig values
+//    won't need to be re-calculated.
+//
+// Returns: Double value for yp.
 static double interp_ratio(double *y, double *x, double xp, long b1, long b2,
   long *lastb)
 {
@@ -145,6 +176,16 @@ static double interp_ratio(double *y, double *x, double xp, long b1, long b2,
   }
 }
 
+// This defines interp_sorted_asc and interp_bisect_asc
+#define SORT_ASC 1
+#include __FILE__
+#undef SORT_ASC
+
+// This defines interp_sorted_desc and interp_bisect_desc
+#define SORT_ASC 0
+#include __FILE__
+#undef SORT_ASC
+
 #else
 
 #if SORT_ASC == 1
@@ -159,11 +200,29 @@ static double interp_ratio(double *y, double *x, double xp, long b1, long b2,
 #  define LTE(X,Y) ((X) >= (Y))
 #endif
 
-static int INTERP_SORTED(double *y, double *x, double *xp, double *yp,
-  long count, long countp, long *start, long *stop);
-static void INTERP_BISECT(double *y, double *x, double *xp, double *yp,
-  long count, long start, long stop);
-
+// interp_sorted_asc and interp_sorted_desc
+//
+// This function assumes that XP is in ascending sorted order and attempts to
+// use the linear algorithm for interpolation. If it succeeds, then it returns
+// 1. If it discovers that XP is not sorted, it returns 0.
+//
+// Even if XP is not sorted, this will still generally take care of at least
+// some of the calculations. In particular, if leading values are below xp[0]
+// and trailing values are above xp[countp-1], those values are all taken care
+// of (even if they're not sorted, provided they're out of bounds). Then
+// whatever series of values are actually sorted at the beginning of xp are
+// handled as well, until a non-sorted entry is found. At that point, *start
+// and *stop are set to the bounds of the data that still need to be sorted and
+// 0 is returned.
+//
+// Parameters:
+//  *y, *x, *xp - Input as provided to Y_interp_angles.
+//  *yp - Return value for Y_interp_angles.
+//  count, countp - Lengths of x and xp, respectively
+//  *start, *stop - The start and stop bounds of what needs to be processed
+//    yet, if everything isn't sorted.
+//
+// Returns: 1 if everything was handled, 0 if anything wasn't handled
 static int INTERP_SORTED(double *y, double *x, double *xp, double *yp,
   long count, long countp, long *start, long *stop)
 {
@@ -220,6 +279,19 @@ static int INTERP_SORTED(double *y, double *x, double *xp, double *yp,
   return *stop < *start;
 }
 
+// interp_bisect_asc and interp_bisect_desc
+//
+// This performs a bisection search to find the appropriate elements to
+// interpolate between for each value in xp. Unlike interp_sorted_*, this is
+// guaranteed to handle all values between *start and *stop.
+//
+// Parameters:
+//  *y, *x, *xp - Input as provided to Y_interp_angles.
+//  *yp - Return value for Y_interp_angles.
+//  count - Length of x
+//  start, stop - The start and stop bounds of what needs to be processed.
+//
+// Returns: 1 if everything was handled, 0 if anything wasn't handled
 static void INTERP_BISECT(double *y, double *x, double *xp, double *yp,
   long count, long start, long stop)
 {
