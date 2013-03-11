@@ -68,7 +68,7 @@ func triangulate(x, y, verbose=) {
   return _ytriangulate(strchar(opts), x, y);
 }
 
-// *** defined in geometry.c ***
+// *** defined in interp_angles.c ***
 
 extern interp_angles;
 

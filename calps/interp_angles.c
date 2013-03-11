@@ -2,9 +2,6 @@
 
 #ifndef SORT_ASC
 
-// #define DEBUG
-#include "dbg.h"
-
 #include "yapi.h"
 #include <math.h>
 #include <stdio.h>
@@ -197,7 +194,6 @@ static int INTERP_SORTED(double *y, double *x, double *xp, double *yp,
   i = *start;
   b2 = 0;
   while(i < *stop && b2 < count) {
-    debug("Outer loop: i=%ld stop=%ld b2=%ld count=%ld", i, *stop, b2, count);
     // Advance b2 beyond xp[i]
     while(LT(x[b2], xp[i]) && b2 < last) {b2++;}
     b1 = b2 - 1;
