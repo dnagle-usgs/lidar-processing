@@ -71,6 +71,23 @@ func triangulate(x, y, verbose=) {
 // *** defined in interp_angles.c ***
 
 extern interp_angles;
+/* DOCUMENT interp_angles(ang, i, ip, rad=)
+
+  This performs linear interpolation on a sequence of angles. This is designed
+  to accept arguments similar to interp. It circumvents problems at the
+  boundaries of the cycle by breaking the angle into its component pieces
+  (using trigonometric functions).
+
+  Parameters:
+    ang: The known angles around which to interpolate.
+    i: The reference values corresponding to the known values. Must be
+      strictly monotonic.
+    ip: The reference values for which you want to interpolate values.
+
+  Options:
+    rad= Set to 1 if the angles are in radians. By default, this assumes
+      degrees.
+*/
 
 // *** defined in gridding.c ***
 
