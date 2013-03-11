@@ -68,6 +68,9 @@ require, "general.i";
 require, "util_obj.i";
 require, "util_progress.i";
 
+// Comptibility routines for CALPS
+require, "calps_compat.i";
+
 require, "ascii.i";
 require, "ascii_encode.i";
 require, "asciixyz.i";

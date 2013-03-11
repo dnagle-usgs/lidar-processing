@@ -208,66 +208,6 @@ func find_points_in_radius(x, y, xs, ys, radius=) {
   return point_indx;
 }
 
-func interp_angles(ang, i, ip, rad=) {
-/* DOCUMENT interp_angles(ang, i, ip, rad=)
-
-  This performs linear interpolation on a sequence of angles. This is designed
-  to accept arguments similar to interp. It works by breaking the angle into
-  its component pieces for the interpolation, which circumvents problems at
-  the boundaries of the cycle.
-
-  Parameters:
-
-    ang: The known angles around which to interpolate.
-
-    i: The reference values corresponding to the known values. Must be
-      strictly monotonic.
-
-    ip: The reference values for which you want to interpolate values.
-
-  Options:
-
-    rad= Set to 1 if the angles are in radians. By default, this assumes
-      degrees.
-*/
-  default, rad, 0;
-
-  // Eliminates errors for scalars and simplifies handling of multi-dim arrays
-  dims = dimsof(ip);
-  ip = ip(*);
-
-  angp = array(double, numberof(ip));
-
-  // Trigonometric functions are expensive. Rather than converting ALL of
-  // angles back and forth, we can save a lot of time by only converting the
-  // range of values that we'll actually need for interpolation.
-  minidx = max(1, digitize(ip(min), i) - 1);
-  maxidx = min(numberof(i), digitize(ip(max), i) + 1);
-  ang = ang(minidx:maxidx);
-  i = i(minidx:maxidx);
-
-  if(!rad) ang *= DEG2RAD;
-
-  // Use C-ALPS helper if available
-  if(is_func(_yinterp_angles)) {
-    ib = digitize(ip, i);
-    _yinterp_angles, i, ang, numberof(i),
-      ip, angp, ib, numberof(ip);
-  } else {
-    x = cos(ang);
-    y = sin(ang);
-
-    xp = interp(x, i, ip);
-    yp = interp(y, i, ip);
-
-    angp = atan(yp, xp);
-  }
-
-  if(!rad) angp *= RAD2DEG;
-
-  return dims(1) ? reform(angp, dims) : angp(1);
-}
-
 func slope2degrees(slope, xdif) {
 /* DOCUMENT slope2degrees(slope, xdif)
 
