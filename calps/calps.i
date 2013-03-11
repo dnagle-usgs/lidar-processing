@@ -70,11 +70,7 @@ func triangulate(x, y, verbose=) {
 
 // *** defined in geometry.c ***
 
-extern _yinterp_angles;
-/* PROTOTYPE
-  void interp_angles(double *x, double *y, long xyn,
-    double *xp, double *yp, long *xb, long xpypn)
-*/
+extern interp_angles;
 
 // *** defined in gridding.c ***
 
@@ -244,7 +240,7 @@ extern profiler_ticks;
 __calps_backup = save(
   calps_compatibility,
   _ytriangulate, triangulate,
-  _yinterp_angles,
+  interp_angles,
   _ydet, _yplanar_params_from_pts,
   _ycross_product_sign, _yin_triangle,
   _ytriangle_interp, _ywrite_arc_grid,
