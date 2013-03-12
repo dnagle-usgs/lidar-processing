@@ -1,11 +1,66 @@
 // vim: set tabstop=2 softtabstop=2 shiftwidth=2 autoindent shiftround expandtab:
 #include "yapi.h"
 
-// See documentation for the Yorick function level_short_dips to find out what
-// this does. This is available in Yorick as _ylevel_short_dips.
-// Argument *seg is modified.
-void level_short_dips(double *seq, double *dist, double thresh, long count)
+#define LEVEL_SHORT_DIPS_KEYCT 2
+void Y_level_short_dips(int nArgs)
 {
+  // level_short_dips(seq, dist=indgen(numberof(seq)), thresh=10)
+  static char *knames[LEVEL_SHORT_DIPS_KEYCT+1] = {"dist", "thresh", 0};
+  static long kglobs[LEVEL_SHORT_DIPS_KEYCT+1];
+
+  double *seq, *dist, thresh;
+  long count;
+
+  {
+    int kiargs[LEVEL_SHORT_DIPS_KEYCT];
+    yarg_kw_init(knames, kglobs, kiargs);
+
+    int iarg_seq = yarg_kw(nArgs-1, kglobs, kiargs);
+    if(iarg_seq == -1) y_error("must provide 1 argument");
+    if(yarg_kw(iarg_seq-1, kglobs, kiargs) != -1) {
+      y_error("must provide only 1 argument");
+    }
+
+    // Retrieve seq
+    long dims[Y_DIMSIZE];
+    seq = ygeta_d(iarg_seq, &count, dims);
+
+    // Retrieve thresh or use default of 10
+    thresh = (kiargs[1] == -1) ? 10. : ygets_d(kiargs[1]);
+
+    // Retrieve dist, if provided.
+    if(kiargs[0] == -1) {
+      // If not provided, push a new array on the stack to use for dist. Then
+      // increment iarg_seq to reflect it's new position (in case we need it
+      // later).
+      dist = ypush_d(dims);
+      long i;
+      for(i = 0; i < count; i++)
+        dist[i] = i+1;
+      iarg_seq++;
+    } else {
+      // If provided, then retrieve and make sure the count matches. Don't
+      // worry about checking dimensions.
+      long count_dist;
+      dist = ygeta_d(kiargs[0], &count_dist, 0);
+      if(count_dist != count)
+        y_error("array for dist= must have same size as seq");
+    }
+
+    // If seq is a scratch variable, re-use for return variable (saves us from
+    // having to copy it). Otherwise, push a new array on the stack for the
+    // return value and copy seq to it; then use that as seq instead.
+    if(yarg_scratch(iarg_seq)) {
+      yarg_swap(0, iarg_seq);
+    } else {
+      double *tmp = ypush_d(dims);
+      long i;
+      for(i = 0; i < count; i++)
+        tmp[i] = seq[i];
+      seq = tmp;
+    }
+  }
+
   long pass, r1, r2, i, j;
   double b1, b2, lower, upper;
 

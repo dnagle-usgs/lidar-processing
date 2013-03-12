@@ -88,6 +88,8 @@ extern interp_angles;
     rad= Set to 1 if the angles are in radians. By default, this assumes
       degrees.
 */
+// If you change this documentation, be sure to also change the documentation
+// in core ALPS.
 
 // *** defined in gridding.c ***
 
@@ -139,10 +141,49 @@ extern _yin_box;
 
 // *** defined in lines.c ***
 
-extern _ylevel_short_dips;
-/* PROTOTYPE
-  void level_short_dips(double *seq, double *dist, double thresh, long count)
+extern level_short_dips;
+/* DOCUMENT leveled = level_short_dips(seq, dist=, thresh=)
+  Removes short "dips" in a data array, smoothing out some of its "noise".
+
+  seq should be a 1-dimensional array of numerical values. For example:
+    seq=[4,4,4,3,3,4,4,4,5,5,5,6,5,5]
+
+  The sequnce of "3,3" in the above is a short "dip". This function is
+  intended to smooth that sort of thing out:
+    leveled=[4,4,4,4,4,4,4,4,5,5,5,6,5,5]
+
+  Short peaks will be left alone; only short dips will be leveled.
+
+  Parameter:
+    seq: An array of numbers with values to be smoothed out.
+
+  Options:
+    dist= If provided, this must be the same length of seq. It defaults to
+      [1,2,3...numberof(seq)]. This is used with thresh to determine which
+      items on either side of a value are used for comparisons. This array
+      is the cummulative differences of distances from point to point. (So
+      the default assumes they are equally spaced.)
+    thresh= The threshold for how far on either side of a value the algorithm
+      should look for determining whether it's a dip. Default is 10.
+
+  Examples:
+    > seq = [2,2,1,0,0,0,0,0,1,2,2,1,1,2,2,3]
+    > seq
+    [2,2,1,0,0,0,0,0,1,2,2,1,1,2,2,3]
+    > level_short_dips(seq, thresh=2)
+    [2,2,1,0,0,0,0,0,1,2,2,2,2,2,2,3]
+    > level_short_dips(seq, thresh=4)
+    [2,2,1,1,1,1,1,1,1,2,2,2,2,2,2,3]
+    > level_short_dips(seq, thresh=5)
+    [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3]
+    > dist = [2,1,1,2,1,1,2,1,1,2,1,1,2,1,1](cum)
+    > dist
+    [0,2,3,4,6,7,8,10,11,12,14,15,16,18,19,20]
+    > level_short_dips(seq, thresh=4, dist=dist)
+    [2,2,1,0,0,0,0,0,1,2,2,2,2,2,2,3]
 */
+// If you change this documentation, be sure to also change the documentation
+// in core ALPS.
 
 // *** defined in ll2utm.c ***
 
