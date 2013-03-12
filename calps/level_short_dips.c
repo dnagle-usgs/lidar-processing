@@ -1,4 +1,4 @@
-// vim: set tabstop=2 softtabstop=2 shiftwidth=2 autoindent shiftround expandtab:
+// vim: set ts=2 sts=2 sw=2 ai sr et:
 #include "yapi.h"
 
 #define LEVEL_SHORT_DIPS_KEYCT 2
