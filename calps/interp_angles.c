@@ -18,12 +18,9 @@
 
 #ifndef SORT_ASC
 
+#include "constants.h"
 #include "yapi.h"
 #include <math.h>
-
-#define PI 3.141592653589793238462643383279502884197
-#define DEG2RAD (PI/180.)
-#define RAD2DEG (180./PI)
 
 static int interp_sorted_desc(double *y, double *x, double *xp, double *yp,
   long count, long countp, long *start, long *stop);
