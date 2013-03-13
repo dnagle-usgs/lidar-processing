@@ -3,7 +3,7 @@
    For processing bathymetry data using the topographic georectification.
 */
 
-func make_fs_bath(d, rrr, avg_surf=, sample_interval=, verbose=) {
+func make_fs_bath(d, rrr, avg_surf=, sample_interval=, verbose=, forcechannel=) {
 /* DOCUMENT make_fs_bath (d, rrr, avg_surf=, sample_interval=, verbose=)
 
   This function makes a depth or bathymetric image using the georectification
@@ -96,15 +96,22 @@ func make_fs_bath(d, rrr, avg_surf=, sample_interval=, verbose=) {
     if(logger(trace)) logger, trace, log_id+"  indx="+pr1(indx);
     if (is_array(indx)) {
       fs_rtn_cent = rrr(i).fs_rtn_centroid(indx)+offset(indx);
+      ba_idx = d(,i).idx(indx) - fs_rtn_cent;
+      if(forcechannel == 4) {
+        // TODO: Why are we doubling this?
+        ba_idx += 2*(ops_conf.chn4_range_bias - ops_conf.chn2_range_bias);
+      }
+      geodepth(i).sr2(indx) = long(ba_idx * 10);
       // NOTE: This depth value will be ignored and clobbered by compute_depth
       // if it is used.
-      geodepth(i).depth(indx) = int((-d(,i).idx(indx) + fs_rtn_cent) * CNSH2O2X *100.-0.5);
-      geodepth(i).sr2(indx) =int((d(,i).idx(indx) - fs_rtn_cent)*10);
+      geodepth(i).depth(indx) = int((-ba_idx) * CNSH2O2X *100.-0.5);
     }
   }
 
   if(logger(debug)) logger, debug, log_id+"Storing remaining results to geodepth";
-  if(has_member(rrr, "channel") && has_member(geodepth, "channel"))
+  if(forcechannel)
+    geodepth.channel = forcechannel;
+  else if(has_member(rrr, "channel") && has_member(geodepth, "channel"))
     geodepth.channel = rrr.channel;
 
   geodepth.rn = rrr.rn;
@@ -294,8 +301,9 @@ func make_bathy(latutm=, q=, avg_surf=, ext_bad_att=, forcechannel=, verbose=) {
         pause, 1; // make sure Yorick shows output
       }
       status, start, msg=msg;
+      fschannel = (forcechannel == 4) ? 2 : forcechannel;
       surface = first_surface(start=raster_starts(i), stop=raster_stops(i),
-        usecentroid=1, ext_bad_att=ext_bad_att, forcechannel=forcechannel,
+        usecentroid=1, ext_bad_att=ext_bad_att, forcechannel=fschannel,
         msg=msg, verbose=verbose);
 
       msg = msg_prefix + "Step 3/3: Merging and correcting depths...";
@@ -304,7 +312,7 @@ func make_bathy(latutm=, q=, avg_surf=, ext_bad_att=, forcechannel=, verbose=) {
         write, "Using make_fs_bath for submerged topography...";
         pause, 1; // make sure Yorick shows output
       }
-      depth = make_fs_bath(depth, surface, avg_surf=avg_surf,
+      depth = make_fs_bath(depth, surface, avg_surf=avg_surf, forcechannel=forcechannel,
         verbose=max(0,verbose-1), sample_interval=sample_interval);
 
       // make depth correction using compute_depth
