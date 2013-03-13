@@ -185,7 +185,7 @@ func status_finished {
 }
 finished = status_finished;
 
-func status_noop(a, b, count=, interval=) {}
+func status_noop(a, b, count=, interval=, msg=) {}
 
 if(!_ytk) {
   start = progress = finished = status_noop;
