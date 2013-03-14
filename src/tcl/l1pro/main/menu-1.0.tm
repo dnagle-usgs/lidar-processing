@@ -356,7 +356,7 @@ proc menu_debug mb {
 
 proc load_and_launch_missconf {} {
     if {[::mission::load_conf -parent .l1wid]} {
-        ::mission::launch
+        exp_send "tkcmd, \"mission::launch\";\r"
     }
 }
 
