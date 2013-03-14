@@ -27,7 +27,7 @@ proc get_file { sock addr } {
    # puts [llength $res]
    set fn [ lindex $res 0 ]
    if { [ llength $res] > 0 } {
-      set myt [ clock format [clock seconds] -format "%H:%M:%S"]
+      set myt [ clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
       catch { exec mv $jdir/$fn $fdir } res
       puts $log "$myt send: $addr $sock ($fdir) $fn"; flush $log;
       puts "send: $addr $sock ($fdir) $fn"
@@ -47,7 +47,7 @@ proc get_file { sock addr } {
 
 proc Service { sock addr } {
    global fdir jdir echo status assigned completed delta start stop updated log
-   set myt [ clock format [clock seconds] -format "%H:%M:%S"]
+   set myt [ clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
 
    # puts "Service: $sock $addr"
    if { [eof $sock] || [ catch { gets $sock line } ]} {
@@ -144,7 +144,7 @@ proc Service { sock addr } {
 proc check_for_files { } {
    global echo sock status assigned completed delta start stop updated
 
-   set myt [ clock format [clock seconds] -format "%H:%M:%S"]
+   set myt [ clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
    puts -nonewline "$myt: Timer expired: "
    alarm 10 ; # reset the clock
 
@@ -243,7 +243,7 @@ if { $host eq "server" } {
    signal trap  [ list ALRM ] check_for_files
    make_dirs
    alarm 5
-   set myd [ clock format [clock seconds] -format "%Y-%m-%d_%H:%M:%S"]
+   set myd [ clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
    puts $myd
    if { [catch { set log [open "/tmp/batch/logs/$myd.log" w] } ] } {
       puts "Failed to create $myd logfile"
@@ -285,7 +285,7 @@ proc client'read sock {
    set lst [ split $line " "]
    set cmd [ lindex $lst 0 ]
    set args [ lrange $lst 1 end ]
-   set myt [ clock format [clock seconds] -format "%H:%M:%S"]
+   set myt [ clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
    puts "$myt CMD: $cmd: $args"
    switch $cmd {
       file: {
