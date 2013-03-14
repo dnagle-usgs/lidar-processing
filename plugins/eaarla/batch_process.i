@@ -291,16 +291,19 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
           system, cmd;
           write, "rsyncing finished";
         }
+      }
 
-        if (typ == 0)
-          new_file = file_rootname(pofn)+"_f.pbd";
-        if (typ == 1)
-          new_file = file_rootname(pofn)+"_b.pbd";
-        if (typ == 2)
-          new_file = file_rootname(pofn)+"_v.pbd";
+      if (typ == 0)
+        new_file = file_rootname(pofn)+"_f.pbd";
+      if (typ == 1)
+        new_file = file_rootname(pofn)+"_b.pbd";
+      if (typ == 2)
+        new_file = file_rootname(pofn)+"_v.pbd";
 
-        //does not work for typ=3
-        new_file = file_tail(new_file); // only file name (removed path);
+      //does not work for typ=3
+      new_file = file_tail(new_file); // only file name (removed path);
+
+      if (update) {
         scmd = swrite(format = "find %s -name '%s'",save_dir, new_file);
         nf = 0;
         s = array(string, 1);
