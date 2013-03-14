@@ -92,7 +92,7 @@ func save_vars (filename, tile=) {
   }
   save, f, ext_bad_att, bath_ctl, bath_ctl_chn4;
   if(!is_void(forcechannel))
-    save, forcechannel;
+    save, f, forcechannel;
 
   close, f;
   // This makes sure the file is completely written before batcher.tcl has a chance
