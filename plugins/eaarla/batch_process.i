@@ -314,9 +314,9 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
           // continue; // RWM
           return update;
         }
-        write, format="Generating tile: %s\n", new_file;
         update=0;  // if the tile was updated, force rcf to process.
       }
+      write, format="Generating tile: %s\n", new_file;
 
       mkdirp, swrite(format="%si_e%d_n%d_%s", save_dir, idx_e, idx_n, zone_s);
       mkdirp, swrite(format="%si_e%d_n%d_%s/t_e%6.0f_n%7.0f_%s", save_dir, idx_e, idx_n, zone_s, min_e, max_n, zone_s);
