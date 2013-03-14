@@ -2,8 +2,11 @@
 require, "logger.i";
 
 func package_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
-
-  ppath = swrite(format="/tmp/batch/prep/job-t_e%6.0f_n%7.0f_%s.cmd", min_e, max_n, zone_s);
+  ppath = swrite(format="/tmp/batch/prep/job-t_e%6.0f_n%7.0f_%s_typ%d",
+    min_e, max_n, zone_s, typ);
+  if(!is_void(forcechannel))
+    ppath += swrite(format="_chn%d", forcechannel);
+  ppath += swrite(format="_pid%d.cmd", _pid);
   jpath = swrite(format="%s", "/tmp/batch/jobs/");
   save_vars, ppath, tile=1;
   cmd = swrite(format="mv %s %s", ppath, jpath);
