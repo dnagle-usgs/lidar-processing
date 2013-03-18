@@ -76,13 +76,13 @@ func mission_constants(args) {
     tx_clean=8
     dmars_invert=0
     use_ins_for_gps=0
-    chn1_dx=-0.42
-    chn1_dy=-1.67
+    chn1_dx=-0.117
+    chn1_dy=-1.6
     chn2_dx=0
     chn2_dy=0
-    chn3_dx=-0.42
-    chn3_dy=1.67
-    chn4_dx=0
+    chn3_dx=-0.117
+    chn3_dy=1.6
+    chn4_dx=-0.117
     chn4_dy=0
     delta_ht=300
 
@@ -164,13 +164,13 @@ func mission_constants(args) {
       chn2_range_bias=-12.105,
       chn3_range_bias=-10.564,
       chn4_range_bias=-18.985,
-      chn1_dx=-0.42,
-      chn1_dy=-1.67,
+      chn1_dx=-0.117,
+      chn1_dy=-1.6,
       chn2_dx=0.,
       chn2_dy=0.,
-      chn3_dx=-0.42,
-      chn3_dy=1.67,
-      chn4_dx=0.,
+      chn3_dx=-0.117,
+      chn3_dy=1.6,
+      chn4_dx=-0.117,
       chn4_dy=0.,
       delta_ht=300.,
       tx_clean=8s,
@@ -294,13 +294,13 @@ wrap_args, mission_constants;
   ops_eaarlb.chn2_range_bias = -12.105; // = -1.814 / NS2MAIR;
   ops_eaarlb.chn3_range_bias = -10.564; // = -1.583 / NS2MAIR;
   ops_eaarlb.chn4_range_bias = -18.985; // = -2.845 / NS2MAIR;
-  ops_eaarlb.chn1_dx = -0.42;
-  ops_eaarlb.chn1_dy = -1.67;
+  ops_eaarlb.chn1_dx = -0.117;
+  ops_eaarlb.chn1_dy = -1.6;
   ops_eaarlb.chn2_dx = 0.;
   ops_eaarlb.chn2_dy = 0.;
-  ops_eaarlb.chn3_dx = -0.42;
-  ops_eaarlb.chn3_dy = 1.67;
-  ops_eaarlb.chn4_dx = 0.;
+  ops_eaarlb.chn3_dx = -0.117;
+  ops_eaarlb.chn3_dy = 1.6;
+  ops_eaarlb.chn4_dx = -0.117;
   ops_eaarlb.chn4_dy = 0.;
   ops_eaarlb.delta_ht = 300.;
   ops_eaarlb.max_sfc_sat = 2;
