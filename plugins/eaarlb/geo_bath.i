@@ -301,9 +301,8 @@ func make_bathy(latutm=, q=, avg_surf=, ext_bad_att=, forcechannel=, verbose=) {
         pause, 1; // make sure Yorick shows output
       }
       status, start, msg=msg;
-      fschannel = (forcechannel == 4) ? 2 : forcechannel;
       surface = first_surface(start=raster_starts(i), stop=raster_stops(i),
-        usecentroid=1, ext_bad_att=ext_bad_att, forcechannel=fschannel,
+        usecentroid=1, ext_bad_att=ext_bad_att, forcechannel=forcechannel,
         msg=msg, verbose=verbose);
 
       msg = msg_prefix + "Step 3/3: Merging and correcting depths...";

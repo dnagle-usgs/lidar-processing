@@ -72,12 +72,12 @@ func pcr(rast, pulse, forcechannel=) {
 
   channel = 0;
   if(!is_void(forcechannel)) {
-    channel = forcechannel;
-    rx = *rast.rx(pulse,forcechannel);
+    channel = (forcechannel == 4 ? 2 : forcechannel);
+    rx = *rast.rx(pulse,channel);
     if(!numberof(rx)) return;
     rx_centroid = cent(rx);
     rx_centroid(1:2) += get_member(ops_conf,
-        swrite(format="chn%d_range_bias", forcechannel));
+        swrite(format="chn%d_range_bias", channel));
     nsat = numberof(where(rx(1:np) <= 1));
     // This ensures we get contrast even on waveforms where the peak is
     // saturated.
