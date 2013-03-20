@@ -935,7 +935,7 @@ func mission_reload(flight) {
   // Deleting the cached data will force 'mission, load' to load from file for
   // everything.
   mission, unload;
-  save, mission.data.cache, noop(flight), save();
+  save, mission.data, cache=obj_delete(mission.data.cache, noop(flight));
   mission, load, flight;
 }
 reload = mission_reload;
