@@ -16,8 +16,8 @@ func set_contains(A, b) {
   return result;
 }
 
-func set_intersection(A, B, idx=, delta=) {
-/* DOCUMENT set_intersection(A, B, idx=, delta=)
+func set_intersection(A, B, idx=) {
+/* DOCUMENT set_intersection(A, B, idx=)
 
   Returns the intersection of the sets represented by A and B.
 
@@ -31,17 +31,13 @@ func set_intersection(A, B, idx=, delta=) {
 
     idx= Set to 1 and the index of the intersection set into A will be
       returned instead of the elements.
-
-    delta= If provided, this provides the range over which values are
-      considered equal, useful when dealing with floats and doubles.
 */
   default, idx, 0;
-  default, delta, 0;
-  return _set_intersection_master(A, B, 1, idx, delta);
+  return _set_intersection_master(A, B, 1, idx);
 }
 
-func set_difference(A, B, idx=, delta=) {
-/* DOCUMENT set_difference(A, B, idx=, delta=)
+func set_difference(A, B, idx=) {
+/* DOCUMENT set_difference(A, B, idx=)
 
   Returns the difference of the sets represented by A and B.
 
@@ -58,17 +54,13 @@ func set_difference(A, B, idx=, delta=) {
 
     idx= Set to 1 and the index of the difference set into A will be returned
       instead of the elements.
-
-    delta= If provided, this provides the range over which values are
-      considered equal, useful when dealing with floats and doubles.
 */
   default, idx, 0;
-  default, delta, 0;
-  return _set_intersection_master(A, B, 0, idx, delta);
+  return _set_intersection_master(A, B, 0, idx);
 }
 
-func _set_intersection_master(A, B, flag, idx, delta) {
-/* DOCUMENT _set_intersection_master(A, B, flag, idx, delta)
+func _set_intersection_master(A, B, flag, idx) {
+/* DOCUMENT _set_intersection_master(A, B, flag, idx)
   Master function for set_intersection and set_difference. See
   set_intersection or set_difference for explanation of parameters.
 
@@ -79,7 +71,6 @@ func _set_intersection_master(A, B, flag, idx, delta) {
     _yset_intersect_double
     _yset_intersect_long
     _set_intersect_generic
-    _set_intersect_delta
 */
   // Trivial cases
   if(! numberof(A))
@@ -107,17 +98,14 @@ func _set_intersection_master(A, B, flag, idx, delta) {
     is_numerical(A) && is_numerical(B) && is_func(_yset_intersect_long) &&
     is_func(_yset_intersect_double)
   ) {
-    if(delta || is_real(A) || is_real(B)) {
-      _yset_intersect_double, C, A, an, B, bn, flag, double(delta);
+    if(is_real(A) || is_real(B)) {
+      // 0. is for delta
+      _yset_intersect_double, C, A, an, B, bn, flag, 0.;
     } else {
       _yset_intersect_long, C, A, an, B, bn, flag;
     }
   } else {
-    if(delta) {
-      _set_intersect_delta, C, A, an, B, bn, flag, delta;
-    } else {
-      _set_intersect_generic, C, A, an, B, bn, flag;
-    }
+    _set_intersect_generic, C, A, an, B, bn, flag;
   }
   index = where(C);
   if(idx)
@@ -148,26 +136,6 @@ func _set_intersect_generic(C, A, An, B, Bn, flag) {
   }
 }
 
-func _set_intersect_delta(result, A, An, B, Bn, flag, delta) {
-/* DOCUMENT _set_intersect_delta, C, A, An, B, Bn, flag, delta;
-  Helper for _set_intersect_master suitable for using on any input that can be
-  treated as numbers.
-*/
-  ai = bi = 1;
-  while(ai <= an && bi <= bn) {
-    if(abs(A(ai) - B(bi)) <= delta) {
-      C(ai) = flag;
-      ai++;
-      bi++;
-    } else {
-      if(A(ai) < B(bi))
-        ai++;
-      else
-        bi++;
-    }
-  }
-}
-
 func set_intersect3(A, B) {
 /* DOCUMENT result = set_intersect3(A, B)
 
@@ -181,7 +149,7 @@ func set_intersect3(A, B) {
     result.right  -or-  result(3)
       Items in B that are not in A. (B - A)
 
-  Unlike other set commands, this does not accept idx= or delta= options.
+  Unlike other set commands, this does not accept the idx= option.
 */
   C = set_union(A, B);
   state = array(0, numberof(C));
@@ -201,8 +169,8 @@ func set_intersect3(A, B) {
   return result;
 }
 
-func set_symmetric_difference(A, B, delta=) {
-/* DOCUMENT set_symmetric_difference(A, B, delta=)
+func set_symmetric_difference(A, B) {
+/* DOCUMENT set_symmetric_difference(A, B)
 
   Returns the symmetric difference of the sets represented by A and B.
 
@@ -212,14 +180,8 @@ func set_symmetric_difference(A, B, delta=) {
   The elements of set_symmetric_difference(a,b) and
   set_symmetric_difference(b,a) will be the same, but the arrays may not be
   ordered the same.
-
-  Options:
-
-    delta= If provided, this provides the range over which values are
-      considered equal, useful when dealing with floats and doubles.
 */
-  default, delta, 0;
-  return grow(set_difference(A, B, delta=delta), set_difference(B, A, delta=delta));
+  return grow(set_difference(A, B), set_difference(B, A));
 }
 
 func set_union(A, B) {
@@ -259,8 +221,8 @@ func set_cartesian_product(A, B) {
   return C;
 }
 
-func set_remove_duplicates(A, idx=, delta=) {
-/* DOCUMENT set_remove_duplicates(A, idx=, delta=)
+func set_remove_duplicates(A, idx=) {
+/* DOCUMENT set_remove_duplicates(A, idx=)
 
   Returns the set A with its duplicate elements removed. The returned list
   will also be sorted.
@@ -270,9 +232,6 @@ func set_remove_duplicates(A, idx=, delta=) {
   SEE ALSO: unique
 */
   default, idx, 0;
-  default, delta, 0;
-  if(delta)
-    return set_remove_duplicates_delta(A, delta=delta, idx=idx);
 
   // Trivial/edge cases
   if(! numberof(A))
@@ -319,41 +278,6 @@ func set_remove_duplicates(A, idx=, delta=) {
   if(idx) A = indgen(numberof(unref(A)));
 
   return A(srt)(unq);
-}
-
-func set_remove_duplicates_delta(A, delta=, idx=) {
-  extern EPSILON;
-  default, delta, EPSILON;
-  default, idx, 0;
-
-  // Trivial/edge cases
-  if(! numberof(A))
-    return [];
-  if(numberof(A) == 1)
-    return idx ? [1] : A;
-
-  // Eliminate any dimensionality
-  A = unref(A)(*);
-
-  // Eliminate duplicates in the initial sequence. Valuable when there are a
-  // large number of items that take a long time to sort, especially with
-  // strings.
-  seq = where(grow([1n], abs(A(:-1) - A(2:)) > delta));
-
-  // If there's only one item, we're done!
-  if(numberof(seq) == 1)
-    return idx ? seq : A(seq);
-
-  // Sort them
-  srt = sort(A(seq));
-
-  // Eliminate duplicates in the sorted sequence
-  unq = where(grow([1n], abs(A(seq)(srt)(:-1) - A(seq)(srt)(2:)) > delta));
-
-  // If they want indices, we want to index into an index list instead of A
-  if(idx) A = indgen(numberof(unref(A)));
-
-  return A(seq)(srt)(unq);
 }
 
 func set_remove_duplicates_string(A, idx=) {
