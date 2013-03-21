@@ -173,17 +173,9 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
   result = [];
   numchans = numberof(channel);
   for(i = 1; i <= numchans; i++) {
-    if(i == numchans) {
-      curpulses = pulses;
-    } else {
-      curpulses = obj_copy(pulses);
-    }
+    curpulses = (i == numchans) ? pulses : obj_copy(pulses);
     save, curpulses, channel=array(channel(i), numberof(pulses.tx));
-    if(is_void(result)) {
-      result = curpulses;
-    } else {
-      result = obj_grow(result, curpulses);
-    }
+    result = is_void(result) ? curpulses : obj_grow(result, curpulses);
   }
   pulses = result;
   result = curpulses = [];
