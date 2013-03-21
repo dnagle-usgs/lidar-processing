@@ -143,13 +143,14 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
   if(is_void(ops_conf))
     error, "ops_conf is not set";
 
-  // Set up default functions for fs_tx and fs_rx
+  // Set up default functions
   fs_tx = eaarl_fs_tx_cent;
-  fs_rx = eaarl_fs_rx_cent;
   fs_traj = eaarl_fs_trajectory;
   if(channel(1)) {
+    fs_rx = eaarl_fs_rx_cent_eaarlb;
     fs_spacing = eaarl_fs_spacing;
   } else {
+    fs_rx = eaarl_fs_rx_cent_eaarla;
     fs_spacing = noop;
   }
 
@@ -169,6 +170,24 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
   // Determine tx offsets; adds ftx
   fs_tx, pulses;
 
+  result = [];
+  numchans = numberof(channel);
+  for(i = 1; i <= numchans; i++) {
+    if(i == numchans) {
+      curpulses = pulses;
+    } else {
+      curpulses = obj_copy(pulses);
+    }
+    save, pulses, channel=array(channel(i), numberof(pulses.tx));
+    if(is_void(result)) {
+      result = curpulses;
+    } else {
+      result = obj_grow(result, curpulses);
+    }
+  }
+  pulses = result;
+  result = curpulses = [];
+
   // Interpolate trajectory
   traj = fs_traj(pulses.soe);
 
@@ -182,62 +201,42 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
   lasang = 45.0 - .4;
   cyaw = 0.;
 
+  // Determine rx offsets; adds frx, fint, fchannel
+  fs_rx, pulses;
+
+  // Throw away bogus returns
+  // 10000 is the bogus return value
+  w = where(pulses.frx != 10000);
+  if(!numberof(w)) return;
+
+  if(numberof(w) < numberof(pulses.frx)) {
+    pulses = obj_index(pulses, w);
+    traj = obj_index(traj, w);
+  }
+
   // Calculate scan angles
   scan_angles = SAD * (pulses.scan_angle + ops_conf.scan_bias);
 
-  result = [];
-  numchans = numberof(channel);
-  for(i = 1; i <= numchans; i++) {
-    if(i == numchans) {
-      curpulses = pulses;
-    } else {
-      curpulses = obj_copy(pulses);
-    }
-    curtraj = traj;
-    curlasang = lasang;
-    curscan = scan_angles;
+  // Calculate angles for channel spacing
+  lasang = array(lasang, numberof(pulses.channel));
+  fs_spacing, pulses.channel, scan_angles, lasang;
 
-    // Determine rx offsets; adds frx, fint, fchannel
-    fs_rx, curpulses, channel=channel(i);
+  // Calculate magnitude of vectors from mirror to ground
+  fs_slant_range = NS2MAIR * sample_interval * (
+      pulses.irange + pulses.frx - pulses.ftx + pulses.fbias
+    ) - ops_conf.range_biasM;
 
-    // Throw away bogus returns
-    // 10000 is the bogus return value
-    w = where(curpulses.frx != 10000);
-    if(!numberof(w)) continue;
+  eaarl_direct_vector,
+    traj.yaw, traj.pitch, traj.roll,
+    traj.easting, traj.northing, traj.alt,
+    dx, dy, dz,
+    cyaw,
+    lasang,
+    mirang, scan_angles, fs_slant_range,
+    mx, my, mz, fx, fy, fz;
 
-    if(numberof(w) < numberof(curpulses.frx)) {
-      curpulses = obj_index(curpulses, w);
-      curtraj = obj_index(curtraj, w);
-      curscan = curscan(w);
-    }
-
-    // Calculate magnitude of vectors from mirror to ground
-    fs_slant_range = NS2MAIR * sample_interval * (
-        curpulses.irange + curpulses.frx - curpulses.ftx + curpulses.fbias
-      ) - ops_conf.range_biasM;
-
-    // Calculate angles for channel spacing
-    fs_spacing, channel(i), curscan, curlasang;
-
-    eaarl_direct_vector,
-      curtraj.yaw, curtraj.pitch, curtraj.roll,
-      curtraj.easting, curtraj.northing, curtraj.alt,
-      dx, dy, dz,
-      cyaw,
-      curlasang,
-      mirang, curscan, fs_slant_range,
-      mx, my, mz, fx, fy, fz;
-
-    // Add mirror and first return coordinates to pulses object
-    save, curpulses, fs_slant_range, mx, my, mz, fx, fy, fz;
-
-    if(is_void(result)) {
-      result = curpulses;
-    } else {
-      result = obj_grow(result, curpulses);
-    }
-  }
-  pulses = result;
+  // Add mirror and first return coordinates to pulses object
+  save, pulses, fs_slant_range, mx, my, mz, fx, fy, fz;
 
   if(is_void(pulses)) return;
 
@@ -328,8 +327,8 @@ func eaarl_fs_rx_cent_eaarla(pulses) {
   save, pulses, frx, fint, fchannel, fbias;
 }
 
-func eaarl_fs_rx_cent_eaarlb(pulses, channel) {
-/* DOCUMENT eaarl_fs_rx_cent_eaarlb, pulses, channel
+func eaarl_fs_rx_cent_eaarlb(pulses) {
+/* DOCUMENT eaarl_fs_rx_cent_eaarlb, pulses
   Updates the given pulses oxy group object with first return info using the
   centroid from the specified channel. The following fields are added to
   pulses:
@@ -344,12 +343,20 @@ func eaarl_fs_rx_cent_eaarlb(pulses, channel) {
   // 10000 is the "bad data" value that cent will return, match that
   frx = array(float(10000), npulses);
   fint = array(float, npulses);
-  fchannel = array(char(channel), npulses);
-  fbias = array(get_member(ops_conf,
-    swrite(format="chn%d_range_bias", channel)), npulses);
+  fchannel = pulses.channel;
+
+  w = where(fchannel == 4);
+  if(numberof(w))
+    fchannel(w) = 2;
+
+  fbias = [
+    ops_conf.chn1_range_bias,
+    ops_conf.chn2_range_bias,
+    ops_conf.chn3_range_bias
+  ](fchannel);
 
   for(i = 1; i <= npulses; i++) {
-    wf = *pulses.rx(channel,i);
+    wf = *pulses.rx(fchannel(i),i);
     np = numberof(wf);
 
     // Give up if not at least 2 points
@@ -368,17 +375,6 @@ func eaarl_fs_rx_cent_eaarlb(pulses, channel) {
   }
 
   save, pulses, frx, fint, fchannel, fbias;
-}
-
-func eaarl_fs_rx_cent(pulses, channel=) {
-/* DOCUMENT eaarl_fs_rx_cent, pulses, channel=
-  This is a temporary glue function. It calls either eaarl_fs_rx_eaarla or
-  eaarl_fs_rx_eaarlb as appropriate.
-*/
-  if(!channel)
-    eaarl_fs_rx_cent_eaarla, pulses;
-  else
-    eaarl_fs_rx_cent_eaarlb, pulses, channel;
 }
 
 func eaarl_fs_trajectory(soe) {
@@ -441,18 +437,24 @@ func eaarl_fs_spacing(channel, &scan_angles, &lasang) {
   // If delta_ht is missing, we can't calculate spacing; assume EAARL-A
   // If delta_ht is present, assume other fields are also present
   if(!has_member(ops_conf, "delta_ht")) return;
-
-  chandx = get_member(ops_conf, swrite(format="chn%d_dx", channel));
-  chandy = get_member(ops_conf, swrite(format="chn%d_dy", channel));
   chandz = ops_conf.delta_ht;
 
-  if(chandx && chandz) {
-    chantx = atan(chandx, chandz) * RAD2DEG;
-    scan_angles -= chantx;
-  }
+  channels = set_remove_duplicates(channel);
+  for(i = 1; i <= numberof(channels); i++) {
+    chan = channels(i);
+    w = where(chan == channel);
 
-  if(chandy && chandz) {
-    chanty = atan(chandy, chandz) * RAD2DEG;
-    lasang -= chanty;
+    chandx = get_member(ops_conf, swrite(format="chn%d_dx", chan));
+    chandy = get_member(ops_conf, swrite(format="chn%d_dy", chan));
+
+    if(chandx && chandz) {
+      chantx = atan(chandx, chandz) * RAD2DEG;
+      scan_angles(w) -= chantx;
+    }
+
+    if(chandy && chandz) {
+      chanty = atan(chandy, chandz) * RAD2DEG;
+      lasang(w) -= chanty;
+    }
   }
 }
