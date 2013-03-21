@@ -274,6 +274,7 @@ func eaarl_fs_rx_cent_eaarla(pulses) {
     fint - Peak intensity value of first return
     fchannel - Channel used
     fbias - The channel range bias (ops_conf.chn%d_range_bias)
+  Also, channel is replaced by fchannel.
 */
   extern ops_conf;
 
@@ -324,7 +325,7 @@ func eaarl_fs_rx_cent_eaarla(pulses) {
     fint(i) = rx_cent(3);
   }
 
-  save, pulses, frx, fint, fchannel, fbias;
+  save, pulses, frx, fint, fchannel, fbias, channel=fchannel;
 }
 
 func eaarl_fs_rx_cent_eaarlb(pulses) {
