@@ -212,7 +212,7 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
     }
 
     // Calculate magnitude of vectors from mirror to ground
-    slant_range = NS2MAIR * sample_interval * (
+    fs_slant_range = NS2MAIR * sample_interval * (
         curpulses.irange + curpulses.frx - curpulses.ftx + curpulses.fbias
       ) - ops_conf.range_biasM;
 
@@ -225,11 +225,11 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
       dx, dy, dz,
       cyaw,
       curlasang,
-      mirang, curscan, slant_range,
+      mirang, curscan, fs_slant_range,
       mx, my, mz, fx, fy, fz;
 
     // Add mirror and first return coordinates to pulses object
-    save, curpulses, mx, my, mz, fx, fy, fz;
+    save, curpulses, fs_slant_range, mx, my, mz, fx, fy, fz;
 
     if(is_void(result)) {
       result = curpulses;
