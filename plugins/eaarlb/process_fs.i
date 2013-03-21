@@ -68,7 +68,8 @@ func make_fs_new(q=, ply=, ext_bad_att=, channel=, verbose=) {
     pause, 1; // make sure Yorick shows output
     pulses = process_fs(rn_start(i), rn_stop(i), channel=channel,
       ext_bad_att=ext_bad_att);
-    fs_all(i) = &fs_struct_from_obj(pulses);
+    if(!is_void(pulses))
+      fs_all(i) = &fs_struct_from_obj(pulses);
     status, progress, rn_counts(i), rn_counts(0);
   }
   status, finished;
