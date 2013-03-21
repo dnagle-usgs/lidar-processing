@@ -98,7 +98,7 @@ func fs_struct_from_obj(pulses) {
   result.elevation = long(pulses.fz * 100);
   result.intensity = pulses.fint;
   result.soe = pulses.soe;
-  result.channel = pulses.fchannel;
+  result.channel = pulses.channel;
   return result;
 }
 
@@ -178,7 +178,7 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
     } else {
       curpulses = obj_copy(pulses);
     }
-    save, pulses, channel=array(channel(i), numberof(pulses.tx));
+    save, curpulses, channel=array(channel(i), numberof(pulses.tx));
     if(is_void(result)) {
       result = curpulses;
     } else {
