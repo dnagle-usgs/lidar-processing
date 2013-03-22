@@ -109,10 +109,8 @@ func make_fs_bath(d, rrr, avg_surf=, sample_interval=, verbose=, forcechannel=) 
   }
 
   if(logger(debug)) logger, debug, log_id+"Storing remaining results to geodepth";
-  if(forcechannel)
-    geodepth.channel = forcechannel;
-  else if(has_member(rrr, "channel") && has_member(geodepth, "channel"))
-    geodepth.channel = rrr.channel;
+  if(has_member(d, "channel") && has_member(geodepth, "channel"))
+    geodepth.channel = d.channel;
 
   geodepth.rn = rrr.rn;
   geodepth.north = rrr.north;

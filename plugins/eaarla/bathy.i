@@ -10,11 +10,13 @@ local BATHPIX;
     short idx;          // bottom index
     short bottom_peak;  // peak amplitude of bottom signal
     short first_peak;   // peak amplitude of the surface signal
+    char channel;       // channel used
   };
 */
 struct BATHPIX {
   long rastpix;
   short sa, idx, bottom_peak, first_peak;
+  char channel;
 };
 
 local BATH_CTL;
@@ -300,6 +302,8 @@ xfma=, verbose=) {
 
   restore, hook_invoke("ex_bath_wf",
     save(wf, channel, maxint, saturated, numsat));
+
+  result.channel = channel;
 
   if(!wflen)
     return result;
