@@ -7,7 +7,7 @@ local BATHPIX;
   struct BATHPIX {
     long rastpix;       // raster + pulse << 24
     short sa;           // scan angle
-    short idx;          // bottom index
+    float idx;          // bottom index
     short bottom_peak;  // peak amplitude of bottom signal
     short first_peak;   // peak amplitude of the surface signal
     char channel;       // channel used
@@ -15,7 +15,8 @@ local BATHPIX;
 */
 struct BATHPIX {
   long rastpix;
-  short sa, idx, bottom_peak, first_peak;
+  short sa, bottom_peak, first_peak;
+  float idx;
   char channel;
 };
 

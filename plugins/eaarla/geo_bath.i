@@ -96,10 +96,11 @@ func make_fs_bath(d, rrr, avg_surf=, sample_interval=, verbose=) {
     if(logger(trace)) logger, trace, log_id+"  indx="+pr1(indx);
     if (is_array(indx)) {
       fs_rtn_cent = rrr(i).fs_rtn_centroid(indx)+offset(indx);
+      ba_idx = d(,i).idx(indx) - fs_rtn_cent;
+      geodepth(i).sr2(indx) = ba_idx;
       // NOTE: This depth value will be ignored and clobbered by compute_depth
       // if it is used.
-      geodepth(i).depth(indx) = int((-d(,i).idx(indx) + fs_rtn_cent) * CNSH2O2X *100.-0.5);
-      geodepth(i).sr2(indx) =int((d(,i).idx(indx) - fs_rtn_cent)*10);
+      geodepth(i).depth(indx) = int((-ba_idx) * CNSH2O2X *100.-0.5);
     }
   }
 
@@ -145,7 +146,7 @@ func compute_depth(data, sample_interval=) {
   // Force copy so that original isn't modified in place.
   data = noop(data);
 
-  dist = data.sr2/10. * NS2MAIR * sample_interval;
+  dist = data.sr2 * NS2MAIR * sample_interval;
 
   ref = [data.meast/100., data.mnorth/100., data.melevation/100.];
   fs = [data.east/100., data.north/100., data.elevation/100.];
