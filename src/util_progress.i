@@ -137,8 +137,8 @@ func timer_finished(t0, fmt=) {
 }
 
 scratch = save(scratch, tmp, status_start, status_progress, status_finished,
-    status_noop);
-tmp = save(start, progress, finished, cache);
+    status_noop, status_enable, status_disable);
+tmp = save(start, progress, finished, enable, disable, cache);
 
 func status_start(count=, interval=, msg=) {
   use, cache;
@@ -187,11 +187,34 @@ finished = status_finished;
 
 func status_noop(a, b, count=, interval=, msg=) {}
 
+func status_enable(fncs, prior) {
+  default, prior, _ytk;
+  result = status.cache.enabled;
+  if(prior && _ytk) {
+    save, status, start=fncs.start, progress=fncs.progress,
+      finished=fncs.finished;
+    save, status.cache, enabled=1;
+  } else {
+    status, disable;
+  }
+  return result;
+}
+enable = closure(status_enable, save(start, progress, finished));
+
+func status_disable(fncs, void) {
+  result = status.cache.enabled;
+  save, status.cache, enabled=0;
+  save, status, start=fncs.noop, progress=fncs.noop,
+    finished=fncs.noop;
+  return result;
+}
+disable = closure(status_disable, save(noop=status_noop));
+
 if(!_ytk) {
   start = progress = finished = status_noop;
 }
 
-cache = save();
+cache = save(enabled=_ytk!=0);
 
 local status; status = restore(tmp); restore, scratch;
 /* DOCUMENT status
@@ -203,7 +226,8 @@ local status; status = restore(tmp); restore, scratch;
   The status object has three subcommands:
 
   status, start, count=, interval=, msg=
-    Used at the start of a process to initialize the status display. Parameters:
+    Used at the start of a process to initialize the status display.
+    Parameters:
         count= Specifies the number of steps in the task. Only necessary if
           msg= uses the COUNT substitution. Defaults to 1.
         interval= The interval at which the time display will be updated.
@@ -229,6 +253,30 @@ local status; status = restore(tmp); restore, scratch;
     Used to reset the status when processing is finished. The status text will
     be set to "Ready.", the time remaining will be cleared, and the progress
     bar will be emptied.
+
+  status, disable
+  enabled = status(disable,)
+    This will disable the status framework, making all commands no-ops. It
+    returns the previous state for status, 1 if it was enabled and 0 if it
+    was not.
+
+  status, enable
+    This will re-enable the status framework if YTK is available. Otherwise,
+    all commands will remain no-ops.
+
+  status, enable, enabled
+    If "enabled" is 1, it will enable the status framework if YTK is
+    available. Otherwise, it will disable.
+
+  If you need to disable the status framework for a block of code, use this
+  pattern:
+
+    prog_enabled = status(disable,)
+    // code goes here...
+    status, enable, prog_enabled
+
+  The above patterns will function properly even if you have nested disabled
+  blocks.
 
   If YTK is not available at startup, all of these functions will be no-ops.
 */
