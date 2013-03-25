@@ -97,9 +97,6 @@ func make_fs_bath(d, rrr, avg_surf=, sample_interval=, verbose=, forcechannel=) 
     if (is_array(indx)) {
       fs_rtn_cent = rrr(i).fs_rtn_centroid(indx)+offset(indx);
       ba_idx = d(,i).idx(indx) - fs_rtn_cent;
-      if(forcechannel == 4) {
-        ba_idx += (ops_conf.chn4_range_bias - ops_conf.chn2_range_bias);
-      }
       geodepth(i).sr2(indx) = long(ba_idx * 10);
       // NOTE: This depth value will be ignored and clobbered by compute_depth
       // if it is used.
