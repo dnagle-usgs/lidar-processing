@@ -732,6 +732,7 @@ Added server/client support (2009-01) Richard Mitchell
     }
     return;
   }
+  prog_enabled = status(disable,);
 
   extern pnav_filenam, bath_ctl, bath_ctl_chn4, _hgid;
 
@@ -931,7 +932,10 @@ Added server/client support (2009-01) Richard Mitchell
   pldj, max_e, min_n, max_e, max_n, color="yellow"
   pldj, max_e, max_n, min_e, max_n, color="yellow"
 
-  if (onlyplot == 1) return
+  if (onlyplot == 1) {
+    status, enable, prog_enabled;
+    return;
+  }
 
   indx_path = array(string,n);
 
@@ -1034,6 +1038,7 @@ Added server/client support (2009-01) Richard Mitchell
   write, format="Time Statistics in minutes: \n CPU    :%12.4f \n System :%12.4f \n Wall   :%12.4f\n",t(1), t(2), t(3);
   write, format="Walltime: %f: %f - %f\n", myt1-myt0, myt1, myt0;
 
+  status, enable, prog_enabled;
 }
 
 func batch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
