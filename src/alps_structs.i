@@ -183,7 +183,7 @@ local GEO;
     short pulse;        pulse
     long north;         surface northing in cm
     long east;          surface easting in cm
-    short sr2;          slant range first to last return in ns*10
+    float sr2;          slant range first to last return in ns
     long elevation;     first surface elevation in cm
     long mnorth;        mirror northing
     long meast;         mirror easting
@@ -202,7 +202,7 @@ struct GEO {
   long rn, raster;
   short pulse;
   long north, east;
-  short sr2;
+  float sr2;
   long elevation;
   long mnorth, meast, melevation;
   short bottom_peak, first_peak;
@@ -336,7 +336,7 @@ local GEOALL;
     long rn (120);             raster + pulse << 24
     long north(120);           surface northing in cm
     long east(120);            surface easting in cm
-    short sr2(120);            slant range first to last return in ns*10
+    float sr2(120);            slant range first to last return in ns
     long elevation(120);       first surface elevation in cm
     long mnorth(120);          mirror northing
     long meast(120);           mirror easting
@@ -359,7 +359,7 @@ local GEOALL;
 struct GEOALL {
   long rn (120);
   long north(120), east(120);
-  short sr2(120);
+  float sr2(120);
   long elevation(120);
   long mnorth(120), meast(120), melevation(120);
   short bottom_peak(120), first_peak(120);
