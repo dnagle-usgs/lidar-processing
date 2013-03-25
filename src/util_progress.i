@@ -176,7 +176,7 @@ func status_progress(current, count) {
 
   if(!update) return;
 
-  // tkcmd, "::l1pro::status::progress "+swrite(current)+" "+swrite(count);
+  tkcmd, "::l1pro::status::progress "+swrite(current)+" "+swrite(count);
 }
 progress = status_progress;
 
