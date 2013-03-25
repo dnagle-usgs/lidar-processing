@@ -70,7 +70,7 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, _batch=) {
     return [];
   }
 
-  write, format=" %d GGA records found\n", numberof(q);
+  if(verbose) write, format=" %d GGA records found\n", numberof(q);
 
   if(!_batch) {
     seconds = ((gga_find_times(q)(dif,sum)))(1);
