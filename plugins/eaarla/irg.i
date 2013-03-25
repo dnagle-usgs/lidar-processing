@@ -26,7 +26,7 @@ struct RTRS {
   short sa;           // Scan angle counts
   // The location within the return waveform of the first return centroid.
   // This is to used to subtract from the depth idx to get true depth.
-  short fs_rtn_centroid;
+  float fs_rtn_centroid;
   char dropout;       // Specifies whether the tx/rx dropout flags are set
 };
 

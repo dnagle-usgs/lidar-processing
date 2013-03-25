@@ -226,7 +226,7 @@ local R;
     long east(120);               surface east
     long elevation(120);          surface elevation (m)
     short intensity(120);         surface return intensity
-    short fs_rtn_centroid(120);   surface return centroid location w/in waveform
+    float fs_rtn_centroid(120);   surface return centroid location w/in waveform
     double soe(120);              seconds of the epoch
     char channel(120);            channel used if forced; 0 if auto chosen
   };
@@ -238,7 +238,8 @@ struct R {
   long rn(120);
   long mnorth(120), meast(120), melevation(120);
   long north(120), east(120), elevation(120);
-  short intensity(120), fs_rtn_centroid(120);
+  short intensity(120);
+  float fs_rtn_centroid(120);
   double soe(120);
   char channel(120);
 };
