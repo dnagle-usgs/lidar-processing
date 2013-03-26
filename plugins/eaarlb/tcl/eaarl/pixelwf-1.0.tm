@@ -175,7 +175,7 @@ if {![namespace exists ::eaarl::pixelwf]} {
         } {
             foreach var [info vars ${ns}::*] {
                 set var [namespace tail $var]
-                tky_tie append broadcast ${ns}::$var to pixelwfvars.$ns.$var \
+                tky_tie add broadcast ${ns}::$var to pixelwfvars.$ns.$var \
                         -initialize 1
             }
             unset var
@@ -183,7 +183,7 @@ if {![namespace exists ::eaarl::pixelwf]} {
         unset ns
     }
     # Special cases:
-    tky_tie append broadcast ::win_no to pixelwfvars.selection.win \
+    tky_tie add broadcast ::win_no to pixelwfvars.selection.win \
         -initialize 1
 
 }; # (end of: if {![namespace exists ::eaarl::pixelwf]})
