@@ -755,8 +755,8 @@ Added server/client support (2009-01) Richard Mitchell
 
 
   // Create output directory for tile cmd files:
-  system, "mkdir -p /tmp/batch/prep";
-  system, "mkdir -p /tmp/batch/jobs";
+  mkdirp, "/tmp/batch/prep";
+  mkdirp, "/tmp/batch/jobs";
 
   // Get username and pc name of person running batch_process
   user_pc_NAME = [get_host(), get_user()];
