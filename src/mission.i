@@ -921,6 +921,8 @@ func mission_load(flight) {
     write, "         Most likely this means you didn't load a configuration";
     write, "         No data loaded";
   }
+  // Update Tcl with changes to anything that just got loaded
+  tksync, check;
 }
 load = mission_load;
 
@@ -952,6 +954,8 @@ func mission_unload(void) {
     write, "         Most likely this means you didn't load a configuration";
     write, "         No data unloaded";
   }
+  // Update Tcl with changes to anything that just got unloaded
+  tksync, check;
 }
 unload = mission_unload;
 
