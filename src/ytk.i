@@ -3,6 +3,8 @@ require, "rrequire.i";
 require, "ascii_encode.i";
 require, "yeti.i";
 
+require, "ytk_tksync.i";
+
 local ytk;
 /* DOCUMENT ytk
 
