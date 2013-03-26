@@ -539,26 +539,21 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
 // show progress of jobs completed.
 func show_progress(color=) {
   default, color, "red";
-  system, swrite(format="'%s' -rm /tmp/batch/done > /tmp/batch/.tiles",
-    file_join(alpsrc.batcher_dir, "show_tiles.pl"));
-  f = open("/tmp/batch/.tiles");
 
-  col1= col2= col3= col4= array(0, 1000 /* max rows per column */ );
-  read, f, col1, col2, col3, col4;
-  close,f;
+  files = lsdir("/tmp/batch/done");
+  if(!numberof(files)) return;
+  files = files(where(strglob("*.cmd", files)));
+  if(!numberof(files)) return;
 
-  col1 = col1(where(col1));  // Throw away nulls
-  col2 = col2(where(col2));  // Throw away nulls
-  col3 = col3(where(col3));  // Throw away nulls
-  col4 = col4(where(col4));  // Throw away nulls
-
-  if ( is_array( col1 )) {
-    pldj, col1, col3, col1, col4, color=color
-    pldj, col1, col3, col2, col3, color=color
-    pldj, col2, col3, col2, col4, color=color
-    pldj, col2, col4, col1, col4, color=color
+  count = numberof(files);
+  for(i = 1; i <= count; i++) {
+    remove, files(i);
+    bbox = dt2utm(file_tail(files(i)), bbox=1);
+    plg, bbox([1,3,3,1,1]), bbox([2,2,4,4,2]), color=color;
   }
-  window,6;  // seems to help in getting the status plot updated.
+
+  // seems to help in getting the status plot updated
+  window, 6;
 }
 
 // Check space in batch area
