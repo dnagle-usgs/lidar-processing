@@ -19,31 +19,27 @@ if {![namespace exists ::mission]} {
 
         # Corresponds to mission.data.path; read-only.
         variable path ""
-        tky_tie add read ::mission::path \
-                from mission.data.path -initialize 1
+        ybkg tksync add \"mission.data.path\" \"::mission::path\"
 
         # Corresponds to mission.data.loaded; read-only.
         variable loaded ""
-        tky_tie add read ::mission::loaded \
-                from mission.data.loaded -initialize 1
+        ybkg tksync add \"mission.data.loaded\" \"::mission::loaded\"
 
         # Corresponds to mission.data.cache_mode; read-only.
         variable cache_mode ""
-        tky_tie add read ::mission::cache_mode \
-                from mission.data.cache_mode -initialize 1
+        ybkg tksync add \"mission.data.cache_mode\" \"::mission::cache_mode\"
 
         # Corresponds to mission.data.cache_what; read-only.
         variable cache_what ""
-        tky_tie add read ::mission::cache_what \
-                from mission.data.cache_what -initialize 1
+        ybkg tksync add \"mission.data.cache_what\" \"::mission::cache_what\"
 
         # Corresponds to mission.data.missing_file; read-only.
         variable missing_file ""
-        tky_tie add read ::mission::missing_file \
-                from mission.data.missing_file -initialize 1
+        ybkg tksync add \"mission.data.missing_file\" \
+                \"::mission::missing_file\"
 
-        # List of all known detail types; used to populate the dropdown box for
-        # "Detail type:". This should get set by a plugin.
+        # List of all known detail types; used to populate the dropdown box
+        # for "Detail type:". This should get set by a plugin.
         variable detail_types {}
 
         # Dict of -filetypes options for each applicable detail type; used
