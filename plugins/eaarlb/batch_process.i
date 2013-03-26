@@ -2,15 +2,18 @@
 require, "logger.i";
 
 func package_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
-  ppath = swrite(format="/tmp/batch/prep/job-t_e%6.0f_n%7.0f_%s_typ%d",
+  tail = swrite(format="/tmp/batch/prep/job-t_e%6.0f_n%7.0f_%s_typ%d",
     min_e, max_n, zone_s, typ);
   if(!is_void(forcechannel))
-    ppath += swrite(format="_chn%d", forcechannel);
-  ppath += swrite(format="_pid%d.cmd", _pid);
-  jpath = swrite(format="%s", "/tmp/batch/jobs/");
+    tail += swrite(format="_chn%d", forcechannel);
+  tail += swrite(format="_pid%d.cmd", _pid);
+
+  ppath = file_join("/tmp/batch/prep/", tail);
+  jpath = file_join("/tmp/batch/jobs/", tail);
+
   save_vars, ppath, tile=1;
-  cmd = swrite(format="mv %s %s", ppath, jpath);
-  system, cmd;  // want the file to be fully there before the foreman sees it.
+  // want the file to be fully there before the foreman sees it.
+  rename, ppath, jpath;
 }
 
 func package_rcf (ofn) {
