@@ -60,12 +60,8 @@ func package_rcf (ofn) {
 }
 
 func save_vars (filename, tile=) {
-  myi   = strchr( filename, '/', last=1);  // get filename only
-  pt  = strpart( filename, 1:myi);
-  fn  = strpart( filename, myi+1:0 );
-  tfn = swrite(format="%s.%s", pt, fn);
-  cmd = swrite(format="mv %s %s", tfn, filename);
-  f = createb( tfn );
+  tempfn = file_join(file_dirname(filename), "."+file_tail(filename));
+  f = createb(tempfn);
   if ( ! get_typ ) get_typ = 0;
   default, initialdir, "/data/0";
   save, f, plugins="eaarla";
@@ -113,9 +109,9 @@ func save_vars (filename, tile=) {
     save, f, forcechannel;
 
   close, f;
-  // This makes sure the file is completely written before batcher.tcl has a chance
-  // to grab it.
-  system, cmd;
+  // This makes sure the file is completely written before batcher.tcl has a
+  // chance to grab it.
+  rename, tempfn, filename;
   return;
 }
 
