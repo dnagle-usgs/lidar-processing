@@ -12,7 +12,7 @@ package provide plot 1.0
 if {![info exists curzone]} {
    set curzone 0
 }
-tky_tie add read ::curzone from curzone -initialize 1
+ybkg tksync add \"curzone\" \"::curzone\"
 
 if {![namespace exists ::plot]} {
    namespace eval ::plot {
