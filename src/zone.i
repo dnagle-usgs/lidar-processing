@@ -270,7 +270,8 @@ func auto_curzone(lat, lon, verbose=) {
     }
   }
 
-  tkcmd, swrite(format="set curzone %d", long(curzone));
+  // Update Tcl, if needed
+  tksync, check;
   if(!verbose)
     return;
 

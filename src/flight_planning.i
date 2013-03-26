@@ -139,6 +139,8 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
       czone = "";
       read, prompt="Could not determine UTM Zone Number.\nPlease enter zone number: ",czone;
       sread, czone, format="%d",curzone;
+      // Notify Tcl that curzone changed, if needed
+      tksync, check;
     }
     ll = utm2ll([click(2), click(4)], [click(1), click(3)], [curzone, curzone]);
     click(1) = ll(1,1);
