@@ -312,9 +312,6 @@ proc ::plot::pane_interact {pane} {
    grid $pane.lfrSFSync  -sticky news -padx 1 -pady 1
    grid $pane.lfrLimitsCopy  -sticky news -padx 1 -pady 1
 
-   bind $pane <Enter> {set ::curzone $::curzone}
-   bind $pane <Visibility> {set ::curzone $::curzone}
-
    grid rowconfigure $pane 100 -weight 1
    grid columnconfigure $pane 0 -weight 1
 
