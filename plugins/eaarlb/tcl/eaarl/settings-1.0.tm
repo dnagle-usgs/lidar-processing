@@ -124,7 +124,7 @@ proc ::eaarl::settings::ops_conf::gui_init {fields} {
         } else {
             set val [list gui_entry]
         }
-        tky_tie add read ${var}($key) from "ops_conf.$key" -initialize 1
+        ybkg tksync add \"ops_conf.$key\" \"${var}($key)\"
         {*}[linsert $val 1 $v::fieldframe $key]
     }
     ::misc::idle ::eaarl::settings::ops_conf::gui_refresh
@@ -239,8 +239,7 @@ namespace eval ::eaarl::settings::bath_ctl::v {
             variable $var
             foreach {field -} $guilayout {
                 set ${var}($field) 0
-                tky_tie add read ${ns}::${var}($field) \
-                        from "${var}.$field" -initalize 1
+                ybkg tksync add \"${var}.$field\" \"${ns}::${var}($field)\"
             }
             unset field
         }
