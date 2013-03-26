@@ -1,6 +1,21 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "logger.i";
 
+func do_rsync_get(host, path, update=) {
+  opts = "-PHaqR";
+  if(update) opts += "u";
+  cmd = swrite(format="rsync %s %s:%s /", opts, host, path);
+  write, cmd;
+  system, cmd;
+}
+
+func do_rsync_send(host, path) {
+  opts = "-PHaqR";
+  cmd = swrite(format="rsync %s %s %s:/", opts, path, host);
+  write, cmd;
+  system, cmd;
+}
+
 func package_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
   tail = swrite(format="/tmp/batch/prep/job-t_e%6.0f_n%7.0f_%s_typ%d",
     min_e, max_n, zone_s, typ);
@@ -125,18 +140,9 @@ func unpackage_tile (fn=,host= ) {
   close, f;
   if ( ! strmatch(host, "localhost") ) {
     // We need to rsync the edb, pnav, and ins files from the server
-
-    cmd = swrite(format="rsync -PHaqR %s:%s /", host, edb_filename);
-    write, cmd;
-    system, cmd;
-
-    cmd = swrite(format="rsync -PHaqR %s:%s /", host, pnav_filename);
-    write, cmd;
-    system, cmd;
-
-    cmd = swrite(format="rsync -PHaqR %s:%s /", host, ins_filename);
-    write, cmd;
-    system, cmd;
+    do_rsync_get, host, edb_filename;
+    do_rsync_get, host, pnav_filename;
+    do_rsync_get, host, ins_filename;
 
     afn  = swrite(format="%s.files", fn);
     af = open(afn, "w");
@@ -205,9 +211,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
         // XYZZY - This will result in errors from rsync when the
         // files don't exist on the server (probably most of the time)
         write, format="RCF: rsyncing %s:%s\n", host, mypath;
-        cmd = swrite(format="rsync -PHauqR %s:%s /", host, mypath);
-        write,  cmd;
-        system, cmd;
+        do_rsync_get, host, mypath, update=1;
         write, "rsync complete";
       }
 
@@ -219,9 +223,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
 
     if ( ! strmatch(host, "localhost") ) {
       write, format="FINISH: rsyncing %s to %s\n", mypath, host;
-      cmd = swrite(format="rsync -PHaqR %s %s:/", mypath, host);
-      write, cmd;
-      system, cmd;
+      do_rsync_send, host, mypath;
       write, "rsync complete";
     }
 
@@ -294,9 +296,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
         if ( ! strmatch(host, "localhost") ) {
           if(logger(debug)) logger, debug, log_id+"retrieving files via rsync";
           write, format="rsyncing %s:%s\n", host, ofn(1);
-          cmd = swrite(format="rsync -PHaqR %s:%s /", host, ofn(1));
-          write, cmd;
-          system, cmd;
+          do_rsync_get, host, ofn(1);
           write, "rsyncing finished";
         }
       }
