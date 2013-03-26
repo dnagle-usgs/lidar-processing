@@ -290,6 +290,8 @@ xfma=, verbose=) {
 
   // setup the return struct
   result = BATHPIX();
+  // bogus value is -100000, for detecting points we didn't find bottom on
+  result.idx = -100000;
   result.rastpix = raster_number + (pulse_number<<24);
 
   local wf, scan_angle, channel;

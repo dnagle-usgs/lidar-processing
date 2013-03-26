@@ -92,7 +92,8 @@ func make_fs_bath(d, rrr, avg_surf=, sample_interval=, verbose=, forcechannel=) 
     if(logger(trace)) logger, trace, log_id+"  info(d(,i).idx)="+info(d(,i).idx)(sum);
     if(logger(trace)) logger, trace, log_id+"  offset="+pr1(offset);
     if(logger(trace)) logger, trace, log_id+"  info(offset)="+info(offset)(sum);
-    indx = where((d(,i).idx > 0) & (abs(offset) < 100));
+    // ex_bath sets idx = -100000 for points it couldn't find bottom on
+    indx = where((d(,i).idx > -100000) & (abs(offset) < 100));
     if(logger(trace)) logger, trace, log_id+"  indx="+pr1(indx);
     if (is_array(indx)) {
       fs_rtn_cent = rrr(i).fs_rtn_centroid(indx)+offset(indx);
