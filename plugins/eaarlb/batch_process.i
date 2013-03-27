@@ -136,9 +136,12 @@ func unpackage_tile (fn=,host= ) {
   close, f;
   if(!strmatch(host, "localhost")) {
     // We need to rsync the edb, pnav, and ins files from the server
-    do_rsync_get, host, edb_filename;
-    do_rsync_get, host, pnav_filename;
-    do_rsync_get, host, ins_filename;
+    if(!file_exists(edb_filename))
+      do_rsync_get, host, edb_filename;
+    if(!file_exists(pnav_filename))
+      do_rsync_get, host, pnav_filename;
+    if(!file_exists(ins_filename))
+      do_rsync_get, host, ins_filename;
   }
 
   // We don't need these if only doing rcf
