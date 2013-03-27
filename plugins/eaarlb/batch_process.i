@@ -143,8 +143,8 @@ func unpackage_tile (fn=,host= ) {
     // Also need to get whichever TLD files are needed
     tld_dir = file_dirname(edb_filename);
     tlds = get_tld_names(q);
-    for(i = 1; i <= numberof(tlds); i++) {
-      tld = file_join(tld_dir, file_tail(tlds(i)));
+    for(k = 1; k <= numberof(tlds); k++) {
+      tld = file_join(tld_dir, file_tail(tlds(k)));
       if(!file_exists(tld)) {
         do_rsync_get, host, tld;
       }
