@@ -545,7 +545,7 @@ func show_progress(color=) {
 }
 
 // Check space in batch area
-func check_space(wmark, path, loop=) {
+func check_space(path, wmark, loop=) {
   default, loop, 1;
   do {
     space = atoi(popen_rdfile(swrite("du -ks '%s'", path))(1));
