@@ -134,21 +134,11 @@ func unpackage_tile (fn=,host= ) {
   f = openb(fn);
   restore, f;
   close, f;
-  if ( ! strmatch(host, "localhost") ) {
+  if(!strmatch(host, "localhost")) {
     // We need to rsync the edb, pnav, and ins files from the server
     do_rsync_get, host, edb_filename;
     do_rsync_get, host, pnav_filename;
     do_rsync_get, host, ins_filename;
-
-    // Also need to get whichever TLD files are needed
-    tld_dir = file_dirname(edb_filename);
-    tlds = get_tld_names(q);
-    for(k = 1; k <= numberof(tlds); k++) {
-      tld = file_join(tld_dir, file_tail(tlds(k)));
-      if(!file_exists(tld)) {
-        do_rsync_get, host, tld;
-      }
-    }
   }
 
   // We don't need these if only doing rcf
@@ -161,6 +151,18 @@ func unpackage_tile (fn=,host= ) {
     load_iexpbd,  ins_filename, verbose=0;
 
     ops_conf = oc;
+  }
+
+  if(!strmatch(host, "localhost")) {
+    // Also need to get whichever TLD files are needed
+    tld_dir = file_dirname(edb_filename);
+    tlds = get_tld_names(q);
+    for(k = 1; k <= numberof(tlds); k++) {
+      tld = file_join(tld_dir, file_tail(tlds(k)));
+      if(!file_exists(tld)) {
+        do_rsync_get, host, tld;
+      }
+    }
   }
 
   write, format="Unpackage_Tile(%s): %s: done\n", host, fn;
