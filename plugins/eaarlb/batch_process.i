@@ -1013,17 +1013,19 @@ Added server/client support (2009-01) Richard Mitchell
     }
   }
   if(!now  && cleanup) {
+    // Throw a newline in to separate from previous output
+    if(verbose) write, "";
     // wait until no more jobs to be farmed out
     batch_cleanup, verbose=verbose;
   }
 
   // stop the timer
   if(verbose)
-    write, format="start Time: %f\n", t0(3);
+    write, format="\n Start Time: %f\n", t0(3);
   timer, t1;
   myt1 = t1(3);
   if(verbose)
-    write, format="End   Time: %f\n", t1(3);
+    write, format=" End   Time: %f\n", t1(3);
   t = (t1-t0)/60.;
   for (ij = 1; ij <=numberof(iidx_path); ij++) {
     if (bool_arr(ij) == 1) {
@@ -1034,9 +1036,9 @@ Added server/client support (2009-01) Richard Mitchell
     }
   }
   if(verbose) {
-    write, "Batch Process Complete. GoodBye."
-    write, format="Time Statistics in minutes: \n CPU    :%12.4f \n System :%12.4f \n Wall   :%12.4f\n",t(1), t(2), t(3);
-    write, format="Walltime: %f: %f - %f\n", myt1-myt0, myt1, myt0;
+    write, "Batch Process Complete. Goodbye."
+    write, format=" Time Statistics in minutes: \n CPU    :%12.4f \n System :%12.4f \n Wall   :%12.4f\n",t(1), t(2), t(3);
+    write, format=" Walltime: %f: %f - %f\n", myt1-myt0, myt1, myt0;
   }
 
   status, enable, prog_enabled;
