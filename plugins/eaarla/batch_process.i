@@ -557,15 +557,20 @@ func show_progress(color=) {
 }
 
 // Check space in batch area
-func check_space(wmark=, dir=) {
-  system, swrite(format="'%s' -noloop %d '%s' > /tmp/batch/.space",
-    file_join(alpsrc.batcher_dir, "waiter.pl"), wmark, dir);
-  f = open("/tmp/batch/.space");
-
-  space= fc= array(0, 1 /* max rows per column */ );
-  read, f, space, fc
-  close,f;
-  return ([space, fc]);
+func check_space(wmark, path, loop=) {
+  default, loop, 1;
+  do {
+    space = atoi(popen_rdfile(swrite("du -ks '%s'", path))(1));
+    fcount = numberof(lsdir(path));
+    if(space > wmark) {
+      if(loop) {
+        write, format="Waiting for %d to drop below %d\n", space, wmark;
+        write, format="%d file(s) in queue\n", fcount;
+      }
+      pause, 10000;
+    }
+  } while(loop && space > wmark);
+  return fcount;
 }
 
 // batch_process is defined further below; it is dummied out here so that it
@@ -1000,8 +1005,7 @@ Added server/client support (2009-01) Richard Mitchell
           show_progress, color="green";
 
           // make sure we have space before creating more files
-          system, swrite(format="'%s' 25000 /tmp/batch/jobs",
-            file_join(alpsrc.batcher_dir, "waiter.pl"));
+          check_space, "/tmp/batch/jobs", 25000;
           package_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i) )
         } else {
           uber_process_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i), host=host, ext_bad_att=ext_bad_att, forcechannel=forcechannel )
@@ -1056,19 +1060,22 @@ shapefile=, shp_buffer=) {
 func batch_cleanup ( junk ) {
   // wait until no more jobs to be farmed out
   do {
-    mya1 = check_space(wmark=8, dir="/tmp/batch/jobs");
-    if ( mya1(2) > 0 ) write,format="%3d job(s) queued.\n", mya1(2);
+    count = 0;
+
+    tmp = check_space("/tmp/batch/jobs", 8, loop=0);
+    if(tmp > 0) write, format="%3d job(s) queued.\n", tmp;
     show_progress, color="green";
+    count += tmp;
 
-    mya2 = check_space (wmark=8, dir="/tmp/batch/farm");
-    if ( mya2(2) > 0 ) write,format="%3d job(s) transferring.\n",  mya2(2);
+    tmp = check_space("/tmp/batch/farm", 8, loop=0);
+    if(tmp > 0) write, format="%3d job(s) transferring.\n", tmp;
     show_progress, color="green";
+    count += tmp;
 
-    mya3 = check_space (wmark=8, dir="/tmp/batch/work");
-    if ( mya3(2) > 0 ) write,format="%3d job(s) processing.\n",   mya3(2);
-    cnt = mya1(2) + mya2(2) + mya3(2);
-
-  } while ( cnt(1) > 0 );
+    tmp = check_space("/tmp/batch/work", 8, loop=0);
+    if(tmp > 0) write, format="%3d job(s) processing.\n", tmp;
+    count += tmp;
+  } while (count);
   write, "No batch jobs available.";
 }
 
@@ -1141,8 +1148,7 @@ write,format="For      : %s\n", ss;
   // loop to generate batch jobs
   for ( i=1; i<=n; ++i ) {
     // make sure we have space
-    system, swrite(format="'%s' 25000 /tmp/batch/jobs",
-      file_join(alpsrc.batcher_dir, "waiter.pl"));
+    check_space, "/tmp/batch/jobs", 25000;
     package_rcf, dn_all(i);
     show_progress, color="green";
   }
