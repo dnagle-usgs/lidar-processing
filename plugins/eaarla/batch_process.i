@@ -999,9 +999,9 @@ Added server/client support (2009-01) Richard Mitchell
 
           // make sure we have space before creating more files
           check_space, "/tmp/batch/jobs", 25000;
-          package_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i) )
+          package_tile, q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i);
         } else {
-          uber_process_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i), host=host, ext_bad_att=ext_bad_att, forcechannel=forcechannel )
+          uber_process_tile, q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i), host=host, ext_bad_att=ext_bad_att, forcechannel=forcechannel;
         }
       }
     }
