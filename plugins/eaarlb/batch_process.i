@@ -2,7 +2,7 @@
 require, "logger.i";
 
 func do_rsync_get(host, path, update=) {
-  opts = "-PHaqR";
+  opts = "-PHOaqR";
   if(update) opts += "u";
   cmd = swrite(format="rsync %s %s:%s /", opts, host, path);
   write, cmd;
@@ -10,7 +10,7 @@ func do_rsync_get(host, path, update=) {
 }
 
 func do_rsync_send(host, path) {
-  opts = "-PHaqR";
+  opts = "-PHOaqR";
   cmd = swrite(format="rsync %s %s %s:/", opts, path, host);
   write, cmd;
   system, cmd;
