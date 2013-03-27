@@ -1079,7 +1079,11 @@ func batch_cleanup(verbose=) {
         if(wcount) write, format=" %d processing.", wcount;
         write, "";
       }
-      pause, 10000;
+      if(!pause(10000)) {
+        answer = "";
+        read, prompt="Do you want to stop waiting? [y/n]: ", answer;
+        if(strcase(0, strpart(strtrim(answer), :1)) == "y") return;
+      }
     }
   } while(count);
   if(verbose) write, "No batch jobs available.";
