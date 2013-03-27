@@ -140,41 +140,29 @@ func unpackage_tile (fn=,host= ) {
     do_rsync_get, host, pnav_filename;
     do_rsync_get, host, ins_filename;
 
-    afn  = swrite(format="%s.files", fn);
-    af = open(afn, "w");
-    write, af, format="%s\n", data_path;
+    // Also need to get whichever TLD files are needed
+    tld_dir = file_dirname(edb_filename);
+    tlds = get_tld_names(q);
+    for(i = 1; i <= numberof(tlds); i++) {
+      tld = file_join(tld_dir, file_tail(tlds(i)));
+      if(!file_exists(tld)) {
+        do_rsync_get, host, tld;
+      }
+    }
   }
 
-  oc = ops_conf;    // this gets wiped out by load_iexpbd, save now to restore later
-
   // We don't need these if only doing rcf
-  if ( rcf_only != 1 ) {
+  if(rcf_only != 1) {
+    // this gets wiped out by load_iexpbd, save now to restore later
+    oc = ops_conf;
+
     load_edb,  fn=edb_filename, verbose=0, override_offset = eaarl_time_offset;
     pnav = rbpnav( fn=pnav_filename, verbose=0);
     load_iexpbd,  ins_filename, verbose=0;
+
+    ops_conf = oc;
   }
 
-  ops_conf = oc;
-
-  if ( ! strmatch(host, "localhost") ) {
-    // Get list of edb_files for this tile
-    mytld = get_tld_names(q);
-    for(myi=1; myi<=numberof(mytld); ++myi) {
-      write, af, format="%s\n", mytld(myi);
-    }
-    // for(myi=1; myi<=numberof(myedb); ++myi) {
-    //     write, af, format="%s\n", edb_files(myedb(myi)).name;
-    // }
-
-    close,af;
-    cmd = swrite(format="/opt/alps/lidar-processing/scripts/check_for_tlds.pl %s %s %s",
-        afn,
-        host,
-        file_tail(file_dirname(edb_filename)) );
-    write, cmd;
-    system, cmd;
-    write, format="Unpackage_Tile(%s): %s: done\n", host, cmd;
-  }
   write, format="Unpackage_Tile(%s): %s: done\n", host, fn;
 }
 
