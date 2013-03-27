@@ -862,7 +862,6 @@ Added server/client support (2009-01) Richard Mitchell
     } else {
       ply=getPoly();
     }
-    ply;
     plpoly, ply, marker=4;
     box=boundBox(ply);
     rgn= array(float,4)
