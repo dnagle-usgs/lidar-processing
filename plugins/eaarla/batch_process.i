@@ -1073,7 +1073,7 @@ func batch_cleanup(verbose=) {
 
     if(count) {
       if(verbose) {
-        write, format="%s", " Jobs:";
+        write, format="[%s] Jobs:", gettime();
         if(jcount) write, format=" %d queued.", jcount;
         if(fcount) write, format=" %d transferring.", fcount;
         if(wcount) write, format=" %d processing.", wcount;
