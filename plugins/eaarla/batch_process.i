@@ -550,20 +550,16 @@ func show_progress(color=) {
 }
 
 // Check space in batch area
-func check_space(path, wmark, loop=) {
-  default, loop, 1;
+func check_space(path, wmark) {
   do {
     space = atoi(popen_rdfile(swrite(format="du -ks '%s'", path))(1));
-    fcount = numberof(lsdir(path));
     if(space > wmark) {
-      if(loop) {
-        write, format="Waiting for %d to drop below %d\n", space, wmark;
-        write, format="%d file(s) in queue\n", fcount;
-      }
+      fcount = numberof(lsdir(path));
+      write, format="Waiting for %d to drop below %d\n", space, wmark;
+      write, format="%d file(s) in queue\n", fcount;
       pause, 10000;
     }
-  } while(loop && space > wmark);
-  return fcount;
+  } while(space > wmark);
 }
 
 // batch_process is defined further below; it is dummied out here so that it
@@ -1053,22 +1049,20 @@ shapefile=, shp_buffer=) {
 func batch_cleanup ( junk ) {
   // wait until no more jobs to be farmed out
   do {
-    count = 0;
+    jcount = numberof(lsdir("/tmp/batch/jobs"));
+    fcount = numberof(lsdir("/tmp/batch/farm"));
+    wcount = numberof(lsdir("/tmp/batch/work"));
+    count = jcount + fcount + wcount;
 
-    tmp = check_space("/tmp/batch/jobs", 8, loop=0);
-    if(tmp > 0) write, format="%3d job(s) queued.\n", tmp;
-    show_progress, color="green";
-    count += tmp;
-
-    tmp = check_space("/tmp/batch/farm", 8, loop=0);
-    if(tmp > 0) write, format="%3d job(s) transferring.\n", tmp;
-    show_progress, color="green";
-    count += tmp;
-
-    tmp = check_space("/tmp/batch/work", 8, loop=0);
-    if(tmp > 0) write, format="%3d job(s) processing.\n", tmp;
-    count += tmp;
-  } while (count);
+    if(count) {
+      write, format="%s", " Jobs:";
+      if(jcount) write, format=" %d queued.", jcount;
+      if(fcount) write, format=" %d transferring.", fcount;
+      if(wcount) write, format=" %d processing.", wcount;
+      write, "";
+      pause, 10000;
+    }
+  } while(count);
   write, "No batch jobs available.";
 }
 
