@@ -569,13 +569,13 @@ func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
 onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
 only_veg=, update=, avg_surf=, now=, b_rcf=, buf=, w=, no_rcf=,
 mode=, merge=, rcfmode=, write_merge=, ext_bad_att=, forcechannel=, shapefile=,
-shp_buffer=)
+shp_buffer=, cleanup=)
 {
 /* DOCUMENT mbatch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=,
   n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=,
   only_bathy=, only_veg=, update=, avg_surf=, now=, b_rcf=, buf=,
   w=, no_rcf=, mode=, merge=, rcfmode=, write_merge=, ext_bad_att=,
-  forcechannel=, shapefile=, shp_buffer=
+  forcechannel=, shapefile=, shp_buffer=, cleanup=
 
   batch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
   onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
@@ -705,9 +705,15 @@ Ex: curzone=18
 amar nayegandhi started (10/04/02) Lance Mosher
 Added server/client support (2009-01) Richard Mitchell
 */
+  default, now, 0;
+  default, cleanup, !now;
   default, ext_bad_att, 20.;
+
   if(numberof(forcechannel) > 1) {
+    count = numberof(forcechannel);
+    curcleanup = cleanup;
     for(i = 1; i <= numberof(forcechannel); i++) {
+      if(cleanup) curcleanup = i==numberof(forcechannel);
       mbatch_process, typ=typ, save_dir=save_dir, shem=shem, zone=zone,
         dat_tag=dat_tag, cmdfile=cmdfile, n=n, onlyplot=onlyplot, mdate=mdate,
         pbd=pbd, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ,
@@ -716,7 +722,7 @@ Added server/client support (2009-01) Richard Mitchell
         w=w, no_rcf=no_rcf, mode=mode, merge=merge, rcfmode=rcfmode,
         write_merge=write_merge, ext_bad_att=ext_bad_att,
         forcechannel=forcechannel(i), shapefile=shapefile,
-        shp_buffer=shp_buffer;
+        shp_buffer=shp_buffer, cleanup=curcleanup;
     }
     return;
   }
@@ -735,8 +741,7 @@ Added server/client support (2009-01) Richard Mitchell
   myt0 = t0(3);
   write, format="Start Time: %f\n", t0(3);
   default, host, "localhost";
-  default, now,  0;
-  default, win,  6;
+  default, win, 6;
   window, win;
 
   eaarl_time_offset = 0;	// need this first, cuz get_erast uses it.
@@ -990,7 +995,7 @@ Added server/client support (2009-01) Richard Mitchell
         pldj, max_e(i), min_n(i), max_e(i), max_n(i), color="blue"
         pldj, max_e(i), max_n(i), min_e(i), max_n(i), color="blue"
 
-        if ( now == 0 ) {
+        if(!now) {
           show_progress, color="green";
 
           // make sure we have space before creating more files
@@ -1002,7 +1007,7 @@ Added server/client support (2009-01) Richard Mitchell
       }
     }
   }
-  if ( now == 0 ) {
+  if(!now  && cleanup) {
     // wait until no more jobs to be farmed out
     batch_cleanup;
   }
