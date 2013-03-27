@@ -548,7 +548,7 @@ func show_progress(color=) {
 func check_space(path, wmark, loop=) {
   default, loop, 1;
   do {
-    space = atoi(popen_rdfile(swrite("du -ks '%s'", path))(1));
+    space = atoi(popen_rdfile(swrite(format="du -ks '%s'", path))(1));
     fcount = numberof(lsdir(path));
     if(space > wmark) {
       if(loop) {
