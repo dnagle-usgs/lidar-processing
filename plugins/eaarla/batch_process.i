@@ -569,13 +569,13 @@ func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
 onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
 only_veg=, update=, avg_surf=, now=, b_rcf=, buf=, w=, no_rcf=,
 mode=, merge=, rcfmode=, write_merge=, ext_bad_att=, forcechannel=, shapefile=,
-shp_buffer=, cleanup=)
+shp_buffer=, verbose=, cleanup=)
 {
 /* DOCUMENT mbatch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=,
   n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=,
   only_bathy=, only_veg=, update=, avg_surf=, now=, b_rcf=, buf=,
   w=, no_rcf=, mode=, merge=, rcfmode=, write_merge=, ext_bad_att=,
-  forcechannel=, shapefile=, shp_buffer=, cleanup=
+  forcechannel=, shapefile=, shp_buffer=, verbose=, cleanup=
 
   batch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
   onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
@@ -669,6 +669,10 @@ Input:
           also use the convex hull, so if your region has concavity, that
           concavity will be lost.
 
+  verbose= Specifies the verbosity level to use. Default is 1, which means
+          minimal screen output. Use verbose=0 to silent it even further. Use
+          verbose=2 to make it extra-verbose.
+
 If using the automatic region creation, the following options
 are REQUIRED:
 
@@ -708,6 +712,7 @@ Added server/client support (2009-01) Richard Mitchell
   default, now, 0;
   default, cleanup, !now;
   default, ext_bad_att, 20.;
+  default, verbose, 1;
 
   if(numberof(forcechannel) > 1) {
     count = numberof(forcechannel);
@@ -739,7 +744,8 @@ Added server/client support (2009-01) Richard Mitchell
   t1 = array(double, 3);
   timer, t0;
   myt0 = t0(3);
-  write, format="Start Time: %f\n", t0(3);
+  if(verbose)
+    write, format="Start Time: %f\n", t0(3);
   default, host, "localhost";
   default, win, 6;
   window, win;
@@ -757,10 +763,8 @@ Added server/client support (2009-01) Richard Mitchell
 
   // Make sure the output path ends in a /
   if ( strpart(save_dir, 0:0) != "/" ) save_dir += "/";
-  // write, format="SAVE_DIR: %s\n", save_dir;
 
   if (zone) zone_s = swrite(format="%d", zone);
-  //if (zone) pick=1;
   if (!pbd && !edf)      pbd      = 1;
 
   default, typ,         1;
@@ -806,7 +810,8 @@ Added server/client support (2009-01) Richard Mitchell
       zone = long(north_east(3));
       zone_s = swrite(format="%d", long(north_east(3)));
     }
-    write, "Region selected. Confirming region... this may take several minutes..."
+    if(verbose)
+      write, "Region selected. Confirming region... this may take several minutes...";
     ind_e_min = 2000 * (int((rgn(1)/2000)));
     ind_e_max = 2000 * (1+int((rgn(2)/2000)));
     if ((rgn(2) % 2000) == 0) ind_e_max = rgn(2);
@@ -967,6 +972,7 @@ Added server/client support (2009-01) Richard Mitchell
       close, f;
     }
   }
+  if(verbose) write, format="Processing %d Tiles\n", n;
   for (i=1;i<=n;i++) {
     if (cmdfile) {
       ofn = [file_dirname(path(i))+"/", file_tail(path(i))];
@@ -981,12 +987,12 @@ Added server/client support (2009-01) Richard Mitchell
         ofn(2) = file_rootname(ofn(2))+".edf";
       }
     }
-    write, format = "Selecting Region %d of %d\n",i,n;
-    q = pnav_sel_rgn(win=win, region=[min_e(i)-200.0, max_e(i)+200.0, min_n(i)-200.0, max_n(i)+200.0], _batch=1);
+    if(verbose > 1) write, format = "Selecting Region %d of %d\n",i,n;
+    q = pnav_sel_rgn(win=win, region=[min_e(i)-200.0, max_e(i)+200.0, min_n(i)-200.0, max_n(i)+200.0], _batch=1, verbose=verbose>1);
     // 2009-01-15: came across odd bug where q was:  <nuller>:
     // To avoid, check for numberof as well.
     if ( ! is_void(q) && numberof(q) > 0 ) {
-      r = pnav_sel_rgn(win=win, color="green", region=[min_e(i), max_e(i), min_n(i), max_n(i)], _batch=1);
+      r = pnav_sel_rgn(win=win, color="green", region=[min_e(i), max_e(i), min_n(i), max_n(i)], _batch=1, verbose=verbose>1);
       if ( ! is_void(r) && numberof(r) > 0 ) {
         // Show the tile that is being prepared to be processed.
         pldj, min_e(i), min_n(i), min_e(i), max_n(i), color="blue"
@@ -995,7 +1001,7 @@ Added server/client support (2009-01) Richard Mitchell
         pldj, max_e(i), max_n(i), min_e(i), max_n(i), color="blue"
 
         if(!now) {
-          show_progress, color="green";
+          if(verbose>1) show_progress, color="green";
 
           // make sure we have space before creating more files
           check_space, "/tmp/batch/jobs", 25000;
@@ -1008,14 +1014,16 @@ Added server/client support (2009-01) Richard Mitchell
   }
   if(!now  && cleanup) {
     // wait until no more jobs to be farmed out
-    batch_cleanup;
+    batch_cleanup, verbose=verbose;
   }
 
   // stop the timer
-  write, format="start Time: %f\n", t0(3);
+  if(verbose)
+    write, format="start Time: %f\n", t0(3);
   timer, t1;
   myt1 = t1(3);
-  write, format="End   Time: %f\n", t1(3);
+  if(verbose)
+    write, format="End   Time: %f\n", t1(3);
   t = (t1-t0)/60.;
   for (ij = 1; ij <=numberof(iidx_path); ij++) {
     if (bool_arr(ij) == 1) {
@@ -1025,9 +1033,11 @@ Added server/client support (2009-01) Richard Mitchell
       close, f;
     }
   }
-  write, "Batch Process Complete. GoodBye."
-  write, format="Time Statistics in minutes: \n CPU    :%12.4f \n System :%12.4f \n Wall   :%12.4f\n",t(1), t(2), t(3);
-  write, format="Walltime: %f: %f - %f\n", myt1-myt0, myt1, myt0;
+  if(verbose) {
+    write, "Batch Process Complete. GoodBye."
+    write, format="Time Statistics in minutes: \n CPU    :%12.4f \n System :%12.4f \n Wall   :%12.4f\n",t(1), t(2), t(3);
+    write, format="Walltime: %f: %f - %f\n", myt1-myt0, myt1, myt0;
+  }
 
   status, enable, prog_enabled;
 }
@@ -1050,7 +1060,8 @@ shapefile=, shp_buffer=) {
 // all of the tiles and then monitors the status of the work completed,
 // coloring completed tiles green.
 // This can also be called manually if ALPS gets restarted.
-func batch_cleanup ( junk ) {
+func batch_cleanup(verbose=) {
+  default, verbose, 1;
   // wait until no more jobs to be farmed out
   do {
     jcount = numberof(lsdir("/tmp/batch/jobs"));
@@ -1059,15 +1070,17 @@ func batch_cleanup ( junk ) {
     count = jcount + fcount + wcount;
 
     if(count) {
-      write, format="%s", " Jobs:";
-      if(jcount) write, format=" %d queued.", jcount;
-      if(fcount) write, format=" %d transferring.", fcount;
-      if(wcount) write, format=" %d processing.", wcount;
-      write, "";
+      if(verbose) {
+        write, format="%s", " Jobs:";
+        if(jcount) write, format=" %d queued.", jcount;
+        if(fcount) write, format=" %d transferring.", fcount;
+        if(wcount) write, format=" %d processing.", wcount;
+        write, "";
+      }
       pause, 10000;
     }
   } while(count);
-  write, "No batch jobs available.";
+  if(verbose) write, "No batch jobs available.";
 }
 
 // process an output directory instead of a flightline.
