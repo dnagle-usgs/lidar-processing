@@ -229,7 +229,7 @@ func set_remove_duplicates(A, idx=) {
 
   If idx=1, then the indices will be returned rather than the values.
 
-  SEE ALSO: unique
+  Usage with idx= is deprecated; use uniq instead.
 */
   default, idx, 0;
   if(idx) return uniq(A);
@@ -239,7 +239,7 @@ func set_remove_duplicates(A, idx=) {
 local unique;
 unique = uniq;
 /* DOCUMENT unique(x)
-  Alias for uniq.
+  Alias for uniq. Deprecated; use uniq instead.
 */
 
 func munique(x, ..) {
