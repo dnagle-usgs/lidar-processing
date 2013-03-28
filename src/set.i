@@ -198,29 +198,6 @@ func set_union(A, B) {
   return set_remove_duplicates(grow(unref(A), unref(B)));
 }
 
-func set_cartesian_product(A, B) {
-/* DOCUMENT set_cartesian_product(A, B)
-
-  Returns the cartesian product of A and B.
-
-  The cartesian product of A and B is the set of all ordered pairs [X,Y] where
-  X is a member of A and Y is a member of B.
-
-  The returned array will be two-dimensional.
-
-  If,   cp = set_cartesian_product(a,b);
-  Then, cp(,1) is the values from a
-      cp(,2) is the values from b
-      cp(i,) is the ith ordered pair [xi,yi]
-*/
-  if(! numberof(A) || ! numberof(B))
-    return [];
-  C = array(A(1), numberof(A)*numberof(B), 2);
-  C(,1) = A(-:1:numberof(B),)(*);
-  C(,2) = B(,-:1:numberof(A))(*);
-  return C;
-}
-
 func set_remove_duplicates(A, idx=) {
 /* DOCUMENT set_remove_duplicates(A, idx=)
 
