@@ -197,7 +197,7 @@ Original amar nayegandhi. Started 12/06/02.
       file_dir(ti) = file_tail(file_dirname(fn_all(ti)))+"/";
       all_dir(ti) = file_dirname(fn_all(ti))+"/";
     }
-    uidx = unique(tile_dir);
+    uidx = uniq(tile_dir);
     ndirname = array(string, numberof(uidx));
     ndirname = all_dir(uidx);
     fname = array(string, numberof(uidx));
@@ -718,8 +718,7 @@ func batch_test_rcf(dir, mode, datum=, testpbd=, testedf=, buf=, w=, no_rcf=, re
   }
   t=*pointer(fn_all(1));
   nn=where(t=='_');
-  dtiles = strpart(fn_all, 1:nn(-5)-2);
-  dtiles = dtiles(unique(dtiles));
+  dtiles = set_remove_duplicates(strpart(fn_all, 1:nn(-5)-2));
   dbool = array(short, numberof(dtiles),2);
 
 //go through each directory and determine if the rcf file exists

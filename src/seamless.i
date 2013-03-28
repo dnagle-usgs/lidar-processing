@@ -15,23 +15,9 @@ func remove_bathy_from_veg(veg, bathy, buf=) {
 
   */
 
-  rnb_idx = [];
-  rnbu_idx = [];
-  // make sure bathy array has unique rn
-  rnb_idx = sort(bathy.rn);
-  bathy1 = bathy(rnb_idx);
-  rnbu_idx = unique(bathy1.rn);
-  bathy1 = bathy1(rnbu_idx);
-
-  rnv_idx = [];
-  rnvu_idx = [];
-
-  //sort veg array as well and ensure uniqueness
-  rnv_idx = sort(veg.rn);
-  veg1 = veg(rnv_idx);
-  rnvu_idx = unique(veg1.rn);
-  veg1 = veg1(rnvu_idx);
-
+  // sort and get unique items
+  bathy1 = bathy(uniq(bathy.rn));
+  veg1 = veg(uniq(veg.rn));
 
   num_rn_bathy = numberof(bathy1.rn);
   num_rn_veg = numberof(veg1.rn);
@@ -54,8 +40,7 @@ func remove_bathy_from_veg(veg, bathy, buf=) {
   veg_new = veg1(veg_new_idx);
 
   // sort by northing
-  nidx = sort(veg_new.lnorth);
-  veg_new = veg_new(nidx);
+  veg_new = veg_new(sort(veg_new.lnorth));
 
   return veg_new;
 
