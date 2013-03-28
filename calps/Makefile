@@ -22,7 +22,7 @@ PKG_NAME=calps
 PKG_I=calps.i
 
 OBJS=triangle.o triangle_y.o interp_angles.o gridding.o region.o \
-	level_short_dips.o ll2utm.o navd88.o set.o set_uniq.o linux.o \
+	level_short_dips.o ll2utm.o navd88.o set.o uniq.o linux.o \
 	profiler.o
 
 # change to give the executable a name other than yorick

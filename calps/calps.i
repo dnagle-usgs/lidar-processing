@@ -241,11 +241,11 @@ extern _yset_intersect_double;
   long Bn, long flag, double delta)
 */
 
-// *** defined in set_uniq.c ***
+// *** defined in uniq.c ***
 
 extern uniq;
 /* DOCUMENT uniq(x)
-  Returns an array of longs such as X(sort(X)) is a monotonically increasing
+  Returns an array of longs such that X(sort(X)) is a monotonically increasing
   array of the unique values of X. X can contain integer, real, or string
   values. X may have any dimensions, but the return result will always be
   one-dimensional. If multiple elements have the same value, the index of the
