@@ -54,7 +54,7 @@
 
 // Median-of-3 algorithm. Given three indexes into list, returns the one with
 // the median value in data.
-long med3(char **data, long *list, long ia, long ib, long ic, long depth)
+static long med3(char **data, long *list, long ia, long ib, long ic, long depth)
 {
   char va, vb, vc;
 
@@ -73,7 +73,7 @@ long med3(char **data, long *list, long ia, long ib, long ic, long depth)
 #define MED3(a,b,c) med3(data, list, a, b, c, depth)
 
 // Selects a suitable pivot from the range a..c
-long select_pivot(char **data, long *list, long a, long c, long depth)
+static long select_pivot(char **data, long *list, long a, long c, long depth)
 {
   long n = c - a + 1;
   // If less than 3 items, then return the smaller of the one/two items
@@ -98,7 +98,7 @@ long select_pivot(char **data, long *list, long a, long c, long depth)
 }
 
 // Swap two indices in list
-void swap(long *list, long a, long b)
+static void swap(long *list, long a, long b)
 {
   long t = list[a];
   list[a] = list[b];
@@ -109,7 +109,7 @@ void swap(long *list, long a, long b)
 
 // Swap two chunks of list. a and b are the indices into list where the chunks
 // start, and count is the length of the chunks.
-void vecswap(long *list, long a, long b, long count)
+static void vecswap(long *list, long a, long b, long count)
 {
   while(count--) SWAP(a++, b++);
 }
@@ -121,7 +121,7 @@ void vecswap(long *list, long a, long b, long count)
 // value, puts it at index out, then increments out. So this effectively
 // removes a series of equal values and stores a single value in the output
 // position.
-void assign_first(long *list, long start, long stop, long *out)
+static void assign_first(long *list, long start, long stop, long *out)
 {
   list[*out] = list[start];
   // reuse "start" variable as loop iterator
@@ -133,7 +133,7 @@ void assign_first(long *list, long start, long stop, long *out)
 
 // This is a variant of the insertion sort that finds unique values. Its call
 // signature is the same as quick_uniq. Unique values are sorted starting at 
-void ins_uniq(char **data, long *list, long start, long stop, long *out,
+static void ins_uniq(char **data, long *list, long start, long stop, long *out,
   long depth)
 {
   long h, i, j, k, cmp;
@@ -240,23 +240,6 @@ void quick_uniq(char **data, long *list, long start, long stop, long *out,
       VECSWAP(lt, stop-r+1, r);
     }
 
-    /*
-      
-      start = 10
-      le = 17
-      lt = 19
-      lt-le = 2
-      r = 2
-      vecswap 0, 7, 2
-
-      le = 2
-      lt = 9
-      lt-le = 7
-      r = 2
-      vecswap, 0, 7, 2
-      
-     */
-
     // Change le and ge to bounds of EQUAL region
     le = start + (lt - le);
     ge = stop - (ge - gt);
@@ -354,7 +337,7 @@ void Y_uniq(int nArgs)
  *    len - Length of output list
  * Only dst and len are modified.
  */
-void MERGE(value_t *data, long *src1, long len1, long *src2, long len2,
+static void MERGE(value_t *data, long *src1, long len1, long *src2, long len2,
 long *dst, long *len)
 {
   long i1, i2, j;
