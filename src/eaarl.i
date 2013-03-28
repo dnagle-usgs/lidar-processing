@@ -1,6 +1,11 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 // Place to collect all yorick .i files that eaarl needs.
 
+// Include calps, if available. This makes sure it doesn't accidentally get
+// clobberred if a function gets (re)defined prior to autoloading it.
+if(is_func(calps_compatibility))
+  require, "calps.i";
+
 if(is_void(src_path))
   src_path = pwd();
 
