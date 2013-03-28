@@ -185,8 +185,7 @@ func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=, search
     error, "No files found.";
 
   // Remove duplicate files under different paths
-  idx = set_remove_duplicates(file_tail(photo_files), idx=1);
-  photo_files = photo_files(idx);
+  photo_files = photo_files(uniq(file_tail(photo_files)));
 
   write, format="Found %d images\n", numberof(photo_files);
   write, format="Determining second-of-epoch values...%s", "\n";

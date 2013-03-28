@@ -667,8 +667,7 @@ func tk_dsw_get_data(data, type, var, sod_field) {
   mission, load, loaded;
 
   if(numberof(working)) {
-    idx = set_remove_duplicates(int((working_soe-working_soe(min))*200), idx=1);
-    working = working(idx);
+    working = working(uniq(long((working_soe-working_soe(min))*200)));
   }
   return working;
 }
