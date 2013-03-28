@@ -25,3 +25,7 @@ if(!is_func(interp_angles))
 // Added 2013-03-12
 if(!is_func(level_short_dips))
   require, "calps/level_short_dips.i";
+
+// Added 2013-03-28
+if(!is_func(uniq))
+  require, "calps/uniq.i";
