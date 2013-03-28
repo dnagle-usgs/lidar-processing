@@ -49,43 +49,14 @@ func remove_bathy_from_veg(veg, bathy, buf=) {
 
 func merge_veg_bathy(veg, bathy) {
 /* DOCUMENT merge_veg_bathy(veg,bathy)
-   This function merges the veg (type VEG__) and bathy (type GEO) data structures into 1 VEG__ struction.
-   INPUT:
-    veg = veg data array of type (VEG__)
-    bathy = bathy data array of type (GEO)
-   OUTPUT:
-    merged_vb = merged topo-bathy data of type VEG__
+  Coerces bathy (GEO) data to veg format (VEG__) and merges with veg data.
+  INPUT:
+    veg = array of VEG__
+    bathy = array of GEO
+  OUTPUT:
+    merged_vb = merged array of VEG__
 */
-// Original Amar Nayegandhi 2009-06-16
-
-  nveg = numberof(veg);
-  nbathy = numberof(bathy);
-
-  nmvb = nveg+nbathy;
-
-  if(!nmvb)
-    return [];
-
-  mvb = array(VEG__, nmvb);
-
-  if(nveg)
-    mvb(1:nveg) = veg;
-
-  if(nbathy) {
-    mvb(nveg+1:).rn = bathy.rn;
-    mvb(nveg+1:).north = bathy.north;
-    mvb(nveg+1:).east = bathy.east;
-    mvb(nveg+1:).elevation = bathy.elevation;
-    mvb(nveg+1:).mnorth = bathy.mnorth;
-    mvb(nveg+1:).meast = bathy.meast;
-    mvb(nveg+1:).melevation = bathy.melevation;
-    mvb(nveg+1:).lnorth = bathy.north;
-    mvb(nveg+1:).least = bathy.east;
-    mvb(nveg+1:).lelv = bathy.elevation+bathy.depth;
-    mvb(nveg+1:).fint = bathy.first_peak;
-    mvb(nveg+1:).lint = bathy.bottom_peak;
-    mvb(nveg+1:).soe = bathy.soe;
-  }
-
-  return mvb;
+  if(!numberof(bathy)) return veg;
+  if(!numberof(veg)) return struct_cast(bathy, VEG__);
+  return grow(veg, struct_cast(bathy, VEG__));
 }
