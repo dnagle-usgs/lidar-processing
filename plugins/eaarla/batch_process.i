@@ -117,9 +117,6 @@ func save_vars (filename, tile=) {
 
 func get_tld_names( q ) {
   myrar = sel_region(q);
-  // next line is an attempt to avoid problem seen when sel_region
-  // returned [0,0] as first array value
-  myrar = myrar(where(myrar>0));            // remove 0 indexes
   myedb = edb(myrar).file_number;           // get list of file numbers for region
   myedb = myedb(unique(myedb));             // get unique file numbers
 
