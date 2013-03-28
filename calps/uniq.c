@@ -281,7 +281,6 @@ void Y_uniq(int nArgs)
 
   if(yarg_string(0)) {
     ystring_t *data = ygeta_q(0, &count, dims);
-    if(count == 1) return;
     list = ypush_l(dims);
     for(i = 0; i < count; i++) list[i] = i;
     new_count = 0;
@@ -295,13 +294,11 @@ void Y_uniq(int nArgs)
     }
   } else if(yarg_number(0) == 1) {
     long *data = ygeta_l(0, &count, dims);
-    if(count == 1) return;
     list = ypush_l(dims);
     new_count = count;
     mergeuniq_L(data, list, &new_count);
   } else if(yarg_number(0) == 2) {
     double *data = ygeta_d(0, &count, dims);
-    if(count == 1) return;
     list = ypush_l(dims);
     new_count = count;
     mergeuniq_D(data, list, &new_count);
