@@ -243,14 +243,13 @@ extern _yset_intersect_double;
 
 // *** defined in set_uniq.c ***
 
-extern _ymergeuniq_L;
-/* PROTOTYPE
-  void mergeuniq_L(long *, long *, long *);
-*/
-
-extern _ymergeuniq_D;
-/* PROTOTYPE
-  void mergeuniq_D(double *, long *, long *);
+extern uniq;
+/* DOCUMENT uniq(x)
+  Returns an array of longs such as X(sort(X)) is a monotonically increasing
+  array of the unique values of X. X can contain integer, real, or string
+  values. X may have any dimensions, but the return result will always be
+  one-dimensional. If multiple elements have the same value, the index of the
+  first value will be used.
 */
 
 // *** defined in linux.c
@@ -306,7 +305,7 @@ __calps_backup = save(
   _yll2utm, _yutm2ll,
   calps_n88_interp_qfit2d, calps_n88_interp_spline2d,
   _yset_intersect_long, _yset_intersect_double,
-  _ymergeuniq_L, _ymergeuniq_D,
+  uniq,
   get_pid,
   profiler_init, profiler_lastinit, profiler_reset, profiler_ticks
 );
