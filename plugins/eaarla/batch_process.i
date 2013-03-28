@@ -115,13 +115,11 @@ func save_vars (filename, tile=) {
   return;
 }
 
-func get_tld_names( q ) {
-  myrar = sel_region(q);
-  myedb = edb(myrar).file_number;           // get list of file numbers for region
-  myedb = myedb(unique(myedb));             // get unique file numbers
-
-  return ( edb_files(myedb) );         // return list of names
- }
+func get_tld_names(q) {
+  rns = sel_region(q);
+  if(!numberof(rns)) return [];
+  return edb_files(set_remove_duplicates(edb(rns).file_number));
+}
 
 func unpackage_tile (fn=,host= ) {
   extern gga, pnav, tans;
