@@ -6,7 +6,6 @@ namespace eval ::eaarl::settings::ops_conf::v {
     variable top .l1wid.opsconf
     variable fieldframe
     variable ops_conf
-    variable last_refresh 0
 
     variable settings {
         name            {gui_entry}
@@ -40,19 +39,8 @@ namespace eval ::eaarl::settings::ops_conf::v {
     }
 }
 
-proc ::eaarl::settings::ops_conf::gui_refresh {} {
-    # Throttle to every 3/4 second to prevent flooding Yorick in the background
-    # (which can cause issues)
-    set elapsed [expr {[clock milliseconds] - $v::last_refresh}]
-    if {$elapsed > 750} {
-        set v::last_refresh [clock milliseconds]
-        array set v::ops_conf [array get v::ops_conf]
-    }
-}
-
 proc ::eaarl::settings::ops_conf::applycmd {key old new} {
-    exp_send "var_expr_tkupdate, \"ops_conf.$key\", \"$new\";\
-            tkcmd, \"::eaarl::settings::ops_conf::gui_refresh\";\r"
+    exp_send "var_expr_tkupdate, \"ops_conf.$key\", \"$new\";\r"
 }
 
 proc ::eaarl::settings::ops_conf::gui_line {w key} {
@@ -110,9 +98,6 @@ proc ::eaarl::settings::ops_conf::gui {} {
     grid columnconfigure $w 0 -weight 1
     grid rowconfigure $w 0 -weight 1
 
-    bind $f <Enter> [namespace which -command gui_refresh]
-    bind $f <Visibility> [namespace which -command gui_refresh]
-
     ybkg eaarl_ops_conf_gui_init
 }
 
@@ -127,7 +112,6 @@ proc ::eaarl::settings::ops_conf::gui_init {fields} {
         ybkg tksync add \"ops_conf.$key\" \"${var}($key)\"
         {*}[linsert $val 1 $v::fieldframe $key]
     }
-    ::misc::idle ::eaarl::settings::ops_conf::gui_refresh
     ::misc::idle {wm geometry .l1wid.opsconf ""}
 }
 
@@ -188,7 +172,6 @@ proc ::eaarl::settings::ops_conf::view {json {name {}}} {
 
 namespace eval ::eaarl::settings::bath_ctl::v {
     variable top .l1wid.bctl
-    variable last_refresh 0
 
     variable presets {
          Clear {
@@ -248,8 +231,7 @@ namespace eval ::eaarl::settings::bath_ctl::v {
 }
 
 proc ::eaarl::settings::bath_ctl::applycmd {var key old new} {
-    exp_send "var_expr_tkupdate, \"$var.$key\", \"$new\";\
-            tkcmd, \"::misc::idle ::eaarl::settings::bath_ctl::gui_refresh\";\r"
+    exp_send "var_expr_tkupdate, \"$var.$key\", \"$new\";\r"
 }
 
 proc ::eaarl::settings::bath_ctl::gui_main {} {
@@ -329,9 +311,6 @@ proc ::eaarl::settings::bath_ctl::gui_main {} {
     grid $w.f -sticky news
     grid columnconfigure $w 0 -weight 1
     grid rowconfigure $w 0 -weight 1
-
-    bind $f <Enter> [namespace which -command gui_refresh]
-    bind $f <Visibility> [namespace which -command gui_refresh]
 }
 
 proc ::eaarl::settings::bath_ctl::launch_win {window raster pulse channel} {
@@ -406,9 +385,6 @@ snit::type ::eaarl::settings::bath_ctl::gui_embed {
                 $f.lblsfc_last -sticky e -padx 2 -pady 2
         grid columnconfigure $f {1 3 5} -weight 1 -uniform a
 
-        bind $settings <Enter> ${ns}::gui_refresh
-        bind $settings <Visibility> ${ns}::gui_refresh
-
         # Force initialization in case no options are given by caller
         $self configure -channel 1
         $self configure {*}$args
@@ -463,17 +439,6 @@ snit::type ::eaarl::settings::bath_ctl::gui_embed {
     }
 }
 
-proc ::eaarl::settings::bath_ctl::gui_refresh {} {
-    # Throttle to every 3/4 second to prevent flooding Yorick in the background
-    # (which can cause issues)
-    set elapsed [expr {[clock milliseconds] - $v::last_refresh}]
-    if {$elapsed > 750} {
-        set v::last_refresh [clock milliseconds]
-        array set v::bath_ctl [array get v::bath_ctl]
-        array set v::bath_ctl_chn4 [array get v::bath_ctl_chn4]
-    }
-}
-
 proc ::eaarl::settings::bath_ctl::save {} {
     set fn [tk_getSaveFile -initialdir $::data_path \
             -filetypes {{{json files} {.json}} {{all files} {*}}}]
@@ -500,7 +465,6 @@ proc ::eaarl::settings::bath_ctl::load {} {
             }]
     if {$fn ne ""} {
         exp_send "bath_ctl_load, \"$fn\";\r"
-        ::misc::idle [namespace which -command gui_refresh]
     }
 }
 
@@ -509,6 +473,5 @@ proc ::eaarl::settings::bath_ctl::preset {var preset} {
     dict for {key val} [dict get $v::presets $preset] {
         append cmd "var_expr_tkupdate, \"$var.$key\", \"$val\"; "
     }
-    append cmd "tkcmd, \"::misc::idle ::eaarl::settings::bath_ctl::gui_refresh\";\r"
     exp_send $cmd
 }
