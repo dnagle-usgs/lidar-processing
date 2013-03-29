@@ -262,6 +262,7 @@ snit::widgetadaptor ::mixin::revertable {
         set options(-textvariable) $value
         trace add variable $options(-textvariable) write \
                 [mymethod TraceTextWrite]
+        $self TraceTextWrite - - -
     }
 
     method SetWorkVar {option value} {
@@ -274,6 +275,7 @@ snit::widgetadaptor ::mixin::revertable {
         trace add variable $options(-workvariable) write \
                 [mymethod TraceWorkWrite]
         $hull configure -textvariable $options(-workvariable)
+        $self TraceWorkWrite - - -
     }
 
     method TraceTextWrite {name1 name2 op} {
