@@ -187,9 +187,15 @@ func compute_depth(data, sample_interval=) {
   fs = reform(fs, dims);
   ba = reform(ba, dims);
 
+  depth = long((ba(..,3) - fs(..,3))*100);
+  w = where(depth > 0);
+  if(numberof(w)) {
+    depth(w) = 0;
+  }
+
   data.east = ba(..,1)*100;
   data.north = ba(..,2)*100;
-  data.depth = (ba(..,3) - fs(..,3))*100;
+  data.depth = depth;
 
   if(logger(debug)) logger, debug, log_id+"Leaving compute_depth";
   return data;
