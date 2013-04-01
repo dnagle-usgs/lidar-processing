@@ -245,8 +245,6 @@ proc ::eaarl::settings::bath_ctl::gui_main {} {
     menu $w.mb
     menu $w.mb.file
     menu $w.mb.preset
-    menu $w.mb.preset.p1
-    menu $w.mb.preset.p2
 
     set ns [namespace current]
 
@@ -260,53 +258,46 @@ proc ::eaarl::settings::bath_ctl::gui_main {} {
             -command [list destroy $w]
 
     $w.mb add cascade -label "Presets" -underline 0 -menu $w.mb.preset
-    $w.mb.preset add cascade -label "Channels 1, 2, and 3" -menu $w.mb.preset.p1
-    $w.mb.preset add cascade -label "Channel 4" -menu $w.mb.preset.p2
-    foreach {m var} [list p1 bath_ctl p2 bath_ctl_chn4] {
-        foreach {preset -} $v::presets {
-            $w.mb.preset.$m add command -label $preset \
-                    -command [list ${ns}::preset $var $preset]
-        }
+    foreach {preset -} $v::presets {
+        $w.mb.preset add command -label $preset \
+                -command [list ${ns}::preset bath_ctl $preset]
     }
 
     $w configure -menu $w.mb
 
     ttk::frame $w.f
     set f $w.f
-    ttk::labelframe $f.bath_ctl -text "Channels 1, 2, and 3"
-    ttk::labelframe $f.bath_ctl_chn4 -text "Channel 4"
+    ttk::frame $f.bath_ctl
 
-    foreach var [list bath_ctl bath_ctl_chn4] {
-        foreach {key info} $v::guilayout {
-            lassign $info name rmin rmax rinc fmt
-            ttk::label $f.$var.lbl$key -text "${name}:"
-            ttk::spinbox $f.$var.spn$key \
-                    -width 8 \
-                    -textvariable ${ns}::v::${var}($key) \
-                    -from $rmin -to $rmax -increment $rinc
-            ::mixin::revertable $f.$var.spn$key -applycommand \
-                    [list ::eaarl::settings::bath_ctl::applycmd $var $key]
-            ::misc::tooltip $f.$var.lbl$key $f.$var.spn$key \
-                    "Press Enter to apply current changes to field. Press
-                    Escape to revert current changes to field."
-            ttk::button $f.$var.app$key -text "\u2713" \
-                    -style Toolbutton \
-                    -command [list $f.$var.spn$key apply]
-            ::misc::tooltip $f.$var.app$key "Apply current changes to field"
-            ttk::button $f.$var.rev$key -text "x" \
-                    -style Toolbutton \
-                    -command [list $f.$var.spn$key revert]
-            ::misc::tooltip $f.$var.rev$key "Revert current changes to field"
-            grid $f.$var.lbl$key $f.$var.spn$key $f.$var.app$key \
-                    $f.$var.rev$key -padx 2 -pady 2
-            grid configure $f.$var.lbl$key -sticky e
-            grid configure $f.$var.spn$key -sticky ew
-        }
-        grid columnconfigure $f.$var 1 -weight 1
+    foreach {key info} $v::guilayout {
+        lassign $info name rmin rmax rinc fmt
+        ttk::label $f.bath_ctl.lbl$key -text "${name}:"
+        ttk::spinbox $f.bath_ctl.spn$key \
+                -width 8 \
+                -textvariable ${ns}::v::bath_ctl($key) \
+                -from $rmin -to $rmax -increment $rinc
+        ::mixin::revertable $f.bath_ctl.spn$key -applycommand \
+                [list ::eaarl::settings::bath_ctl::applycmd bath_ctl $key]
+        ::misc::tooltip $f.bath_ctl.lbl$key $f.bath_ctl.spn$key \
+                "Press Enter to apply current changes to field. Press
+                Escape to revert current changes to field."
+        ttk::button $f.bath_ctl.app$key -text "\u2713" \
+                -style Toolbutton \
+                -command [list $f.bath_ctl.spn$key apply]
+        ::misc::tooltip $f.bath_ctl.app$key "Apply current changes to field"
+        ttk::button $f.bath_ctl.rev$key -text "x" \
+                -style Toolbutton \
+                -command [list $f.bath_ctl.spn$key revert]
+        ::misc::tooltip $f.bath_ctl.rev$key "Revert current changes to field"
+        grid $f.bath_ctl.lbl$key $f.bath_ctl.spn$key $f.bath_ctl.app$key \
+                $f.bath_ctl.rev$key -padx 2 -pady 2
+        grid configure $f.bath_ctl.lbl$key -sticky e
+        grid configure $f.bath_ctl.spn$key -sticky ew
     }
+    grid columnconfigure $f.bath_ctl 1 -weight 1
 
-    grid $f.bath_ctl $f.bath_ctl_chn4 -sticky news -padx 2 -pady 2
-    grid columnconfigure $f {0 1} -weight 1 -uniform 1
+    grid $f.bath_ctl -sticky news -padx 2 -pady 2
+    grid columnconfigure $f 0 -weight 1 -uniform 1
 
     grid $w.f -sticky news
     grid columnconfigure $w 0 -weight 1
