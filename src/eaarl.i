@@ -81,6 +81,7 @@ require, "data_segments.i";
 require, "datum_converter.i";
 require, "dir.i";
 require, "dirload.i";
+require, "distributions.i";
 require, "dmars.i";
 require, "edf.i";
 require, "expix.i";
