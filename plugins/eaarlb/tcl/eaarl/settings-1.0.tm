@@ -473,5 +473,5 @@ proc ::eaarl::settings::bath_ctl::preset {var preset} {
     dict for {key val} [dict get $v::presets $preset] {
         append cmd "var_expr_tkupdate, \"$var.$key\", \"$val\"; "
     }
-    exp_send $cmd
+    exp_send "$cmd\r"
 }
