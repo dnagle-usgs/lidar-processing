@@ -335,7 +335,7 @@ xfma=, verbose=) {
     plot_bath_ctl, channel, wf, thresh=thresh, raster=raster_number, pulse=pulse_number;
   }
 
-  wf_decay = bathy_wf_compensate_decay(wf, surface=surface_sat_end,
+  wf_decay = bathy_wf_compensate_decay_exp(wf, surface=surface_sat_end,
       laser_coeff=conf.laser, water_coeff=conf.water,
       agc_coeff=conf.agc, max_intensity=escale,
       sample_interval=sample_interval, graph=graph, win=win);
@@ -476,9 +476,9 @@ func bathy_detect_surface(wf, maxint, thresh, sfc_last, &surface,
   }
 }
 
-func bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=,
+func bathy_wf_compensate_decay_exp(wf, surface=, laser_coeff=, water_coeff=,
 agc_coeff=, max_intensity=, sample_interval=, graph=, win=) {
-/* DOCUMENT bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=,
+/* DOCUMENT bathy_wf_compensate_decay_exp(wf, surface=, laser_coeff=, water_coeff=,
  * agc_coeff=, max_intensity=, sample_interval=, graph=, win=)
   Returns an adjusted waveform WF_DECAY that compensates for attenuation of
   light in water.
