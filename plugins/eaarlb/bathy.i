@@ -336,10 +336,17 @@ xfma=, verbose=) {
     plot_bath_ctl, channel, wf, thresh=thresh, raster=raster_number, pulse=pulse_number;
   }
 
-  wf_decay = bathy_wf_compensate_decay_exp(wf, surface=surface_sat_end,
-      laser_coeff=conf.laser, water_coeff=conf.water,
-      agc_coeff=conf.agc, max_intensity=escale,
-      sample_interval=sample_interval, graph=graph, win=win);
+  if(forcechannel == 4) {
+    wf_decay = bathy_wf_compensate_decay_lognorm(wf, surface=surface_sat_end,
+        mean=conf.laser, stdev=conf.water,
+        agc_coeff=conf.agc, max_intensity=escale,
+        sample_interval=sample_interval, graph=graph, win=win);
+  } else {
+    wf_decay = bathy_wf_compensate_decay_exp(wf, surface=surface_sat_end,
+        laser_coeff=conf.laser, water_coeff=conf.water,
+        agc_coeff=conf.agc, max_intensity=escale,
+        sample_interval=sample_interval, graph=graph, win=win);
+  }
 
   first = min(wflen, conf.first);
   last = min(wflen, conf.last);
@@ -525,6 +532,69 @@ agc_coeff=, max_intensity=, sample_interval=, graph=, win=) {
 
   return wf_decay;
 }
+
+func bathy_wf_compensate_decay_lognorm(cache, wf, surface=, mean=, stdev=,
+agc_coeff=, max_intensity=, sample_interval=, graph=, win=) {
+/* DOCUMENT bathy_wf_compensate_decay_lognorm(wf, surface=, mean=, stdev=,
+   agc_coeff=, max_intensity=, sample_interval=, graph=, win=)
+  Returns an adjusted waveform WF_DECAY that compensates for attenuation of
+  light in water.
+*/
+  default, sample_interval, 1.0;
+
+  // Hard-coded parameters into log_normal:
+  // This is the pixel at which you want the peak to occur
+  peakx = 25;
+  // This is a scaling parameter to convert from sample counts to standard
+  // normal variable values. The maximum waveform length is 300; xscale=15
+  // means that log_normal will effectively operate over the range 0 to 20
+  // instead (300/15 = 20). With xscale=10, the range is 0 to 30.
+  xscale = 10.;
+
+  // Hard-coded parameter for determining which pixel to match intensity on.
+  // This should probably be beyond where we expect to find the surface.
+  pixint = 25;
+
+  wflen = numberof(wf);
+  opts = [mean, stdev, peakx, xscale];
+  if(anyof(opts != cache.opts) || wflen > cache.len) {
+    len = max(wflen, 300);
+    decay = log_normal(indgen(1:len), mean, stdev, peakx=peakx, xscale=xscale);
+    save, cache, opts, len, decay;
+  } else {
+    decay = cache.decay;
+  }
+
+  wflen = numberof(wf);
+  attdepth = indgen(0:wflen-1) * sample_interval * CNSH2O2X;
+
+  pixint = min(pixint, wflen);
+  decay = decay(:wflen) / decay(pixint) * wf(pixint);
+
+  agc = 1.0 - exp(agc_coeff * attdepth);
+  agc(surface:0) = agc(1:0-surface+1);
+  agc(1:surface) = 0.0;
+
+  bias = (1-agc) * -5.0;
+  wf_temp = wf - decay;
+  wf_decay = wf_temp*agc + bias;
+
+  if(graph) {
+    wbkp = current_window();
+    window, win;
+    plg, decay, color="magenta";
+    plg, agc*40, color=[100,100,100];
+    plmk, wf_temp, msize=.2, marker=1, color="black";
+    plg, wf_temp;
+    plmk, wf_decay, msize=.2, marker=1, color="blue";
+    plg, wf_decay, color="blue";
+    window_select, wbkp;
+  }
+
+  return wf_decay;
+}
+bathy_wf_compensate_decay_lognorm = closure(bathy_wf_compensate_decay_lognorm,
+  save(opts=[0,0,0,0], len=0, decay=[]));
 
 func bathy_detect_bottom(wf, first, last, thresh, &bottom_peak, &msg) {
 /* DOCUMENT bathy_detect_bottom(wf, first, last, thresh, &bottom_peak, &msg)
