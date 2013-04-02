@@ -41,6 +41,10 @@ namespace eval ::eaarl::settings::ops_conf::v {
 
 proc ::eaarl::settings::ops_conf::applycmd {key old new} {
     exp_send "var_expr_tkupdate, \"ops_conf.$key\", \"$new\";\r"
+   # Generating an error tells the revertable control not to apply the change;
+   # this prevents an inconsistent state if Yorick doesn't actually accept the
+   # value (during a mouse wait for instance).
+   return -code error
 }
 
 proc ::eaarl::settings::ops_conf::gui_line {w key} {
@@ -76,6 +80,7 @@ proc ::eaarl::settings::ops_conf::gui_spinbox {w key from to inc} {
     ttk::spinbox $w.$key -textvariable ${var}($key) \
             -from $from -to $to -increment $inc
     gui_line $w $key
+    $w.$key configure -valuetype number
 }
 
 proc ::eaarl::settings::ops_conf::gui {} {
