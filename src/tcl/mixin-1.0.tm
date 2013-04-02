@@ -178,7 +178,8 @@ proc ::mixin::text::calc_height w {
 #       -revertcommand
 #   Both are called with two parameters: $old $new. These are the old
 #   (unmodified) and new (modified) values of the widget prior to the apply or
-#   revert. This is invoked *after* the apply or revert has occured.
+#   revert. This is invoked *before* the apply or revert has occured. If the
+#   command throws an exception, the apply or revert will not occur.
 #
 #   This is intended to work on ttk::entry, ttk::spinbox, and ttk::combobox. If
 #   the widget doesn't already exist, it will be created as a ttk::entry. The
@@ -238,19 +239,25 @@ snit::widgetadaptor ::mixin::revertable {
     method revert {} {
         set old [set $options(-textvariable)]
         set new [set $options(-workvariable)]
-        set $options(-workvariable) [set $options(-textvariable)]
         if {$options(-revertcommand) ne ""} {
-            eval $options(-revertcommand) [list $old $new]
+            set cmd [string map [list %W $win] $options(-revertcommand)]
+            if {[catch {{*}$cmd $old $new}]} {
+                return
+            }
         }
+        set $options(-workvariable) [set $options(-textvariable)]
     }
 
     method apply {} {
         set old [set $options(-textvariable)]
         set new [set $options(-workvariable)]
-        set $options(-textvariable) [set $options(-workvariable)]
         if {$options(-applycommand) ne ""} {
-            eval $options(-applycommand) [list $old $new]
+            set cmd [string map [list %W $win] $options(-applycommand)]
+            if {[catch {{*}$cmd $old $new}]} {
+                return
+            }
         }
+        set $options(-textvariable) [set $options(-workvariable)]
     }
 
     method SetTextVar {option value} {
