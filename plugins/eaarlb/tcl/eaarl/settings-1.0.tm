@@ -293,9 +293,10 @@ proc ::eaarl::settings::bath_ctl::gui_main {} {
                     -width 8 \
                     -textvariable ${ns}::v::${var}($key) \
                     -from $rmin -to $rmax -increment $rinc
-            ::mixin::revertable $f.$var.spn$key -applycommand \
+            ::mixin::revertable $f.$var.spn$key \
                     -valuetype number \
-                    [list ::eaarl::settings::bath_ctl::applycmd $var $key]
+                    -applycommand \
+                        [list ::eaarl::settings::bath_ctl::applycmd $var $key]
             ::misc::tooltip $f.$var.lbl$key $f.$var.spn$key \
                     "Press Enter to apply current changes to field. Press
                     Escape to revert current changes to field."
