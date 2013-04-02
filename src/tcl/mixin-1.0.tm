@@ -265,10 +265,12 @@ snit::widgetadaptor ::mixin::revertable {
         if {$options(-applycommand) ne ""} {
             set cmd [string map [list %W $win] $options(-applycommand)]
             if {[catch {{*}$cmd $old $new}]} {
+                $self TraceTextWrite - - -
                 return
             }
         }
         set $options(-textvariable) [set $options(-workvariable)]
+        $self TraceTextWrite - - -
     }
 
     method SetTextVar {option value} {
@@ -302,6 +304,7 @@ snit::widgetadaptor ::mixin::revertable {
         }
         if {[$self VarsMatch]} {
             $self state !alternate
+            set $options(-workvariable) [set $options(-textvariable)]
         } else {
             $self state alternate
         }
