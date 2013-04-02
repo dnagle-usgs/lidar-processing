@@ -181,6 +181,14 @@ proc ::mixin::text::calc_height w {
 #   revert. This is invoked *before* the apply or revert has occured. If the
 #   command throws an exception, the apply or revert will not occur.
 #
+#   One additional command changes how the values are interpreted:
+#       -valuetype
+#   By default this is "string", but it can also be "number". When it's
+#   "string", the values are compared using "eq" and when it's "number" they
+#   are compared using ==. This is used for determining whether the value has
+#   changed or not. (In number mode, you can change 1.0 to 1.0000 and it won't
+#   register as having changed.)
+#
 #   This is intended to work on ttk::entry, ttk::spinbox, and ttk::combobox. If
 #   the widget doesn't already exist, it will be created as a ttk::entry. The
 #   widget's style will be modified so that the widget indicates visually when
@@ -236,6 +244,9 @@ snit::widgetadaptor ::mixin::revertable {
     option {-revertcommand revertCommand RevertCommand} \
             -default {}
 
+    option {-valuetype valueType ValueType} \
+            -default string
+
     method revert {} {
         set old [set $options(-textvariable)]
         set new [set $options(-workvariable)]
@@ -289,7 +300,7 @@ snit::widgetadaptor ::mixin::revertable {
         if {[$self instate !alternate]} {
             set $options(-workvariable) [set $options(-textvariable)]
         }
-        if {[set $options(-workvariable)] eq [set $options(-textvariable)]} {
+        if {[$self VarsMatch]} {
             $self state !alternate
         } else {
             $self state alternate
@@ -297,10 +308,20 @@ snit::widgetadaptor ::mixin::revertable {
     }
 
     method TraceWorkWrite {name1 name2 op} {
-        if {[set $options(-workvariable)] eq [set $options(-textvariable)]} {
+        if {[$self VarsMatch]} {
             $self state !alternate
         } else {
             $self state alternate
+        }
+    }
+
+    method VarsMatch {} {
+        set old [set $options(-textvariable)]
+        set new [set $options(-workvariable)]
+        if {$options(-valuetype) eq "number"} {
+            return [expr {$old == $new}]
+        } else {
+            return [expr {$old eq $new}]
         }
     }
 }
