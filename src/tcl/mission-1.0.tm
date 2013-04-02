@@ -46,6 +46,13 @@ if {![namespace exists ::mission]} {
         # during "Select File...".
         variable detail_filetypes {}
 
+        # -filetypes option for Mission Configuration files.
+        set mission_filetypes {
+            {"Mission files" .mission}
+            {"JSON files" .json}
+            {"All files" *}
+        }
+
         # GUI specific variables...
 
         # Toplevel
@@ -1181,6 +1188,7 @@ namespace eval ::mission {
     proc load_conf {args} {
         variable top
         variable currentfile
+        variable mission_filetypes
         set parent $top
         if {[dict exists $args -parent]} {
             set parent [dict get $args -parent]
@@ -1192,7 +1200,7 @@ namespace eval ::mission {
         set fn [tk_getOpenFile \
                 -initialdir $initialdir \
                 -parent $parent \
-                -filetypes {{"JSON files" .json} {"All files" *}} \
+                -filetypes $mission_filetypes \
                 -title "Select mission configuration to load"]
         if {$fn ne ""} {
             set currentfile $fn
@@ -1210,6 +1218,7 @@ namespace eval ::mission {
     proc save_conf {} {
         variable top
         variable currentfile
+        variable mission_filetypes
         set initial ""
         if {$currentfile ne "" && $::mission::path ne ""} {
             set initial [::fileutil::relative $::mission::path $currentfile]
@@ -1222,6 +1231,7 @@ namespace eval ::mission {
                 -initialdir $::mission::path \
                 -initialfile $initial \
                 -parent $top \
+                -filetypes $mission_filetypes \
                 -title "Select destination for mission configuration"]
         if {$fn ne ""} {
             set currentfile $fn
