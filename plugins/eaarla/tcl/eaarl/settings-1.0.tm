@@ -237,6 +237,10 @@ namespace eval ::eaarl::settings::bath_ctl::v {
 
 proc ::eaarl::settings::bath_ctl::applycmd {var key old new} {
     exp_send "var_expr_tkupdate, \"$var.$key\", \"$new\";\r"
+   # Generating an error tells the revertable control not to apply the change;
+   # this prevents an inconsistent state if Yorick doesn't actually accept the
+   # value (during a mouse wait for instance).
+   return -code error
 }
 
 proc ::eaarl::settings::bath_ctl::gui_main {} {
@@ -282,6 +286,7 @@ proc ::eaarl::settings::bath_ctl::gui_main {} {
                 -textvariable ${ns}::v::bath_ctl($key) \
                 -from $rmin -to $rmax -increment $rinc
         ::mixin::revertable $f.bath_ctl.spn$key -applycommand \
+                -valuetype number \
                 [list ::eaarl::settings::bath_ctl::applycmd bath_ctl $key]
         ::misc::tooltip $f.bath_ctl.lbl$key $f.bath_ctl.spn$key \
                 "Press Enter to apply current changes to field. Press
@@ -357,6 +362,7 @@ snit::type ::eaarl::settings::bath_ctl::gui_embed {
             ttk::spinbox $f.spn$key -width 3 \
                     -from $rmin -to $rmax -increment $rinc
             ::mixin::revertable $f.spn$key \
+                    -valuetype number \
                     -applycommand [mymethod ApplyCmd $key]
             ::misc::tooltip $f.lbl$key $f.spn$key \
                     "Press Enter to apply current changes to field. Press
@@ -427,7 +433,13 @@ snit::type ::eaarl::settings::bath_ctl::gui_embed {
         } else {
             set var bath_ctl
         }
-        ::eaarl::settings::bath_ctl::applycmd $var $key $old $new
+        # Omit trailing \r so that replot appends to it
+        exp_send "var_expr_tkupdate, \"$var.$key\", \"$new\"; "
+        $self replot
+        # Generating an error tells the revertable control not to apply the
+        # change; this prevents an inconsistent state if Yorick doesn't
+        # actually accept the value (during a mouse wait for instance).
+        return -code error
     }
 
     method id {} {
