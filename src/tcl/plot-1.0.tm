@@ -141,6 +141,7 @@ proc ::plot::pane_interact {pane} {
          -width 3 \
          -from 0 -to 60 -increment 1
    ::mixin::revertable $f.spnZone \
+         -valuetype number \
          -textvariable ::curzone \
          -applycommand ::plot::curzone_apply
    ttk::button $f.appZone -text "\u2713" \
@@ -571,6 +572,10 @@ proc ::plot::pane_plan {pane} {
 
 proc ::plot::curzone_apply {old new} {
    exp_send "curzone = $new;\r"
+   # Generating an error tells the revertable control not to apply the change;
+   # this prevents an inconsistent state if Yorick doesn't actually accept the
+   # value (during a mouse wait for instance).
+   return -code error
 }
 
 proc ::plot::plot_all {} {
