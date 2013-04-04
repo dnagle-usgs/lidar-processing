@@ -43,6 +43,9 @@ struct BATH_CTL {
   double laser, water, agc, thresh;
   int first, last, sfc_last, maxsat, lwing_dist, rwing_dist;
   double lwing_factor, rwing_factor;
+  double xshift, xscale;
+  long tiepoint;
+  short smoothwf;
 };
 
 local bath_ctl, bath_ctl_chn4;
@@ -133,6 +136,10 @@ func bath_ctl_load(filename) {
       }
     }
   }
+  bath_ctl_chn4.xshift = 20;
+  bath_ctl_chn4.xscale = 10;
+  bath_ctl_chn4.tiepoint = 25;
+  bath_ctl_chn4.smoothwf = 1;
 }
 
 func run_bath(nil, start=, stop=, center=, delta=, last=, forcechannel=,
@@ -442,6 +449,12 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
   wf = float(~raw_wf);
   maxint = 255 - long(wf(1));
   wf = wf - wf(1);
+
+  // Apply moving 3-point average
+  extern bath
+  if(conf.smoothwf && numberof(wf) > 2) {
+    wf(2:-1) = (wf(1:-2)+wf(2:-1)+wf(3:0))/3.;
+  }
 }
 
 func bathy_detect_surface(wf, maxint, thresh, sfc_last, &surface,
@@ -553,33 +566,36 @@ agc_coeff=, max_intensity=, sample_interval=, graph=, win=) {
   default, sample_interval, 1.0;
 
   // Hard-coded parameters into log_normal:
-  // This is the pixel at which you want the peak to occur
-  peakx = 25;
+  // This is the pixel at which you want the distribution to start.
+  xshift = conf.xshift;
   // This is a scaling parameter to convert from sample counts to standard
   // normal variable values. The maximum waveform length is 300; xscale=15
   // means that log_normal will effectively operate over the range 0 to 20
   // instead (300/15 = 20). With xscale=10, the range is 0 to 30.
-  xscale = 10.;
+  xscale = conf.xscale;
 
   // Hard-coded parameter for determining which pixel to match intensity on.
   // This should probably be beyond where we expect to find the surface.
-  pixint = 25;
+  tiepoint = conf.tiepoint;
 
   wflen = numberof(wf);
-  opts = [mean, stdev, peakx, xscale];
+  opts = [mean, stdev, xshift, xscale];
   if(anyof(opts != cache.opts) || wflen > cache.len) {
     len = max(wflen, 300);
-    decay = log_normal(indgen(1:len), mean, stdev, peakx=peakx, xscale=xscale);
+    decay = log_normal(indgen(1:len), mean, stdev, xshift=xshift, xscale=xscale);
     save, cache, opts, len, decay;
   } else {
     decay = cache.decay;
   }
 
   wflen = numberof(wf);
+  if(wflen < tiepoint) {
+    // If the waveform is too short, abort and flatten wf
+    return wf * 0;
+  }
   attdepth = indgen(0:wflen-1) * sample_interval * CNSH2O2X;
 
-  pixint = min(pixint, wflen);
-  decay = decay(:wflen) / decay(pixint) * wf(pixint);
+  decay = decay(:wflen) / decay(tiepoint) * wf(tiepoint);
 
   agc = 1.0 - exp(agc_coeff * attdepth);
   agc(surface:0) = agc(1:0-surface+1);
