@@ -320,7 +320,8 @@ xfma=, verbose=) {
   // values.
   if(numsat != 0) {
     if(numsat >= conf.maxsat) {
-      ex_bath_message, graph, verbose, swrite(format="%d points saturated", numsat);
+      msg = swrite(format="%d points saturated", numsat);
+      ex_bath_message, graph, verbose, msg;
       if(graph)
         plot_bath_ctl, channel, wf, last=wflen, raster=raster_number, pulse=pulse_number;
       return result;
