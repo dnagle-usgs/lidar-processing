@@ -161,9 +161,8 @@ tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=, bathyverbose=)
         pulse=60          Default
     bathy= Enables bathy mode: bottom markers will be overlaid on the raster.
         bathy=0           Default (disabled)
-    bathyoffset= Bathy offset. This gets added to the depth values. Postive
-      values shift the markers lower. Value is in nanoseconds. Ignored if
-      bathy=0.
+    bathyoffset= Bathy offset. This gets added to the depth values. Value is in
+      nanoseconds. Ignored if bathy=0.
         bathyoffset=5     Default
     bathyverbose= Enables a verbose bathy mode. Information about failed
       bottoms will be printed to the console. Ignored if bathy=0.
@@ -244,7 +243,7 @@ tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=, bathyverbose=)
       depth = ex_bath(rn, pulse, msg, forcechannel=channel, graph=0, verbose=0,
         keeprejected=1);
       if(depth.idx > -10000) {
-        bottom = bias - depth.idx - bathyoffset;
+        bottom = bias - depth.idx + bathyoffset;
         bottom = apply_depth_scale(bottom, units=units, autoshift=!geo);
         if(geo) bottom += z(pulse);
         if(is_void(msg)) {
