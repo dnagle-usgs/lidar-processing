@@ -411,11 +411,8 @@ snit::type ::eaarl::settings::bath_ctl::gui_embed {
             puts "raster"
             if {[$obj cget -geo]} {continue}
             puts "geo"
-            append cmd "show_rast, $options(-raster),\
-                    channel=$options(-channel), win=$win, bathy=1; "
-        }
-        if {$cmd ne ""} {
-            append cmd "write, \"\\nCurrent Pulse: $options(-pulse)\"; "
+            append cmd "show_rast, $options(-raster), win=$win, bathy=1,
+                    channel=$options(-channel), autolims=0; "
         }
         append cmd "ex_bath, $options(-raster), $options(-pulse), graph=1,\
                 win=$options(-window), xfma=1"
