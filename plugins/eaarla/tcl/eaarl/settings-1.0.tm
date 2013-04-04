@@ -398,7 +398,26 @@ snit::type ::eaarl::settings::bath_ctl::gui_embed {
     }
 
     method replot {} {
-        set cmd "ex_bath, $options(-raster), $options(-pulse), graph=1,\
+        set cmd ""
+        for {set win 0} {$win < 64} {incr win} {
+            set obj [.yorwin$win cget -owner]
+            set type ""
+            catch {set type [$obj info type]}
+            if {$type ne "::eaarl::rasters::rastplot::gui"} {continue}
+            puts "$win $type"
+            if {[$obj cget -channel] != $options(-channel)} {continue}
+            puts "channel"
+            if {[$obj cget -raster] != $options(-raster)} {continue}
+            puts "raster"
+            if {[$obj cget -geo]} {continue}
+            puts "geo"
+            append cmd "show_rast, $options(-raster),\
+                    channel=$options(-channel), win=$win, bathy=1; "
+        }
+        if {$cmd ne ""} {
+            append cmd "write, \"\\nCurrent Pulse: $options(-pulse)\"; "
+        }
+        append cmd "ex_bath, $options(-raster), $options(-pulse), graph=1,\
                 win=$options(-window), xfma=1"
         if {$options(-channel)} {
             append cmd ", forcechannel=$options(-channel)"
