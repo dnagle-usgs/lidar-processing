@@ -237,6 +237,7 @@ tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=, bathyverbose=)
 
   if(bathy) {
     bias = get_member(ops_conf, swrite(format="chn%d_range_bias", channel));
+    bgood = bbad = 0;
     for(pulse = 1; pulse <= 120; pulse++) {
       if(skip(pulse)) continue;
       msg = [];
@@ -247,14 +248,19 @@ tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=, bathyverbose=)
         bottom = apply_depth_scale(bottom, units=units, autoshift=!geo);
         if(geo) bottom += z(pulse);
         if(is_void(msg)) {
+          bgood++;
           plmk, bottom, pulse+.5, color="green", marker=7, msize=0.25;
         } else {
+          bbad++;
           plmk, bottom, pulse+.5, color="white", marker=6, msize=0.25;
         }
       }
-      if(!is_void(msg)) {
-        write, format="Pulse %d: %s\n", pulse, msg;
-      }
+    }
+    if(bathyverbose) {
+      btotal = bgood + bbad;
+      bsnr = (btotal > 0) ? 100*bgood/double(btotal) : 0.;
+      write, format=" Bathy: %d total; %d accepted; %d rejected; SNR: %.1f%%\n",
+        btotal, bgood, bbad, bsnr;
     }
   }
 
