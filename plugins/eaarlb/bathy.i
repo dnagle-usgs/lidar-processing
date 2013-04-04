@@ -207,7 +207,7 @@ func show_bath_constants {
 }
 
 func ex_bath(raster_number, pulse_number, &msg, last=, forcechannel=, graph=, win=,
-xfma=, verbose=) {
+xfma=, verbose=, keeprejected=) {
 /* DOCUMENT ex_bath(raster_number, pulse_number)
   See run_bath for details on usage.
 
@@ -266,6 +266,7 @@ xfma=, verbose=) {
   default, win, 4;
   default, graph, 0;
   default, verbose, graph;
+  default, keeprejected, 0;
 
   // hard coded for now
   sample_interval = 1.;
@@ -377,6 +378,10 @@ xfma=, verbose=) {
     conf.lwing_dist, conf.rwing_dist, conf.lwing_factor, conf.rwing_factor,
     msg;
 
+  if(is_void(msg) || keeprejected) {
+    result.idx = bottom_peak + get_member(ops_conf, swrite(format="chn%d_range_bias", channel));
+  }
+
   if(!is_void(msg)) {
     ex_bath_message, graph, verbose, msg;
     return result;
@@ -390,7 +395,6 @@ xfma=, verbose=) {
     ex_bath_message, graph, 0, swrite(format="%3dns\n%3.0f sfc\n%3.1f cnts(blue)\n%3.1f cnts(black)\n(~%3.1fm)", bottom_peak, double(surface_intensity), bottom_intensity, wf(bottom_peak), (bottom_peak-7)*sample_interval*CNSH2O2X);
   }
 
-  result.idx = bottom_peak + get_member(ops_conf, swrite(format="chn%d_range_bias", channel));
   return result;
 }
 
