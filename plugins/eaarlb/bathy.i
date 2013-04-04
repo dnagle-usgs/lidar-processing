@@ -394,7 +394,7 @@ func ex_bath_message(graph, verbose, msg) {
     plt, strwrap(msg, width=25, paragraph="\n"), port(2), port(4),
       justify="RT", tosys=0, color="red";
   }
-  if(verbose) write, "Rejected: "+msg+"\n";
+  if(verbose) write, "Rejected: "+msg;
 }
 
 func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
