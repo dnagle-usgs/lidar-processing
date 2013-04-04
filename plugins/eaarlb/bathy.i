@@ -206,7 +206,7 @@ func show_bath_constants {
   }
 }
 
-func ex_bath(raster_number, pulse_number, last=, forcechannel=, graph=, win=,
+func ex_bath(raster_number, pulse_number, &msg, last=, forcechannel=, graph=, win=,
 xfma=, verbose=) {
 /* DOCUMENT ex_bath(raster_number, pulse_number)
   See run_bath for details on usage.
@@ -353,7 +353,7 @@ xfma=, verbose=) {
 
   offset = first - 1;
 
-  local bottom_peak, msg;
+  local bottom_peak;
   bathy_detect_bottom, wf_decay, first, last, thresh, bottom_peak, msg;
 
   if(!is_void(msg)) {
