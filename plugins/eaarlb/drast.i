@@ -115,9 +115,10 @@ autolims=, pulse=) {
 }
 
 func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=, eoffset=,
-tx=, autolims=, showcbar=, sfsync=, pulse=) {
+tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=, bathyverbose=) {
 /* DOCUMENT show_rast, rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=,
-   tx=, autolims=, showbar=, sfsync=
+   eoffset=, tx=, autolims=, showbar=, sfsync=, pulse=, bathy=, bathyoffset=,
+   bathyverbose=
 
   Displays a raster's waveform data as an 2-dimensional image, where the x axis
   is the pulse number and the y axis is depth, time, or elevation (depending on
@@ -158,6 +159,15 @@ tx=, autolims=, showcbar=, sfsync=, pulse=) {
         sfsync=0          Default
     pulse= Initialize the GUI with the specified pulse number.
         pulse=60          Default
+    bathy= Enables bathy mode: bottom markers will be overlaid on the raster.
+        bathy=0           Default (disabled)
+    bathyoffset= Bathy offset. This gets added to the depth values. Postive
+      values shift the markers lower. Value is in nanoseconds. Ignored if
+      bathy=0.
+        bathyoffset=5     Default
+    bathyverbose= Enables a verbose bathy mode. Information about failed
+      bottoms will be printed to the console. Ignored if bathy=0.
+        bathyverbose=1    Default
 */
   extern data_path, soe_day_start;
   default, channel, 1;
@@ -172,6 +182,9 @@ tx=, autolims=, showcbar=, sfsync=, pulse=) {
   default, showcbar, 0;
   default, sfsync, 0;
   default, pulse, 60;
+  default, bathy, 0;
+  default, bathyoffset, 0;
+  default, bathyverbose, 1;
 
   // Ignore tx=1 if channel=0
   if(channel == 0) tx = 0;
@@ -220,6 +233,29 @@ tx=, autolims=, showcbar=, sfsync=, pulse=) {
 
     pli, wf, pulse, scale(1), pulse+1, scale(2), cmin=cmin, cmax=cmax;
     top = max(top, scale(1));
+  }
+
+  if(bathy) {
+    bias = get_member(ops_conf, swrite(format="chn%d_range_bias", channel));
+    for(pulse = 1; pulse <= 120; pulse++) {
+      if(skip(pulse)) continue;
+      msg = [];
+      depth = ex_bath(rn, pulse, msg, forcechannel=channel, graph=0, verbose=0,
+        keeprejected=1);
+      if(depth.idx > -10000) {
+        bottom = bias - depth.idx - bathyoffset;
+        bottom = apply_depth_scale(bottom, units=units, autoshift=!geo);
+        if(geo) bottom += z(pulse);
+        if(is_void(msg)) {
+          plmk, bottom, pulse+.5, color="green", marker=7, msize=0.25;
+        } else {
+          plmk, bottom, pulse+.5, color="white", marker=6, msize=0.25;
+        }
+      }
+      if(!is_void(msg)) {
+        write, format="Pulse %d: %s\n", pulse, msg;
+      }
+    }
   }
 
   if(tx) {
