@@ -308,8 +308,13 @@ xfma=, verbose=) {
 
   result.channel = channel;
 
-  if(!wflen)
+  if(!wflen) {
+    if(graph)
+      plot_bath_ctl, channel, wf, raster=raster_number, pulse=pulse_number;
+    msg = "No waveform";
+    ex_bath_message, graph, verbose, msg;
     return result;
+  }
 
   // Dont bother processing returns with more than bathctl.maxsat saturated
   // values.
