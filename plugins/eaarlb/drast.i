@@ -208,7 +208,7 @@ tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=, bathyverbose=)
   skip = array(0, 120);
   if(geo) {
     units = "meters";
-    fs = first_surface(start=rn, stop=rn, verbose=0)(1);
+    fs = first_surface(start=rn, stop=rn, verbose=0, usecentroid=1)(1);
     data2xyz, fs, , , z, mode="fs";
     if(rcfw) {
       skip(*) = 1;
