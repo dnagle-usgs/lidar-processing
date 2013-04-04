@@ -15,7 +15,8 @@ local BATHPIX;
 */
 struct BATHPIX {
   long rastpix;
-  short sa, idx, bottom_peak, first_peak;
+  short sa, bottom_peak, first_peak;
+  float idx;
   char channel;
 };
 
