@@ -878,6 +878,9 @@ func mission_load_soe_rn(soe, rn) {
 
   See "mission, help, query_soe_rn" for details on how the flight is determined
   from the SOE and RN.
+
+  As an optimization, if the currently-loaded flight contains this SOE and RN,
+  then no action is taken.
 */
   if(handler_has("mission_load_soe_rn")) {
     restore, handler_invoke("mission_load_soe_rn", save(soe, rn));
@@ -895,6 +898,9 @@ func mission_load_soe(soe) {
 
   See "mission, help, query_soe" for details on how the flight is determined
   from the SOE.
+
+  As an optimization, if the currently-loaded flight contains this SOE, then no
+  action is taken.
 */
   if(handler_has("mission_load_soe")) {
     restore, handler_invoke("mission_load_soe", save(soe));
