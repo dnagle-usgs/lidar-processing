@@ -272,9 +272,7 @@ void Y_uniq(int nArgs)
   if(nArgs != 1)
     y_error("uniq accepts exactly one argument");
 
-  if(yarg_nil(0)) return;
-
-  if(yarg_rank(0) == -1)
+  if(yarg_nil(0) || yarg_rank(0) == -1)
     y_error("uniq only accepts numeric and string arrays");
 
   long count, dims[Y_DIMSIZE], *list, i, new_count;
