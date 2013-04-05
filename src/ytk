@@ -644,6 +644,12 @@ proc start_yorick {}  {
     set ::state 0
     interact {
         -o
+        # Yorick errors cancel pending after events. This makes sure that the
+        # tksync, background event gets rescheduled.
+        -re {\nERROR } {
+            exp_send_user $interact_out(0,string)
+            ybkg tksync background
+        }
         # This should never conflict with the command line because the command
         # line always has the pattern "\n> " at the start. DOCUMENT statements
         # never start with >.
