@@ -413,13 +413,9 @@ snit::type ::eaarl::settings::bath_ctl::gui_embed {
             set type ""
             catch {set type [$obj info type]}
             if {$type ne "::eaarl::rasters::rastplot::gui"} {continue}
-            puts "$win $type"
             if {[$obj cget -channel] != $options(-channel)} {continue}
-            puts "channel"
             if {[$obj cget -raster] != $options(-raster)} {continue}
-            puts "raster"
             if {[$obj cget -geo]} {continue}
-            puts "geo"
             append cmd "show_rast, $options(-raster), win=$win, bathy=1,
                     channel=$options(-channel), autolims=0; "
         }
