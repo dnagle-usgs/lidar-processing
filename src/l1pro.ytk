@@ -45,7 +45,7 @@ if {![info exists l1pro_data]} {
   set avg_surf 1
   set rcf_buf_rgn 0; #Used in proc filter_replace
   set autoclean_after_process 1
-  set l1pro_fma 0
+  set l1pro_fma 1
   set skip 1
 
   set gridtype grid
