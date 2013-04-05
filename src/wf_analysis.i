@@ -288,10 +288,9 @@ func extract_peaks_first_deriv(w1, thresh=, verbose=, graph=, newgraph=, win=) {
   Output:
     peaks_idx = returns index to the maxima locations of w1.
 */
-
-  if (is_void(thresh)) thresh = 3;
+  default, thresh, 3;
   if (verbose) write, "*** Func extract_peaks_first_deriv ***";
-  if (verbose) write, format="Threshold value = %d; Diff operator threshold = %d\n", thresh, diffthresh;
+  if (verbose) write, format="Threshold value = %.1f\n", double(thresh);
 
   if (newgraph) {
     if (is_void(win)) win = 25;
