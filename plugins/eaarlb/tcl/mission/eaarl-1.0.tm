@@ -170,7 +170,7 @@ namespace eval ::mission::eaarl {
                 -command ::eaarl::main::gui
         ttk::button $f.btnPlot -text "Plotting Tool" -width 0 \
                 -command ::plot::gui
-        grid x $f.btnPro $f.btnPlot -padx 2 -pady 2
+        grid x $f.btnPlot $f.btnPro -padx 2 -pady 2
         grid columnconfigure $f {0 3} -weight 1
 
         grid $extra.f1 -sticky ew
