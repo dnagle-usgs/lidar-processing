@@ -49,7 +49,7 @@ if {![namespace exists ::plot]} {
 
       # GUI variables
       namespace eval g {
-         variable fma 0
+         variable fma 1
          # gga(llu)   utm = 1 or 0
          variable coordType "UTM"
          # gga(linewidth)
