@@ -347,7 +347,7 @@ proc menu_debug mb {
             -command ::logger::dlg_logfile
     $mb add separator
     $mb add command {*}[menulabel "&Restart background sync"] \
-            -command [list exp_send "tksync, background\r"]
+            -command [list exp_send "tksync_background\r"]
     $mb add command {*}[menulabel "&Nudge Yorick in background"] \
             -command ybkg_nudge
     $mb add separator

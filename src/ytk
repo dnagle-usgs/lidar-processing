@@ -648,7 +648,7 @@ proc start_yorick {}  {
         # tksync, background event gets rescheduled.
         -re {ERROR} {
             exp_send_user $interact_out(0,string)
-            ybkg tksync background
+            ybkg tksync_background
         }
         # This should never conflict with the command line because the command
         # line always has the pattern "\n> " at the start. DOCUMENT statements

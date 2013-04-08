@@ -34,9 +34,14 @@ local tksync;
       Schedules a background process. When Yorick is idle, this will
       periodically call tksync,check. This background process is
       automatically kicked off at startup. To cancel it, run:
-        after, 0, tksync, background
+        after, -, tksync, background
       To start it back up, just run the command normally again:
         tksync, background
+
+    BUG WORKAROUND:
+      tksync,background is currently replaced by tksync_background. Cancel
+      using:
+        after, -, tksync_background
 
   By default, tksync,background schedules itself every 0.25 seconds. If you
   want to change that interval, you can update the interval member. For
@@ -45,8 +50,8 @@ local tksync;
     save, tksync, interval=1.5;
 */
 
-scratch = save(scratch, tmp, tksync_add, tksync_remove, tksync_check,
-  tksync_background);
+// tksync_background intentionally omitted from scratch
+scratch = save(scratch, tmp, tksync_add, tksync_remove, tksync_check);
 tmp = save(cache, interval, add, remove, check, background);
 
 if(is_obj(tksync) && is_obj(tksync.cache)) {
@@ -134,18 +139,24 @@ func tksync_check(void) {
 }
 check = tksync_check;
 
+// Bug workaround:
+// The "after" function is currently partly broken for oxy-type scheduling. A
+// cancelation of the form "after, 0, obj, method;" does not actually work. So
+// we're temporarily using tksync_background instead of tksync,background to
+// work around that deficiency.
+
 func tksync_background(void) {
   // Cancel any scheduled background requests (to avoid having several going
   // at once)
-  after, -, tksync, background;
+  after, -, tksync_background;
   // Check for updated variables
   tksync, check;
   // Schedule a new background request
-  after, tksync.interval, tksync, background;
+  after, tksync.interval, tksync_background;
 }
 background = tksync_background;
 
 tksync = restore(tmp);
 restore, scratch;
 
-tksync, background;
+tksync_background;
