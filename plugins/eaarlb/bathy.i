@@ -452,8 +452,8 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
 
   // Apply moving 3-point average
   extern bath
-  if(conf.smoothwf && numberof(wf) > 2) {
-    wf(2:-1) = (wf(1:-2)+wf(2:-1)+wf(3:0))/3.;
+  if(conf.smoothwf > 0 && numberof(wf)) {
+    wf = moving_average(wf, bin=(conf.smoothwf*2+1), taper=1);
   }
 }
 
