@@ -646,7 +646,7 @@ proc start_yorick {}  {
         -o
         # Yorick errors cancel pending after events. This makes sure that the
         # tksync, background event gets rescheduled.
-        -re {\nERROR } {
+        -re {ERROR} {
             exp_send_user $interact_out(0,string)
             ybkg tksync background
         }
