@@ -77,73 +77,68 @@ func perpendicular_intercept(x1, y1, x2, y2, x3, y3) {
   return [xi, yi];
 }
 
-func average_line(x, y, bin=, taper=) {
-/* DOCUMENT average_line(x, y, bin=, taper=)
+func moving_average(x, bin=, taper=) {
+/* DOCUMENT xp = moving_average(x, bin=, taper=)
+  Performs a moving average on X.
 
-  Computes the moving average for an x-y scatter. Each sequence of 'bin'
-  points results in an average value in the results. The results array will
-  have bin-1 fewer coordinate pairs than the input data unless taper is set.
-
-  Parameters:
-
-    x: An array of floats or doubles.
-
-    y: An array of floats or doubles.
-
+  Parameter:
+    x: Must be a one-dimensional array of numeric values.
   Options:
+    bin= Specifies the bin size. Must be odd if taper=1.
+        bin=3     Default
+    taper= Specifies to taper the bin so that the output array has the same
+      size as the input array.
+        taper=0   Default
 
-    bin= A bin size to use. Default is 10.
-
-    taper= If set to true, the bin size will taper on the ends so that the
-      result spans the full distance of x and y, rather than cutting off the
-      ends. Default is false, which disables this behavior.
-
-  Returns:
-
-    [avgX, avgY] - An array of doubles of the averaged values.
+  Examples:
+    > moving_average([1,2,3,4,5,6,7,8,9,10], bin=5)
+    [3,4,5,6,7,8]
+    > moving_average([1,2,3,4,5,6,7,8,9,10], bin=5, taper=1)
+    [1,2,3,4,5,6,7,8,9,10]
+    > moving_average([1,2,4,8,16,32,64], bin=3)
+    [2.333333333,4.666666667,9.333333333,18.66666667,37.33333333]
+    > moving_average([1,2,4,8,16,32,64], bin=3, taper=1)
+    [1,2.333333333,4.666666667,9.333333333,18.66666667,37.33333333,64]
+    > moving_average([1,2,4,8,16,32,64], bin=5, taper=1)
+    [1,2.333333333,6.2,12.4,24.8,37.33333333,64]
 */
-  if(is_void(bin)) bin=10;
-  if(is_void(taper)) taper=0;
+  default, bin, 3;
+  default, taper, 0;
   if(bin < 1)
-    error, "Bin must be at least 1.";
-  if(numberof(x) != numberof(y))
-    error, "X and Y must have the same range.";
+    error, "bin= must be at least 1";
   if(dimsof(x)(1) != 1)
-    error, "X and Y must be one-dimensional arrays.";
-  if(bin > numberof(x))
-    error, "Bin is too big. Bin must be smaller than X and Y.";
+    error, "input must be one-dimensional array";
+  if(taper && bin % 2 != 1)
+    error, "bin= must be odd when taper=1";
 
-  resX = array(double, numberof(x)-bin+1);
-  resY = array(double, numberof(x)-bin+1);
-
-  for (i = 1; i <= bin; i++) {
-    resX += x(i:-bin+i) / double(bin);
-    resY += y(i:-bin+i) / double(bin);
+  if(bin <= numberof(x)) {
+    res = array(double, numberof(x)-bin+1);
+    for(i = 1; i <= bin; i++) {
+      res += x(i:i-bin);
+    }
+    res /= double(bin);
+  } else {
+    res = [];
   }
 
   if(taper) {
-    need = bin - 1;
-    need_lo = int(need / 2);
-    need_hi = need - need_lo;
-    lo_resX = array(double, need_lo);
-    lo_resY = array(double, need_lo);
-    hi_resX = array(double, need_hi);
-    hi_resY = array(double, need_hi);
-    for(i = 1; i <= need_lo; i++) {
-      w = (i - 1) * 2 + 1;
-      lo_resX(i) = x(1:w)(avg);
-      lo_resY(i) = y(1:w)(avg);
+    core = res;
+    res = array(double, numberof(x));
+
+    if(numberof(core)) {
+      res(1+bin/2:-bin/2) = core;
+      core = [];
     }
-    for(i = 1; i <= need_hi; i++) {
-      w = (i - 1) * -2;
-      hi_resX(i) = x(w:0)(avg);
-      hi_resY(i) = y(w:0)(avg);
+
+    count = min(bin/2, (numberof(x)+1)/2);
+    for(i = 0; i < count; i++) {
+      pts = 2 * i + 1;
+      res(i+1) = x(1:pts)(avg);
+      res(-i) = x(1-pts:0)(avg);
     }
-    resX = grow(lo_resX, resX, hi_resX);
-    resY = grow(lo_resY, resY, hi_resY);
   }
 
-  return [resX, resY];
+  return res;
 }
 
 func smooth_line(x, y, &upX, &upY, &idx, bin=, upsample=) {
