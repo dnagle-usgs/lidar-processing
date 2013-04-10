@@ -102,8 +102,7 @@ func mouse_click_is(query, click) {
   }
 
   // Test to see if any of the cases match the click
-  match = (cases == click);
-  return match ? 1 : 0;
+  return anyof(cases == click);
 }
 
 func mouse_bounds(&xmin, &ymin, &xmax, &ymax, sys=, style=, prompt=, win=) {
