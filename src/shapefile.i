@@ -345,42 +345,6 @@ func shapefile_limits(void) {
   }
 }
 
-func polygon_acquire(closed) {
-/* DOCUMENT poly = polygon_acquire(closed)
-  Allows the user to define a polygon or polyline using the mouse to click on
-  a Yorick window. Closed specified whether it's a polygon (closed=1) or
-  polyline (closed=0).
-*/
-// Original David Nagle 2008-10-06
-  if(closed)
-    type = "polygon";
-  else
-    type = "polyline";
-
-  prompt = swrite(format="Left click generates a vertex. " +
-    "CTRL+Left or CTRL+Middle click will close %s.", type);
-  poly = array(float, 2, 1);
-  result = mouse(1, 0, prompt);
-  poly(,1) = result(1:2);
-  plmk, poly(2,0), poly(1,0), marker=4, msize=.4, width=10, color="red";
-
-  prompt = swrite(format="Left click generates another vertex. " +
-    "CTRL+Left or Middle click will close %s.", type);
-
-  while(!((result(11) == 4 && result(10) == 1) || result(10) == 2)) {
-    result = mouse(1, 2, prompt);
-    grow, poly, result(1:2);
-    plmk, poly(2, 0), poly(1, 0), marker=4, msize=.3, width=10;
-    plg, poly(2,-1:0), poly(1, -1:0), marks=0;
-  }
-  write, format="Closed %s with %d vertices.\n", type, numberof(poly(1,));
-  if(closed) {
-    grow, poly, poly(,1);
-    plg, poly(2,-1:0), poly(1, -1:0), marks=0;
-  }
-  return poly;
-}
-
 func polygon_check_llutm(ref, ply) {
 /* DOCUMENT polygon_check_llutm, ref, ply
   Makes sure PLY is in the same coordinate system (UTM or GEO) as REF. If it's

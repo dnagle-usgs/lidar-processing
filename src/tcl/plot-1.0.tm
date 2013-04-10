@@ -887,7 +887,7 @@ proc ::plot::poly_cleanup {} {
 }
 
 proc ::plot::poly_add {closed} {
-   exp_send "polygon_add, polygon_acquire($closed), \"$g::poly_next_name\"\r"
+   exp_send "polygon_add, get_poly(closed=$closed), \"$g::poly_next_name\"\r"
    expect "vertices"
    $g::polyListBox insert end $g::poly_next_name
    regexp {^(.*?)([0-9]*)$} $g::poly_next_name - base num
