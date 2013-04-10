@@ -404,18 +404,6 @@ func ytk_not_present(void) {
   write, "Ytk not present. This function will not work without the ytk program.";
 }
 
-func source(fn) {
-/* DOCUMENT source, fn;
-  Tells Tcl to source the given file.
-*/
-  extern _ytk;
-  if(is_void(_ytk)) {
-    ytk_not_present;
-    return;
-  }
-  tkcmd, swrite(format="source {%s}", fn);
-}
-
 func ytk_startup(void) {
 /* DOCUMENT ytk_startup;
   When ytk.i is sourced, this function is called. It checks argv to see if it

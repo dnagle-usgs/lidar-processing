@@ -71,9 +71,3 @@ func var_expr_set(expr, val) {
     logger, warn, "call to var_expr_set when not running YTK:\n"+
       "  expr="+pr1(expr)+" val="+pr1(val);
 }
-
-func source(fn) {
-  if(logger(warn))
-    logger, warn, "call to source when not running YTK:\n"+
-      "  fn="+pr1(fn);
-}
