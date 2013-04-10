@@ -403,21 +403,3 @@ func ytk_not_present(void) {
 */
   write, "Ytk not present. This function will not work without the ytk program.";
 }
-
-func ytk_startup(void) {
-/* DOCUMENT ytk_startup;
-  When ytk.i is sourced, this function is called. It checks argv to see if it
-  looks like this was started from ytk with fifo arguments and, if so,
-  attempts to initialize the fifos.
-*/
-// Original David Nagle 2009-08-20
-  args = get_argv();
-  if(numberof(args) > 3 && args(-2) == "ytk.i") {
-    initialize_ytk, args(-1), args(0);
-  }
-
-  if(!is_func(is_obj))
-    tkcmd, "ytk_alps_update_required";
-}
-
-ytk_startup;

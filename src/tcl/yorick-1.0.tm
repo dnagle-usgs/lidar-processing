@@ -121,7 +121,7 @@ proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
         set logfn ${::logger::fn}.tscp
     }
 
-    lappend yorick -i ytk.i $yor_tcl_fn $tcl_yor_fn
+    lappend yorick -i ytk_startup.i $yor_tcl_fn $tcl_yor_fn
 
     # Try rlterm first, if enabled
     if {$result eq "" && $opts(-rlterm) && $rlterm ne ""} {
