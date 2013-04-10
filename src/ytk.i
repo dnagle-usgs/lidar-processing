@@ -274,21 +274,30 @@ func var_expr_get(expr) {
 /* DOCUMENT val = var_expr_get(expr)
   Given a variable expression (scalar string), this returns its value.
 
-  The variable expression can be any of the following:
-
-    - The name of a variable.
-    - The name of a yeti hash value with dotted keys to dereference.
-    - The name of a variable of struct data with dotted fields to
-      dereference.
+  A variable expression can be any valid Yorick variable name or any valid
+  Yorick variable name followed key names delimited by commas. This allows you
+  to retrieve nested values from plain variables, struct instances, Yeti
+  hashes, and oxy group objects.
 
   A non-existing expression results in [].
 
   Examples:
 
-    > foo = 10
+    > foo = 42
     > var_expr_get("foo")
-    10
+    42
     > foo = h_new(bar=h_new(baz=42))
+    > var_expr_get("foo.bar.baz")
+    42
+    > foo = save(bar=save(baz=42))
+    > var_expr_get("foo.bar.baz")
+    42
+    > foo = save(bar=h_new(baz=42))
+    > var_expr_get("foo.bar.baz")
+    42
+    > struct BAR { long baz; }
+    > struct FOO { BAR bar; }
+    > foo = FOO(bar=BAR(baz=42))
     > var_expr_get("foo.bar.baz")
     42
 
