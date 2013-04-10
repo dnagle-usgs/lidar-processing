@@ -337,11 +337,11 @@ proc filter_replace {} {
                             append_varlist $replace_out_var
                             exp_send "$replace_out_var = $replace_in_var;\r"
                             # For eval purposes, success stores if
-                            # getPoly_add_buffer command was successful. The
+                            # get_poly_add_buffer command was successful. The
                             # yorick variables buf_points, temp_rgn, and
                             # workdata are made.
                             exp_send "success =\
-                                    getPoly_add_buffer($rcf_buf_rgn,\
+                                    get_poly_add_buffer($rcf_buf_rgn,\
                                     origdata=$replace_origvar,\
                                     windw=$win_no);\r"
                             expect ">"

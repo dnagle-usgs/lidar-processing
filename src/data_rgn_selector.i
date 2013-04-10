@@ -594,8 +594,8 @@ OUTPUT:
   return rgn;
 }
 
-func getPoly_add_buffer(buf,origdata=,windw=) {
-/* DOCUMENT getPoly_add_buffer( buf, origdata=, window= )
+func get_poly_add_buffer(buf,origdata=,windw=) {
+/* DOCUMENT get_poly_add_buffer( buf, origdata=, window= )
 Function was necessary to combine the following commands into one:
   get_poly()
   add_buffer_rgn()
