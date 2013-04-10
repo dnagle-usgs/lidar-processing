@@ -105,8 +105,9 @@ func mouse_click_is(query, click) {
   return anyof(cases == click);
 }
 
-func mouse_bounds(&xmin, &ymin, &xmax, &ymax, sys=, style=, prompt=, win=) {
-/* DOCUMENT mouse_bounds(sys=, style=, prompt=, win=)
+func mouse_bounds(&xmin, &ymin, &xmax, &ymax, sys=, style=, prompt=, win=,
+ply=) {
+/* DOCUMENT mouse_bounds(sys=, style=, prompt=, win=, ply=)
   -or- mouse_bounds, xmin, ymin, xmax, ymax, sys=, style=, prompt=, win=
 
   Prompts the user to click and drag in the current window to determine a
@@ -118,6 +119,10 @@ func mouse_bounds(&xmin, &ymin, &xmax, &ymax, sys=, style=, prompt=, win=) {
   default to 1, 1, and "Click and drag in window %d to select bounds",
   respectively. WIN is the window the user should click in and defaults to the
   current window.
+
+  If option PLY is set to 1, then a polygon will be returned instead. The
+  polygon will have four vertices, matching the bounds selected. (Not
+  applicable if called as a subroutine.)
 */
   default, sys, 1;
   default, style, 1
@@ -135,7 +140,11 @@ func mouse_bounds(&xmin, &ymin, &xmax, &ymax, sys=, style=, prompt=, win=) {
 
   window_select, win;
 
-  return [xmin, ymin, xmax, ymax];
+  if(ply) {
+    return [[xmin,ymin],[xmin,ymax],[xmax,ymax],[xmax,ymin]];
+  } else {
+    return [xmin, ymin, xmax, ymax];
+  }
 }
 
 func mdist(&click, units=, win=, plot=, verbose=, nox=, noy=) {
