@@ -21,12 +21,8 @@ func select_region_tile(data, win=, plot=, mode=) {
   wbkp = current_window();
   window, win;
 
-  a = mouse(1,1,"Hold the left mouse button down and select a region:");
-
-  emin = a([1,3])(min);
-  emax = a([1,3])(max);
-  nmin = a([2,4])(min);
-  nmax = a([2,4])(max);
+  local emin, emax, nmin, nmax;
+  mouse_bounds, emin, emax, nmin, nmax;
 
   factors = [250., 1000., 2000.];
 
