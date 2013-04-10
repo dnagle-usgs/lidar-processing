@@ -99,7 +99,7 @@ func getPolyll( void ) {
   Displays points selected using getPoly as lat/lon.
   This assumes the window is in UTM.
 */
-  ply=getPoly();
+  ply=get_poly();
   str="";
   for(i=1; i<=numberof(ply); i+=2) {
     ll = utm2ll(ply(i+1), ply(i+0), curzone );

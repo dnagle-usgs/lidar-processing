@@ -860,7 +860,7 @@ Added server/client support (2009-01) Richard Mitchell
       if(shp_buffer)
         ply = buffer_hull(ply, shp_buffer);
     } else {
-      ply=getPoly();
+      ply=get_poly();
     }
     plpoly, ply, marker=4;
     box=boundBox(ply);

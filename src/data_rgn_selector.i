@@ -44,7 +44,7 @@ INPUT:
    when using mode 4 and sending points through rgn,
    you can either send points selected by the:
     mouse(1,1) method (this is is a rectangle),
-    getPoly() method (for a polygon).
+    get_poly() method (for a polygon).
 */
 
   if (is_void(nosort)) nosort = 0;
@@ -58,7 +58,7 @@ INPUT:
   extern q, workdata, croppeddata;
   if (!mode) mode = 1;
   if ( (!is_void(rgn)) && (mode == 4) ) {
-    //mouse (1,1) always returns a size 11 array while getPoly() always sends an even number of points with the lowest being 6
+    //mouse (1,1) always returns a size 11 array while get_poly() always sends an even number of points with the lowest being 6
     if ( (numberof(rgn) == 11) ) {
       mode = 4;
       pnts = rgn;
@@ -122,7 +122,7 @@ INPUT:
   if (mode == 3) {
     window, win;
     if (is_void(rgn)) {
-      ply = getPoly();
+      ply = get_poly();
     } else {
       ply = rgn;
     }
@@ -401,7 +401,7 @@ modified amar nayegandhi April 2005
     } else {
       // use pip to define region
       if (!is_array(pidx)) {
-        pidx = getPoly();
+        pidx = get_poly();
         pidx = grow(pidx,pidx(,1));
       }
       lpidx = pidx;
@@ -597,7 +597,7 @@ OUTPUT:
 func getPoly_add_buffer(buf,origdata=,windw=) {
 /* DOCUMENT getPoly_add_buffer( buf, origdata=, window= )
 Function was necessary to combine the following commands into one:
-  getPoly()
+  get_poly()
   add_buffer_rgn()
   sel_data_rgn()
 
@@ -607,7 +607,7 @@ INPUTS:
   win=      :  Current window number
 
 OUTPUTS:
-  buf_points  :  Array of points returned by getPoly that represents
+  buf_points  :  Array of points returned by get_poly that represents
             the actual region selected
   temp_rgn    :  Buffer region returned by add_buffer_rgn
             (array(float,4) = points of rectangle)
@@ -620,7 +620,7 @@ OUTPUTS:
   extern buf_points,workdata;
   workdata=[];
   if (is_void(origdata)) return 0;
-  buf_points = getPoly();
+  buf_points = get_poly();
   temp_rgn = add_buffer_rgn(buf_points, buf, mode=2);
   workdata = sel_data_rgn(origdata, mode=4, win=windw, rgn=temp_rgn);
   if (!is_void(workdata)) {
@@ -679,7 +679,7 @@ original: amar nayegandhi September 2005
   if (mode == 3) {
     // use pip to define region
     if (!is_array(pidx)) {
-      pidx = getPoly();
+      pidx = get_poly();
       pidx = grow(pidx,pidx(,1));
     }
     lpidx = pidx;

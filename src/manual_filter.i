@@ -112,7 +112,7 @@ func pipthresh(data, maxthresh=, minthresh=, mode=, idx=) {
   data2xyz, data, x, y, z, mode=mode;
 
   // Make the user give us a polygon
-  ply = getPoly();
+  ply = get_poly();
 
   // Find the points that are within the polygon.
   poly_pts = testPoly(ply, x, y);

@@ -440,9 +440,7 @@ func gt_extract_selpoly(which) {
   polygon in the current window. The coordinates are sent to the tool to be
   used for the data specified by WHICH.
 */
-  win = window();
-  write, format="Draw a polygon in window %d to select the region.", win;
-  ply = getPoly();
+  ply = get_poly();
   gt_extract_send, ply, "Polygon", which;
 }
 
@@ -514,11 +512,7 @@ func gt_vars_selpoly(data, which, win) {
   and returned. DATA is comparisons variable, WHICH is truth data to use, WIN
   is window the plot exists in.
 */
-  wbkp = current_window();
-  window, win;
-  write, format="Draw a polygon in window %d to select the region.", win;
-  ply = getPoly();
-  window_select, wbkp;
+  ply = get_poly(win=win);
   return gt_vars_subsample(data, which, ply);
 }
 

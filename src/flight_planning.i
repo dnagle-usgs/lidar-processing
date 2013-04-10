@@ -652,7 +652,7 @@ func pip_fp(nil, fp=, ply=, shapefile=, name=, win=, mode=, in_utm=, out_utm=, d
   }
 
   if(is_void(ply))
-    ply = getPoly();
+    ply = get_poly();
 
   lply1 = ply;
   plpoly, lply1, marker=4;

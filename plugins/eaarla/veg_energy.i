@@ -1624,7 +1624,7 @@ func compare_mets(outveg1, mets1, outveg2, mets2, idx=, outwin=, inwin=, mselect
   } 
 
   if (mselect==2) { // use pip
-    ply = getPoly();
+    ply = get_poly();
     box = boundBox(ply);
     box_pts1 = ptsInBox(box*100., outveg1.east, outveg1.north);
     if (!is_array(box_pts1)) return;

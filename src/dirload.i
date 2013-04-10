@@ -513,9 +513,7 @@ func dirload_l1pro_selpoly {
 /* DOCUMENT dirload_l1pro_selpoly;
   Intergration function for YTK. Used by l1pro::dirload.
 */
-  win = window();
-  write, format="Draw a polygon in window %d to select the region.", win;
-  ply = getPoly();
+  ply = get_poly();
   dirload_l1pro_send, ply, "Polygon";
 }
 

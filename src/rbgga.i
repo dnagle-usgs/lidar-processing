@@ -43,7 +43,7 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, _batch=) {
 
   if(is_void(region)) {
     if(mode == "pip") {
-      ply = getPoly();
+      ply = get_poly();
     } else {
       bounds = mouse_bounds();
       ply = bounds([[1,2],[1,4],[3,4],[3,2]]);
