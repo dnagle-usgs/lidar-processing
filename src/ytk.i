@@ -370,20 +370,17 @@ func var_expr_set(expr, val) {
     // Hashes are straightforward: add or replace key
     if(is_hash(var)) {
       h_set, var, parts(1), val;
-    // Non-hashes can't have new keys added, so either replace key or clobber
+    // Oxy group -- update
+    } else if(is_obj(var) && var(*,parts(1))) {
+      save, var, parts(1), val;
+    // Hash key -- update
+    } else if(is_pointer(var) && has_member(*var, parts(1))) {
+      get_member(*var, parts(1)) = val;
+    // No key -- clobber + add
     } else {
-      // Oxy group -- update
-      if(is_obj(var) && var(*,parts(1))) {
-        save, var, parts(1), val;
-      // Hash key -- update
-      } else if(is_pointer(var) && has_member(*var, parts(1))) {
-        get_member(*var, parts(1)) = val;
-      // No key -- clobber + add
-      } else {
-        var_expr_set, processed, h_new();
-        var = var_expr_get(processed);
-        h_set, var, parts(1), val;
-      }
+      var_expr_set, processed, h_new();
+      var = var_expr_get(processed);
+      h_set, var, parts(1), val;
     }
 
   // No period! Just set it.
