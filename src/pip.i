@@ -1,53 +1,61 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-/* DOCUMENT PointsInPolygon.i
-  ************************** Points In Polygon ********************************
-  This program creates a polygon used to define an area of interest. Then
-  a subset of points from a given set is tested against this area of interest.
-  The program determines which points from the set are inside the polygon. The
-  program also creates a bound box that wraps around the polygon and defines the
-  subset of points inside the bound box.
 
-     _ply is a global var set to the most recent polygon.
+func getPoly(void, closed=, win=) {
+/* DOCUMENT ply = getPoly(closed=, win=)
 
-  Original: Enils Bashi
-  Last Modified: June 12, 2002
-*********************************************************************************/
+  Prompts the user to click on the current window to draw a polygon. The
+  polygon is then returned to the caller as array(double,2,N) containing
+  vertices as [x,y] pairs.
 
-func getPoly(void)
-/* DOCUMENT function getPoly
-  This function draws a polygon on the Yorick window Start
-  by clicking in the current Yorick graphics window.
-  To close the polygon and stop clicking points use
-  Ctrl-left mouse button at the same time.
-  Parameters: none
-  Returns:    ply - array of polygon vertices
+  Option:
+    closed= If set to 1, then the first point will be duplicated as the last
+      point to make an explicitly-closed polygon. This is off by default. Many
+      things in Yorick do not differentiate between a polygon and a polyline,
+      so this setting usually isn't needed.
+    win= Window to use. By default, uses current window. If provided, the
+      currently selected window will be restored when the function finishes.
 */
-{
-  extern _ply;	// global copy of most recently defined ply
-  prompt = "Left mouse generates a vertex. Ctl-Left or middle mouse click to end and close polygon.";
-  ply = array(float, 2, 1);    // array that contains polygon vertices
-  result = mouse(1, 0, prompt);
-  ply(1, 1) = result(1);     // x coordinate of the first vertex
-  ply(2, 1) = result(2);     // y coordinate of the first vertex
-  //fma;
-  plmk, ply(2, 0), ply(1, 0), marker = 4, msize = .4, width = 10, color="red";
+  default, closed, 0;
+  default, win, window();
 
-  prompt = swrite("Ctl-left or middle mouse click to close polygon.");
-  write, prompt;
-  while((!((result(10)== 1)   &&
-          (result(11)== 4))) &&
-      (!(result(10)==2))) 	// while !(CTRL && left mouse) loop
-  {
-    result = mouse(1, 2,"");
-    grow, ply, result(3:4);       // make room for new vertex
-    plmk, ply(2, 0), ply(1, 0), marker = 4, msize = .3, width = 10;
-    plg, [ply(2,-1), ply(2,0)],
-      [ply(1,-1), ply(1,0)], marks = 0; //connect current and previous
+  wbkp = current_window();
+  window, win;
+
+  write, format=
+    " Window %d: Left click to add vertex; ctrl-left or middle click to\n" +
+    " add and finish; right click to finish. Anything else aborts.\n", win;
+
+  ply = [];
+  first = 1;
+  more = 1;
+
+  while(more) {
+    spot = mouse(1, 0, "");
+
+    more = mouse_click_is("left", spot);
+    if(more || mouse_click_is(["ctrl+left","middle"], spot)) {
+      grow, ply, [spot(1:2)];
+
+      if(first) {
+        plmk, ply(2,0), ply(1,0), marker=4, msize=.4, width=10, color="red";
+        first = 0;
+      } else {
+        plmk, ply(2,0), ply(1,0), marker=4, msize=.3, width=10;
+        plg, ply(2,-1:0), ply(1,-1:0), marks=0;
+      }
+    } else if(!mouse_click_is("right", spot)) {
+      ply = [];
+    }
   }
-  write, "PIP region selected.  Please wait...";
-  plg, [ply(2,1), ply(2,0)],
-    [ply(1,1), ply(1,0)], marks = 0;  //connect first and last vertex
-  _ply = ply;
+  n = numberof(ply)/2;
+  if(n > 1) {
+    plg, ply(2,[1,n]), ply(1,[1,n]), marks=0;
+    if(closed) {
+      grow, ply, ply(,1);
+    }
+  }
+
+  window_select, wbkp;
   return ply;
 }
 
