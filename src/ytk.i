@@ -349,6 +349,7 @@ func var_expr_set(expr, val) {
 
     // Deference until we have no more subkeys to process
     while(parts(2)) {
+      parent = var;
       parts = strtok(parts(2), ".");
       if(parts(2)) {
         // If it doesn't have the key specified, we must create it
@@ -371,7 +372,7 @@ func var_expr_set(expr, val) {
     if(is_hash(var)) {
       h_set, var, parts(1), val;
     // Oxy group -- update
-    } else if(is_obj(var) && var(*,parts(1))) {
+    } else if(is_obj(var)) {
       save, var, parts(1), val;
     // Hash key -- update
     } else if(is_pointer(var) && has_member(*var, parts(1))) {
