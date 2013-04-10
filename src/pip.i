@@ -1,7 +1,16 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
 func getPoly(void, closed=, win=) {
-/* DOCUMENT ply = getPoly(closed=, win=)
+/* DOCUMENT getPoly(closed=, win=)
+  DEPRECATED! Use get_poly instead.
+*/
+// Deprecated 2013-04-10
+  write, "WARNING: called deprecated function getPoly; use get_poly instead";
+  return get_poly(closed=closed, win=win);
+}
+
+func get_poly(void, closed=, win=) {
+/* DOCUMENT ply = get_poly(closed=, win=)
 
   Prompts the user to click on the current window to draw a polygon. The
   polygon is then returned to the caller as array(double,2,N) containing
