@@ -334,6 +334,9 @@ func var_expr_set(expr, val) {
     > foo.bar.baz
     3.14
 
+  If a variable expression doesn't exist, it will be created. If a nested
+  container is needed, it will be created as a Yeti hash if its parent is a
+  Yeti hash; otherwise, it will be created as an oxy group object.
 */
 // Original David Nagle 2009-08-14
   parts = strtok(expr, ".");
@@ -347,9 +350,9 @@ func var_expr_set(expr, val) {
       var = is_array(symbol_def(parts(1))) \
         ? &symbol_def(parts(1)) : symbol_def(parts(1));
     }
-    // If symbol can't be dereferenced, clobber it with a new Yeti hash
+    // If symbol can't be dereferenced, clobber it with a new oxy group
     if(!has_members(var, deref=1)) {
-      symbol_set, parts(1), h_new();
+      symbol_set, parts(1), save();
       var = symbol_def(parts(1));
     }
 
@@ -363,12 +366,20 @@ func var_expr_set(expr, val) {
       if(parts(2)) {
         // If it doesn't have the key specified, we must create it
         if(!has_member(var, parts(1))) {
-          // If the variable isn't a hash, then clobber + force it to be
-          if(!is_hash(var)) {
-            var_expr_set, processed, h_new();
+          // If the variable isn't an object/hash, then clobber + force it to
+          // be
+          if(!is_hash(var) && !is_obj(var)) {
+            if(is_hash(parent)) {
+              var_expr_set, processed, h_new();
+            } else {
+              var_expr_set, processed, save();
+            }
             var = var_expr_get(processed);
           }
-          h_set, var, parts(1), h_new();
+          if(is_hash(var))
+            h_set, var, parts(1), h_new();
+          else
+            save, var, parts(1), save();
         }
         var = is_pointer(var) ? *var : var;
         var = is_array(get_member(var, parts(1))) \
@@ -388,9 +399,9 @@ func var_expr_set(expr, val) {
       get_member(*var, parts(1)) = val;
     // No key -- clobber + add
     } else {
-      var_expr_set, processed, h_new();
+      var_expr_set, processed, save();
       var = var_expr_get(processed);
-      h_set, var, parts(1), val;
+      save, var, parts(1), val;
     }
 
   // No period! Just set it.
