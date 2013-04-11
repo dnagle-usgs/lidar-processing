@@ -137,6 +137,7 @@ require, "rcf.i";
 require, "read_yfile.i";
 require, "rlw.i";
 require, "seamless.i";
+require, "serialize.i";
 require, "set.i";
 require, "sf.i";
 require, "shapefile.i";
