@@ -44,7 +44,7 @@ func keydefault(args) {
   SEE ALSO: key_default_and_cast keyrequire default save
 */
   if(args(0) < 1)
-    error, "invalid call to keycast";
+    error, "invalid call to keydefault";
   obj = args(1);
 
   if(args(0) == 2 && is_obj(args(2))) {
@@ -72,7 +72,7 @@ func key_default_and_cast(args) {
   SEE ALSO: keydefault keyrequire default save
 */
   if(args(0) < 1)
-    error, "invalid call to keycast";
+    error, "invalid call to key_default_and_cast";
   obj = args(1);
 
   if(args(0) == 2 && is_obj(args(2))) {
