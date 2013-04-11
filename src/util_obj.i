@@ -96,6 +96,12 @@ func keycast(args) {
   string to double) will result in an error. The types may be given as actual
   types (such as "short" or "double") or by giving values of the given type
   (such as "1s" or "0.").
+
+  If the current value is a number but it needs to be cast to a string, the
+  casting is performed as strtrim(swrite(val)).
+
+  If the current value is a string but it needs to be cast to a number, it is
+  converted using either atoi or atod prior to casting.
 */
   if(args(0) < 1)
     error, "invalid call to keycast";
@@ -114,7 +120,20 @@ func keycast(args) {
     type = cast(keys(i));
     if(!is_struct(type))
       type = structof(type);
-    save, obj, keys(i), type(obj(keys(i)));
+    // Both are strings, or both are not strings, so safe to directly cast
+    if(is_string(type()) == is_string(obj(keys(i)))) {
+      save, obj, keys(i), type(obj(keys(i)));
+    // Cast to string, but value is not; use swrite and hope for the best
+    } else if(is_string(type())) {
+      save, obj, keys(i), strtrim(swrite(obj(keys(i))));
+    // Otherwise, value is a string and it needs to be cast to a number
+    // Try integer first
+    } else if(is_integer(type())) {
+      save, obj, keys(i), type(atoi(obj(keys(i))));
+    // Fall back to real
+    } else {
+      save, obj, keys(i), type(atod(obj(keys(i))));
+    }
   }
 }
 wrap_args, keycast;
