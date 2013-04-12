@@ -67,9 +67,6 @@ proc ::l1pro::main::panel_cbar w {
     ttk::radiobutton $f.minlock \
             -value cmin \
             -variable ::cbar_locked
-    ::mixin::padlock $f.maxlock
-    ::mixin::padlock $f.dltlock
-    ::mixin::padlock $f.minlock
 
     grid $f.maxlbl $f.max $f.maxlock -sticky e
     grid $f.dltlbl $f.dlt $f.dltlock -sticky e
