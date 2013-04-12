@@ -101,13 +101,13 @@ proc ::l1pro::main::panel_cbar w {
             - unlocked: each variable has its own colorbar
             - locked: colorbar shared by all variables"
     tooltip $f.maxlock \
-            "When locked, CMax will be automatically updated based on CDelta
+            "When selected, CMax will be automatically updated based on CDelta
             and CMin."
     tooltip $f.dltlock \
-            "When locked, CDelta will be automatically updated based on CMax
+            "When selected, CDelta will be automatically updated based on CMax
             and CMin."
     tooltip $f.minlock \
-            "When locked, CMin will be automatically updated based on CMax and
+            "When selected, CMin will be automatically updated based on CMax and
             CDelta."
 
     return $w
