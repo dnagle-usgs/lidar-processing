@@ -57,6 +57,12 @@ proc ::l1pro::main::panel_cbar w {
     ttk::spinbox $f.dlt -width 6 \
             -from 0 -to 20000 -increment 0.1 \
             -textvariable ::cdelta
+    ttk::label $f.maxauto \
+            -textvariable ::plot_settings(cmax)
+    ttk::label $f.minauto \
+            -textvariable ::plot_settings(cmin)
+    ttk::label $f.dltauto \
+            -textvariable ::cdelta
     ttk::radiobutton $f.maxlock \
             -value cmax \
             -variable ::cbar_locked
@@ -73,12 +79,19 @@ proc ::l1pro::main::panel_cbar w {
     grid configure $f.max $f.dlt $f.min -sticky ew
     grid columnconfigure $f 1 -weight 1
 
+    grid $f.maxauto -row 0 -column 1 -sticky ew
+    grid $f.dltauto -row 1 -column 1 -sticky ew
+    grid $f.minauto -row 2 -column 1 -sticky ew
+    grid remove $f.maxauto $f.dltauto $f.minauto
+
     set body [string map [list %f $f] {
         foreach widget {%f.max %f.dlt %f.min} {
-            $widget state !disabled
+            grid remove ${widget}auto
+            grid ${widget}
         }
-        [dict get {cmax %f.max cmin %f.min cdelta %f.dlt} $::cbar_locked] \
-                state disabled
+        set widget [dict get {cmax %f.max cmin %f.min cdelta %f.dlt} $::cbar_locked]
+        grid remove ${widget}
+        grid ${widget}auto
     }]
     trace add variable ::cbar_locked write [list apply [list {v1 v2 op} $body]]
     set ::cbar_locked $::cbar_locked
