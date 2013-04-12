@@ -50,8 +50,7 @@ proc ::l1pro::main::panel_cbar w {
     ttk::label $f.dltlbl -text "CDelta:"
     ttk::spinbox $f.max -width 6 \
             -from -10000 -to 10000 -increment 0.1 \
-            -textvariable ::plot_settings(cmax) \
-            -format %.2f
+            -textvariable ::plot_settings(cmax)
     ttk::spinbox $f.min -width 6 \
             -from -10000 -to 10000 -increment 0.1 \
             -textvariable ::plot_settings(cmin)
