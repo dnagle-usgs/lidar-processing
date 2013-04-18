@@ -80,6 +80,7 @@ require, "ascii.i";
 require, "ascii_encode.i";
 require, "asciixyz.i";
 require, "batch_process.i";
+require, "class_confobj.i";
 require, "class_deque.i";
 require, "colorbar.i";
 require, "cs.i";
