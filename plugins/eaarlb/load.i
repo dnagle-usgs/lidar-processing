@@ -9,6 +9,7 @@ include, base + "batch_process.i";
 include, base + "batch_veg_energy.i";
 include, base + "bathy.i";
 include, base + "centroid.i";
+include, base + "class_bathconfobj.i";
 include, base + "drast.i";
 include, base + "eaarl_constants.i";
 include, base + "eaarl_json_log.i";
