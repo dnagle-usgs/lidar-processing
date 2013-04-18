@@ -5,6 +5,7 @@ package provide eaarl 1.0
 namespace eval ::eaarl {}
 
 package require eaarl::main
+package require eaarl::bathconf
 package require eaarl::drast
 package require eaarl::jsonlog
 package require eaarl::load
