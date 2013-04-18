@@ -205,7 +205,7 @@ snit::type ::eaarl::bathconf::embed {
         pack $f.sepChan $f.sepRast $f.sepPulse -fill y -padx 2
 
         lappend controls $f.cboChan $f.spnRast $f.btnRastPrev $f.btnRastNext \
-                $f.spnPulse $f.btnPulsePrev $f.btnPulseNext $f.btnPulse \
+                $f.spnPulse $f.btnPulsePrev $f.btnPulseNext $f.btnLims \
                 $f.btnReplot
     }
 
@@ -247,6 +247,7 @@ snit::type ::eaarl::bathconf::embed {
         ttk::label $f.lblGroup -text "channel4"
         ttk::label $f.lblProfile -text "Profile:"
         mixin::combobox $f.cboProfile \
+                -state readonly \
                 -width 6
         ttk::button $f.btnAdd \
                 -image ::imglib::plus \
@@ -409,9 +410,9 @@ snit::type ::eaarl::bathconf::embed {
                 -side left
 
         lappend controls $f.spnFirst $f.spnLast $f.spnThresh
-        dict set wantsettings $f.spnFirst first
-        dict set wantsettings $f.spnLast last
-        dict set wantsettings $f.spnThresh thresh
+        dict set wantsetting $f.spnFirst first
+        dict set wantsetting $f.spnLast last
+        dict set wantsetting $f.spnThresh thresh
     }
 
     method Gui_settings_validate {f} {
@@ -432,10 +433,10 @@ snit::type ::eaarl::bathconf::embed {
 
         lappend controls $f.spnLeftDist $f.spnLeftFact \
                 $f.spnRightDist $f.spnRightFact
-        dict set wantsettings $f.spnLeftDist lwing_dist
-        dict set wantsettings $f.spnLeftFact lwing_factor
-        dict set wantsettings $f.spnRightDist rwing_dist
-        dict set wantsettings $f.spnRightFact rwing_factor
+        dict set wantsetting $f.spnLeftDist lwing_dist
+        dict set wantsetting $f.spnLeftFact lwing_factor
+        dict set wantsetting $f.spnRightDist rwing_dist
+        dict set wantsetting $f.spnRightFact rwing_factor
     }
 
     method SetOpt {option value} {
@@ -454,15 +455,15 @@ snit::type ::eaarl::bathconf::embed {
     }
 
     method UpdateGroup {{force 0}} {
-        if {$force || $curgroup eq $options(-group)} return
+        if {!$force && $curgroup eq $options(-group)} return
         set group $options(-group)
 
         if {$group eq ""} {
             set var [myvar empty]
             foreach path $controls {
-                $controls state disabled
+                $path state disabled
             }
-            dict for {path key} $wantsettings {
+            dict for {path key} $wantsetting {
                 $path configure -textvariable $var
             }
             foreach path $wantprofiles {
@@ -471,9 +472,9 @@ snit::type ::eaarl::bathconf::embed {
         } else {
             set ns ::eaarl::bathconf
             foreach path $controls {
-                $controls state !disabled
+                $path state !disabled
             }
-            dict for {path key} $wantsettings {
+            dict for {path key} $wantsetting {
                 $path configure \
                         -textvariable ${ns}::settings(${group},${key})
             }
