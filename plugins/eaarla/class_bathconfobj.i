@@ -2,7 +2,8 @@ require, "class_confobj.i";
 
 scratch = save(scratch, base,
   bathconfobj_settings, bathconfobj_groups, bathconfobj_validate,
-  bathconfobj_read, bathconfobj_clear, bathconfobj_cleangroups
+  bathconfobj_read, bathconfobj_clear, bathconfobj_cleangroups,
+  bathconfobj_profile_add, bathconfobj_profile_del, bathconfobj_profile_rename
 );
 
 func bathconfobj(base, data) {
@@ -34,7 +35,8 @@ func bathconfobj(base, data) {
       group will have a member named "channels" that stores an array of channel
       numbers. Each channel should be assigned to exactly one group. If any
       channels are missing, they are assigned to the first group. If any
-      channels appear multiple times, an error occurs.
+      channels appear multiple times, an error occurs. Also removes unneeded
+      syncs for Tcl.
 
     bathconf, read, "/path/to/file.bathy"
       Overloaded to handle legacy bathy formats.
@@ -43,12 +45,18 @@ func bathconfobj(base, data) {
       Modified to account for the requirement of channels in the empty
       initialized configuration.
 
+    bathconf, profile_add, "<group>", "<profile>"
+    bathconf, profile_del, "<group>", "<profile>"
+    bathconf, profile_rename, "<group>", "<old_profile>", "<new_profile>"
+      In addition to their normal behavior, these will also keep Tcl updated
+      with changes to the profile list.
+
   Internal modified methods:
 
     bathconf, validate, "<group>"
       Ensures the presence of all required keys, including conditional
       selection of keys based on "decay" setting. Also enforces proper types on
-      them (double or integer).
+      them (double or integer). Also applies syncing to Tcl.
 
     bathconf(cleangroups,)
       Ensures that only the relevant keys are kept. In particular, if you've
@@ -82,7 +90,10 @@ save, base,
   confobj_validate=base.validate,
   confobj_read=base.read,
   confobj_clear=base.clear,
-  confobj_cleangroups=base.cleangroups;
+  confobj_cleangroups=base.cleangroups,
+  confobj_profile_add=base.profile_add,
+  confobj_profile_del=base.profile_del,
+  confobj_profile_rename=base.profile_rename;
 
 func bathconfobj_settings(channel) {
   use, data;
@@ -304,6 +315,30 @@ func bathconfobj_cleangroups(void) {
   return groups;
 }
 save, base, cleangroups=bathconfobj_cleangroups;
+
+func bathconfobj_profile_add(group, profile) {
+  use, data;
+  use_method, confobj_profile_add, group, profile;
+  tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", group),
+    strjoin(data(noop(group)).profiles(*,), " ");
+}
+save, base, profile_add=bathconfobj_profile_add;
+
+func bathconfobj_profile_del(group, profile) {
+  use, data;
+  use_method, confobj_profile_del, group, profile;
+  tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", group),
+    strjoin(data(noop(group)).profiles(*,), " ");
+}
+save, base, profile_del=bathconfobj_profile_del;
+
+func bathconfobj_profile_rename(group, oldname, newname) {
+  use, data;
+  use_method, confobj_profile_rename, group, oldname, newname;
+  tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", group),
+    strjoin(data(noop(group)).profiles(*,), " ");
+}
+save, base, profile_rename=bathconfobj_profile_rename;
 
 bathconfobj = closure(bathconfobj, base);
 restore, scratch;
