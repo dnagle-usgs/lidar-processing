@@ -78,6 +78,9 @@ func tksync_add(yvar, tkvar) {
     // Initialize a cache entry if needed
     if(!cache(*,yvar(i))) {
       save, cache, yvar(i), save(val, tkvars=[]);
+    // If it's already there, no need to do anything else
+    } else if(anyof(cache(yvar(i)).tkvars == tkvar(i))) {
+      continue;
     }
 
     // Update the list of tkvars and save to cache
