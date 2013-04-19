@@ -109,6 +109,7 @@ func bathconfobj_groups(newgroups, copy=) {
 
   // Remove syncs
   for(i = 1; i <= oldgroups(*); i++) {
+    if(!oldgroups(noop(i))(*,"active")) continue;
     group = oldgroups(*,i);
     drop = oldgroups(noop(i)).active(*,);
     tksync, remove,
