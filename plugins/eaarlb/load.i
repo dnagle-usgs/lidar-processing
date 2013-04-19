@@ -4,12 +4,15 @@ scratch = save(scratch, base);
 // absolute path names are required. All files to include will be siblings to
 // the current file.
 base = file_dirname(current_include())+"/";
+
+// Has to come first, used directly in files at loading
+include, base + "class_bathconfobj.i";
+
 include, base + "autoselect.i";
 include, base + "batch_process.i";
 include, base + "batch_veg_energy.i";
 include, base + "bathy.i";
 include, base + "centroid.i";
-include, base + "class_bathconfobj.i";
 include, base + "drast.i";
 include, base + "eaarl_constants.i";
 include, base + "eaarl_json_log.i";
