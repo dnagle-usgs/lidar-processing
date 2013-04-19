@@ -59,6 +59,8 @@ local bath_ctl, bath_ctl_chn4;
 default, bath_ctl, BATH_CTL();
 default, bath_ctl_chn4, BATH_CTL();
 
+if(is_void(bathconf)) bathconf = bathconfobj();
+
 func bath_ctl_save(filename) {
 /* DOCUMENT bath_ctl_save, filename
   Saves the current bathy configuration settings to the given JSON file.
@@ -158,7 +160,7 @@ graph=, pse=, msg=, verbose=) {
     logger, debug, log_id+"  pse="+pr1(pse);
     logger, debug, log_id+"  msg="+pr1(msg);
   }
-  extern bath_ctl;
+  extern bathconf;
   default, last, 250;
   default, graph, 0;
   default, pse, 0;
@@ -175,16 +177,6 @@ graph=, pse=, msg=, verbose=) {
       stop = start + delta;
     else if(is_void(stop))
       error, "When using start=, you must provide delta= or stop=";
-  }
-
-  if(forcechannel == 4) {
-    if(bath_ctl_chn4.laser == 0) {
-      error, "You must first configure bathy settings for channel 4 (bath_ctl_chn4).";
-    }
-  } else {
-    if(bath_ctl.laser == 0) {
-      error, "You must first configure bathy settings (bath_ctl).";
-    }
   }
 
   count = stop - start + 1;
@@ -213,8 +205,8 @@ func show_bath_constants {
   }
 }
 
-func ex_bath(raster_number, pulse_number, &msg, last=, forcechannel=, graph=, win=,
-xfma=, verbose=, keeprejected=) {
+func ex_bath(raster_number, pulse_number, &msg, last=, forcechannel=, graph=,
+win=, xfma=, verbose=, keeprejected=) {
 /* DOCUMENT ex_bath(raster_number, pulse_number)
   See run_bath for details on usage.
 
@@ -269,7 +261,7 @@ xfma=, verbose=, keeprejected=) {
    da                The return waveform with the computed exponentials substracted
    db                The return waveform equalized by agc and tilted by bias.
 */
-  extern bath_ctl, bath_ctl_chn4;
+  extern bathconf;
   default, win, 4;
   default, graph, 0;
   default, verbose, graph;
@@ -283,18 +275,16 @@ xfma=, verbose=, keeprejected=) {
     // Embedding in Tk destroys limits, so backup and restore
     lims = limits();
     channel = is_void(forcechannel) ? 0 : forcechannel;
-    tkcmd, swrite(format="::eaarl::settings::bath_ctl::launch_win %d %d %d %d",
-      win, raster_number, pulse_number, channel);
+    group = bathconf(settings_group, min(channel, 1));
+    tkcmd, swrite(format=
+      "::eaarl::bathconf::config %d -raster %d -pulse %d -channel %d -group {%s}",
+      win, raster_number, pulse_number, channel, group);
     gridxy, 2, 2;
     if(xfma) fma;
     limits, lims;
   }
 
-  if(forcechannel == 4) {
-    conf = bath_ctl_chn4;
-  } else {
-    conf = bath_ctl;
-  }
+  conf = bathconf(settings, (forcechannel ? forcechannel : 1));
 
   // setup the return struct
   result = BATHPIX();
@@ -704,11 +694,7 @@ rwing_dist, lwing_factor, rwing_factor, &msg) {
 func plot_bath_ctl(channel, wf, thresh=, first=, last=, raster=, pulse=) {
   extern bath_ctl;
   default, channel, 1;
-  if(channel == 4) {
-    conf = bath_ctl_chn4;
-  } else {
-    conf = bath_ctl;
-  }
+  conf = bathconf(settings, channel);
   default, thresh, conf.thresh;
   default, first, conf.first;
   default, last, conf.last;
