@@ -19,9 +19,10 @@ namespace eval ::eaarl::bathconf {
     variable profiles
 
     # An array of groups mapping each to its currently active profile
-    # No direct mapping, but kept updated by Yorick such that
+    # Mapping is from Yorick:
+    #       .bathconf.data.GROUP.active_name
+    # To Tcl:
     #       ::eaarl::bathconf::active_profile(GROUP)
-    # provides the currently active profile for GROUP
     variable active_profile
 }
 
@@ -86,7 +87,7 @@ snit::type ::eaarl::bathconf::embed {
     variable wantsetting {}
 
     # This stores the name of the profile combobox so we can apply the list
-    # variable to it.
+    # variable and text variable to it.
     variable wantprofiles {}
 
     # List of controls that accept user interaction. These will be disabled if
@@ -244,7 +245,8 @@ snit::type ::eaarl::bathconf::embed {
 
     method Gui_settings {f} {
         ttk::label $f.lblSettings -text "Settings:"
-        ttk::label $f.lblGroup -text "channel4"
+        ttk::label $f.lblGroup \
+                -textvariable [myvar options](-group)
         ttk::label $f.lblProfile -text "Profile:"
         mixin::combobox $f.cboProfile \
                 -state readonly \
