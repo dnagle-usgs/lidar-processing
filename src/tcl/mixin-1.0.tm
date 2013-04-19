@@ -457,11 +457,18 @@ snit::widgetadaptor ::mixin::combobox {
     #     When -listvariable changes, the old variable's traces need to be
     #     removed and the new variable's traces must be added. Or, the empty
     #     string specifies to trace no variable at all.
+    #
+    #     Note that array values (such as "foo(a)") must be passed with a fully
+    #     qualified paths. Other variables probably should as well, but if they
+    #     aren't, an attempt will be made to determine their fully qualified
+    #     path. The attempt always fails for array values though.
     method SetListVar {option value} {
         if {![uplevel 1 [list info exists $value]]} {
             uplevel 1 [list set $value [list]]
         }
-        set value [uplevel 1 [list namespace which -variable $value]]
+        if {![string match ::* $value]} {
+            set value [uplevel 1 [list namespace which -variable $value]]
+        }
         if {$options(-listvariable) ne ""} {
             $self RemoveTraces $options(-listvariable)
         }
