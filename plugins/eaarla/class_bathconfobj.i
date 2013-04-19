@@ -178,6 +178,8 @@ func bathconfobj_groups(newgroups, copy=) {
 
   for(i = 1; i <= data(*); i++) {
     use_method, validate, data(*,i);
+    tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", data(*,)),
+      strjoin(data(noop(i)).profiles(*,), " ");
   }
 }
 save, base, groups=bathconfobj_groups;
