@@ -1,6 +1,7 @@
 require, "class_confobj.i";
 
 scratch = save(scratch, base,
+  bathconfobj_settings_group,
   bathconfobj_settings, bathconfobj_groups, bathconfobj_validate,
   bathconfobj_read, bathconfobj_clear, bathconfobj_cleangroups,
   bathconfobj_profile_add, bathconfobj_profile_del, bathconfobj_profile_rename
@@ -23,6 +24,11 @@ func bathconfobj(base, data) {
 
   Additionally, bathconfobj has specific knowledge of which keys are expected
   and what format they should be in (integer, double, etc.).
+
+  Added method:
+
+    group = bathconf(settings_group, <channel>)
+      Given a CHANNEL, returns the name of the GROUP used for that channel.
 
   Modified methods:
 
@@ -101,6 +107,12 @@ func bathconfobj_settings(channel) {
   return data(mapping(channel)).active;
 }
 save, base, settings=bathconfobj_settings;
+
+func bathconfobj_settings_group(channel) {
+  use, mapping;
+  return mapping(channel);
+}
+save, base, settings_group=bathconfobj_settings_group;
 
 func bathconfobj_groups(newgroups, copy=) {
   default, copy, 1;
