@@ -155,12 +155,14 @@ snit::type ::eaarl::bathconf::embed {
     method Gui_browse {f} {
         ttk::label $f.lblChan -text "Channel:"
         mixin::combobox $f.cboChan \
+                -textvariable [myvar options](-channel) \
                 -state readonly \
                 -width 2
         ttk::separator $f.sepChan \
                 -orient vertical
         ttk::label $f.lblRast -text "Raster:"
         ttk::spinbox $f.spnRast \
+                -textvariable [myvar options](-raster) \
                 -width 5
         ttk::button $f.btnRastPrev \
                 -image ::imglib::vcr::stepbwd \
@@ -174,6 +176,7 @@ snit::type ::eaarl::bathconf::embed {
                 -orient vertical
         ttk::label $f.lblPulse -text "Pulse:"
         ttk::spinbox $f.spnPulse \
+                -textvariable [myvar options](-pulse) \
                 -width 3
         ttk::button $f.btnPulsePrev \
                 -image ::imglib::vcr::stepbwd \
