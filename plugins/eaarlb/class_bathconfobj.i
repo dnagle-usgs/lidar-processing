@@ -96,6 +96,18 @@ func bathconfobj_groups(newgroups, copy=) {
   use, data;
   oldgroups = data;
 
+  // Remove syncs
+  for(i = 1; i <= oldgroups(*); i++) {
+    group = oldgroups(*,i);
+    drop = oldgroups(noop(i)).active(*,);
+    tksync, remove,
+      swrite(format="bathconf.data.%s.active.%s", group, drop),
+      swrite(format="::eaarl::bathconf::settings(%s,%s)", group, drop);
+    tksync, remove,
+      swrite(format="bathconf.data.%s.active_name", group),
+      swrite(format="::eaarl::bathconf::active_profile(%s)", group);
+  }
+
   use, mapping;
   oldmap = mapping;
 
@@ -154,20 +166,37 @@ func bathconfobj_validate(group) {
   active = data(noop(group)).active;
 
   // Values that all confs have
-  key_default_and_cast, active,
+  defaults = save(
     thresh=1.0, first=1, last=2, sfc_last=12, maxsat=1,
     lwing_dist=1, rwing_dist=3, lwing_factor=0.9, rwing_factor=0.9,
-    decay="exponential";
+    decay="exponential"
+  );
+  key_default_and_cast, active, defaults;
+  tksync, add,
+    swrite(format="bathconf.data.%s.active.%s", group, defaults(*,)),
+    swrite(format="::eaarl::bathconf::settings(%s,%s)", group, defaults(*,));
 
   // Values specific to a decay type
   if(active.decay == "exponential") {
-    key_default_and_cast, active, laser=-1.0, water=-1.0, agc=1.0;
+    defaults = save(laser=-1.0, water=-1.0, agc=1.0);
+    drop = ["mean", "stdev", "xshift", "xscale", "tiepoint"];
   } else if(active.decay == "lognormal") {
-    key_default_and_cast, active,
-      mean=1.0, stdev=1.0, xshift=1.0, xscale=15.0, tiepoint=2;
+    defaults = save(mean=1.0, stdev=1.0, agc=1.0, xshift=1.0, xscale=15.0,
+      tiepoint=2);
+    drop = ["laser", "water"];
   } else {
     error, "Unknown decay type";
   }
+  key_default_and_cast, active, defaults;
+  tksync, add,
+    swrite(format="bathconf.data.%s.active.%s", group, defaults(*,)),
+    swrite(format="::eaarl::bathconf::settings(%s,%s)", group, defaults(*,));
+  tksync, remove,
+    swrite(format="bathconf.data.%s.active.%s", group, drop),
+    swrite(format="::eaarl::bathconf::settings(%s,%s)", group, drop);
+  tksync, add,
+    swrite(format="bathconf.data.%s.active_name", group),
+    swrite(format="::eaarl::bathconf::active_profile(%s)", group);
 }
 save, base, validate=bathconfobj_validate;
 
