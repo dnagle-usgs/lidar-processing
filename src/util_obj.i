@@ -76,7 +76,7 @@ func key_default_and_cast(args) {
   obj = args(1);
 
   if(args(0) == 2 && is_obj(args(2))) {
-    defaults = args(2):
+    defaults = args(2);
   } else {
     defaults = args2obj(args)(2:);
   }
