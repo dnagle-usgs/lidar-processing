@@ -254,6 +254,7 @@ snit::type ::eaarl::bathconf::embed {
         mixin::combobox $f.cboProfile \
                 -state readonly \
                 -width 6
+        ::mixin::revertable $f.cboProfile
         ttk::button $f.btnAdd \
                 -image ::imglib::plus \
                 -style Toolbutton \
@@ -308,9 +309,11 @@ snit::type ::eaarl::bathconf::embed {
         ttk::label $f.lblSat -text "Max Sat:"
         ttk::spinbox $f.spnSat \
                 -width 4
+        ::mixin::revertable $f.spnSat
         ttk::label $f.lblSfc -text "Surface Last:"
         ttk::spinbox $f.spnSfc \
                 -width 4
+        ::mixin::revertable $f.spnSfc
 
         pack $f.lblSat $f.spnSat $f.lblSfc $f.spnSfc \
                 -side left
@@ -334,15 +337,19 @@ snit::type ::eaarl::bathconf::embed {
         mixin::combobox $f.cboType \
                 -state readonly \
                 -width 11
+        ::mixin::revertable $f.cboType
         ttk::label $f.lblLaser -text "Laser:"
         ttk::spinbox $f.spnLaser \
                 -width 4
+        ::mixin::revertable $f.spnLaser
         ttk::label $f.lblWater -text "Water:"
         ttk::spinbox $f.spnWater \
                 -width 4
+        ::mixin::revertable $f.spnWater
         ttk::label $f.lblAgc -text "AGC:"
         ttk::spinbox $f.spnAgc \
                 -width 4
+        ::mixin::revertable $f.spnAgc
 
         pack $f.lblType $f.cboType $f.lblLaser $f.spnLaser \
                 $f.lblWater $f.spnWater $f.lblAgc $f.spnAgc \
@@ -359,24 +366,31 @@ snit::type ::eaarl::bathconf::embed {
         ttk::label $f.lblType -text "Type:"
         mixin::combobox $f.cboType \
                 -width 6
+        ::mixin::revertable $f.cboType
         ttk::label $f.lblMean -text "Mean:"
         ttk::spinbox $f.spnMean \
                 -width 4
+        ::mixin::revertable $f.spnMean
         ttk::label $f.lblStd -text "Std Dev:"
         ttk::spinbox $f.spnStd \
                 -width 4
+        ::mixin::revertable $f.spnStd
         ttk::label $f.lblAgc -text "AGC:"
         ttk::spinbox $f.spnAgc \
                 -width 4
+        ::mixin::revertable $f.spnAgc
         ttk::label $f.lblXsh -text "X Shift:"
         ttk::spinbox $f.spnXsh \
                 -width 4
+        ::mixin::revertable $f.spnXsh
         ttk::label $f.lblXsc -text "X Scale:"
         ttk::spinbox $f.spnXsc \
                 -width 4
+        ::mixin::revertable $f.spnXsc
         ttk::label $f.lblTie -text "Tie Point:"
         ttk::spinbox $f.spnTie \
                 -width 4
+        ::mixin::revertable $f.spnTie
 
         lower [ttk::frame $f.fra1]
         pack $f.lblType $f.cboType $f.lblMean $f.spnMean $f.lblStd \
@@ -403,12 +417,15 @@ snit::type ::eaarl::bathconf::embed {
         ttk::label $f.lblFirst -text "First:"
         ttk::spinbox $f.spnFirst \
                 -width 4
+        ::mixin::revertable $f.spnFirst
         ttk::label $f.lblLast -text "Last:"
         ttk::spinbox $f.spnLast \
                 -width 4
+        ::mixin::revertable $f.spnLast
         ttk::label $f.lblThresh -text "Threshold:"
         ttk::spinbox $f.spnThresh \
                 -width 4
+        ::mixin::revertable $f.spnThresh
 
         pack $f.lblFirst $f.spnFirst $f.lblLast $f.spnLast \
                 $f.lblThresh $f.spnThresh \
@@ -424,13 +441,17 @@ snit::type ::eaarl::bathconf::embed {
         ttk::label $f.lblLeft -text "Left Dist/Factor:"
         ttk::spinbox $f.spnLeftDist \
                 -width 4
+        ::mixin::revertable $f.spnLeftDist
         ttk::spinbox $f.spnLeftFact \
                 -width 4
+        ::mixin::revertable $f.spnLeftFact
         ttk::label $f.lblRight -text "Right Dist/Factor:"
         ttk::spinbox $f.spnRightDist \
                 -width 4
+        ::mixin::revertable $f.spnRightDist
         ttk::spinbox $f.spnRightFact \
                 -width 4
+        ::mixin::revertable $f.spnRightFact
 
         pack $f.lblLeft $f.spnLeftDist $f.spnLeftFact \
                 $f.lblRight $f.spnRightDist $f.spnRightFact \
@@ -481,15 +502,27 @@ snit::type ::eaarl::bathconf::embed {
             }
             dict for {path key} $wantsetting {
                 $path configure \
-                        -textvariable ${ns}::settings(${group},${key})
+                        -textvariable ${ns}::settings(${group},${key}) \
+                        -applycommand [mymethod SetKey $key]
             }
             foreach path $wantprofiles {
                 $path configure \
+                        -textvariable ${ns}::active_profile(${group}) \
                         -listvariable ${ns}::profiles(${group}) \
-                        -textvariable ${ns}::active_profile(${group})
+                        -applycommand [mymethod SetProfile]
             }
         }
         set curgroup $options(-group)
+    }
+
+    method SetKey {key old new} {
+        exp_send "bathconf, set, \"$options(-group)\", \"$key\", \"$new\";\r"
+        return -code error
+    }
+
+    method SetProfile {old new} {
+        exp_send "bathconf, profile_select, \"$options(-group)\", \"$new\";\r"
+        return -code error
     }
 
     method GetDecay {} {
