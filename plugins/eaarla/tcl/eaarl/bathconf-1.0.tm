@@ -255,6 +255,7 @@ snit::type ::eaarl::bathconf::embed {
                 -state readonly \
                 -width 6
         ::mixin::revertable $f.cboProfile
+        bind $f.cboProfile <<ComboboxSelected>> +[list $f.cboProfile apply]
         ttk::button $f.btnAdd \
                 -image ::imglib::plus \
                 -style Toolbutton \
@@ -339,6 +340,7 @@ snit::type ::eaarl::bathconf::embed {
                 -width 11
         ::mixin::revertable $f.cboType
         ttk::label $f.lblLaser -text "Laser:"
+        bind $f.cboType <<ComboboxSelected>> +[list $f.cboType apply]
         ttk::spinbox $f.spnLaser \
                 -width 4
         ::mixin::revertable $f.spnLaser
@@ -367,6 +369,7 @@ snit::type ::eaarl::bathconf::embed {
         mixin::combobox $f.cboType \
                 -width 6
         ::mixin::revertable $f.cboType
+        bind $f.cboType <<ComboboxSelected>> +[list $f.cboType apply]
         ttk::label $f.lblMean -text "Mean:"
         ttk::spinbox $f.spnMean \
                 -width 4
