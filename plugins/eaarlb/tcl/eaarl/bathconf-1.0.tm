@@ -516,12 +516,14 @@ snit::type ::eaarl::bathconf::embed {
     }
 
     method SetKey {key old new} {
-        exp_send "bathconf, set, \"$options(-group)\", \"$key\", \"$new\";\r"
+        exp_send "bathconf, set, \"$options(-group)\", \"$key\", \"$new\"; "
+        $self plot
         return -code error
     }
 
     method SetProfile {old new} {
-        exp_send "bathconf, profile_select, \"$options(-group)\", \"$new\";\r"
+        exp_send "bathconf, profile_select, \"$options(-group)\", \"$new\"; "
+        $self plot
         return -code error
     }
 
@@ -545,7 +547,7 @@ snit::type ::eaarl::bathconf::embed {
         if {$options(-channel)} {
             append cmd ", forcechannel=$options(-channel)"
         }
-        append cmd ";"
+        append cmd "; "
         return $cmd
     }
 
