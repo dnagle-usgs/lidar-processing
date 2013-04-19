@@ -87,7 +87,7 @@ func bathconfobj(base, data) {
   return obj;
 }
 
-base = confobj.data;
+base = obj_copy(confobj.data, recurse=1);
 
 // Backup parent class methods that we'll be clobbering
 save, base,
