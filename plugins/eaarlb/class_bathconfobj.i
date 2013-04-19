@@ -204,10 +204,10 @@ func bathconfobj_validate(group) {
 
   // Values specific to a decay type
   if(active.decay == "exponential") {
-    defaults = save(laser=-1.0, water=-1.0, agc=1.0);
+    defaults = save(laser=-1.0, water=-1.0, agc=-1.0);
     drop = ["mean", "stdev", "xshift", "xscale", "tiepoint"];
   } else if(active.decay == "lognormal") {
-    defaults = save(mean=1.0, stdev=1.0, agc=1.0, xshift=1.0, xscale=15.0,
+    defaults = save(mean=1.0, stdev=1.0, agc=-1.0, xshift=1.0, xscale=15.0,
       tiepoint=2);
     drop = ["laser", "water"];
   } else {
