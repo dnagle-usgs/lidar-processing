@@ -101,6 +101,16 @@ snit::type ::eaarl::bathconf::embed {
     variable show_wf 1
     variable show_rast 1
 
+    variable wf_chan1 0
+    variable wf_chan2 0
+    variable wf_chan3 0
+    variable wf_chan4 0
+    variable wf_win 0
+
+    variable rast_plot 0
+    variable rast_bath 0
+    variable rast_win 1
+
     constructor {args} {
         if {[dict exist $args -window]} {
             set win [dict get $args -window]
@@ -216,11 +226,13 @@ snit::type ::eaarl::bathconf::embed {
     method Gui_waveforms {f} {
         ttk::label $f.lblWf -text "Plot waveforms:"
         foreach i {1 2 3 4} {
-            ttk::checkbutton $f.chkChan$i -text $i
+            ttk::checkbutton $f.chkChan$i -text $i \
+                    -variable [myvar wf_chan$i]
         }
         ttk::label $f.lblWin -text "Win:"
         ttk::spinbox $f.spnWin \
-                -width 3
+                -width 3 \
+                -textvariable [myvar wf_win]
 
         pack $f.lblWf $f.chkChan1 $f.chkChan2 $f.chkChan3 $f.chkChan4 \
                 -side left
@@ -232,11 +244,14 @@ snit::type ::eaarl::bathconf::embed {
     }
 
     method Gui_raster {f} {
-        ttk::checkbutton $f.chkRast -text "Plot raster"
-        ttk::checkbutton $f.chkBottom -text "Bottom markers"
+        ttk::checkbutton $f.chkRast -text "Plot raster" \
+                -variable [myvar rast_plot]
+        ttk::checkbutton $f.chkBottom -text "Bottom markers" \
+                -variable [myvar rast_bath]
         ttk::label $f.lblWin -text "Win:"
         ttk::spinbox $f.spnWin \
-                -width 3
+                -width 3 \
+                -textvariable [myvar rast_win]
 
         pack $f.chkRast $f.chkBottom \
                 -side left
