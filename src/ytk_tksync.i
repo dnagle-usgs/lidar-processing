@@ -22,7 +22,14 @@ local tksync;
   arrays are of the same size. This lets you define multiple pairs to sync in
   one call.
 
-  There are two additional methods.
+  There are three additional methods.
+
+    tksync, idleadd, "<yvar>", "<tkvar>"
+      Like tksync,add except it waits until Yorick is idle to run. This is
+      sometimes necessary when you are syncing an object member within a
+      context where you're using "use"; use doesn't store the revised contents
+      back to the object until scope exits, which can lead to inconsistent
+      results. By waiting until Yorick is next idle, you avoid that issue.
 
     tksync, check
       Checks to see if any Yorick variables have changed and, if so, sends an
@@ -51,19 +58,32 @@ local tksync;
 */
 
 // tksync_background intentionally omitted from scratch
-scratch = save(scratch, tmp, tksync_add, tksync_remove, tksync_check);
-tmp = save(cache, interval, add, remove, check, background);
+scratch = save(scratch, tmp, tksync_add, tksync_remove, tksync_check,
+  tksync_idleadd);
+tmp = save(cache, pending, interval, add, idleadd, remove, check, background);
 
 if(is_obj(tksync) && is_obj(tksync.cache)) {
   cache = tksync.cache;
 } else {
   cache = save();
 }
+if(is_obj(tksync) && is_obj(tksync.pending)) {
+  pending = tksync.pending;
+} else {
+  pending = save(yvar=[], tkvar=[]);
+}
 if(is_obj(tksync) && is_numerical(tksync.interval)) {
   interval = tksync.interval;
 } else {
   interval = 0.25;
 }
+
+func tksync_idleadd(yvar, tkvar) {
+  pending = tksync.pending;
+  save, pending, yvar=grow(pending.yvar, yvar),
+    tkvar=grow(pending.tkvar, tkvar);
+}
+idleadd = tksync_idleadd;
 
 func tksync_add(yvar, tkvar) {
   cache = tksync.cache;
@@ -122,8 +142,15 @@ func tksync_remove(yvar, tkvar) {
 remove = tksync_remove;
 
 func tksync_check(void) {
-  cache = tksync.cache;
+  pending = tksync.pending;
+  if(numberof(pending.yvar)) {
+    yvar = pending.yvar;
+    tkvar = pending.tkvar;
+    save, pending, yvar=[], tkvar=[];
+    tksync, add, yvar, tkvar;
+  }
 
+  cache = tksync.cache;
   for(i = 1; i <= cache(*); i++) {
     val = var_expr_get(cache(*,i));
 
@@ -138,7 +165,7 @@ func tksync_check(void) {
     save, cache(noop(i)), val;
   }
 
-  save, tksync, cache;
+  save, tksync, cache, pending;
 }
 check = tksync_check;
 
