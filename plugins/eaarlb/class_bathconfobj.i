@@ -198,7 +198,7 @@ func bathconfobj_validate(group) {
     decay="exponential"
   );
   key_default_and_cast, active, defaults;
-  tksync, add,
+  tksync, idleadd,
     swrite(format="bathconf.data.%s.active.%s", group, defaults(*,)),
     swrite(format="::eaarl::bathconf::settings(%s,%s)", group, defaults(*,));
 
@@ -214,13 +214,13 @@ func bathconfobj_validate(group) {
     error, "Unknown decay type";
   }
   key_default_and_cast, active, defaults;
-  tksync, add,
+  tksync, idleadd,
     swrite(format="bathconf.data.%s.active.%s", group, defaults(*,)),
     swrite(format="::eaarl::bathconf::settings(%s,%s)", group, defaults(*,));
   tksync, remove,
     swrite(format="bathconf.data.%s.active.%s", group, drop),
     swrite(format="::eaarl::bathconf::settings(%s,%s)", group, drop);
-  tksync, add,
+  tksync, idleadd,
     swrite(format="bathconf.data.%s.active_name", group),
     swrite(format="::eaarl::bathconf::active_profile(%s)", group);
 }
