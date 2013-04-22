@@ -108,7 +108,7 @@ func tksync_add(yvar, tkvar) {
     save, cache(yvar(i)), tkvars;
 
     // Initialize variable in Tk
-    tksetval, tkvar, val;
+    tksetval, tkvar(i), val;
   }
 
   save, tksync, cache;
