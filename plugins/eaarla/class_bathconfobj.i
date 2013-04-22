@@ -193,7 +193,7 @@ func bathconfobj_validate(group) {
 
   // Values that all confs have
   defaults = save(
-    thresh=1.0, first=1, last=2, sfc_last=12, maxsat=1,
+    thresh=1.0, first=1, last=2, sfc_last=12, maxsat=1, smoothwf=0,
     lwing_dist=1, rwing_dist=3, lwing_factor=0.9, rwing_factor=0.9,
     decay="exponential"
   );
@@ -311,13 +311,14 @@ func bathconfobj_cleangroups(void) {
     for(j = 1; j <= grp.profiles(*); j++) {
       prof = grp.profiles(noop(j));
       if(prof.decay == "lognormal") {
-        idx = prof(*, ["maxsat", "sfc_last", "decay", "mean", "stdev", "agc",
-          "xshift", "xscale", "tiepoint", "first", "last", "threshold",
-          "lwing_dist", "lwing_factor", "rwing_dist", "rwing_factor"]);
+        idx = prof(*, ["maxsat", "sfc_last", "smoothwf", "decay", "mean",
+          "stdev", "agc", "xshift", "xscale", "tiepoint", "first", "last",
+          "threshold", "lwing_dist", "lwing_factor", "rwing_dist",
+          "rwing_factor"]);
       } else {
-        idx = prof(*, ["maxsat", "sfc_last", "decay", "laser", "water", "agc",
-          "first", "last", "threshold", "lwing_dist", "lwing_factor",
-          "rwing_dist", "rwing_factor"]);
+        idx = prof(*, ["maxsat", "sfc_last", "smoothwf", "decay", "laser",
+          "water", "agc", "first", "last", "threshold", "lwing_dist",
+          "lwing_factor", "rwing_dist", "rwing_factor"]);
       }
       idx = idx(where(idx));
       if(numberof(idx))

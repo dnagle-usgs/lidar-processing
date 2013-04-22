@@ -330,13 +330,19 @@ snit::type ::eaarl::bathconf::embed {
         ttk::spinbox $f.spnSfc \
                 -width 4
         ::mixin::revertable $f.spnSfc
+        ttk::label $f.lblSmo -text "Smooth:"
+        ttk::spinbox $f.spnSmo \
+                -width 4
+        ::mixin::revertable $f.spnSmo
 
         pack $f.lblSat $f.spnSat $f.lblSfc $f.spnSfc \
+                $f.lblSmo $f.spnSmo \
                 -side left
 
-        lappend controls $f.spnSat $f.spnSfc
+        lappend controls $f.spnSat $f.spnSfc $f.spnSmo
         dict set wantsetting $f.spnSat maxsat
         dict set wantsetting $f.spnSfc sfc_last
+        dict set wantsetting $f.spnSmo smoothwf
     }
 
     method Gui_settings_backscatter {f} {
