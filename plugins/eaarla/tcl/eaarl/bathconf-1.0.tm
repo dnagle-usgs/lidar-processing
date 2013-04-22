@@ -174,13 +174,17 @@ snit::type ::eaarl::bathconf::embed {
         ttk::spinbox $f.spnRast \
                 -textvariable [myvar options](-raster) \
                 -width 5
+        ::mixin::revertable $f.spnRast \
+                -applycommand [mymethod IdlePlot]
         ttk::button $f.btnRastPrev \
                 -image ::imglib::vcr::stepbwd \
                 -style Toolbutton \
+                -command [mymethod IncrRast -1] \
                 -width 0
         ttk::button $f.btnRastNext \
                 -image ::imglib::vcr::stepfwd \
                 -style Toolbutton \
+                -command [mymethod IncrRast 1] \
                 -width 0
         ttk::separator $f.sepRast \
                 -orient vertical
@@ -188,24 +192,30 @@ snit::type ::eaarl::bathconf::embed {
         ttk::spinbox $f.spnPulse \
                 -textvariable [myvar options](-pulse) \
                 -width 3
+        ::mixin::revertable $f.spnPulse \
+                -applycommand [mymethod IdlePlot]
         ttk::button $f.btnPulsePrev \
                 -image ::imglib::vcr::stepbwd \
                 -style Toolbutton \
+                -command [mymethod IncrPulse -1] \
                 -width 0
         ttk::button $f.btnPulseNext \
                 -image ::imglib::vcr::stepfwd \
                 -style Toolbutton \
+                -command [mymethod IncrPulse 1] \
                 -width 0
         ttk::separator $f.sepPulse \
                 -orient vertical
         ttk::button $f.btnLims \
                 -image ::imglib::misc::limits \
                 -style Toolbutton \
-                -width 0
+                -width 0 \
+                -command [list exp_send "limits;\r"]
         ttk::button $f.btnReplot \
                 -image ::imglib::misc::refresh \
                 -style Toolbutton \
-                -width 0
+                -width 0 \
+                -command [mymethod plot]
 
         pack $f.lblChan $f.cboChan \
                 $f.sepChan \
@@ -548,6 +558,28 @@ snit::type ::eaarl::bathconf::embed {
                     write [mymethod TraceDecay]
         }
         set curgroup $options(-group)
+    }
+
+    method IncrRast {amt} {
+        incr options(-raster) $amt
+        if {$options(-raster) < 1} {
+            set options(-raster) 1
+        }
+        $self plot
+    }
+
+    method IncrPulse {amt} {
+        incr options(-pulse) $amt
+        if {$options(-pulse) < 1} {
+            set options(-pulse) 1
+        } elseif {$options(-pulse) > 120} {
+            set options(-pulse) 120
+        }
+        $self plot
+    }
+
+    method IdlePlot {old new} {
+        ::misc::idle [mymethod plot]
     }
 
     method SetKey {key old new} {
