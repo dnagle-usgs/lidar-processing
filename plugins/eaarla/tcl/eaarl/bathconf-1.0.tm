@@ -341,7 +341,7 @@ snit::type ::eaarl::bathconf::embed {
 
     method Gui_settings_backscatter {f} {
         set curdecay [$self GetDecay]
-        if {$curdecay eq "lognorm"} {
+        if {$curdecay eq "lognormal"} {
             $self Gui_settings_backscatter_lognorm $f
         } else {
             $self Gui_settings_backscatter_exp $f
@@ -352,7 +352,8 @@ snit::type ::eaarl::bathconf::embed {
         ttk::label $f.lblType -text "Type:"
         mixin::combobox $f.cboType \
                 -state readonly \
-                -width 11
+                -width 11 \
+                -values {exponential lognormal}
         ::mixin::revertable $f.cboType
         ttk::label $f.lblLaser -text "Laser:"
         bind $f.cboType <<ComboboxSelected>> +[list $f.cboType apply]
@@ -382,7 +383,9 @@ snit::type ::eaarl::bathconf::embed {
     method Gui_settings_backscatter_lognorm {f} {
         ttk::label $f.lblType -text "Type:"
         mixin::combobox $f.cboType \
-                -width 6
+                -state readonly \
+                -width 11 \
+                -values {exponential lognormal}
         ::mixin::revertable $f.cboType
         bind $f.cboType <<ComboboxSelected>> +[list $f.cboType apply]
         ttk::label $f.lblMean -text "Mean:"
@@ -418,13 +421,13 @@ snit::type ::eaarl::bathconf::embed {
         pack $f.lblXsh $f.spnXsh $f.lblXsc $f.spnXsc $f.lblTie $f.spnTie \
                 -in $f.fra2 -side left
 
-        pack $f.fra1 $f.fra2 -side top
+        pack $f.fra1 $f.fra2 -side top -anchor w
 
         lappend controls $f.cboType $f.spnMean $f.spnStd $f.spnAgc \
                 $f.spnXsh $f.spnXsc $f.spnTie
         dict set wantsetting $f.cboType decay
         dict set wantsetting $f.spnMean mean
-        dict set wantsetting $f.spnWater stdev
+        dict set wantsetting $f.spnStd stdev
         dict set wantsetting $f.spnAgc agc
         dict set wantsetting $f.spnXsh xshift
         dict set wantsetting $f.spnXsc xscale
@@ -502,6 +505,13 @@ snit::type ::eaarl::bathconf::embed {
         if {!$force && $curgroup eq $options(-group)} return
         set group $options(-group)
 
+        set ns ::eaarl::bathconf
+
+        if {$curgroup ne ""} {
+            trace remove variable ${ns}::settings(${curgroup},decay) \
+                    write [mymethod TraceDecay]
+        }
+
         if {$group eq ""} {
             set var [myvar empty]
             foreach path $controls {
@@ -514,7 +524,6 @@ snit::type ::eaarl::bathconf::embed {
                 $path configure -listvariable $var -textvariable $var
             }
         } else {
-            set ns ::eaarl::bathconf
             foreach path $controls {
                 $path state !disabled
             }
@@ -529,6 +538,8 @@ snit::type ::eaarl::bathconf::embed {
                         -listvariable ${ns}::profiles(${group}) \
                         -applycommand [mymethod SetProfile]
             }
+            trace add variable ${ns}::settings(${group},decay) \
+                    write [mymethod TraceDecay]
         }
         set curgroup $options(-group)
     }
