@@ -313,11 +313,11 @@ func bathconfobj_cleangroups(void) {
       if(prof.decay == "lognormal") {
         idx = prof(*, ["maxsat", "sfc_last", "smoothwf", "decay", "mean",
           "stdev", "agc", "xshift", "xscale", "tiepoint", "first", "last",
-          "threshold", "lwing_dist", "lwing_factor", "rwing_dist",
+          "thresh", "lwing_dist", "lwing_factor", "rwing_dist",
           "rwing_factor"]);
       } else {
         idx = prof(*, ["maxsat", "sfc_last", "smoothwf", "decay", "laser",
-          "water", "agc", "first", "last", "threshold", "lwing_dist",
+          "water", "agc", "first", "last", "thresh", "lwing_dist",
           "lwing_factor", "rwing_dist", "rwing_factor"]);
       }
       idx = idx(where(idx));
