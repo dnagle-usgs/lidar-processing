@@ -167,7 +167,11 @@ snit::type ::eaarl::bathconf::embed {
         mixin::combobox $f.cboChan \
                 -textvariable [myvar options](-channel) \
                 -state readonly \
-                -width 2
+                -width 2 \
+                -values {1 2 3 4}
+        ::mixin::revertable $f.cboChan \
+                -applycommand [mymethod IdlePlot]
+        bind $f.cboChan <<ComboboxSelected>> +[list $f.cboChan apply]
         ttk::separator $f.sepChan \
                 -orient vertical
         ttk::label $f.lblRast -text "Raster:"
