@@ -340,16 +340,14 @@ win=, xfma=, verbose=, keeprejected=) {
     plot_bath_ctl, channel, wf, thresh=thresh, raster=raster_number, pulse=pulse_number;
   }
 
-  if(forcechannel == 4) {
-    wf_decay = bathy_wf_compensate_decay_lognorm(wf, surface=surface_sat_end,
-        mean=conf.laser, stdev=conf.water,
-        agc_coeff=conf.agc, max_intensity=escale,
-        sample_interval=sample_interval, graph=graph, win=win);
+  if(conf.decay == "exponential") {
+    wf_decay = bathy_wf_compensate_decay_exp(wf, conf, surface=surface_sat_end,
+      max_intensity=escale, sample_interval=sample_interval, graph=graph,
+      win=win);
   } else {
-    wf_decay = bathy_wf_compensate_decay_exp(wf, surface=surface_sat_end,
-        laser_coeff=conf.laser, water_coeff=conf.water,
-        agc_coeff=conf.agc, max_intensity=escale,
-        sample_interval=sample_interval, graph=graph, win=win);
+    wf_decay = bathy_wf_compensate_decay_lognorm(wf, conf,
+      surface=surface_sat_end, max_intensity=escale,
+      sample_interval=sample_interval, graph=graph, win=win);
   }
 
   first = min(wflen, conf.first);
@@ -505,10 +503,10 @@ func bathy_detect_surface(wf, maxint, thresh, sfc_last, &surface,
   }
 }
 
-func bathy_wf_compensate_decay_exp(wf, surface=, laser_coeff=, water_coeff=,
-agc_coeff=, max_intensity=, sample_interval=, graph=, win=) {
-/* DOCUMENT bathy_wf_compensate_decay_exp(wf, surface=, laser_coeff=, water_coeff=,
- * agc_coeff=, max_intensity=, sample_interval=, graph=, win=)
+func bathy_wf_compensate_decay_exp(wf, conf, surface=, max_intensity=,
+sample_interval=, graph=, win=) {
+/* DOCUMENT bathy_wf_compensate_decay_exp(wf, conf, surface=, max_intensity=,
+ * sample_interval=, graph=, win=)
   Returns an adjusted waveform WF_DECAY that compensates for attenuation of
   light in water.
 */
@@ -516,14 +514,14 @@ agc_coeff=, max_intensity=, sample_interval=, graph=, win=) {
   wflen = numberof(wf);
   attdepth = indgen(0:wflen-1) * sample_interval * CNSH2O2X;
 
-  laser_decay = exp(laser_coeff * attdepth) * max_intensity;
-  secondary_decay = exp(water_coeff * attdepth) * max_intensity;
+  laser_decay = exp(conf.laser * attdepth) * max_intensity;
+  secondary_decay = exp(conf.water * attdepth) * max_intensity;
 
   laser_decay(surface:0) = laser_decay(1:0-surface+1) +
     secondary_decay(1:0-surface+1)*.25;
   laser_decay(1:min(wflen,surface+1)) = max_intensity;
 
-  agc = 1.0 - exp(agc_coeff * attdepth);
+  agc = 1.0 - exp(conf.agc * attdepth);
   agc(surface:0) = agc(1:0-surface+1);
   agc(1:surface) = 0.0;
 
@@ -546,48 +544,36 @@ agc_coeff=, max_intensity=, sample_interval=, graph=, win=) {
   return wf_decay;
 }
 
-func bathy_wf_compensate_decay_lognorm(cache, wf, surface=, mean=, stdev=,
-agc_coeff=, max_intensity=, sample_interval=, graph=, win=) {
-/* DOCUMENT bathy_wf_compensate_decay_lognorm(wf, surface=, mean=, stdev=,
-   agc_coeff=, max_intensity=, sample_interval=, graph=, win=)
+func bathy_wf_compensate_decay_lognorm(cache, wf, conf, surface=,
+max_intensity=, sample_interval=, graph=, win=) {
+/* DOCUMENT bathy_wf_compensate_decay_lognorm(wf, conf, surface=,
+ * max_intensity=, sample_interval=, graph=, win=)
   Returns an adjusted waveform WF_DECAY that compensates for attenuation of
   light in water.
 */
   default, sample_interval, 1.0;
 
-  // Hard-coded parameters into log_normal:
-  // This is the pixel at which you want the distribution to start.
-  xshift = conf.xshift;
-  // This is a scaling parameter to convert from sample counts to standard
-  // normal variable values. The maximum waveform length is 300; xscale=15
-  // means that log_normal will effectively operate over the range 0 to 20
-  // instead (300/15 = 20). With xscale=10, the range is 0 to 30.
-  xscale = conf.xscale;
-
-  // Hard-coded parameter for determining which pixel to match intensity on.
-  // This should probably be beyond where we expect to find the surface.
-  tiepoint = conf.tiepoint;
-
   wflen = numberof(wf);
-  opts = [mean, stdev, xshift, xscale];
+  opts = [conf.mean, conf.stdev, conf.xshift, conf.xscale];
   if(anyof(opts != cache.opts) || wflen > cache.len) {
     len = max(wflen, 300);
-    decay = log_normal(indgen(1:len), mean, stdev, xshift=xshift, xscale=xscale);
+    decay = log_normal(indgen(1:len), conf.mean, conf.stdev,
+      xshift=-conf.xshift, xscale=conf.xscale);
     save, cache, opts, len, decay;
   } else {
     decay = cache.decay;
   }
 
   wflen = numberof(wf);
-  if(wflen < tiepoint) {
+  if(wflen < conf.tiepoint) {
     // If the waveform is too short, abort and flatten wf
     return wf * 0;
   }
   attdepth = indgen(0:wflen-1) * sample_interval * CNSH2O2X;
 
-  decay = decay(:wflen) / decay(tiepoint) * wf(tiepoint);
+  decay = decay(:wflen) * (wf(conf.tiepoint) / decay(conf.tiepoint));
 
-  agc = 1.0 - exp(agc_coeff * attdepth);
+  agc = 1.0 - exp(conf.agc * attdepth);
   agc(surface:0) = agc(1:0-surface+1);
   agc(1:surface) = 0.0;
 
