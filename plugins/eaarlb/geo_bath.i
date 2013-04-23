@@ -209,14 +209,12 @@ func make_bathy(latutm=, q=, avg_surf=, ext_bad_att=, forcechannel=, verbose=) {
   Returns an array depth_all of GEOALL.
 
   Please ensure that the tans and pnav data have been loaded before executing
-  make_bathy. See rbpnav() and rbtans() for details. The structure BATH_CTL
-  must be initialized as well. See define_bath_ctl().
+  make_bathy. See rbpnav() and rbtans() for details.
 
   Set verbose=0 for no console output, verbose=1 (default) for normal console
   output, for verbose=2 for detailed console output.
 
-  SEE ALSO: first_surface, run_bath, make_fs_bath, rbpnav, rbtans,
-    define_bath_ctl
+  SEE ALSO: first_surface, run_bath, make_fs_bath, rbpnav, rbtans
 */
   log_id = logger_id();
   if(logger(debug)) {
@@ -234,8 +232,6 @@ func make_bathy(latutm=, q=, avg_surf=, ext_bad_att=, forcechannel=, verbose=) {
     logger, trace, log_id+"  Full contents of q:";
     logger, trace, log_id+"    "+print(q);
     logger, trace, log_id+"ops_conf="+print(ops_conf)(sum);
-    logger, trace, log_id+"bath_ctl="+print(bath_ctl)(sum);
-    logger, trace, log_id+"bath_ctl_chn4="+print(bath_ctl_chn4)(sum);
   }
 
   default, verbose, 1;

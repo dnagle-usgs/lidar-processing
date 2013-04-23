@@ -43,8 +43,8 @@ func autoselect_ops_conf(dir, options=) {
   return options ? results : results(1);
 }
 
-func autoselect_bath_ctl(dir, options=) {
-/* DOCUMENT bctl_file = autoselect_bath_ctl(dir, options=)
+func autoselect_bathconf(dir, options=) {
+/* DOCUMENT bathconf_file = autoselect_bathconf(dir, options=)
 
   This function attempts to determine the bathy settings file to load for a
   dataset. The dir parameter should be the path to the mission day directory.
@@ -52,10 +52,12 @@ func autoselect_bath_ctl(dir, options=) {
   The function attempts to find an appropriate bathy settings file by following
   these steps:
 
-    1. Are there any files named *-bctl.json in the flight directory?
-    2. Are there any files named *-bctl.json in the parent directory?
-    3. Are there any files named *.bctl in the flight directory?
-    4. Are there any files named *.bctl in the parent directory?
+    1. Are there any files named *.bathconf in the flight directory?
+    2. Are there any files named *.bathconf in the parent directory?
+    3. Are there any files named *-bctl.json in the flight directory?
+    4. Are there any files named *-bctl.json in the parent directory?
+    5. Are there any files named *.bctl in the flight directory?
+    6. Are there any files named *.bctl in the parent directory?
 
   If no file can be found, then the nil string is returned (string(0)).
 
@@ -65,7 +67,7 @@ func autoselect_bath_ctl(dir, options=) {
 */
   dir = file_join(dir);
   dirs = [dir, file_dirname(dir)];
-  globs = ["*-bctl.json", "*.bctl"];
+  globs = ["*.bathconf", "*-bctl.json", "*.bctl"];
 
   results = [];
   for(i = 1; i <= numberof(globs); i++) {

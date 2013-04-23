@@ -262,12 +262,11 @@ func eaarl_mission_load(env) {
       ops_conf = ops_eaarlb;
     }
 
-    if(test_key(env.flight, "bath_ctl file")) {
-      bath_ctl_load, mission(get, env.flight, "bath_ctl file");
+    if(test_key(env.flight, "bathconf file")) {
+      bathconf, read, mission(get, env.flight, "bathconf file");
     } else {
       write, "         (using null defaults)";
-      default, bath_ctl, BATH_CTL();
-      default, bath_ctl_chn4, BATH_CTL();
+      bathconf, clear;
     }
   }
 
@@ -347,8 +346,8 @@ func eaarl_mission_unload(env) {
   extern ops_conf, ops_conf_filename;
   ops_conf = ops_conf_filename = [];
 
-  extern bath_ctl, bath_ctl_chn4;
-  bath_ctl = bath_ctl_chn4 = [];
+  extern bathconf;
+  bathconf, clear;
 
   return env;
 }
@@ -365,12 +364,12 @@ func eaarl_mission_wrap(env) {
   extern pnav, gga, pnav_filename;
   extern iex_nav, iex_head, tans, ins_filename;
   extern ops_conf, ops_conf_filename;
-  extern bath_ctl, bath_ctl_chn4;
+  extern bathconf;
 
   save, env.wrapped,
     cache_what=mission.data.cache_what,
     ops_conf, ops_conf_filename,
-    bath_ctl, bath_ctl_chn4;
+    bathconf;
 
   if(mission.data.cache_what == "everything") {
     save, env.wrapped,
@@ -397,7 +396,7 @@ func eaarl_mission_unwrap(env) {
   extern pnav, gga, pnav_filename;
   extern iex_nav, iex_head, tans, ins_filename;
   extern ops_conf, ops_conf_filename;
-  extern bath_ctl, bath_ctl_chn4;
+  extern bathconf;
 
   restore, env.data;
   if(cache_what == "everything") iex2tans;
@@ -432,7 +431,7 @@ func eaarl_mission_flights_auto_keys(env) {
     "pnav file",
     "ins file",
     "ops_conf file",
-    "bath_ctl file",
+    "bathconf file",
     "rgb dir",
     "rgb file",
     "cir dir"
@@ -457,8 +456,8 @@ func eaarl_mission_details_autolist(env) {
     env, result=autoselect_iexpbd(path, options=1);
   else if(key == "ops_conf file")
     env, result=autoselect_ops_conf(path, options=1);
-  else if(key == "bath_ctl file")
-    env, result=autoselect_bath_ctl(path, options=1);
+  else if(key == "bathconf file")
+    env, result=autoselect_bathconf(path, options=1);
   else if(key == "rgb dir")
     env, result=autoselect_rgb_dir(path, options=1);
   else if(key == "rgb file")
