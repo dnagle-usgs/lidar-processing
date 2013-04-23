@@ -1094,7 +1094,7 @@ func mission_json_import(versions, json) {
 
 scratch = save(scratch, versions);
 versions = save(mission_json_version1, mission_json_version2,
-  mission_json_version3);
+  mission_json_version3, mission_json_version4);
 
 /*
   The format used for mission configuration files has changed over time. To
@@ -1207,6 +1207,22 @@ func mission_json_version3(data) {
   }
 
   save, data, mcversion=4;
+  return data;
+}
+
+func mission_json_version4(data) {
+  // Conversion to 5 does one thing:
+  // Changes "bath_ctl file" to "bathconf file"
+  for(i = 1; i <= data.flights(*); i++) {
+    tmp = data.flights(noop(i));
+    if(tmp(*,"bath_ctl file")) {
+      save, tmp, "bathconf file", tmp("bath_ctl file");
+      tmp = obj_delete(tmp, "bath_ctl file");
+      save, data.flights, noop(i), tmp;
+    }
+  }
+
+  save, data, mcversion=5;
   return data;
 }
 
