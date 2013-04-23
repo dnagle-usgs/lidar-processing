@@ -45,12 +45,12 @@ namespace eval ::eaarl::bathconf {
 # sending via expect)
 
 proc ::eaarl::bathconf::plotcmd {window args} {
-    set gui [launch $window {*}$args]
+    set gui [config $window {*}$args]
     return [$gui plotcmd]
 }
 
 proc ::eaarl::bathconf::plot {window args} {
-    set gui [launch $window {*}$args]
+    set gui [config $window {*}$args]
     $gui plot
     return $gui
 }
