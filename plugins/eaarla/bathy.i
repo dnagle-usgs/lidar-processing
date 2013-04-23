@@ -425,6 +425,12 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
   wf = float(~raw_wf);
   maxint = 255 - long(wf(1));
   wf = wf - wf(1);
+
+  // Apply moving average to smooth wf
+  conf = bathconf(settings, channel);
+  if(conf.smoothwf > 0 && numberof(wf)) {
+    wf = moving_average(wf, bin=(conf.smoothwf*2+1), taper=1);
+  }
 }
 
 func bathy_detect_surface(wf, maxint, thresh, sfc_last, &surface,
