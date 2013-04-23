@@ -336,7 +336,7 @@ func bathconfobj_profile_add(group, profile) {
   use, data;
   use_method, confobj_profile_add, group, profile;
   tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", group),
-    strjoin(data(noop(group)).profiles(*,), " ");
+    strjoin("{"+data(noop(group)).profiles(*,)+"}", " ");
 }
 save, base, profile_add=bathconfobj_profile_add;
 
