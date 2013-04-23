@@ -293,6 +293,14 @@ win=, xfma=, verbose=, keeprejected=) {
   result.rastpix = raster_number + (pulse_number<<24);
 
   local wf, scan_angle, channel;
+  if(raster_number > numberof(edb)) {
+    if(graph)
+      plot_bath_ctl, channel, wf, raster=raster_number, pulse=pulse_number;
+    msg = "No waveform";
+    ex_bath_message, graph, verbose, msg;
+    return result;
+  }
+
   bathy_lookup_raster_pulse, raster_number, pulse_number, conf.maxsat,
       wf, scan_angle, channel, maxint, forcechannel=forcechannel;
 
