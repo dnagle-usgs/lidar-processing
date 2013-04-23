@@ -5,6 +5,8 @@ package provide eaarl::bathconf 1.0
 # sync using: bathctl, set, "group", "key", val
 
 namespace eval ::eaarl::bathconf {
+    namespace import ::misc::tooltip
+
     # Array to hold configuration info in
     # Mapping is from Yorick:
     #       bathconf.data.GROUP.active.KEY
@@ -318,7 +320,7 @@ snit::type ::eaarl::bathconf::embed {
         pack $f.fra3 -side top -fill both -expand 1
 
         foreach {cmd desc} {
-            surfsat "Surface and Saturation"
+            surfsat "Surface, Saturation, and Smoothing"
             backscatter "Backscatter Model"
             bottom "Bottom Detection"
             validate "Bottom Validation: Pulse Wings"
@@ -366,6 +368,25 @@ snit::type ::eaarl::bathconf::embed {
         dict set wantsetting $f.spnSat maxsat
         dict set wantsetting $f.spnSfc sfc_last
         dict set wantsetting $f.spnSmo smoothwf
+
+        tooltip $f.lblSat $f.spnSat \
+                "Maximum number of saturated samples permitted.
+
+                If more than this many samples are saturated, the waveform is
+                rejected and no bottom will be found."
+        tooltip $f.lblSfc $f.spnSfc \
+                "Last sample where first return saturation may begin.
+
+                This is used to determine where the surface starts."
+        tooltip $f.lblSmo $f.spnSmo \
+                "Smoothing factor to apply to waveform.
+
+                If this is non-zero, then a moving average is applied to the
+                waveform. This setting specifies how many samples on either
+                side of a sample should be used to generate the average. So
+                with a smoothing setting of 2, each sample will be averaged
+                using the 2 adjacent samples on either side; thus the average
+                is calculated using 5 total samples."
     }
 
     method Gui_settings_backscatter {f} {
@@ -407,6 +428,56 @@ snit::type ::eaarl::bathconf::embed {
         dict set wantsetting $f.spnLaser laser
         dict set wantsetting $f.spnWater water
         dict set wantsetting $f.spnAgc agc
+
+        tooltip $f.lblType $f.cboType \
+                "Backscatter model to use.
+
+                \"exponential\" models backscatter using an exponential decay
+                formula.
+
+                \"lognormal\" models backscatter using a log-normal
+                distribution.
+
+                For both types, the basic idea is to model the backscatter /
+                signal decay mathematically. That model is then subtracted from
+                the waveform, and what's left is them adjusted using an AGC
+                model."
+        tooltip $f.lblLaser $f.spnLaser \
+                "Exponential decay coefficient for the laser.
+
+                This attempts to model the decay of the signal due to the decay
+                of the laser signal. This coefficient is passed through the
+                exponential function.
+
+                This is normally a negative number. Values closer to 0 will
+                result in a slower decay.
+
+                Laser and Water use the same math, except Water's curve is
+                multiplied by 0.25 to make it weaker. They are then added
+                together."
+        tooltip $f.lblWater $f.spnWater \
+                "Exponential decay coefficient for the water column.
+
+                This attempts to model the decay of the signal due to the water
+                column. This coefficient is passed through the exponential
+                function.
+
+                This is normally a negative number. Values closer to 0 will
+                result in a slower decay.
+
+                Laser and Water use the same math, except Water's curve is
+                multiplied by 0.25 to make it weaker. They are then added
+                together."
+        tooltip $f.lblAgc $f.spnAgc \
+                "Automatic gain control coefficient.
+
+                This weakens the waveform signal towards the beginning,
+                eventually tapering to full strength towards the end.
+
+                This is normally a negative number. Values closer to 0 will
+                result in a more gradual transition from weakened to full
+                strength. Values with very large negative values (such as
+                -1000) effectively leave the entire waveform at full strength."
     }
 
     method Gui_settings_backscatter_lognorm {f} {
@@ -461,6 +532,46 @@ snit::type ::eaarl::bathconf::embed {
         dict set wantsetting $f.spnXsh xshift
         dict set wantsetting $f.spnXsc xscale
         dict set wantsetting $f.spnTie tiepoint
+
+        tooltip $f.lblType $f.cboType \
+                "Backscatter model to use.
+
+                \"exponential\" models backscatter using an exponential decay
+                formula.
+
+                \"lognormal\" models backscatter using a log-normal
+                distribution.
+
+                For both types, the basic idea is to model the backscatter /
+                signal decay mathematically. That model is then subtracted from
+                the waveform, and what's left is them adjusted using an AGC
+                model."
+        tooltip $f.spnMean $f.lblMean \
+                "Mean coefficient for log-normal distribution."
+        tooltip $f.lblStd $f.spnStd \
+                "Standard deviation coefficient for log-normal distribution."
+        tooltip $f.lblAgc $f.spnAgc \
+                "Automatic gain control coefficient.
+
+                This weakens the waveform signal towards the beginning,
+                eventually tapering to full strength towards the end.
+
+                This is normally a negative number. Values closer to 0 will
+                result in a more gradual transition from weakened to full
+                strength. Values with very large negative values (such as
+                -1000) effectively leave the entire waveform at full strength."
+        tooltip $f.lblXsh $f.spnXsh \
+                "Number of samples to shift the distribution along the X axis."
+        tooltip $f.lblXsc $f.spnXsc \
+                "Scaling factor to apply along X axis.
+
+                Larger values will stretch the distribution further
+                left-to-right. Smaller values will compress it."
+        tooltip $f.lblTie $f.spnTie \
+                "The sample at which to scale the distribution to.
+
+                The log-normal distribution will be vertically scaled so that
+                its graph crosses the raw waveform's graph at this pixel."
     }
 
     method Gui_settings_bottom {f} {
@@ -485,6 +596,18 @@ snit::type ::eaarl::bathconf::embed {
         dict set wantsetting $f.spnFirst first
         dict set wantsetting $f.spnLast last
         dict set wantsetting $f.spnThresh thresh
+
+        tooltip $f.lblFirst $f.lblLast $f.lblThresh \
+                $f.spnFirst $f.spnLast $f.spnThresh \
+                "First, Last, and Thresh define where to look for a bottom.
+
+                The bottom will only be looked for between samples First and
+                Last. Only signals that raise above Thresh will be considered.
+
+                In the graph, First and Last are plotted with vertical red
+                lines. Thresh is plotted as a horizontal green line connecting
+                them. The bottom must occur between the red lines, with a peak
+                above the green line."
     }
 
     method Gui_settings_validate {f} {
@@ -513,6 +636,20 @@ snit::type ::eaarl::bathconf::embed {
         dict set wantsetting $f.spnLeftFact lwing_factor
         dict set wantsetting $f.spnRightDist rwing_dist
         dict set wantsetting $f.spnRightFact rwing_factor
+
+        tooltip $f.lblLeft $f.spnLeftDist $f.spnLeftFact \
+                $f.lblRight $f.spnRightDist $f.spnRightFact \
+                "Defines the pulse wing locations.
+
+                The \"pulse wings\" are used to validate the bottom by
+                examining its shape. The samples at the given Dist to the left
+                and right of the bottom are examined and must be found to be no
+                more than Factor of the peak intensity value.
+
+                In the graph, the pulse wings are plotted as magenta dots. The
+                waveform must always be beneath these dots in order to
+                validate. These allow the algorithm to reject wide pulse
+                shapes."
     }
 
     method ProfileAdd {} {
