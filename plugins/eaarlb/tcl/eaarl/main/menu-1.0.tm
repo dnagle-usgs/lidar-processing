@@ -50,8 +50,6 @@ namespace eval ::eaarl::main::menu {
                 -command eaarl::load::ins
         $mb add command {*}[menulabel "&PNAV Data..."] \
                 -command eaarl::load::pnav
-        $mb add command {*}[menulabel "&Bathymetry Settings..."] \
-                -command bathctl::gui
         return $mb
     }
 
@@ -67,7 +65,8 @@ namespace eval ::eaarl::main::menu {
                 -menu [menu_data_settings_ops $mb.ops]
         $mb add separator
         $mb add command {*}[menulabel "&Bathymetry Settings..."] \
-                -command ::eaarl::settings::bath_ctl::gui_main
+                -command [list ::eaarl::bathconf::plot 8 \
+                        -channel 1 -raster 1 -pulse 1]
         return $mb
     }
 
