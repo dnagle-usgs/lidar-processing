@@ -289,10 +289,12 @@ snit::type ::eaarl::bathconf::embed {
         ttk::button $f.btnAdd \
                 -image ::imglib::plus \
                 -style Toolbutton \
+                -command [mymethod ProfileAdd] \
                 -width 0
         ttk::button $f.btnRem \
                 -image ::imglib::x \
                 -style Toolbutton \
+                -command [mymethod ProfileDel] \
                 -width 0
         ttk::menubutton $f.mnuTools -text "Tools" \
                 -width 0 \
@@ -333,7 +335,8 @@ snit::type ::eaarl::bathconf::embed {
 
     method Gui_settings_menu {mb} {
         menu $mb
-        $mb add command -label "Placeholder"
+        $mb add command -label "Rename current profile" \
+                -command [mymethod ProfileRename]
     }
 
     method Gui_settings_surfsat {f} {
@@ -505,6 +508,34 @@ snit::type ::eaarl::bathconf::embed {
         dict set wantsetting $f.spnLeftFact lwing_factor
         dict set wantsetting $f.spnRightDist rwing_dist
         dict set wantsetting $f.spnRightFact rwing_factor
+    }
+
+    method ProfileAdd {} {
+        if {
+            [::getstring::tk_getString $window.gs text \
+                    "Please provide the new profile name:"]
+        } {
+            exp_send "bathconf, profile_add, \"$options(-group)\",\
+                    \"$text\";\r"
+        }
+    }
+
+    method ProfileDel {} {
+        exp_send "bathconf, profile_del, \"$options(-group)\",\
+                \"$::eaarl::bathconf::active_profile($options(-group))\";\r"
+    }
+
+    method ProfileRename {} {
+        set old $::eaarl::bathconf::active_profile($options(-group))
+        if {
+            [::getstring::tk_getString $window.gs new \
+                    "What would you like to rename \"$old\" to?"]
+        } {
+            if {$old ne $new} {
+                exp_send "bathconf, profile_rename, \"$options(-group)\",\
+                        \"$old\", \"$new\";\r"
+            }
+        }
     }
 
     method SetOpt {option value} {
