@@ -104,7 +104,8 @@ func save_vars (filename, tile=) {
   if ( b_rcf == 1 ) {
     save,  f, b_rcf, buf, w, no_rcf, mode, merge, clean, rcfmode, write_merge;
   }
-  save, f, ext_bad_att, bath_ctl, bath_ctl_chn4;
+  bathconf_serialized = serialize(bathconf.data);
+  save, f, ext_bad_att, bathconf_serialized;
   if(!is_void(forcechannel))
     save, f, forcechannel;
 
@@ -129,6 +130,8 @@ func unpackage_tile (fn=,host= ) {
   f = openb(fn);
   restore, f;
   close, f;
+  if(!is_void(bathconf_serialized))
+    bathconf = bathconfobj(deserialize(bathconf_serialized));
   if(!strmatch(host, "localhost")) {
     // We need to rsync the edb, pnav, and ins files from the server
     if(!file_exists(edb_filename))
@@ -338,7 +341,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
         write_ops_conf, f;
         if (typ == 1) {
           write, f, "Bathymetry Settings";
-          bath_ctl_save, f;
+          write, f, bathconf(json, compact=1);
         }
 
         close, f;
@@ -728,7 +731,7 @@ Added server/client support (2009-01) Richard Mitchell
   }
   prog_enabled = status(disable,);
 
-  extern pnav_filenam, bath_ctl, bath_ctl_chn4, _hgid;
+  extern pnav_filenam, bathconf, _hgid;
 
   if(forcechannel && !strglob("*_chan*", mdate)) {
     mdate += swrite(format="_chan%d", forcechannel);
@@ -961,7 +964,7 @@ Added server/client support (2009-01) Richard Mitchell
       write_ops_conf, f;
       if (typ == 1) {
         write, f, "Bathymetry Settings";
-        bath_ctl_save, f;
+        write, f, bathconf(json, compact=1);
       }
 
       close, f;
