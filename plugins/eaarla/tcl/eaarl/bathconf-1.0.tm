@@ -337,6 +337,11 @@ snit::type ::eaarl::bathconf::embed {
         menu $mb
         $mb add command -label "Rename current profile" \
                 -command [mymethod ProfileRename]
+        $mb add separator
+        $mb add command -label "Save to file..." \
+                -command [mymethod FileSave]
+        $mb add command -label "Load from file..." \
+                -command [mymethod FileLoad]
     }
 
     method Gui_settings_surfsat {f} {
@@ -535,6 +540,35 @@ snit::type ::eaarl::bathconf::embed {
                 exp_send "bathconf, profile_rename, \"$options(-group)\",\
                         \"$old\", \"$new\";\r"
             }
+        }
+    }
+
+    method FileLoad {} {
+        set fn [tk_getOpenFile \
+                -parent $window \
+                -title "Select file to load" \
+                -filetypes {
+                    {{Bathy configuration files} {.bathconf}}
+                    {{JSON files} {.json}}
+                    {{bctl files} {.bctl}}
+                    {{All files} {*}}
+                }]
+        if {$fn ne ""} {
+            exp_send "bathconf, read, \"$fn\"; "
+            $self plot
+        }
+    }
+
+    method FileSave {} {
+        set fn [tk_getSaveFile \
+                -parent $window \
+                -title "Select destination" \
+                -filetypes {
+                    {{Bathy configuration files} {.bathconf}}
+                    {{All files} {*}}
+                }]
+        if {$fn ne ""} {
+            exp_send "bathconf, write, \"$fn\";\r"
         }
     }
 
