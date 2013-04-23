@@ -105,11 +105,11 @@ snit::type ::eaarl::bathconf::embed {
     variable wf_chan2 0
     variable wf_chan3 0
     variable wf_chan4 0
-    variable wf_win 0
+    variable wf_win 9
 
     variable rast_plot 0
     variable rast_bath 0
-    variable rast_win 1
+    variable rast_win 11
 
     constructor {args} {
         if {[dict exist $args -window]} {
@@ -237,20 +237,19 @@ snit::type ::eaarl::bathconf::embed {
         ttk::label $f.lblWf -text "Plot waveforms:"
         foreach i {1 2 3 4} {
             ttk::checkbutton $f.chkChan$i -text $i \
-                    -variable [myvar wf_chan$i]
+                    -variable [myvar wf_chan$i] \
+                    -command [mymethod WfEnabler $f.spnWin]
         }
         ttk::label $f.lblWin -text "Win:"
         ttk::spinbox $f.spnWin \
                 -width 3 \
                 -textvariable [myvar wf_win]
+        $self WfEnabler $f.spnWin
 
         pack $f.lblWf $f.chkChan1 $f.chkChan2 $f.chkChan3 $f.chkChan4 \
                 -side left
         pack $f.spnWin $f.lblWin \
                 -side right
-
-        lappend controls $f.chkChan1 $f.chkChan2 $f.chkChan3 $f.chkChan4 \
-                $f.spnWin
     }
 
     method Gui_raster {f} {
@@ -263,12 +262,14 @@ snit::type ::eaarl::bathconf::embed {
                 -width 3 \
                 -textvariable [myvar rast_win]
 
+        ::mixin::statevar $f.spnWin \
+                -statemap {0 disabled 1 normal} \
+                -statevariable [myvar rast_plot]
+
         pack $f.chkRast $f.chkBottom \
                 -side left
         pack $f.spnWin $f.lblWin \
                 -side right
-
-        lappend controls $f.chkRast $f.chkBottom $f.spnWin
     }
 
     method Gui_settings {f} {
@@ -560,6 +561,14 @@ snit::type ::eaarl::bathconf::embed {
         set curgroup $options(-group)
     }
 
+    method WfEnabler {widget} {
+        if {$wf_chan1 || $wf_chan2 || $wf_chan3 || $wf_chan4} {
+            $widget state !disabled
+        } else {
+            $widget state disabled
+        }
+    }
+
     method IncrRast {amt} {
         incr options(-raster) $amt
         if {$options(-raster) < 1} {
@@ -620,7 +629,26 @@ snit::type ::eaarl::bathconf::embed {
 
     # (Re)plots the window
     method plot {} {
-        exp_send "[$self plotcmd]\r"
+        set cmd [$self plotcmd]
+
+        if {$rast_plot} {
+            append cmd " show_rast, $options(-raster), win=${rast_win},\
+                    bathy=${rast_bath}, channel=$options(-channel),\
+                    autolims=0;"
+        }
+
+        if {$wf_chan1 || $wf_chan2 || $wf_chan3 || $wf_chan4} {
+            append cmd " show_wf, $options(-raster), $options(-pulse),\
+                    win=${wf_win}"
+            ::misc::appendif cmd \
+                    $wf_chan1   ", c1=1" \
+                    $wf_chan2   ", c2=1" \
+                    $wf_chan3   ", c3=1" \
+                    $wf_chan4   ", c4=1" \
+                    1           ";"
+        }
+
+        exp_send "$cmd\r"
     }
 
     # Used by associated window when resetting the GUI for something else
