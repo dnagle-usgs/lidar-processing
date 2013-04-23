@@ -233,7 +233,7 @@ func bathconfobj_read(fn) {
   if(file_extension(fn) == ".bctl") {
     lines = rdfile(f);
     key = val = [];
-    good = regmatch("set bath_ctl\\(.*)\\) (.*)", lines, , key, val);
+    good = regmatch("set bath_ctl\\((.*)\\) (.*)", lines, , key, val);
     w = where(good);
     prof = save();
     for(i = 1; i <= numberof(w); i++) {
@@ -244,11 +244,11 @@ func bathconfobj_read(fn) {
       groups=save(
         channels123=save(
           channels=[1,2,3],
-          default=obj_copy(prof)
+          profiles=save(default=obj_copy(prof))
         ),
         channel4=save(
           channels=4,
-          default=obj_copy(prof)
+          profiles=save(default=obj_copy(prof))
         )
       )
     );
