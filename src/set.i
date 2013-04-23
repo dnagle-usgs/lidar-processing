@@ -211,6 +211,7 @@ func set_remove_duplicates(A, idx=) {
   default, idx, 0;
   if(idx) return uniq(A);
   if(is_void(A)) return [];
+  if(numberof(A) == 1) return A(1);
   return A(uniq(A));
 }
 
