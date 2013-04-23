@@ -268,7 +268,7 @@ win=, xfma=, verbose=, keeprejected=) {
     // Embedding in Tk destroys limits, so backup and restore
     lims = limits();
     channel = is_void(forcechannel) ? 0 : forcechannel;
-    group = bathconf(settings_group, min(channel, 1));
+    group = bathconf(settings_group, max(channel, 1));
     tkcmd, swrite(format=
       "::eaarl::bathconf::config %d -raster %d -pulse %d -channel %d -group {%s}",
       win, raster_number, pulse_number, channel, group);
