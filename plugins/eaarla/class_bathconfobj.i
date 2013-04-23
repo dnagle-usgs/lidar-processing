@@ -261,16 +261,20 @@ func bathconfobj_read(fn) {
         groups=save(
           channels123=save(
             channels=[1,2,3],
-            default=(working(*,"bath_ctl")
-              ? working.bath_ctl
-              : working.bath_ctl_chn4
+            profiles=save(
+              default=(working(*,"bath_ctl")
+                ? working.bath_ctl
+                : working.bath_ctl_chn4
+              )
             )
           ),
           channel4=save(
             channels=4,
-            default=(working(*,"bath_ctl_chn4")
-              ? working.bath_ctl_chn4
-              : working.bath_ctl
+            profiles=save(
+              default=(working(*,"bath_ctl_chn4")
+                ? working.bath_ctl_chn4
+                : working.bath_ctl
+              )
             )
           )
         )
