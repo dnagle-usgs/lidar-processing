@@ -65,8 +65,7 @@ namespace eval ::eaarl::main::menu {
                 -menu [menu_data_settings_ops $mb.ops]
         $mb add separator
         $mb add command {*}[menulabel "&Bathymetry Settings..."] \
-                -command [list ::eaarl::bathconf::plot 8 \
-                        -channel 1 -raster 1 -pulse 1]
+                -command [list ::eaarl::bathconf::plot 8]
         return $mb
     }
 
