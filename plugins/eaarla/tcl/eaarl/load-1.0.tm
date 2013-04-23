@@ -58,10 +58,4 @@ namespace eval eaarl::load {
             exp_send "iex_head = []; tans = iex_nav = rbtans(fn=ins_filename);\r"
         }
     }
-
-    proc bath_ctl {{fn ""}} {
-        if {$fn eq ""} {set fn [prompt bath_ctl]}
-        if {$fn eq ""} return
-        exp_send "bath_ctl_load, \"$fn\";\r"
-    }
 }
