@@ -6,14 +6,16 @@ scratch = save(scratch, tmp,
     confobj_profile_rename,
   confobj_groups, confobj_groups_migrate,
   confobj_validate, confobj_write, confobj_read, confobj_clear,
-  confobj_json, confobj_cleangroups, confobj_upgrade
+  confobj_json, confobj_cleangroups, confobj_upgrade,
+  confobj_display
 );
 tmp = save(
   settings, set, get,
   profile_select, profile_add, profile_del, profile_rename,
   groups, groups_migrate,
   validate, write, read, clear,
-  json, cleangroups, upgrade
+  json, cleangroups, upgrade,
+  display
 );
 
 func confobj(base, data) {
@@ -79,6 +81,13 @@ func confobj(base, data) {
     conf, clear
       Clears the current configuration, giving you a default empty
       configuration.
+
+    conf, display
+    conf, display, "<group>"
+    conf, display, "<group>", "<profile>"
+      Displays configuration info on the command line. If GROUP is omitted, all
+      groups are shown. If PROFILE is omitted, then the active profile is
+      shown. Otherwise, GROUP and/or PROFILE specified are shown.
 
   Internal methods:
   These methods are only intended to be used internally by confobj or by
@@ -452,6 +461,26 @@ save, versions, confobj_upgrade_version1
 
 upgrade = closure(confobj_upgrade, restore(versions));
 restore, scratch;
+
+func confobj_display(group, profile) {
+  use, data;
+  if(is_void(group)) {
+    for(i = 1; i <= data(*); i++) {
+      use_method, display, data(*,i);
+    }
+    return;
+  }
+
+  if(!data(*,group)) error, "invalid group";
+  grp = data(noop(group));
+  default, profile, grp.active_name;
+  if(!grp.profiles(*,profile)) error, "invalid profile";
+  prof = grp.profiles(noop(profile));
+  lines = strsplit(obj_show(prof), "\n");
+  lines(1) = swrite(format="%s -> %s", group, profile);
+  write, format="%s\n", lines;
+}
+display = confobj_display;
 
 confobj = closure(confobj, restore(tmp));
 restore, scratch;
