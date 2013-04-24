@@ -4,6 +4,7 @@ scratch = save(scratch, base,
   bathconfobj_settings_group,
   bathconfobj_settings, bathconfobj_groups, bathconfobj_validate,
   bathconfobj_read, bathconfobj_clear, bathconfobj_cleangroups,
+  bathconfobj_json, bathconfobj_upgrade,
   bathconfobj_profile_add, bathconfobj_profile_del, bathconfobj_profile_rename
 );
 
@@ -97,6 +98,8 @@ save, base,
   confobj_read=base.read,
   confobj_clear=base.clear,
   confobj_cleangroups=base.cleangroups,
+  confobj_json=base.json,
+  confobj_upgrade=base.upgrade,
   confobj_profile_add=base.profile_add,
   confobj_profile_del=base.profile_del,
   confobj_profile_rename=base.profile_rename;
@@ -258,6 +261,7 @@ func bathconfobj_read(fn) {
     if(anyof(working(*,["bath_ctl","bath_ctl_chn4"]))) {
       working = save(
         confver=1,
+        bathver=1,
         groups=save(
           channels123=save(
             channels=[1,2,3],
@@ -335,6 +339,77 @@ func bathconfobj_cleangroups(void) {
   return groups;
 }
 save, base, cleangroups=bathconfobj_cleangroups;
+
+func bathconfobj_json(json, compact=) {
+  if(!is_void(json)) {
+    use_method, confobj_json, json, compact=compact;
+  }
+
+  if(!am_subroutine()) {
+    output = save();
+    if(!compact)
+      save, output, confver=1, bathver=2;
+    save, output, groups=use_method(cleangroups,);
+    if(!compact) {
+      save, output, "save environment", save(
+        "user", get_user(),
+        "host", get_host(),
+        "timestamp", soe2iso8601(getsoe()),
+        "repository", _hgid
+      );
+    }
+    return json_encode(output, indent=(compact ? [] : 2));
+  }
+}
+save, base, json=bathconfobj_json;
+
+func bathconfobj_upgrade(versions, working) {
+  working = use_method(confobj_upgrade, working);
+
+  if(!working(*,"bathver"))
+    save, working, bathver=2;
+  if(is_string(working.bathver))
+    save, working, bathver=atoi(working.bathver);
+
+  for(i = working.bathver; i <= versions(*); i++) {
+    working = versions(noop(i), working);
+  }
+
+  maxver = versions(*) + 1;
+  if(working.bathver > maxver) {
+    write, format=" WARNING: bathy format is version %d!\n", working.bathver;
+    write, format=" This version of ALPS can only handle up to version %d.\n",
+      maxversion;
+    write, "Attempting to use anyway, but errors may ensue...";
+  }
+
+  return working;
+}
+
+scratch = save(scratch, versions);
+versions = save();
+
+func bathconfobj_upgrade_version1(working) {
+  for(i = 1; i <= working.groups(*); i++) {
+    grp = working.groups(noop(i));
+    for(j = 1; j <= grp.profiles(*); j++) {
+      prof = grp.profiles(noop(j));
+      if(prof.xscale) {
+        save, prof, xshift=-1*prof.xshift;
+        save, prof, mean=prof.laser;
+        save, prof, stdev=prof.water;
+        save, prof, decay="lognormal";
+      }
+    }
+  }
+
+  save, working, bathver=2;
+  return working;
+}
+save, versions, bathconfobj_upgrade_version1;
+
+save, base, upgrade=closure(bathconfobj_upgrade, restore(versions));
+restore, scratch;
 
 func bathconfobj_profile_add(group, profile) {
   use, data;
