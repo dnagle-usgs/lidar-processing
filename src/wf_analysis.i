@@ -303,6 +303,13 @@ func extract_peaks_first_deriv(w1, thresh=, verbose=, graph=, newgraph=, win=) {
   minw1 = min(w1);
   w1_dif = w1(dif); // first derivative
 
+  // By subtracting a small amount from the first derivitive, we force the
+  // algorithm below to ignore very tiny positive slopes. This often occurs
+  // where two successive samples have the same value in the raw waveform, but
+  // AGC boosts the second ever-so-slightly more than the first. Prior to this
+  // change, that would often get incorrectly recognized as a peak.
+  w1_dif -= -0.05;
+
   w1_dif_sign = sign(w1_dif);
   w1_dif_sign_dif = (w1_dif_sign)(dif);
 
