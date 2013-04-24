@@ -71,3 +71,5 @@ func var_expr_set(expr, val) {
     logger, warn, "call to var_expr_set when not running YTK:\n"+
       "  expr="+pr1(expr)+" val="+pr1(val);
 }
+
+tksync = save(add=noop, remove=noop, idleadd=noop, check=noop, background=noop);
