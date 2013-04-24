@@ -341,7 +341,11 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
         write_ops_conf, f;
         if (typ == 1) {
           write, f, "Bathymetry Settings";
-          write, f, bathconf(json, compact=1);
+          if(forcechannel) {
+            bathconf, display, bathconf(settings_group, forcechannel), fh=f;
+          } else {
+            bathconf, display, fh=f;
+          }
         }
 
         close, f;
