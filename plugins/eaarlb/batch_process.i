@@ -131,7 +131,7 @@ func unpackage_tile (fn=,host= ) {
   restore, f;
   close, f;
   if(!is_void(bathconf_serialized))
-    bathconf = bathconfobj(deserialize(bathconf_serialized));
+    bathconf, groups, deserialize(bathconf_serialized), copy=0;
   if(!strmatch(host, "localhost")) {
     // We need to rsync the edb, pnav, and ins files from the server
     if(!file_exists(edb_filename))
