@@ -441,16 +441,17 @@ versions = save();
   uncomment this section and modify to suit. Each new version gets an addition
   to the versions object.
 
-save, versions, confobj_upgrade_version1
-func confobj_updgrade_version1(working) {
+func confobj_upgrade_version1(working) {
   // do something to update working here...
   save, working, confver=2;
   return working;
 }
+save, versions, confobj_upgrade_version1
 
 */
 
 upgrade = closure(confobj_upgrade, restore(versions));
+restore, scratch;
 
 confobj = closure(confobj, restore(tmp));
 restore, scratch;
