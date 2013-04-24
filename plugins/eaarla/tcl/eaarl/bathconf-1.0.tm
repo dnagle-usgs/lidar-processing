@@ -181,6 +181,7 @@ snit::type ::eaarl::bathconf::embed {
                 -textvariable [myvar options](-raster) \
                 -width 5
         ::mixin::revertable $f.spnRast \
+                -valuetype number \
                 -applycommand [mymethod IdlePlot]
         ttk::button $f.btnRastPrev \
                 -image ::imglib::vcr::stepbwd \
@@ -199,6 +200,7 @@ snit::type ::eaarl::bathconf::embed {
                 -textvariable [myvar options](-pulse) \
                 -width 3
         ::mixin::revertable $f.spnPulse \
+                -valuetype number \
                 -applycommand [mymethod IdlePlot]
         ttk::button $f.btnPulsePrev \
                 -image ::imglib::vcr::stepbwd \
@@ -350,15 +352,18 @@ snit::type ::eaarl::bathconf::embed {
         ttk::label $f.lblSat -text "Max Sat:"
         ttk::spinbox $f.spnSat \
                 -width 4
-        ::mixin::revertable $f.spnSat
+        ::mixin::revertable $f.spnSat \
+                -valuetype number
         ttk::label $f.lblSfc -text "Surface Last:"
         ttk::spinbox $f.spnSfc \
                 -width 4
-        ::mixin::revertable $f.spnSfc
+        ::mixin::revertable $f.spnSfc \
+                -valuetype number
         ttk::label $f.lblSmo -text "Smooth:"
         ttk::spinbox $f.spnSmo \
                 -width 4
-        ::mixin::revertable $f.spnSmo
+        ::mixin::revertable $f.spnSmo \
+                -valuetype number
 
         pack $f.lblSat $f.spnSat $f.lblSfc $f.spnSfc \
                 $f.lblSmo $f.spnSmo \
@@ -409,15 +414,18 @@ snit::type ::eaarl::bathconf::embed {
         bind $f.cboType <<ComboboxSelected>> +[list $f.cboType apply]
         ttk::spinbox $f.spnLaser \
                 -width 4
-        ::mixin::revertable $f.spnLaser
+        ::mixin::revertable $f.spnLaser \
+                -valuetype number
         ttk::label $f.lblWater -text "Water:"
         ttk::spinbox $f.spnWater \
                 -width 4
-        ::mixin::revertable $f.spnWater
+        ::mixin::revertable $f.spnWater \
+                -valuetype number
         ttk::label $f.lblAgc -text "AGC:"
         ttk::spinbox $f.spnAgc \
                 -width 4
-        ::mixin::revertable $f.spnAgc
+        ::mixin::revertable $f.spnAgc \
+                -valuetype number
 
         pack $f.lblType $f.cboType $f.lblLaser $f.spnLaser \
                 $f.lblWater $f.spnWater $f.lblAgc $f.spnAgc \
@@ -491,27 +499,33 @@ snit::type ::eaarl::bathconf::embed {
         ttk::label $f.lblMean -text "Mean:"
         ttk::spinbox $f.spnMean \
                 -width 4
-        ::mixin::revertable $f.spnMean
+        ::mixin::revertable $f.spnMean \
+                -valuetype number
         ttk::label $f.lblStd -text "Std Dev:"
         ttk::spinbox $f.spnStd \
                 -width 4
-        ::mixin::revertable $f.spnStd
+        ::mixin::revertable $f.spnStd \
+                -valuetype number
         ttk::label $f.lblAgc -text "AGC:"
         ttk::spinbox $f.spnAgc \
                 -width 4
-        ::mixin::revertable $f.spnAgc
+        ::mixin::revertable $f.spnAgc \
+                -valuetype number
         ttk::label $f.lblXsh -text "X Shift:"
         ttk::spinbox $f.spnXsh \
                 -width 4
-        ::mixin::revertable $f.spnXsh
+        ::mixin::revertable $f.spnXsh \
+                -valuetype number
         ttk::label $f.lblXsc -text "X Scale:"
         ttk::spinbox $f.spnXsc \
                 -width 4
-        ::mixin::revertable $f.spnXsc
+        ::mixin::revertable $f.spnXsc \
+                -valuetype number
         ttk::label $f.lblTie -text "Tie Point:"
         ttk::spinbox $f.spnTie \
                 -width 4
-        ::mixin::revertable $f.spnTie
+        ::mixin::revertable $f.spnTie \
+                -valuetype number
 
         lower [ttk::frame $f.fra1]
         pack $f.lblType $f.cboType $f.lblMean $f.spnMean $f.lblStd \
@@ -578,15 +592,18 @@ snit::type ::eaarl::bathconf::embed {
         ttk::label $f.lblFirst -text "First:"
         ttk::spinbox $f.spnFirst \
                 -width 4
-        ::mixin::revertable $f.spnFirst
+        ::mixin::revertable $f.spnFirst \
+                -valuetype number
         ttk::label $f.lblLast -text "Last:"
         ttk::spinbox $f.spnLast \
                 -width 4
-        ::mixin::revertable $f.spnLast
+        ::mixin::revertable $f.spnLast \
+                -valuetype number
         ttk::label $f.lblThresh -text "Threshold:"
         ttk::spinbox $f.spnThresh \
                 -width 4
-        ::mixin::revertable $f.spnThresh
+        ::mixin::revertable $f.spnThresh \
+                -valuetype number
 
         pack $f.lblFirst $f.spnFirst $f.lblLast $f.spnLast \
                 $f.lblThresh $f.spnThresh \
@@ -614,17 +631,21 @@ snit::type ::eaarl::bathconf::embed {
         ttk::label $f.lblLeft -text "Left Dist/Factor:"
         ttk::spinbox $f.spnLeftDist \
                 -width 4
-        ::mixin::revertable $f.spnLeftDist
+        ::mixin::revertable $f.spnLeftDist \
+                -valuetype number
         ttk::spinbox $f.spnLeftFact \
                 -width 4
-        ::mixin::revertable $f.spnLeftFact
+        ::mixin::revertable $f.spnLeftFact \
+                -valuetype number
         ttk::label $f.lblRight -text "Right Dist/Factor:"
         ttk::spinbox $f.spnRightDist \
                 -width 4
-        ::mixin::revertable $f.spnRightDist
+        ::mixin::revertable $f.spnRightDist \
+                -valuetype number
         ttk::spinbox $f.spnRightFact \
                 -width 4
-        ::mixin::revertable $f.spnRightFact
+        ::mixin::revertable $f.spnRightFact \
+                -valuetype number
 
         pack $f.lblLeft $f.spnLeftDist $f.spnLeftFact \
                 $f.lblRight $f.spnRightDist $f.spnRightFact \
