@@ -462,7 +462,7 @@ save, versions, confobj_upgrade_version1
 upgrade = closure(confobj_upgrade, restore(versions));
 restore, scratch;
 
-func confobj_display(group, profile) {
+func confobj_display(group, profile, fh=) {
   use, data;
   if(is_void(group)) {
     for(i = 1; i <= data(*); i++) {
@@ -478,7 +478,7 @@ func confobj_display(group, profile) {
   prof = grp.profiles(noop(profile));
   lines = strsplit(obj_show(prof), "\n");
   lines(1) = swrite(format="%s -> %s", group, profile);
-  write, format="%s\n", lines;
+  write, fh, format="%s\n", lines;
 }
 display = confobj_display;
 
