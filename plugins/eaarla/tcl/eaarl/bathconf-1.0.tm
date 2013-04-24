@@ -179,6 +179,7 @@ snit::type ::eaarl::bathconf::embed {
         ttk::label $f.lblRast -text "Raster:"
         ttk::spinbox $f.spnRast \
                 -textvariable [myvar options](-raster) \
+                -from 1 -to 100000000 -increment 1 \
                 -width 5
         ::mixin::revertable $f.spnRast \
                 -valuetype number \
@@ -198,6 +199,7 @@ snit::type ::eaarl::bathconf::embed {
         ttk::label $f.lblPulse -text "Pulse:"
         ttk::spinbox $f.spnPulse \
                 -textvariable [myvar options](-pulse) \
+                -from 1 -to 120 -increment 1 \
                 -width 3
         ::mixin::revertable $f.spnPulse \
                 -valuetype number \
@@ -351,16 +353,19 @@ snit::type ::eaarl::bathconf::embed {
     method Gui_settings_surfsat {f} {
         ttk::label $f.lblSat -text "Max Sat:"
         ttk::spinbox $f.spnSat \
+                -from 0 -to 1000 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnSat \
                 -valuetype number
         ttk::label $f.lblSfc -text "Surface Last:"
         ttk::spinbox $f.spnSfc \
+                -from 1 -to 1000 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnSfc \
                 -valuetype number
         ttk::label $f.lblSmo -text "Smooth:"
         ttk::spinbox $f.spnSmo \
+                -from 0 -to 1000 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnSmo \
                 -valuetype number
@@ -413,16 +418,19 @@ snit::type ::eaarl::bathconf::embed {
         ttk::label $f.lblLaser -text "Laser:"
         bind $f.cboType <<ComboboxSelected>> +[list $f.cboType apply]
         ttk::spinbox $f.spnLaser \
+                -from -5 -to -1 -increment 0.1 \
                 -width 4
         ::mixin::revertable $f.spnLaser \
                 -valuetype number
         ttk::label $f.lblWater -text "Water:"
         ttk::spinbox $f.spnWater \
+                -from -10 -to -0.1 -increment 0.1 \
                 -width 4
         ::mixin::revertable $f.spnWater \
                 -valuetype number
         ttk::label $f.lblAgc -text "AGC:"
         ttk::spinbox $f.spnAgc \
+                -from -10 -to -0.1 -increment 0.1 \
                 -width 4
         ::mixin::revertable $f.spnAgc \
                 -valuetype number
@@ -498,31 +506,37 @@ snit::type ::eaarl::bathconf::embed {
         bind $f.cboType <<ComboboxSelected>> +[list $f.cboType apply]
         ttk::label $f.lblMean -text "Mean:"
         ttk::spinbox $f.spnMean \
+                -from -100 -to 100 -increment 0.05 \
                 -width 4
         ::mixin::revertable $f.spnMean \
                 -valuetype number
         ttk::label $f.lblStd -text "Std Dev:"
         ttk::spinbox $f.spnStd \
+                -from -100 -to 100 -increment 0.05 \
                 -width 4
         ::mixin::revertable $f.spnStd \
                 -valuetype number
         ttk::label $f.lblAgc -text "AGC:"
         ttk::spinbox $f.spnAgc \
+                -from -10 -to -0.1 -increment 0.1 \
                 -width 4
         ::mixin::revertable $f.spnAgc \
                 -valuetype number
         ttk::label $f.lblXsh -text "X Shift:"
         ttk::spinbox $f.spnXsh \
+                -from -100 -to 100 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnXsh \
                 -valuetype number
         ttk::label $f.lblXsc -text "X Scale:"
         ttk::spinbox $f.spnXsc \
+                -from 1 -to 100 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnXsc \
                 -valuetype number
         ttk::label $f.lblTie -text "Tie Point:"
         ttk::spinbox $f.spnTie \
+                -from 1 -to 1000 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnTie \
                 -valuetype number
@@ -591,16 +605,19 @@ snit::type ::eaarl::bathconf::embed {
     method Gui_settings_bottom {f} {
         ttk::label $f.lblFirst -text "First:"
         ttk::spinbox $f.spnFirst \
+                -from 1 -to 1000 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnFirst \
                 -valuetype number
         ttk::label $f.lblLast -text "Last:"
         ttk::spinbox $f.spnLast \
+                -from 1 -to 1000 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnLast \
                 -valuetype number
         ttk::label $f.lblThresh -text "Threshold:"
         ttk::spinbox $f.spnThresh \
+                -from 1 -to 1000 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnThresh \
                 -valuetype number
@@ -630,19 +647,23 @@ snit::type ::eaarl::bathconf::embed {
     method Gui_settings_validate {f} {
         ttk::label $f.lblLeft -text "Left Dist/Factor:"
         ttk::spinbox $f.spnLeftDist \
+                -from 1 -to 100 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnLeftDist \
                 -valuetype number
         ttk::spinbox $f.spnLeftFact \
+                -from 0 -to 1 -increment 0.05 \
                 -width 4
         ::mixin::revertable $f.spnLeftFact \
                 -valuetype number
         ttk::label $f.lblRight -text "Right Dist/Factor:"
         ttk::spinbox $f.spnRightDist \
+                -from 1 -to 100 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnRightDist \
                 -valuetype number
         ttk::spinbox $f.spnRightFact \
+                -from 0 -to 1 -increment 0.05 \
                 -width 4
         ::mixin::revertable $f.spnRightFact \
                 -valuetype number
