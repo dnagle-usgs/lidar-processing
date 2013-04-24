@@ -182,6 +182,7 @@ snit::type ::eaarl::bathconf::embed {
                 -from 1 -to 100000000 -increment 1 \
                 -width 5
         ::mixin::revertable $f.spnRast \
+                -command [list $f.spnRast apply] \
                 -valuetype number \
                 -applycommand [mymethod IdlePlot]
         ttk::button $f.btnRastPrev \
@@ -202,6 +203,7 @@ snit::type ::eaarl::bathconf::embed {
                 -from 1 -to 120 -increment 1 \
                 -width 3
         ::mixin::revertable $f.spnPulse \
+                -command [list $f.spnPulse apply] \
                 -valuetype number \
                 -applycommand [mymethod IdlePlot]
         ttk::button $f.btnPulsePrev \
@@ -356,18 +358,21 @@ snit::type ::eaarl::bathconf::embed {
                 -from 0 -to 1000 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnSat \
+                -command [list $f.spnSat apply] \
                 -valuetype number
         ttk::label $f.lblSfc -text "Surface Last:"
         ttk::spinbox $f.spnSfc \
                 -from 1 -to 1000 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnSfc \
+                -command [list $f.spnSfc apply] \
                 -valuetype number
         ttk::label $f.lblSmo -text "Smooth:"
         ttk::spinbox $f.spnSmo \
                 -from 0 -to 1000 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnSmo \
+                -command [list $f.spnSmo apply] \
                 -valuetype number
 
         pack $f.lblSat $f.spnSat $f.lblSfc $f.spnSfc \
@@ -421,18 +426,21 @@ snit::type ::eaarl::bathconf::embed {
                 -from -5 -to -1 -increment 0.1 \
                 -width 4
         ::mixin::revertable $f.spnLaser \
+                -command [list $f.spnLaser apply] \
                 -valuetype number
         ttk::label $f.lblWater -text "Water:"
         ttk::spinbox $f.spnWater \
                 -from -10 -to -0.1 -increment 0.1 \
                 -width 4
         ::mixin::revertable $f.spnWater \
+                -command [list $f.spnWater apply] \
                 -valuetype number
         ttk::label $f.lblAgc -text "AGC:"
         ttk::spinbox $f.spnAgc \
                 -from -10 -to -0.1 -increment 0.1 \
                 -width 4
         ::mixin::revertable $f.spnAgc \
+                -command [list $f.spnAgc apply] \
                 -valuetype number
 
         pack $f.lblType $f.cboType $f.lblLaser $f.spnLaser \
@@ -509,36 +517,42 @@ snit::type ::eaarl::bathconf::embed {
                 -from -100 -to 100 -increment 0.05 \
                 -width 4
         ::mixin::revertable $f.spnMean \
+                -command [list $f.spnMean apply] \
                 -valuetype number
         ttk::label $f.lblStd -text "Std Dev:"
         ttk::spinbox $f.spnStd \
                 -from -100 -to 100 -increment 0.05 \
                 -width 4
         ::mixin::revertable $f.spnStd \
+                -command [list $f.spnStd apply] \
                 -valuetype number
         ttk::label $f.lblAgc -text "AGC:"
         ttk::spinbox $f.spnAgc \
                 -from -10 -to -0.1 -increment 0.1 \
                 -width 4
         ::mixin::revertable $f.spnAgc \
+                -command [list $f.spnAgc apply] \
                 -valuetype number
         ttk::label $f.lblXsh -text "X Shift:"
         ttk::spinbox $f.spnXsh \
                 -from -100 -to 100 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnXsh \
+                -command [list $f.spnXsh apply] \
                 -valuetype number
         ttk::label $f.lblXsc -text "X Scale:"
         ttk::spinbox $f.spnXsc \
                 -from 1 -to 100 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnXsc \
+                -command [list $f.spnXsc apply] \
                 -valuetype number
         ttk::label $f.lblTie -text "Tie Point:"
         ttk::spinbox $f.spnTie \
                 -from 1 -to 1000 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnTie \
+                -command [list $f.spnTie apply] \
                 -valuetype number
 
         lower [ttk::frame $f.fra1]
@@ -608,18 +622,21 @@ snit::type ::eaarl::bathconf::embed {
                 -from 1 -to 1000 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnFirst \
+                -command [list $f.spnFirst apply] \
                 -valuetype number
         ttk::label $f.lblLast -text "Last:"
         ttk::spinbox $f.spnLast \
                 -from 1 -to 1000 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnLast \
+                -command [list $f.spnLast apply] \
                 -valuetype number
         ttk::label $f.lblThresh -text "Threshold:"
         ttk::spinbox $f.spnThresh \
                 -from 1 -to 1000 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnThresh \
+                -command [list $f.spnThresh apply] \
                 -valuetype number
 
         pack $f.lblFirst $f.spnFirst $f.lblLast $f.spnLast \
@@ -650,22 +667,26 @@ snit::type ::eaarl::bathconf::embed {
                 -from 1 -to 100 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnLeftDist \
+                -command [list $f.spnLeftDist apply] \
                 -valuetype number
         ttk::spinbox $f.spnLeftFact \
                 -from 0 -to 1 -increment 0.05 \
                 -width 4
         ::mixin::revertable $f.spnLeftFact \
+                -command [list $f.spnLeftFact apply] \
                 -valuetype number
         ttk::label $f.lblRight -text "Right Dist/Factor:"
         ttk::spinbox $f.spnRightDist \
                 -from 1 -to 100 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnRightDist \
+                -command [list $f.spnRightDist apply] \
                 -valuetype number
         ttk::spinbox $f.spnRightFact \
                 -from 0 -to 1 -increment 0.05 \
                 -width 4
         ::mixin::revertable $f.spnRightFact \
+                -command [list $f.spnRightFact apply] \
                 -valuetype number
 
         pack $f.lblLeft $f.spnLeftDist $f.spnLeftFact \
