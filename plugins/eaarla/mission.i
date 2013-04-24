@@ -369,7 +369,7 @@ func eaarl_mission_wrap(env) {
   save, env.wrapped,
     cache_what=mission.data.cache_what,
     ops_conf, ops_conf_filename,
-    bathconf;
+    bathconf_data=bathconf.data;
 
   if(mission.data.cache_what == "everything") {
     save, env.wrapped,
@@ -397,9 +397,14 @@ func eaarl_mission_unwrap(env) {
   extern iex_nav, iex_head, tans, ins_filename;
   extern ops_conf, ops_conf_filename;
   extern bathconf;
+  local bathconf_data;
 
   restore, env.data;
   if(cache_what == "everything") iex2tans;
+  if(is_void(bathconf_data))
+    bathconf, clear;
+  else
+    bathconf, groups, bathconf_data, copy=0;
 
   save, env, cache_what;
 
