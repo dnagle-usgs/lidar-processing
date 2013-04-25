@@ -506,6 +506,8 @@ amp_bias=, units=) {
   default, range_bias, 0;
   default, amp_bias, 0;
   default, units, _depth_display_units;
+  default, win, 9;
+  default, tx, 0;
 
   rast = decode_raster(rn=rn);
 
@@ -519,11 +521,13 @@ amp_bias=, units=) {
   cb |= (4 * (c3 != 0));
   cb |= (8 * (c4 != 0));
 
-  if(!is_void(win)) {
-    prev_win = current_window();
-    window, win;
-  }
+  prev_win = current_window();
+  window, win;
   if(!nofma) fma;
+
+  tkcmd, swrite(format=
+      "::eaarl::rawwf::config %d -raster %d -pulse %d -chan1 %d -chan2 %d -chan3 %d -chan4 %d -amp_bias %d -range_bias %d -tx %d -units {%s}",
+      win, rn, pix, c1, c2, c3, c4, amp_bias, range_bias, tx, units);
 
   justify = amp_bias ? "RA" : "LA";
 

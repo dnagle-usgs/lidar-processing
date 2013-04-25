@@ -12,6 +12,7 @@ package require eaarl::load
 package require eaarl::pixelwf
 package require eaarl::processing
 package require eaarl::rasters
+package require eaarl::rawwf
 package require eaarl::settings
 package require eaarl::tscheck
 
