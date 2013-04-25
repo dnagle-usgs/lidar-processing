@@ -574,6 +574,7 @@ func plot_bath_ctl(channel, wf, thresh=, first=, last=, raster=, pulse=) {
     pltitle, swrite(format="rn:%d pulse:%d chan:%d", raster, pulse, channel);
   else
     pltitle, swrite(format="chan:%d", channel);
+  xytitles, "Sample Number", "Sample Counts (Relative Intensity)";
   if(!is_void(thresh)) {
     plg, [thresh,thresh], [first,last], marks=0, color="red";
     plg, [0,thresh], [first,first], marks=0, color="green", width=7;
