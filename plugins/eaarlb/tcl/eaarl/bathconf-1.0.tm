@@ -113,6 +113,9 @@ snit::type ::eaarl::bathconf::embed {
     variable rast_bath 0
     variable rast_win 11
 
+    # Step amount for raster stepping
+    variable raststep 2
+
     constructor {args} {
         if {[dict exist $args -window]} {
             set win [dict get $args -window]
@@ -185,6 +188,13 @@ snit::type ::eaarl::bathconf::embed {
                 -command [list $f.spnRast apply] \
                 -valuetype number \
                 -applycommand [mymethod IdlePlot]
+        ttk::spinbox $f.spnStep \
+                -textvariable [myvar raststep] \
+                -from 1 -to 100000 -increment 1 \
+                -width 3
+        ::mixin::revertable $f.spnStep \
+                -command [list $f.spnStep apply] \
+                -valuetype number
         ttk::button $f.btnRastPrev \
                 -image ::imglib::vcr::stepbwd \
                 -style Toolbutton \
@@ -206,16 +216,6 @@ snit::type ::eaarl::bathconf::embed {
                 -command [list $f.spnPulse apply] \
                 -valuetype number \
                 -applycommand [mymethod IdlePlot]
-        ttk::button $f.btnPulsePrev \
-                -image ::imglib::vcr::stepbwd \
-                -style Toolbutton \
-                -command [mymethod IncrPulse -1] \
-                -width 0
-        ttk::button $f.btnPulseNext \
-                -image ::imglib::vcr::stepfwd \
-                -style Toolbutton \
-                -command [mymethod IncrPulse 1] \
-                -width 0
         ttk::separator $f.sepPulse \
                 -orient vertical
         ttk::button $f.btnLims \
@@ -231,19 +231,24 @@ snit::type ::eaarl::bathconf::embed {
 
         pack $f.lblChan $f.cboChan \
                 $f.sepChan \
-                $f.lblRast $f.spnRast $f.btnRastPrev $f.btnRastNext \
+                $f.lblRast $f.spnRast $f.spnStep $f.btnRastPrev $f.btnRastNext \
                 $f.sepRast \
-                $f.lblPulse $f.spnPulse $f.btnPulsePrev $f.btnPulseNext \
+                $f.lblPulse $f.spnPulse \
                 $f.sepPulse \
                 $f.btnLims $f.btnReplot \
                 -side left
         pack $f.spnRast -fill x -expand 1
         pack $f.sepChan $f.sepRast $f.sepPulse -fill y -padx 2
 
-        lappend controls $f.cboChan $f.spnRast $f.btnRastPrev $f.btnRastNext \
-                $f.spnPulse $f.btnPulsePrev $f.btnPulseNext $f.btnLims \
-                $f.btnReplot
+        lappend controls $f.cboChan $f.spnRast $f.spnStep $f.btnRastPrev \
+                $f.btnRastNext $f.spnPulse $f.btnLims $f.btnReplot
 
+        tooltip $f.lblRast $f.spnRast \
+                "Raster number"
+        tooltip $f.spnStep \
+                "Amount to step by"
+        tooltip $f.btnRastPrev $f.btnRastNext \
+                "Step through rasters by step increment"
         tooltip $f.btnLims \
                 "Reset the limits on the plot so everything is visible."
         tooltip $f.btnReplot \
@@ -844,20 +849,10 @@ snit::type ::eaarl::bathconf::embed {
         }
     }
 
-    method IncrRast {amt} {
-        incr options(-raster) $amt
+    method IncrRast {dir} {
+        incr options(-raster) [expr {$raststep * $dir}]
         if {$options(-raster) < 1} {
             set options(-raster) 1
-        }
-        $self plot
-    }
-
-    method IncrPulse {amt} {
-        incr options(-pulse) $amt
-        if {$options(-pulse) < 1} {
-            set options(-pulse) 1
-        } elseif {$options(-pulse) > 120} {
-            set options(-pulse) 120
         }
         $self plot
     }
