@@ -243,6 +243,12 @@ snit::type ::eaarl::bathconf::embed {
         lappend controls $f.cboChan $f.spnRast $f.btnRastPrev $f.btnRastNext \
                 $f.spnPulse $f.btnPulsePrev $f.btnPulseNext $f.btnLims \
                 $f.btnReplot
+
+        tooltip $f.btnLims \
+                "Reset the limits on the plot so everything is visible."
+        tooltip $f.btnReplot \
+                "Replots the current plot. Also plots linked plots (such as
+                raster or raw waveform) if any are selected."
     }
 
     method Gui_waveforms {f} {
