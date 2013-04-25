@@ -129,6 +129,15 @@ image create bitmap ::imglib::x -data {
         0x1c, 0x1c, 0x08, 0x08, 0x00, 0x00};
 }
 
+# Symbol with "x2" on it
+image create photo ::imglib::x2 -format png -data {
+    iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAQAAACR313BAAAAqUlEQVR4Aa3BsYrBcQAA4M8v
+    w909wnW6q1uu7obr7gE8gAegZLdYTLwFgzLIxiCLgSxeQUnZLQpRDEr9i8WgjHyfh3tX1deU
+    5FbC1lhZTyRNwgvgC1SsxEHXjJGRZxQcvSEtAyjb8GFuqCCSAwBMDODT2kkeAMTUHH1DVmSn
+    Kw4gpu4gBRmRoh9rbQEEDXtJoKMEfk29ImhZ+gMIAALIO/j3dHlj4XT1LmdqCy7zJio7fAAA
+    AABJRU5ErkJggg==
+}
+
 # Icons for arrows
 namespace eval ::imglib::arrow {}
 
