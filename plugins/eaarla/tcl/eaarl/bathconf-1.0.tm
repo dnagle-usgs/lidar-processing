@@ -222,7 +222,7 @@ snit::type ::eaarl::bathconf::embed {
                 -image ::imglib::misc::limits \
                 -style Toolbutton \
                 -width 0 \
-                -command [list exp_send "limits;\r"]
+                -command [mymethod limits]
         ttk::button $f.btnReplot \
                 -image ::imglib::misc::refresh \
                 -style Toolbutton \
@@ -888,6 +888,10 @@ snit::type ::eaarl::bathconf::embed {
         if {$curdecay ne [$self GetDecay]} {
             $self Gui
         }
+    }
+
+    method limits {} {
+        exp_send "window, $options(-window); limits;\r"
     }
 
     # Returns the command that can be used to (re)plot this window
