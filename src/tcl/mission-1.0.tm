@@ -368,10 +368,16 @@ namespace eval ::mission {
         ttk::button $f.tbnDown -style Toolbutton \
                 -image ::imglib::arrow::down \
                 -command [list ::mission::quick_action flights lower]
+        ttk::button $f.tbnDupe -style Toolbutton \
+                -image ::imglib::x2 \
+                -command [list ::mission::quick_action flights dupe]
         grid $f.tbnPlus -in $f.fraToolbar
         grid $f.tbnX -in $f.fraToolbar
         grid $f.tbnUp -in $f.fraToolbar
         grid $f.tbnDown -in $f.fraToolbar
+        grid $f.tbnDupe -in $f.fraToolbar
+
+        tooltip $f.tbnDupe "Duplicate flight"
 
         ttk::treeview $f.tvwFlights \
                 -columns name \
@@ -834,7 +840,7 @@ namespace eval ::mission {
     # Implements the raise, lower, and remove quick buttons to the left of the
     # treeviews.
     # type must be "flights" or "details"
-    # action must be "raise", "lower", or "remove"
+    # action must be "raise", "lower", or "remove"; "flights" may also be "dupe"
     proc quick_action {type action} {
         variable flights
         variable details

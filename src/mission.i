@@ -247,8 +247,10 @@ restore, scratch;
 
 scratch = save(scratch, cmds, mission_flights_add, mission_flights_remove,
   mission_flights_rename, mission_flights_swap, mission_flights_raise,
-  mission_flights_lower, mission_flights_clear, mission_flights_auto);
-cmds = save(__help, add, remove, rename, swap, raise, lower, clear, auto);
+  mission_flights_lower, mission_flights_dupe, mission_flights_clear,
+  mission_flights_auto);
+cmds = save(__help, add, remove, rename, swap, raise, lower, dupe, clear,
+  auto);
 
 __help = "Contains subcommands for modifying the configuration for flights.";
 
@@ -364,6 +366,22 @@ func mission_flights_lower(name) {
   mission, tksync;
 }
 lower = mission_flights_lower;
+
+func mission_flights_dupe(name) {
+/* DOCUMENT mission, flights, dupe, "<name>"
+  Creates a duplicate of the specified flight.
+*/
+  if(!is_string(name) || !strlen(name))
+    error, "invalid name: "+pr1(name);
+  i = 1;
+  do {
+    newname = swrite(format="%s (%d)", name, ++i);
+  } while(mission.data.conf(*,newname));
+  save, mission.data.conf, noop(newname),
+    obj_copy(mission.data.conf(noop(name)), recurse=1);
+  mission, tksync;
+}
+dupe = mission_flights_dupe;
 
 func mission_flights_clear {
 /* DOCUMENT mission, flights, clear
