@@ -173,21 +173,19 @@ image create photo ::imglib::misc::plot -format gif -data {
 
 # Depicts an excerpt/thumbnail of a plotted lidar raster.
 image create photo ::imglib::misc::raster -format png -data {
-    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
+    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
+    AAAAAElFTkSuQmCC
 }
 
 # Depicts two arrows, one pointing to the upper right and one to the lower left
