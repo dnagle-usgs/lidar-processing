@@ -199,11 +199,13 @@ image create bitmap ::imglib::misc::limits -data {
 }
 
 # Depicts two arrows, curved to form a circle
-image create bitmap ::imglib::misc::refresh -data {
-    #define refresh_width 15
-    #define refresh_height 15
-    static unsigned char refresh_bits[] = {
-        0x00, 0x00, 0x00, 0x00, 0xe0, 0x03, 0x10, 0x04, 0x00, 0x08, 0x04, 0x10,
-        0x0e, 0x10, 0x15, 0x54, 0x04, 0x38, 0x04, 0x10, 0x08, 0x00, 0x10, 0x04,
-        0xe0, 0x03, 0x00, 0x00, 0x00, 0x00};
+# Icon by Timothy Miller, "Pictype Free Vector Icons"
+# Licensed under CC Attribution-Share Alike 3.0 Unported
+# www.iconfinder.com/icondetails/126579/128/refresh_reload_sync_icon
+image create photo ::imglib::misc::refresh -format png -data {
+    iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAAwUlEQVR4AZ3RIapCARAF0JMe
+    2M0mmwuw2V2GIHaTyWYwGQSbIIK4AUFcgskk4gsGm0G7ijC/TREM/0y9MDNcqa5n5ephb6ym
+    5Wgo9X2EHB8v4QQUlkK4mOnomrsLIZyBkRCmKoCmZwbQ8BYmkm0uOsBaKBWSto2dnY023ISB
+    HxZKVf9SVVr4YSDcvo5KhVJYwyHf2pImwlsDzkIIT01AxVQII5CBu7mujpmLEJYK4CS8vsrq
+    S0NHLTVjew9XKz11gD9DtmsZeJUtKwAAAABJRU5ErkJggg==
 }
