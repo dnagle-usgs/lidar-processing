@@ -217,16 +217,20 @@ snit::type ::eaarl::rawwf::embed {
 
     method Gui_settings {f} {
         ttk::checkbutton $f.tx -text "Show transmit above return" \
-                -variable [myvar options](-tx)
+                -variable [myvar options](-tx) \
+                -command [mymethod plot]
         ttk::checkbutton $f.ampbias -text "Remove amplitude bias" \
-                -variable [myvar options](-amp_bias)
+                -variable [myvar options](-amp_bias) \
+                -command [mymethod plot]
         ttk::checkbutton $f.rangebias -text "Remove range bias" \
-                -variable [myvar options](-range_bias)
+                -variable [myvar options](-range_bias) \
+                -command [mymethod plot]
         ttk::label $f.lblunits -text "Units:"
         ::mixin::combobox $f.units -width 6 \
                 -state readonly \
                 -values [list ns meters feet] \
-                -textvariable [myvar options](-units)
+                -textvariable [myvar options](-units) \
+                -modifycmd [mymethod plot]
         grid $f.ampbias - $f.tx - \
                 -sticky w
         grid $f.rangebias - $f.lblunits $f.units \
