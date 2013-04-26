@@ -215,11 +215,13 @@ snit::type ::eaarl::raster::embed {
         ttk::button $f.btnSelect \
                 -image ::imglib::handup \
                 -style Toolbutton \
-                -width 0
+                -width 0 \
+                -command [mymethod examine single]
         ttk::button $f.btnBrowse \
                 -image ::imglib::handup2 \
                 -style Toolbutton \
-                -width 0
+                -width 0 \
+                -command [mymethod examine browse]
         pack $f.btnBrowse $f.btnSelect -side right
     }
 
@@ -366,22 +368,27 @@ snit::type ::eaarl::raster::embed {
     # (Re)plots the window
     method plot {args} {
         set cmd [$self plotcmd {*}$args]
+        append cmd [::eaarl::sync::multicmd \
+                -raster $options(-raster) -pulse $options(-pulse) \
+                -rawwf $rawwf_plot -rawwfwin $rawwf_win \
+                -bath $bathy_plot -bathwin $bathy_win \
+                -tx $transmit_plot -txwin $transmit_win]
+        exp_send "$cmd\r"
+    }
 
-        if {$rawwf_plot} {
-            append cmd [::eaarl::rawwf::plotcmd $rawwf_win \
-                    -raster $options(-raster) -pulse $options(-pulse)]
-        }
-
-        if {$bathy_plot} {
-            append cmd [::eaarl::bathconf::plotcmd $bathy_win \
-                    -raster $options(-raster) -pulse $options(-pulse)]
-        }
-
-        if {$transmit_plot} {
-            append cmd "show_wf_transmit, $options(-raster),\
-                    $options(-pulse), win=$transmit_win; "
-        }
-
+    method examine {mode} {
+        set type rast
+        if {$options(-geo)} {set type geo}
+        set cmd "drast_msel, $options(-raster), type=\"$type\""
+        appendif cmd \
+                1                   ", rx=$rawwf_plot" \
+                $transmit_plot      ", tx=1" \
+                $bathy_plot         ", bath=1" \
+                1                   ", winsel=$options(-window)" \
+                $rawwf_plot         ", winrx=$rawwf_win" \
+                $transmit_plot      ", wintx=$transmit_win" \
+                $bathy_plot         ", winbath=$bathy_win" \
+                {$mode eq "single"} ", single=1"
         exp_send "$cmd\r"
     }
 

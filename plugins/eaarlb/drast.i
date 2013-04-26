@@ -433,6 +433,7 @@ tkpulsevar=) {
   // single = -1 -> replot mode (internal state)
 
   extern xm;
+  extern plotcmd, scratch;
 
   continue_interactive = 1;
   if(pulse) single = -1;
@@ -463,16 +464,23 @@ tkpulsevar=) {
 
     if(pulse) {
       write, format=" - Pulse %d\n", pulse;
+      cmd = swrite(format="::eaarl::sync::sendyorick plotcmd"
+        +" -raster %d -pulse %d", rn, pulse);
       if(rx)
-        show_wf, rn, pulse, win=winrx, cb=cb, range_bias=range_bias,
-          amp_bias=amp_bias, tx=rxtx, units=units;
+        cmd += swrite(format=" -rawwf 1 -rawwfwin %d", winrx);
       if(bath)
-        ex_bath, rn, pulse, graph=1, win=winbath, xfma=1,
-          forcechannel=bathchan;
+        cmd += swrite(format=" -bath 1 -bathwin %d", winbath);
       if(tx)
-        show_wf_transmit, rn, pulse, win=wintx;
-      if(!is_void(tkpulsevar))
-        tkcmd, swrite(format="set %s %d", tkpulsevar, pulse);
+        cmd += swrite(format=" -tx 1 -txwin %d", wintx);
+
+      scratch = save(scratch, plotcmd);
+      plotcmd = [];
+      tkcmd, cmd;
+      while(is_void(plotcmd)) pause, 1;
+      cmdf = include1(z_decompress(base64_decode(plotcmd)));
+      restore, scratch;
+      cmdf;
+
       pulse = 0;
     }
   }
