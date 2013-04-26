@@ -209,3 +209,27 @@ image create photo ::imglib::misc::refresh -format png -data {
     HxZKVf9SVVr4YSDcvo5KhVJYwyHf2pImwlsDzkIIT01AxVQII5CBu7mujpmLEJYK4CS8vsrq
     S0NHLTVjew9XKz11gD9DtmsZeJUtKwAAAABJRU5ErkJggg==
 }
+
+# Following two images are derived from:
+# Icon by WPZOOM, "WPZOOM Developer Icon Set"
+# Licensed under CC Attribution-Share Alike 3.0 Unported
+# www.iconfinder.com/icondetails/111069/128/finger_point_up_icon
+
+# Single hand pointing up
+image create photo ::imglib::handup -format png -data {
+    iVBORw0KGgoAAAANSUhEUgAAAA4AAAAPCAQAAAB+HTb/AAAAxElEQVR4AWOAAc1a87taExmw
+    A+ub//+7PWBgwSrpeuf//5BHDBz4JAUZmHBIhj4xf6B+jcNTKoeBC0Ny289P/9f+cXu99LfE
+    HsVpDKLIkmDw9/93IDnv3/H/mhvAvmBgRkgigM05BvUdua/M7igtTnuBLul6i0H79h8g48r/
+    3//RgfsdBglfj2ev/2MD1ueAVrKpaV7c9ANTUvcAxKnMyisP/UKV2vNbrgTmE1bN8y9RJD3u
+    IAeEgtpDr0cw6PlIdR4DAwD2BtFORhBUsAAAAABJRU5ErkJggg==
+}
+
+# Two hands pointing up
+image create photo ::imglib::handup2 -format png -data {
+    iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAQAAACR313BAAABBUlEQVR4AWNAAdyqF1QvM3Az
+    4AD20z/P+cHgikvaYfa3pb8YPDDE+XTV9siFQKSlH6mckqrmR1akse35f6OrIOln/x7/m/1p
+    7k+Hl4oXOfWh0toH//93uAaS/g8Fz/9/+K99GSqtden/f9OfKq9afp/7/+8/DNjdYYJZzsAQ
+    x3ZKdB7LCoYIhvVQQUaYrPYhiPqvQLzsf+H/rWCeyQUG5XT1QxIxKmf/I4FL/1uB5LP/musY
+    NB9++T//++LPyNIv/hcAyYyXDJoMyhlhzz78RwUn/qs+1TmtuhBsL6uW1pkjP5Glp31lcEIO
+    NFa1sw+QpE1vMjCjhqqE6j2vRxDo8FShBiYMAGEhyooLrIGcAAAAAElFTkSuQmCC
+}
