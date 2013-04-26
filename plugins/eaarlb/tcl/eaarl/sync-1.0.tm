@@ -5,7 +5,10 @@ namespace eval eaarl::sync {}
 proc ::eaarl::sync::multicmd {args} {
     array set opts {
         -raster     1
+        -channel    0
         -pulse      1
+        -rast       0
+        -rastwin    11
         -rawwf      0
         -rawwfwin   9
         -bath       0
@@ -17,13 +20,20 @@ proc ::eaarl::sync::multicmd {args} {
 
     set cmd ""
 
+    set baseopts [list -raster $opts(-raster) -pulse $opts(-pulse)]
+    set chanopts $baseopts
+    if {$opts(-channel)} {
+        lappend chanopts -channel $opts(-channel)
+    }
+
+    if {$opts(-rast)} {
+        append cmd [::eaarl::raster::plotcmd $opts(-rastwin) {*}$chanopts]
+    }
     if {$opts(-rawwf)} {
-        append cmd [::eaarl::rawwf::plotcmd $opts(-rawwfwin) \
-                -raster $opts(-raster) -pulse $opts(-pulse)]
+        append cmd [::eaarl::rawwf::plotcmd $opts(-rawwfwin) {*}$baseopts]
     }
     if {$opts(-bath)} {
-        append cmd [::eaarl::bathconf::plotcmd $opts(-bathwin) \
-                -raster $opts(-raster) -pulse $opts(-pulse)]
+        append cmd [::eaarl::bathconf::plotcmd $opts(-bathwin) {*}$chanopts]
     }
     if {$opts(-tx)} {
         append cmd "show_wf_transmit, $opts(-raster),\
