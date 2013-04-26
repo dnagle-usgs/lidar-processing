@@ -171,9 +171,7 @@ tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=, bathyverbose=)
   extern data_path, soe_day_start;
   default, channel, 1;
   default, units, "ns";
-  default, win, max(0, current_window());
-  default, cmin, 0;
-  default, cmax, 255;
+  default, win, 11;
   default, geo, 0;
   default, rcfw, 50.;
   default, tx, 0;
@@ -195,8 +193,22 @@ tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=, bathyverbose=)
   win_bkp = current_window();
 
   // Attach Tcl GUI
-  tkcmd, swrite(format="::eaarl::rasters::rastplot::launch %d %d %d -pulse %d",
-    win, rn, channel, pulse);
+  cmd = swrite(format=
+    "::eaarl::raster::config %d -raster %d -channel %d -units {%s} -geo %d"
+    +" -tx %d -showcbar %d -bathy %d",
+    win, long(rn), long(channel), units, long(geo),
+    long(tx), long(showcbar), long(bathy));
+  if(!is_void(cmin))
+    cmd += swrite(format=" -cmin %g", double(cmin));
+  if(!is_void(cmax))
+    cmd += swrite(format=" -cmax %g", double(cmax));
+  if(geo)
+    cmd += swrite(format=" -rcfw %g -eoffset %g",
+      double(rcfw), double(eoffset));
+  tkcmd, cmd;
+
+  default, cmin, 0;
+  default, cmax, 255;
 
   window, win;
   // TODO: Is this necessary now?

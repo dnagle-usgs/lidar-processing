@@ -11,6 +11,7 @@ package require eaarl::jsonlog
 package require eaarl::load
 package require eaarl::pixelwf
 package require eaarl::processing
+package require eaarl::raster
 package require eaarl::rasters
 package require eaarl::rawwf
 package require eaarl::settings
