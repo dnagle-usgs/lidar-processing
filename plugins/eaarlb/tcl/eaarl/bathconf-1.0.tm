@@ -100,18 +100,13 @@ snit::type ::eaarl::bathconf::embed {
     variable empty ""
 
     variable show_browse 1
-    variable show_wf 1
-    variable show_rast 1
 
-    variable wf_chan1 0
-    variable wf_chan2 0
-    variable wf_chan3 0
-    variable wf_chan4 0
-    variable wf_win 9
-
-    variable rast_plot 0
-    variable rast_bath 0
-    variable rast_win 11
+    variable raster_plot 0
+    variable raster_win 11
+    variable rawwf_plot 0
+    variable rawwf_win 9
+    variable transmit_plot 0
+    variable transmit_win 16
 
     # Step amount for raster stepping
     variable raststep 2
@@ -148,12 +143,7 @@ snit::type ::eaarl::bathconf::embed {
         if {$show_browse} {
             lappend sections browse
         }
-        if {$show_wf} {
-            lappend sections waveforms
-        }
-        if {$show_rast} {
-            lappend sections raster
-        }
+        lappend sections sync
         lappend sections settings
         foreach section $sections {
             ttk::frame $pane.$section \
@@ -256,43 +246,24 @@ snit::type ::eaarl::bathconf::embed {
                 raster or raw waveform) if any are selected."
     }
 
-    method Gui_waveforms {f} {
-        ttk::label $f.lblWf -text "Plot waveforms:"
-        foreach i {1 2 3 4} {
-            ttk::checkbutton $f.chkChan$i -text $i \
-                    -variable [myvar wf_chan$i] \
-                    -command [mymethod WfEnabler $f.spnWin]
-        }
-        ttk::label $f.lblWin -text "Win:"
-        ttk::spinbox $f.spnWin \
-                -width 3 \
-                -textvariable [myvar wf_win]
-        $self WfEnabler $f.spnWin
-
-        pack $f.lblWf $f.chkChan1 $f.chkChan2 $f.chkChan3 $f.chkChan4 \
-                -side left
-        pack $f.spnWin $f.lblWin \
-                -side right
-    }
-
-    method Gui_raster {f} {
-        ttk::checkbutton $f.chkRast -text "Plot raster" \
-                -variable [myvar rast_plot]
-        ttk::checkbutton $f.chkBottom -text "Bottom markers" \
-                -variable [myvar rast_bath]
-        ttk::label $f.lblWin -text "Win:"
-        ttk::spinbox $f.spnWin \
-                -width 3 \
-                -textvariable [myvar rast_win]
-
-        ::mixin::statevar $f.spnWin \
-                -statemap {0 disabled 1 normal} \
-                -statevariable [myvar rast_plot]
-
-        pack $f.chkRast $f.chkBottom \
-                -side left
-        pack $f.spnWin $f.lblWin \
-                -side right
+    method Gui_sync {f} {
+        foreach type {raster rawwf transmit} {
+            set name [string totitle $type]
+            ttk::checkbutton $f.lbl$name \
+                    -text ${name}: \
+                    -variable [myvar ${type}_plot]
+            pack $f.lbl$name -side left
+    
+            ttk::spinbox $f.spn$name \
+                    -width 2 \
+                    -from 0 -to 63 -increment 1 \
+                    -textvariable [myvar ${type}_win]
+            ::mixin::statevar $f.spn$name \
+                    -statemap {0 disabled 1 normal} \
+                    -statevariable [myvar ${type}_plot]
+            pack $f.spn$name -side left -padx {0 1}
+        }       
+        $f.lblRawwf configure -text "Raw WF"
     }
 
     method Gui_settings {f} {
@@ -841,14 +812,6 @@ snit::type ::eaarl::bathconf::embed {
         set curgroup $options(-group)
     }
 
-    method WfEnabler {widget} {
-        if {$wf_chan1 || $wf_chan2 || $wf_chan3 || $wf_chan4} {
-            $widget state !disabled
-        } else {
-            $widget state disabled
-        }
-    }
-
     method IncrRast {dir} {
         incr options(-raster) [expr {$raststep * $dir}]
         if {$options(-raster) < 1} {
@@ -904,24 +867,12 @@ snit::type ::eaarl::bathconf::embed {
     # (Re)plots the window
     method plot {} {
         set cmd [$self plotcmd]
-
-        if {$rast_plot} {
-            append cmd " show_rast, $options(-raster), win=${rast_win},\
-                    bathy=${rast_bath}, channel=$options(-channel),\
-                    autolims=0;"
-        }
-
-        if {$wf_chan1 || $wf_chan2 || $wf_chan3 || $wf_chan4} {
-            append cmd " show_wf, $options(-raster), $options(-pulse),\
-                    win=${wf_win}"
-            ::misc::appendif cmd \
-                    $wf_chan1   ", c1=1" \
-                    $wf_chan2   ", c2=1" \
-                    $wf_chan3   ", c3=1" \
-                    $wf_chan4   ", c4=1" \
-                    1           ";"
-        }
-
+        append cmd [::eaarl::sync::multicmd \
+                -raster $options(-raster) -pulse $options(-pulse) \
+                -channel $options(-channel) \
+                -rast $raster_plot -rastwin $raster_win \
+                -rawwf $rawwf_plot -rawwfwin $rawwf_win \
+                -tx $transmit_plot -txwin $transmit_win]
         exp_send "$cmd\r"
     }
 

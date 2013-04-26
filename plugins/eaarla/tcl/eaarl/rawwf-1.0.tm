@@ -297,22 +297,11 @@ snit::type ::eaarl::rawwf::embed {
     # (Re)plots the window
     method plot {} {
         set cmd [$self plotcmd]
-
-        if {$raster_plot} {
-            append cmd "show_rast, $options(-raster), win=$raster_win,\
-                    channel=1, autolims=0; "
-        }
-
-        if {$bathy_plot} {
-            append cmd [::eaarl::bathconf::plotcmd $bathy_win \
-                    -raster $options(-raster) -pulse $options(-pulse)]
-        }
-
-        if {$transmit_plot} {
-            append cmd "show_wf_transmit, $options(-raster),\
-                    $options(-pulse), win=$transmit_win; "
-        }
-
+        append cmd [::eaarl::sync::multicmd \
+                -raster $options(-raster) -pulse $options(-pulse) \
+                -rast $raster_plot -rastwin $raster_win \
+                -bath $bathy_plot -bathwin $bathy_win \
+                -tx $transmit_plot -txwin $transmit_win]
         exp_send "$cmd\r"
     }
 
