@@ -370,6 +370,7 @@ snit::type ::eaarl::raster::embed {
         set cmd [$self plotcmd {*}$args]
         append cmd [::eaarl::sync::multicmd \
                 -raster $options(-raster) -pulse $options(-pulse) \
+                -channel $options(-channel) \
                 -rawwf $rawwf_plot -rawwfwin $rawwf_win \
                 -bath $bathy_plot -bathwin $bathy_win \
                 -tx $transmit_plot -txwin $transmit_win]
