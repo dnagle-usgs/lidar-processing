@@ -76,6 +76,10 @@ snit::type ::eaarl::raster::embed {
     variable transmit_plot 0
     variable transmit_win 16
 
+    # Keeps track of the state of the Georeference options. They are only
+    # enabled when both the channel is not 0 and Georeference is enabled.
+    variable geo_opt_state 0
+
     constructor {args} {
         if {[dict exist $args -window]} {
             set win [dict get $args -window]
@@ -87,6 +91,11 @@ snit::type ::eaarl::raster::embed {
         $window configure -owner $self
 
         set pane [$window pane bottom]
+
+        trace add variable [myvar options](-channel) write \
+                [mymethod TraceGeoOptState]
+        trace add variable [myvar options](-geo) write \
+                [mymethod TraceGeoOptState]
 
         $self Gui
         $self configure {*}$args
@@ -107,14 +116,12 @@ snit::type ::eaarl::raster::embed {
 
     method Gui_browse {f} {
         ttk::label $f.lblChan -text "Channel:"
-        mixin::combobox $f.cboChan \
-                -textvariable [myvar options](-channel) \
+        mixin::combobox::mapping $f.cboChan \
+                -mapping {1 1 2 2 3 3 4 4 tx 0} \
+                -altvariable [myvar options](-channel) \
                 -state readonly \
                 -width 2 \
-                -values {1 2 3 4}
-        mixin::revertable $f.cboChan \
-                -applycommand [mymethod IdlePlot]
-        bind $f.cboChan <<ComboboxSelected>> +[list $f.cboChan apply]
+                -modifycmd [mymethod IdlePlot - -]
 
         ttk::separator $f.sepChan \
                 -orient vertical
@@ -249,6 +256,13 @@ snit::type ::eaarl::raster::embed {
         ttk::checkbutton $f.bathy -text "Show bathy" \
                 -variable [myvar options](-bathy) \
                 -command [mymethod plot]
+        foreach w [list $f.tx $f.bathy] {
+            ::mixin::statevar $w \
+                    -statemap {
+                        0 disabled 1 normal 2 normal 3 normal 4 normal
+                    } \
+                    -statevariable [myvar options](-channel)
+        }
         pack $f.lblunits $f.units $f.limits $f.tx $f.bathy \
                 -in $f.fra1 -side left -padx 2
 
@@ -263,6 +277,9 @@ snit::type ::eaarl::raster::embed {
                 -textvariable [myvar options](-cmin) \
                 -from 0 -to 255 -increment 1 \
                 -width 3
+        mixin::statevar $f.cmin \
+                -statemap {0 disabled 1 normal} \
+                -statevariable [myvar options](-usecmin)
         mixin::revertable $f.cmin \
                 -command [list $f.cmin apply] \
                 -valuetype number \
@@ -274,6 +291,9 @@ snit::type ::eaarl::raster::embed {
                 -textvariable [myvar options](-cmax) \
                 -from 0 -to 255 -increment 1 \
                 -width 3
+        mixin::statevar $f.cmax \
+                -statemap {0 disabled 1 normal} \
+                -statevariable [myvar options](-usecmax)
         mixin::revertable $f.cmax \
                 -command [list $f.cmax apply] \
                 -valuetype number \
@@ -303,10 +323,13 @@ snit::type ::eaarl::raster::embed {
                 -command [list $f.eoffset apply] \
                 -valuetype number \
                 -applycommand [mymethod IdlePlot]
+        ::mixin::statevar $f.geo \
+                -statemap {0 disabled 1 normal 2 normal 3 normal 4 normal} \
+                -statevariable [myvar options](-channel)
         foreach w [list $f.lblrcfw $f.rcfw $f.lbleoffset $f.eoffset] {
             mixin::statevar $w \
                     -statemap {0 disabled 1 normal} \
-                    -statevariable [myvar options](-geo)
+                    -statevariable [myvar geo_opt_state]
         }
         pack $f.geo $f.lblrcfw $f.rcfw $f.lbleoffset $f.eoffset \
                 -in $f.fra3 -side left -padx 2
@@ -321,9 +344,13 @@ snit::type ::eaarl::raster::embed {
     }
 
     method UpdateTitle {} {
+        set chan "Channel $options(-channel)"
+        if {$options(-channel) == 0} {
+            set chan "Transmit"
+        }
         wm title $window "Window $options(-window) - \
                 Raster - \
-                Raster $options(-raster) Channel $options(-channel)"
+                Raster $options(-raster) $chan"
     }
 
     method IncrRast {dir} {
@@ -338,6 +365,10 @@ snit::type ::eaarl::raster::embed {
         ::misc::idle [mymethod plot]
     }
 
+    method TraceGeoOptState {old new op} {
+        set geo_opt_state [expr {$options(-channel) != 0 && $options(-geo)}]
+    }
+
     method limits {} {
         exp_send "window, $options(-window); limits;\r"
     }
@@ -350,17 +381,22 @@ snit::type ::eaarl::raster::embed {
         set cmd ""
         append cmd "show_rast, $opts(-raster), channel=$opts(-channel),\
                 win=$opts(-window)"
+        if {$opts(-channel) == 0} {
+            append cmd ", units=\"$opts(-units)\""
+        } else {
+            appendif cmd \
+                    {!$opts(-geo)}      ", units=\"$opts(-units)\"" \
+                    $opts(-geo)         ", geo=1" \
+                    $opts(-geo)         ", rcfw=$opts(-rcfw)" \
+                    $opts(-geo)         ", eoffset=$opts(-eoffset)" \
+                    $opts(-tx)          ", tx=1" \
+                    $opts(-bathy)       ", bathy=1"
+        }
         appendif cmd \
-                {!$opts(-geo)}      ", units=\"$opts(-units)\"" \
                 $opts(-usecmin)     ", cmin=$opts(-cmin)" \
                 $opts(-usecmax)     ", cmax=$opts(-cmax)" \
-                $opts(-geo)         ", geo=1" \
-                $opts(-geo)         ", rcfw=$opts(-rcfw)" \
-                $opts(-geo)         ", eoffset=$opts(-eoffset)" \
-                $opts(-tx)          ", tx=1" \
-                $opts(-autolims)    ", autolims=1" \
                 $opts(-showcbar)    ", showcbar=1" \
-                $opts(-bathy)       ", bathy=1"
+                $opts(-autolims)    ", autolims=1"
         append cmd "; "
         return $cmd
     }
@@ -395,6 +431,10 @@ snit::type ::eaarl::raster::embed {
 
     # Used by associated window when resetting the GUI for something else
     method clear_gui {} {
+        trace remove variable [myvar options](-channel) write \
+                [mymethod TraceGeoOptState]
+        trace remove variable [myvar options](-geo) write \
+                [mymethod TraceGeoOptState]
         $self destroy
     }
 }

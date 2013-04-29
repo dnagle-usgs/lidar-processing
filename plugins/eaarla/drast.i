@@ -115,7 +115,8 @@ autolims=, pulse=) {
 }
 
 func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=, eoffset=,
-tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=, bathyverbose=) {
+tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=,
+bathyverbose=) {
 /* DOCUMENT show_rast, rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=,
    eoffset=, tx=, autolims=, showbar=, sfsync=, pulse=, bathy=, bathyoffset=,
    bathyverbose=
@@ -183,8 +184,12 @@ tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=, bathyverbose=)
   default, bathyoffset, 0;
   default, bathyverbose, 1;
 
-  // Ignore tx=1 if channel=0
-  if(channel == 0) tx = 0;
+  // Ignore certain settings if channel=0 (=transmit)
+  if(channel == 0) {
+    tx = 0;
+    bathy = 0;
+    geo = 0;
+  }
 
   local z;
 
@@ -194,10 +199,12 @@ tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=, bathyverbose=)
 
   // Attach Tcl GUI
   cmd = swrite(format=
-    "::eaarl::raster::config %d -raster %d -channel %d -units {%s} -geo %d"
-    +" -tx %d -showcbar %d -bathy %d",
-    win, long(rn), long(channel), units, long(geo),
-    long(tx), long(showcbar), long(bathy));
+    "::eaarl::raster::config %d -raster %d -channel %d -units {%s}"
+    +" -showcbar %d",
+    win, long(rn), long(channel), units, long(showcbar));
+  if(channel > 0)
+    cmd += swrite(format=" -tx %d -bathy %d -geo %d",
+      long(tx), long(bathy), long(geo));
   if(!is_void(cmin))
     cmd += swrite(format=" -cmin %g", double(cmin));
   if(!is_void(cmax))
@@ -247,7 +254,12 @@ tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=, bathyverbose=)
   }
 
   if(bathy) {
-    bias = get_member(ops_conf, swrite(format="chn%d_range_bias", channel));
+    bias_opt = swrite(format="chn%d_range_bias", channel);
+    if(has_member(ops_conf, bias_opt)) {
+      bias = get_member(ops_conf, bias_opt);
+    } else {
+      bias = 0.;
+    }
     bgood = bbad = 0;
     for(pulse = 1; pulse <= 120; pulse++) {
       if(skip(pulse)) continue;
