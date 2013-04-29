@@ -193,9 +193,14 @@ bathyverbose=) {
 
   local z;
 
-  rast = decode_raster(rn=rn);
-
   win_bkp = current_window();
+
+  // Sanitize raster number
+  if(!numberof(edb)) {
+    rn = 0;
+  } else {
+    rn = max(1, min(numberof(edb), rn));
+  }
 
   // Attach Tcl GUI
   cmd = swrite(format=
@@ -223,6 +228,14 @@ bathyverbose=) {
   lims = limits();
   fma;
 
+  if(rn == 0) {
+    port = viewport();
+    plt, "No rasters available", port(1:2)(avg), port(3:4)(avg),
+      tosys=0, justify="CC";
+    window_select, win_bkp;
+    return;
+  }
+
   skip = array(0, 120);
   if(geo) {
     units = "meters";
@@ -237,6 +250,8 @@ bathyverbose=) {
   }
 
   top = -1e1000;
+
+  rast = decode_raster(rn=rn);
 
   for(pulse = 1; pulse <= 120; pulse++) {
     if(skip(pulse)) continue;
