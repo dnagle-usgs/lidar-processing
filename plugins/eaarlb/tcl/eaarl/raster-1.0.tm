@@ -121,7 +121,7 @@ snit::type ::eaarl::raster::embed {
                 -altvariable [myvar options](-channel) \
                 -state readonly \
                 -width 2 \
-                -modifycmd [mymethod IdlePlot - -]
+                -modifycmd [mymethod IdlePlot]
 
         ttk::separator $f.sepChan \
                 -orient vertical
@@ -134,7 +134,7 @@ snit::type ::eaarl::raster::embed {
         ::mixin::revertable $f.spnRast \
                 -command [list $f.spnRast apply] \
                 -valuetype number \
-                -applycommand [mymethod IdlePlot]
+                -applycommand [mymethod ApplyIdlePlot]
         ttk::spinbox $f.spnStep \
                 -textvariable [myvar raststep] \
                 -from 1 -to 100000 -increment 1 \
@@ -162,7 +162,7 @@ snit::type ::eaarl::raster::embed {
         ::mixin::revertable $f.spnPulse \
                 -command [list $f.spnPulse apply] \
                 -valuetype number \
-                -applycommand [mymethod IdlePlot]
+                -applycommand [mymethod ApplyIdlePlot]
         ttk::separator $f.sepPulse \
                 -orient vertical
         ttk::button $f.btnLims \
@@ -255,7 +255,7 @@ snit::type ::eaarl::raster::embed {
                 -command [mymethod plot]
         ttk::checkbutton $f.bathy -text "Show bathy" \
                 -variable [myvar options](-bathy) \
-                -command [mymethod plot]
+                -command [mymethod plot -autolims 0]
         foreach w [list $f.tx $f.bathy] {
             ::mixin::statevar $w \
                     -statemap {
@@ -269,10 +269,10 @@ snit::type ::eaarl::raster::embed {
         ttk::frame $f.fra2
         ttk::checkbutton $f.showcbar -text "Show colobar" \
                 -variable [myvar options](-showcbar) \
-                -command [mymethod plot]
+                -command [mymethod plot -autolims 0]
         ttk::checkbutton $f.usecmin -text "CMin:" \
                 -variable [myvar options](-usecmin) \
-                -command [mymethod plot]
+                -command [mymethod plot -autolims 0]
         ttk::spinbox $f.cmin \
                 -textvariable [myvar options](-cmin) \
                 -from 0 -to 255 -increment 1 \
@@ -283,10 +283,10 @@ snit::type ::eaarl::raster::embed {
         mixin::revertable $f.cmin \
                 -command [list $f.cmin apply] \
                 -valuetype number \
-                -applycommand [mymethod IdlePlot]
+                -applycommand [mymethod ApplyIdlePlot -autolims 0]
         ttk::checkbutton $f.usecmax -text "CMax:" \
                 -variable [myvar options](-usecmax) \
-                -command [mymethod plot]
+                -command [mymethod plot -autolims 0]
         ttk::spinbox $f.cmax \
                 -textvariable [myvar options](-cmax) \
                 -from 0 -to 255 -increment 1 \
@@ -297,7 +297,7 @@ snit::type ::eaarl::raster::embed {
         mixin::revertable $f.cmax \
                 -command [list $f.cmax apply] \
                 -valuetype number \
-                -applycommand [mymethod IdlePlot]
+                -applycommand [mymethod ApplyIdlePlot -autolims 0]
         pack $f.showcbar $f.usecmin $f.cmin $f.usecmax $f.cmax \
                 -in $f.fra2 -side left -padx 2
 
@@ -313,7 +313,7 @@ snit::type ::eaarl::raster::embed {
         mixin::revertable $f.rcfw \
                 -command [list $f.rcfw apply] \
                 -valuetype number \
-                -applycommand [mymethod IdlePlot]
+                -applycommand [mymethod ApplyIdlePlot -autolims 0]
         ttk::label $f.lbleoffset -text "Elev offset:"
         ttk::spinbox $f.eoffset \
                 -textvariable [myvar options](-eoffset) \
@@ -322,7 +322,7 @@ snit::type ::eaarl::raster::embed {
         mixin::revertable $f.eoffset \
                 -command [list $f.eoffset apply] \
                 -valuetype number \
-                -applycommand [mymethod IdlePlot]
+                -applycommand [mymethod ApplyIdlePlot -autolims 0]
         ::mixin::statevar $f.geo \
                 -statemap {0 disabled 1 normal 2 normal 3 normal 4 normal} \
                 -statevariable [myvar options](-channel)
@@ -361,8 +361,14 @@ snit::type ::eaarl::raster::embed {
         $self plot
     }
 
-    method IdlePlot {old new} {
-        ::misc::idle [mymethod plot]
+    method IdlePlot {args} {
+        ::misc::idle [mymethod plot {*}$args]
+    }
+
+    method ApplyIdlePlot {args} {
+        # skip the old, new args
+        set args [lrange $args 0 end-2]
+        ::misc::idle [mymethod plot {*}$args]
     }
 
     method TraceGeoOptState {old new op} {
@@ -396,7 +402,7 @@ snit::type ::eaarl::raster::embed {
                 $opts(-usecmin)     ", cmin=$opts(-cmin)" \
                 $opts(-usecmax)     ", cmax=$opts(-cmax)" \
                 $opts(-showcbar)    ", showcbar=1" \
-                $opts(-autolims)    ", autolims=1"
+                {!$opts(-autolims)} ", autolims=0"
         append cmd "; "
         return $cmd
     }
