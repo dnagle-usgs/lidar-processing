@@ -97,7 +97,7 @@ namespace eval ::eaarl::main::menu {
     proc menu_utilities mb {
         menu $mb
         $mb add command {*}[menulabel "Browse &Rasters"] \
-                -command ::eaarl::drast::gui
+                -command [list exp_send "show_rast, 1;\r"]
         $mb add command {*}[menulabel "Examine Pixels Settings"] \
                 -command ::l1pro::expix::gui
         $mb add separator
@@ -108,6 +108,16 @@ namespace eval ::eaarl::main::menu {
                 -command {exp_send "plot_no_raster_fltlines(gga, edb);\r"}
         $mb add command {*}[menulabel "S&how Flightlines with No TANS Data..."] \
                 -command {exp_send "plot_no_tans_fltlines(tans, gga);\r"}
+        $mb add separator
+        $mb add cascade {*}[menulabel "Deprecated"] \
+                -menu [menu_utilities_deprecated $mb.deprecated]
+        return $mb
+    }
+
+    proc menu_utilities_deprecated mb {
+        menu $mb
+        $mb add command {*}[menulabel "Old Browse Rasters"] \
+                -command ::eaarl::drast::gui
         return $mb
     }
 }
