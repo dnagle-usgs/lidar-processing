@@ -36,8 +36,7 @@ proc ::eaarl::sync::multicmd {args} {
         append cmd [::eaarl::bathconf::plotcmd $opts(-bathwin) {*}$chanopts]
     }
     if {$opts(-tx)} {
-        append cmd "show_wf_transmit, $opts(-raster),\
-                $opts(-pulse), win=$opts(-txwin); "
+        append cmd [::eaarl::transmit::plotcmd $opts(-txwin) {*}$baseopts]
     }
 
     return $cmd
