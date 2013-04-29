@@ -16,6 +16,7 @@ package require eaarl::rasters
 package require eaarl::rawwf
 package require eaarl::settings
 package require eaarl::sync
+package require eaarl::transmit
 package require eaarl::tscheck
 
 namespace eval ::eaarl {

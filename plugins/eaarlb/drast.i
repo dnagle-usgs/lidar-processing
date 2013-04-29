@@ -861,6 +861,12 @@ func show_wf_transmit(rast, pix, win=, xfma=) {
   wbkp = current_window();
   window, win;
 
+  cmd = swrite(format="::eaarl::transmit::config %d -pulse %d", win, pix);
+  if(!is_void(raster)) {
+    cmd += swrite(format=" -raster %d", raster);
+  }
+  tkcmd, cmd;
+
   if(xfma) fma;
 
   time = indgen(numberof(tx));
