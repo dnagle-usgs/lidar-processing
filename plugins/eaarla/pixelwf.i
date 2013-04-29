@@ -73,7 +73,8 @@ func expix_pixelwf_hook(env) {
   point = nearest.point;
 
   extern rn, pixelwfvars;
-  mission, load_soe_rn, point.soe, point.rn;
+  if(pixelwfvars.selection.missionload)
+    mission, load_soe_rn, point.soe, point.rn;
   rp = parse_rn(point.rn);
   channel = has_member(point, "channel") ? short(point.channel) : 0;
   h_set, pixelwfvars.selection, raster=rp(1), pulse=rp(2), channel=channel;
