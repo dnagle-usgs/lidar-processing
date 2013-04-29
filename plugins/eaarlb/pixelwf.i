@@ -10,21 +10,24 @@ if(is_void(pixelwfvars)) {
       pulse=1,
       missionday="",
       extended=0,
-      sfsync=0,
       missionload=1
+    ),
+    sync=h_new(
+      rast=1,
+      rastwin=11,
+      rawwf=1,
+      rawwfwin=9,
+      bath=0,
+      bathwin=8,
+      tx=0,
+      txwin=16,
+      sf=0
     ),
     fit_gauss=h_new(
       enabled=1,  //bool
       win=10,     //int
       add_peak=0, //int; num peaks to add
       verbose=0,  //bool
-      dest_action=0,
-      dest_variable=""
-    ),
-    ex_bath=h_new(
-      enabled=1,  //bool
-      win=0,      //int
-      verbose=0,
       dest_action=0,
       dest_variable=""
     ),
@@ -38,31 +41,6 @@ if(is_void(pixelwfvars)) {
       hard_surface=0,         //bool
       dest_action=0,
       dest_variable=""
-    ),
-    show_wf=h_new(
-      enabled=1,     //bool
-      win=9,
-      c1=1,          //bool; channel 1
-      c2=1,          //bool; channel 2
-      c3=1,          //bool; channel 3
-      c4=0           //bool; channel 4
-    ),
-    show_wf_transmit=h_new(
-      enabled=1,
-      win=18
-    ),
-    geo_rast=h_new(
-      enabled=1,  //bool
-      win=21,
-      eoffset=0.
-    ),
-    ndrast=h_new(
-      enabled=1,
-      win=11,
-      units="ns",
-      dest_action=0,
-      dest_variable="",
-      parent=0
     )
   );
 }
@@ -126,16 +104,35 @@ func expix_pixelwf_hook(env) {
 
 func pixelwf_plot(void) {
   extern pixelwfvars, edb;
-  fns = ["ex_bath", "ex_veg", "show_wf", "show_wf_transmit", "geo_rast",
-    "ndrast", "fit_gauss"];
-
-  for(i = 1; i <= numberof(fns); i++) {
-    if(pixelwfvars(fns(i)).enabled)
-      symbol_def(swrite(format="pixelwf_%s", fns(i)));
-  }
-
   tkcmd, swrite(format="::eaarl::pixelwf::mediator::broadcast_soe %.8f",
     edb.seconds(pixelwfvars.selection.raster)+edb.fseconds(pixelwfvars.selection.raster)*1.6e-6);
+
+  sync = pixelwfvars.sync;
+  sel = pixelwfvars.selection;
+
+  if(noneof([sync.rawwf, sync.rast, sync.bath, sync.tx]))
+    return;
+
+  cmd = swrite(format="::eaarl::sync::sendyorick plotcmd"
+    +" -raster %d -pulse %d", sel.raster, sel.pulse);
+  if(sel.channel)
+    cmd += swrite(format=" -channel %d", sel.channel);
+  if(sync.rawwf)
+    cmd += swrite(format=" -rawwf 1 -rawwfwin %d", sync.rawwfwin);
+  if(sync.rast)
+    cmd += swrite(format=" -rast 1 -rastwin %d", sync.rastwin);
+  if(sync.bath)
+    cmd += swrite(format=" -bath 1 -bathwin %d", sync.bathwin);
+  if(sync.tx)
+    cmd += swrite(format=" -tx 1 -txwin %d", sync.txwin);
+
+  scratch = save(scratch, plotcmd);
+  plotcmd = [];
+  tkcmd, cmd;
+  while(is_void(plotcmd)) pause, 1;
+  cmdf = include1(z_decompress(base64_decode(plotcmd)));
+  restore, scratch;
+  cmdf;
 }
 
 func pixelwf_handle_result(vars, result) {
@@ -169,23 +166,6 @@ func pixelwf_fit_gauss(void) {
   pixelwf_handle_result, vars, &result;
 }
 
-func pixelwf_ex_bath(void) {
-  extern pixelwfvars;
-  channel = pixelwfvars.selection.channel;
-  raster = pixelwfvars.selection.raster;
-  pulse = pixelwfvars.selection.pulse;
-  vars = pixelwfvars.ex_bath;
-  pixelwf_load_data;
-
-  if(!channel) channel = [];
-
-  win = current_window();
-  result = ex_bath(raster, pulse, win=vars.win, graph=1, xfma=1,
-    verbose=vars.verbose, forcechannel=channel);
-  pixelwf_handle_result, vars, result;
-  window_select, win;
-}
-
 func pixelwf_ex_veg(void) {
   extern pixelwfvars;
   channel = pixelwfvars.selection.channel;
@@ -203,65 +183,6 @@ func pixelwf_ex_veg(void) {
     forcechannel=channel);
   pixelwf_handle_result, vars, result;
   window_select, win;
-}
-
-func pixelwf_show_wf(void) {
-  extern pixelwfvars;
-  raster = pixelwfvars.selection.raster;
-  pulse = pixelwfvars.selection.pulse;
-  vars = pixelwfvars.show_wf;
-  pixelwf_load_data;
-
-  win = current_window();
-  show_wf, raster, pulse, win=vars.win, c1=vars.c1, c2=vars.c2, c3=vars.c3,
-    c4=vars.c4;
-  window_select, win;
-}
-
-func pixelwf_show_wf_transmit(void) {
-  extern pixelwfvars;
-  raster = pixelwfvars.selection.raster;
-  pulse = pixelwfvars.selection.pulse;
-  vars = pixelwfvars.show_wf_transmit;
-  pixelwf_load_data;
-
-  win = current_window();
-  show_wf_transmit, raster, pulse, win=vars.win;
-  window_select, win;
-}
-
-func pixelwf_geo_rast(void) {
-  extern pixelwfvars;
-  channel = pixelwfvars.selection.channel;
-  raster = pixelwfvars.selection.raster;
-  pulse = pixelwfvars.selection.pulse;
-  vars = pixelwfvars.geo_rast;
-  pixelwf_load_data;
-
-  channel = max(1, channel);
-
-  show_rast, raster, channel=channel, pulse=pulse, win=vars.win,
-    units=vars.units, geo=1, eoffset=vars.eoffset;
-}
-
-func pixelwf_ndrast(void) {
-  extern pixelwfvars, rn;
-  channel = pixelwfvars.selection.channel;
-  raster = pixelwfvars.selection.raster;
-  pulse = pixelwfvars.selection.pulse;
-  vars = pixelwfvars.ndrast;
-  pixelwf_load_data;
-  rn = raster;
-
-  channel = max(1, channel);
-
-  show_rast, raster, channel=channel, pulse=pulse, win=vars.win,
-    units=vars.units;
-
-  if(vars.dest_action) {
-    result = ndrast(raster, channel=channel, graph=0, sfsync=0);
-    pixelwf_handle_result, vars, result;
-  }
 }
 
 func pixelwf_set_soe(soe) {

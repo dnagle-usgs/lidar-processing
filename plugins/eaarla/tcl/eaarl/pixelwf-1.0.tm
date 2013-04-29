@@ -24,20 +24,23 @@ if {![namespace exists ::eaarl::pixelwf]} {
                 variable pulse 1
                 variable missionday {}
                 variable extended 0
-                variable sfsync 0
                 variable missionload 1
+            }
+            namespace eval sync {
+                variable rast 1
+                variable rastwin 11
+                variable rawwf 1
+                variable rawwfwin 9
+                variable bath 0
+                variable bathwin 8
+                variable tx 0
+                variable txwin 16
+                variable sf 0
             }
             namespace eval fit_gauss {
                 variable enabled 0
                 variable win 10
                 variable add_peak 0
-                variable verbose 0
-                variable dest_action 0
-                variable dest_variable ""
-            }
-            namespace eval ex_bath {
-                variable enabled 0
-                variable win 8
                 variable verbose 0
                 variable dest_action 0
                 variable dest_variable ""
@@ -53,30 +56,6 @@ if {![namespace exists ::eaarl::pixelwf]} {
                 variable dest_action 0
                 variable dest_variable ""
             }
-            namespace eval show_wf {
-                variable enabled 1
-                variable win 9
-                variable c1 1
-                variable c2 1
-                variable c3 1
-                variable c4 0
-            }
-            namespace eval show_wf_transmit {
-                variable enabled 0
-                variable win 18
-            }
-            namespace eval geo_rast {
-                variable enabled 0
-                variable win 21
-                variable eoffset 0
-            }
-            namespace eval ndrast {
-                variable enabled 1
-                variable win 11
-                variable units ns
-                variable dest_action 0
-                variable dest_variable ""
-            }
             # Backup all the variables we just created...
             variable defaults {}
             foreach ns [namespace children [namespace current]] {
@@ -88,12 +67,7 @@ if {![namespace exists ::eaarl::pixelwf]} {
         namespace eval gui {
             variable widgets_tied_to_enabled {
                 fit_gauss {}
-                ex_bath {}
                 ex_veg {}
-                show_wf {}
-                show_wf_transmit {}
-                geo_rast {}
-                ndrast {}
             }
             variable missionday_list {}
         }
@@ -101,11 +75,12 @@ if {![namespace exists ::eaarl::pixelwf]} {
             # valid_ranges is a dict. It is used to apply bounding ranges on
             # variables using constrain.
             #
-            # Keys into valid_ranges are the ranges, as a two-element list of {min
-            # max}; optionally, a third element can be included which is the step
-            # to use in between items when creating spinboxes (default: 1). Values
-            # are themselves dicts, whose keys are namespaces and whose values are
-            # lists of variables in those namespaces that need the range applied.
+            # Keys into valid_ranges are the ranges, as a two-element list of
+            # {min max}; optionally, a third element can be included which is
+            # the step to use in between items when creating spinboxes
+            # (default: 1). Values are themselves dicts, whose keys are
+            # namespaces and whose values are lists of variables in those
+            # namespaces that need the range applied.
             variable valid_ranges {
                 {1 100000000} {
                     selection raster
@@ -116,12 +91,8 @@ if {![namespace exists ::eaarl::pixelwf]} {
                 {0 5} {fit_gauss add_peak}
                 {0 63} {
                     fit_gauss win
-                    ex_bath win
                     ex_veg win
-                    show_wf win
-                    show_wf_transmit win
-                    geo_rast win
-                    ndrast win
+                    sync {rawwfwin rastwin bathwin txwin}
                 }
                 {-1000 1000 0.01} {geo_rast eoffset}
                 {0.01 100 0.5} {selection}
@@ -135,23 +106,16 @@ if {![namespace exists ::eaarl::pixelwf]} {
             # applied.
             variable valid_values {
                 {0 1} {
-                    selection {background extended sfsync missionload}
+                    selection {background extended missionload}
                     fit_gauss {enabled verbose}
-                    ex_bath {enabled verbose}
                     ex_veg {enabled verbose use_be_peak use_be_centroid \
                             hard_surface}
-                    show_wf {enabled c1 c2 c3 c4}
-                    show_wf {enabled}
-                    geo_rast {enabled}
-                    ndrast {enabled}
+                    sync {rawwf rast bath tx sf}
                 }
                 {0 1 2} {
                     fit_gauss dest_action
-                    ex_bath dest_action
                     ex_veg dest_action
-                    ndrast dest_action
                 }
-                {meters ns feet} {ndrast units}
             }
             # output_possibilities is a list specifying the options that can be
             # used for the output of various panels
@@ -169,10 +133,7 @@ if {![namespace exists ::eaarl::pixelwf]} {
 
     # Keep Yorick updated for all variables in the specified namespaces
     namespace eval ::eaarl::pixelwf::vars {
-        foreach ns {
-            selection fit_gauss ex_bath ex_veg show_wf show_wf_transmit
-            geo_rast ndrast
-        } {
+        foreach ns {selection sync fit_gauss ex_veg} {
             foreach var [info vars ${ns}::*] {
                 set var [namespace tail $var]
                 tky_tie add broadcast ${ns}::$var to pixelwfvars.$ns.$var \
@@ -264,17 +225,17 @@ namespace eval ::eaarl::pixelwf::gui {
     proc set_default_enabled {} {
         set ns ::eaarl::pixelwf::vars
         set ${ns}::fit_gauss::enabled 0
-        set ${ns}::show_wf::enabled 1
-        set ${ns}::show_wf_transmit::enabled 0
-        set ${ns}::geo_rast::enabled 0
-        set ${ns}::ndrast::enabled 1
+        #set ${ns}::show_wf::enabled 1
+        #set ${ns}::show_wf_transmit::enabled 0
+        #set ${ns}::geo_rast::enabled 0
+        #set ${ns}::ndrast::enabled 1
         # We're currently not changing behavior based on data mode, but this
         # logic is left in place in case we want to again in the future.
         if {$::plot_settings(display_mode) eq "ba"} {
-            set ${ns}::ex_bath::enabled 0
+            #set ${ns}::ex_bath::enabled 0
             set ${ns}::ex_veg::enabled 0
         } else {
-            set ${ns}::ex_bath::enabled 0
+            #set ${ns}::ex_bath::enabled 0
             set ${ns}::ex_veg::enabled 0
         }
     }
@@ -290,19 +251,20 @@ namespace eval ::eaarl::pixelwf::gui {
         selection $childsite
         grid $childsite -sticky news
 
+        set f $w.lfr_sync
+        ttk::labelframe $f -text Sync
+        add_panel $f
+
+        set childsite $f.child
+        sync $childsite
+        grid $childsite -sticky news
+
         set titles {
             fit_gauss "Gaussian Decomposition"
-            ex_bath "Bathy Functionality"
             ex_veg "Topo Under Veg"
-            show_wf "Raw Waveform"
-            show_wf_transmit "Transmit Waveform"
-            geo_rast "Georeferenced Raster"
-            ndrast "Unreferenced Raster"
         }
 
-        foreach type {
-            fit_gauss ex_bath ex_veg show_wf show_wf_transmit ndrast geo_rast
-        } {
+        foreach type {fit_gauss ex_veg} {
             set f $w.lfr_$type
             ::mixin::labelframe::collapsible $f \
                     -text "Enable [dict get $titles $type]" \
@@ -340,7 +302,6 @@ namespace eval ::eaarl::pixelwf::gui {
         ttk::spinbox $f.spnWindow -text Window: -textvariable ::win_no \
                 -from 0 -to 63 -increment 1 -width 0
 
-        ttk::checkbutton $f.chkSync -text "Sync" -variable ${ns}::sfsync
         ttk::checkbutton $f.chkExt -text "Extended output" \
                 -variable ${ns}::extended
         ttk::checkbutton $f.chkLoad -text "Auto load mission data" \
@@ -378,7 +339,7 @@ namespace eval ::eaarl::pixelwf::gui {
         grid $f.lblFlight $f.cboFlight - -
         grid $f.lblChannel $f.spnChannel $f.lblWindow $f.spnWindow
         grid $f.lblRaster  $f.spnRaster  $f.lblPulse  $f.spnPulse
-        grid $f.chkExt - $f.chkSync -
+        grid $f.chkExt - - -
         grid $f.chkLoad - - -
         grid $f.chkBg - - -
         grid x x $f.btnGraph -
@@ -387,10 +348,42 @@ namespace eval ::eaarl::pixelwf::gui {
                 $f.lblFlight $f.cboFlight \
                 $f.lblChannel $f.spnChannel \
                 $f.lblRaster $f.spnRaster $f.lblPulse $f.spnPulse \
-                $f.lblWindow $f.spnWindow $f.chkSync \
+                $f.lblWindow $f.spnWindow \
                 $f.btnGraph \
                 $f.chkExt $f.chkLoad $f.chkBg
 
+        grid columnconfigure $f {0 2} -weight 0 -uniform 2
+        grid columnconfigure $f {1 3} -weight 1 -uniform 1
+    }
+
+    proc sync {f} {
+        set ns ::eaarl::pixelwf::vars::sync
+        ttk::frame $f
+
+        foreach type {rast rawwf bath tx} {
+            set name [string totitle $type]
+            ttk::checkbutton $f.chk$name \
+                    -text ${name}: \
+                    -variable ${ns}::$type
+            ttk::spinbox $f.spn$name \
+                    -width 2 \
+                    -from 0 -to 63 -increment 1 \
+                    -textvariable ${ns}::${type}win
+            mixin::statevar $f.spn$name \
+                    -statemap {0 disabled 1 normal} \
+                    -statevariable ${ns}::$type
+        }
+        $f.chkRawwf configure -text "Raw WF:"
+        ttk::checkbutton $f.chkSf \
+                -text "SF Viewer" \
+                -variable ${ns}::sf
+        grid $f.chkRast $f.spnRast $f.chkBath $f.spnBath
+        grid $f.chkRawwf $f.spnRawwf $f.chkTx $f.spnTx
+        grid $f.chkSf - x x
+        default_sticky \
+            $f.chkRast $f.spnRast $f.chkBath $f.spnBath \
+            $f.chkRawwf $f.spnRawwf $f.chkTx $f.spnTx \
+            $f.chkSf
         grid columnconfigure $f {0 2} -weight 0 -uniform 2
         grid columnconfigure $f {1 3} -weight 1 -uniform 1
     }
@@ -421,43 +414,6 @@ namespace eval ::eaarl::pixelwf::gui {
 
         grid columnconfigure $f {0 2} -weight 0 -uniform 2
         grid columnconfigure $f {1 3} -weight 1 -uniform 1
-    }
-
-    proc ex_bath f {
-        set ns ::eaarl::pixelwf::vars::ex_bath
-
-        ttk::label $f.lblWindow -text Window:
-        helper_spinbox $f.spnWindow ${ns}::win
-
-        helper_output_dest $f.cboAction $f.entVariable $ns
-
-        ttk::checkbutton $f.chkVerbose -text Verbose -variable ${ns}::verbose
-        ttk::button $f.btnBathctl -text Settings -command bathctl::gui
-        ttk::button $f.btnGraph -text Plot \
-                -command [list [namespace current]::yorcmd pixelwf_ex_bath]
-
-        ttk::frame $f.fraBtns
-        lower $f.fraBtns
-        grid $f.btnBathctl $f.btnGraph -in $f.fraBtns
-        grid columnconfigure $f.fraBtns 0 -weight 1
-
-        ttk::frame $f.fraBottom
-        lower $f.fraBottom
-        grid $f.chkVerbose $f.fraBtns -in $f.fraBottom
-        grid columnconfigure $f.fraBottom 0 -weight 1
-
-        grid $f.lblWindow $f.spnWindow
-        grid $f.cboAction $f.entVariable
-        grid $f.fraBottom - -sticky ew
-
-        grid $f.fraBtns -sticky se
-
-        default_sticky \
-                $f.lblWindow $f.spnWindow \
-                $f.cboAction $f.entVariable \
-                $f.chkVerbose $f.btnGraph $f.btnBathctl
-
-        grid columnconfigure $f {0 1} -weight 1 -uniform 1
     }
 
     proc ex_veg f {
@@ -502,115 +458,17 @@ namespace eval ::eaarl::pixelwf::gui {
         grid columnconfigure $f {0 2} -weight 0 -uniform 2
         grid columnconfigure $f {1 3} -weight 1 -uniform 1
     }
-
-    proc show_wf f {
-        set ns ::eaarl::pixelwf::vars::show_wf
-
-        ttk::label $f.lblWindow -text Window:
-        helper_spinbox $f.spnWindow ${ns}::win
-
-        ttk::checkbutton $f.chkC1 -text c1 -variable ${ns}::c1
-        ttk::checkbutton $f.chkC2 -text c2 -variable ${ns}::c2
-        ttk::checkbutton $f.chkC3 -text c3 -variable ${ns}::c3
-        ttk::checkbutton $f.chkC4 -text c4 -variable ${ns}::c4
-
-        ttk::button $f.btnGraph -text Plot \
-                -command [list [namespace current]::yorcmd pixelwf_show_wf]
-
-        ttk::frame $f.fraC
-        lower $f.fraC
-        grid $f.chkC1 $f.chkC2 $f.chkC3 $f.chkC4 -in $f.fraC
-        grid columnconfigure $f.fraC 2 -weight 1
-
-        grid $f.lblWindow $f.spnWindow
-        grid $f.fraC $f.btnGraph
-
-        default_sticky \
-                $f.lblWindow $f.spnWindow \
-                $f.fraC $f.btnGraph
-
-        grid columnconfigure $f 1 -weight 1
-    }
-
-    proc show_wf_transmit f {
-        set ns ::eaarl::pixelwf::vars::show_wf_transmit
-
-        ttk::label $f.lblWindow -text Window:
-        helper_spinbox $f.spnWindow ${ns}::win
-
-        ttk::button $f.btnGraph -text Plot \
-                -command [list [namespace current]::yorcmd pixelwf_show_wf_transmit]
-
-        grid $f.lblWindow $f.spnWindow
-        grid x $f.btnGraph
-
-        default_sticky \
-                $f.lblWindow $f.spnWindow \
-                $f.btnGraph
-
-        grid columnconfigure $f 1 -weight 1
-    }
-
-    proc geo_rast f {
-        set ns ::eaarl::pixelwf::vars::geo_rast
-
-        ttk::label $f.lblWindow -text Window:
-        helper_spinbox $f.spnWindow ${ns}::win
-
-        ttk::label $f.lblEOff -text eoffset:
-        helper_spinbox $f.spnEOff ${ns}::eoffset
-
-        ttk::button $f.btnGraph -text Plot \
-                -command [list [namespace current]::yorcmd pixelwf_geo_rast]
-
-        grid $f.lblWindow $f.spnWindow $f.lblEOff $f.spnEOff
-        grid x x $f.btnGraph -
-
-        default_sticky \
-                $f.lblWindow $f.spnWindow $f.lblEOff $f.spnEOff \
-                $f.btnGraph
-
-        grid columnconfigure $f {0 2} -weight 0 -uniform 2
-        grid columnconfigure $f {1 3} -weight 1 -uniform 1
-    }
-
-    proc ndrast f {
-        set ns ::eaarl::pixelwf::vars::ndrast
-
-        ttk::label $f.lblWindow -text Window:
-        helper_spinbox $f.spnWindow ${ns}::win
-
-        ttk::label $f.lblUnits -text Units:
-        helper_combobox $f.cboUnits ${ns}::units
-
-        helper_output_dest $f.cboAction $f.entVariable $ns
-
-        ttk::button $f.btnGraph -text Plot \
-                -command [list [namespace current]::yorcmd pixelwf_ndrast]
-
-        grid $f.lblWindow $f.spnWindow $f.lblUnits $f.cboUnits
-        grid $f.cboAction - $f.entVariable -
-        grid $f.btnGraph - - -
-
-        default_sticky \
-                $f.lblWindow $f.spnWindow $f.lblUnits $f.cboUnits \
-                $f.cboAction $f.entVariable \
-                $f.btnGraph
-
-        grid columnconfigure $f {0 2} -weight 0 -uniform 2
-        grid columnconfigure $f {1 3} -weight 1 -uniform 1
-    }
 }
 
 namespace eval ::eaarl::pixelwf::mediator {
    proc jump_soe soe {
-      if {$::eaarl::pixelwf::vars::selection::sfsync} {
+      if {$::eaarl::pixelwf::vars::sync::sf} {
          ybkg pixelwf_set_soe $soe
       }
    }
 
    proc broadcast_soe soe {
-      if {$::eaarl::pixelwf::vars::selection::sfsync} {
+      if {$::eaarl::pixelwf::vars::sync::sf} {
          ::sf::mediator broadcast soe $soe \
                 -exclude [list ::eaarl::pixelwf::mediator::jump_soe]
       }
