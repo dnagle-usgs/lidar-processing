@@ -230,6 +230,13 @@ snit::type ::eaarl::raster::embed {
                 -width 0 \
                 -command [mymethod examine browse]
         pack $f.btnBrowse $f.btnSelect -side right
+
+        tooltip $f.btnSelect \
+                "Allows you to click on the plot once to select a waveform to
+                view in the synced windows."
+        tooltip $f.btnBrowse \
+                "Allows you to click on the plot multiple times to select
+                waveforms to view in the synced windows."
     }
 
     method Gui_settings {f} {
