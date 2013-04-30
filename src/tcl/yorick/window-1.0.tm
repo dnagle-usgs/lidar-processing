@@ -107,6 +107,8 @@ snit::widget ::yorick::window::embedded {
     # Calling code looking to embed stuff into the window should always call
     # clear_gui first to make sure it's working with a clean slate
     method clear_gui {} {
+        $self configure -resizecmd ""
+
         # Hook to allow the owner the chance to clean up after itself if needed
         if {$options(-owner) ne ""} {
             catch [list $options(-owner) clear_gui]
