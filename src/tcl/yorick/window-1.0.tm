@@ -115,6 +115,14 @@ snit::widget ::yorick::window::embedded {
             set options(-owner) ""
         }
 
+        wm title $win "Window $options(-window)"
+
+        $self reset_gui
+    }
+
+    # Calling code can call this to reset the GUI -without- clearing its
+    # ownership or title.
+    method reset_gui {} {
         foreach f [list $bottom $left $right] {
             destroy $f
             ttk::frame $f
@@ -123,7 +131,6 @@ snit::widget ::yorick::window::embedded {
         grid forget $plot
         grid $left $plot   $right -sticky news
         grid ^     $bottom ^      -sticky news
-        wm title $win "Window $options(-window)"
     }
 
     # The width/height used here should be the same as the width/height used in
