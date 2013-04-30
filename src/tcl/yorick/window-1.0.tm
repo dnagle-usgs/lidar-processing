@@ -48,6 +48,7 @@ snit::widget ::yorick::window::embedded {
     option -style -default "work.gs" -configuremethod SetStyleDpi
     option -dpi -default 75 -configuremethod SetStyleDpi
     option -owner ""
+    option -resizecmd ""
 
     # plot is the frame where the Yorick window will get embedded
     component plot
@@ -134,16 +135,20 @@ snit::widget ::yorick::window::embedded {
         set options($option) $value
         if {$options(-style) eq "landscape11x85.gs"} {
             if {$options(-dpi) == 75} {
-                $plot configure -width 825 -height 661
+                lassign {825 661} width height
             } else {
-                $plot configure -width 1100 -height 873
+                lassign {1100 873} width height
             }
         } else {
             if {$options(-dpi) == 75} {
-                $plot configure -width 450 -height 473
+                lassign {450 473} width height
             } else {
-                $plot configure -width 600 -height 623
+                lassign {600 623} width height
             }
+        }
+        $plot configure -width $width -height $height
+        if {$options(-resizecmd) ne ""} {
+            {*}$options(-resizecmd) $width $height
         }
     }
 }
