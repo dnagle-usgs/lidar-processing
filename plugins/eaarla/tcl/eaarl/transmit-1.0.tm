@@ -62,6 +62,9 @@ snit::type ::eaarl::transmit::embed {
     variable bathy_plot 0
     variable bathy_win 8
 
+    # The current window width
+    variable win_width 450
+
     constructor {args} {
         if {[dict exist $args -window]} {
             set win [dict get $args -window]
@@ -75,7 +78,25 @@ snit::type ::eaarl::transmit::embed {
         set pane [$window pane bottom]
 
         $self Gui
+        $window configure -resizecmd [mymethod Resize]
+
         $self configure {*}$args
+    }
+
+    method Resize {width height} {
+        if {$width == $win_width} return
+
+        set win_width $width
+
+        pack forget $pane.browse $pane.sync
+        if {$win_width > 600} {
+            pack $pane.browse $pane.sync \
+                -side left -fill x
+            pack configure $pane.browse -expand 1
+        } else {
+            pack $pane.browse $pane.sync \
+                -side top -fill x -expand 1
+        }
     }
 
     method Gui {} {
