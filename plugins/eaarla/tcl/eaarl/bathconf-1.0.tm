@@ -99,8 +99,6 @@ snit::type ::eaarl::bathconf::embed {
     # Empty variable. Used for controls when they're disabled. Keep empty.
     variable empty ""
 
-    variable show_browse 1
-
     variable raster_plot 0
     variable raster_win 11
     variable rawwf_plot 0
@@ -110,6 +108,9 @@ snit::type ::eaarl::bathconf::embed {
 
     # Step amount for raster stepping
     variable raststep 2
+
+    # The current window width
+    variable win_width 450
 
     constructor {args} {
         if {[dict exist $args -window]} {
@@ -124,7 +125,24 @@ snit::type ::eaarl::bathconf::embed {
         set pane [$window pane bottom]
 
         $self Gui
+        $window configure -resizecmd [mymethod Resize]
+
         $self configure {*}$args
+    }
+
+    method Resize {width height} {
+        if {$width == $win_width} return
+
+        set win_width $width
+
+        $window reset_gui
+
+        if {$win_width > 600} {
+            set pane [$window pane right]
+        } else {
+            set pane [$window pane bottom]
+        }
+        $self Gui
     }
 
     method Gui {} {
@@ -140,18 +158,13 @@ snit::type ::eaarl::bathconf::embed {
 
         # Create GUI
         set sections [list]
-        if {$show_browse} {
-            lappend sections browse
-        }
-        lappend sections sync
-        lappend sections settings
-        foreach section $sections {
+        foreach section {browse sync settings} {
             ttk::frame $pane.$section \
                     -relief ridge \
                     -borderwidth 1 \
                     -padding 1
             $self Gui_$section $pane.$section
-            pack $pane.$section -side top -fill x -expand 1
+            pack $pane.$section -side top -fill x
         }
 
         $self UpdateGroup 1
@@ -219,16 +232,49 @@ snit::type ::eaarl::bathconf::embed {
                 -width 0 \
                 -command [mymethod plot]
 
-        pack $f.lblChan $f.cboChan \
-                $f.sepChan \
-                $f.lblRast $f.spnRast $f.spnStep $f.btnRastPrev $f.btnRastNext \
-                $f.sepRast \
-                $f.lblPulse $f.spnPulse \
-                $f.sepPulse \
-                $f.btnLims $f.btnReplot \
-                -side left
-        pack $f.spnRast -fill x -expand 1
-        pack $f.sepChan $f.sepRast $f.sepPulse -fill y -padx 2
+        if {$win_width > 600} {
+            $f.sepRast configure -orient horizontal
+
+            lower [ttk::frame $f.fra1]
+            pack $f.lblRast $f.spnRast $f.spnStep $f.btnRastPrev \
+                    $f.btnRastNext \
+                    -in $f.fra1 -side left -fill x
+            pack $f.spnRast -fill x -expand 1
+
+            lower [ttk::frame $f.fra2]
+            pack $f.lblChan $f.cboChan \
+                    $f.sepChan \
+                    $f.lblPulse $f.spnPulse \
+                    -in $f.fra2 -side left -fill x
+            pack $f.spnPulse -fill x -expand 1
+            pack $f.sepChan -fill y -padx 2
+
+            lower [ttk::frame $f.fra3]
+            pack $f.fra1 $f.sepRast $f.fra2 \
+                    -in $f.fra3 -side top -fill x -expand 1
+            pack $f.sepRast -pady 2
+
+            lower [ttk::frame $f.fra4]
+            pack $f.btnLims $f.btnReplot \
+                    -in $f.fra4 -side top
+
+            pack $f.fra3 $f.sepPulse $f.fra4 \
+                    -side left -fill y
+            pack $f.sepPulse -padx 2
+            pack $f.fra3 -fill both -expand 1
+        } else {
+            pack $f.lblChan $f.cboChan \
+                    $f.sepChan \
+                    $f.lblRast $f.spnRast $f.spnStep $f.btnRastPrev \
+                        $f.btnRastNext \
+                    $f.sepRast \
+                    $f.lblPulse $f.spnPulse \
+                    $f.sepPulse \
+                    $f.btnLims $f.btnReplot \
+                    -side left
+            pack $f.spnRast -fill x -expand 1
+            pack $f.sepChan $f.sepRast $f.sepPulse -fill y -padx 2
+        }
 
         lappend controls $f.cboChan $f.spnRast $f.spnStep $f.btnRastPrev \
                 $f.btnRastNext $f.spnPulse $f.btnLims $f.btnReplot
@@ -249,10 +295,9 @@ snit::type ::eaarl::bathconf::embed {
     method Gui_sync {f} {
         foreach type {raster rawwf transmit} {
             set name [string totitle $type]
-            ttk::checkbutton $f.lbl$name \
+            ttk::checkbutton $f.chk$name \
                     -text ${name}: \
                     -variable [myvar ${type}_plot]
-            pack $f.lbl$name -side left
     
             ttk::spinbox $f.spn$name \
                     -width 2 \
@@ -261,9 +306,20 @@ snit::type ::eaarl::bathconf::embed {
             ::mixin::statevar $f.spn$name \
                     -statemap {0 disabled 1 normal} \
                     -statevariable [myvar ${type}_plot]
-            pack $f.spn$name -side left -padx {0 1}
+
+            if {$win_width > 600} {
+                grid $f.chk$name $f.spn$name -sticky ew
+                grid $f.chk$name -sticky w
+            } else {
+                pack $f.chk$name -side left
+                pack $f.spn$name -side left -padx {0 1}
+            }
         }       
-        $f.lblRawwf configure -text "Raw WF"
+        $f.chkRawwf configure -text "Raw WF"
+        if {$win_width > 600} {
+            grid columnconfigure $f 0 -weight 2 -uniform 1
+            grid columnconfigure $f 1 -weight 3 -uniform 1
+        }
     }
 
     method Gui_settings {f} {
@@ -300,12 +356,18 @@ snit::type ::eaarl::bathconf::embed {
         pack $f.cboProfile -in $f.fra2 -side left -fill x -expand 1
 
         lower [ttk::frame $f.fra3]
-        grid $f.fra1 $f.fra2 $f.btnAdd $f.btnRem $f.mnuTools \
-                -in $f.fra3 -sticky news
-        grid $f.mnuTools -padx {4 0}
-        grid columnconfigure $f.fra3 {0 1} -weight 1 -uniform 1
+        pack $f.btnAdd $f.btnRem -in $f.fra3 -side left
+        pack $f.mnuTools -in $f.fra3 -side right -padx {4 0}
 
-        pack $f.fra3 -side top -fill both -expand 1
+        if {$win_width > 600} {
+            pack $f.fra1 $f.fra2 $f.fra3 -side top -fill x
+        } else {
+            lower [ttk::frame $f.fra4]
+            grid $f.fra1 $f.fra2 $f.fra3 -in $f.fra4 -sticky news
+            grid columnconfigure $f.fra4 {0 1} -weight 1 -uniform 1
+
+            pack $f.fra4 -side top -fill both -expand 1
+        }
 
         foreach {cmd desc} {
             surfsat "Surface, Saturation, and Smoothing"
@@ -317,6 +379,10 @@ snit::type ::eaarl::bathconf::embed {
             ::mixin::labelframe::collapsible $path -text $desc
             $self Gui_settings_${cmd} [$path interior]
             pack $path -side top -fill x
+        }
+
+        if {$win_width > 600} {
+            $f.lfrsurfsat configure -text "Surface, Sat, and Smoothing"
         }
 
         lappend controls $f.cboProfile $f.btnAdd $f.btnRem $f.mnuTools
@@ -357,9 +423,20 @@ snit::type ::eaarl::bathconf::embed {
                 -command [list $f.spnSmo apply] \
                 -valuetype number
 
-        pack $f.lblSat $f.spnSat $f.lblSfc $f.spnSfc \
-                $f.lblSmo $f.spnSmo \
-                -side left
+        if {$win_width > 600} {
+            grid $f.lblSat $f.spnSat
+            grid $f.lblSfc $f.spnSfc
+            grid $f.lblSmo $f.spnSmo
+
+            grid $f.lblSat $f.lblSfc $f.lblSmo -sticky e
+            grid $f.spnSat $f.spnSfc $f.spnSmo -sticky ew
+            grid columnconfigure $f 0 -weight 2 -uniform 1
+            grid columnconfigure $f 1 -weight 3 -uniform 1
+        } else {
+            pack $f.lblSat $f.spnSat $f.lblSfc $f.spnSfc \
+                    $f.lblSmo $f.spnSmo \
+                    -side left
+        }
 
         lappend controls $f.spnSat $f.spnSfc $f.spnSmo
         dict set wantsetting $f.spnSat maxsat
@@ -425,9 +502,21 @@ snit::type ::eaarl::bathconf::embed {
                 -command [list $f.spnAgc apply] \
                 -valuetype number
 
-        pack $f.lblType $f.cboType $f.lblLaser $f.spnLaser \
-                $f.lblWater $f.spnWater $f.lblAgc $f.spnAgc \
-                -side left
+        if {$win_width > 600} {
+            grid $f.lblType $f.cboType
+            grid $f.lblLaser $f.spnLaser
+            grid $f.lblWater $f.spnWater
+            grid $f.lblAgc $f.spnAgc
+
+            grid $f.lblType $f.lblLaser $f.lblWater $f.lblAgc -sticky e
+            grid $f.cboType $f.spnLaser $f.spnWater $f.spnAgc -sticky ew
+            grid columnconfigure $f 0 -weight 2 -uniform 1
+            grid columnconfigure $f 1 -weight 3 -uniform 1
+        } else {
+            pack $f.lblType $f.cboType $f.lblLaser $f.spnLaser \
+                    $f.lblWater $f.spnWater $f.lblAgc $f.spnAgc \
+                    -side left
+        }
 
         lappend controls $f.cboType $f.spnLaser $f.spnWater $f.spnAgc
         dict set wantsetting $f.cboType decay
@@ -537,15 +626,32 @@ snit::type ::eaarl::bathconf::embed {
                 -command [list $f.spnTie apply] \
                 -valuetype number
 
-        lower [ttk::frame $f.fra1]
-        pack $f.lblType $f.cboType $f.lblMean $f.spnMean $f.lblStd \
-                $f.spnStd $f.lblAgc $f.spnAgc \
-                -in $f.fra1 -side left
-        lower [ttk::frame $f.fra2]
-        pack $f.lblXsh $f.spnXsh $f.lblXsc $f.spnXsc $f.lblTie $f.spnTie \
-                -in $f.fra2 -side left
+        if {$win_width > 600} {
+            grid $f.lblType $f.cboType
+            grid $f.lblMean $f.spnMean
+            grid $f.lblStd $f.spnStd
+            grid $f.lblAgc $f.spnAgc
+            grid $f.lblXsh $f.spnXsh
+            grid $f.lblXsc $f.spnXsc
+            grid $f.lblTie $f.spnTie
 
-        pack $f.fra1 $f.fra2 -side top -anchor w
+            grid $f.lblType $f.lblMean $f.lblStd $f.lblAgc $f.lblXsh \
+                    $f.lblXsc $f.lblTie -sticky e
+            grid $f.cboType $f.spnMean $f.spnStd $f.spnAgc $f.spnXsh \
+                    $f.spnXsc $f.spnTie -sticky ew
+            grid columnconfigure $f 0 -weight 2 -uniform 1
+            grid columnconfigure $f 1 -weight 3 -uniform 1
+        } else {
+            lower [ttk::frame $f.fra1]
+            pack $f.lblType $f.cboType $f.lblMean $f.spnMean $f.lblStd \
+                    $f.spnStd $f.lblAgc $f.spnAgc \
+                    -in $f.fra1 -side left
+            lower [ttk::frame $f.fra2]
+            pack $f.lblXsh $f.spnXsh $f.lblXsc $f.spnXsc $f.lblTie $f.spnTie \
+                    -in $f.fra2 -side left
+
+            pack $f.fra1 $f.fra2 -side top -anchor w
+        }
 
         lappend controls $f.cboType $f.spnMean $f.spnStd $f.spnAgc \
                 $f.spnXsh $f.spnXsc $f.spnTie
@@ -621,9 +727,20 @@ snit::type ::eaarl::bathconf::embed {
                 -command [list $f.spnThresh apply] \
                 -valuetype number
 
-        pack $f.lblFirst $f.spnFirst $f.lblLast $f.spnLast \
-                $f.lblThresh $f.spnThresh \
-                -side left
+        if {$win_width > 600} {
+            grid $f.lblFirst $f.spnFirst
+            grid $f.lblLast $f.spnLast
+            grid $f.lblThresh $f.spnThresh
+
+            grid $f.lblFirst $f.lblLast $f.lblThresh -sticky e
+            grid $f.spnFirst $f.spnLast $f.spnThresh -sticky ew
+            grid columnconfigure $f 0 -weight 2 -uniform 1
+            grid columnconfigure $f 1 -weight 3 -uniform 1
+        } else {
+            pack $f.lblFirst $f.spnFirst $f.lblLast $f.spnLast \
+                    $f.lblThresh $f.spnThresh \
+                    -side left
+        }
 
         lappend controls $f.spnFirst $f.spnLast $f.spnThresh
         dict set wantsetting $f.spnFirst first
@@ -644,7 +761,6 @@ snit::type ::eaarl::bathconf::embed {
     }
 
     method Gui_settings_validate {f} {
-        ttk::label $f.lblLeft -text "Left Dist/Factor:"
         ttk::spinbox $f.spnLeftDist \
                 -from 1 -to 100 -increment 1 \
                 -width 4
@@ -657,7 +773,7 @@ snit::type ::eaarl::bathconf::embed {
         ::mixin::revertable $f.spnLeftFact \
                 -command [list $f.spnLeftFact apply] \
                 -valuetype number
-        ttk::label $f.lblRight -text "Right Dist/Factor:"
+
         ttk::spinbox $f.spnRightDist \
                 -from 1 -to 100 -increment 1 \
                 -width 4
@@ -671,9 +787,30 @@ snit::type ::eaarl::bathconf::embed {
                 -command [list $f.spnRightFact apply] \
                 -valuetype number
 
-        pack $f.lblLeft $f.spnLeftDist $f.spnLeftFact \
-                $f.lblRight $f.spnRightDist $f.spnRightFact \
-                -side left
+        if {$win_width > 600} {
+            ttk::label $f.lblLeftDist -text "Left Dist:"
+            ttk::label $f.lblLeftFact -text "Left Factor:"
+            ttk::label $f.lblRightDist -text "Right Dist:"
+            ttk::label $f.lblRightFact -text "Right Factor:"
+
+            grid $f.lblLeftDist $f.spnLeftDist
+            grid $f.lblLeftFact $f.spnLeftFact
+            grid $f.lblRightDist $f.spnRightDist
+            grid $f.lblRightFact $f.spnRightFact
+
+            grid $f.lblLeftDist $f.lblLeftFact $f.lblRightDist \
+                    $f.lblRightFact -sticky e
+            grid $f.spnLeftDist $f.spnLeftFact $f.spnRightDist \
+                    $f.spnRightFact -sticky ew
+            grid columnconfigure $f 0 -weight 2 -uniform 1
+            grid columnconfigure $f 1 -weight 3 -uniform 1
+        } else {
+            ttk::label $f.lblLeft -text "Left Dist/Factor:"
+            ttk::label $f.lblRight -text "Right Dist/Factor:"
+            pack $f.lblLeft $f.spnLeftDist $f.spnLeftFact \
+                    $f.lblRight $f.spnRightDist $f.spnRightFact \
+                    -side left
+        }
 
         lappend controls $f.spnLeftDist $f.spnLeftFact \
                 $f.spnRightDist $f.spnRightFact
