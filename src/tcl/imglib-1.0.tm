@@ -233,3 +233,14 @@ image create photo ::imglib::handup2 -format png -data {
     NB9++T//++LPyNIv/hcAyYyXDJoMyhlhzz78RwUn/qs+1TmtuhBsL6uW1pkjP5Glp31lcEIO
     NFa1sw+QpE1vMjCjhqqE6j2vRxDo8FShBiYMAGEhyooLrIGcAAAAAElFTkSuQmCC
 }
+
+# Depicts an X in a circle
+# Icon by Victor Erixon http://victorerixon.com
+# License is "Free for commercial use"
+# www.iconfinder.com/icondetails/106227/128/close_icon
+image create photo ::imglib::xincircle -format png -data {
+    iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAQAAACR313BAAAAhElEQVR4AYXRqw2FQABE0SMR
+    GAwJLUFzWCR228Cu3xpegkMg5xn8qqsm8wNgc6ge1WEDAGZFRNwfixlg9hPNasJk1cTPDBRx
+    GgAwOEWBTTSD0W7k46CJjUOs2MVlcYkdqzioYsLoEq+4jJhE5XEDFq94LYDb01F3vDvJO707
+    q3U27zz2B+1AYzRTLDEHAAAAAElFTkSuQmCC
+}
