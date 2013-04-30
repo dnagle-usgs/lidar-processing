@@ -76,6 +76,9 @@ snit::type ::eaarl::raster::embed {
     variable transmit_plot 0
     variable transmit_win 16
 
+    # The current window width
+    variable win_width 450
+
     # Keeps track of the state of the Georeference options. They are only
     # enabled when both the channel is not 0 and Georeference is enabled.
     variable geo_opt_state 0
@@ -98,7 +101,27 @@ snit::type ::eaarl::raster::embed {
                 [mymethod TraceGeoOptState]
 
         $self Gui
+        $window configure -resizecmd [mymethod Resize]
+
         $self configure {*}$args
+    }
+
+    method Resize {width height} {
+        if {$width == $win_width} return
+
+        set win_width $width
+
+        grid forget $pane.browse $pane.sync $pane.settings
+        if {$win_width > 600} {
+            grid $pane.browse $pane.settings -sticky news
+            grid $pane.sync   ^ -sticky news
+            grid columnconfigure $pane 0 -weight 1
+        } else {
+            grid $pane.browse -sticky ew
+            grid $pane.sync -sticky ew
+            grid $pane.settings -sticky ew
+            grid columnconfigure $pane 0 -weight 1
+        }
     }
 
     method Gui {} {
@@ -110,8 +133,9 @@ snit::type ::eaarl::raster::embed {
                     -borderwidth 1 \
                     -padding 1
             $self Gui_$section $pane.$section
-            pack $pane.$section -side top -fill x -expand 1
+            grid $pane.$section -sticky ew
         }
+        grid columnconfigure $pane 0 -weight 1
     }
 
     method Gui_browse {f} {
