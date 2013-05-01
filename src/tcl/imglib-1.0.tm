@@ -130,6 +130,7 @@ image create bitmap ::imglib::x -data {
 }
 
 # Symbol with "x2" on it
+# 15x15 pixels
 image create photo ::imglib::x2 -format png -data {
     iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAQAAACR313BAAAAqUlEQVR4Aa3BsYrBcQAA4M8v
     w909wnW6q1uu7obr7gE8gAegZLdYTLwFgzLIxiCLgSxeQUnZLQpRDEr9i8WgjHyfh3tX1deU
@@ -166,12 +167,14 @@ namespace eval ::imglib::misc {}
 
 # Depicts a red square on a blue line, as would be seen in Yorick when
 # plotting the point.
+# 16x16 pixels
 image create photo ::imglib::misc::plot -format gif -data {
     R0lGODdhEAAQAJEAAAAA/+fn5/8AAP///ywAAAAAEAAQAAACIUSOqWHr196KMtF6hN5C9vQ5
     YeYpo4k+3IZZrftCsTwDBQA7
 }
 
 # Depicts an excerpt/thumbnail of a plotted lidar raster.
+# 16x16 pixels
 image create photo ::imglib::misc::raster -format png -data {
     iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAACW0lEQVR4AQBTAaz+ATFaei4h
     Dc7d/wcD/SUfB+v17RcKEP8E//T5Cr7K5TgoGQoOBQEC7RADGfDy9TktIwQ0IjOag1KrwbAQ
@@ -202,6 +205,7 @@ image create bitmap ::imglib::misc::limits -data {
 # Icon by Timothy Miller, "Pictype Free Vector Icons"
 # Licensed under CC Attribution-Share Alike 3.0 Unported
 # www.iconfinder.com/icondetails/126579/128/refresh_reload_sync_icon
+# 16x16 pixels
 image create photo ::imglib::misc::refresh -format png -data {
     iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAAwUlEQVR4AZ3RIapCARAF0JMe
     2M0mmwuw2V2GIHaTyWYwGQSbIIK4AUFcgskk4gsGm0G7ijC/TREM/0y9MDNcqa5n5ephb6ym
@@ -216,6 +220,7 @@ image create photo ::imglib::misc::refresh -format png -data {
 # www.iconfinder.com/icondetails/111069/128/finger_point_up_icon
 
 # Single hand pointing up
+# 14x15 pixels
 image create photo ::imglib::handup -format png -data {
     iVBORw0KGgoAAAANSUhEUgAAAA4AAAAPCAQAAAB+HTb/AAAAxElEQVR4AWOAAc1a87taExmw
     A+ub//+7PWBgwSrpeuf//5BHDBz4JAUZmHBIhj4xf6B+jcNTKoeBC0Ny289P/9f+cXu99LfE
@@ -225,6 +230,7 @@ image create photo ::imglib::handup -format png -data {
 }
 
 # Two hands pointing up
+# 15x15 pixels
 image create photo ::imglib::handup2 -format png -data {
     iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAQAAACR313BAAABBUlEQVR4AWNAAdyqF1QvM3Az
     4AD20z/P+cHgikvaYfa3pb8YPDDE+XTV9siFQKSlH6mckqrmR1akse35f6OrIOln/x7/m/1p
@@ -238,6 +244,7 @@ image create photo ::imglib::handup2 -format png -data {
 # Icon by Victor Erixon http://victorerixon.com
 # License is "Free for commercial use"
 # www.iconfinder.com/icondetails/106227/128/close_icon
+# 15x15 pixels
 image create photo ::imglib::xincircle -format png -data {
     iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAQAAACR313BAAAAhElEQVR4AYXRqw2FQABE0SMR
     GAwJLUFzWCR228Cu3xpegkMg5xn8qqsm8wNgc6ge1WEDAGZFRNwfixlg9hPNasJk1cTPDBRx
