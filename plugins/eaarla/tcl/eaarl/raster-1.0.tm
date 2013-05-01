@@ -122,6 +122,12 @@ snit::type ::eaarl::raster::embed {
             grid $pane.settings -sticky ew
             grid columnconfigure $pane 0 -weight 1
         }
+
+        if {$win_width > 600 && $win_width < 1000} {
+            $pane.browse.lblChan configure -text "Chan:"
+        } else {
+            $pane.browse.lblChan configure -text "Channel:"
+        }
     }
 
     method Gui {} {
