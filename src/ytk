@@ -100,8 +100,8 @@ proc ybkg args {
 ##
 # ybkg args
 #   Sends a command to Yorick in the background. This does NOT accept normal
-#   Yorick commands!! You must format them in a format acceptable to funcdef. In
-#   Yorick, use 'help, funcdef' for more information.
+#   Yorick commands!! You must format them in a format acceptable to funcdef.
+#   In Yorick, use 'help, funcdef' for more information.
 #
 #   Some examples:
 #
@@ -129,6 +129,10 @@ proc ybkg args {
 #
 #   Also, do not send any input that includes newlines. It just doesn't work
 #   yet.
+#
+#   ybkg will block for up to one tenth of a second while waiting on Yorick to
+#   run the command. It will return 1 if the command finished and 0 if it did
+#   not; thus 0 means the command is likely still running.
 ##
     if {[chan names $::tky_fifo] eq ""} {
         logger warn "Call to ybkg after Yorick termination, redefining ybkg"
@@ -146,7 +150,12 @@ proc ybkg args {
     set cmd [base64::encode -wrapchar "" $cmd]
     logger trace "Encoded as: $cmd"
     puts $::tky_fifo "bkg $cmd"
-    while {$::__ybkg__wait} {sleep 1}
+    set counter 0
+    while {$::__ybkg__wait} {
+        if {[incr counter] > 100} {return 0}
+        sleep 1
+    }
+    return 1
 }
 
 # ybkg_nudge
