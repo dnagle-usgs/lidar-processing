@@ -174,6 +174,37 @@ snit::widget ::yorick::window::embedded {
         ttk::frame $plot.toolbar
         set f $plot.toolbar
 
+        ttk::button $f.limits \
+                -image ::imglib::misc::limits \
+                -width 0 \
+                -style Toolbutton \
+                -command [mymethod limits]
+        ::misc::tooltip $f.limits \
+                "Resets the limits for this window."
+
+        set mb $f.resize.mb
+        ttk::menubutton $f.resize \
+                -image ::imglib::resize \
+                -width 0 \
+                -style Toolbutton \
+                -menu $mb
+        menu $mb
+        $mb add command \
+                -label "75 DPI / 450x450" \
+                -command [mymethod resize work 75]
+        $mb add command \
+                -label "100 DPI / 600x600" \
+                -command [mymethod resize work 100]
+        $mb add command \
+                -label "75 DPI / 825x638" \
+                -command [mymethod resize landscape11x85 75]
+        $mb add command \
+                -label "100 DPI / 1100x850" \
+                -command [mymethod resize landscape11x85 100]
+        ::misc::tooltip $f.resize \
+                "Change the window size. This opens a menu that gives you
+                options for resizing the window."
+
         ttk::button $f.snapshot \
                 -image ::imglib::camera \
                 -style Toolbutton \
@@ -200,8 +231,8 @@ snit::widget ::yorick::window::embedded {
                 "Clicking on this will remove the GUI from this window,
                 leaving you with just the Yorick plot."
 
-        pack $f.snapshot $f.close \
-                -side left
+        pack $f.limits $f.resize $f.snapshot $f.close \
+                -side left -padx 1
 
         place $f -relx 1 -rely 0 -anchor ne -x 1 -y -1
     }
@@ -221,5 +252,18 @@ snit::widget ::yorick::window::embedded {
         }
 
         image delete $img
+    }
+
+    method resize {style dpi} {
+        set cmd "window, $options(-window);\
+                change_window_style, \"$style\""
+        if {$dpi == 100} {
+            append cmd ", dpi=100"
+        }
+        exp_send "$cmd;\r"
+    }
+
+    method limits {} {
+        exp_send "window, $options(-window); limits;\r"
     }
 }
