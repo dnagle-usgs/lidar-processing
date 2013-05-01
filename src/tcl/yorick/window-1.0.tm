@@ -174,6 +174,19 @@ snit::widget ::yorick::window::embedded {
         ttk::frame $plot.toolbar
         set f $plot.toolbar
 
+        ttk::button $f.snapshot \
+                -image ::imglib::camera \
+                -style Toolbutton \
+                -command [mymethod snapshot] \
+                -width 0
+        ::misc::tooltip $f.snapshot \
+                "Takes a screenshot of this window's plot. The screenshot will
+                exclude the GUI.
+
+                IMPORTANT: Make sure the entire window is visible and
+                unobstructed first. If part of the plot is covered by another
+                window, that part will show as pure black in the image."
+
         ttk::button $f.close \
                 -image ::imglib::xincircle \
                 -style Toolbutton \
@@ -183,12 +196,30 @@ snit::widget ::yorick::window::embedded {
                 -statemap {"" disabled} \
                 -statedefault {!disabled} \
                 -statevariable [myvar options](-owner)
-        ::misc::tooltip $.close \
+        ::misc::tooltip $f.close \
                 "Clicking on this will remove the GUI from this window,
                 leaving you with just the Yorick plot."
 
-        pack $f.close
+        pack $f.snapshot $f.close \
+                -side left
 
         place $f -relx 1 -rely 0 -anchor ne -x 1 -y -1
+    }
+
+    method snapshot {} {
+        set img [image create photo -format window -data $plot]
+
+        set fn [tk_getSaveFile \
+                -filetypes {
+                    {{PNG image} {.png}}
+                    {{All files} {*}}
+                } \
+                -parent $win \
+                -title "Save screenshot as..."]
+        if {$fn ne ""} {
+            $img write -format png $fn
+        }
+
+        image delete $img
     }
 }
