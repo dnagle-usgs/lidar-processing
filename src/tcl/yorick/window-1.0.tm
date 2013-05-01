@@ -47,7 +47,7 @@ snit::widget ::yorick::window::embedded {
     option -window -readonly 1 -default 0
     option -style -default "work.gs" -configuremethod SetStyleDpi
     option -dpi -default 75 -configuremethod SetStyleDpi
-    option -owner ""
+    option -owner -default "" -configuremethod SetOwner
     option -resizecmd ""
 
     # plot is the frame where the Yorick window will get embedded
@@ -75,7 +75,7 @@ snit::widget ::yorick::window::embedded {
         ttk::frame $plot
 
         # Default configuration based on default option values
-        $plot configure -width 450 -height 473
+        $plot configure -width 450 -height 471
 
         $self configure {*}$args
         wm protocol $win WM_DELETE_WINDOW [list ybkg winkill $options(-window)]
@@ -131,6 +131,8 @@ snit::widget ::yorick::window::embedded {
         grid forget $plot
         grid $left $plot   $right -sticky news
         grid ^     $bottom ^      -sticky news
+
+        $self UpdateToolbar
     }
 
     # The width/height used here should be the same as the width/height used in
@@ -156,8 +158,37 @@ snit::widget ::yorick::window::embedded {
             }
         }
         $plot configure -width $width -height $height
+        $self UpdateToolbar
         if {$options(-resizecmd) ne ""} {
             {*}$options(-resizecmd) $width $height
         }
+    }
+
+    method SetOwner {option value} {
+        set options($option) $value
+        $self UpdateToolbar
+    }
+
+    method UpdateToolbar {} {
+        destroy $plot.toolbar
+        ttk::frame $plot.toolbar
+        set f $plot.toolbar
+
+        ttk::button $f.close \
+                -image ::imglib::xincircle \
+                -style Toolbutton \
+                -command [mymethod clear_gui] \
+                -width 0
+        mixin::statevar $f.close \
+                -statemap {"" disabled} \
+                -statedefault {!disabled} \
+                -statevariable [myvar options](-owner)
+        ::misc::tooltip $.close \
+                "Clicking on this will remove the GUI from this window,
+                leaving you with just the Yorick plot."
+
+        pack $f.close
+
+        place $f -relx 1 -rely 0 -anchor ne -x 1 -y -1
     }
 }

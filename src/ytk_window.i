@@ -105,6 +105,8 @@ style=, width=, height=, rgb=, parent=, xpos=, ypos=, keeptk=) {
   if(width || height)
     yor_window, win, width=0, height=0;
 
+  tkcmd, swrite(format=".yorwin%d UpdateToolbar", win);
+
   return result;
 }
 
