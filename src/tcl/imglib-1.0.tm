@@ -251,3 +251,16 @@ image create photo ::imglib::xincircle -format png -data {
     GgAwOEWBTTSD0W7k46CJjUOs2MVlcYkdqzioYsLoEq+4jJhE5XEDFq94LYDb01F3vDvJO707
     q3U27zz2B+1AYzRTLDEHAAAAAElFTkSuQmCC
 }
+
+# Depicts a camera
+# Icon by Designmodo http://designmodo.com
+# Licensed under CC Attribution-Share Alike 3.0 Unported
+# www.iconfinder.com/icondetails/103171/128/camera_image_picture_pictures_icon
+# 15x15 pixels
+image create photo ::imglib::camera -format png -data {
+    iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAQAAACR313BAAAAqElEQVR4AX2JsQnCYBQGj4QI
+    tlbZQQfIBEI6BUFLBxCyQiprY+0CzmARzAIqEdIFxDbgACmer/h5EKN+xwcHh81nxhqFBQG9
+    nRDjio9bwJKUHdLhQMqKAdyQn9xBjIaMjb5BDJMLIUOm+lC9l8fEvBB9rP6RayB3ngN1N5dA
+    5bwCym5uGZE4T9Rby44jHhFbvaculo2CORN9gRg8TPs8PSIyzl/ZE/F/b0pal5I9AYRrAAAA
+    AElFTkSuQmCC
+}
