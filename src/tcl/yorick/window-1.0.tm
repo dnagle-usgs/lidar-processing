@@ -205,6 +205,21 @@ snit::widget ::yorick::window::embedded {
                 "Change the window size. This opens a menu that gives you
                 options for resizing the window."
 
+        set mb $f.palette.mb
+        ttk::menubutton $f.palette \
+                -image ::imglib::palette \
+                -width 0 \
+                -style Toolbutton \
+                -menu $mb
+        menu $mb
+        foreach p {earth altearth stern rainbow yarg heat gray} {
+            $mb add command -label $p \
+                    -command [mymethod palette $p]
+        }
+        ::misc::tooltip $f.palette \
+                "Change the palette. This opens a menu that gives you options
+                for changing the palette."
+
         ttk::button $f.snapshot \
                 -image ::imglib::camera \
                 -style Toolbutton \
@@ -231,7 +246,7 @@ snit::widget ::yorick::window::embedded {
                 "Clicking on this will remove the GUI from this window,
                 leaving you with just the Yorick plot."
 
-        pack $f.limits $f.resize $f.snapshot $f.close \
+        pack $f.limits $f.resize $f.palette $f.snapshot $f.close \
                 -side left -padx 1
 
         place $f -relx 1 -rely 0 -anchor ne -x 1 -y -1
@@ -265,5 +280,10 @@ snit::widget ::yorick::window::embedded {
 
     method limits {} {
         exp_send "window, $options(-window); limits;\r"
+    }
+
+    method palette {pal} {
+        exp_send "window, $options(-window);\
+                palette, \"${pal}.gp\";\r"
     }
 }
