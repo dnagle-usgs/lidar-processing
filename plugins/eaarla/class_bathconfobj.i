@@ -181,8 +181,8 @@ func bathconfobj_groups(newgroups, copy=) {
 
   for(i = 1; i <= data(*); i++) {
     use_method, validate, data(*,i);
-    tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", data(*,)),
-      strjoin(data(noop(i)).profiles(*,), " ");
+    tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", data(*,i)),
+      strjoin("{"+data(noop(i)).profiles(*,)+"}", " ");
   }
 }
 save, base, groups=bathconfobj_groups;
@@ -423,7 +423,7 @@ func bathconfobj_profile_del(group, profile) {
   use, data;
   use_method, confobj_profile_del, group, profile;
   tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", group),
-    strjoin(data(noop(group)).profiles(*,), " ");
+    strjoin("{"+data(noop(group)).profiles(*,)+"}", " ");
 }
 save, base, profile_del=bathconfobj_profile_del;
 
@@ -431,7 +431,7 @@ func bathconfobj_profile_rename(group, oldname, newname) {
   use, data;
   use_method, confobj_profile_rename, group, oldname, newname;
   tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", group),
-    strjoin(data(noop(group)).profiles(*,), " ");
+    strjoin("{"+data(noop(group)).profiles(*,)+"}", " ");
 }
 save, base, profile_rename=bathconfobj_profile_rename;
 
