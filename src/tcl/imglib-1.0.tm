@@ -274,3 +274,18 @@ image create photo ::imglib::camera -format png -data {
     5bwCym5uGZE4T9Rby44jHhFbvaculo2CORN9gRg8TPs8PSIyzl/ZE/F/b0pal5I9AYRrAAAA
     AElFTkSuQmCC
 }
+
+# Depicts a painter's palette
+# Icon by Webalys http://www.webalys.com
+# Licensed under CC Attribution-Share Alike 3.0 Unported
+# www.iconfinder.com/icondetails/95100/45/paint_icon
+# 15x14 pixels
+image create photo ::imglib::palette -format png -data {
+    iVBORw0KGgoAAAANSUhEUgAAAA8AAAAOCAYAAADwikbvAAABLklEQVR4AY3SMUvDYBCA4Yso
+    SAcHlQ4xcXJwcnIv0kVQ/A0iDoKDi7sgDqK4dhMdLCIFBydBEFHoUgS1Kh0qWBz0B4hEKDlf
+    5ALlyNAPnruE3vWOfpUoCr0BlFBBHa9oRHFYJS+jIHZ84ySuKNQonlCe87xhxjdPoQM1B1hD
+    gi4eej7/RFGYIBjhpeUmjCLAI3Zj6kBd+ALFTjZ1HylqqENxiypSLELMKRRNpoZFHr7RRIAx
+    qHOPMlbwA8WvENahSLCKPWg/xFbVPm2gAUVXCE9Qc40TJFH8/95BGQv4wiHeoWhLzw/0gWEI
+    tqx5kyxm221xJIRZXGAeYpagOMcgVzREvswa7YtL2T1701aYooW2m3qGQAh5AtxAc9TYpOD/
+    nt44jvGMO7apkOcQiJ0/C1K7WN4TbcMAAAAASUVORK5CYII=
+}
