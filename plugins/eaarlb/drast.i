@@ -455,6 +455,11 @@ tkpulsevar=) {
   default, single, 0;
   default, pulse, 0;
 
+  if(noneof([rx,tx,bath])) {
+    write, " ABORTING: You must select at least one of rx=, tx=, or bath=.";
+    return;
+  }
+
   // single = 0  -> multi mode
   // single = 1  -> single mode
   // single = -1 -> replot mode (internal state)
