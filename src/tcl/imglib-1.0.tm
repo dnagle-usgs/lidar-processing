@@ -289,3 +289,21 @@ image create photo ::imglib::palette -format png -data {
     tqx5kyxm221xJIRZXGAeYpagOMcgVzREvswa7YtL2T1701aYooW2m3qGQAh5AtxAc9TYpOD/
     nt44jvGMO7apkOcQiJ0/C1K7WN4TbcMAAAAASUVORK5CYII=
 }
+
+# Depicts two chevron-like symbols pointing right: >>
+# 15x15 pixels
+image create photo ::imglib::doubleright -format png -data {
+    iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAQAAACR313BAAAAhklEQVR4AWNgWMCwmUGIAQL0
+    GS4ypDCggHMM/xnOMgiC2S5A9j+GLGRpeYb7QMFzUBMKGP4DYTayAjmGexgKclAV3MVQkIus
+    QBaLgnxkBTIMd8AK+HCZYAEWCoPyNgDZzzB18yI7EK/deF1O2N+EQ+00kqQNZpjPZdjBIAhl
+    azNcZkhDlgQANdtOXjawt8oAAAAASUVORK5CYII=
+}
+
+# Depicts two chevron-like symbols pointing left: <<
+# 15x15 pixels
+image create photo ::imglib::doubleleft -format png -data {
+    iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAQAAACR313BAAAAhklEQVR4AWNAASkMFxn0oWwh
+    hs0MC5Alsxj+MfxncAGzBRnOAtnnEJLZDP+BsACq8xyQfZ9BHiaZgyF5j0EOJpmLIXkXIZmP
+    RVIWm04+sOQdBhmEk54BBTZA2WFgpRYQDqajeJF1E7absMsJ+5twqCHC3AZJwWnUGEtjuMyg
+    DWULMuxgmAsA6nhOXmCcfJkAAAAASUVORK5CYII=
+}
