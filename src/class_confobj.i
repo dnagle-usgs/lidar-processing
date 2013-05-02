@@ -306,7 +306,7 @@ func confobj_groups_migrate(oldgroups, newgroups, oldmap, newmap) {
     // Iterate over the profiles in the old group (to import each)
     for(j = 1; j <= oldprof(*); j++) {
       // Retrieve the profile name
-      profname = oldprof(*,noop(i));
+      profname = oldprof(*,noop(j));
 
       // If there was a conflict, try appending the old group name in parens;
       // that should generally give a unique name. But if it doesn't, we find
@@ -323,7 +323,7 @@ func confobj_groups_migrate(oldgroups, newgroups, oldmap, newmap) {
       }
 
       // Save to the new profiles group with the new name
-      save, newprof, noop(profname), oldprof(noop(i));
+      save, newprof, noop(profname), oldprof(noop(j));
     }
 
     // In case we added any names, save them back to cinfo
