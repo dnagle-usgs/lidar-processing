@@ -292,10 +292,10 @@ func confobj_groups_migrate(oldgroups, newgroups, oldmap, newmap) {
   }
 
   // Now actually do imports
-  for(i = 1; i <= numberof(w); i++) {
+  for(i = 1; i <= numberof(oldmap); i++) {
     // Get the names of the old and new groups
-    oldgrp = oldmap(w(i));
-    newgrp = newmap(w(i));
+    oldgrp = oldmap(i);
+    newgrp = newmap(i);
     // Retrieve profile objects for each
     oldprof = oldgroups(noop(oldgrp)).profiles;
     newprof = newgroups(noop(newgrp)).profiles;
