@@ -201,6 +201,17 @@ snit::widget ::yorick::window::embedded {
         $mb add command \
                 -label "100 DPI / 1100x850" \
                 -command [mymethod resize landscape11x85 100]
+        $mb add separator
+        foreach dpi {75 100} {
+            $mb add cascade -label "More $dpi DPI styles..." \
+                    -menu [menu $mb.dpi$dpi]
+            foreach style {
+                axes boxed l_nobox nobox vgbox vg work landscape11x85
+            } {
+                $mb.dpi$dpi add command -label $style \
+                        -command [mymethod resize $style $dpi]
+            }
+        }
         ::misc::tooltip $f.resize \
                 "Change the window size. This opens a menu that gives you
                 options for resizing the window."
