@@ -61,6 +61,8 @@ snit::widget ::yorick::window::embedded {
     component left
     component right
 
+    variable show_toolbar 1
+
     constructor {args} {
         # Window starts out withdrawn by default. Yorick can deiconify it when
         # it comes time to use the window.
@@ -174,93 +176,125 @@ snit::widget ::yorick::window::embedded {
         ttk::frame $plot.toolbar
         set f $plot.toolbar
 
-        ttk::button $f.limits \
-                -image ::imglib::misc::limits \
-                -width 0 \
-                -style Toolbutton \
-                -command [mymethod limits]
-        ::misc::tooltip $f.limits \
-                "Resets the limits for this window."
+        if {$show_toolbar} {
+            ttk::button $f.limits \
+                    -image ::imglib::misc::limits \
+                    -width 0 \
+                    -style Toolbutton \
+                    -command [mymethod limits]
+            ::misc::tooltip $f.limits \
+                    "Resets the limits for this window."
 
-        set mb $f.resize.mb
-        ttk::menubutton $f.resize \
-                -image ::imglib::resize \
-                -width 0 \
-                -style Toolbutton \
-                -menu $mb
-        menu $mb
-        $mb add command \
-                -label "75 DPI / 450x450" \
-                -command [mymethod resize work 75]
-        $mb add command \
-                -label "100 DPI / 600x600" \
-                -command [mymethod resize work 100]
-        $mb add command \
-                -label "75 DPI / 825x638" \
-                -command [mymethod resize landscape11x85 75]
-        $mb add command \
-                -label "100 DPI / 1100x850" \
-                -command [mymethod resize landscape11x85 100]
-        $mb add separator
-        foreach dpi {75 100} {
-            $mb add cascade -label "More $dpi DPI styles..." \
-                    -menu [menu $mb.dpi$dpi]
-            foreach style {
-                axes boxed l_nobox nobox vgbox vg work landscape11x85
-            } {
-                $mb.dpi$dpi add command -label $style \
-                        -command [mymethod resize $style $dpi]
+            set mb $f.resize.mb
+            ttk::menubutton $f.resize \
+                    -image ::imglib::resize \
+                    -width 0 \
+                    -style Toolbutton \
+                    -menu $mb
+            menu $mb
+            $mb add command \
+                    -label "75 DPI / 450x450" \
+                    -command [mymethod resize work 75]
+            $mb add command \
+                    -label "100 DPI / 600x600" \
+                    -command [mymethod resize work 100]
+            $mb add command \
+                    -label "75 DPI / 825x638" \
+                    -command [mymethod resize landscape11x85 75]
+            $mb add command \
+                    -label "100 DPI / 1100x850" \
+                    -command [mymethod resize landscape11x85 100]
+            $mb add separator
+            foreach dpi {75 100} {
+                $mb add cascade -label "More $dpi DPI styles..." \
+                        -menu [menu $mb.dpi$dpi]
+                foreach style {
+                    axes boxed l_nobox nobox vgbox vg work landscape11x85
+                } {
+                    $mb.dpi$dpi add command -label $style \
+                            -command [mymethod resize $style $dpi]
+                }
             }
+            ::misc::tooltip $f.resize \
+                    "Change the window size. This opens a menu that gives you
+                    options for resizing the window."
+
+            set mb $f.palette.mb
+            ttk::menubutton $f.palette \
+                    -image ::imglib::palette \
+                    -width 0 \
+                    -style Toolbutton \
+                    -menu $mb
+            menu $mb
+            foreach p {earth altearth stern rainbow yarg heat gray} {
+                $mb add command -label $p \
+                        -command [mymethod palette $p]
+            }
+            ::misc::tooltip $f.palette \
+                    "Change the palette. This opens a menu that gives you
+                    options for changing the palette."
+
+            ttk::button $f.snapshot \
+                    -image ::imglib::camera \
+                    -style Toolbutton \
+                    -command [mymethod snapshot] \
+                    -width 0
+            ::misc::tooltip $f.snapshot \
+                    "Takes a screenshot of this window's plot. The screenshot
+                    will exclude the GUI.
+
+                    IMPORTANT: Make sure the entire window is visible and
+                    unobstructed first. If part of the plot is covered by
+                    another window, that part will show as pure black in the
+                    image."
+
+            ttk::button $f.close \
+                    -image ::imglib::xincircle \
+                    -style Toolbutton \
+                    -command [mymethod clear_gui] \
+                    -width 0
+            mixin::statevar $f.close \
+                    -statemap {"" disabled} \
+                    -statedefault {!disabled} \
+                    -statevariable [myvar options](-owner)
+            ::misc::tooltip $f.close \
+                    "Clicking on this will remove the GUI from this window,
+                    leaving you with just the Yorick plot."
+
+            ttk::button $f.hide \
+                    -image ::imglib::doubleright \
+                    -style Toolbutton \
+                    -command [mymethod HideToolbar] \
+                    -width 0
+            ::misc::tooltip $f.hide \
+                    "Click to collapse the toolbar down to a single button (in
+                    case you need to see the Yorick text behind it)."
+
+            pack $f.limits $f.resize $f.palette $f.snapshot $f.close $f.hide \
+                    -side left -padx 1
+        } else {
+            ttk::button $f.show \
+                    -image ::imglib::doubleleft \
+                    -style Toolbutton \
+                    -command [mymethod ShowToolbar] \
+                    -width 0
+            ::misc::tooltip $f.show \
+                    "Click to expand the toolbar."
+
+            pack $f.show -side left -padx 1
         }
-        ::misc::tooltip $f.resize \
-                "Change the window size. This opens a menu that gives you
-                options for resizing the window."
-
-        set mb $f.palette.mb
-        ttk::menubutton $f.palette \
-                -image ::imglib::palette \
-                -width 0 \
-                -style Toolbutton \
-                -menu $mb
-        menu $mb
-        foreach p {earth altearth stern rainbow yarg heat gray} {
-            $mb add command -label $p \
-                    -command [mymethod palette $p]
-        }
-        ::misc::tooltip $f.palette \
-                "Change the palette. This opens a menu that gives you options
-                for changing the palette."
-
-        ttk::button $f.snapshot \
-                -image ::imglib::camera \
-                -style Toolbutton \
-                -command [mymethod snapshot] \
-                -width 0
-        ::misc::tooltip $f.snapshot \
-                "Takes a screenshot of this window's plot. The screenshot will
-                exclude the GUI.
-
-                IMPORTANT: Make sure the entire window is visible and
-                unobstructed first. If part of the plot is covered by another
-                window, that part will show as pure black in the image."
-
-        ttk::button $f.close \
-                -image ::imglib::xincircle \
-                -style Toolbutton \
-                -command [mymethod clear_gui] \
-                -width 0
-        mixin::statevar $f.close \
-                -statemap {"" disabled} \
-                -statedefault {!disabled} \
-                -statevariable [myvar options](-owner)
-        ::misc::tooltip $f.close \
-                "Clicking on this will remove the GUI from this window,
-                leaving you with just the Yorick plot."
-
-        pack $f.limits $f.resize $f.palette $f.snapshot $f.close \
-                -side left -padx 1
 
         place $f -relx 1 -rely 0 -anchor ne -x 1 -y -1
+    }
+
+    method HideToolbar {} {
+        set show_toolbar 0
+        $self UpdateToolbar
+    }
+
+    method ShowToolbar {} {
+        set show_toolbar 1
+        $self UpdateToolbar
     }
 
     method snapshot {} {
