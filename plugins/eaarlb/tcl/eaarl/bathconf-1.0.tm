@@ -898,7 +898,7 @@ snit::type ::eaarl::bathconf::embed {
 
     method SetGroup {option value} {
         set options($option) $value
-        $self UpdateGroup
+        $self Gui
     }
 
     method UpdateTitle {} {
@@ -974,8 +974,8 @@ snit::type ::eaarl::bathconf::embed {
     }
 
     method GetDecay {} {
-        if {$curgroup eq ""} return ""
-        return $::eaarl::bathconf::settings($curgroup,decay)
+        if {$options(-group) eq ""} return ""
+        return $::eaarl::bathconf::settings($options(-group),decay)
     }
 
     # If the decay value changes, the GUI needs to be re-made.
