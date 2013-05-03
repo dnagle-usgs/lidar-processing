@@ -399,6 +399,9 @@ snit::type ::eaarl::bathconf::embed {
                 -command [mymethod FileSave]
         $mb add command -label "Load from file..." \
                 -command [mymethod FileLoad]
+        $mb add separator
+        $mb add command -label "Configure groups..." \
+                -command [mymethod prompt_groups]
     }
 
     method Gui_settings_surfsat {f} {
@@ -1017,6 +1020,10 @@ snit::type ::eaarl::bathconf::embed {
     # Used by associated window when resetting the GUI for something else
     method clear_gui {} {
         $self destroy
+    }
+
+    method prompt_groups {} {
+        exp_send "bathconf, prompt_groups, $options(-window);\r"
     }
 }
 

@@ -3,6 +3,7 @@ require, "class_confobj.i";
 scratch = save(scratch, base,
   bathconfobj_settings_group,
   bathconfobj_settings, bathconfobj_groups, bathconfobj_validate,
+  bathconfobj_prompt_groups,
   bathconfobj_read, bathconfobj_clear, bathconfobj_cleangroups,
   bathconfobj_json, bathconfobj_upgrade,
   bathconfobj_profile_add, bathconfobj_profile_del, bathconfobj_profile_rename
@@ -228,6 +229,21 @@ func bathconfobj_validate(group) {
     swrite(format="::eaarl::bathconf::active_profile(%s)", group);
 }
 save, base, validate=bathconfobj_validate;
+
+func bathconfobj_prompt_groups(win) {
+  use, data;
+
+  cmd = swrite(format="::eaarl::bathconf::prompt_groups .yorwin%d.pg", win);
+  parts = [];
+  for(i = 1; i <= data(*); i++) {
+    chans = strjoin(swrite(format="%d", data(noop(i)).channels), " " );
+    grow, parts, swrite(format="%s {%s}", data(*,i), chans);
+  }
+  cmd += " {"+strjoin(parts, " ")+"}";
+  cmd += swrite(format=" -window %d", win);
+  tkcmd, cmd;
+}
+save, base, prompt_groups=bathconfobj_prompt_groups;
 
 func bathconfobj_read(fn) {
   f = open(fn, "r");
