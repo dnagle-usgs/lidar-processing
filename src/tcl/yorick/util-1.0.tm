@@ -41,6 +41,10 @@ namespace eval ::yorick::util {
         set newvname $vname
         set warnings [list]
 
+        if {![string length $vname]} {
+            set newvname var[expr {int(rand()*10000)}]
+            lappend warnings "cannot be an empty string"
+        }
         if {[regexp -- {^[0-9]} $newvname]} {
             set newvname v$newvname
             lappend warnings "cannot start with number"
