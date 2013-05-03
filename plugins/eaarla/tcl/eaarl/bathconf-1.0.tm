@@ -365,7 +365,8 @@ snit::type ::eaarl::bathconf::embed {
         } else {
             lower [ttk::frame $f.fra4]
             grid $f.fra1 $f.fra2 $f.fra3 -in $f.fra4 -sticky news
-            grid columnconfigure $f.fra4 {0 1} -weight 1 -uniform 1
+            grid $f.fra2 -padx {10 0}
+            grid columnconfigure $f.fra4 1 -weight 1
 
             pack $f.fra4 -side top -fill both -expand 1
         }
