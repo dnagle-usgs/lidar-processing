@@ -1,6 +1,7 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
 package provide eaarl::bathconf 1.0
+package require widget::dialog
 
 # sync using: bathctl, set, "group", "key", val
 
@@ -298,7 +299,7 @@ snit::type ::eaarl::bathconf::embed {
             ttk::checkbutton $f.chk$name \
                     -text ${name}: \
                     -variable [myvar ${type}_plot]
-    
+
             ttk::spinbox $f.spn$name \
                     -width 2 \
                     -from 0 -to 63 -increment 1 \
@@ -314,7 +315,7 @@ snit::type ::eaarl::bathconf::embed {
                 pack $f.chk$name -side left
                 pack $f.spn$name -side left -padx {0 1}
             }
-        }       
+        }
         $f.chkRawwf configure -text "Raw WF"
         if {$win_width > 600} {
             grid columnconfigure $f 0 -weight 2 -uniform 1
@@ -1016,5 +1017,120 @@ snit::type ::eaarl::bathconf::embed {
     # Used by associated window when resetting the GUI for something else
     method clear_gui {} {
         $self destroy
+    }
+}
+
+snit::widgetadaptor ::eaarl::bathconf::prompt_groups {
+    option -window -1
+
+    # Array
+    variable groups
+    variable chans
+
+    constructor {groupdefs args} {
+        if {[winfo exists $win]} {
+            installhull $win
+        } else {
+            installhull using widget::dialog
+        }
+
+        array set groups {1 "" 2 "" 3 "" 4 ""}
+        array set chans {1 1 2 1 3 1 4 1}
+
+        set i 0
+        foreach {group ch} $groupdefs {
+            incr i
+            set groups($i) $group
+            foreach chan $ch {
+                set chans($chan) $i
+            }
+        }
+
+        $hull configure \
+                -modal local \
+                -title "Configure bathyconf groups" \
+                -type okcancel
+
+        set f [$hull getframe]
+
+        foreach chan {1 2 3 4} {
+            ttk::label $f.lblChan$chan -text $chan
+        }
+        grid x $f.lblChan1 $f.lblChan2 $f.lblChan3 $f.lblChan4 \
+                -sticky w
+
+        # Create these prior to creating the channel radiobuttons so that they
+        # are more easily tab-traversed.
+        foreach grp {1 2 3 4} {
+            ttk::entry $f.entGrp$grp \
+                    -textvariable [myvar groups]($grp)
+        }
+
+        foreach grp {1 2 3 4} {
+            foreach chan {1 2 3 4} {
+                ttk::radiobutton $f.rdo$grp$chan \
+                        -text "" \
+                        -variable [myvar chans]($chan) \
+                        -value $grp
+            }
+            grid $f.entGrp$grp $f.rdo${grp}1 $f.rdo${grp}2 \
+                    $f.rdo${grp}3 $f.rdo${grp}4 \
+                    -sticky w
+        }
+
+        $hull configure -focus $f.entGrp1
+
+        $self configure {*}$args
+
+        if {$options(-window) >= 0} {
+            $hull configure -parent .yorwin$options(-window)
+        }
+
+        ::misc::idle [mymethod run]
+    }
+
+    method run {} {
+        set outcome done
+        if {[$hull display] eq "ok"} {
+            set outcome [$self apply]
+        }
+        if {$outcome eq "retry"} {
+            ::misc::idle [mymethod run]
+        } else {
+            destroy $win
+        }
+    }
+
+    method apply {} {
+        set data [list]
+
+        # To make sure they go in the given order
+        foreach grp {1 2 3 4} {
+            dict set data $groups($grp) [list]
+        }
+
+        foreach chan {1 2 3 4} {
+            dict lappend data $groups($chans($chan)) $chan
+        }
+
+        set chunks {}
+        dict for {grp chns} $data {
+            if {![llength $chns]} continue
+
+            if {[catch {
+                    ::yorick::util::check_vname grp \
+                            -conflict prompt
+            }]} {
+                return retry
+            }
+            lappend chunks "$grp=save(channels=\[[join $chns ,]\])"
+        }
+
+        set cmd "bathconf, groups, save([join $chunks ,]); "
+        exp_send "$cmd\r"
+        if {$options(-window) >= 0} {
+            after 1000 ::eaarl::bathconf::plot $options(-window)
+        }
+        return done
     }
 }
