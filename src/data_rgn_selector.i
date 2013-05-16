@@ -156,7 +156,8 @@ INPUT:
       }
     } else {
       box_pts = ptsInBox(box*100., data.east, data.north);
-      if (!is_array(box_pts)) {
+      poly_pts = testPoly(ply*100., data.east(box_pts), data.north(box_pts));
+      if (!is_array(poly_pts)) {
         if (exclude) {
           if (!silent) write, "No points removed.";
           return data;
@@ -165,7 +166,6 @@ INPUT:
           return [];
         }
       }
-      poly_pts = testPoly(ply*100., data.east(box_pts), data.north(box_pts));
       indx = box_pts(poly_pts);
       if (!is_void(origdata)) {
         orig_box_pts = ptsInBox(box*100., origdata.east, origdata.north);
