@@ -57,6 +57,9 @@ if(is_void(ymedian))
   ymedian = median;
 median = quick_median;
 
+// Comptibility routines for CALPS
+require, "calps_compat.i";
+
 // ALPS requires
 // These must come first, since some other functions make use of them at the
 // top level
@@ -72,9 +75,6 @@ require, "util_basic.i";
 require, "general.i";
 require, "util_obj.i";
 require, "util_progress.i";
-
-// Comptibility routines for CALPS
-require, "calps_compat.i";
 
 require, "ascii.i";
 require, "ascii_encode.i";
