@@ -172,10 +172,8 @@ win=, xfma=, verbose=, keeprejected=) {
 
   local wf, scan_angle, channel;
   if(raster_number > numberof(edb)) {
-    if(graph)
-      plot_bath_ctl, channel, wf, raster=raster_number, pulse=pulse_number;
     msg = "No waveform";
-    ex_bath_message, graph, verbose, msg;
+    ex_bath_message, graph, verbose, msg, justify="CH";
     return result;
   }
 
