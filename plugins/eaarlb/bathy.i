@@ -279,11 +279,32 @@ win=, xfma=, verbose=, keeprejected=) {
   return result;
 }
 
-func ex_bath_message(graph, verbose, msg) {
+func ex_bath_message(graph, verbose, msg, justify=) {
   if(graph) {
+    default, justify, "RT";
     port = viewport();
-    plt, strwrap(msg, width=25, paragraph="\n"), port(2), port(4),
-      justify="RT", tosys=0, color="red";
+
+    jh = strpart(justify, 1:1);
+    jv = strpart(justify, 2:2);
+
+    if(jh == "R") {
+      x = port(2);
+    } else if(jh == "C") {
+      x = port(1:2)(avg);
+    } else {
+      x = port(1);
+    }
+
+    if(anyof(jv == ["T", "C"])) {
+      y = port(4);
+    } else if(jv == "H") {
+      y = port(3:4)(avg);
+    } else {
+      y = port(3);
+    }
+
+    plt, strwrap(msg, width=25, paragraph="\n"), x, y,
+      justify=justify, tosys=0, color="red";
   }
   if(verbose) write, "Rejected: "+msg;
 }
