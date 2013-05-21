@@ -124,3 +124,46 @@ func plpoly(ply, type=, width=, color=, marker=, msize=, mcolor=, mwidth=) {
     plmk, y, x, marker=marker, msize=msize, color=mcolor, width=mwidth;
   plg, y, x, type=type, width=width, color=color, marks=0;
 }
+
+func viewport_justify(justify, &x, &y) {
+/* DOCUMENT viewport_justify, justify, &x, &y
+  -OR- xy = viewport_justify(justify)
+
+  This calculates coordinates to be used in plotting text justified to some
+  spot of the viewport of the current window. Standard recipe for using it:
+
+    viewport_justify, justify, x, y;
+    plt, msg, x, y, justify=justify, tosys=0;
+
+  JUSTIFY must be provided in either of the forms supported by plt: as a scalar
+  two-character string or as a scalar integer.
+*/
+  default, justify, "NN";
+  port = viewport();
+
+  if(is_string(justify)) {
+    jh = strpart(justify, 1:1);
+    jv = strpart(justify, 2:2);
+  } else {
+    jh = ["N","L","C","R"](justify % 4 + 1);
+    jv = ["N","T","C","H","A","B"](justify/4 + 1);
+  }
+
+  if(jh == "R") {
+    x = port(2);
+  } else if(jh == "C") {
+    x = port(1:2)(avg);
+  } else {
+    x = port(1);
+  }
+
+  if(anyof(jv == ["T", "C"])) {
+    y = port(4);
+  } else if(jv == "H") {
+    y = port(3:4)(avg);
+  } else {
+    y = port(3);
+  }
+
+  return [x,y];
+}
