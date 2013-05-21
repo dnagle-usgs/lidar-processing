@@ -148,6 +148,8 @@ win=, xfma=, verbose=, keeprejected=) {
   // hard coded for now
   sample_interval = 1.;
 
+  local conf;
+
   if(graph) {
     window, win;
     // Embedding in Tk destroys limits, so backup and restore
@@ -162,8 +164,6 @@ win=, xfma=, verbose=, keeprejected=) {
     limits, lims;
   }
 
-  conf = bathconf(settings, (forcechannel ? forcechannel : 1));
-
   // setup the return struct
   result = BATHPIX();
   // bogus value is -100000, for detecting points we didn't find bottom on
@@ -177,8 +177,15 @@ win=, xfma=, verbose=, keeprejected=) {
     return result;
   }
 
-  bathy_lookup_raster_pulse, raster_number, pulse_number, conf.maxsat,
+  bathy_lookup_raster_pulse, raster_number, pulse_number, conf,
       wf, scan_angle, channel, maxint, forcechannel=forcechannel;
+
+  if(graph && channel != forcechannel) {
+    group = bathconf(settings_group, max(channel, 1));
+    tkcmd, swrite(format=
+      "::eaarl::bathconf::config %d -channel %d -group {%s}",
+      win, channel, group);
+  }
 
   result.sa = scan_angle;
   wflen = numberof(wf);
@@ -211,17 +218,17 @@ win=, xfma=, verbose=, keeprejected=) {
   }
 
   local surface_sat_end, surface_intensity, escale;
-  bathy_detect_surface, wf, maxint, conf.thresh, conf.sfc_last,
-    surface_sat_end, surface_intensity, escale, forcechannel=forcechannel;
+  bathy_detect_surface, wf, maxint, conf, surface_sat_end, surface_intensity,
+    escale, forcechannel=forcechannel;
   result.first_peak = surface_intensity;
 
-  thresh = conf.thresh;
   if(numsat > 14) {
-    thresh = thresh * (numsat-13)*0.65;
+    save, conf, thresh=conf.thresh * (numsat-13)*0.65;
   }
 
   if(graph) {
-    plot_bath_ctl, channel, wf, thresh=thresh, raster=raster_number, pulse=pulse_number;
+    plot_bath_ctl, channel, wf, thresh=conf.thresh, raster=raster_number,
+      pulse=pulse_number;
   }
 
   if(conf.decay == "exponential") {
@@ -234,13 +241,10 @@ win=, xfma=, verbose=, keeprejected=) {
       sample_interval=sample_interval, graph=graph, win=win);
   }
 
-  first = min(wflen, conf.first);
-  last = min(wflen, conf.last);
-
-  offset = first - 1;
+  save, conf, first=min(wflen, conf.first), last=min(wflen, conf.last);
 
   local bottom_peak;
-  bathy_detect_bottom, wf_decay, first, last, thresh, bottom_peak, msg;
+  bathy_detect_bottom, wf_decay, conf, bottom_peak, msg;
 
   if(!is_void(msg)) {
     ex_bath_message, graph, verbose, msg;
@@ -253,9 +257,7 @@ win=, xfma=, verbose=, keeprejected=) {
   result.bottom_peak = wf(bottom_peak);
 
   msg = [];
-  bathy_validate_bottom, wf_decay, bottom_peak, first, last, thresh, graph,
-    conf.lwing_dist, conf.rwing_dist, conf.lwing_factor, conf.rwing_factor,
-    msg;
+  bathy_validate_bottom, wf_decay, bottom_peak, conf, msg;
 
   if(is_void(msg) || keeprejected) {
     result.idx = bottom_peak + get_member(ops_conf, swrite(format="chn%d_range_bias", channel));
@@ -307,9 +309,9 @@ func ex_bath_message(graph, verbose, msg, justify=) {
   if(verbose) write, "Rejected: "+msg;
 }
 
-func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
+func bathy_lookup_raster_pulse(raster_number, pulse_number, &conf, &wf,
 &scan_angle, &channel, &maxint, forcechannel=) {
-/* DOCUMENT bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
+/* DOCUMENT bathy_lookup_raster_pulse(raster_number, pulse_number, conf, &wf,
  * &scan_angle, &channel, &maxint, forcechannel=)
   Part of bathy algorithm. Selects the appropriate channel and returns the
   waveform, with bias removed.
@@ -329,6 +331,8 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
   channel = is_void(forcechannel) ? 0 : forcechannel-1;
   do {
     channel++;
+    // Make a copy so that settings can be overridden as needed
+    conf = obj_copy(bathconf(settings, channel));
     raw_wf = *raster.rx(pulse_number, channel);
     wflen = numberof(raw_wf);
     if(wflen == 0)
@@ -337,23 +341,22 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &wf,
     saturated = where(raw_wf == 0);
     // saturated sample count
     numsat = numberof(saturated);
-  } while(numsat > maxsat && channel < 3 && is_void(forcechannel));
+  } while(numsat > conf.maxsat && channel < 3 && is_void(forcechannel));
 
   wf = float(~raw_wf);
   maxint = 255 - long(wf(1));
   wf = wf - wf(1);
 
   // Apply moving average to smooth wf
-  conf = bathconf(settings, channel);
   if(conf.smoothwf > 0 && numberof(wf)) {
     wf = moving_average(wf, bin=(conf.smoothwf*2+1), taper=1);
   }
 }
 
-func bathy_detect_surface(wf, maxint, thresh, sfc_last, &surface,
-			  &surface_intensity, &escale, forcechannel=) {
-/* DOCUMENT bathy_detect_surface(wf, maxint, thresh, &surface,
- * &surface_intensity, &escale)
+func bathy_detect_surface(wf, maxint, conf, &surface, &surface_intensity,
+&escale, forcechannel=) {
+/* DOCUMENT bathy_detect_surface(wf, maxint, conf, &surface,
+   &surface_intensity, &escale)
   Part of bathy algorithm. Detects the surface. However, this is not a -true-
   surface, since for saturated returns the sample of saturation is returned
   instead of a point in the middle of the saturated region.
@@ -363,7 +366,7 @@ func bathy_detect_surface(wf, maxint, thresh, sfc_last, &surface,
   numsat = numberof(saturated);
   // For EAARL, first return saturation should always start in first sfc_last
   // samples (12 for EAARL-A). If a saturated first return is found...
-  if((numsat > 1) && (saturated(1) <= sfc_last)) {
+  if((numsat > 1) && (saturated(1) <= conf.sfc_last)) {
     // If all saturated samples are contiguous, only surface is saturated.
     if(saturated(dif)(max) == 1) {
       // Last surface saturated sample is the last in saturated.
@@ -398,7 +401,7 @@ func bathy_detect_surface(wf, maxint, thresh, sfc_last, &surface,
   }
 
   dd = wf(dif);
-  xr = where(((dd >= thresh)(dif)) == 1);
+  xr = where(((dd >= conf.thresh)(dif)) == 1);
   if(numberof(xr)) {
     // find surface peak now
     surface_peak = wf(xr(1):min(wflen,xr(1)+5))(mxx) + xr(1) - 1;
@@ -503,20 +506,21 @@ max_intensity=, sample_interval=, graph=, win=) {
 bathy_wf_compensate_decay_lognorm = closure(bathy_wf_compensate_decay_lognorm,
   save(opts=[0,0,0,0], len=0, decay=[]));
 
-func bathy_detect_bottom(wf, first, last, thresh, &bottom_peak, &msg) {
-/* DOCUMENT bathy_detect_bottom(wf, first, last, thresh, &bottom_peak, &msg)
+func bathy_detect_bottom(wf, conf, &bottom_peak, &msg) {
+/* DOCUMENT bathy_detect_bottom(wf, conf, &bottom_peak, &msg)
   Detects a bottom return in a waveform.
 */
   bottom_peak = msg = [];
-  offset = first - 1;
+  offset = conf.first - 1;
 
-  last_new = offset + remove_noisy_tail(wf(first:last), thresh=thresh,
-      verbose=0, idx=1);
-  if(last_new - first < 4) {
+  last_new = offset + remove_noisy_tail(wf(conf.first:conf.last),
+    thresh=conf.thresh, verbose=0, idx=1);
+  if(last_new - conf.first < 4) {
     msg = "Waveform too short after removing noisy tail";
     return;
   }
-  peaks = extract_peaks_first_deriv(wf(first:last_new), thresh=thresh);
+  peaks = extract_peaks_first_deriv(wf(conf.first:last_new),
+    thresh=conf.thresh);
 
   if(!numberof(peaks)) {
     msg = "No significant inflection in backscattered waveform after decay";
@@ -540,33 +544,31 @@ func bathy_compensate_saturation(saturated, &bottom) {
   bottom = long(0.5*(sat0+sat1));
 }
 
-func bathy_validate_bottom(wf, bottom, first, last, thresh, graph, lwing_dist,
-rwing_dist, lwing_factor, rwing_factor, &msg) {
-/* DOCUMENT bathy_validate_bottom(wf, bottom, first, last, thresh, graph,
-   lwing_dist, rwing_dist, lwing_factor, rwing_factor, &msg)
+func bathy_validate_bottom(wf, bottom, conf, &msg) {
+/* DOCUMENT bathy_validate_bottom(wf, bottom, conf, &msg)
   Performs some analysis on a detected bottom to see if it seems legitimate.
 */
   msg = [];
 
   // pulse wings
-  lwing_idx = bottom - lwing_dist;
-  rwing_idx = bottom + rwing_dist;
+  lwing_idx = bottom - conf.lwing_dist;
+  rwing_idx = bottom + conf.rwing_dist;
 
   // test pw with 9-6-01:17673:50
   // first, just check to see if anything is above thresh
-  if((wf(bottom) <= thresh) || (last < rwing_idx)) {
+  if((wf(bottom) <= conf.thresh) || (conf.last < rwing_idx)) {
     msg = "Below threshold";
     return;
   }
 
-  if((lwing_idx < first) || (rwing_idx > last)) {
+  if((lwing_idx < conf.first) || (rwing_idx > conf.last)) {
     msg = "Too close to edge gate";
     return;
   }
 
   // define pulse wings;
-  lwing_thresh = lwing_factor * wf(bottom);
-  rwing_thresh = rwing_factor * wf(bottom);
+  lwing_thresh = conf.lwing_factor * wf(bottom);
+  rwing_thresh = conf.rwing_factor * wf(bottom);
 
   if(graph) {
     plmk, lwing_thresh, lwing_idx, marker=5, color="magenta", msize=0.4, width=10;
