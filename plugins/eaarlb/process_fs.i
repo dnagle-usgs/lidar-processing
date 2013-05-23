@@ -127,15 +127,6 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
         raster, soe, tx, rx
       added by process_fs: ftx, frx, fint, fchannel, mx, my, mz, fx, fy, fz
 */
-  log_id = logger_id();
-  if(logger(debug)) {
-    logger, debug, log_id+"Entering process_fs";
-    logger, debug, log_id+"Parameters:";
-    logger, debug, log_id+"  start="+pr1(start);
-    logger, debug, log_id+"  stop="+pr1(stop);
-    logger, debug, log_id+"  ext_bad_att="+pr1(ext_bad_att);
-    logger, debug, log_id+"  channel="+pr1(channel);
-  }
   local mx, my, mz, fx, fy, fz;
   default, stop, start;
   default, channel, 0;
@@ -240,7 +231,6 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
     pulses = obj_index(pulses, w);
   }
 
-  if(logger(debug)) logger, debug, log_id+"Leaving process_fs";
   return pulses;
 }
 
