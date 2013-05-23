@@ -189,7 +189,7 @@ win=, xfma=, verbose=, keeprejected=) {
 
   result.sa = scan_angle;
   wflen = numberof(wf);
-  saturated = wf == maxint;
+  saturated = (wf == maxint);
   numsat = numberof(where(saturated));
 
   restore, hook_invoke("ex_bath_wf",
