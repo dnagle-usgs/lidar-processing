@@ -806,3 +806,56 @@ func strip_flightline_edges(data, startpulse=, endpulse=, idx=) {
   if(idx) return w;
   return data(w);
 }
+
+func batch_strip_flightline_edges(srcdir, outdir=, searchstr=, startpulse=, endpulse=) {
+/* DOCUMENT batch_strip_flightline_edges, srcdir, outdir=, searchstr=, startpulse=, endpulse=
+  Applies strip_flightline_edges in batch mode.
+
+  Output files will have the startpulse and endpulse appended to the variable
+  name. With the default settings of startpulse=10, endpulse=110, files will
+  thus have _s10e110 added to their names.
+
+  Variables will have _sfe added to their names.
+
+  Parameter:
+    srcdir: The directory to find files in.
+  Options:
+    outdir= Specifies a directory to put output files in. If omitted, output
+      files are created alongside input files.
+    searchstr= Search string to use for finding files to strip.
+        searchstr="*.pbd"   Default, all pbds
+    startpulse= Remove all pulses before and including this number.
+        startpulse=10       Default
+    endpulse= Remove all pulses after and including this number.
+        endpulse=110        Default
+*/
+  local vname;
+  default, searchstr, "*.pbd";
+  default, startpulse, 10;
+  default, endpulse, 110;
+  srcfiles = find(srcdir, searchstr=searchstr);
+
+  sizes = double(file_size(srcfiles));
+  srt = sort(sizes);
+  srcfiles = srcfiles(srt);
+  sizes = sizes(srt);
+
+  if(numberof(sizes) > 1)
+    sizes = sizes(cum)(2:);
+
+  dstfiles = swrite(format="%s_s%de%d.pbd",
+    file_rootname(srcfiles), startpulse, endpulse);
+  if(!is_void(outdir))
+    dstfiles = file_join(outdir, file_tail(dstfiles));
+
+  write, "Stripping flightline edges...";
+  status, start, msg="Stripping flightline edges...";
+  count = numberof(srcfiles);
+  for(i = 1; i <= count; i++) {
+    data = pbd_load(srcfiles(i), , vname);
+    data = strip_flightline_edges(data, startpulse=startpulse, endpulse=endpulse);
+    pbd_save, dstfiles(i), vname+"_sfe", data;
+    status, progress, sizes(i), sizes(0);
+  }
+  status, finished;
+}
