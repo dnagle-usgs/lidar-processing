@@ -219,6 +219,33 @@ INPUT:
   }
 }
 
+func sel_rgn_by_shapefile(data, shapefile) {
+/* DOCUMENT sel_rgn_by_shapefile(data, shapefile)
+
+Selects a region defined by the supplied Global Mapper formatted
+ascii shapefile. Handles complex shapefiles i.e. those with multiple
+polygons and holes within polygons.
+
+INPUT:
+  data: Input data array
+  shapefile: name of shapefile to use for data extraction
+*/
+
+  shp = read_ascii_shapefile(shapefile, meta);
+  tmp_data = data_out = [];
+
+  for (i=1; i<=numberof(shp); i++) {
+    if (has_member(meta(noop(i)), "ISLAND")) {
+      data_out = sel_data_rgn(data_out, mode=3, rgn=*shp(i), exclude=1,
+        noplot=1, silent=1);
+    } else {
+      tmp_data = sel_data_rgn(data, mode=3, rgn=*shp(i), noplot=1, silent=1);
+      grow, data_out, tmp_data;
+    }
+  }
+  return data_out;
+}
+
 func sel_data_ptRadius(data, point=, radius=, win=, msize=, retindx=, silent=) {
 /* DOCUMENT sel_data_ptRadius(data, point=, radius=, win=, msize=,retindx=,
   silent=)
