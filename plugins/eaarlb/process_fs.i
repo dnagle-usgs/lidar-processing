@@ -104,8 +104,7 @@ func fs_struct_from_obj(pulses) {
 }
 
 func process_fs(start, stop, ext_bad_att=, channel=) {
-/* DOCUMENT result = process_fs(start, stop, ext_bad_att=,
-   channel=)
+/* DOCUMENT result = process_fs(start, stop, ext_bad_att=, channel=)
 
   Processes the given raster ranges for first return.
 
