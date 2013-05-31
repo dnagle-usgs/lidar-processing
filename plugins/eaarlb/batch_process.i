@@ -947,7 +947,7 @@ Added server/client support (2009-01) Richard Mitchell
       indx_path(i) = swrite(format="%si_e%d_n%d_%s/", save_dir, idx_e, idx_n, zone_s);
     }
   }
-  iidx_path = uniq(indx_path);
+  iidx_path = unique(indx_path);
   bool_arr = array(int, numberof(iidx_path));
   mtdt_path = array(string, numberof(iidx_path));
   mtdt_file = array(string, numberof(iidx_path));
@@ -1153,7 +1153,7 @@ write,format="For      : %s\n", ss;
 
   // XYZZY: we have a list of files, now we just want the dirnames they are in.
   dn_all = file_dirname(fn_all);
-  dn_all = dn_all(uniq(dn_all));
+  dn_all = dn_all(unique(dn_all));
   n      = numberof(dn_all);
   write, format="Dirs : %3d\n", n;
 

@@ -1,7 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-func nocalps_uniq(A) {
-/* DOCUMENT uniq(x)
+func nocalps_unique(A) {
+/* DOCUMENT unique(x)
   Returns an array of longs such that X(sort(X)) is a monotonically increasing
   array of the unique values of X. X can contain integer, real, or string
   values. X may have any dimensions, but the return result will always be
@@ -67,4 +67,4 @@ func nocalps_uniq(A) {
   return idx(srt)(unq);
 }
 
-if(!is_func(uniq)) uniq = nocalps_uniq;
+if(!is_func(unique)) unique = nocalps_unique;

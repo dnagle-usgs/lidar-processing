@@ -267,13 +267,13 @@ void quick_uniq(char **data, long *list, long start, long stop, long *out,
   }
 }
 
-void Y_uniq(int nArgs)
+void Y_unique(int nArgs)
 {
   if(nArgs != 1)
-    y_error("uniq accepts exactly one argument");
+    y_error("unique accepts exactly one argument");
 
   if(yarg_nil(0) || yarg_rank(0) == -1)
-    y_error("uniq only accepts numeric and string arrays");
+    y_error("unique only accepts numeric and string arrays");
 
   long count, dims[Y_DIMSIZE], *list, i, new_count;
 

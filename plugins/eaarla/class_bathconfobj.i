@@ -174,7 +174,7 @@ func bathconfobj_groups(newgroups, copy=) {
   if(copy)
     use_method, groups_migrate, oldgroups, newgroups, oldmap, newmap;
 
-  keep = uniq(newmap);
+  keep = unique(newmap);
   keep = keep(sort(keep));
 
   data = newgroups(newmap(keep));

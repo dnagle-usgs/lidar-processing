@@ -241,10 +241,10 @@ extern _yset_intersect_double;
   long Bn, long flag, double delta)
 */
 
-// *** defined in uniq.c ***
+// *** defined in unique.c ***
 
-extern uniq;
-/* DOCUMENT uniq(x)
+extern unique;
+/* DOCUMENT unique(x)
   Returns an array of longs such that X(sort(X)) is a monotonically increasing
   array of the unique values of X. X can contain integer, real, or string
   values. X may have any dimensions, but the return result will always be
@@ -305,7 +305,7 @@ __calps_backup = save(
   _yll2utm, _yutm2ll,
   calps_n88_interp_qfit2d, calps_n88_interp_spline2d,
   _yset_intersect_long, _yset_intersect_double,
-  uniq,
+  unique,
   get_pid,
   profiler_init, profiler_lastinit, profiler_reset, profiler_ticks
 );

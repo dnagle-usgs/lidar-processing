@@ -215,12 +215,6 @@ func set_remove_duplicates(A, idx=) {
   return A(uniq(A));
 }
 
-local unique;
-unique = uniq;
-/* DOCUMENT unique(x)
-  Alias for uniq. Deprecated; use uniq instead.
-*/
-
 func munique(x, ..) {
 /* DOCUMENT munique(x1, x2, x3, ...)
   Returns the indexes into the given arrays that correspond to unique tuples

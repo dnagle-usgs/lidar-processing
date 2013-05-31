@@ -197,7 +197,7 @@ Original amar nayegandhi. Started 12/06/02.
       file_dir(ti) = file_tail(file_dirname(fn_all(ti)))+"/";
       all_dir(ti) = file_dirname(fn_all(ti))+"/";
     }
-    uidx = uniq(tile_dir);
+    uidx = unique(tile_dir);
     ndirname = array(string, numberof(uidx));
     ndirname = all_dir(uidx);
     fname = array(string, numberof(uidx));

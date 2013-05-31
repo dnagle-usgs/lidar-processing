@@ -16,8 +16,8 @@ func remove_bathy_from_veg(veg, bathy, buf=) {
   */
 
   // sort and get unique items
-  bathy1 = bathy(uniq(bathy.rn));
-  veg1 = veg(uniq(veg.rn));
+  bathy1 = bathy(unique(bathy.rn));
+  veg1 = veg(unique(veg.rn));
 
   num_rn_bathy = numberof(bathy1.rn);
   num_rn_veg = numberof(veg1.rn);
