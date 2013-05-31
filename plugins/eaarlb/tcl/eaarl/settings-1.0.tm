@@ -4,7 +4,7 @@ package provide eaarl::settings 1.0
 
 namespace eval ::eaarl::settings::ops_conf::v {
     variable top .l1wid.opsconf
-    variable fieldframe
+    variable fieldframe ""
     variable ops_conf
 
     variable settings {
@@ -122,6 +122,10 @@ proc ::eaarl::settings::ops_conf::gui_init {fields} {
 
 proc ::eaarl::settings::ops_conf::gui_dead {} {
     destroy $v::top
+    set var [namespace which -variable v::ops_conf]
+    foreach key [array names v::ops_conf] {
+        ybkg tksync remove \"ops_conf.$key\" \"${var}($key)\"
+    }
     array unset v::ops_conf *
 }
 
