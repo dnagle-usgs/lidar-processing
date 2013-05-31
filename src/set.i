@@ -209,10 +209,10 @@ func set_remove_duplicates(A, idx=) {
   Usage with idx= is deprecated; use uniq instead.
 */
   default, idx, 0;
-  if(idx) return uniq(A);
+  if(idx) return unique(A);
   if(is_void(A)) return [];
   if(numberof(A) == 1) return A(1);
-  return A(uniq(A));
+  return A(unique(A));
 }
 
 func munique(x, ..) {
