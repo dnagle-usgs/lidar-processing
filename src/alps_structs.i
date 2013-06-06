@@ -190,7 +190,6 @@ local GEO;
     long melevation;    mirror elevation
     short bottom_peak;  peak amplitude of bottom return signal
     short first_peak;   peak amplitude of first surface return signal
-    long bath;          unused?
     short depth;        water depth in cm
     double soe;         seconds of the epoch
     char channel;       channel used if forced; 0 if auto chosen
@@ -206,7 +205,6 @@ struct GEO {
   long elevation;
   long mnorth, meast, melevation;
   short bottom_peak, first_peak;
-  long bath;
   short depth;
   double soe;
   char channel;
