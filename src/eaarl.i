@@ -51,6 +51,7 @@ require, "zlib.i";
 // Patches for core / plugins
 require, "patches/2012-08-yutils.i";
 require, "patches/2012-09-funcset.i";
+require, "patches/2013-05-help.i";
 
 // Replace built-in median with Yeti's median which is much faster
 if(is_void(ymedian))
