@@ -1,27 +1,62 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-struct VEG_CONF {    // Veg configuration parameters
-  float thresh;     // threshold
-  int max_sat(3);   // Maximum number of sat dig pixels before switching
+local VEG_CONF;
+/* DOCUMENT VEG_CONF
+  Struct used for configuring veg processing.
+
+  struct VEG_CONF {
+    float thresh;     // Threshold
+    int max_sat(3);   // Maximum number of sat dig pixels before switching
+  };
+*/
+struct VEG_CONF {
+  float thresh;
+  int max_sat(3);
 };
 
+local VEGPIX;
+/* DOCUMENT VEGPIX
+  Struct used for holding the result of ex_veg.
+
+  struct VEGPIX {
+    int rastpix;   // raster + pulse << 24
+    short sa;      // scan angle
+    float mx1;     // first pulse index
+    short mv1;     // first pulse peak value
+    float mx0;     // last pulse index
+    short mv0;     // last pulse peak value
+    char nx;       // number of return pulses found
+  };
+*/
 struct VEGPIX {
-  int rastpix;   // raster + pulse << 24
-  short sa;      // scan angle
-  float mx1;     // first pulse index
-  short mv1;     // first pulse peak value
-  float mx0;     // last pulse index
-  short mv0;     // last pulse peak value
-  char nx;       // number of return pulses found
+  int rastpix;
+  short sa;
+  float mx1;
+  short mv1;
+  float mx0;
+  short mv0;
+  char nx;
 };
 
+local VEGPIXS;
+/* DOCUMENT VEGPIXS
+  Struct used for holding the result of ex_veg_all.
+
+  struct VEGPIXS {
+    int rastpix;   // raster + pulse << 24
+    short sa;      // scan angle
+    float mx(10);  // range in ns of all return peaks from irange
+    short mr(10);  // range in ns of all return peaks from irange
+    short mv(10);  // intensities of all return peaks (max 10)
+    char nx;       // number of return pulses found
+  };
+*/
 struct VEGPIXS {
-  int rastpix;   // raster + pulse << 24
-  short sa;      // scan angle
-  float mx(10);  // range in ns of all return peaks from irange
-  short mr(10);  // range in ns of all return peaks from irange
-  short mv(10);  // intensities of all return peaks (max 10)
-  char nx;       // number of return pulses found
+  int rastpix;
+  short sa;
+  float mx(10);
+  short mr(10), mv(10);
+  char nx;
 };
 
 func define_veg_conf {
@@ -666,7 +701,6 @@ func clean_cveg_all(vegall, rcf_width=) {
 
   return new_vegall;
 }
-
 
 func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=,
 use_be_peak=, hard_surface=, alg_mode=, pse=, verbose=, add_peak=,
