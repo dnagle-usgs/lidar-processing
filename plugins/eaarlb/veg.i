@@ -709,7 +709,7 @@ forcechannel=, header=) {
  use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=, pse=, verbose=,
  forcechannel=, header=)
 
-  This function returns an array of VEGPIX structures.
+  This function returns an instance of VEGPIX.
 
   Parameters:
     rn: Raster number
@@ -1000,7 +1000,6 @@ forcechannel=, header=) {
   }
   return rv;
 }
-
 
 func xcent(a) {
 /* DOCUMENT cent(a)
