@@ -467,7 +467,7 @@ func ex_veg_all(rn, pulse_number, last=, graph=, pse=, thresh=, win=, verbose=,h
    last = The last point in the waveform to consider.
    wf = The return waveform with the computed exponentials substracted
 */
-  extern irg_a, _errno;
+  extern irg_a;
   default, win, 4;
   default, graph, 0;
   default, verbose, graph;
@@ -753,7 +753,7 @@ forcechannel=, header=) {
       "gauss": use gaussian decomposition algorithm, see func xgauss
     pse= Time (in milliseconds) to pause between each waveform plot.
 */
-  extern veg_conf, ops_conf, n_all3sat, _errno;
+  extern veg_conf, ops_conf, n_all3sat;
   define_veg_conf;
 
   default, win, 4;
@@ -761,11 +761,8 @@ forcechannel=, header=) {
   default, verbose, graph;
   local retdist, idx1;
 
-  _errno = 0; // If not specifically set, preset to assume no errors.
-
   if (rn == 0 && pulse_number == 0) {
     write, format="Are you clicking in window %d? No data was found.\n", win;
-    _errno = -1;
     return;
   }
 
@@ -788,7 +785,6 @@ forcechannel=, header=) {
   // If transmit or return pulse is missing, return
   if (pulse.flag_irange_bit14 || pulse.flag_irange_bit15 ||
    pulse.transmit_length == 0 || pulse.channel1_length < 2) {
-    _errno = -1;
     return rv;
   }
 
@@ -853,7 +849,6 @@ forcechannel=, header=) {
   if (numberof(xr) == 0) {
     rv.mv0 = rv.mv1 = wf(max);
     rv.nx = 0;
-    _errno = 0;
     return rv;
   }
 
@@ -870,7 +865,6 @@ forcechannel=, header=) {
   retdist = min(retdist, wflen - xr(0) - 1);
 
   if (retdist < 5) { // this eliminates possible noise pulses.
-    _errno = 0;
     return rv;
   }
   if (pse) pause, pse;
@@ -990,7 +984,6 @@ forcechannel=, header=) {
   rv.mx1 = mx1;
   rv.mv1 = mv1;
   rv.nx = numberof(xr);
-  _errno = 0;
 
   if (graph) {
     plot_veg_wf, wf, channel, (irange-ctx(1)), mx=[mx0,mx1], mv=[mv0,mv1];
@@ -1024,7 +1017,6 @@ func xcent(a) {
   return [ c, mx, mv ];
 }
 
-
 func xpeak(a) {
 /* DOCUMENT xpeak(a)
   Compute the peak of "a" of the inflection in the waveform.
@@ -1037,7 +1029,6 @@ func xpeak(a) {
   mx = a (mxx);		// find the index of the maximum
 
   return [mx,mx,mv];
-
 }
 
 func xgauss(w1, add_peak=, graph=, xaxis=,logmode=) {
