@@ -104,6 +104,14 @@ proc ::eaarl::processing::process {} {
 
     set cmd ""
     switch -- $processing_mode {
+        fs_new {
+            set cmd "$::pro_var = make_fs_new(q=q,\
+                    ext_bad_att=$ext_bad_att)"
+        }
+        ba_new {
+            set cmd "$::pro_var = make_ba(q=q,\
+                    ext_bad_att=$ext_bad_att)"
+        }
         fs {
             set cmd "$::pro_var = make_fs(latutm=1, q=q,\
                     ext_bad_att=$ext_bad_att,\
@@ -129,7 +137,10 @@ proc ::eaarl::processing::process {} {
     }
 
     if {$cmd ne ""} {
-        if {$::eaarl::autoclean_after_process} {
+        if {
+            $::eaarl::autoclean_after_process
+            && $processing_mode ni {fs_new ba_new}
+        } {
             append cmd "; test_and_clean, $::pro_var"
         }
         exp_send "$cmd;\r"

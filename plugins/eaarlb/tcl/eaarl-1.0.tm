@@ -24,6 +24,8 @@ namespace eval ::eaarl {
       "Submerged Topo"     bathy
       "Topo Under Veg"     veg
       "Multi Peak Veg"     cveg
+      "Experimental: New First Return Topo"  fs_new
+      "Experimental: New Submerged Topo"     ba_new
    }
 
    variable autoclean_after_process 1
@@ -39,6 +41,7 @@ namespace eval ::eaarl {
       variable processing_mode
       set mapping {
          fs fs_all veg veg_all bathy depth_all cveg cveg_all
+         fs_new fs_all ba_new depth_all
       }
       if {$pro_var_next in [list fs_all depth_all veg_all cveg_all wave_data]} {
          set pro_var_next [dict get $mapping $processing_mode]

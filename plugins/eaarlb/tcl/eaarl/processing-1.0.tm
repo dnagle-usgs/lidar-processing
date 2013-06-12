@@ -130,7 +130,10 @@ proc ::eaarl::processing::process {} {
 
     if {$cmd ne ""} {
         append cmd  "; $::pro_var = merge_pointers($::pro_var)"
-        if {$::autoclean_after_process} {
+        if {
+            $::eaarl::autoclean_after_process
+            && $processing_mode ni {fs_new ba_new}
+        } {
             append cmd "; test_and_clean, $::pro_var"
         }
         append cmd "; $::pro_var = sortdata($::pro_var, method=\"soe\")"
@@ -146,6 +149,14 @@ proc ::eaarl::processing::process_channel {channel} {
     variable ::eaarl::avg_surf
 
     switch -- $processing_mode {
+        fs_new {
+            set cmd "grow, $::pro_var, &make_fs_new(q=q,\
+                    ext_bad_att=$ext_bad_att, channel=$channel)"
+        }
+        ba_new {
+            set cmd "grow, $::pro_var, &make_ba(q=q,\
+                    ext_bad_att=$ext_bad_att, channel=$channel)"
+        }
         fs {
             set cmd "grow, $::pro_var, &make_fs(latutm=1, q=q,\
                     ext_bad_att=$ext_bad_att, usecentroid=$usecentroid,\
