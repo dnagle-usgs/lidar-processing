@@ -292,8 +292,6 @@ To see a raster, try:\n\
   }
   // adding time correct array (tca) function
   time_correct, data_path;
-  if(verbose)
-    write, "load_edb_completed";
 }
 
 func time_correct(path) {
