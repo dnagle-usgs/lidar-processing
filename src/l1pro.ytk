@@ -20,13 +20,6 @@ package require tooltip
 ybkg require \"l1pro.i\"
 
 if {![info exists l1pro_data]} {
-  set l1pro_data(process_mapping) [lrange {
-    "First Return Topo"     fs
-    "Submerged Topo"        bathy
-    "Topo Under Veg"        veg
-    "Multi Peak Veg"        cveg
-  } 0 end]
-
   set l1pro_data(mode_mapping) [lrange {
     "First Return Topography"  fs
     "Submerged Topography"     ba
@@ -38,13 +31,10 @@ if {![info exists l1pro_data]} {
   } 0 end]
 
   set outvar ""
-  set usecentroid 1
 
   set cbar_locked cdelta
 
-  set avg_surf 1
   set rcf_buf_rgn 0; #Used in proc filter_replace
-  set autoclean_after_process 1
   set l1pro_fma 1
   set skip 1
 
@@ -85,11 +75,9 @@ if {![info exists l1pro_data]} {
   unset var_common
 
   set pro_var fs_all
-  set pro_var_next fs_all
   array set plot_settings $var_settings($pro_var)
 
   set _map(window) 6
-  set processing_mode fs
 
   # Compatibility: We want to keep the window setting in ::plot_settings(win),
   # but there's a ton of code that refers to ::win_no.
@@ -105,11 +93,6 @@ if {![info exists l1pro_data]} {
 
   set constant_win_no 0
   set l1pro_square_limits 1
-
-  trace remove \
-    variable processing_mode write processing_mode_changed
-  trace add \
-    variable processing_mode write processing_mode_changed
 
   trace remove variable pro_var write pro_var_changed
   trace add variable pro_var write pro_var_changed
@@ -158,16 +141,6 @@ proc rename_varlist {old new} {
   }
   if {$::pro_var eq $old} {
     set ::pro_var $new
-  }
-}
-
-proc processing_mode_changed {a b c} {
-  global curs pro_var_next
-  set mapping {
-    fs fs_all veg veg_all bathy depth_all cveg cveg_all
-  }
-  if {$pro_var_next in [list fs_all depth_all veg_all cveg_all wave_data]} {
-    set pro_var_next [dict get $mapping $::processing_mode]
   }
 }
 

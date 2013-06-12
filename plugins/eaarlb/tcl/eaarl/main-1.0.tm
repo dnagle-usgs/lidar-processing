@@ -40,7 +40,7 @@ proc ::eaarl::main::gui {} {
 
     ttk::label $f.minhtlbl -text "Minimum height:"
     ttk::spinbox $f.minht -from 0 -to 1000 -increment 1 \
-            -width 2 -textvariable ::ext_bad_att
+            -width 2 -textvariable ::eaarl::ext_bad_att
 
     ::misc::tooltip $f.minht $f.minhtlbl \
             "Specify the minimum flying height of the aircraft in meters.
@@ -51,8 +51,8 @@ proc ::eaarl::main::gui {} {
     ::mixin::combobox::mapping $f.mode \
             -state readonly \
             -width 16 \
-            -altvariable ::processing_mode \
-            -mapping $::l1pro_data(process_mapping)
+            -altvariable ::eaarl::processing_mode \
+            -mapping $::eaarl::process_mapping
 
     ttk::label $f.winlbl -text "Window:"
     ttk::spinbox $f.win -from 0 -to 64 -increment 1 \
@@ -60,7 +60,7 @@ proc ::eaarl::main::gui {} {
 
     ttk::label $f.varlbl -text "Use variable:"
     ::mixin::combobox $f.var -width 4 \
-            -textvariable ::pro_var_next \
+            -textvariable ::eaarl::pro_var_next \
             -listvariable ::varlist
 
     ttk::button $f.process -text "Process" \

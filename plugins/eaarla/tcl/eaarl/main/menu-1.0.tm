@@ -84,12 +84,12 @@ namespace eval ::eaarl::main::menu {
 
     proc menu_settings mb {
         menu $mb
-        $mb add checkbutton -variable ::usecentroid \
+        $mb add checkbutton -variable ::eaarl::usecentroid \
                 -label  "Correct walk with centroid"
-        $mb add checkbutton -variable ::avg_surf \
+        $mb add checkbutton -variable ::eaarl::avg_surf \
                 -label "Use Fresnel reflections to determine water surface\
                         (submerged only)"
-        $mb add checkbutton -variable ::autoclean_after_process \
+        $mb add checkbutton -variable ::eaarl::autoclean_after_process \
                 -label "Automatically test and clean after processing"
         return $mb
     }

@@ -3,8 +3,6 @@
 package provide eaarl::processing 1.0
 package require yorick::util
 
-set ext_bad_att 20
-
 namespace eval ::eaarl::processing {
     namespace import ::misc::appendif
     namespace import ::l1pro::file::prefix
@@ -95,37 +93,43 @@ snit::widget ::eaarl::processing::define_region_rect::gui {
 }
 
 proc ::eaarl::processing::process {} {
-    if {[catch {yorick::util::check_vname ::pro_var_next}]} {return}
-    set ::pro_var $::pro_var_next
+    if {[catch {yorick::util::check_vname ::eaarl::pro_var_next}]} {return}
+    variable ::eaarl::processing_mode
+    variable ::eaarl::pro_var_next
+    variable ::eaarl::usecentroid
+    variable ::eaarl::ext_bad_att
+    variable ::eaarl::avg_surf
+
+    set ::pro_var $pro_var_next
 
     set cmd ""
-    switch -- $::processing_mode {
+    switch -- $processing_mode {
         fs {
             set cmd "$::pro_var = make_fs(latutm=1, q=q,\
-                    ext_bad_att=$::ext_bad_att,\
-                    usecentroid=$::usecentroid)"
+                    ext_bad_att=$ext_bad_att,\
+                    usecentroid=$usecentroid)"
         }
         bathy {
             set cmd "$::pro_var = make_bathy(latutm=1, q=q,\
-                    ext_bad_att=$::ext_bad_att,\
-                    avg_surf=$::avg_surf)"
+                    ext_bad_att=$ext_bad_att,\
+                    avg_surf=$avg_surf)"
             }
         veg {
             set cmd "$::pro_var = make_veg(latutm=1, q=q,\
-                    ext_bad_att=$::ext_bad_att,\
-                    use_centroid=$::usecentroid)"
+                    ext_bad_att=$ext_bad_att,\
+                    use_centroid=$usecentroid)"
         }
         cveg {
             set cmd "$::pro_var = make_veg(latutm=1, q=q,\
-                    use_centroid=$::usecentroid, multi_peaks=1)"
+                    use_centroid=$usecentroid, multi_peaks=1)"
         }
         default {
-            error "Unknown processing mode: $::processing_mode"
+            error "Unknown processing mode: $processing_mode"
         }
     }
 
     if {$cmd ne ""} {
-        if {$::autoclean_after_process} {
+        if {$::eaarl::autoclean_after_process} {
             append cmd "; test_and_clean, $::pro_var"
         }
         exp_send "$cmd;\r"

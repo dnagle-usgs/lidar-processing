@@ -7,7 +7,6 @@ set forcechannel_1 0
 set forcechannel_2 0
 set forcechannel_3 0
 set forcechannel_4 0
-set ext_bad_att 20
 
 namespace eval ::eaarl::processing {
     namespace import ::misc::appendif
@@ -99,15 +98,18 @@ snit::widget ::eaarl::processing::define_region_rect::gui {
 }
 
 proc ::eaarl::processing::process {} {
-    if {[catch {yorick::util::check_vname ::pro_var_next}]} {return}
-    set ::pro_var $::pro_var_next
+    if {[catch {yorick::util::check_vname ::eaarl::pro_var_next}]} {return}
+    variable ::eaarl::processing_mode
+    variable ::eaarl::pro_var_next
+
+    set ::pro_var $pro_var_next
 
     set cmd ""
     set forced 0
     foreach channel {1 2 3 4} {
         if {[set ::forcechannel_$channel]} {
-            if {$::processing_mode ni {fs bathy veg}} {
-                error "Invalid processing mode: $::processing_mode"
+            if {$processing_mode ni {fs bathy veg}} {
+                error "Invalid processing mode: $processing_mode"
             }
             if {!$forced} {
                 set cmd "$::pro_var = \[\]"
@@ -138,24 +140,29 @@ proc ::eaarl::processing::process {} {
 }
 
 proc ::eaarl::processing::process_channel {channel} {
-    switch -- $::processing_mode {
+    variable ::eaarl::processing_mode
+    variable ::eaarl::usecentroid
+    variable ::eaarl::ext_bad_att
+    variable ::eaarl::avg_surf
+
+    switch -- $processing_mode {
         fs {
             set cmd "grow, $::pro_var, &make_fs(latutm=1, q=q,\
-                    ext_bad_att=$::ext_bad_att, usecentroid=$::usecentroid,\
+                    ext_bad_att=$ext_bad_att, usecentroid=$usecentroid,\
                     forcechannel=$channel)"
         }
         bathy {
             set cmd "grow, $::pro_var, &make_bathy(latutm=1, q=q,\
-                    ext_bad_att=$::ext_bad_att, avg_surf=$::avg_surf,\
+                    ext_bad_att=$ext_bad_att, avg_surf=$avg_surf,\
                     forcechannel=$channel)"
             }
         veg {
             set cmd "grow, $::pro_var, &make_veg(latutm=1, q=q,\
-                    ext_bad_att=$::ext_bad_att, use_centroid=$::usecentroid,\
+                    ext_bad_att=$ext_bad_att, use_centroid=$usecentroid,\
                     forcechannel=$channel)"
         }
         default {
-            error "Invalid processing mode: $::processing_mode"
+            error "Invalid processing mode: $processing_mode"
         }
     }
     return $cmd
