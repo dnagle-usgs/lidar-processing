@@ -22,10 +22,5 @@ package require sf
 set data_path "/data/"
 ybkg require \"eaarl.i\"
 
-# Since ybkg is used, some output may go to the console (especially Yeti), so
-# this gives the user back their prompt.
-exp_send \r
-expect ">"
-
 source [file join $src_path l1pro.ytk]
 wm deiconify .l1wid
