@@ -108,11 +108,7 @@ func __job_run(argv) {
   // Load plugins, if specified
   if(conf(*,"plugins")) {
     require, "eaarl.i";
-    parts = strtok(conf.plugins, ",");
-    while(parts(1)) {
-      plugins_load, parts(1);
-      parts = strtok(parts(2), ",");
-    }
+    plugins_load, conf.plugins;
   }
 
   if(!symbol_exists(job_func))
