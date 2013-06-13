@@ -19,9 +19,13 @@
 
 // Only kick off a job if called in batch mode.
 if(1 || batch()) {
+  // Some code refers to src_path directly.
+  src_path = strpart(current_include(), :-5);
+
   // Must add the lidar-processing/src directory to the search path
   // Also, for safety sake, drop the ./ part of the default path
-  set_path, strpart(current_include(), :-5) + strpart(get_path(), 3:);
+  set_path, src_path + strpart(get_path(), 3:);
+
   require, "rrequire.i";
   require, "job_support.i";
   __job_run, get_argv();
