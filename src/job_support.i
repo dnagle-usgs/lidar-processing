@@ -99,6 +99,8 @@ func __job_run(argv) {
   conf = save();
   if(numberof(argv) > 2)
     conf = _job_parse_options(argv(3:));
+  else
+    conf = _job_parse_options([]);
 
   if(strpart(job_func, 1:4) != "job_")
     error, "job function must start with \"job_\"";
