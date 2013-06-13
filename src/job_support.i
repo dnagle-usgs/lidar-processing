@@ -105,6 +105,16 @@ func __job_run(argv) {
   if(strpart(job_func, 1:4) != "job_")
     error, "job function must start with \"job_\"";
 
+  // Load plugins, if specified
+  if(conf(*,"plugins")) {
+    require, "eaarl.i";
+    parts = strtok(conf.plugins, ",");
+    while(parts(1)) {
+      plugins_load, parts(1);
+      parts = strtok(parts(2), ",");
+    }
+  }
+
   if(!symbol_exists(job_func))
     error, "unknown job function: "+job_func;
 
