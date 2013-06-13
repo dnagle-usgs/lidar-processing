@@ -47,9 +47,9 @@
 
  ******************************************************************************/
 
-func job_debug_dump(args) {
+func job_debug_dump(conf) {
 /* DOCUMENT job_debug_dump, conf
-  Simple job command that parses its arguments and dumps the tree to stdout.
+  Simple job command that dumps the parsed switches tree to stdout.
     > job_debug_dump, ["--foo-bar", "baz", "--answer", "42"]
      TOP (oxy_object, 4 entries)
      |- (nil) (void) []
@@ -59,7 +59,7 @@ func job_debug_dump(args) {
     >
 */
   require, "obj_show.i";
-  obj_show, _job_parse_options(args);
+  obj_show, conf;
 }
 
 func job_debug_dump_file(conf) {
