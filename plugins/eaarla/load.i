@@ -30,6 +30,7 @@ include, base + "parse.i";
 include, base + "pixelwf.i";
 include, base + "process_ba.i";
 include, base + "process_fs.i";
+include, base + "process_util.i";
 include, base + "sf.i";
 include, base + "surface_topo.i";
 include, base + "veg.i";

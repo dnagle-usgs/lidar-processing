@@ -29,27 +29,9 @@ func make_ba(q=, ply=, ext_bad_att=, channel=, verbose=) {
   extern ops_conf, tans, pnav;
   default, verbose, 1;
 
-  if(is_void(ops_conf))
-    error, "ops_conf is not set";
-  if(is_void(tans))
-    error, "tans is not set";
-  if(is_void(pnav))
-    error, "pnav is not set";
-
-  if(is_void(q))
-    q = pnav_sel_rgn(region=ply);
-
-  // find start and stop raster numbers for all flightlines
-  rn_arr = sel_region(q, verbose=verbose);
-
-  if(is_void(rn_arr)) {
-    write, "No rasters found, aborting";
-    return;
-  }
-
-  // Break rn_arr up into per-TLD raster ranges instead
   local rn_start, rn_stop;
-  edb_raster_range_files, rn_arr(1,), rn_arr(2,), , rn_start, rn_stop;
+  process_selection_rasters, rn_start, rn_stop, q, ply;
+  if(is_void(rn_start)) return;
 
   rn_counts = (rn_stop - rn_start + 1)(cum)(2:);
 
@@ -64,7 +46,6 @@ func make_ba(q=, ply=, ext_bad_att=, channel=, verbose=) {
       write, format=" %d/%d: rasters %d through %d\n",
         i, count, rn_start(i), rn_stop(i);
     }
-    pause, 1; // make sure Yorick shows output
     pulses = process_ba(rn_start(i), rn_stop(i), channel=channel,
       ext_bad_att=ext_bad_att);
     if(!is_void(pulses))
