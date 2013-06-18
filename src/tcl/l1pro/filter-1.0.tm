@@ -175,6 +175,8 @@ proc filter_remove {} {
     }
 
     pack .rem.05.varname .rem.05.varlist -side left -padx 5
+    pack .rem.05.varlist -expand 1 -fill x
+    pack .rem.05 -expand 1 -fill x
     pack .rem.06.typetext .rem.06.type -side left
     pack .rem.05 .rem.06 .rem.1 -pady 8
     pack .rem.08 .rem.07 .rem.09
@@ -264,7 +266,9 @@ proc filter_keep {} {
     Button .sel.3 -width 8 -text "Dismiss" -command {destroy .sel}
 
     pack .sel.05.varname .sel.05.varlist -side left -padx 5
+    pack .sel.05.varlist -expand 1 -fill x
     pack .sel.05 .sel.1 .sel.grow .sel.15 -side top -pady 10
+    pack .sel.05 .sel.15 -expand 1 -fill x
     pack .sel.2 .sel.3 -side left -padx 5 -pady 5
 }
 
@@ -570,6 +574,13 @@ proc filter_replace {} {
     pack .rep.05 .rep.005 .rep.15 .rep.1 .rep.type  -side top -pady 10
     pack .rep.2 .rep.4 .rep.3 -side left -padx 5 -pady 5
     pack .rep.5 -side left -pady 5
+
+    pack .rep.05.varlist -expand 1 -fill x
+    pack .rep.005.varlist -expand 1 -fill x
+    pack .rep.15.1 -expand 1 -fill x
+    pack .rep.05 -expand 1 -fill x
+    pack .rep.005 -expand 1 -fill x
+    pack .rep.15 -expand 1 -fill x
 }
 
 } ;# closing namespace eval l1pro::filter
