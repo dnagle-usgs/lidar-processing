@@ -121,8 +121,39 @@ func handler_invoke(handlers, handler_name, &env) {
   return env;
 }
 
+func handler_serialize(handlers, handler_names) {
+/* DOCUMENT sdata = handler_serialize(handler_names)
+  Serializes the specified handlers into a format that can be saved to file and
+  then later restored using handler_deserialize.
+
+  If handler_names is omitted, then all handlers are serialized.
+*/
+  if(!numberof(handler_names)) return serialize(handlers);
+  idx = handlers(*,handler_names);
+  if(noneof(idx)) return serializ();
+  return serialize(handlers(idx(where(idx))));
+}
+
+func handler_deserialize(handlers, sdata, clear=) {
+/* DOCUMENT handler_deserialize, sdata, clear=
+  Deserializes and restores handlers that were serialized with
+  handler_serialize. If clear=1 is provided, then all existing handlers are
+  first cleared (useful in conjunction with having serialized all handlers).
+*/
+  if(clear) {
+    for(i = 1; i <= handlers(*); i++)
+      save, handlers, noop(i), string(0);
+  }
+  data = deserialize(sdata);
+  for(i = 1; i <= data(*); i++) {
+    handler_set, data(*,i), data(noop(i));
+  }
+}
+
 handler_set = closure(handler_set, handlers);
 handler_clear = closure(handler_clear, handlers);
 handler_get = closure(handler_get, handlers);
 handler_invoke = closure(handler_invoke, handlers);
+handler_serialize = closure(handler_serialize, handlers);
+handler_deserialize = closure(handler_deserialize, handlers);
 restore, scratch;

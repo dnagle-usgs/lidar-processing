@@ -157,8 +157,42 @@ func hook_invoke(hooks, hook_name, &env) {
   return env;
 }
 
+func hook_serialize(hooks, hook_names) {
+/* DOCUMENT sdata = hook_serialize(hook_names)
+  Serializes the specified hooks into a format that can be saved to file and
+  then later restored using hook_deserialize.
+
+  If hook_names is omitted, then all hooks are serialized.
+*/
+  if(!numberof(hook_names)) return serialize(hooks);
+  idx = hooks(*,hook_names);
+  if(noneof(idx)) return serialize();
+  return serialize(hooks(idx(where(idx))));
+}
+
+func hook_deserialize(hooks, sdata, clear=) {
+/* DOCUMENT hook_deserialize, sdata, clear=
+  Deserializes and restores hooks that were serialized with hook_serialize. If
+  clear=1 is provided, then all existing hooks are first cleared (useful in
+  conjunction with having serialized all hooks).
+*/
+  if(clear) {
+    for(i = 1; i <= hooks(*); i++)
+      save, hooks, noop(i), [];
+  }
+  data = deserialize(sdata);
+  for(i = 1; i <= data(*); i++) {
+    vals = data(noop(i));
+    for(j = 1; j <= numberof(vals); j++) {
+      hook_add, data(*,i), vals(j).func_name, vals(j).priority;
+    }
+  }
+}
+
 hook_add = closure(hook_add, hooks);
 hook_remove = closure(hook_remove, hooks);
 hook_query = closure(hook_query, hooks);
 hook_invoke = closure(hook_invoke, hooks);
+hook_serialize = closure(hook_serialize, hooks);
+hook_deserialize = closure(hook_deserialize, hooks);
 restore, scratch;
