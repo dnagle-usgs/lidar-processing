@@ -219,28 +219,34 @@ INPUT:
   }
 }
 
-func sel_rgn_by_shapefile(data, shapefile) {
-/* DOCUMENT sel_rgn_by_shapefile(data, shapefile)
+func sel_rgn_by_shapefile(data, shapefile, buffer=) {
+/* DOCUMENT sel_rgn_by_shapefile(data, shapefile, buffer=)
 
-Selects a region defined by the supplied Global Mapper formatted
-ascii shapefile. Handles complex shapefiles i.e. those with multiple
-polygons and holes within polygons.
+  Selects a region defined by the supplied Global Mapper formatted
+  ascii shapefile. Handles complex shapefiles i.e. those with multiple
+  polygons and holes within polygons.
 
-INPUT:
-  data: Input data array
-  shapefile: name of shapefile to use for data extraction
+  Parameters:
+    data: Input data array
+    shapefile: Name of shapefile to use for data extraction
+  Options:
+    buffer= A buffer in meters to apply around each polygon in the shapefile.
+      When this option is used, the convex hull of each polygon + this buffer
+      (in meters) is calculated and used. Holes are ignored.
 */
-
+  default, buffer, 0;
   shp = read_ascii_shapefile(shapefile, meta);
   tmp_data = data_out = [];
 
   for (i=1; i<=numberof(shp); i++) {
     if (has_member(meta(noop(i)), "ISLAND")) {
-      data_out = sel_data_rgn(data_out, mode=3, rgn=*shp(i), exclude=1,
-        noplot=1, silent=1);
+      if(!buffer) {
+        data_out = sel_data_rgn(data_out, mode=3, rgn=*shp(i), exclude=1,
+          noplot=1, silent=1);
+      }
     } else {
-      tmp_data = sel_data_rgn(data, mode=3, rgn=*shp(i), noplot=1, silent=1);
-      grow, data_out, tmp_data;
+      ply = buffer ? buffer_hull(*shp(i), buffer) : *shp(i);
+      grow, data_out, sel_data_rgn(data, mode=3, rgn=ply, noplot=1, silent=1);
     }
   }
   return data_out;
