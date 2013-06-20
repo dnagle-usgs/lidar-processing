@@ -41,6 +41,7 @@ if {[info commands SegmentedDataWindow] eq ""} {
       method define_region_mismatch {} {}
       method define_region_multilines {} {}
       method new_segment_window {} {}
+      method close_clear {} {}
       method selected {cmd} {}
 
       # Holds per-segment data
@@ -245,11 +246,15 @@ itcl::body SegmentedDataWindow::constructor {args} {
       -text "Auto Fma" \
       -variable $itk_option(-fmavariable)
 
+   button $w.btnCloseClear -text "Close & Clear" \
+      -command [itcl::code $this close_clear]
+
    grid $f.chkFma -sticky w
    grid columnconfigure $f 0 -weight 1
 
    grid $w.fraVariables - -sticky wens
    grid $w.fraWithSelected $w.fraOptions -sticky wens
+   grid ^ $w.btnCloseClear -sticky sw
    grid columnconfigure $w 0 -weight 1
 
    grid rowconfigure $w 0 -weight 1
@@ -498,6 +503,28 @@ itcl::body SegmentedDataWindow::new_segment_window {} {
          -message "No variables were selected." \
          -type ok
    }
+}
+
+itcl::body SegmentedDataWindow::close_clear {} {
+   set vars $itk_option(-segmentvariables)
+   if {[llength $vars] > 1} {
+      set this_var "these variables"
+   } else {
+      set this_var "this variable"
+   }
+
+   set response [tk_messageBox -icon question -type yesno \
+         -title Warning -message "Do you want to delete ${this_var}?\n$vars"]
+   if {$response eq "yes"} {
+      set cmd ""
+      foreach var $vars {
+         append cmd "$var = \[\];"
+         delete_varlist $var
+      }
+      exp_send "$cmd\r"
+   }
+
+   itcl::delete object $this
 }
 
 itcl::body SegmentedDataWindow::selected {cmd} {
