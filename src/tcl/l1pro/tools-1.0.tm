@@ -1088,8 +1088,8 @@ namespace eval ::l1pro::tools::varmanage {
             if {$response eq "yes"} {
                 foreach var $pass {
                     exp_send "$var = \[\];\r"
+                    delete_varlist $var
                 }
-                set ::varlist $fail
             }
         }
     }

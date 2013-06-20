@@ -135,6 +135,14 @@ proc append_varlist {newvar} {
   }
 }
 
+proc delete_varlist {delvar} {
+  global varlist
+  set idx [lsearch -exact $varlist $delvar]
+  if {$idx != -1} {
+    set varlist [lreplace $varlist $idx $idx]
+  }
+}
+
 proc processing_mode_changed {a b c} {
   global curs pro_var_next
   set mapping {
