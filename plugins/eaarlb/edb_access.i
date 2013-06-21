@@ -356,7 +356,57 @@ func edb_raster_range_files(start, stop, &fnum, &fstart, &fstop) {
   fstop = merge_pointers(fstop);
 }
 
-func decode_rasters(start, stop, wfs=) {
+func raster_sources(&rn_start, &rn_stop, &file, &offset_start, &offset_stop) {
+/* DOCUMENT raster_sources, &rn_start, &rn_stop, &file, &offset_start, &offset_stop
+  Given a range of raster numbers, this breaks them into per-TLD ranges and
+  determines the appropriate TLD file and start/stop offset to retrieve the
+  data.
+
+  Input:
+    rn_start, rn_stop: Scalar or arrays of equal size that specify the start
+      and stop raster numbers for the ranges of interest.
+
+  Output:
+    rn_start, rn_stop: Updated arrays of start/stop rasters broken up on TLD
+      boundaries.
+    file: Array of TLD files containing the data for the ranges; provides full
+      path to the TLD.
+    offset_start, offset_stop: The offset ranges in the TLD file where the raw
+      data can be found; offset_stop may be 0 which indicates that the range
+      ends at the end of the file.
+
+  For output, all five variables will be arrays of equal size.
+*/
+  local fnum, fstart, fstop;
+  edb_raster_range_files, rn_start, rn_stop, fnum, fstart, fstop;
+  rn_start = fstart;
+  rn_stop = fstop;
+
+  file = array(string, numberof(rn_start));
+  offset_start = array(long, numberof(rn_start));
+  offset_stop = array(long, numberof(rn_start));
+
+  extern edb, edb_files, edb_filename;
+  tld_dir = file_dirname(edb_filename);
+
+  nfn = numberof(fnum);
+  result = [];
+  for(i = 1; i <= nfn; i++) {
+    // Determine offsets for these rasters in the TLD file
+    // edb offsets are zero based, we need them to be 1 based
+    offset_start(i) = edb(rn_start(i)).offset + 1;
+    if(rn_stop(i) + 1 <= numberof(edb) && edb(rn_stop(i) + 1).file_number == fnum(i)) {
+      offset_stop(i) = edb(rn_stop(i) + 1).offset;
+    } else {
+      offset_stop(i) = 0;
+    }
+
+    // Nab the full path for the TLD file
+    file(i) = file_join(tld_dir, file_tail(edb_files(fnum(i))));
+  }
+}
+
+func decode_rasters(rn_start, rn_stop, wfs=) {
 /* DOCUMENT pulses = decode_rasters(start, stop)
   Retrieves decoded pulse data for the specified range of rasters. START is
   the first raster number and STOP is the last. START and STOP may also be
@@ -370,35 +420,13 @@ func decode_rasters(start, stop, wfs=) {
     An oxy object containing the same members as described by
     eaarl_decode_fast.
 */
-  local fnum, fstart, fstop;
-  edb_raster_range_files, start, stop, fnum, fstart, fstop;
+  raster_sources, rn_start, rn_stop, tldfn, offset_start, offset_stop;
 
-  extern edb, edb_files, edb_filename;
-  tld_dir = file_dirname(edb_filename);
-
-  nfn = numberof(fnum);
+  count = numberof(rn_start);
   result = [];
-  for(i = 1; i <= nfn; i++) {
-    // Focus on one TLD file at a time
-    fidx = fnum(i);
-
-    // Determine raster numbers for the range in this file
-    rn_start = fstart(i);
-    rn_stop = fstop(i);
-
-    // Determine offsets for these rasters in the TLD file
-    // edb offsets are zero based, we need them to be 1 based
-    offset_start = edb(rn_start).offset + 1;
-    if(rn_stop + 1 <= numberof(edb) && edb(rn_stop + 1).file_number == fidx) {
-      offset_stop = edb(rn_stop + 1).offset;
-    } else {
-      offset_stop = 0;
-    }
-
-    // Retrieve results for this file
-    fn = file_join(tld_dir, file_tail(edb_files(fidx)));
-    current = eaarl_decode_fast(fn, offset_start, offset_stop, wfs=wfs,
-      rnstart=rn_start);
+  for(i = 1; i <= count; i++) {
+    current = eaarl_decode_fast(tldfn(i), offset_start(i), offset_stop(i),
+      wfs=wfs, rnstart=rn_start(i));
 
     if(is_void(result)) {
       result = current;
