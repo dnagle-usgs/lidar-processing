@@ -32,7 +32,7 @@ func get_poly(void, closed=, win=) {
 
   write, format=
     " Window %d: Left click to add vertex; ctrl-left or middle click to\n" +
-    " add and finish; right click to finish. Shift-left to abort.\n", win;
+    " add and finish; right click to finish. Shift-left click to abort.\n", win;
 
   ply = [];
   first = 1;
