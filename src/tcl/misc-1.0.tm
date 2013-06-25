@@ -1,6 +1,8 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
 package provide misc 1.0
+package require misc::getstring
+
 package require imglib
 package require snit
 package require textutil::adjust
