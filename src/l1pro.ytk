@@ -143,6 +143,20 @@ proc delete_varlist {delvar} {
   }
 }
 
+proc rename_varlist {old new} {
+  set new [yorick::sanitize_vname $new]
+  set idx [lsearch -exact $::varlist $old]
+  set ::varlist [lreplace $::varlist $idx $idx $new]
+  if {[info exists ::plot_settings($old)]} {
+    if {![info exists ::plot_settings($new)]} {
+      set ::plot_settings($new) $::plot_settings($old)
+    }
+  }
+  if {$::pro_var eq $old} {
+    set ::pro_var $new
+  }
+}
+
 proc processing_mode_changed {a b c} {
   global curs pro_var_next
   set mapping {

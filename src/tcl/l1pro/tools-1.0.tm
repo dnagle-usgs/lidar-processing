@@ -1119,19 +1119,8 @@ namespace eval ::l1pro::tools::varmanage {
                         ] result new
                 if {$result eq "ok"} {
                     if {$old ne $new} {
-                        set new [yorick::sanitize_vname $new]
+                        rename_varlist $old $new
                         exp_send "eq_nocopy, $new, $old; $old = \[\];\r"
-                        set idx [lsearch -exact $::varlist $old]
-                        set ::varlist [lreplace $::varlist $idx $idx $new]
-                        if {[info exists ::plot_settings($old)]} {
-                            if {![info exists ::plot_settings($new)]} {
-                                set ::plot_settings($new) \
-                                        $::plot_settings($old)
-                            }
-                        }
-                        if {$::pro_var eq $old} {
-                            set ::pro_var $new
-                        }
                     }
                 }
             } else {

@@ -29,18 +29,50 @@ func restore_alps_data(fn, vname=, skip=) {
     data = data(::skip);
 
   sanitize_vname, vname;
+
+  // Variable already exists?
+  if(symbol_exists(vname) && !is_void(symbol_def(vname))) {
+    // Loading data equals loaded data? Do nothing except add to varlist.
+    curdata = symbol_def(vname);
+    if(
+      numberof(curdata) == numberof(data)
+      && structeq(structof(curdata), structof(data))
+      && allof(curdata == data)
+    ) {
+      tkcmd, swrite(format="append_varlist %s", vname);
+      tkcmd, swrite(format="set pro_var %s", vname);
+      write, format="Data in file matches data found in existing variable of same name:\n  %s\n",
+        vname;
+      return;
+
+    // Loading data is different than loaded data? Rename loaded out of the
+    // way. Then fall through to add new.
+    } else {
+      newvname = vname + "_backup";
+      if(symbol_exists(newvname) && !is_void(newvname)) {
+        i = 1;
+        do {
+          i++;
+          newvname = swrite(format="%s_backup%d", vname, i);
+        } while(symbol_exists(newvname) && !is_void(newvname));
+      }
+      msg = swrite(format=
+        "Data in file for variable %s does not match data found in " +
+        "existing variable of same name. Backing up existing data " +
+        "to %s.", vname, newvname);
+      write, format="%s\n", strwrap(msg);
+      symbol_set, newvname, curdata;
+      tkcmd, swrite(format="rename_varlist %s %s", vname, newvname);
+    }
+  }
+
   symbol_set, vname, data;
 
-  if(!is_obj(data) || data.__bless == "pcobj") {
-    update_var_settings, data, vname, fn=fn;
-    tkcmd, swrite(format="append_varlist %s", vname);
-    tkcmd, swrite(format="set pro_var %s", vname);
-    write, format="Loaded variable %s\n", vname;
-    if(logger(info)) logger, info, "Loaded variable "+vname+" from "+fn;
-  } else {
-    write, format="Loaded object variable %s\n", vname;
-    if(logger(info)) logger, info, "Loaded object variable "+vname+" from "+fn;
-  }
+  update_var_settings, data, vname, fn=fn;
+  tkcmd, swrite(format="append_varlist %s", vname);
+  tkcmd, swrite(format="set pro_var %s", vname);
+  write, format="Loaded variable %s\n", vname;
+  if(logger(info)) logger, info, "Loaded variable "+vname+" from "+fn;
 }
 
 func update_var_settings(data, vname, fn=) {
