@@ -1035,6 +1035,7 @@ namespace eval ::l1pro::tools::varmanage {
                 -helptext "Add variable name to list" \
                 -textvariable ${ns}::v::var_add
         $f.lbeAdd bind <Return> ${ns}::bind_add_enter
+        button $f.btnCopy -text "Copy" -command ${ns}::cmd_copy
         button $f.btnDelete -text "Delete" -command ${ns}::cmd_delete
         button $f.btnRename -text "Rename" -command ${ns}::cmd_rename
         button $f.btnDismiss -text "Dismiss" -command [list destroy $v::win]
@@ -1042,6 +1043,7 @@ namespace eval ::l1pro::tools::varmanage {
         grid $v::lb -sticky news
         grid $f.btnSelect -sticky news
         grid $f.lbeAdd -sticky news
+        grid $f.btnCopy -sticky news
         grid $f.btnDelete -sticky news
         grid $f.btnRename -sticky news
         grid $f.btnDismiss -sticky news
@@ -1103,7 +1105,7 @@ namespace eval ::l1pro::tools::varmanage {
         if {[llength $pass]} {
             set this_variable [this_variable [llength $pass]]
             tk_messageBox -icon warning -type ok -message \
-                    "Aborting. You cannot delete ${this_variable}: $pass"
+                    "Aborting. You cannot rename ${this_variable}: $pass"
         } else {
             ::struct::list split $::varlist \
                     [list ::struct::set contains $selected] pass fail
@@ -1137,6 +1139,45 @@ namespace eval ::l1pro::tools::varmanage {
                         "You cannot rename multiple variables at once. Select\
                         only one."
             }
+        }
+    }
+
+    proc cmd_copy {} {
+        set selected [$v::lb getcurselection]
+
+        ::struct::list split $::varlist \
+                [list ::struct::set contains $selected] pass fail
+
+        if {[llength $pass] == 1} {
+            set old [lindex $pass 0]
+            set prompt "What would you like to copy '$old' to?"
+            lassign [::misc::getstring \
+                    -default $old \
+                    -prompt $prompt \
+                    ] result new
+            if {$result eq "ok"} {
+                if {$old ne $new} {
+                    set new [yorick::sanitize_vname $new]
+                    exp_send "$new = $old;\r"
+                    if {
+                        [info exists ::plot_settings($old)]
+                        && ![info exists ::plot_settings($new)]
+                    } {
+                        append_varlist $new
+                        set ::plot_settings($new) \
+                                $::plot_settings($old)
+                    } else {
+                        append_varlist $new
+                    }
+                    if {$::pro_var eq $old} {
+                        set ::pro_var $new
+                    }
+                }
+            }
+        } else {
+            tk_messageBox -icon warning -type ok -title Warning -message \
+                    "You cannot copy multiple variables at once. Select\
+                    only one."
         }
     }
 
