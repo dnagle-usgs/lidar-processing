@@ -1110,10 +1110,14 @@ namespace eval ::l1pro::tools::varmanage {
 
             if {[llength $pass] == 1} {
                 set old [lindex $pass 0]
-                set new $old
                 set prompt "What would you like to rename '$old' to?"
-                if {[::getstring::tk_getString $v::win.gs new $prompt]} {
+                lassign [::misc::getstring \
+                        -default $old \
+                        -prompt $prompt \
+                        ] result new
+                if {$result eq "ok"} {
                     if {$old ne $new} {
+                        set new [yorick::sanitize_vname $new]
                         exp_send "eq_nocopy, $new, $old; $old = \[\];\r"
                         set idx [lsearch -exact $::varlist $old]
                         set ::varlist [lreplace $::varlist $idx $idx $new]
