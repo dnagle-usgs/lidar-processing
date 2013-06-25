@@ -146,6 +146,10 @@ proc delete_varlist {delvar} {
 proc rename_varlist {old new} {
   set new [yorick::sanitize_vname $new]
   set idx [lsearch -exact $::varlist $old]
+  if {$idx == -1} {
+    append_varlist $new
+    return
+  }
   set ::varlist [lreplace $::varlist $idx $idx $new]
   if {[info exists ::plot_settings($old)]} {
     if {![info exists ::plot_settings($new)]} {
