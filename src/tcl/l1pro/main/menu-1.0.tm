@@ -49,10 +49,10 @@ proc menu_file mb {
             -command ::l1pro::file::load_pbd
     $mb add command {*}[menulabel "&Save ALPS data..."] \
             -command ::l1pro::file::save_pbd
+    $mb add command {*}[menulabel "Save ALPS data &as..."] \
+            -command ::l1pro::file::save_pbd_as
     $mb add command {*}[menulabel "Load ALPS data &directory..."] \
             -command ::l1pro::dirload
-    $mb add cascade {*}[menulabel "Custom load/save ALPS data..."] \
-            -menu [menu_file_alps $mb.alps]
     $mb add separator
     $mb add command {*}[menulabel "&Import ASPRS LAS..."] \
             -command ::l1pro::file::load_las
@@ -67,15 +67,6 @@ proc menu_file mb {
             -command [list wm withdraw [get_top $mb]]
     $mb add command {*}[menulabel "&Quit ALPS"] \
             -command exit
-    return $mb
-}
-
-proc menu_file_alps mb {
-    menu $mb
-    $mb add command {*}[menulabel "L&oad ALPS data as..."] \
-            -command ::l1pro::file::load_pbd_as
-    $mb add command {*}[menulabel "Save ALPS data &as..."] \
-            -command ::l1pro::file::save_pbd_as
     return $mb
 }
 

@@ -18,7 +18,7 @@ proc ::l1pro::file::prefix {} {
     }
 }
 
-proc ::l1pro::file::load_pbd {} {
+proc ::l1pro::file::load_pbd {{vname {}}} {
     set fn [tk_getOpenFile -parent .l1wid -filetypes {
         {{Yorick PBD files} {.pbd .pdb}}
         {{IDL binary files} {.bin .edf}}
@@ -30,8 +30,12 @@ proc ::l1pro::file::load_pbd {} {
     }
 }
 
-proc ::l1pro::file::save_pbd {} {
+proc ::l1pro::file::save_pbd {{outvname {}}} {
     set vname $::pro_var
+    if {$outvname eq ""} {
+        set outvname $vname
+    }
+    set outvname [::yorick::sanitize_vname $outvname]
     set fn [tk_getSaveFile -parent .l1wid \
             -title "Select destination to save $vname" \
             -filetypes {
@@ -47,214 +51,25 @@ proc ::l1pro::file::save_pbd {} {
         if {$ext eq ".edf" || $ext eq ".bin"} {
             exp_send "edf_export, \"$fn\", $vname;\r"
         } else {
-            exp_send "pbd_save, \"$fn\", \"$vname\", $vname;\r"
+            exp_send "pbd_save, \"$fn\", \"$outvname\", $vname;\r"
         }
     }
 }
 
 proc ::l1pro::file::save_pbd_as {} {
-    gui::save_pbd_as [prefix]%AUTO%
-}
+    set vname $::pro_var
+    set prompt \
+            "You are saving variable $::pro_var. Please specify the\
+            \nname you would like $::pro_var saved as in the file."
 
-snit::widget ::l1pro::file::gui::save_pbd_as {
-    hulltype toplevel
-    delegate option * to hull
-    delegate method * to hull
+    lassign [::misc::getstring \
+            -default $vname \
+            -prompt $prompt \
+            -title "Save PBD as..." \
+            ] result outvname
 
-    variable filename {}
-    variable vdata {}
-    variable vname {}
-
-    constructor args {
-        wm title $win "Save ALPS data to pbd..."
-        wm resizable $win 1 0
-
-        ttk::frame $win.f1
-        ttk::frame $win.f2
-
-        ttk::label $win.lblFile -text "Destination: "
-        ttk::entry $win.entFile -state readonly -width 40 \
-                -textvariable [myvar filename]
-        ttk::button $win.btnFile -text "Browse..." \
-                -command [mymethod select_file]
-
-        ttk::label $win.lblData -text "Data variable: "
-        ::mixin::combobox $win.cboData \
-                -textvariable [myvar vdata] \
-                -listvariable ::varlist
-
-        ttk::label $win.lblVname -text "vname to use: "
-        ttk::entry $win.entVname -width 20 -textvariable [myvar vname]
-
-        ttk::button $win.btnSave -text "Save" -command [mymethod save]
-        ttk::button $win.btnCancel -text "Cancel" -command [mymethod cancel]
-
-        grid $win.f1 -sticky news
-        grid columnconfigure $win 0 -weight 1
-        grid rowconfigure $win 0 -weight 1
-
-        grid $win.lblFile $win.entFile $win.btnFile -in $win.f1 -padx 1 -pady 1
-        grid $win.lblData $win.cboData -in $win.f1 -padx 1 -pady 1
-        grid $win.lblVname $win.entVname -in $win.f1 -padx 1 -pady 1
-        grid $win.f2 - - -in $win.f1
-
-        grid $win.lblFile $win.lblData $win.lblVname -sticky e
-        grid $win.entFile $win.btnFile $win.cboData $win.entVname $win.f2 \
-                -sticky ew
-
-        grid x $win.btnSave $win.btnCancel -in $win.f2 -padx 1 -pady 1
-
-        grid columnconfigure $win.f1 1 -weight 1
-        grid columnconfigure $win.f2 {0 3} -weight 1
-        grid rowconfigure $win.f1 10 -weight 1
-
-        set vdata $::pro_var
-        set vname $::pro_var
-        $self configurelist $args
-    }
-
-    method select_file {} {
-        if {$filename eq ""} {
-            set base $::data_file_path
-        } else {
-            set base [file dirname $filename]
-        }
-
-        set temp [tk_getSaveFile -initialdir $base \
-                -parent $win -title "Select destination" \
-                -filetypes {{"PBD files" .pbd} {"All files" *}}]
-
-        if {$temp ne ""} {
-            set filename $temp
-        }
-    }
-
-    method save {} {
-        if {$filename eq ""} {
-            $self select_file
-        }
-
-        if {$filename eq ""} {
-            return
-        }
-
-        exp_send "pbd_save, \"$filename\", \"$vname\", $vdata;\r"
-        expect "> "
-
-        destroy $self
-    }
-
-    method cancel {} {
-        destroy $self
-    }
-}
-
-proc ::l1pro::file::load_pbd_as {} {
-    if {[winfo exists .l1wid]} {
-        set prefix .l1wid.
-    } else {
-        set prefix .
-    }
-    ::l1pro::file::gui::load_pbd_as ${prefix}%AUTO%
-}
-
-snit::widget ::l1pro::file::gui::load_pbd_as {
-    hulltype toplevel
-    delegate option * to hull
-    delegate method * to hull
-
-    variable filename {}
-    variable vname {}
-    variable skip 1
-
-    constructor args {
-        wm title $win "Load ALPS data as..."
-        wm resizable $win 1 0
-
-        ttk::frame $win.f1
-        ttk::frame $win.f2
-
-        ttk::label $win.lblFile -text "Source file: "
-        ttk::entry $win.entFile -state readonly -width 40 \
-                -textvariable [myvar filename]
-        ttk::button $win.btnFile -text "Browse..." \
-                -command [mymethod select_file]
-
-        ttk::label $win.lblVname -text "Variable name: "
-        ttk::entry $win.entVname -width 20 \
-                -textvariable [myvar vname]
-
-        ttk::label $win.lblSkip -text "Subsample factor: "
-        ttk::spinbox $win.spnSkip -from 1 -to 10000 -increment 1 \
-                -textvariable [myvar skip]
-
-        ttk::button $win.btnLoad -text "Load" -command [mymethod load]
-        ttk::button $win.btnCancel -text "Cancel" -command [mymethod cancel]
-
-        grid $win.f1 -sticky news
-        grid columnconfigure $win 0 -weight 1
-        grid rowconfigure $win 0 -weight 1
-
-        grid $win.lblFile $win.entFile $win.btnFile -in $win.f1 -padx 1 -pady 1
-        grid $win.lblVname $win.entVname -in $win.f1 -padx 1 -pady 1
-        grid $win.lblSkip $win.spnSkip -in $win.f1 -padx 1 -pady 1
-        grid $win.f2 - - -in $win.f1
-
-        grid $win.lblFile $win.lblVname $win.lblSkip -sticky e
-        grid $win.entFile $win.btnFile $win.entVname $win.spnSkip $win.f2 \
-                -sticky ew
-
-        grid x $win.btnLoad $win.btnCancel -in $win.f2 -sticky e \
-                -padx 1 -pady 1
-
-        grid columnconfigure $win.f1 1 -weight 1
-        grid columnconfigure $win.f2 {0 3} -weight 1
-        grid rowconfigure $win.f1 10 -weight 1
-
-        $self configurelist $args
-    }
-
-    method select_file {} {
-        if {$filename eq ""} {
-            set base $::data_file_path
-        } else {
-            set base [file dirname $filename]
-        }
-
-        set temp [tk_getOpenFile -initialdir $base \
-                -parent $win -title "Select source file" \
-                -filetypes {{"PBD files" .pbd} {"All files" *}}]
-
-        if {$temp ne ""} {
-            set filename $temp
-        }
-    }
-
-    method load {} {
-        if {$vname eq ""} {
-            tk_messageBox -icon error -type ok \
-                    -message "You must provide a variable name."
-            return
-        }
-
-        if {$filename eq ""} {
-            $self select_file
-        }
-        if {$filename eq ""} {
-            return
-        }
-
-        set cmd "restore_alps_data, \"$filename\", vname=\"$vname\""
-        if {$skip > 1} {
-            append cmd ", skip=$skip"
-        }
-        exp_send "$cmd;\r"
-
-        destroy $self
-    }
-
-    method cancel {} {
-        destroy $self
+    if {$result eq "ok"} {
+        save_pbd $outvname
     }
 }
 
