@@ -38,7 +38,8 @@ dst_geoid=, verbose=) {
         src_geoid="03"    - for GEOID03 (default)
         src_geoid="03dep" - for GEOID03, deprecated version
         src_geoid="06"    - for GEOID06
-        src_geoid="09"    - for GEOID09
+        src_geoid="12"    - for GEOID12
+        src_geoid="12A"   - for GEOID12A
       If src_datum is not set to n88, then src_geoid has no effect.
     dst_datum= The datum that the converted data should be in. Possible
       values:
@@ -50,9 +51,11 @@ dst_geoid=, verbose=) {
         dst_geoid="96"    - for GEOID96
         dst_geoid="99"    - for GEOID99
         dst_geoid="03"    - for GEOID03
-        src_geoid="03dep" - for GEOID03, deprecated version
-        src_geoid="06"    - for GEOID06
+        dst_geoid="03dep" - for GEOID03, deprecated version
+        dst_geoid="06"    - for GEOID06
         dst_geoid="09"    - for GEOID09 (default)
+        dst_geoid="12"    - for GEOID12
+        dst_geoid="12A"   - for GEOID12A
       If dst_datum is not set to n88, then dst_geoid has no effect.
 
   The default for dst_geoid will change in the future when new GEOID models
