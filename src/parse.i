@@ -69,7 +69,7 @@ func parse_datum(text) {
 
   part1 = part2 = part3 = datum = geoid = [];
   regmatch, "(^.*?(^|_))(w84|n83|n88)((\.|_|$).*$)", text, , part1, , datum, part2;
-  regmatch, "^_g(96|99|03dep|03|06|09)((\.|_|$).*$)", part2, , geoid, part3;
+  regmatch, "^_g(96|99|03dep|03|06|09|12A|12)((\.|_|$).*$)", part2, , geoid, part3;
 
   w = where(datum != "n88");
   if(numberof(w)) {
