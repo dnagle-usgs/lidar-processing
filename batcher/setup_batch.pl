@@ -36,7 +36,9 @@ my $ETC           = "$EAARL/etc";
 my $MASTER_file   = "$ETC/ALPS_master";
 my $SCREEN_master = "$ETC/.screenrc-batch-master";
 my $SCREEN_slave  = "$ETC/.screenrc-batch-slave";
-my $NCPU          = `grep -c "^vendor" /proc/cpuinfo`;
+
+my $NCPU          = $ENV{NCPU};
+   $NCPU          = `grep -c "^vendor" /proc/cpuinfo` if ( $NCPU eq "" );
 my $SCREEN        = "/usr/bin/screen";
 my $RUN="";
 my $LOG_PATH      = "/tmp/batch/screen";
