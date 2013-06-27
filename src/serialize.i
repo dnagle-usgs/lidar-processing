@@ -17,6 +17,7 @@ scratch = save(scratch, tmps, tmpu,
   serialize_direct, deserialize_direct,
   serialize_function, deserialize_function,
   serialize_oxygroup, deserialize_oxygroup,
+  serialize_struct_instance, deserialize_struct_instance,
   serialize_yetihash, deserialize_yetihash
 );
 
@@ -26,6 +27,7 @@ tmpu = save();
 func serialize(helper, data) {
   if(is_hash(data)) return helper(yetihash, data);
   if(is_obj(data)) return helper(oxygroup, data);
+  if(typeof(data) == "struct_instance") return helper(struct_instance, data);
   if(is_func(data)) return helper(function, data);
   return helper(direct, data);
 }
@@ -85,6 +87,24 @@ func deserialize_oxygroup(data) {
   return result;
 }
 save, tmpu, oxygroup=deserialize_oxygroup;
+
+func serialize_struct_instance(data) {
+  type = "struct_instance";
+  name = nameof(structof(data));
+  val = serialize(struct2obj(data));
+  return [&type, &name, &val];
+}
+save, tmps, struct_instance=serialize_struct_instance;
+
+func deserialize_struct_instance(data) {
+  name = *data(2);
+  obj = deserialize(*data(3));
+  result = obj2struct(obj, name=name);
+  if(symbol_exists(name) && is_struct(symbol_def(name)))
+    struct_cast, result, symbol_def(name);
+  return result;
+}
+save, tmpu, struct_instance=deserialize_struct_instance;
 
 func serialize_yetihash(data) {
   type = "yetihash";
