@@ -389,7 +389,6 @@ func eaarl_mission_unwrap(env) {
   Handler for mission_unwrap.
   SEE ALSO: mission_unwrap
 */
-  local cache_what;
   extern data_path;
   extern edb, edb_filename, edb_files, total_edb_records, soe_day_start,
     eaarl_time_offset;
@@ -397,9 +396,20 @@ func eaarl_mission_unwrap(env) {
   extern iex_nav, iex_head, tans, ins_filename;
   extern ops_conf, ops_conf_filename;
   extern bathconf;
-  local bathconf_data;
 
-  restore, env.data;
+  cache_what = env.data.cache_what;
+  bathconf_data = env.data.bathconf_data;
+
+  idx = env.data(*,[
+    "data_path",
+    "edb", "edb_filename", "edb_files", "total_edb_records", "soe_day_start",
+        "eaarl_time_offset",
+    "pnav", "gga", "pnav_filename",
+    "iex_nav", "iex_head", "tans", "ins_filename",
+    "ops_conf", "ops_conf_filename"
+  ]);
+  restore, env.data(idx(where(idx)));
+
   if(cache_what == "everything") iex2tans;
   if(is_void(bathconf_data))
     bathconf, clear;
