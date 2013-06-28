@@ -2,7 +2,7 @@ pro batch_grid, path, filename=filename, rcfmode=rcfmode, searchstr=searchstr, $
 	cell=cell, mode=mode, z_grid_max = z_grid_max, z_grid_min=z_grid_min, $
 	area_threshold=area_threshold, dist_threshold=dist_threshold, $
 	missing = missing, zbuf_plot=zbuf_plot, save_zbuf_plots = save_zbuf_plots, $
-	zbuf_scale=zbuf_scale, maxelv = maxelv, minelv = minelv, $
+	zbuf_scale=zbuf_scale, maxelv = maxelv, minelv = minelv, buffer=buffer, $
 	plot_grids = plot_grids, max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, $
 	scale_down_by = scale_down_by, save_grid_plots = save_grid_plots, $
 	write_geotiffs=write_geotiffs, GE_plots=GE_plots, colorbar_plot = colorbar_plot, $
@@ -47,7 +47,8 @@ pro batch_grid, path, filename=filename, rcfmode=rcfmode, searchstr=searchstr, $
    	; datum_type = 1 (default) for NAD83/NAVD88
    	; datum_type = 2 for WGS84/ITRF
    	; datum_type = 3 for NAD83/ITRF
-   
+   ; buffer = add a buffer region (in meters) around tile.
+	; Ignored if datamode=1
 
 
    ; amar nayegandhi 05/14/03
@@ -118,7 +119,7 @@ for i = 0, n_elements(fn_arr)-1 do begin
      grid_eaarl_data, *data_arr[0], cell=cell, mode=mode, datamode=datamode, $
 	zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, $
 	z_max=z_grid_max, z_min=z_grid_min, missing = missing, $
-	corner=[we, no], $
+	corner=[we, no], buffer=buffer, $
 	area_threshold = area_threshold, dist_threshold=dist_threshold
    endif else begin
      grid_eaarl_data, *data_arr[0], cell=cell, mode=mode, datamode=datamode, $

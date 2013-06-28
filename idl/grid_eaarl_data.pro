@@ -1,7 +1,7 @@
 pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, $
 	z_max = z_max, z_min=z_min, missing = missing, limits=limits, $
 	area_threshold=area_threshold, dist_threshold = dist_threshold, $
-	datamode=datamode, corner=corner
+	datamode=datamode, corner=corner, buffer=buffer
   ; this procedure does tinning / gridding on eaarl data
   ; amar nayegandhi 5/14/03.
   ; INPUT KEYWORDS:
@@ -17,21 +17,22 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
 	; datamode = set to 3 if you want to use the function in index tile mode
 	;	     set to 2 if you want to use the function in data tile mode 	
 	;	     set to 1 if you want to use the function in non-data or non-index tile mode
-
+	; buffer = add a buffer region (m) around tile. Ignored if datamode=1
 
   if (not keyword_set(cell)) then cell = 1  
   if (not keyword_set(z_min)) then z_min = -100L
   if (not keyword_set(missing)) then missing = -32767L
   if (not keyword_set(area_threshold)) then area_threshold = 200
   if (not keyword_set(dist_threshold)) then dist_threshold = 50
-  if (not keyword_set(datamode)) then datamode = 2  
+  if (not keyword_set(datamode)) then datamode = 2
+  if (not keyword_set(buffer)) then buffer=0
   if (not keyword_set(limits)) then begin
 	; get the limits from the input data set
 	if ((not keyword_set(corner)) OR (datamode eq 1)) then begin
 	    limits = [min(data.east),min(data.north),max(data.east),max(data.north)]/100.
 	endif else begin
 	    if (datamode eq 2) then begin
-		limits = [corner[0], corner[1]-2000, corner[0]+2000, corner[1]]
+		limits = [corner[0]-buffer, corner[1]-2000-buffer, corner[0]+2000+buffer, corner[1]+buffer]
 	    endif else begin
 		limits = [corner[0], corner[1]-10000, corner[0]+10000, corner[1]]
 	    endelse
