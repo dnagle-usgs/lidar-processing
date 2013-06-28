@@ -358,6 +358,9 @@ func eaarl_mission_wrap(env) {
   Handler for mission_wrap.
   SEE ALSO: mission_wrap
 */
+  default, cache_what, env.cache_what;
+  default, cache_what, mission.data.cache_what;
+
   extern data_path;
   extern edb, edb_filename, edb_files, total_edb_records, soe_day_start,
     eaarl_time_offset;
@@ -367,11 +370,11 @@ func eaarl_mission_wrap(env) {
   extern bathconf;
 
   save, env.wrapped,
-    cache_what=mission.data.cache_what,
+    cache_what,
     ops_conf, ops_conf_filename,
     bathconf_data=bathconf.data;
 
-  if(mission.data.cache_what == "everything") {
+  if(cache_what == "everything") {
     save, env.wrapped,
       data_path,
       edb, edb_filename, edb_files, total_edb_records, soe_day_start,
