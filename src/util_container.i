@@ -217,16 +217,30 @@ func sanitize_vname(&vname) {
     return ovname;
 }
 
-func pbd_save(file, vname, data) {
+func pbd_save(file, vname, data, empty=) {
 /* DOCUMENT pbd_save, file, vname, data
   This creates the pbd "file" using variable name "vname" to store "data". If
   the file already exists, it will be overwritten.
 
+  If you try to save an empty data/void variable, you'll get an error. If you
+  set empty=1, a 0-byte empty file will be created instead.
+
   SEE ALSO: pbd_append pbd_load
 */
 // Original David Nagle 2009-12-28
+  default, empty, 0;
   default, vname, file_rootname(file_tail(file));
   sanitize_vname, vname;
+
+  if(is_void(data)) {
+    if(empty == 1) {
+      open, file, "w";
+      return;
+    } else {
+      error, "cannot save empty data variable";
+    }
+  }
+
   f = createb(file, i86_primitives);
   save, f, vname;
   add_variable, f, -1, vname, structof(data), dimsof(data);
