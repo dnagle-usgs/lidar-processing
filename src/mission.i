@@ -981,7 +981,7 @@ func mission_unload(void) {
 }
 unload = mission_unload;
 
-func mission_wrap(void) {
+func mission_wrap(void, cache_what=) {
 /* DOCUMENT data = mission(wrap,)
   Saves all of the relevant variables to an oxy group object for the currently
   loaded dataset. The group object is then returned. The group object should be
@@ -994,7 +994,7 @@ func mission_wrap(void) {
 */
   wrapped = save();
   if(handler_has("mission_wrap")) {
-    restore, handler_invoke("mission_wrap", save(wrapped));
+    restore, handler_invoke("mission_wrap", save(wrapped, cache_what));
   } else {
     write, "WARNING: 'mission(wrap,)' is not properly implemented";
     write, "         Most likely this means you didn't load a configuration";
