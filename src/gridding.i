@@ -830,9 +830,9 @@ usetcl=) {
 }
 
 func idl_batch_grid(dir, outdir=, searchstr=, cell=, mode=, maxarea=, maxside=,
-tilemode=, nodata=, datum=, zone=) {
+tilemode=, nodata=, datum=, zone=, buffer=) {
 /* DOCUMENT idl_batch_grid, dir, outdir=, searchstr=, cell=, mode=, maxarea=,
-  maxside=, tilemode=, nodata=, datum=, zone=
+  maxside=, tilemode=, nodata=, datum=, zone=, buffer=
 
   Uses IDL to run batch_grid.
 
@@ -864,6 +864,8 @@ tilemode=, nodata=, datum=, zone=) {
         datum=2           WGS84/ITRF
         datum=3           NAD83/ITRF
     zone= UTM zone of the data. By default, will use curzone.
+    buffer= add buffer (in meters) around tiled gridded data. Ignored if 
+	tilemode=1.
 */
   extern curzone;
   default, outdir, [];
@@ -893,6 +895,8 @@ tilemode=, nodata=, datum=, zone=) {
   cmd += swrite(format=", area_threshold=%.4f", double(maxarea));
   cmd += swrite(format=", dist_threshold=%.4f", double(maxside));
   cmd += swrite(format=", datamode=%d", long(tilemode));
+  if(!is_void(buffer))
+    cmd += swrite(format=", buffer=%d", long(buffer));
   if(!is_void(nodata))
     cmd += swrite(format=", missing=%.4f", double(nodata));
   cmd += swrite(format=", datum_type=%d", long(datum));
