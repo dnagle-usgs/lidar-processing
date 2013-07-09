@@ -163,6 +163,27 @@ func keyrequire(args) {
 errs2caller, keyrequire;
 wrap_args, keyrequire;
 
+func restore_if_exists(args) {
+/* DOCUMENT restore_if_exists, <obj|hash|file>, <var1>, <var2>, ...
+  The first argument must be something with named fields (such that has_members
+  would return 1). The remaining arguments must be simple varaiable references.
+  This works like a simplified restore that only restores those variables if
+  they exist in the container. If they do not exist, they are left at their
+  current value.
+*/
+  if(!args(0))
+    error, "invalid call to restore_if_exists";
+  obj = args(1);
+  for(i = 2; i <= args(0); i++) {
+    if(args(0,i) != 0) error, "must use simple variable refs";
+    key = args(-,i);
+    if(!has_member(obj, key)) continue;
+    args, i, get_member(obj, key);
+  }
+}
+errs2caller, restore_if_exists;
+wrap_args, restore_if_exists;
+
 func obj_merge(obj, ..) {
 /* DOCUMENT obj = obj_merge(objA, objB, objC, ...)
   -or-  obj_merge, objA, objB, objC, ...
