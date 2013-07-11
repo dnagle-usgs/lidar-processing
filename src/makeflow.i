@@ -281,8 +281,16 @@ func makeflow_obj_to_switches(obj, prefix) {
     if(is_obj(obj(noop(i)))) {
       grow, result, makeflow_obj_to_switches(obj(noop(i)), prefix+"-"+keys(i));
     } else {
-      for(j = 1; j <= numberof(obj(noop(i))); j++)
-        grow, result, [prefix+"-"+keys(i), obj(noop(i))(j)];
+      for(j = 1; j <= numberof(obj(noop(i))); j++) {
+        val = obj(noop(i))(j);
+        if(is_integer(val))
+          val = swrite(format="%d", val);
+        if(typeof(val) == "double")
+          val = swrite(format="%.16g", val);
+        if(typeof(val) == "float")
+          val = swrite(format="%.8g", val);
+        grow, result, [prefix+"-"+keys(i), val];
+      }
     }
   }
   return result;
