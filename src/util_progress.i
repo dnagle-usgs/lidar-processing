@@ -156,7 +156,7 @@ func status_start(count=, interval=, msg=) {
 }
 start = status_start;
 
-func status_progress(current, count) {
+func status_progress(current, count, msg=) {
   use, cache;
 
   update = 0;
@@ -176,7 +176,10 @@ func status_progress(current, count) {
 
   if(!update) return;
 
-  tkcmd, "::l1pro::status::progress "+swrite(current)+" "+swrite(count);
+  cmd = "";
+  if(!is_void(msg)) cmd = "set ::status(template) {"+msg+"}; ";
+  cmd += "::l1pro::status::progress "+swrite(current)+" "+swrite(count);
+  tkcmd, cmd;
 }
 progress = status_progress;
 
