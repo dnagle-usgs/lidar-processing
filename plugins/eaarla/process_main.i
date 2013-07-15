@@ -8,11 +8,11 @@ local eaarl_processing_modes;
 */
 if(is_void(eaarl_processing_modes)) eaarl_processing_modes = save();
 save, eaarl_processing_modes,
-  fs=save(
+  f=save(
     process=process_fs,
     cast=fs_struct_from_obj
   ),
-  ba=save(
+  b=save(
     process=process_ba,
     cast=ba_struct_from_obj
   );
@@ -34,7 +34,7 @@ func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, opts=) {
 
   Options:
     mode= Processing mode.
-        mode="fs"   Process for first surface (default)
+        mode="f"    Process for first surface (default)
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
     channel= Specifies which channel or channels to process. If omitted or set
@@ -51,7 +51,7 @@ func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, opts=) {
   restore_if_exists, opts, start, stop, mode, ext_bad_att, channel;
 
   extern eaarl_processing_modes;
-  default, mode, "fs";
+  default, mode, "f";
 
   if(!eaarl_processing_modes(*,mode))
     error, "invalid mode";
@@ -78,7 +78,7 @@ func make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=) {
 
   Options for processing:
     mode= Processing mode.
-        mode="fs"   Process for first surface (default)
+        mode="f"    Process for first surface (default)
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
     channel= Specifies which channel or channels to process. If omitted or set
@@ -99,7 +99,7 @@ func make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=) {
 
   extern ops_conf, tans, pnav;
 
-  default, mode, "fs";
+  default, mode, "f";
   default, verbose, 1;
 
   if(is_void(ops_conf))
@@ -172,7 +172,7 @@ ext_bad_att=, opts=) {
 
   Options:
     mode= Processing mode.
-        mode="fs"   Process for first surface (default)
+        mode="f"    Process for first surface (default)
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
     channel= Specifies which channel or channels to process. If omitted or set
@@ -212,7 +212,7 @@ makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
 
   extern ops_conf, tans, pnav;
 
-  default, mode, "fs";
+  default, mode, "f";
   default, verbose, 1;
 
   if(is_void(ops_conf))
