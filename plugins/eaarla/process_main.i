@@ -154,3 +154,53 @@ func make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=) {
 
   return data;
 }
+
+func make_eaarl_from_tld(tldfn, start, stop, rnstart, mode=, channel=,
+ext_bad_att=, opts=) {
+/* DOCUMENT make_eaarl_from_tld(tldfn, start, stop, rnstart, mode=, channel=,
+   ext_bad_att=, opts=)
+  Processes EAARl data. This is a lower-level version of make_eaarl that is
+  primarily intended for use in jobs.
+
+  Parameters:
+  The parameters specify the raw data to process. They may be scalar or array,
+  but must all have the same count.
+    tldfn: The full path to a TLD file.
+    start: Starting byte offset into the TLD file.
+    stop: Stopping byte offset into the TLD file.
+    rnstart: Raster number of first raster in selected data.
+
+  Options:
+    mode= Processing mode.
+        mode="fs"   Process for first surface (default)
+    ext_bad_att= A value in meters. Points less than this close to the mirror
+      (in elevation) are discarded. By default, this is 0 and is not applied.
+    channel= Specifies which channel or channels to process. If omitted or set
+      to 0, EAARL-A style channel selection is used. Otherwise, this can be an
+      integer or array of integers for the channels to process.
+    opts= Oxy group that provides an alternative interface for providing
+      function arguments/options. Any key/value pairs not used by this function
+      will be passed through as-is to the underlying processing function.
+
+  Returns:
+    An array of EAARL point cloud data, in the struct appropriate for the
+    data's type.
+*/
+  restore_if_exists, opts, tldfn, start, stop, rnstart, mode, channel,
+    ext_bad_att;
+
+  passopts = save(mode, channel, ext_bad_att);
+  if(opts)
+    passopts = obj_delete(obj_merge(opts, passopts),
+      tldfn, start, stop, rnstart);
+
+  result = array(pointer, numberof(tldfn));
+  for(i = 1; i <= numberof(tldfn); i++) {
+    pulses = eaarl_decode_fast(tldfn(i), start(i), stop(i),
+      rnstart=rnstart(i), wfs=1);
+    result(i) = &process_eaarl(pulses, opts=passopts);
+  }
+  pulses = [];
+
+  return merge_pointers(result);
+}
