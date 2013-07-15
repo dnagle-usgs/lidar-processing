@@ -75,12 +75,12 @@ func makeflow_run(conf, fn, norun=, interval=) {
   extern alpsrc;
   default, norun, 0;
 
+  // If makeflow is enabled, attempt to find a makeflow executable
   makeflow_exe = "";
-
-  if(alpsrc.makeflow_enable) {
+  if(alpsrc.makeflow_enable)
     makeflow_exe = file_join(alpsrc.cctools_bin, "makeflow");
-  }
 
+  // If no makeflow executable is available/allowed, fall back to pure Yorick.
   if(!file_exists(makeflow_exe)) {
     sans_makeflow, conf, interval=interval;
     return;
@@ -88,13 +88,13 @@ func makeflow_run(conf, fn, norun=, interval=) {
 
   tempdir = [];
   if(is_void(fn)) {
-    if(norun) {
+    if(norun)
       error, "You can't provide norun=1 unless you also provide fn.";
-    }
     tempdir = mktempdir("makeflow");
     fn = file_join(tempdir, "Makeflow");
   }
 
+  // Associated files always get created alongside makeflow file
   makeflow_log = fn+".makeflowlog";
 
   makeflow_conf_to_script, conf, fn;
@@ -106,13 +106,16 @@ func makeflow_run(conf, fn, norun=, interval=) {
   cmd_makeflow = swrite(format="%s %s %s > /dev/null",
     makeflow_exe, alpsrc.makeflow_opts, fn);
 
-  if(file_exists(makeflow_log))
-    remove, makeflow_log;
+  // Need to remove any existing makeflow log to avoid possibility of accessing
+  // old log before new log is created.
+  remove, makeflow_log;
 
   f = popen(cmd_makeflow, 0);
   do {
     pause, 10;
   } while(!file_exists(makeflow_log));
+
+  // Monitor logfile until finished.
   do {
     pause, 250;
     status = makeflow_parse_log(makeflow_log);
