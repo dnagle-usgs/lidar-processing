@@ -96,8 +96,14 @@ func makeflow_run(conf, fn, norun=, interval=) {
 
   // Associated files always get created alongside makeflow file
   makeflow_log = fn+".makeflowlog";
+  makeflow_env = fn+".env.pbd";
 
-  makeflow_conf_to_script, conf, fn;
+  // Generate makeflow and env files
+  jobs_env_wrap, makeflow_env;
+  makeflow_conf_to_script, conf, fn, jobenv=makeflow_env;
+
+  // Abort: this lets the caller examine the output without running the
+  // makeflow.
   if(norun) {
     write, format=" Makeflow written to:\n %s\n", fn;
     return;
