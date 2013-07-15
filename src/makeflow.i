@@ -207,9 +207,9 @@ func makeflow_parse_log(fn) {
   return save(status, started, ended, log);
 }
 
-func makeflow_conf_to_script(conf, fn) {
-/* DOCUMENT makeflow_conf_to_script, conf, fn
-  script = makeflow_conf_to_script(conf)
+func makeflow_conf_to_script(conf, fn, jobenv=) {
+/* DOCUMENT makeflow_conf_to_script, conf, fn, jobenv=
+  script = makeflow_conf_to_script(conf, jobenv=)
 
   Given a configuration, generates a makeflow script.
 
@@ -250,6 +250,11 @@ func makeflow_conf_to_script(conf, fn) {
       if(numberof(item.options(1)))
         grow, args, item.options(1);
       args = strjoin(args, " ");
+    }
+
+    if(!is_void(jobenv)) {
+      input += " " + jobenv;
+      args += " --jobenv " + jobenv;
     }
 
     cmd = item.command;
