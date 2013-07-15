@@ -49,8 +49,7 @@ func make_fs_new(q=, ply=, ext_bad_att=, channel=, verbose=) {
     }
     pulses = process_fs(rn_start(i), rn_stop(i), channel=channel,
       ext_bad_att=ext_bad_att);
-    if(!is_void(pulses))
-      fs_all(i) = &fs_struct_from_obj(pulses);
+    fs_all(i) = &fs_struct_from_obj(pulses);
     status, progress, rn_counts(i), rn_counts(0);
   }
   status, finished;
@@ -68,6 +67,7 @@ func fs_struct_from_obj(pulses) {
   Converts the return result from process_fs (which is an oxy group) into the
   FS struct.
 */
+  if(!is_obj(pulses) || !numberof(pulses.fx)) return [];
   result = array(FS, numberof(pulses.fx));
   result.rn = (long(pulses.raster) & 0xffffff) | (long(pulses.pulse) << 24);
   result.raster = pulses.raster;
