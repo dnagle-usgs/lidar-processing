@@ -146,6 +146,8 @@ func makeflow_parse_log(fn) {
         3 - failed
     started - Time when the makeflow was started.
     ended - Time when the makeflow ended.
+    jobs_pending - Number of jobs that have not finished.
+    jobs_finished - Number of jobs that have finished.
     log - An array of struct MAKEFLOW_LOG containing the log entries.
 
   The second set of fields are the contents of result.log, as noted above, an
@@ -204,7 +206,11 @@ func makeflow_parse_log(fn) {
     nodes_running, nodes_complete, nodes_failed, nodes_aborted,
     node_id_counter), name="MAKEFLOW_LOG", ary=1);
 
-  return save(status, started, ended, log);
+  last = log(0);
+  jobs_pending = last.nodes_waiting + last.nodes_running;
+  jobs_finished = last.nodes_complete + last.nodes_failed + last.nodes_aborted;
+
+  return save(status, started, ended, jobs_pending, jobs_finished, log);
 }
 
 func makeflow_conf_to_script(conf, fn, jobenv=) {
