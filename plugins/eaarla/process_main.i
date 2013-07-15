@@ -204,3 +204,86 @@ ext_bad_att=, opts=) {
 
   return merge_pointers(result);
 }
+
+func mf_make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=,
+makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
+  restore_if_exists, opts, mode, q, ply, ext_bad_att, channel, verbose,
+    makeflow_fn, forcelocal, retconf=, norun;
+
+  extern ops_conf, tans, pnav;
+
+  default, mode, "fs";
+  default, verbose, 1;
+
+  if(is_void(ops_conf))
+    error, "ops_conf is not set";
+  if(is_void(tans))
+    error, "tans is not set";
+  if(is_void(pnav))
+    error, "pnav is not set";
+
+  if(is_void(q))
+    q = pnav_sel_rgn(region=ply);
+
+  // find start and stop raster numbers for all flightlines
+  rn_arr = sel_region(q, verbose=verbose);
+
+  if(is_void(rn_arr)) {
+    write, "No rasters found, aborting";
+    return;
+  }
+
+  // Break rn_arr up into per-TLD raster ranges instead
+  rn_start = rn_arr(1,);
+  rn_stop = rn_arr(2,);
+  rn_arr = [];
+  raster_sources, rn_start, rn_stop, tldfn, offset_start, offset_stop;
+
+  tempdir = mktempdir("mf_make_eaarl");
+  pbdfn = file_join(tempdir, swrite(format="eaarl_%d.pbd", rn_start));
+
+  count = numberof(rn_start);
+
+  options = save(string(0), [], mode, channel, ext_bad_att);
+  if(opts)
+    options = obj_delete(obj_merge(opts, options),
+      q, ply, makeflow_fn, forcelocal, norun);
+
+  conf = save();
+  for(i = 1; i <= count; i++) {
+    remove, pbdfn(i);
+    save, conf, string(0), save(
+      forcelocal=forcelocal,
+      input=tldfn(i),
+      output=pbdfn(i),
+      command="job_eaarl_process",
+      options=obj_merge(options, save(
+        "tldfn", tldfn(i),
+        "pbdfn", pbdfn(i),
+        "start", offset_start(i),
+        "stop", offset_stop(i),
+        "rnstart", rn_start(i),
+        "vname", swrite(format="%s_%d", mode, i)
+      ))
+    );
+  }
+
+  if(retconf) return conf;
+
+  hook_add, "jobs_env_wrap", "hook_eaarl_mission_jobs_env_wrap";
+  hook_add, "jobs_env_unwrap", "hook_eaarl_mission_jobs_env_unwrap";
+  makeflow_run, conf, makeflow_fn, interval=15, norun=norun;
+  hook_remove, "jobs_env_wrap", "hook_eaarl_mission_jobs_env_wrap";
+  hook_remove, "jobs_env_unwrap", "hook_eaarl_mission_jobs_env_unwrap";
+
+  data = dirload(files=pbdfn, verbose=0);
+  for(i = 1; i <= count; i++) {
+    remove, pbdfn(i);
+  }
+  rmdir, tempdir;
+
+  if(verbose)
+    write, format=" Total points derived: %d\n", numberof(data);
+
+  return data;
+}

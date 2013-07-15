@@ -21,6 +21,7 @@ include, base + "eaarl_vector.i";
 include, base + "edb_access.i";
 include, base + "geo_bath.i";
 include, base + "irg.i";
+include, base + "job_commands.i";
 include, base + "makeflow_eaarl.i";
 include, base + "manual_filter.i";
 include, base + "mission.i";
