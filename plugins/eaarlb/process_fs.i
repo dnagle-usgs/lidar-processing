@@ -94,6 +94,11 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
     stop: Raster number to stop at. This may also be an array and must match
       the size of START. If omitted, STOP is set to START.
 
+    Alternately:
+
+    start: May be a pulses object as returned by decode_rasters. In this case,
+      STOP is ignored.
+
   Options:
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
@@ -108,12 +113,21 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
       added by process_fs: ftx, frx, fint, fchannel, mx, my, mz, fx, fy, fz
 */
   local mx, my, mz, fx, fy, fz;
-  default, stop, start;
   default, channel, 0;
   sample_interval = 1.0;
 
   if(is_void(ops_conf))
     error, "ops_conf is not set";
+
+  // Retrieve rasters
+  if(is_integer(start)) {
+    default, stop, start;
+    pulses = decode_rasters(start, stop);
+  } else if(is_obj(start)) {
+    pulses = start;
+  } else {
+    error, "don't know how to handle input given for start";
+  }
 
   // Set up default functions
   fs_tx = eaarl_fs_tx_cent;
@@ -129,9 +143,6 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
   // Allow core functions to be overridden via hook
   restore, hook_invoke("process_fs_funcs",
     save(fs_tx, fs_rx, fs_traj, fs_spacing));
-
-  // Retrieve rasters
-  pulses = decode_rasters(start, stop);
 
   // Throw away dropouts
   w = where(!pulses.dropout);
