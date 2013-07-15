@@ -18,7 +18,7 @@ func _job_parse_options(args) {
   As a special case, two dashes without any key name ("--") will be stored in
   the anonymous key array as-is.
 
-    > obj_show, _job_parse_options(["yorick", "--foo", "1", "--bar-a", "2", \
+    > obj_show, _job_parse_options(["--foo", "1", "--bar-a", "2", \
     cont> "extra", "--bar-b", "3", "more", "--foo", "4"])
      TOP (oxy_object, 3 entries)
      |- (nil) (string,2) ["extra","more"]
