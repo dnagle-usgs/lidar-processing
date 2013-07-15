@@ -116,6 +116,11 @@ func makeflow_run(conf, fn, norun=, interval=) {
   // old log before new log is created.
   remove, makeflow_log;
 
+  // Initialize status
+  job_count = conf(*);
+  status, start;
+
+  // Launch and wait for logfile to exist.
   f = popen(cmd_makeflow, 0);
   do {
     pause, 10;
@@ -124,14 +129,17 @@ func makeflow_run(conf, fn, norun=, interval=) {
   // Monitor logfile until finished.
   do {
     pause, 250;
-    status = makeflow_parse_log(makeflow_log);
-    last = status.log(0);
-    write,
-      format="Waiting: %d  Running: %d  Complete: %d  Failed: %d  Aborted: %d\n",
-      last.nodes_waiting, last.nodes_running, last.nodes_complete,
-      last.nodes_failed, last.nodes_aborted;
-  } while(!status.status);
+    parsed = makeflow_parse_log(makeflow_log);
+    last = parsed.log(0);
+    msg = swrite(format="Makeflow running (W:%d R:%d D:%d",
+      last.nodes_waiting, last.nodes_running, last.nodes_complete);
+    if(last.nodes_failed) msg += swrite(format=" F:%d", last.nodes_failed);
+    if(last.nodes_aborted) msg += swrite(format=" A:%d", last.nodes_aborted);
+    msg += ")";
+    status, progress, parsed.jobs_finished, job_count, msg=msg;
+  } while(!parsed.status);
   close, f;
+  status, finished;
 
   if(!is_void(tempdir)) {
     remove, makeflow_log;
