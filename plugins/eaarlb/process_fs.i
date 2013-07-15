@@ -84,8 +84,8 @@ func fs_struct_from_obj(pulses) {
   return result;
 }
 
-func process_fs(start, stop, ext_bad_att=, channel=) {
-/* DOCUMENT result = process_fs(start, stop, ext_bad_att=, channel=)
+func process_fs(start, stop, ext_bad_att=, channel=, opts=) {
+/* DOCUMENT result = process_fs(start, stop, ext_bad_att=, channel=, opts=)
 
   Processes the given raster ranges for first return.
 
@@ -105,6 +105,8 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
     channel= Specifies which channel or channels to process. If omitted or set
       to 0, EAARL-A style channel selection is used. Otherwise, this can be an
       integer or array of integers for the channels to process.
+    opts= Oxy group that provides an alternative interface for providing
+      function arguments/options.
 
   Returns:
     An oxy group object containing these fields:
@@ -112,6 +114,8 @@ func process_fs(start, stop, ext_bad_att=, channel=) {
         raster, soe, tx, rx
       added by process_fs: ftx, frx, fint, fchannel, mx, my, mz, fx, fy, fz
 */
+  restore_if_exists, opts, start, stop, ext_bad_att, channel, opts;
+
   local mx, my, mz, fx, fy, fz;
   default, channel, 0;
   sample_interval = 1.0;
