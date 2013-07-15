@@ -105,10 +105,9 @@ func __job_run(argv) {
   if(strpart(job_func, 1:4) != "job_")
     error, "job function must start with \"job_\"";
 
-  // Load plugins, if specified
-  if(conf(*,"plugins")) {
-    require, "eaarl.i";
-    plugins_load, conf.plugins;
+  // Restore env, if provided
+  if(conf(*,"jobenv")) {
+    jobs_env_unwrap, conf.jobenv;
   }
 
   if(!symbol_exists(job_func))
@@ -119,4 +118,175 @@ func __job_run(argv) {
     error, "invalid job function: "+job_func;
 
   f, conf;
+}
+
+func jobs_env_wrap(fn) {
+/* DOCUMENT jobs_env_wrap, "<filename>"
+  Wraps up (part of) the current environment and saves it to file for use by a
+  job. This is intended to be unwrapped by jobs_env_unwrap.
+
+  By default, the following things are saved:
+    - the variable 'curzone'
+    - the list of loaded plugins
+    - all current hooks
+    - all current handlers
+
+  By using the hook "jobs_env_wrap", calling code can:
+    - save additional variables
+    - specify source files
+
+  Calling code can also potentially add other arbitrary items, provided a hook
+  is set for jobs_env_unwrap to specify how to handle those items.
+
+  See jobs_env_unwrap for info on how the above are interpreted.
+*/
+  extern curzone;
+
+  env = save(
+    vars=save(curzone),
+    plugins=plugins_loaded(),
+    hooks=hook_serialize(),
+    handlers=handler_serialize(),
+    includes=[]
+  );
+
+  // Atypical hook. Normally hooks wrap variables from the function's context
+  // in save(), then restore them. In this case, we're passing a specific
+  // variable directly. This is to avoid having confusing awkwardness like
+  // "env.env" in the hook functions.
+  env = hook_invoke("jobs_env_wrap", env);
+
+  save, env, vars=serialize(env.vars);
+  obj2pbd, env, fn;
+}
+
+func jobs_env_unwrap(fn) {
+/* DOCUMENT jobs_env_unwrap, "<filename>"
+  Unwraps a wrapped environment saved by jobs_env_wrap.
+
+  This will do the following (in this order):
+    - Load any plugins specified
+    - Source any include files specified
+    - Restore any variables saved
+    - Restore hooks and handlers
+    - Invoke the hook "jobs_env_unwrap"
+*/
+  require, "eaarl.i";
+  env = pbd2obj(fn);
+
+  if(numberof(env.plugins)) {
+    plugins_load, env.plugins;
+  }
+
+  for(i = 1; i <= numberof(env.includes); i++)
+    require, env.includes(i);
+
+  if(is_pointer(env.vars))
+    restore, deserialize(env.vars);
+
+  if(numberof(env.hooks)) {
+    require, "hook.i";
+    hook_deserialize, env.hooks, clear=1;
+  }
+
+  if(numberof(env.handlers)) {
+    require, "handler.i";
+    handler_deserialize, env.handlers, clear=1;
+  }
+
+  hook_invoke, "jobs_env_unwrap", env;
+}
+
+func jobs_env_include(fn) {
+/* DOCUMENT jobs_env_include;
+  -or- jobs_env_include, "<filename>";
+
+  This function lets you easily add custom include files to be loaded during
+  job execution. This lets you easily create a file with custom code that will
+  get included.
+
+  The simplest way to use the function is to simply add "jobs_env_include;" to
+  your include file. Then load your include file into your current ALPS
+  session. Your include file will automatically be added to the list of files
+  included by jobs.
+
+  You can also manually specify an include file (or an array of include files)
+  to be added.
+
+  This is primarily intended for use during development/testing of new code
+  that isn't yet part of ALPS. Avoid having your include file do much on load;
+  be mindful that it'll be included by ALL jobs that run.
+
+  (Technically speaking, omitting the filename means that the default filename
+  is current_include(). This only works if you include the file at some point.
+  It also means that omitting the filename when using the function
+  interactively is a no-op, since current_include() returns [] on the Yorick
+  command line.)
+*/
+  if(is_void(fn)) fn = current_include();
+  save, __jobs_env_include_hook.data, includes=set_remove_duplicates(grow(
+    __jobs_env_include_hook.data.includes, fn));
+  hook_add, "jobs_env_wrap", "__jobs_env_include_hook";
+}
+
+func jobs_env_include_remove(fn) {
+/* DOCUMENT jobs_env_include_remove, "<filename>";
+  Removes a custom include file that was added via jobs_env_include.
+*/
+  save, __jobs_env_include_hook.data, includes=set_difference(
+    __jobs_env_include_hook.data.includes, fn);
+  if(is_void(__jobs_env_include_hook.data.includes))
+    hook_remove, "jobs_env_wrap", "__jobs_env_include_hook";
+}
+
+func __jobs_env_include_hook(data, env) {
+/* DOCUMENT env = __jobs_env_include_hook(env);
+  Hook function used by jobs_env_include.
+*/
+  save, env, includes=grow(env.includes, data.includes);
+  return env;
+}
+__jobs_env_include_hook = closure(__jobs_env_include_hook, save(includes=[]));
+
+func jobs_env_vars(vnames) {
+/* DOCUMENT jobs_env_vars, "<varname>";
+  -or- jobs_env_vars, ["<varname1>", "<varname2>", ...];
+
+  This function lets you easily add custom variables from your current session
+  that should be copied and used during job execution.
+
+  The argument to the function is a string (or array of strings) specifying the
+  variable name to transfer. The variable referred to must be a scalar or array
+  value that can be saved to a pbd file.
+
+  The variable values aren't retrieved until the Makeflow for the jobs is
+  created.
+
+  Be mindful that the variables you specify will be used for ALL jobs that run.
+  You may wish to remove the variables you add using jobs_env_vars_remove after
+  the Makeflow is initialized.
+*/
+  save, __jobs_env_vars_hook.data, vars=set_remove_duplicates(grow(
+    __jobs_env_vars_hook.data.vars, vnames));
+  hook_add, "jobs_env_wrap", "__jobs_env_vars_hook";
+}
+
+func jobs_env_vars_remove(vnames) {
+/* DOCUMENT jobs_env_vars_remove, "<varname>";
+  -or- jobs_env_vars_remove, ["<varname1>", "<varname2>", ...];
+  Removes a variable added by jobs_env_vars.
+*/
+  save, __jobs_env_vars_hook.data, vars=set_difference(
+    __jobs_env_vars_hook.data.vars, vnames);
+  if(is_void(__jobs_env_vars_hook.data.vars))
+    hook_remove, "jobs_env_wrap", "__jobs_env_vars_hook";
+}
+
+func __jobs_env_vars_hook(data, env) {
+/* DOCUMENT env = __jobs_env_vars_hook(env);
+  Hook function used by jobs_env_vars_hook.
+*/
+  for(i = 1; i <= data.vars; i++)
+    save, env.vars, data.vars(i), symbol_def(data.vars(i));
+  return env;
 }
