@@ -499,7 +499,7 @@ prefilter_min=, prefilter_max=, verbose=) {
 
   if(verbose)
     write, format=" %s", "saving...";
-  vname = regsub("_(v|b)$", vname, "");
+  vname = regsub("_(f|v|b)$", vname, "");
   vname += swrite(format="_%s_%s", mode, rcfmode);
   pbd_save, file_out, vname, data;
 
