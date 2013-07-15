@@ -51,7 +51,7 @@ func hook_add(hooks, hook_name, func_name, priority) {
 
   // If there are no hooks for this hook name, then initialize it using the
   // specified hook function.
-  if(!hooks(*,hook_name)) {
+  if(!hooks(*,hook_name) || is_void(hooks(noop(hook_name)))) {
     save, hooks, noop(hook_name), [item];
     return;
   }
