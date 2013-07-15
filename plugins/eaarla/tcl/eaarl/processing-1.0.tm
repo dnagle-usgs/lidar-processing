@@ -105,12 +105,12 @@ proc ::eaarl::processing::process {} {
     set cmd ""
     switch -- $processing_mode {
         fs_new {
-            set cmd "$::pro_var = make_fs_new(q=q,\
-                    ext_bad_att=$ext_bad_att)"
+            set cmd "$::pro_var = make_eaarl(mode=\"fs\",\
+                    q=q, ext_bad_att=$ext_bad_att)"
         }
         ba_new {
-            set cmd "$::pro_var = make_ba(q=q,\
-                    ext_bad_att=$ext_bad_att)"
+            set cmd "$::pro_var = make_eaarl(mode=\"ba\",\
+                    q=q, ext_bad_att=$ext_bad_att)"
         }
         fs {
             set cmd "$::pro_var = make_fs(latutm=1, q=q,\
