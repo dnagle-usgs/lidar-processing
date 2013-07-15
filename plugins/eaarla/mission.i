@@ -424,6 +424,29 @@ func eaarl_mission_unwrap(env) {
   return env;
 }
 
+local hook_eaarl_mission_jobs_env_wrap, hook_eaarl_mission_jobs_env_unwrap;
+/* DOCUMENT
+  hook_add, "jobs_env_wrap", "hook_eaarl_mission_jobs_env_wrap";
+  hook_add, "jobs_env_unwrap", "hook_eaarl_mission_jobs_env_unwrap";
+  makeflow_run, conf, ... ;
+  hook_remove, "jobs_env_wrap", "hook_eaarl_mission_jobs_env_wrap";
+  hook_remove, "jobs_env_unwrap", "hook_eaarl_mission_jobs_env_unwrap";
+
+  These two hooks are used to send the loaded mission data to jobs, as
+  indicated above.
+*/
+
+func hook_eaarl_mission_jobs_env_wrap(env) {
+  save, env,
+    wrapped_missiondata=serialize(mission(wrap, cache_what="everything"));
+  return env;
+}
+
+func hook_eaarl_mission_jobs_env_unwrap(env) {
+  mission, unwrap, deserialize(env.wrapped_missiondata);
+  return env;
+}
+
 hook_add, "mission_flights_auto_critical",
   "eaarl_mission_flights_auto_critical";
 func eaarl_mission_flights_auto_critical(env) {
