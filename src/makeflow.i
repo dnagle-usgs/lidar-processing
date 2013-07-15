@@ -296,7 +296,7 @@ func makeflow_obj_to_switches(obj, prefix) {
   return result;
 }
 
-func sans_makeflow(conf, interval=) {
+func sans_makeflow(conf, interval=, current=, count=) {
 /* DOCUMENT sans_makeflow, conf, interval=
   Runs a makeflow batch, without using makeflow. Useful for systems that don't
   have makeflow installed.
@@ -305,6 +305,8 @@ func sans_makeflow(conf, interval=) {
     interval= Interval to pass to timer_remaining. Default is 15.
 */
   default, interval, 15;
+  default, current, 0;
+  default, count, conf(*);
   t0 = t1 = tp = array(double, 3);
   timer, t0;
 
@@ -335,7 +337,8 @@ func sans_makeflow(conf, interval=) {
     write, format="Processing %d jobs\n", conf(*);
   }
 
-  timer, t1;
+  if(!current && count == conf(*))
+    status, start, msg="Running jobs, finished CURRENT of COUNT", count=count;
   for(i = 1; i <= conf(*); i++) {
     cur = conf(noop(i));
     cmd = cur.command;
@@ -362,8 +365,9 @@ func sans_makeflow(conf, interval=) {
 
     f = symbol_def(cmd);
     f, opt;
+    current++;
 
-    timer_remaining, t1, sizes(i), sizes(0), tp, interval=interval;
+    status, progress, current, count;
   }
 
   timer_finished, t0, fmt=swrite(format="Finished %d jobs in ELAPSED.\n", conf(*));
@@ -380,6 +384,8 @@ func sans_makeflow(conf, interval=) {
       error, "Timed out while waiting for next input file to exist.";
     }
     write, "";
-    sans_makeflow, defer, interval=interval;
+    sans_makeflow, defer, interval=interval, current=current, count=count;
   }
+
+  status, finished;
 }
