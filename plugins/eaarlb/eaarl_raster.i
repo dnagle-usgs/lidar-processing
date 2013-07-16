@@ -54,7 +54,7 @@
   3   ?   ui8[?]  Array of char data with length given
 */
 
-func eaarl_decode_fast(fn, start, stop, rnstart=, wfs=) {
+func eaarl_decode_fast(fn, start, stop, rnstart=, raw=, wfs=) {
 /* DOCUMENT result = eaarl_decode_fast(fn, start, stop)
   Decodes the data in the specified TLD file from offset START through offset
   STOP. START and STOP must each be scalar integers.
@@ -72,6 +72,9 @@ func eaarl_decode_fast(fn, start, stop, rnstart=, wfs=) {
     rnstart= Starting raster number. If provided, then the raster field will be
       added, treating the raster found at START as raster RNSTART and numbering
       the ones that follow sequentially.
+    raw= Specifies whether raw data is desired.
+      raw=0   Default; soe will be updated using eaarl_time_offset
+      raw=1   All data returned as it was in the file
     wfs= By default, waveforms are included. Use wfs=0 to disable, which will
       omit the rx and tx fields.
 
@@ -89,6 +92,7 @@ func eaarl_decode_fast(fn, start, stop, rnstart=, wfs=) {
     All arrays have the same size and dimensions, except for RX which has an
     extra dimension of size 4.
 */
+  extern eaarl_time_offset;
   default, wfs, 1;
 
   f = open(fn, "rb");
@@ -155,7 +159,8 @@ func eaarl_decode_fast(fn, start, stop, rnstart=, wfs=) {
       digitizer(pidx) = dig;
 
       offset_time=i24(f.raw, offset);
-      soe(pidx) = seconds + (fseconds + offset_time) * 1.6e-6;
+      soe(pidx) = seconds + (fseconds + offset_time) * 1.6e-6 +
+        eaarl_time_offset;
 
       scan_angle(pidx) = i16(f.raw, offset+9);
 
