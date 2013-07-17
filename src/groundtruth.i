@@ -96,10 +96,10 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
     status, progress, p_finished, p_count;
 
     mxgw = where(mxgrid == mxgrid_uniq(mxgi));
-    if(is_void(mxgw)) continue;
+    if(!is_array(mxgw)) continue;
 
     txgw = where(abs(txgrid - mxgrid_uniq(mxgi)) <= 1);
-    if(is_void(txgw)) {
+    if(!is_array(txgw)) {
       p_finished += numberof(mxgw);
       continue;
     }
@@ -111,11 +111,11 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
       status, progress, p_finished, p_count;
 
       mygw = where(mygrid(mxgw) == mygrid_uniq(mygi));
-      if(is_void(mygw)) continue;
+      if(!is_array(mygw)) continue;
       mw = mxgw(mygw);
 
       tygw = where(abs(tygrid(txgw) - mygrid_uniq(mygi)) <= 1);
-      if(is_void(tygw)) {
+      if(!is_array(tygw)) {
         p_finished += numberof(mygw);
         continue;
       }
