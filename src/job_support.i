@@ -150,11 +150,7 @@ func jobs_env_wrap(fn) {
     includes=[]
   );
 
-  // Atypical hook. Normally hooks wrap variables from the function's context
-  // in save(), then restore them. In this case, we're passing a specific
-  // variable directly. This is to avoid having confusing awkwardness like
-  // "env.env" in the hook functions.
-  env = hook_invoke("jobs_env_wrap", env);
+  restore, hook_invoke("jobs_env_wrap", save(env, fn));
 
   save, env, vars=serialize(env.vars);
   obj2pbd, env, fn;
@@ -194,7 +190,7 @@ func jobs_env_unwrap(fn) {
     handler_deserialize, env.handlers, clear=1;
   }
 
-  hook_invoke, "jobs_env_unwrap", env;
+  hook_invoke, "jobs_env_unwrap", save(env, fn);
 }
 
 func jobs_env_include(fn) {
@@ -243,7 +239,7 @@ func __jobs_env_include_hook(data, env) {
 /* DOCUMENT env = __jobs_env_include_hook(env);
   Hook function used by jobs_env_include.
 */
-  save, env, includes=grow(env.includes, data.includes);
+  save, env.env, includes=grow(env.env.includes, data.includes);
   return env;
 }
 __jobs_env_include_hook = closure(__jobs_env_include_hook, save(includes=[]));
@@ -287,6 +283,6 @@ func __jobs_env_vars_hook(data, env) {
   Hook function used by jobs_env_vars_hook.
 */
   for(i = 1; i <= data.vars; i++)
-    save, env.vars, data.vars(i), symbol_def(data.vars(i));
+    save, env.env.vars, data.vars(i), symbol_def(data.vars(i));
   return env;
 }
