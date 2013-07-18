@@ -247,6 +247,8 @@ func obj2pbd(obj, pbd) {
     val = obj(noop(i));
     if(!strlen(key) || !is_array(val))
       continue;
+    if(typeof(val) == "struct_instance")
+      save, pbd, nameof(structof(val)), structof(val);
     save, pbd, noop(key), val;
   }
 }
