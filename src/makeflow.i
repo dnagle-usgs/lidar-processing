@@ -81,7 +81,7 @@ func makeflow_run(conf, fn, norun=, interval=) {
     makeflow_exe = file_join(alpsrc.cctools_bin, "makeflow");
 
   // If no makeflow executable is available/allowed, fall back to pure Yorick.
-  if(!file_exists(makeflow_exe)) {
+  if(!file_exists(makeflow_exe) && !norun) {
     sans_makeflow, conf, interval=interval;
     return;
   }
