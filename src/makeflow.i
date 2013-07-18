@@ -95,7 +95,7 @@ func makeflow_run(conf, fn, norun=, interval=) {
   }
 
   // Associated files always get created alongside makeflow file
-  makeflow_log = file_rootname(fn)+".makeflowlog";
+  makeflow_log = fn+".makeflowlog";
   makeflow_env = file_rootname(fn)+".env.pbd";
 
   // Generate makeflow and env files
