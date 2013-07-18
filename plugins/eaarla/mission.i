@@ -437,13 +437,20 @@ local hook_eaarl_mission_jobs_env_wrap, hook_eaarl_mission_jobs_env_unwrap;
 */
 
 func hook_eaarl_mission_jobs_env_wrap(env) {
-  save, env.env,
-    wrapped_missiondata=serialize(mission(wrap, cache_what="everything"));
+  wrapped = mission(wrap, cache_what="everything");
+  if(wrapped(*,"bathconf_data"))
+    save, wrapped, bathconf_data=serialize(wrapped.bathconf_data);
+  mission_fn = file_rootname(env.fn) + ".flight.pbd";
+  obj2pbd, wrapped, mission_fn;
+  save, env.env, mission_fn;
   return env;
 }
 
 func hook_eaarl_mission_jobs_env_unwrap(env) {
-  mission, unwrap, deserialize(env.env.wrapped_missiondata);
+  wrapped = pbd2obj(env.env.mission_fn);
+  if(wrapped(*,"bathconf_data"))
+    save, wrapped, bathconf_data=deserialize(wrapped.bathconf_data);
+  mission, unwrap, wrapped;
   return env;
 }
 
