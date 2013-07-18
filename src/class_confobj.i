@@ -466,7 +466,7 @@ func confobj_display(group, profile, fh=) {
   use, data;
   if(is_void(group)) {
     for(i = 1; i <= data(*); i++) {
-      use_method, display, data(*,i);
+      use_method, display, data(*,i), fh=fh;
     }
     return;
   }
