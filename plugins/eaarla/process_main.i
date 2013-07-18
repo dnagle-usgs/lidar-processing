@@ -287,3 +287,217 @@ makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
 
   return data;
 }
+
+func mf_batch_eaarl(mode=, outdir=, update=, ftag=, vtag=, mdate=, avg_surf=,
+ext_bad_att=, channel=, pick=, plot=, onlyplot=, win=, ply=, shapefile=,
+shp_buffer=, buffer=, force_zone=, log_fn=, makeflow_fn=, forcelocal=, norun=,
+retconf=, opts=) {
+  restore_if_exists, opts, mode, outdir, update, ftag, vtag, mdate, avg_surf,
+    ext_bad_att, channel, pick, plot, onlyplot, win, ply, shapefile,
+    shp_buffer, buffer, force_zone, log_fn, makeflow_fn, forcelocal, norun,
+    retconf;
+
+  default, mode, "f";
+  default, buffer, 200.;
+  now = getsoe();
+
+  if(is_void(outdir)) error, "Must provide outdir=";
+
+  // Determine the metadata part of the filename, if needed
+  // ftag is for files and will look like:
+  //    w84_YYYYMMDD_chanNN_T.pbd -or- w84_YYYYMMDD_T.pbd
+  // vtag is for variable names and will look like:
+  //    w84_MMDD_chanNN_T -or- w84_MMDD_T
+  if(is_void(ftag) || is_void(vtag)) {
+    if(is_void(mdate) && (is_void(ftag) || is_void(vtag))) {
+      mdate = mission(get, mission.data.loaded, "date");
+      mdate = regsub("-", mdate, "", all=1);
+    }
+
+    chantag = string(0);
+    if(!is_void(channels))
+      chantag = "chan" + swrite("%d", channels)(sum);
+
+    if(is_void(ftag)) {
+      ftag = "w84_" + mdate;
+      if(chantag) ftag += "_" + chantag;
+      ftag += "_" + mode;
+    }
+
+    if(is_void(vtag)) {
+      vtag = "w84_" + strpart(mdate, 5:);
+      if(chantag) vtag += "_" + chantag;
+      vtag += "_" + mode;
+    }
+
+    chantag = [];
+  }
+  // Make sure it's safe for use in a variable name
+  vtag = sanitize_vname(vtag);
+  if(strpart(ftag, 1:1) != "_") ftag = "_" + ftag;
+  if(strpart(vtag, 1:1) != "_") vtag = "_" + vtag;
+  if(file_extension(ftag) != ".pbd") ftag += ".pbd";
+
+  // Default makeflow_fn is: YYYYMMDD_HHMMSS_w84_YYMMDD_chanNN_T.makeflow
+  if(is_void(makeflow_fn)) {
+    // Start out with current timestamp as YYYYMMDD_HHMMSS
+    ts = regsub(" ", regsub("-|:", soe2iso8601(now), "", all=1), "_");
+    // Add ftag, then make into full path with extension .makeflow
+    makeflow_fn = file_join(outdir, file_rootname(ts + ftag) + ".makeflow");
+    ts = [];
+  }
+
+  // Default log_fn is makeflow_fn with .log extension
+  default, log_fn, file_rootname(makeflow_fn) + ".log";
+
+  // Derive region polygon
+  if(shapefile) {
+    ply = read_ascii_shapefile(shapefile);
+    if(numberof(ply) != 1)
+      error, "shapefile must contain exactly one polygon!";
+    ply = *ply(1);
+    if(shp_buffer)
+      ply = buffer_hull(ply, shp_buffer);
+  }
+  if(is_void(ply)) {
+    if(pick == "pip")
+      ply = get_poly();
+    else
+      ply = mouse_bounds(ply=1);
+  }
+
+  // If given a shapefile, it's possible that there will be a mismatch. Juggle
+  // utm to prevent that issue.
+  extern utm;
+  _utm = utm;
+  utm = ply(1,1) > 360;
+  q = pnav_sel_rgn(win=win, region=ply, _batch=1);
+  utm = _utm;
+
+  if(is_void(q)) {
+    write, "No data found in region selected.";
+    return;
+  }
+
+  // Determine which tiles to process
+  local north, east, zone, n, e;
+  ll2utm, pnav(q).lat, pnav(q).lon, north, east, zone, force_zone=force_zone;
+  q = [];
+  zones = zone(uniq(zone));
+  dtiles = array(pointer, numberof(zones));
+  for(i = 1; i <= numberof(zones); i++) {
+    w = where(zone == zones(i));
+    n = (north(w)(-,) + (buffer*[-1,-1, 1, 1])(,-))(*);
+    e = ( east(w)(-,) + (buffer*[-1, 1,-1, 1])(,-))(*);
+    dtiles(i) = &utm2dt_names(e, n, zones(i), dtlength="long", dtprefix=1);
+  }
+  dtiles = merge_pointers(dtiles);
+  north = east = zone = zones = n = e = [];
+
+  // Construct output filenames and variable names
+  itiles = dt2it(dtiles, dtlength="long", dtprefix=1);
+  outfiles = file_join(outdir, itiles, dtiles, dtiles + ftag);
+  vnames = extract_dt(dtiles, dtlength="short", dtprefix=0) + vtag;
+
+  // Calculate bounding boxes
+  minx = maxx = miny = maxy = 0;
+  dt2utm, dtiles, minx, maxy, zone;
+  miny = maxy - 2000;
+  maxx = minx + 2000;
+  bminx = minx - buffer;
+  bmaxx = maxx + buffer;
+  bminy = miny - buffer;
+  bmaxy = maxy + buffer;
+
+  if(plot) {
+    pldj, minx, miny, minx, maxy, color="yellow";
+    pldj, maxx, miny, maxx, maxy, color="yellow";
+    pldj, minx, miny, maxx, miny, color="yellow";
+    pldj, minx, maxy, maxx, maxy, color="yellow";
+  }
+
+  // Set base options
+  options = save(string(0), [], mode, channel, avg_surf, ext_bad_att);
+  if(opts)
+    options = obj_delete(obj_merge(opts, options),
+      makeflow_fn, forcelocal, norun);
+
+  // Create log file
+  mkdirp, file_dirname(log_fn);
+  f = open(log_fn, "w");
+  write, f, format="Batch processing log file%s", "\n";
+  write, f, format="%s\n", soe2iso8601(now);
+  write, f, format="Makeflow created on %s by %s\n\n", get_host(), get_user();
+
+  write, f, format="data_path: %s\n", data_path;
+  write, f, format="edb_filename: %s\n", edb_filename;
+  write, f, format="pnav_filename: %s\n", pnav_filename;
+  write, f, format="ins_filename: %s\n\n", ins_filename;
+
+  write, f, format="ops_conf settings:%s", "\n";
+  write_ops_conf, f;
+
+  write, f, format="\nbathy settings:%s", "\n";
+  bathconf, display, fh=f;
+
+  write, f, format="\nOptions used:%s", "\n";
+  write, f, format="%s", obj_show(save(
+    mode, outdir, update, ftag, vtag, mdate, avg_surf,
+    ext_bad_att, channel, pick, plot, onlyplot, win, shapefile, shp_buffer,
+    buffer, force_zone, log_fn, makeflow_fn, forcelocal, norun, retconf,
+    opts), maxchild=100, maxary=10);
+
+  write, f, format="\nProcessing area:%s", "\n";
+  write, f, format="%s\n", print(ply);
+
+  write, f, format="\nOutput files:%s", "\n";
+  write, f, format="%s\n", file_tail(outfiles);
+  close, f;
+
+  // Build job queue
+  local offset_start, offset_stop, tldfn;
+  count = numberof(outfiles);
+  conf = save();
+  for(i = 1; i <= count; i++) {
+    if(update) {
+      if(file_exists(outfiles(i))) continue;
+    } else {
+      remove, outfiles(i);
+    }
+
+    q = pnav_sel_rgn(region=[bminx(i), bmaxx(i), bminy(i), bmaxy(i)],
+      _batch=1, verbose=0);
+    if(is_void(q)) continue;
+    rn_arr = sel_region(q, verbose=0);
+    if(is_void(rn_arr)) continue;
+
+    rn_start = rn_arr(1,);
+    rn_stop = rn_arr(2,);
+    rn_arr = [];
+
+    raster_sources, rn_start, rn_stop, tldfn, offset_start, offset_stop;
+
+    save, conf, string(0), save(
+      forcelocal=forcelocal,
+      input=tldfn,
+      output=outfiles(i),
+      command="job_eaarl_process",
+      options=obj_merge(options, save(
+        "tldfn", tldfn,
+        "pbdfn", outfiles(i),
+        "start", offset_start,
+        "stop", offset_stop,
+        "rnstart", rn_start,
+        "vname", vnames(i)
+      ))
+    );
+  }
+
+  if(retconf) return conf;
+
+  hook_add, "jobs_env_wrap", "hook_eaarl_mission_jobs_env_wrap";
+  hook_add, "jobs_env_unwrap", "hook_eaarl_mission_jobs_env_unwrap";
+  makeflow_run, conf, makeflow_fn, interval=15, norun=norun;
+  hook_remove, "jobs_env_wrap", "hook_eaarl_mission_jobs_env_wrap";
+  hook_remove, "jobs_env_unwrap", "hook_eaarl_mission_jobs_env_unwrap";
+}
