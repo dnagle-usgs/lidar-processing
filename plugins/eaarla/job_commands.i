@@ -32,5 +32,6 @@ func job_eaarl_process(conf) {
   result = make_eaarl_from_tld(opts=opts);
 
   // If data is void, still create a file so Makeflow knows we did something.
+  mkdirp, file_dirname(pbdfn);
   pbd_save, pbdfn, vname, result, empty=1;
 }
