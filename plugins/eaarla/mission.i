@@ -437,13 +437,13 @@ local hook_eaarl_mission_jobs_env_wrap, hook_eaarl_mission_jobs_env_unwrap;
 */
 
 func hook_eaarl_mission_jobs_env_wrap(env) {
-  save, env,
+  save, env.env,
     wrapped_missiondata=serialize(mission(wrap, cache_what="everything"));
   return env;
 }
 
 func hook_eaarl_mission_jobs_env_unwrap(env) {
-  mission, unwrap, deserialize(env.wrapped_missiondata);
+  mission, unwrap, deserialize(env.env.wrapped_missiondata);
   return env;
 }
 
