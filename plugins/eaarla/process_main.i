@@ -299,6 +299,7 @@ retconf=, opts=) {
 
   default, mode, "f";
   default, buffer, 200.;
+  default, plot, 1;
   now = getsoe();
 
   if(is_void(outdir)) error, "Must provide outdir=";
