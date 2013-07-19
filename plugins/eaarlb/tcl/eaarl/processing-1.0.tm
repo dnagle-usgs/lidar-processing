@@ -150,11 +150,11 @@ proc ::eaarl::processing::process_channel {channel} {
 
     switch -- $processing_mode {
         fs_new {
-            set cmd "grow, $::pro_var, &make_eaarl(mode=\"fs\",\
+            set cmd "grow, $::pro_var, &make_eaarl(mode=\"f\",\
                     q=q, ext_bad_att=$ext_bad_att, channel=$channel)"
         }
         ba_new {
-            set cmd "grow, $::pro_var, &make_eaarl(mode=\"ba\",\
+            set cmd "grow, $::pro_var, &make_eaarl(mode=\"b\",\
                     q=q, ext_bad_att=$ext_bad_att, channel=$channel)"
         }
         fs {
