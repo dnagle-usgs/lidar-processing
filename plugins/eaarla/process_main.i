@@ -384,7 +384,7 @@ retconf=, opts=) {
   local north, east, zone, n, e;
   ll2utm, pnav(q).lat, pnav(q).lon, north, east, zone, force_zone=force_zone;
   q = [];
-  zones = zone(uniq(zone));
+  zones = zone(unique(zone));
   dtiles = array(pointer, numberof(zones));
   for(i = 1; i <= numberof(zones); i++) {
     w = where(zone == zones(i));
