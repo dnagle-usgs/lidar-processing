@@ -413,7 +413,6 @@ func eaarl_mission_unwrap(env) {
   ]);
   restore, env.data(idx(where(idx)));
 
-  if(cache_what == "everything") iex2tans;
   if(is_void(bathconf_data))
     bathconf, clear;
   else
