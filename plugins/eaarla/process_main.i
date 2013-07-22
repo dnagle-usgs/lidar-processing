@@ -333,11 +333,11 @@ makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
   return data;
 }
 
-func mf_batch_eaarl(mode=, outdir=, update=, ftag=, vtag=, mdate=,
+func mf_batch_eaarl(mode=, outdir=, update=, ftag=, vtag=, date=,
 ext_bad_att=, channel=, pick=, plot=, onlyplot=, win=, ply=, shapefile=,
 buffer=, force_zone=, log_fn=, makeflow_fn=, forcelocal=, norun=, retconf=,
 opts=) {
-  restore_if_exists, opts, mode, outdir, update, ftag, vtag, mdate,
+  restore_if_exists, opts, mode, outdir, update, ftag, vtag, date,
     ext_bad_att, channel, pick, plot, onlyplot, win, ply, shapefile,
     buffer, force_zone, log_fn, makeflow_fn, forcelocal, norun,
     retconf;
@@ -355,9 +355,9 @@ opts=) {
   // vtag is for variable names and will look like:
   //    w84_MMDD_chanNN_T -or- w84_MMDD_T
   if(is_void(ftag) || is_void(vtag)) {
-    if(is_void(mdate)) {
-      mdate = mission(get, mission.data.loaded, "date");
-      mdate = regsub("-", mdate, "", all=1);
+    if(is_void(date)) {
+      date = mission(get, mission.data.loaded, "date");
+      date = regsub("-", date, "", all=1);
     }
 
     chantag = string(0);
@@ -365,13 +365,13 @@ opts=) {
       chantag = "chan" + swrite("%d", channels)(sum);
 
     if(is_void(ftag)) {
-      ftag = "w84_" + mdate;
+      ftag = "w84_" + date;
       if(chantag) ftag += "_" + chantag;
       ftag += "_" + mode;
     }
 
     if(is_void(vtag)) {
-      vtag = "w84_" + strpart(mdate, 5:);
+      vtag = "w84_" + strpart(date, 5:);
       if(chantag) vtag += "_" + chantag;
       vtag += "_" + mode;
     }
@@ -486,7 +486,7 @@ opts=) {
 
   write, f, format="\nOptions used:%s", "\n";
   write, f, format="%s", obj_show(save(
-    mode, outdir, update, ftag, vtag, mdate,
+    mode, outdir, update, ftag, vtag, date,
     ext_bad_att, channel, pick, plot, onlyplot, win, shapefile,
     buffer, force_zone, log_fn, makeflow_fn, forcelocal, norun, retconf,
     opts), maxchild=100, maxary=10);
