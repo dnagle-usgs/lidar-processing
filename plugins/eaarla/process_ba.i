@@ -56,11 +56,6 @@ func make_ba(q=, ply=, ext_bad_att=, channel=, verbose=) {
 
   depth_all = merge_pointers(depth_all);
 
-  // Processing uses floating point, struct uses integers. This can result in
-  // depth values of 0, throw them out.
-  w = where(depth_all.depth < 0);
-  depth_all = numberof(w) ? depth_all(w) : [];
-
   if(verbose)
     write, format=" Total points derived: %d\n", numberof(depth_all);
 
@@ -90,6 +85,12 @@ func ba_struct_from_obj(pulses) {
   result.depth = long((pulses.lz-pulses.fz) * 100);
   result.soe = pulses.soe;
   result.channel = pulses.lchannel;
+
+  // Original uses floating point, struct uses integers. This can result in
+  // depth values of 0, throw them out.
+  w = where(result.depth < 0);
+  result = numberof(w) ? result(w) : [];
+
   return result;
 }
 
