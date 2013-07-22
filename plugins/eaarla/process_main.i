@@ -337,6 +337,94 @@ func mf_batch_eaarl(mode=, outdir=, update=, ftag=, vtag=, date=,
 ext_bad_att=, channel=, pick=, plot=, onlyplot=, win=, ply=, shapefile=,
 buffer=, force_zone=, log_fn=, makeflow_fn=, forcelocal=, norun=, retconf=,
 opts=) {
+/* DOCUMENT mf_batch_eaarl
+  Most common options:
+    mf_batch_eaarl, pick=, shapefile=, mode=, channel=, outdir=
+
+  Makeflow batch processes EAARL data for the given mode in a region specified
+  by the user.
+
+  Options for selection:
+    pick= Specifies which interactive method to use for selecting the
+      processing region.
+        pick="box"    The will be prompted to drag out a box (default)
+        pick="pip"    The user will be prompted to draw a polygon
+    ply= Specifies a polygon to use. If used, pick= is ignored.
+    shapefile= Specifies the path to a shapefile to load and use. The shapefile
+      must contain exactly one polygon. If used, pick= and ply= are ignored.
+
+  Options for processing:
+    mode= Processing mode.
+        mode="f"    Process for first surface (default)
+    channel= Specifies which channel or channels to process. If omitted or set
+      to 0, EAARL-A style channel selection is used. Otherwise, this can be an
+      integer or array of integers for the channels to process.
+    ext_bad_att= A value in meters. Points less than this close to the mirror
+      (in elevation) are discarded. By default, this is 0 and is not applied.
+    force_zone= Specifies a zone to coerce output to. If not provided, then the
+      zone is determined automatically. If a dataset crosses zone boundaries,
+      the output will contain data from both zones, in the correct zones. This
+      should normally be omitted.
+
+  Options for output:
+    outdir= Output directory; this often ends in "Index_Tiles". This is a
+      required option.
+    update= Specifies how to handle existing files.
+        update=0    Skip tiles that already exist, default
+        update=1    Delete and re-create tiles that already exist
+    date= The date of the flight. This must be a string in "YYYYMMDD" format.
+      Optionally, it can have additional information after the date. If
+      omitted, the date defined for the current loaded flight (from the mission
+      configuration) will be used. This should normally be omitted.
+    ftag= Specifies the "tag" to use in the filename. Output files are
+      formatted as "<tile>_<tag>.pbd" where <tile> is the full tile name
+      (t_e###000_n####000_##). The default ftag is:
+        w84_YYYYMMDD_chanNN_T -or- w84_YYYYMMDD_T
+      Where YYYYMMDD is date= (including anything appended via date=), chanNN
+      represents the channels used (channel=[1,2,3] will result in chan123),
+      and T is the mode= used. If channel= is not specifies, chanNN is omitted.
+    vtag= Specifies the "tag" to use in the variable names. The variable names
+      are formated as "<tile>_<tag>" where <tile> is the short tile name
+      (e###_n####_##). The default vtag is:
+        w84_MMDD_chanNN_T -or- w84_MMDD_T
+      Where MMDD is date= with its first four characters removed (YYYY removed)
+      and the other values are as described in ftag=.
+    log_fn= Specifies where to write the log describing the batch job.
+
+  Miscellaneous options:
+    buffer= Specifies the buffer to use around each tile, in meters. This is
+      not typically provided as the default is normally sufficient.
+        buffer=200.   200 meters, default
+    opts= Oxy group that provides an alternative interface for providing
+      function arguments/options. Any key/value pairs not used by
+      mf_batch_eaarl will be passed through as-is to the underlying processing
+      function.
+
+  Options for feedback:
+    plot= Specifies whether the region of interest and the tiles to be
+      processed are plotted. The region is plotted in red, the tiles in cyan.
+        plot=1        Plot regions and tiles, default
+        plot=0        No plotting
+    onlyplot= Allows you to visually preview which tiles are covered by the
+      region of interest. The tiles are plotted in yellow.
+        onlyplot=0    Process normally, default
+        onlyplot=1    Don't process, just plot the tile lines
+    win= Specifies which window to use.
+        win=6         Default, window 6
+
+  Options for makeflow:
+    makeflow_fn= The filename to use when writing out the makeflow. Ignored if
+      called as a function. If not provided, a temporary file will be used then
+      discarded.
+    forcelocal= Forces local execution.
+        forcelocal=0    Default
+    norun= Don't actually run makeflow; just create the makeflow file.
+        norun=0   Runs makeflow, default
+        norun=1   Doesn't run makeflow
+    retconf= Don't actually run makeflow; just return the configuration object.
+        retconf=0   Runs makeflow, default
+        retconf=1   Returns conf object
+*/
   restore_if_exists, opts, mode, outdir, update, ftag, vtag, date,
     ext_bad_att, channel, pick, plot, onlyplot, win, ply, shapefile,
     buffer, force_zone, log_fn, makeflow_fn, forcelocal, norun,
