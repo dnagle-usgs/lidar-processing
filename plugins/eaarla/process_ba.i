@@ -72,6 +72,8 @@ func ba_struct_from_obj(pulses) {
   Converts the return result from process_ba (which is an oxy group) into the
   GEO struct.
 */
+  if(!is_obj(pulses) || !numberof(pulses.fx)) return [];
+
   result = array(GEO, numberof(pulses.fx));
   result.rn = (long(pulses.raster) & 0xffffff) | (long(pulses.pulse) << 24);
   result.raster = pulses.raster;
