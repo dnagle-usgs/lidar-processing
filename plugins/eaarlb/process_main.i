@@ -415,7 +415,7 @@ opts=) {
   extern utm;
   _utm = utm;
   utm = ply(1,1) > 360;
-  q = pnav_sel_rgn(win=win, region=ply, _batch=1);
+  q = pnav_sel_rgn(win=win, region=ply, _batch=1, plot=plot, color="red");
   utm = _utm;
 
   if(is_void(q)) {
@@ -511,7 +511,7 @@ opts=) {
     }
 
     q = pnav_sel_rgn(region=[bminx(i), bmaxx(i), bminy(i), bmaxy(i)],
-      _batch=1, verbose=0);
+      _batch=1, verbose=0, plot=plot);
     if(is_void(q)) continue;
     rn_arr = sel_region(q, verbose=0);
     if(is_void(rn_arr)) continue;
