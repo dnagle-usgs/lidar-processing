@@ -310,7 +310,7 @@ retconf=, opts=) {
   // vtag is for variable names and will look like:
   //    w84_MMDD_chanNN_T -or- w84_MMDD_T
   if(is_void(ftag) || is_void(vtag)) {
-    if(is_void(mdate) && (is_void(ftag) || is_void(vtag))) {
+    if(is_void(mdate)) {
       mdate = mission(get, mission.data.loaded, "date");
       mdate = regsub("-", mdate, "", all=1);
     }
