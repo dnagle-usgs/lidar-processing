@@ -344,6 +344,7 @@ opts=) {
 
   default, mode, "f";
   default, buffer, 200.;
+  default, win, 6;
   default, plot, 1;
   now = getsoe();
 
