@@ -1,7 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, _batch=) {
-/* DOCUMENT pnav_sel_rgn(win=, color=, mode=, region=, verbose=, _batch=)
+func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=) {
+/* DOCUMENT pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=)
   The user is prompted to draw out a box or polygon. The points of PNAV within
   that region are found and the corresponding indices are returned.
 
@@ -22,6 +22,9 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, _batch=) {
         - Otherwise, region must be a 2xN array of vertices for a polygon.
     verbose= By default informational output is displayed to the console. Use
       verbose=0 to disable.
+    plot= Specify whether to plot the region selected.
+        plot=1    Plot the region selected, default
+        plot=0    Do not plot
     _batch= If set to 1, no check will be made on the size of the selected
       region. Otherwise, too large a selection will result in an warning.
 
@@ -36,6 +39,7 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, _batch=) {
   default, color, "cyan";
   default, mode, "box";
   default, verbose, 1;
+  default, plot, 1;
   default, _batch, 0;
 
   wbkp = current_window();
@@ -55,8 +59,9 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, _batch=) {
     }
   }
 
-  plg, [ply(2,min),ply(2,max)]([1,1,2,2,1]), [ply(1,min),ply(1,max)]([1,2,2,1,1]),
-      color=color;
+  if(plot) {
+    plpoly, ply, color=color;
+  }
 
   if(utm) {
     ply = transpose(utm2ll(ply(2,), ply(1,), curzone));
