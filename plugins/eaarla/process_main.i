@@ -405,9 +405,9 @@ opts=) {
   }
   if(is_void(ply)) {
     if(pick == "pip")
-      ply = get_poly();
+      ply = get_poly(win=win);
     else
-      ply = mouse_bounds(ply=1);
+      ply = mouse_bounds(ply=1, win=win);
   }
 
   // If given a shapefile, it's possible that there will be a mismatch. Juggle
@@ -454,10 +454,13 @@ opts=) {
   bmaxy = maxy + buffer;
 
   if(onlyplot) {
+    wbkp = current_window();
+    window, win;
     pldj, minx, miny, minx, maxy, color="yellow";
     pldj, maxx, miny, maxx, maxy, color="yellow";
     pldj, minx, miny, maxx, miny, color="yellow";
     pldj, minx, maxy, maxx, maxy, color="yellow";
+    window_select, wbkp;
     return;
   }
 
@@ -487,10 +490,10 @@ opts=) {
 
   write, f, format="\nOptions used:%s", "\n";
   write, f, format="%s", obj_show(save(
-    mode, outdir, update, ftag, vtag, date,
-    ext_bad_att, channel, pick, plot, onlyplot, win, shapefile,
-    buffer, force_zone, log_fn, makeflow_fn, forcelocal, norun, retconf,
-    opts), maxchild=100, maxary=10);
+    mode, outdir, update, ftag, vtag, date, ext_bad_att, channel, pick, plot,
+    onlyplot, win, shapefile, buffer, force_zone, log_fn, makeflow_fn,
+    forcelocal, norun, retconf, opts),
+    maxchild=100, maxary=10);
 
   write, f, format="\nProcessing area:%s", "\n";
   write, f, format="%s\n", print(ply);
@@ -511,7 +514,7 @@ opts=) {
     }
 
     q = pnav_sel_rgn(region=[bminx(i), bmaxx(i), bminy(i), bmaxy(i)],
-      _batch=1, verbose=0, plot=plot);
+      win=win, _batch=1, verbose=0, plot=plot);
     if(is_void(q)) continue;
     rn_arr = sel_region(q, verbose=0);
     if(is_void(rn_arr)) continue;
