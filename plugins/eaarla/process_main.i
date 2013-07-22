@@ -453,11 +453,12 @@ opts=) {
   bminy = miny - buffer;
   bmaxy = maxy + buffer;
 
-  if(plot) {
+  if(onlyplot) {
     pldj, minx, miny, minx, maxy, color="yellow";
     pldj, maxx, miny, maxx, maxy, color="yellow";
     pldj, minx, miny, maxx, miny, color="yellow";
     pldj, minx, maxy, maxx, maxy, color="yellow";
+    return;
   }
 
   // Set base options
