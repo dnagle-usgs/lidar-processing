@@ -335,11 +335,11 @@ makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
 
 func mf_batch_eaarl(mode=, outdir=, update=, ftag=, vtag=, mdate=,
 ext_bad_att=, channel=, pick=, plot=, onlyplot=, win=, ply=, shapefile=,
-shp_buffer=, buffer=, force_zone=, log_fn=, makeflow_fn=, forcelocal=, norun=,
-retconf=, opts=) {
+buffer=, force_zone=, log_fn=, makeflow_fn=, forcelocal=, norun=, retconf=,
+opts=) {
   restore_if_exists, opts, mode, outdir, update, ftag, vtag, mdate,
     ext_bad_att, channel, pick, plot, onlyplot, win, ply, shapefile,
-    shp_buffer, buffer, force_zone, log_fn, makeflow_fn, forcelocal, norun,
+    buffer, force_zone, log_fn, makeflow_fn, forcelocal, norun,
     retconf;
 
   default, mode, "f";
@@ -402,8 +402,6 @@ retconf=, opts=) {
     if(numberof(ply) != 1)
       error, "shapefile must contain exactly one polygon!";
     ply = *ply(1);
-    if(shp_buffer)
-      ply = buffer_hull(ply, shp_buffer);
   }
   if(is_void(ply)) {
     if(pick == "pip")
@@ -489,7 +487,7 @@ retconf=, opts=) {
   write, f, format="\nOptions used:%s", "\n";
   write, f, format="%s", obj_show(save(
     mode, outdir, update, ftag, vtag, mdate,
-    ext_bad_att, channel, pick, plot, onlyplot, win, shapefile, shp_buffer,
+    ext_bad_att, channel, pick, plot, onlyplot, win, shapefile,
     buffer, force_zone, log_fn, makeflow_fn, forcelocal, norun, retconf,
     opts), maxchild=100, maxary=10);
 
