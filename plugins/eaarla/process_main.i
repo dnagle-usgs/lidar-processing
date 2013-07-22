@@ -333,11 +333,11 @@ makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
   return data;
 }
 
-func mf_batch_eaarl(mode=, outdir=, update=, ftag=, vtag=, mdate=, avg_surf=,
+func mf_batch_eaarl(mode=, outdir=, update=, ftag=, vtag=, mdate=,
 ext_bad_att=, channel=, pick=, plot=, onlyplot=, win=, ply=, shapefile=,
 shp_buffer=, buffer=, force_zone=, log_fn=, makeflow_fn=, forcelocal=, norun=,
 retconf=, opts=) {
-  restore_if_exists, opts, mode, outdir, update, ftag, vtag, mdate, avg_surf,
+  restore_if_exists, opts, mode, outdir, update, ftag, vtag, mdate,
     ext_bad_att, channel, pick, plot, onlyplot, win, ply, shapefile,
     shp_buffer, buffer, force_zone, log_fn, makeflow_fn, forcelocal, norun,
     retconf;
@@ -463,7 +463,7 @@ retconf=, opts=) {
   }
 
   // Set base options
-  options = save(string(0), [], mode, channel, avg_surf, ext_bad_att);
+  options = save(string(0), [], mode, channel, ext_bad_att);
   if(opts)
     options = obj_delete(obj_merge(opts, options),
       makeflow_fn, forcelocal, norun);
@@ -488,7 +488,7 @@ retconf=, opts=) {
 
   write, f, format="\nOptions used:%s", "\n";
   write, f, format="%s", obj_show(save(
-    mode, outdir, update, ftag, vtag, mdate, avg_surf,
+    mode, outdir, update, ftag, vtag, mdate,
     ext_bad_att, channel, pick, plot, onlyplot, win, shapefile, shp_buffer,
     buffer, force_zone, log_fn, makeflow_fn, forcelocal, norun, retconf,
     opts), maxchild=100, maxary=10);
