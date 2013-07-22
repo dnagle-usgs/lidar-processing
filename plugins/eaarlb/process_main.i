@@ -95,6 +95,9 @@ func make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=) {
     An array of EAARL point cloud data, in the struct appropriate for the
     data's type.
 */
+  t0 = array(double, 3);
+  timer, t0;
+
   restore_if_exists, opts, mode, q, ply, ext_bad_att, channel, verbose;
 
   extern ops_conf, tans, pnav;
@@ -149,8 +152,10 @@ func make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=) {
 
   data = merge_pointers(data);
 
-  if(verbose)
+  if(verbose) {
     write, format=" Total points derived: %d\n", numberof(data);
+    timer_finished, t0;
+  }
 
   return data;
 }
@@ -252,6 +257,9 @@ makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
     An array of EAARL point cloud data, in the struct appropriate for the
     data's type.
 */
+  t0 = array(double, 3);
+  timer, t0;
+
   restore_if_exists, opts, mode, q, ply, ext_bad_att, channel, verbose,
     makeflow_fn, forcelocal, retconf=, norun;
 
@@ -327,8 +335,10 @@ makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
   }
   rmdir, tempdir;
 
-  if(verbose)
+  if(verbose) {
     write, format=" Total points derived: %d\n", numberof(data);
+    timer_finished, t0;
+  }
 
   return data;
 }
@@ -425,6 +435,9 @@ opts=) {
         retconf=0   Runs makeflow, default
         retconf=1   Returns conf object
 */
+  t0 = array(double, 3);
+  timer, t0;
+
   restore_if_exists, opts, mode, outdir, update, ftag, vtag, date,
     ext_bad_att, channel, pick, plot, onlyplot, win, ply, shapefile,
     buffer, force_zone, log_fn, makeflow_fn, forcelocal, norun,
@@ -637,4 +650,6 @@ opts=) {
   makeflow_run, conf, makeflow_fn, interval=15, norun=norun;
   hook_remove, "jobs_env_wrap", "hook_eaarl_mission_jobs_env_wrap";
   hook_remove, "jobs_env_unwrap", "hook_eaarl_mission_jobs_env_unwrap";
+
+  timer_finished, t0;
 }
