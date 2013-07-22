@@ -88,7 +88,7 @@ func make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=) {
   Additional options:
     verbose= Specifies verbosity level.
     opts= Oxy group that provides an alternative interface for providing
-      function arguments/options. Any key/value pairs not used by process_eaarl
+      function arguments/options. Any key/value pairs not used by make_eaarl
       will be passed through as-is to the underlying processing function.
 
   Returns:
@@ -207,6 +207,51 @@ ext_bad_att=, opts=) {
 
 func mf_make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=,
 makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
+/* DOCUMENT mf_make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=,
+   makeflow_fn=, forcelocal=, norun=, retconf=, opts=)
+  Processes EAARL data for the given mode in a region specified by the user.
+  Unlike make_eaarl, mf_make_eaarl uses Makeflow to run flightlines in
+  parallel.
+
+  Options for selection:
+    q= An index into pnav for the region to process.
+    ply= A polygon that specifies an area to process. If Q is provided, PLY is
+      ignored.
+    Note: if neither Q nor PLY are provided, the user will be prompted to draw
+    a box to select the region.
+
+  Options for processing:
+    mode= Processing mode.
+        mode="f"    Process for first surface (default)
+    ext_bad_att= A value in meters. Points less than this close to the mirror
+      (in elevation) are discarded. By default, this is 0 and is not applied.
+    channel= Specifies which channel or channels to process. If omitted or set
+      to 0, EAARL-A style channel selection is used. Otherwise, this can be an
+      integer or array of integers for the channels to process.
+
+  Options for makeflow:
+    makeflow_fn= The filename to use when writing out the makeflow. Ignored if
+      called as a function. If not provided, a temporary file will be used then
+      discarded.
+    forcelocal= Forces local execution.
+        forcelocal=0    Default
+    norun= Don't actually run makeflow; just create the makeflow file.
+        norun=0   Runs makeflow, default
+        norun=1   Doesn't run makeflow
+    retconf= Don't actually run makeflow; just return the configuration object.
+        retconf=0   Runs makeflow, default
+        retconf=1   Returns conf object
+
+  Additional options:
+    verbose= Specifies verbosity level.
+    opts= Oxy group that provides an alternative interface for providing
+      function arguments/options. Any key/value pairs not used by mf_make_eaarl
+      will be passed through as-is to the underlying processing function.
+
+  Returns:
+    An array of EAARL point cloud data, in the struct appropriate for the
+    data's type.
+*/
   restore_if_exists, opts, mode, q, ply, ext_bad_att, channel, verbose,
     makeflow_fn, forcelocal, retconf=, norun;
 
