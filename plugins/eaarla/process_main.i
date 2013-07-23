@@ -463,8 +463,8 @@ opts=) {
     }
 
     chantag = string(0);
-    if(!is_void(channels))
-      chantag = "chan" + swrite("%d", channels)(sum);
+    if(!is_void(channel))
+      chantag = "chan" + swrite(format="%d", channel)(sum);
 
     if(is_void(ftag)) {
       ftag = "w84_" + date;
