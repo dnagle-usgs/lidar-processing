@@ -32,8 +32,8 @@ func ba_struct_from_obj(pulses) {
   return result;
 }
 
-func process_ba(start, stop, ext_bad_att=, channel=) {
-/* DOCUMENT result = process_ba(start, stop, ext_bad_att=, channel=)
+func process_ba(start, stop, ext_bad_att=, channel=, opts=) {
+/* DOCUMENT result = process_ba(start, stop, ext_bad_att=, channel=, opts=)
 
   Processes the given raster ranges for submerged topography (bathy).
 
@@ -48,6 +48,8 @@ func process_ba(start, stop, ext_bad_att=, channel=) {
     channel= Specifies which channel or channels to process. If omitted or set
       to 0, EAARL-A style channel selection is used. Otherwise, this can be an
       integer or array of integers for the channels to process.
+    opts= Oxy group that provides an alternative interface for providing
+      function arguments/options.
 
   Returns:
     An oxy group object containing these fields:
@@ -57,6 +59,8 @@ func process_ba(start, stop, ext_bad_att=, channel=) {
         fs_slant_range, mx, my, mz, fx, fy, fz
       added by process_ba: ltx, lrx, lint, lbias, lchannel, lx, ly, lz
 */
+  restore_if_exists, opts, start, stop, ext_bad_att, channel, opts;
+
   sample_interval = 1.0;
   ba_tx = eaarl_ba_tx_copy;
   ba_rx = eaarl_ba_rx_eaarla;
