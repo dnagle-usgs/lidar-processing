@@ -101,8 +101,45 @@ proc ::eaarl::processing::process {} {
     if {[catch {yorick::util::check_vname ::eaarl::pro_var_next}]} {return}
     variable ::eaarl::processing_mode
     variable ::eaarl::pro_var_next
+    variable ::eaarl::ext_bad_att
 
     set ::pro_var $pro_var_next
+
+    set channels [list]
+    foreach channel {1 2 3 4} {
+        if {[set ::forcechannel_$channel]} {
+            lappend channels \"$channel\"
+        }
+    }
+
+    if {![llength $channels]} {
+        tk_messageBox \
+                -type ok \
+                -icon error \
+                -message "You must select channel processing options. Select\
+                        one or more specific channels."
+        return
+    }
+
+    set channels \[[join $channels ,]\]
+    set cmd ""
+    switch -- $processing_mode {
+        fs_new {
+            set cmd "$::pro_var = make_eaarl(mode=\"f\", q=q,\
+                    ext_bad_att=$ext_bad_att, channel=$channels)"
+        }
+        ba_new {
+            set cmd "$::pro_var = make_eaarl(mode=\"b\", q=q,\
+                    ext_bad_att=$ext_bad_att, channel=$channels)"
+        }
+    }
+
+    if {$cmd ne ""} {
+        append cmd "; $::pro_var = sortdata($::pro_var, method=\"soe\")"
+        exp_send "$cmd;\r"
+        append_varlist $::pro_var
+        return
+    }
 
     set cmd ""
     set forced 0
@@ -119,21 +156,9 @@ proc ::eaarl::processing::process {} {
         }
     }
 
-    if {!$forced} {
-        tk_messageBox \
-                -type ok \
-                -icon error \
-                -message "You must select channel processing options. Select\
-                        one or more specific channels."
-        return
-    }
-
     if {$cmd ne ""} {
         append cmd  "; $::pro_var = merge_pointers($::pro_var)"
-        if {
-            $::eaarl::autoclean_after_process
-            && $processing_mode ni {fs_new ba_new}
-        } {
+        if {$::eaarl::autoclean_after_process} {
             append cmd "; test_and_clean, $::pro_var"
         }
         append cmd "; $::pro_var = sortdata($::pro_var, method=\"soe\")"
@@ -147,16 +172,7 @@ proc ::eaarl::processing::process_channel {channel} {
     variable ::eaarl::usecentroid
     variable ::eaarl::ext_bad_att
     variable ::eaarl::avg_surf
-
     switch -- $processing_mode {
-        fs_new {
-            set cmd "grow, $::pro_var, &make_eaarl(mode=\"f\",\
-                    q=q, ext_bad_att=$ext_bad_att, channel=$channel)"
-        }
-        ba_new {
-            set cmd "grow, $::pro_var, &make_eaarl(mode=\"b\",\
-                    q=q, ext_bad_att=$ext_bad_att, channel=$channel)"
-        }
         fs {
             set cmd "grow, $::pro_var, &make_fs(latutm=1, q=q,\
                     ext_bad_att=$ext_bad_att, usecentroid=$usecentroid,\
