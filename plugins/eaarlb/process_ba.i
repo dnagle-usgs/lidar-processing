@@ -61,9 +61,15 @@ func process_ba(start, stop, ext_bad_att=, channel=, opts=) {
 */
   restore_if_exists, opts, start, stop, ext_bad_att, channel;
 
+  default, channel, 0;
+
   sample_interval = 1.0;
   ba_tx = eaarl_ba_tx_copy;
-  ba_rx = eaarl_ba_rx_eaarla;
+  if(channel(1)) {
+    ba_rx = eaarl_ba_rx_channel;
+  } else {
+    ba_rx = eaarl_ba_rx_eaarla;
+  }
 
   // Allow core functions to be overridden via hook
   restore, hook_invoke("process_ba_funcs", save(ba_tx, ba_rx));
@@ -140,6 +146,45 @@ func eaarl_ba_tx_copy(pulses) {
     ltx - Location of peak in transmit
 */
   save, pulses, ltx=pulses.ftx;
+}
+
+func eaarl_ba_rx_channel(pulses) {
+/* DOCUMENT eaarl_ba_rx_channel, pulses
+  Updates the given pulses oxy group object with bathy last return info. This
+  uses the same channel that was used for the first return. The following
+  fields are added to pulses:
+    lrx - Location in waveform of bottom
+    lint - Intensity at bottom
+    lbias - The channel range bias (ops_conf.chn%d_range_bias)
+    lchannel - Channel used for bottom
+  Additionally, this field is overwritten:
+    fint - Intensity at location deemed as surface by bathy algorithm
+*/
+  local conf;
+  extern ops_conf;
+
+  ba_rx_wf = eaarl_ba_rx_wf;
+
+  biases = [ops_conf.chn1_range_bias, ops_conf.chn2_range_bias,
+    ops_conf.chn3_range_bias];
+
+  npulses = numberof(pulses.tx);
+
+  lrx = fint = lint = lbias = array(float, npulses);
+  lchannel = pulses.fchannel;
+
+  for(i = 1; i <= npulses; i++) {
+    if(!lchannel(i)) continue;
+    conf = bathconf(settings, lchannel(i));
+    lbias(i) = biases(lchannel(i));
+
+    tmp = ba_rx_wf(*pulses.rx(lchannel(i),i), conf);
+    fint(i) = tmp.fint;
+    lint(i) = tmp.lint;
+    lrx(i) = tmp.lrx;
+  }
+
+  save, pulses, lrx, fint, lint, lbias, lchannel;
 }
 
 func eaarl_ba_rx_eaarla(pulses) {
