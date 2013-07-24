@@ -59,7 +59,7 @@ func process_ba(start, stop, ext_bad_att=, channel=, opts=) {
         fs_slant_range, mx, my, mz, fx, fy, fz
       added by process_ba: ltx, lrx, lint, lbias, lchannel, lx, ly, lz
 */
-  restore_if_exists, opts, start, stop, ext_bad_att, channel, opts;
+  restore_if_exists, opts, start, stop, ext_bad_att, channel;
 
   sample_interval = 1.0;
   ba_tx = eaarl_ba_tx_copy;
