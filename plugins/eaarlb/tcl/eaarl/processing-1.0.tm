@@ -108,7 +108,7 @@ proc ::eaarl::processing::process {} {
     set channels [list]
     foreach channel {1 2 3 4} {
         if {[set ::forcechannel_$channel]} {
-            lappend channels \"$channel\"
+            lappend channels $channel
         }
     }
 
