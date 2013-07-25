@@ -37,9 +37,8 @@ func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, opts=) {
         mode="f"    Process for first surface (default)
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
-    channel= Specifies which channel or channels to process. If omitted or set
-      to 0, EAARL-A style channel selection is used. Otherwise, this can be an
-      integer or array of integers for the channels to process.
+    channel= Specifies which channel or channels to process. Required. This can
+      be an integer or array of integers for the channels to process.
     opts= Oxy group that provides an alternative interface for providing
       function arguments/options. Any key/value pairs not used by process_eaarl
       will be passed through as-is to the underlying processing function.
@@ -49,6 +48,7 @@ func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, opts=) {
     data's type.
 */
   restore_if_exists, opts, start, stop, mode, ext_bad_att, channel;
+  if(is_void(channel)) error, "Must specify channel= option";
 
   extern eaarl_processing_modes;
   default, mode, "f";
@@ -81,9 +81,8 @@ func make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=) {
         mode="f"    Process for first surface (default)
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
-    channel= Specifies which channel or channels to process. If omitted or set
-      to 0, EAARL-A style channel selection is used. Otherwise, this can be an
-      integer or array of integers for the channels to process.
+    channel= Specifies which channel or channels to process. Required. This can
+      be an integer or array of integers for the channels to process.
 
   Additional options:
     verbose= Specifies verbosity level.
@@ -99,6 +98,7 @@ func make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=) {
   timer, t0;
 
   restore_if_exists, opts, mode, q, ply, ext_bad_att, channel, verbose;
+  if(is_void(channel)) error, "Must specify channel= option";
 
   extern ops_conf, tans, pnav;
 
@@ -180,9 +180,8 @@ ext_bad_att=, opts=) {
         mode="f"    Process for first surface (default)
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
-    channel= Specifies which channel or channels to process. If omitted or set
-      to 0, EAARL-A style channel selection is used. Otherwise, this can be an
-      integer or array of integers for the channels to process.
+    channel= Specifies which channel or channels to process. Required. This can
+      be an integer or array of integers for the channels to process.
     opts= Oxy group that provides an alternative interface for providing
       function arguments/options. Any key/value pairs not used by this function
       will be passed through as-is to the underlying processing function.
@@ -193,6 +192,7 @@ ext_bad_att=, opts=) {
 */
   restore_if_exists, opts, tldfn, start, stop, rnstart, mode, channel,
     ext_bad_att;
+  if(is_void(channel)) error, "Must specify channel= option";
 
   passopts = save(mode, channel, ext_bad_att);
   if(opts)
@@ -230,9 +230,8 @@ makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
         mode="f"    Process for first surface (default)
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
-    channel= Specifies which channel or channels to process. If omitted or set
-      to 0, EAARL-A style channel selection is used. Otherwise, this can be an
-      integer or array of integers for the channels to process.
+    channel= Specifies which channel or channels to process. Required. This can
+      be an integer or array of integers for the channels to process.
 
   Options for makeflow:
     makeflow_fn= The filename to use when writing out the makeflow. Ignored if
@@ -262,6 +261,7 @@ makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
 
   restore_if_exists, opts, mode, q, ply, ext_bad_att, channel, verbose,
     makeflow_fn, forcelocal, retconf=, norun;
+  if(is_void(channel)) error, "Must specify channel= option";
 
   extern ops_conf, tans, pnav;
 
@@ -366,9 +366,8 @@ opts=) {
   Options for processing:
     mode= Processing mode.
         mode="f"    Process for first surface (default)
-    channel= Specifies which channel or channels to process. If omitted or set
-      to 0, EAARL-A style channel selection is used. Otherwise, this can be an
-      integer or array of integers for the channels to process.
+    channel= Specifies which channel or channels to process. Required. This can
+      be an integer or array of integers for the channels to process.
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
     force_zone= Specifies a zone to coerce output to. If not provided, then the
@@ -442,6 +441,7 @@ opts=) {
     ext_bad_att, channel, pick, plot, onlyplot, win, ply, shapefile,
     buffer, force_zone, log_fn, makeflow_fn, forcelocal, norun,
     retconf;
+  if(is_void(channel)) error, "Must specify channel= option";
 
   default, mode, "f";
   default, buffer, 200.;
