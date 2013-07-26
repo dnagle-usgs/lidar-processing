@@ -142,7 +142,7 @@ func pcobj(base, obj) {
       configuration must be defined that covers the data. If an rn cannot be
       determined, -1 will be returned instead. Values are cached to improve
       performance; if you get -1 because you didn't have the mission
-      configuration loaded, then you'll have to do "wfobj, data" to clear
+      configuration loaded, then you'll have to do "pcobj, data" to clear
       the cache after loading it.
     data, save, fn
       Saves the data for this pcobj object to a pbd file specified by FN.

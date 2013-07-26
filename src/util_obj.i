@@ -15,9 +15,9 @@ func bless(obj, cls) {
   necessary to "bless" the group into its "class".
 
   For example, this:
-    bless, myobj, "wfobj"
+    bless, myobj, "pcobj"
   Is equivalent to:
-    wfobj, myobj
+    pcobj, myobj
 
   If the CLASS parameter is omitted, it is inferred from the oxy group itself
   by looking for a member named __bless. This allows for an object to be
