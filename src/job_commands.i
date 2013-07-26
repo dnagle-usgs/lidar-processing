@@ -143,39 +143,6 @@ func job_rcf_eaarl(conf) {
       prefilter_max=prefilter_max, verbose=0;
 }
 
-func job_georef_eaarl(conf) {
-/* DOCUMENT job_georef_eaarl, conf
-  This is a wrapper around georef_eaarl. Each accepted command-line option
-  corresponds to an option or parameter of georef_eaarl as follows.
-
-    --file-in-tld   corresponds to  rasts
-    --file-in-gns   corresponds to  gns
-    --file-in-ins   corresponds to  ins
-    --file-in-ops   corresponds to  ops
-    --daystart      corresponds to  daystart
-    --file-out      corresponds to  outfile=
-
-  Additionally, the following parameter not required by georef_eaarl is
-  required as well:
-
-    --gps_time_correction
-
-  All options are required.
-*/
-  extern gps_time_correction;
-  require, "util_obj.i";
-  require, "util_str.i";
-  keyrequire, conf, file=, daystart=, gps_time_correction=;
-  keyrequire, conf.file, in=, out=;
-  keyrequire, conf.file.in, tld=, gns=, ins=, ops=;
-  daystart = atoi(conf.daystart);
-  gps_time_correction = atod(conf.gps_time_correction);
-
-  require, "plugins/eaarlb/eaarl_wf.i";
-  georef_eaarl, conf.file.in.tld, conf.file.in.gns, conf.file.in.ins,
-    conf.file.in.ops, daystart, outfile=conf.file.out;
-}
-
 func job_pbd2las(conf) {
 /* DOCUMENT job_pbd2las, conf
   This is a wrapper around pbd2las. Each accepted command-line option
