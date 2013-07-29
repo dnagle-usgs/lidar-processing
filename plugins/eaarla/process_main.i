@@ -486,17 +486,17 @@ opts=) {
   if(strpart(vtag, 1:1) != "_") vtag = "_" + vtag;
   if(file_extension(ftag) != ".pbd") ftag += ".pbd";
 
-  // Default makeflow_fn is: YYYYMMDD_HHMMSS_w84_YYMMDD_chanNN_T.makeflow
-  if(is_void(makeflow_fn)) {
+  // Default makeflow_fn is: YYYYMMDD_HHMMSS_w84_YYMMDD_chanNN_T.log
+  if(is_void(log_fn)) {
     // Start out with current timestamp as YYYYMMDD_HHMMSS
     ts = regsub(" ", regsub("-|:", soe2iso8601(now), "", all=1), "_");
-    // Add ftag, then make into full path with extension .makeflow
-    makeflow_fn = file_join(outdir, file_rootname(ts + ftag) + ".makeflow");
+    // Add ftag, then make into full path with extension .log
+    log_fn = file_join(outdir, file_rootname(ts + ftag) + ".log");
     ts = [];
   }
 
-  // Default log_fn is makeflow_fn with .log extension
-  default, log_fn, file_rootname(makeflow_fn) + ".log";
+  // Default makeflow_fn is log_fn with .makeflow extension
+  default, makeflow_fn, file_rootname(log_fn) + ".makeflow";
 
   // Derive region polygon
   if(shapefile) {
