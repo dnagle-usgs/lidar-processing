@@ -382,6 +382,7 @@ func remove_empty(path, dirs=, files=) {
   fix_dir, path;
   default, dirs, 1;
   default, files, 0;
+  local subdirs;
   fns = lsdir(path, subdirs);
   // This signifies the path doesn't exist.
   if(structof(fns) == long) return;
@@ -400,9 +401,10 @@ func remove_recursive(path) {
   Removes a path and everything under it, equivalent to rm -rf.
 */
   fix_dir, path;
+  local subdirs;
   files = lsdir(path, subdirs);
   // This signifies the path doesn't exist.
-  if(structof(fns) == long) return;
+  if(structof(files) == long) return;
   for(i = 1; i <= numberof(subdirs); i++)
     remove_recursive, path+subdirs(i);
   for(i = 1; i <= numberof(files); i++)
