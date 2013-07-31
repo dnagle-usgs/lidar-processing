@@ -175,6 +175,8 @@ func eaarl_ba_rx_channel(pulses) {
 
   for(i = 1; i <= npulses; i++) {
     if(!lchannel(i)) continue;
+    if(!pulses.rx(lchannel(i),i)) continue;
+
     conf = bathconf(settings, lchannel(i));
     lbias(i) = biases(lchannel(i));
 
