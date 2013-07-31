@@ -261,14 +261,7 @@ func makeflow_conf_to_script(conf, fn, jobenv=) {
     }
 
     args = [];
-    if(is_string(item.options)) {
-      if(is_scalar(item.options)) {
-        args = item.options;
-      } else {
-        args = strjoin(item.options(*), " ");
-      }
-    }
-    if(is_obj(item.options)) {
+    if(!is_void(item.options)) {
       args = makeflow_obj_to_switches(item.options(2:));
       if(numberof(item.options(1)))
         grow, args, item.options(1);
