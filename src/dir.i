@@ -361,24 +361,53 @@ func find(path, searchstr=) {
   return results;
 }
 
-func remove_empty_dirs(path) {
-/* DOCUMENT remove_empty_dirs, path
+func remove_empty(path, dirs=, files=) {
+/* DOCUMENT remove_empty, path, type=
   Given a path, this will recursively search its subdirectories and will
-  remove all directories that are empty (or that become empty because they had
-  only empty subdirectories).
+  remove all directories and/or files that are empty (or that become empty
+  because they had only empty directories and/or files).
 
-  Equivalent to this linux command:
+  The default is equivalent to this linux command:
     cd path
     find -depth -type d -empty -exec rmdir \{} \;
+
+  Options:
+    dirs= Delete empty dirs?
+        dirs=1    Yes, delete them (default)
+        dirs=0    No, don't delete them
+    files= Delete empty files?
+        files=0   No, don't delete them (default)
+        files=1   Yes, delete them
 */
-// Original David Nagle 2010-02-08
   fix_dir, path;
-  subdirs = lsdirs(path);
+  default, dirs, 1;
+  default, files, 0;
+  fns = lsdir(path, subdirs);
+  // This signifies the path doesn't exist.
+  if(structof(fns) == long) return;
   for(i = 1; i <= numberof(subdirs); i++)
-    remove_empty_dirs, path+subdirs(i);
-  files = lsdir(path, subdirs);
-  if(!numberof(files) && !numberof(subdirs))
+    remove_empty, path+subdirs(i), dirs=dirs, files=files;
+  if(files)
+    for(i = 1; i <= numberof(fns); i++)
+      if(!file_size(path+fns(i)))
+        remove, path+fns(i);
+  if(dirs && !numberof(lsdir(path, subdirs)) && !numberof(subdirs))
     rmdir, path;
+}
+
+func remove_recursive(path) {
+/* DOCUMENT remove_recursive, path
+  Removes a path and everything under it, equivalent to rm -rf.
+*/
+  fix_dir, path;
+  files = lsdir(path, subdirs);
+  // This signifies the path doesn't exist.
+  if(structof(fns) == long) return;
+  for(i = 1; i <= numberof(subdirs); i++)
+    remove_recursive, path+subdirs(i);
+  for(i = 1; i <= numberof(files); i++)
+    remove, path+files(i);
+  rmdir, path;
 }
 
 func lsfiles(dir, glob=, ext=, case=, regex=) {
