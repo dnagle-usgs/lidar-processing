@@ -166,7 +166,7 @@ func eaarl_ba_rx_channel(pulses) {
   ba_rx_wf = eaarl_ba_rx_wf;
 
   biases = [ops_conf.chn1_range_bias, ops_conf.chn2_range_bias,
-    ops_conf.chn3_range_bias];
+    ops_conf.chn3_range_bias, ops_conf.chn4_range_bias];
 
   npulses = numberof(pulses.tx);
 
