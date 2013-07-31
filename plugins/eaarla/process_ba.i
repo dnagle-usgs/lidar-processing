@@ -171,7 +171,7 @@ func eaarl_ba_rx_channel(pulses) {
   npulses = numberof(pulses.tx);
 
   lrx = fint = lint = lbias = array(float, npulses);
-  lchannel = pulses.fchannel;
+  lchannel = pulses.channel;
 
   for(i = 1; i <= npulses; i++) {
     if(!lchannel(i)) continue;

@@ -251,7 +251,7 @@ func eaarl_fs_rx_cent_eaarlb(pulses) {
   pulses:
     frx - Location in waveform of first return
     fint - Peak intensity value of first return
-    fchannel - Channel used (== channel)
+    fchannel - Channel used (=channel except for chan 4, which uses 2)
     fbias - The channel range bias (ops_conf.chn%d_range_bias)
 */
   extern ops_conf;
