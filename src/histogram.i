@@ -215,6 +215,13 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
       hist /= double(numberof(z));
   }
 
+  //rwm: clamp all zero values to 1 because it looks ugly on a log scale
+  //rwm: by changing hist here, it also fixes it for the bar graph
+  if (logy) {
+    myhist = where(hist == 0 );
+    hist(myhist)=1;
+  }
+
   parse_plopts, histbar, type, color, size;
   if(type != "hide")
     plh, hist, refs, type=type, color=color, width=size;
