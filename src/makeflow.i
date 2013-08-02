@@ -24,31 +24,42 @@ local makeflow_conf;
         may be dispatched to other servers if a multi-server setup is available
         (optional)
 
-  The "options" key may be formatted in a few different ways:
-  
-    - The simplest is a simple string consisting of the command line switches
-      and arguments to pass to the job invocation. For example:
-          options="--foo bar --answer 42"
-
-    - The next simplest is an array of strings consisting of the command line
-      switches and arguments. For example:
-          options=["--foo", "bar", "--answer", "42"]
-
-    - The last option is to pass an oxy group object that corresponds to the
-      command line switches and arguments. This object should be formatted
-      exactly like the output expected from _job_parse_options in job.i. For
-      example:
-          options=save(string(0), [], foo="bar", answer="42")
+  The "options" key should be an oxy group object that corresponds to the
+  command line switches and arguments. This object should be formatted exactly
+  like the output expected from _job_parse_options in job.i. For example:
+  options=save(string(0), [], foo="bar", answer="42")
 
   So an example configuration with a dummy debug job might be:
     > conf = save()
     > save, conf, string(0), save(command="job_debug_parse_to_file",
-    CONT> output="/data/bar", options="--foo-bar baz")
+    CONT> output="/data/bar", options=save(string(0), [], "foo-bar", "baz")
 
   A few notes:
     - All files used by the job as input MUST be documented under the input
       key.
-    - All path names must be absolute.
+    - All files created/updated by the job as output MUST be documented uner
+      the output key.
+    - All path names MUST be absolute.
+
+  A makeflow job can be run in one of two ways: via Makeflow or within the
+  current ALPS session. If the job is run by Makeflow, it needs to carry along
+  all of its dependencies. If it is run in the current ALPS session, then it
+  doesn't make sense to prepare to carry along all of its dependencies if some
+  of those dependencies are available in the session already. Also, if a job is
+  run by Makeflow, it needn't worry about consequences to the running session;
+  but a job running in the current ALPS session though, it needs to be quite
+  careful about undesirable side effects.
+
+  With that in mind:
+
+  Make sure your job doesn't create any undesirable side effects in the
+  session. Test it with makeflow disabled to verify.
+
+  Make sure your job conf only contains the elements that would be necessary
+  for running without makeflow enabled. Then use hooks to supply the elements
+  that would be needed when running under makeflow. You'll want to look at the
+  hooks "makeflow_run" and "job_run", as well as the function
+  "makeflow_requires_jobenv".
 
   SEE ALSO: makeflow, _job_parse_options
 */
