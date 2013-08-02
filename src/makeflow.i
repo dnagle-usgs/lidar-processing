@@ -96,11 +96,11 @@ func makeflow_run(conf, fn, norun=, interval=) {
 
   // Associated files always get created alongside makeflow file
   makeflow_log = fn+".makeflowlog";
-  makeflow_env = file_rootname(fn)+".env.pbd";
 
-  // Generate makeflow and env files
-  jobs_env_wrap, makeflow_env;
-  makeflow_conf_to_script, conf, fn, jobenv=makeflow_env;
+  restore, hook_invoke("makeflow_run", save(norun, conf, fn, makeflow_log));
+
+  // Generate makeflow
+  makeflow_conf_to_script, conf, fn;
 
   // Abort: this lets the caller examine the output without running the
   // makeflow.
@@ -148,6 +148,48 @@ func makeflow_run(conf, fn, norun=, interval=) {
   }
 
   write, format="%s", "Jobs completed.\n";
+}
+
+func hook_makeflow_jobs_env(data, env) {
+/* DOCUMENT hook_makeflow_jobs_env(env)
+  Hook on makeflow_run that adds jobenv to jobs that need it.
+
+  To add a job to the list of jobs that get a jobenv, use
+  makeflow_requires_jobenv.
+*/
+  if(is_void(data.jobs)) return env;
+
+  conf = obj_copy(env.conf, recurse=1);
+  jobenv = file_rootname(env.fn) + ".env.pbd";
+  needed = 0;
+
+  for(i = 1; i <= conf(*); i++) {
+    item = conf(noop(i));
+    if(noneof(item.command == data.jobs)) continue;
+
+    needed = 1;
+    save, item, input=grow(item.input, jobenv);
+    save, item.options, jobenv;
+  }
+
+  if(needed) {
+    jobs_env_wrap, jobenv;
+    save, env, conf;
+  }
+
+  return env;
+}
+hook_makeflow_jobs_env = closure(hook_makeflow_jobs_env, save(jobs=[]));
+hook_add, "makeflow_run", "hook_makeflow_jobs_env";
+
+func makeflow_requires_jobenv(job) {
+/* DOCUMENT makeflow_requires_jobenv, job
+  This adds JOB to the list of jobs that require a jobenv to be sent along with
+  the job. When the Makeflow is generates, a jobenv file will be created and
+  --jobenv added to those jobs' parameter lists.
+*/
+    save, hook_makeflow_jobs_env.data, jobs=set_remove_duplicates(
+      grow(hook_makeflow_jobs_env.data.jobs, job));
 }
 
 func makeflow_parse_log(fn) {
@@ -230,9 +272,9 @@ func makeflow_parse_log(fn) {
   return save(status, started, ended, jobs_pending, jobs_finished, log);
 }
 
-func makeflow_conf_to_script(conf, fn, jobenv=) {
-/* DOCUMENT makeflow_conf_to_script, conf, fn, jobenv=
-  script = makeflow_conf_to_script(conf, jobenv=)
+func makeflow_conf_to_script(conf, fn) {
+/* DOCUMENT makeflow_conf_to_script, conf, fn
+  script = makeflow_conf_to_script(conf)
 
   Given a configuration, generates a makeflow script.
 
@@ -266,11 +308,6 @@ func makeflow_conf_to_script(conf, fn, jobenv=) {
       if(numberof(item.options(1)))
         grow, args, item.options(1);
       args = strjoin(args, " ");
-    }
-
-    if(!is_void(jobenv)) {
-      input += " " + jobenv;
-      args += " --jobenv " + jobenv;
     }
 
     cmd = item.command;
