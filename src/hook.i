@@ -149,6 +149,7 @@ func hook_invoke(hooks, hook_name, &env) {
   SEE ALSO: hook_add, hook_remove, hook_func
 */
   if(!hooks(*,hook_name)) return env;
+  if(is_void(hooks(noop(hook_name)))) return env;
 
   func_names = hooks(noop(hook_name)).func_name;
   for(i = 1; i <= numberof(func_names); i++)
