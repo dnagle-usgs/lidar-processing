@@ -316,6 +316,7 @@ makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
         "start", offset_start(i),
         "stop", offset_stop(i),
         "rnstart", rn_start(i),
+        "rnstop", rn_stop(i),
         "vname", swrite(format="%s_%d", mode, i)
       ))
     );
@@ -323,17 +324,15 @@ makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
 
   if(retconf) return conf;
 
-  hook_add, "jobs_env_wrap", "hook_eaarl_mission_jobs_env_wrap";
-  hook_add, "jobs_env_unwrap", "hook_eaarl_mission_jobs_env_unwrap";
+  makeflow_requires_jobenv, "job_eaarl_process";
+  hook_add, "makeflow_run", "hook_prep_job_eaarl_process";
+  hook_add, "job_run", "hook_run_job_eaarl_process";
+
   makeflow_run, conf, makeflow_fn, interval=15, norun=norun;
-  hook_remove, "jobs_env_wrap", "hook_eaarl_mission_jobs_env_wrap";
-  hook_remove, "jobs_env_unwrap", "hook_eaarl_mission_jobs_env_unwrap";
+  if(norun) return;
 
   data = dirload(files=pbdfn, verbose=0);
-  for(i = 1; i <= count; i++) {
-    remove, pbdfn(i);
-  }
-  rmdir, tempdir;
+  remove_recursive, tempdir;
 
   if(verbose) {
     write, format=" Total points derived: %d\n", numberof(data);
@@ -638,6 +637,7 @@ opts=) {
         "start", offset_start,
         "stop", offset_stop,
         "rnstart", rn_start,
+        "rnstop", rn_stop,
         "vname", vnames(i)
       ))
     );
@@ -645,11 +645,69 @@ opts=) {
 
   if(retconf) return conf;
 
-  hook_add, "jobs_env_wrap", "hook_eaarl_mission_jobs_env_wrap";
-  hook_add, "jobs_env_unwrap", "hook_eaarl_mission_jobs_env_unwrap";
+  makeflow_requires_jobenv, "job_eaarl_process";
+  hook_add, "makeflow_run", "hook_prep_job_eaarl_process";
+  hook_add, "job_run", "hook_run_job_eaarl_process";
+
   makeflow_run, conf, makeflow_fn, interval=15, norun=norun;
-  hook_remove, "jobs_env_wrap", "hook_eaarl_mission_jobs_env_wrap";
-  hook_remove, "jobs_env_unwrap", "hook_eaarl_mission_jobs_env_unwrap";
 
   timer_finished, t0;
+}
+
+func hook_prep_job_eaarl_process(env) {
+/* DOCUMENT env = hook_prep_job_eaarl_process(env)
+  This is intended to be used as a hook on "makeflow_run" for the job
+  "job_eaarl_process". It saves the mission configuration for the job.
+*/
+  conf = obj_copy(env.conf, recurse=1);
+  path = file_rootname(env.fn);
+
+  needed = 0;
+  for(i = 1; i <= conf(*); i++) {
+    item = conf(noop(i));
+    if(item.command != "job_eaarl_process") continue;
+    needed = 1;
+
+    keep = array(0, dimsof(tans));
+    for(j = 1; j <= numberof(item.options.rnstart); j++) {
+      w = where(
+        (edb(item.options.rnstart(j)).seconds - soe_day_start - 1 <= tans.somd) &
+        (edb(item.options.rnstop(j)).seconds - soe_day_start + 2 >= tans.somd)
+      );
+      keep(w) = 1;
+
+    }
+    w = where(keep);
+    wrapped = mission(wrap, cache_what="everything");
+    save, wrapped, tans=tans(w), iex_nav=iex_nav(w);
+    if(wrapped(*,"bathconf_data"))
+      save, wrapped, bathconf_data=serialize(wrapped.bathconf_data);
+
+    flightfn = file_join(path,
+      file_tail(file_rootname(item.options.pbdfn))+".flight.pbd");
+    mkdirp, path;
+    obj2pbd, wrapped, flightfn;
+    wrapped = [];
+
+    save, item, input=grow(item.input, flightfn);
+    save, item.options, flightfn;
+  }
+
+  if(needed) save, env, conf;
+  return env;
+}
+
+func hook_run_job_eaarl_process(env) {
+/* DOCUMENT env = hook_run_job_eaarl_process(env)
+  This is intended to be used as a hook on "job_run" for the job
+  "job_eaarl_process". It restores the mission configuration for the job.
+*/
+  if(env.job_func != "job_eaarl_process" || !env.conf(*,"flightfn"))
+    return env;
+
+  wrapped = pbd2obj(env.conf.flightfn);
+  if(wrapped(*,"bathconf_data"))
+    save, wrapped, bathconf_data=deserialize(wrapped.bathconf_data);
+  mission, unwrap, wrapped;
+  return env;
 }
