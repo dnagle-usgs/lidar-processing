@@ -106,9 +106,12 @@ func __job_run(argv) {
     error, "job function must start with \"job_\"";
 
   // Restore env, if provided
-  if(conf(*,"jobenv")) {
+  if(conf(*,"jobenv"))
     jobs_env_unwrap, conf.jobenv;
-  }
+
+  // Only run hook if hooks are available (via jobenv)
+  if(!is_void(hook_invoke))
+    restore, hook_invoke("job_run", save(job_func, conf));
 
   if(!symbol_exists(job_func))
     error, "unknown job function: "+job_func;
@@ -123,7 +126,9 @@ func __job_run(argv) {
 func jobs_env_wrap(fn) {
 /* DOCUMENT jobs_env_wrap, "<filename>"
   Wraps up (part of) the current environment and saves it to file for use by a
-  job. This is intended to be unwrapped by jobs_env_unwrap.
+  job. This is intended to be unwrapped by jobs_env_unwrap. It should be
+  provided to the job as --jobenv <filename>, which will trigger its
+  unwrapping.
 
   By default, the following things are saved:
     - the variable 'curzone'
