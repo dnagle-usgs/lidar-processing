@@ -2,12 +2,12 @@ require, "makeflow.i";
 
 func mf_pbd2las(dir_pbd, outdir=, searchstr=, v_maj=, v_min=, cs=, cs_out=,
 mode=, pdrf=, encode_rn=, include_scan_angle_rank=, buffer=, classification=,
-header=, verbose=, pre_fn=, post_fn=, shorten_fn=, makeflow_fn=, forcelocal=,
+header=, verbose=, pre_fn=, post_fn=, shorten_fn=, makeflow_fn=,
 norun=) {
 /* DOCUMENT mf_pbd2las, dir_pbd, outdir=, searchstr=, v_maj=, v_min=,
    cs=, cs_out=, mode=, pdrf=, encode_rn=, include_scan_angle_rank=, buffer=,
    classification=, header=, verbose=, pre_fn=, post_fn=, shorten_fn=,
-   makeflow_fn=, forcelocal=, norun=
+   makeflow_fn=, norun=
 
   Runs pbd2las in a batch mode. This converts individual PBD files into LAS
   files.
@@ -102,9 +102,6 @@ norun=) {
       called as a function. If not provided, a temporary file will be used then
       discarded.
 
-    forcelocal= Forces local execution.
-        forcelocal=0    Default
-
     norun= Don't actually run makeflow; just create the makeflow file.
         norun=0   Runs makeflow, default
         norun=1   Doesn't run makeflow
@@ -181,7 +178,6 @@ norun=) {
   for(i = 1; i <= numberof(files_pbd); i++) {
     remove, files_las(i);
     save, conf, string(0), save(
-      forcelocal=forcelocal,
       input=files_pbd(i),
       output=files_las(i),
       command="job_pbd2las",
@@ -204,12 +200,12 @@ norun=) {
 
 func mf_las2pbd(dir_las, outdir=, searchstr=, format=, fakemirror=, rgbrn=,
 verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=, post_fn=,
-shorten_fn=, update=, files=, date=, geo=, zone=, makeflow_fn=, forcelocal=,
+shorten_fn=, update=, files=, date=, geo=, zone=, makeflow_fn=,
 norun=) {
 /* DOCUMENT mf_las2pbd, dir_las, outdir=, searchstr=, format=, fakemirror=,
    rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=,
    post_fn=, shorten_fn=, update, files=, date=, geo=, zone=, makeflow_fn=,
-   forcelocal=, norun=
+   norun=
 
   Batch converts LAS files to PBD files.
 
@@ -295,9 +291,6 @@ norun=) {
     makeflow_fn= The filename to use when writing out the makeflow. Ignored if
       called as a function. If not provided, a temporary file will be used then
       discarded.
-
-    forcelocal= Forces local execution.
-        forcelocal=0    Default
 
     norun= Don't actually run makeflow; just create the makeflow file.
         norun=0   Runs makeflow, default
@@ -468,7 +461,6 @@ norun=) {
   conf = save();
   for(i = 1; i <= numberof(files_pbd); i++) {
     save, conf, string(0), save(
-      forcelocal=forcelocal,
       input=files_las(i),
       output=files_pbd(i),
       command="job_las2pbd",

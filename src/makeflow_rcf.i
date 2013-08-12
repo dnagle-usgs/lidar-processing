@@ -1,9 +1,9 @@
 require, "makeflow.i";
 
-func mf_automerge_tiles(path, searchstr=, update=, makeflow_fn=, forcelocal=,
+func mf_automerge_tiles(path, searchstr=, update=, makeflow_fn=,
 norun=) {
 /* DOCUMENT mf_automerge_tiles, path, searchstr=, update=, makeflow_fn=,
-   forcelocal=, norun=
+   norun=
 
   Specialized batch merging function for the initial merge of processed data.
 
@@ -39,9 +39,6 @@ norun=) {
       called as a function. If not provided, a temporary file will be used then
       discarded.
 
-    forcelocal= Forces local execution.
-        forcelocal=0    Default
-
     norun= Don't actually run makeflow; just create the makeflow file.
         norun=0   Runs makeflow, default
         norun=1   Doesn't run makeflow
@@ -61,7 +58,6 @@ norun=) {
 */
   default, searchstr, ["*_v.pbd", "*_b.pbd"];
   default, update, 0;
-  default, forcelocal, 0;
 
   // Locate files and split into dirs/tails
   files = find(path, searchstr=searchstr);
@@ -166,7 +162,6 @@ norun=) {
     while(j < count && outfiles(j+1) == outfiles(i))
       j++;
     save, conf, string(0), save(
-      forcelocal=forcelocal,
       input=files(i:j),
       output=outfiles(i),
       command="job_dirload",
@@ -192,10 +187,10 @@ norun=) {
 
 func mf_batch_rcf(dir, searchstr=, merge=, files=, update=, mode=,
 prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, makeflow_fn=,
-forcelocal=, norun=) {
+norun=) {
 /* DOCUMENT new_batch_rcf, dir, searchstr=, merge=, files=, update=, mode=,
    prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, makeflow_fn=,
-   forcelocal=, norun=
+   norun=
 
   This iterates over each file in a set of files and applies an RCF filter to
   its data.
@@ -268,9 +263,6 @@ forcelocal=, norun=) {
       called as a function. If not provided, a temporary file will be used then
       discarded.
 
-    forcelocal= Forces local execution.
-        forcelocal=0    Default
-
     norun= Don't actually run makeflow; just create the makeflow file.
         norun=0   Runs makeflow, default
         norun=1   Doesn't run makeflow
@@ -284,7 +276,6 @@ forcelocal=, norun=) {
   default, meta, 1;
   default, mode, "fs";
   default, rcfmode, "grcf";
-  default, forcelocal, 0;
 
   t0 = array(double, 3);
   timer, t0;
@@ -363,7 +354,6 @@ forcelocal=, norun=) {
       save, options, "prefilter-max", prefilter_max;
 
     save, conf, string(0), save(
-      forcelocal=forcelocal,
       input=file_in,
       output=file_out,
       command="job_rcf_eaarl",

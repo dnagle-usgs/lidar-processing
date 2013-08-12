@@ -211,9 +211,9 @@ ext_bad_att=, opts=) {
 }
 
 func mf_make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=,
-makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
+makeflow_fn=, norun=, retconf=, opts=) {
 /* DOCUMENT mf_make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=,
-   makeflow_fn=, forcelocal=, norun=, retconf=, opts=)
+   makeflow_fn=, norun=, retconf=, opts=)
   Processes EAARL data for the given mode in a region specified by the user.
   Unlike make_eaarl, mf_make_eaarl uses Makeflow to run flightlines in
   parallel.
@@ -238,8 +238,6 @@ makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
     makeflow_fn= The filename to use when writing out the makeflow. Ignored if
       called as a function. If not provided, a temporary file will be used then
       discarded.
-    forcelocal= Forces local execution.
-        forcelocal=0    Default
     norun= Don't actually run makeflow; just create the makeflow file.
         norun=0   Runs makeflow, default
         norun=1   Doesn't run makeflow
@@ -261,7 +259,7 @@ makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
   timer, t0;
 
   restore_if_exists, opts, mode, q, ply, ext_bad_att, channel, verbose,
-    makeflow_fn, forcelocal, retconf=, norun;
+    makeflow_fn, retconf=, norun;
 
   extern ops_conf, tans, pnav;
 
@@ -300,13 +298,12 @@ makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
   options = save(string(0), [], mode, channel, ext_bad_att);
   if(opts)
     options = obj_delete(obj_merge(opts, options),
-      q, ply, makeflow_fn, forcelocal, norun);
+      q, ply, makeflow_fn, norun);
 
   conf = save();
   for(i = 1; i <= count; i++) {
     remove, pbdfn(i);
     save, conf, string(0), save(
-      forcelocal=forcelocal,
       input=tldfn(i),
       output=pbdfn(i),
       command="job_eaarl_process",
@@ -344,7 +341,7 @@ makeflow_fn=, forcelocal=, norun=, retconf=, opts=) {
 
 func mf_batch_eaarl(mode=, outdir=, update=, ftag=, vtag=, date=,
 ext_bad_att=, channel=, pick=, plot=, onlyplot=, win=, ply=, shapefile=,
-buffer=, force_zone=, log_fn=, makeflow_fn=, forcelocal=, norun=, retconf=,
+buffer=, force_zone=, log_fn=, makeflow_fn=, norun=, retconf=,
 opts=) {
 /* DOCUMENT mf_batch_eaarl
   Most common options:
@@ -425,8 +422,6 @@ opts=) {
     makeflow_fn= The filename to use when writing out the makeflow. Ignored if
       called as a function. If not provided, a temporary file will be used then
       discarded.
-    forcelocal= Forces local execution.
-        forcelocal=0    Default
     norun= Don't actually run makeflow; just create the makeflow file.
         norun=0   Runs makeflow, default
         norun=1   Doesn't run makeflow
@@ -439,8 +434,7 @@ opts=) {
 
   restore_if_exists, opts, mode, outdir, update, ftag, vtag, date,
     ext_bad_att, channel, pick, plot, onlyplot, win, ply, shapefile,
-    buffer, force_zone, log_fn, makeflow_fn, forcelocal, norun,
-    retconf;
+    buffer, force_zone, log_fn, makeflow_fn, norun, retconf;
 
   default, mode, "f";
   default, buffer, 200.;
@@ -569,7 +563,7 @@ opts=) {
   options = save(string(0), [], mode, channel, ext_bad_att);
   if(opts)
     options = obj_delete(obj_merge(opts, options),
-      makeflow_fn, forcelocal, norun);
+      makeflow_fn, norun);
 
   // Create log file
   mkdirp, file_dirname(log_fn);
@@ -593,7 +587,7 @@ opts=) {
   write, f, format="%s", obj_show(save(
     mode, outdir, update, ftag, vtag, date, ext_bad_att, channel, pick, plot,
     onlyplot, win, shapefile, buffer, force_zone, log_fn, makeflow_fn,
-    forcelocal, norun, retconf, opts),
+    norun, retconf, opts),
     maxchild=100, maxary=10);
 
   write, f, format="\nProcessing area:%s", "\n";
@@ -627,7 +621,6 @@ opts=) {
     raster_sources, rn_start, rn_stop, tldfn, offset_start, offset_stop;
 
     save, conf, string(0), save(
-      forcelocal=forcelocal,
       input=tldfn,
       output=outfiles(i),
       command="job_eaarl_process",

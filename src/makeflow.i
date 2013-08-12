@@ -20,9 +20,6 @@ local makeflow_conf;
     command: The job command to run (as defined in job.i) (required)
     options: The options to pass to the job command (optional but effectively
         required) (see below for details)
-    forcelocal: If present and true, forces local execution; otherwise, the job
-        may be dispatched to other servers if a multi-server setup is available
-        (optional)
 
   The "options" key should be an oxy group object that corresponds to the
   command line switches and arguments. This object should be formatted exactly
@@ -323,12 +320,10 @@ func makeflow_conf_to_script(conf, fn) {
 
     cmd = item.command;
 
-    forcelocal = item.forcelocal ? "LOCAL " : "";
-
     flow += "\n";
     flow += swrite(format="%s:%s\n", output, input);
-    flow += swrite(format="\t%s$YORICK -batch $JOB %s %s\n",
-      forcelocal, cmd, args);
+    flow += swrite(format="\t$YORICK -batch $JOB %s %s\n",
+      cmd, args);
   }
 
   if(is_string(fn))
