@@ -243,7 +243,7 @@ func rcf_by_fltline(data, mode=, rcfmode=, buf=, w=, n=, timediff=) {
   The mode=, rcfmode=, buf=, w=, and n= options are as documented in
   rcf_filter_eaarl.
 
-  The timediff= option is as documented in split_by_fltline.
+  The timediff= option is as documented in split_by_line.
 */
   ptrs = split_by_line(unref(data), timediff=timediff);
   for(i = 1; i <= numberof(ptrs); i++)
@@ -292,7 +292,7 @@ func tk_sdw_define_region_variables(obj, ..) {
 
   while(more_args()) {
     data = next_arg();
-    ptr = split_by_fltline(data);
+    ptr = split_by_line(data);
     if(numberof(ptr) > 1) {
       multi_flag = 1;
     }
