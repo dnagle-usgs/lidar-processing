@@ -20,6 +20,7 @@ local makeflow_conf;
     command: The job command to run (as defined in job.i) (required)
     options: The options to pass to the job command (optional but effectively
         required) (see below for details)
+    memory: How much memory the job is estimated to require, in MB (optional)
 
   The "options" key should be an oxy group object that corresponds to the
   command line switches and arguments. This object should be formatted exactly
@@ -288,13 +289,31 @@ func makeflow_conf_to_script(conf, fn) {
 
   SEE ALSO: makeflow
 */
+  // Make a copy, then sort by memory requirement
+  conf = obj_copy(conf);
+  mem = array(0, conf(*));
+  for(i = 1; i <= conf(*); i++)
+    mem(i) = conf(noop(i))(*,"memory") ? conf(noop(i)).memory : 100;
+  conf = conf(sort(mem));
+
   flow = "";
 
   flow += swrite(format="YORICK=%syorick\n", Y_LAUNCH);
   flow += swrite(format="JOB=%sjob.i\n", get_cwd());
 
+  lastmem = -1;
   for(i = 1; i <= conf(*); i++) {
     item = conf(noop(i));
+
+    // Round memory requirement up to next 100MB interval, min 100MB
+    mem = item.memory;
+    if(!mem) mem = 100;
+    mem = long(ceil(mem/100.)*100);
+    if(lastmem != mem) {
+      flow += swrite(format="CATEGORY=\"memory%d\"\n", mem);
+      flow += swrite(format="CORES=1\nMEMORY=%d\n", mem);
+      lastmem = mem;
+    }
 
     output = [];
     if(is_scalar(item.output))
