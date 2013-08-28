@@ -24,8 +24,8 @@ namespace eval ::eaarl {
       "Submerged Topo"     bathy
       "Topo Under Veg"     veg
       "Multi Peak Veg"     cveg
-      "Experimental: New First Return Topo"  fs_new
-      "Experimental: New Submerged Topo"     ba_new
+      "Test: New First Return Topo"  fs_new
+      "Test: New Submerged Topo"     ba_new
    }
 
    variable autoclean_after_process 1
