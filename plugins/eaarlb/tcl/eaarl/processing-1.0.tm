@@ -102,8 +102,14 @@ proc ::eaarl::processing::process {} {
     variable ::eaarl::processing_mode
     variable ::eaarl::pro_var_next
     variable ::eaarl::ext_bad_att
+    variable ::eaarl::interactive_batch
 
     set ::pro_var $pro_var_next
+
+    set make_eaarl "make_eaarl"
+    if {$interactive_batch} {
+        set make_eaarl "mf_make_eaarl"
+    }
 
     set channels [list]
     foreach channel {1 2 3 4} {
@@ -125,11 +131,11 @@ proc ::eaarl::processing::process {} {
     set cmd ""
     switch -- $processing_mode {
         fs_new {
-            set cmd "$::pro_var = make_eaarl(mode=\"f\", q=q,\
+            set cmd "$::pro_var = ${make_eaarl}(mode=\"f\", q=q,\
                     ext_bad_att=$ext_bad_att, channel=$channels)"
         }
         ba_new {
-            set cmd "$::pro_var = make_eaarl(mode=\"b\", q=q,\
+            set cmd "$::pro_var = ${make_eaarl}(mode=\"b\", q=q,\
                     ext_bad_att=$ext_bad_att, channel=$channels)"
         }
     }

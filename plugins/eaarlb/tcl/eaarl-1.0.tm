@@ -32,6 +32,7 @@ namespace eval ::eaarl {
    variable usecentroid 1
    variable avg_surf 1
    variable ext_bad_att 20
+   variable interactive_batch 0
 
    variable processing_mode fs
    variable pro_var_next fs_all

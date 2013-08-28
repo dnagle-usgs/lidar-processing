@@ -54,6 +54,16 @@ proc ::eaarl::main::gui {} {
             -altvariable ::eaarl::processing_mode \
             -mapping $::eaarl::process_mapping
 
+    ttk::checkbutton $f.interactive_batch \
+            -text "Batch mode" \
+            -variable ::eaarl::interactive_batch
+    ::mixin::statevar $f.interactive_batch \
+            -statedefault disabled \
+            -statemap {fs_new normal ba_new normal} \
+            -statevariable ::eaarl::processing_mode
+    ::misc::tooltip $f.interactive_batch \
+            "Batch mode is only available for new test processing modes."
+
     ttk::label $f.winlbl -text "Window:"
     ttk::spinbox $f.win -from 0 -to 64 -increment 1 \
             -width 2 -textvariable ::_map(window)
@@ -79,6 +89,7 @@ proc ::eaarl::main::gui {} {
     grid $f.channels $f.f2 -sticky ew -padx 2 -pady 1
     grid $f.minhtlbl $f.minht -sticky ew -padx 2 -pady 1
     grid $f.modelbl $f.mode -sticky ew -padx 2 -pady 1
+    grid x $f.interactive_batch - -sticky w -padx 2 -pady 1
     grid $f.varlbl $f.var -sticky ew -padx 2 -pady 1
     grid $f.process - -padx 2 -pady 1 -sticky ew
     grid $f.channels $f.modelbl $f.varlbl -sticky e

@@ -99,17 +99,23 @@ proc ::eaarl::processing::process {} {
     variable ::eaarl::usecentroid
     variable ::eaarl::ext_bad_att
     variable ::eaarl::avg_surf
+    variable ::eaarl::interactive_batch
 
     set ::pro_var $pro_var_next
+
+    set make_eaarl "make_eaarl"
+    if {$interactive_batch} {
+        set make_eaarl "mf_make_eaarl"
+    }
 
     set cmd ""
     switch -- $processing_mode {
         fs_new {
-            set cmd "$::pro_var = make_eaarl(mode=\"f\",\
+            set cmd "$::pro_var = ${make_eaarl}(mode=\"f\",\
                     q=q, ext_bad_att=$ext_bad_att)"
         }
         ba_new {
-            set cmd "$::pro_var = make_eaarl(mode=\"b\",\
+            set cmd "$::pro_var = ${make_eaarl}(mode=\"b\",\
                     q=q, ext_bad_att=$ext_bad_att)"
         }
         fs {
