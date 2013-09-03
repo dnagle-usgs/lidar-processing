@@ -91,7 +91,7 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=) {
   }
 
   window_select, wbkp;
-  return q;
+  return gga_find_times(q);
 }
 
 func mark_time_pos(sod, win=, msize=, marker=, color=) {
@@ -307,11 +307,6 @@ func sel_region(q, max_rps=, verbose=) {
     if(verbose) write, "No flightline selection provided, aborting!";
     return;
   }
-
-  sods = gga_find_times(q);
-  if(verbose)
-    write, format=" Seconds of flightline data selected = %6.2f\n",
-        (sods(dif,))(,sum);
 
   sods = tans_check_times(sods, verbose=verbose);
 
