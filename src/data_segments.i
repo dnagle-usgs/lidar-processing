@@ -322,7 +322,7 @@ func tk_sdw_define_region_variables(obj, ..) {
   if(multi_flag) {
     tkcmd, swrite(format="%s define_region_multilines", obj);
   } else {
-    q = _tk_swd_region;
+    q = gga_find_times(_tk_swd_region);
     tkcmd, swrite(format="%s define_region_successful", obj);
   }
 }
