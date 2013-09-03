@@ -323,6 +323,44 @@ func sel_region(q, max_rps=, verbose=) {
   return rns;
 }
 
+func sel_rgn_lines(q, lines=) {
+/* DOCUMENT q = sel_rgn_lines(q, lines=)
+  Selects a sub-selection of the current selection by only using the specified
+  lines.
+*/
+  if(is_void(lines)) return q;
+  return q(,lines);
+}
+
+func summarize_sel_region(q) {
+/* DOCUMENT summarize_sel_region, q
+  Prints a summary of the flightlines in the given selection.
+*/
+  local x, y;
+  if(dimsof(q)(1) != 2) error, "Invalid q";
+  count = dimsof(q)(3);
+  for(i = 1; i <= count; i++) {
+    w = where(pnav.sod >= q(1,i) & pnav.sod <= q(2,i));
+    ll2utm, pnav.lat([w(1), w(0)]), pnav.lon([w(1), w(0)]), y, x,
+      force_zone=curzone;
+    // Attempt to flip alternating flightlines so that the coordinates are
+    // easier to compare in sequence.
+    if(abs(x(dif))(1) > abs(y(dif))(1)) {
+      if(x(1) > x(2)) {
+        x = x([2,1]);
+        y = y([2,1]);
+      }
+    } else {
+      if(y(1) > y(2)) {
+        x = x([2,1]);
+        y = y([2,1]);
+      }
+    }
+    write, format="%2d: %.0f - %.0f   %.0f %.0f - %.0f %.0f\n",
+      i, pnav(w(1)).sod, pnav(w(0)).sod, x(1), y(1), x(2), y(2);
+  }
+}
+
 func plot_sel_region(q, win=, lines=, color=) {
 /* DOCUMENT plot_sel_region, q, win=, lines=
   Plots the current processing selection.
