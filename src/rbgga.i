@@ -288,8 +288,8 @@ func edb_sods_to_rns(sods, max_rps=, verbose=) {
   return numberof(w) ? rn_arr(,w) : [];
 }
 
-func sel_region(q, max_rps=, verbose=) {
-/* DOCUMENT sel_region(q, max_rps=, verbose=)
+func sel_region(sods, max_rps=, verbose=) {
+/* DOCUMENT sel_region(sods, max_rps=, verbose=)
   This function extracts the raster numbers for a region selected. It returns a
   the array rn_arr containing start and stop raster numbers for each
   flightline.
@@ -303,7 +303,7 @@ func sel_region(q, max_rps=, verbose=) {
       These can be mostly silenced with verbose=0.
 */
   default, verbose, 1;
-  if(is_void(q)) {
+  if(is_void(sods)) {
     if(verbose) write, "No flightline selection provided, aborting!";
     return;
   }
