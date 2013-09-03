@@ -327,14 +327,18 @@ func sel_rgn_lines(q, lines=) {
 /* DOCUMENT q = sel_rgn_lines(q, lines=)
   Selects a sub-selection of the current selection by only using the specified
   lines.
+
+  SEE ALSO: print_sel_region plot_sel_region
 */
   if(is_void(lines)) return q;
   return q(,lines);
 }
 
-func summarize_sel_region(q) {
-/* DOCUMENT summarize_sel_region, q
+func print_sel_region(q) {
+/* DOCUMENT print_sel_region, q
   Prints a summary of the flightlines in the given selection.
+
+  SEE ALSO: sel_rgn_lines plot_sel_region
 */
   local x, y;
   if(dimsof(q)(1) != 2) error, "Invalid q";
@@ -367,6 +371,8 @@ func plot_sel_region(q, win=, lines=, color=) {
 
   If lines= is provided, it's an array of index values that specify which
   flightlines to plot.
+
+  SEE ALSO: print_sel_region plot_sel_region
 */
   if(dimsof(q)(1) != 2) error, "Invalid q";
   default, lines, indgen(dimsof(q)(3));
