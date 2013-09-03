@@ -323,8 +323,20 @@ func sel_region(q, max_rps=, verbose=) {
   return rns;
 }
 
-func show_track(fs, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=) {
-/* DOCUMENT show_track, fs, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=
+func plot_sel_region(q, win=) {
+/* DOCUMENT plot_sel_region, q, win=
+  Plots the current processing selection.
+*/
+  if(dimsof(q)(1) != 2) error, "Invalid q";
+  for(i = 1; i <= dimsof(q)(3); i++) {
+    w = where(pnav.sod >= q(1,i) & pnav.sod <= q(2,i));
+    show_pnav_track, pnav(w), width=5, color="red", skip=0, marker=0,
+      msize=0.1, utm=1, win=win;
+  }
+}
+
+func show_track(fs, x=, y=, color=, skip=, msize=, marker=, lines=, utm=, width=, win=) {
+/* DOCUMENT show_track, fs, x=, y=, color=, skip=, msize=, marker=, lines=, utm=, width=, win=
   fs can either be an FS or PNAV
 
   SEE ALSO: show_pnav_track
@@ -333,12 +345,12 @@ func show_track(fs, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width
   if(structeq(a, FS)) pn = fs2pnav(fs);
   if(structeq(a, PNAV)) pn = fs;
 
-  show_pnav_track, pn, x=x, y=y, color=color,  skip=skip, msize=msize,
+  show_pnav_track, pn, x=x, y=y, color=color, skip=skip, msize=msize,
     marker=marker, lines=lines, utm=utm, width=width, win=win;
 }
 
-func show_pnav_track(pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=)  {
-/* DOCUMENT func show_pnav_track, pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=
+func show_pnav_track(pn, x=, y=, color=, skip=, msize=, marker=, lines=, utm=, width=, win=) {
+/* DOCUMENT func show_pnav_track, pn, x=, y=, color=, skip=, msize=, marker=, lines=, utm=, width=, win=
 */
   extern curzone;
 
