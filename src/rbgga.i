@@ -94,18 +94,6 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=) {
   return q;
 }
 
-func gga_win_sel(win=, latutm=, llarr=) {
-/* DOCUMENT gga_win_sel(win=, latutm=, llarr=)
-  The user is prompted to draw out a bounding box. The points of GGA within
-  that polygon are found and the corresponding indices are returned.
-
-  DEPRECATED 2012-05-07: Calls to this function should be replaced by
-  equivalent calls to pnav_sel_rgn.
-*/
-  return pnav_sel_rgn(win=win, mode="box", color=color, region=llarr,
-    _batch=_batch);
-}
-
 func mark_time_pos(sod, win=, msize=, marker=, color=) {
 /* DOCUMENT mark_time_pos, sod, win=, msize=, marker=, color=
   Plots a mark for the PNAV location at the given timestamp SOD.
@@ -184,7 +172,7 @@ func gga_find_times(q) {
   the start time and result(2,) is the stop time of the ranges. The times will
   be in seconds-of-the-day format.
 
-  SEE ALSO: gga_win_sel, rbgga, plmk, sod2hms
+  SEE ALSO: rbgga, plmk, sod2hms
 */
   if(!numberof(q)) return;
   extern pnav;
