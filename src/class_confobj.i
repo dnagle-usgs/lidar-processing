@@ -186,7 +186,7 @@ func confobj_profile_add(group, profile) {
   grp = data(noop(group));
   // Adding a profile that already exists is a no-op
   if(grp.profiles(*,profile)) return;
-  save, grp.profiles, noop(profile), save();
+  save, grp.profiles, noop(profile), obj_copy(grp.active, recurse=1);
 }
 profile_add = confobj_profile_add;
 
