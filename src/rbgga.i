@@ -323,14 +323,21 @@ func sel_region(q, max_rps=, verbose=) {
   return rns;
 }
 
-func plot_sel_region(q, win=) {
-/* DOCUMENT plot_sel_region, q, win=
+func plot_sel_region(q, win=, lines=, color=) {
+/* DOCUMENT plot_sel_region, q, win=, lines=
   Plots the current processing selection.
+
+  If lines= is provided, it's an array of index values that specify which
+  flightlines to plot.
 */
   if(dimsof(q)(1) != 2) error, "Invalid q";
-  for(i = 1; i <= dimsof(q)(3); i++) {
-    w = where(pnav.sod >= q(1,i) & pnav.sod <= q(2,i));
-    show_pnav_track, pnav(w), width=5, color="red", skip=0, marker=0,
+  default, lines, indgen(dimsof(q)(3));
+  default, color, "red";
+  count = numberof(lines);
+  for(i = 1; i <= count; i++) {
+    j = lines(i);
+    w = where(pnav.sod >= q(1,j) & pnav.sod <= q(2,j));
+    show_pnav_track, pnav(w), width=5, color=color, skip=0, marker=0,
       msize=0.1, utm=1, win=win;
   }
 }
