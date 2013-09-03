@@ -3,7 +3,7 @@
 func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=) {
 /* DOCUMENT pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=)
   The user is prompted to draw out a box or polygon. The points of PNAV within
-  that region are found and the corresponding indices are returned.
+  that region are found and the time bounds for those segments are returned.
 
   Options:
     win= The window where GGA/PNAV is plotted. The user will be prompted to
@@ -32,7 +32,7 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=) {
     utm: If utm=1, then the input coordinates are considered to be in UTM and
       will be converted to lat/lon prior to use.
     curzone: If utm=1, then curzone must be set to the current zone.
-    pnav: The array of PNAV data that the return result will be an index into.
+    pnav: The array of PNAV data.
 */
   extern utm, curzone, pnav;
   default, win, 6;
