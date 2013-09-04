@@ -54,6 +54,8 @@ if {[info commands SegmentedDataWindow] eq ""} {
       variable _count
       # Do we frame advance prior to plots?
       variable _fma
+      # Do we plot titles?
+      variable _pltitle 0
       # For holding private GUI variables (array)
       variable _private
       # The format to use for time
@@ -245,15 +247,23 @@ itcl::body SegmentedDataWindow::constructor {args} {
       -text "Auto Fma" \
       -variable $itk_option(-fmavariable)
 
+   checkbutton $f.chkTitle \
+      -text "Var Title" \
+      -variable [itcl::scope _pltitle]
+   ::misc::tooltip $f.chkTitle \
+      "If enabled, the per-variable Plot commands will add the variable's title
+      to the plot. This is only suitable if each variable will be plotted in
+      separate windows."
+
    button $w.btnCloseClear -text "Close & Clear" \
       -command [itcl::code $this close_clear]
 
-   grid $f.chkFma -sticky w
-   grid columnconfigure $f 0 -weight 1
+   grid $f.chkTitle $f.chkFma -sticky w
+   grid columnconfigure $f 2 -weight 1
 
    grid $w.fraVariables - -sticky wens
    grid $w.fraWithSelected $w.fraOptions -sticky wens
-   grid ^ $w.btnCloseClear -sticky sw
+   grid ^ $w.btnCloseClear -sticky se
    grid columnconfigure $w 0 -weight 1
 
    grid rowconfigure $w 0 -weight 1
@@ -383,8 +393,12 @@ itcl::body SegmentedDataWindow::clear_time {idx} {
 }
 
 itcl::body SegmentedDataWindow::plot_segment {idx} {
-   ::display_data -var $_segment($idx,var) -win $_segment($idx,win) \
-      -fma [set $itk_option(-fmavariable)]
+   set args [list -var $_segment($idx,var) -win $_segment($idx,win) \
+      -fma [set $itk_option(-fmavariable)]]
+   if {$_pltitle} {
+      lappend args -title $_segment($idx,var)
+   }
+   ::display_data {*}$args
 }
 
 itcl::body SegmentedDataWindow::plot_selected {} {
