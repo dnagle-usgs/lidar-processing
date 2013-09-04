@@ -231,7 +231,7 @@ proc cbar_trace { a b c } {
 }
 
 proc display_data args {
-  array set opts [list -var $::pro_var -win $::win_no -fma $::l1pro_fma]
+  array set opts [list -var $::pro_var -win $::win_no -fma $::l1pro_fma -title {}]
   array set opts $args
 
   set cmd "display_data, $opts(-var)"
@@ -253,6 +253,9 @@ proc display_data args {
   }
   append cmd ", cmin=$::plot_settings(cmin)"
   append cmd ", cmax=$::plot_settings(cmax)"
+  if {$opts(-title) ne ""} {
+    append cmd ", title=\"$opts(-title)\""
+  }
 
   exp_send "$cmd;\r"
 }
