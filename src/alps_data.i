@@ -555,9 +555,9 @@ func xyz2data(_x, &_y, _z, &data, mode=, native=) {
   }
 }
 
-func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma=, skip=, square=, restore_win=, showcbar=, triag=, triagedges=) {
+func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma=, skip=, square=, restore_win=, showcbar=, triag=, triagedges=, title=) {
 /* DOCUMENT display_data, data, mode=, axes=, cmin=, cmax=, marker=, msize=,
-  win=, dofma=, skip=, square=, restore_win=, showcbar=, triag=
+  win=, dofma=, skip=, square=, restore_win=, showcbar=, triag=, title=
 
   Plots ALPS data.
 
@@ -596,6 +596,8 @@ func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma
     showcbar= Allows you to automatically plot the showcbar.
         colorbar=0     Do not show colorbar. (default)
         colorbar=1     Include colorbar.
+    title= A title to add to the plot, using pltitle. If omitted, no title is
+      added.
 */
 // Original David Nagle 2009-01-25
   local x, y, z, X, Y, Z;
@@ -641,6 +643,10 @@ func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma
   limits, square=square;
   if(showcbar)
     colorbar, cmin, cmax;
+  if(!is_void(title)) {
+    title = regsub("_", title, "!_", all=1);
+    pltitle, title;
+  }
 
   if(restore_win)
     window_select, wbkp;
