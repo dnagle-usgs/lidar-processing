@@ -7,6 +7,28 @@
 // we are only reading the specific characters we are interested in, rather
 // than loading the entire file to memory.
 
+// fi32, fi24, and fi16 are improved alternatives to the above functions. For
+// whatever reason, they operate faster and should be used instead when
+// operating on files. However, they can only be used for a scalar value
+// (unlike the above functions, which accept arrays of offsets).
+
+func fi32(f, offset, big=) {
+/* DOCUMENT fi32(f, offset, big=)
+  Reads 4 bytes from file F starting at OFFSET and converts into a 32-bit word.
+  OFFSET is 1-based instead of 0-based, for compatibility with i32. The return
+  type will be long.
+
+  By default, treats data as little-endian. Use big=1 for big-endian.
+*/
+  shift = big ? [24,16,8,0] : [0,8,16,24];
+  data = array(char, 4);
+  _read, f, offset-1, data;
+  return (long(data(1)) << shift(1)) |
+    (long(data(2)) << shift(2)) |
+    (long(data(3)) << shift(3)) |
+    (long(data(4)) << shift(4));
+}
+
 func i32(args) {
 /* DOCUMENT i32(data, offset, big=)
   Converts the 4-byte values stored in data at the given offset(s) into 32-bit
@@ -24,6 +46,22 @@ func i32(args) {
 }
 wrap_args, i32;
 
+func fi24(f, offset, big=) {
+/* DOCUMENT fi24(f, offset, big=)
+  Reads 3 bytes from file F starting at OFFSET and converts into a 24-bit word.
+  OFFSET is 1-based instead of 0-based, for compatibility with i24. The return
+  type will be long.
+
+  By default, treats data as little-endian. Use big=1 for big-endian.
+*/
+  shift = big ? [16,8,0] : [0,8,16];
+  data = array(char, 3);
+  _read, f, offset-1, data;
+  return (long(data(1)) << shift(1)) |
+    (long(data(2)) << shift(2)) |
+    (long(data(3)) << shift(3));
+}
+
 func i24(args) {
 /* DOCUMENT i24(data, offset, big=)
   Converts the 3-byte values stored in data at the given offset(s) into 24-bit
@@ -39,6 +77,21 @@ func i24(args) {
     (long(args(1,:)(args(2)+2)) << shift(3));
 }
 wrap_args, i24;
+
+func fi16(f, offset, big=) {
+/* DOCUMENT fi16(f, offset, big=)
+  Reads 2 bytes from file F starting at OFFSET and converts into a 16-bit word.
+  OFFSET is 1-based instead of 0-based, for compatibility with i16. The return
+  type will be short.
+
+  By default, treats data as little-endian. Use big=1 for big-endian.
+*/
+  shift = big ? [8,0] : [0,8];
+  data = array(char, 2);
+  _read, f, offset-1, data;
+  return (long(data(1)) << shift(1)) |
+    (long(data(2)) << shift(2));
+}
 
 func i16(args) {
 /* DOCUMENT i16(data, offset, big=)
