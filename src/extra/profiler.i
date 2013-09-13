@@ -13,11 +13,11 @@ extern profiler;
 
   Typical use is to bracket code segments of interest like so:
 
-    profiler, enter, "section 1";
+    profiler_enter, "section 1";
     // code to examine
-    profiler, leave, "section 1";
+    profiler_leave, "section 1";
 
-  You can then receive a report using "profiler, report".
+  You can then receive a report using "profiler_report".
 
   Before using the profiler, you should use profiler_calibrate. You can use
   this to set the precision you need for the timing as well as to set the
