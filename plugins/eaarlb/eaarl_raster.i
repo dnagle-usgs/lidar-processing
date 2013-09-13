@@ -104,9 +104,9 @@ func eaarl_decode_fast(fn, start, stop, rnstart=, raw=, wfs=) {
   count = 0;
   offset = start;
   while(offset <= stop) {
-    rlen = u_cast(i24(f.raw, offset), long);
+    rlen = u_cast(fi24(f, offset), long);
     if(rlen >= 18 && f.raw(offset+3) == 5) {
-      count += (i16(f.raw, offset+16) & 0x7fff);
+      count += (fi16(f, offset+16) & 0x7fff);
     } else if(rlen <= 0) {
       break;
     }
@@ -134,14 +134,14 @@ func eaarl_decode_fast(fn, start, stop, rnstart=, raw=, wfs=) {
   while(offset <= stop) {
     rstart = offset;
 
-    rlen = u_cast(i24(f.raw, offset), long);
+    rlen = u_cast(fi24(f, offset), long);
     if(rlen < 18 || f.raw(offset+3) != 5) continue;
     rstop = rstart + rlen - 1;
 
-    seconds = i32(f.raw, offset+4);
-    fseconds = i32(f.raw, offset+8);
+    seconds = fi32(f, offset+4);
+    fseconds = fi32(f, offset+8);
 
-    tmp = i16(f.raw, offset+16);
+    tmp = fi16(f, offset+16);
     npulse = tmp & 0x7fff;
     dig = (tmp >> 15) & 0x1;
 
@@ -151,26 +151,26 @@ func eaarl_decode_fast(fn, start, stop, rnstart=, raw=, wfs=) {
       if(offset + 15 > rstart + rlen - 1)
         break;
       pstart = offset;
-      pstop = pstart + 15 + i16(f.raw, pstart + 13) - 1;
+      pstop = pstart + 15 + fi16(f, pstart + 13) - 1;
       pidx++;
 
       if(rn) raster(pidx) = rn;
       pulse(pidx) = i;
       digitizer(pidx) = dig;
 
-      offset_time=i24(f.raw, offset);
+      offset_time=fi24(f, offset);
       soe(pidx) = seconds + (fseconds + offset_time) * 1.6e-6 +
         eaarl_time_offset;
 
-      scan_angle(pidx) = i16(f.raw, offset+9);
+      scan_angle(pidx) = fi16(f, offset+9);
 
-      tmp = i16(f.raw, offset+11);
+      tmp = fi16(f, offset+11);
       irange(pidx) = (tmp & 0x3fff);
       dropout(pidx) = ((tmp >> 14) & 0x3);
       tmp = [];
 
       if(!wfs) {
-        offset = pstart + 15 + i16(f.raw, pstart + 13);
+        offset = pstart + 15 + fi16(f, pstart + 13);
         continue;
       }
 
@@ -193,7 +193,7 @@ func eaarl_decode_fast(fn, start, stop, rnstart=, raw=, wfs=) {
       offset += 1 + transmit_length;
 
       for(j = 1; j <= 4; j++) {
-        chan_len = i16(f.raw, offset);
+        chan_len = fi16(f, offset);
         wfend = offset+1+chan_len;
         if(chan_len <= 0 || wfend > pstop || wfend > rstop) break;
         rx(j,pidx) = &f.raw(offset+2:wfend);
