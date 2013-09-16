@@ -860,10 +860,27 @@ proc init_hgid {} {
     global HGID
     set hg [auto_execok hg]
     set root [file dirname [app_root_dir]]
+    set msg ""
     if {$hg ne "" && [file isdirectory [file join $root .hg]]} {
-        set HGID [exec {*}$hg identify [file dirname [app_root_dir]]]
+        if {[catch {
+            exec {*}$hg identify [file dirname [app_root_dir]]
+        } HGID options]} {
+            set HGID "--"
+            set msg "An error occured while running mercurial. See console window for details."
+            puts [dict get $options -errorinfo]
+        }
     } else {
         set HGID "--"
+        if {$hg eq ""} {
+            set msg "Mercurial could not be found."
+        }
+    }
+    if {$HGID eq "--" && $msg ne ""} {
+        tk_messageBox \
+                -icon warning \
+                -type ok \
+                -title "Unable to detect repository" \
+                -message "WARNING: Unable to detect repository revision. $msg"
     }
 }
 
