@@ -146,7 +146,6 @@ func eaarl_decode_fast(fn, start, stop, rnstart=, raw=, wfs=) {
     dig = (tmp >> 15) & 0x1;
 
     offset += 18;
-    pulse_offsets = array(-1, npulse);
     for(i = 1; i <= npulse; i++) {
       if(offset + 15 > rstart + rlen - 1)
         break;
