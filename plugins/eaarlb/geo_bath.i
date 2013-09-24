@@ -237,7 +237,6 @@ func make_bathy(latutm=, q=, avg_surf=, ext_bad_att=, forcechannel=, verbose=) {
   if(logger(trace)) {
     logger, trace, log_id+"  Full contents of q:";
     logger, trace, log_id+"    "+print(q);
-    logger, trace, log_id+"ops_conf="+print(ops_conf)(sum);
   }
 
   default, verbose, 1;

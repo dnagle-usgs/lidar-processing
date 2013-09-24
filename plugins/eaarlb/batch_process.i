@@ -95,7 +95,6 @@ func save_vars (filename, tile=) {
     save, f, edb_files;
     save, f, data_path;
     save, f, soe_day_start, eaarl_time_offset;
-    save, f, ops_conf;
     save, f, curzone;
   }
   save, f, initialdir;
@@ -105,7 +104,8 @@ func save_vars (filename, tile=) {
     save,  f, b_rcf, buf, w, no_rcf, mode, merge, clean, rcfmode, write_merge;
   }
   bathconf_serialized = serialize(bathconf.data);
-  save, f, ext_bad_att, bathconf_serialized;
+  ops_conf_serialized = serialize(ops_conf);
+  save, f, ext_bad_att, bathconf_serialized, ops_conf_serializzezd;
   if(!is_void(forcechannel))
     save, f, forcechannel;
 
@@ -132,6 +132,8 @@ func unpackage_tile (fn=,host= ) {
   close, f;
   if(!is_void(bathconf_serialized))
     bathconf, groups, deserialize(bathconf_serialized), copy=0;
+  if(!is_void(ops_conf_serialized))
+    ops_conf = deserialize(ops_conf_serialized);
   if(!strmatch(host, "localhost")) {
     // We need to rsync the edb, pnav, and ins files from the server
     if(!file_exists(edb_filename))

@@ -3,8 +3,8 @@
 func mission_constants(args) {
 /* DOCUMENT mission_constants(key1=val1, key2=val2, key3=val3, ...)
 
-  Creates a struct instance with mission constants. The struct will be
-  dynamically constructed using whatever key-value pairs are given.
+  Creates an oxy group with mission constants. The group will be dynamically
+  constructed using whatever key-value pairs are given.
 
   The type= field specifies what kind of initialization should occur. The
   initialization will make sure all fields relative to that type are present
@@ -15,9 +15,8 @@ func mission_constants(args) {
   == EAARL-A ==
 
   By default, the struct will be set for EAARL-A (conf.type="EAARL-A"). When
-  conf.type="EAARL-A", the struct is initialized with the following structure.
+  conf.type="EAARL-A", the group is initialized with the following fields.
 
-  struct mission_constants {
     string type;            // Type of mission settings
     string name;            // The name of the settings
     double y_offset;        // Aircraft relative + fwd along fuselage
@@ -33,7 +32,6 @@ func mission_constants(args) {
     double chn3_range_bias; // range bias for channel 3
     int max_sfc_sat;        // Maximum saturation allowed for first return
     short minsamples;       // Minimum samples required for waveform
-  }
 
   Additionally, the following are given defaults as follows.
 
@@ -44,13 +42,9 @@ func mission_constants(args) {
 
   == EAARL-B ==
 
-  For EAARL-B surveys, conf.type should be "EAARL-B v1". (Or if more than one
-  version of EAARL-B comes along, perhaps "EAARL-B v2", etc. This allows for
-  the possibility of slightly different ops_conf layouts for different EAARL-B
-  configurations as the system is developed.)
-
-  When conf.type="EAARL-B v1", the struct is initialized as above for EAARL-A,
-  but with the addition of the following new fields.
+  For EAARL-B surveys, conf.type should be "EAARL-B". When conf.type="EAARL-B",
+  the group is initialized as above for EAARL-A, but with the addition of the
+  following new fields.
 
     double chn4_range_bias; // range bias for channel 4
     double chn1_dx;         // channel 1 spacing from center in x direction
@@ -86,8 +80,6 @@ func mission_constants(args) {
     chn4_dy=0
     delta_ht=300
 
-  If conf.type="EAARL-B", then it is changed to conf.type="EAARL-B v1".
-
   == Further explanation of fields ==
 
   ops_conf.x_offset, ops_conf.y_offset, ops_conf.z_offset
@@ -118,7 +110,7 @@ func mission_constants(args) {
     traditionally expected. This compensation is only necessary if it is not
     applied when processing the trajectory in Inertial Explorer.
 
-  use_ins_for_gps
+  ops_conf.use_ins_for_gps
     If set to 1, then the INS data will be used for determining the mirror
     position instead of the PNAV data. This means that the mounting biases
     (*_offset) are the distance between the mirror and the INS system. (When
@@ -184,7 +176,7 @@ func mission_constants(args) {
     conf = obj_merge(conf, temp);
   }
 
-  return obj2struct(conf, name="mission_constants");
+  return conf;
 }
 wrap_args, mission_constants;
 
@@ -239,17 +231,17 @@ wrap_args, mission_constants;
   );
 
   ops_tans = ops_default;
-  ops_tans.name       = "Tans Default Values"
-  ops_tans.roll_bias  = -1.40;    // carefully tweaked on 2003-02-18 data
-  ops_tans.pitch_bias = +0.5;
-  ops_tans.yaw_bias   =  0.0;
-  ops_tans.y_offset   = -1.403;   // From Applanix pospac
-  ops_tans.x_offset   =  -.470;   // From Applanix pospac
+  ops_tans, name       = "Tans Default Values"
+  ops_tans, roll_bias  = -1.40;    // carefully tweaked on 2003-02-18 data
+  ops_tans, pitch_bias = +0.5;
+  ops_tans, yaw_bias   =  0.0;
+  ops_tans, y_offset   = -1.403;   // From Applanix pospac
+  ops_tans, x_offset   =  -.470;   // From Applanix pospac
   // z_offset should be -1.708, but need better measurement of IMU to laser
   // point
-  ops_tans.z_offset   = -1.3;
-  ops_tans.scan_bias  =  0.0;
-  ops_tans.range_biasM = 0.7962;  // Laser range measurement bias
+  ops_tans, z_offset   = -1.3;
+  ops_tans, scan_bias  =  0.0;
+  ops_tans, range_biasM = 0.7962;  // Laser range measurement bias
 
   // By default, we use ops_tans for our constants
   ops_conf = ops_tans;
@@ -262,51 +254,51 @@ wrap_args, mission_constants;
   ksby to kmyr using pospac on 2003-10-02.
   *****************************************************************************/
   ops_IMU1 = ops_default;
-  ops_IMU1.name       = "Applanix 510 Defaults"
-  ops_IMU1.x_offset   =  0.470;   // This is Applanix Y Axis +Rt Wing
-  ops_IMU1.y_offset   =  1.403;   // This is Applanix X Axis +nose
-  ops_IMU1.z_offset   = -0.833;   // This is Applanix Z Axis +Down
-  ops_IMU1.roll_bias  = -0.755;   // DMARS roll bias from 2-13-04
-  ops_IMU1.pitch_bias =  0.1;     // DMARS pitch bias from 2-13-04
+  ops_IMU1, name       = "Applanix 510 Defaults"
+  ops_IMU1, x_offset   =  0.470;   // This is Applanix Y Axis +Rt Wing
+  ops_IMU1, y_offset   =  1.403;   // This is Applanix X Axis +nose
+  ops_IMU1, z_offset   = -0.833;   // This is Applanix Z Axis +Down
+  ops_IMU1, roll_bias  = -0.755;   // DMARS roll bias from 2-13-04
+  ops_IMU1, pitch_bias =  0.1;     // DMARS pitch bias from 2-13-04
 
   ops_IMU2 = ops_default;
-  ops_IMU2.name       = "DMARS Defaults"
-  ops_IMU2.roll_bias  = -0.8;     // with 03/12 Albert Whitted runway
-  ops_IMU2.pitch_bias =  0.1;     // with 03/12 Albert Whitted runway
-  ops_IMU2.yaw_bias   =  0.;
+  ops_IMU2, name       = "DMARS Defaults"
+  ops_IMU2, roll_bias  = -0.8;     // with 03/12 Albert Whitted runway
+  ops_IMU2, pitch_bias =  0.1;     // with 03/12 Albert Whitted runway
+  ops_IMU2, yaw_bias   =  0.;
 
   /*****************************************************************************
   Defaults for the EAARL-B system on N7793Q
   *****************************************************************************/
   ops_eaarlb = mission_constants(type="EAARL-B");
-  ops_eaarlb.x_offset = -0.03099;
-  ops_eaarlb.y_offset = 0.02426;
-  ops_eaarlb.z_offset = -0.25877;
-  ops_eaarlb.roll_bias = 0;
-  ops_eaarlb.pitch_bias = 0;
-  ops_eaarlb.yaw_bias = 0;
-  ops_eaarlb.scan_bias = 0; // Needs to be calibrated
+  ops_eaarlb, x_offset = -0.03099;
+  ops_eaarlb, y_offset = 0.02426;
+  ops_eaarlb, z_offset = -0.25877;
+  ops_eaarlb, roll_bias = 0;
+  ops_eaarlb, pitch_bias = 0;
+  ops_eaarlb, yaw_bias = 0;
+  ops_eaarlb, scan_bias = 0; // Needs to be calibrated
   // range_biasM needs to remain at 0; bias is calculated per-channel instead
-  ops_eaarlb.range_biasM = 0;
+  ops_eaarlb, range_biasM = 0;
   // Following values were calculated by WW on 2012-01-07
   // Biases were calibrated in meters, which were then converted to NS.
-  ops_eaarlb.chn1_range_bias = -13.480; // = -2.020 / NS2MAIR;
-  ops_eaarlb.chn2_range_bias = -12.105; // = -1.814 / NS2MAIR;
-  ops_eaarlb.chn3_range_bias = -10.564; // = -1.583 / NS2MAIR;
-  ops_eaarlb.chn4_range_bias = -18.985; // = -2.845 / NS2MAIR;
-  ops_eaarlb.chn1_dx = -0.117;
-  ops_eaarlb.chn1_dy = -1.6;
-  ops_eaarlb.chn2_dx = 0.;
-  ops_eaarlb.chn2_dy = 0.;
-  ops_eaarlb.chn3_dx = -0.117;
-  ops_eaarlb.chn3_dy = 1.6;
-  ops_eaarlb.chn4_dx = -0.117;
-  ops_eaarlb.chn4_dy = 0.;
-  ops_eaarlb.delta_ht = 300.;
-  ops_eaarlb.max_sfc_sat = 2;
-  ops_eaarlb.tx_clean = 8;
-  ops_eaarlb.dmars_invert = 1;
-  ops_eaarlb.use_ins_for_gps = 1;
+  ops_eaarlb, chn1_range_bias = -13.480; // = -2.020 / NS2MAIR;
+  ops_eaarlb, chn2_range_bias = -12.105; // = -1.814 / NS2MAIR;
+  ops_eaarlb, chn3_range_bias = -10.564; // = -1.583 / NS2MAIR;
+  ops_eaarlb, chn4_range_bias = -18.985; // = -2.845 / NS2MAIR;
+  ops_eaarlb, chn1_dx = -0.117;
+  ops_eaarlb, chn1_dy = -1.6;
+  ops_eaarlb, chn2_dx = 0.;
+  ops_eaarlb, chn2_dy = 0.;
+  ops_eaarlb, chn3_dx = -0.117;
+  ops_eaarlb, chn3_dy = 1.6;
+  ops_eaarlb, chn4_dx = -0.117;
+  ops_eaarlb, chn4_dy = 0.;
+  ops_eaarlb, delta_ht = 300.;
+  ops_eaarlb, max_sfc_sat = 2;
+  ops_eaarlb, tx_clean = 8;
+  ops_eaarlb, dmars_invert = 1;
+  ops_eaarlb, use_ins_for_gps = 1;
 
 func display_mission_constants(conf, ytk=) {
 /* DOCUMENT display_mission_constants, conf, ytk=
@@ -366,10 +358,11 @@ func write_ops_conf(fn, conf=) {
   extern ops_conf;
   default, conf, ops_conf;
 
-  ops = swrite(format="%s", print(conf)(sum));
-  if(!regmatch("mission_constants\\((.*)\\)", ops, , params))
-    error, "Invalid ops_conf!";
-  params = strjoin(strsplit(params, ","), ",\n  ");
+  ops = array(string, conf(*));
+  for(i = 1; i <= conf(*); i++) {
+    ops(i) = "  "+conf(*,i)+"="+print(conf(noop(i)))(sum);
+  }
+  ops = "mission_constants(\n"+strjoin(ops, ",\n")+"\n)";
 
   f = [];
   if(is_string(fn))
@@ -380,7 +373,7 @@ func write_ops_conf(fn, conf=) {
     write, f, format="// Exported from ALPS on %s\n", soe2date(getsoe());
     write, f, format="%s", "ops_conf = ";
   }
-  write, f, format="mission_constants(\n  %s\n)\n", params;
+  write, f, format="%s\n", ops;
   if(is_string(fn)) close, f;
 }
 

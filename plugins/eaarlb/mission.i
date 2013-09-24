@@ -259,7 +259,7 @@ func eaarl_mission_load(env) {
       ops_conf = load_ops_conf(ops_conf_filename);
     } else {
       write, "         (using EAARL-B defaults)";
-      ops_conf = ops_eaarlb;
+      ops_conf = obj_copy(ops_eaarlb);
     }
 
     if(test_key(env.flight, "bathconf file")) {
@@ -439,6 +439,8 @@ func hook_eaarl_mission_jobs_env_wrap(env) {
   wrapped = mission(wrap, cache_what="everything");
   if(wrapped(*,"bathconf_data"))
     save, wrapped, bathconf_data=serialize(wrapped.bathconf_data);
+  if(wrapped(*,"ops_conf"))
+    save, wrapped, ops_conf=serialize(wrapped.ops_conf);
   mission_fn = file_rootname(env.fn) + ".flight.pbd";
   obj2pbd, wrapped, mission_fn;
   save, env.env, mission_fn;
@@ -449,6 +451,8 @@ func hook_eaarl_mission_jobs_env_unwrap(env) {
   wrapped = pbd2obj(env.env.mission_fn);
   if(wrapped(*,"bathconf_data"))
     save, wrapped, bathconf_data=deserialize(wrapped.bathconf_data);
+  if(wrapped(*,"ops_conf"))
+    save, wrapped, ops_conf=deserialize(wrapped.ops_conf);
   mission, unwrap, wrapped;
   return env;
 }
