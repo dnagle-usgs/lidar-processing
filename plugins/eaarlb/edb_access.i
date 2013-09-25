@@ -220,6 +220,8 @@ func load_edb(fn=, update=, verbose=, override_offset=) {
       write, "         EAARL TLD files appear to be missing";
     eaarl_time_offset = 0.;
   }
+  // Coerce to scalar
+  eaarl_time_offset = eaarl_time_offset(*)(1);
 
   // Set these up with some suitable fall-back values
   data_begins = 1;
