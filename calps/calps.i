@@ -294,6 +294,47 @@ extern profiler_ticks;
   The time measured is wall time.
 */
 
+// ** defined in eaarl_decode_fast *
+
+extern eaarl_decode_fast;
+/* DOCUMENT result = eaarl_decode_fast(fn, start, stop)
+  Decodes the data in the specified TLD file from offset START through offset
+  STOP. START and STOP must each be scalar integers.
+        
+  This performs a faster decode than alternative functions because it pulls
+  only the data typically needed during processing.
+      
+  Parameters:
+    fn: Should be a full path to a TLD file.
+    start: The byte addres (1-based) where the first raster to decode starts.
+    stop: The byte address (1-based) where the last raster to decode ends. This
+      may also be 0, which means to decode to the end of the file.
+
+  Options:
+    rnstart= Starting raster number. If provided, then the raster field will be
+      added, treating the raster found at START as raster RNSTART and numbering
+      the ones that follow sequentially.
+    raw= Specifies whether raw data is desired.
+      raw=0   Default; soe will be updated using eaarl_time_offset
+      raw=1   All data returned as it was in the file
+    wfs= By default, waveforms are included. Use wfs=0 to disable, which will
+      omit the rx and tx fields.
+
+  Returns:
+    An oxy group object containing the following array members:
+      digitizer - int8_t
+      dropout - int8_t 
+      pulse - int8_t 
+      irange - int16_t
+      scan_angle - int16_t
+      raster - int32_t (if rnstart!=0)
+      soe - double
+      tx - pointer (if wfs=1)
+      rx - pointer x 4 (if wfs=1)
+    All arrays have the same size and dimensions, except for RX which has an
+    extra dimension of size 4.
+*/
+
 __calps_backup = save(
   calps_compatibility,
   _ytriangulate, triangulate,
@@ -307,6 +348,7 @@ __calps_backup = save(
   _yset_intersect_long, _yset_intersect_double,
   unique,
   get_pid,
-  profiler_init, profiler_lastinit, profiler_reset, profiler_ticks
+  profiler_init, profiler_lastinit, profiler_reset, profiler_ticks,
+  eaarl_decode_fast
 );
 

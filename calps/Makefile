@@ -3,11 +3,11 @@
 # Then put triangle.c and triangle.h in this directory.
 
 # these values filled in by    yorick -batch make.i
-Y_MAKEDIR=
-Y_EXE=
+Y_MAKEDIR=/opt/alps/yorick
+Y_EXE=/opt/alps/yorick/bin/yorick
 Y_EXE_PKGS=
-Y_EXE_HOME=
-Y_EXE_SITE=
+Y_EXE_HOME=/opt/alps/yorick
+Y_EXE_SITE=/opt/alps/yorick
 Y_HOME_PKG=
 
 # ----------------------------------------------------- optimization flags
@@ -23,7 +23,7 @@ PKG_I=calps.i
 
 OBJS=triangle.o triangle_y.o interp_angles.o gridding.o region.o \
 	level_short_dips.o ll2utm.o navd88.o set.o unique.o linux.o \
-	profiler.o
+	profiler.o eaarl_decode_fast.o
 
 # change to give the executable a name other than yorick
 PKG_EXENAME=yorick
