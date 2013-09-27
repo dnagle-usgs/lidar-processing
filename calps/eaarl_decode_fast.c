@@ -3,37 +3,12 @@
 #include <stdio.h>
 #include <string.h>
 #include "yapi.h"
+#include "filebuffer.h"
 
-unsigned char buffer[4];
-
-#define i32(F, OFFSET) ( \
-    fseek((F), (OFFSET), SEEK_SET), \
-    fread(buffer, 4, 1, (F)), \
-    (buffer[0] | (buffer[1] << 8) | (buffer[2] << 16) | (buffer[3] << 24)) \
-    )
-
-#define i24(F, OFFSET) ( \
-    fseek((F), (OFFSET), SEEK_SET), \
-    fread(buffer, 3, 1, (F)), \
-    (buffer[0] | (buffer[1] << 8) | (buffer[2] << 16)) \
-    )
-
-#define i16(F, OFFSET) ( \
-    fseek((F), (OFFSET), SEEK_SET), \
-    fread(buffer, 2, 1, (F)), \
-    (buffer[0] | (buffer[1] << 8)) \
-    )
-
-#define i8(F, OFFSET) ( \
-    fseek((F), (OFFSET), SEEK_SET), \
-    fread(buffer, 1, 1, (F)), \
-    buffer[0] \
-    )
-
-void close_f(void *tmp)
-{
-  fclose(*((FILE **)tmp));
-}
+#define i32(F, OFFSET) filebuffer_i32((F), (OFFSET))
+#define i24(F, OFFSET) filebuffer_i24((F), (OFFSET))
+#define i16(F, OFFSET) filebuffer_i16((F), (OFFSET))
+#define i8(F, OFFSET) filebuffer_i8((F), (OFFSET))
 
 #define EAARL_DECODE_FAST_KEYCT 3
 void Y_eaarl_decode_fast(int nArgs)
@@ -47,7 +22,7 @@ void Y_eaarl_decode_fast(int nArgs)
   long tx_clean = 0;
   double eaarl_time_offset = 0.;
 
-  FILE *f = NULL, **fptr = NULL;
+  filebuffer_t *f = NULL;
   long count = 0, offset = 0, pidx = -1, rn = 0, rstart = 0, rstop = 0;
   unsigned long rlen = 0, wflen = 0, tmp = 0;
   long seconds = 0, fseconds = 0, npulse = 0, dig = 0;
@@ -135,20 +110,12 @@ void Y_eaarl_decode_fast(int nArgs)
     }
   }
 
-  f = fopen(fn, "rb");
-  if(!f) y_error("error opening file");
-
-  // A touch convoluted, but this lets Yorick close the file if the user
-  // CTRL-C's.
-  fptr = (FILE **)ypush_scratch(sizeof(FILE **), close_f);
-  *fptr = f;
+  f = filebuffer_open(fn);
 
   // stop=0 is special for indicating to use the rest of the file
   if(stop == 0)
   {
-    fseek(f, 0, SEEK_END);
-    stop = ftell(f);
-    fseek(f, 0, SEEK_SET);
+    stop = f->size;
   }
 
   // Scan to see how many pulses there are
@@ -251,11 +218,7 @@ void Y_eaarl_decode_fast(int nArgs)
       wflen = i8(f, offset);
       if(!wflen) continue;
 
-      dims[0] = 1;
-      dims[1] = wflen;
-      wf = ypush_c(dims);
-      fseek(f, offset+1, SEEK_SET);
-      fread(wf, wflen, 1, f);
+      wf = filebuffer_read(f, offset+1, wflen);
       yget_use(0);
       tx[pidx] = wf;
       yarg_drop(1);
@@ -275,10 +238,7 @@ void Y_eaarl_decode_fast(int nArgs)
         wflen = i16(f, offset);
         tmp = offset + 1 + wflen;
         if(!wflen || tmp > pstop || tmp > rstop) break;
-        dims[1] = wflen;
-        wf = ypush_c(dims);
-        fseek(f, offset+2, SEEK_SET);
-        fread(wf, wflen, 1, f);
+        wf = filebuffer_read(f, offset+2, wflen);
         yget_use(0);
         rx[pidx][j] = wf;
         yarg_drop(1);
@@ -291,10 +251,6 @@ void Y_eaarl_decode_fast(int nArgs)
     if(rn) rn++;
     offset = rstop + 1;
   }
-
-  // Closed automatically; don't close here or else it'll get closed twice and
-  // crashed.
-  //fclose(f);
 }
 
 #undef i32
