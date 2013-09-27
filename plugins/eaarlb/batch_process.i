@@ -105,7 +105,7 @@ func save_vars (filename, tile=) {
   }
   bathconf_serialized = serialize(bathconf.data);
   ops_conf_serialized = serialize(ops_conf);
-  save, f, ext_bad_att, bathconf_serialized, ops_conf_serializzezd;
+  save, f, ext_bad_att, bathconf_serialized, ops_conf_serialized;
   if(!is_void(forcechannel))
     save, f, forcechannel;
 
