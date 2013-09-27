@@ -223,7 +223,6 @@ void Y_eaarl_decode_fast(int nArgs)
       if(offset + 15 > rstart + rlen - 1)
         break;
       pstart = offset;
-      pstop = pstart + 15 + i16(f, pstart+13) - 1;
       pidx++;
 
       if(rn) raster[pidx] = rn;
@@ -239,9 +238,11 @@ void Y_eaarl_decode_fast(int nArgs)
       irange[pidx] = (tmp & 0x3fff);
       dropout[pidx] = ((tmp >> 14) & 0x3);
       
+      pstop = pstart + 15 + i16(f, offset+13) - 1;
+
       if(!wfs)
       {
-        offset = pstart + 15 + i16(f, pstart + 13);
+        offset = pstop + 1;
         continue;
       }
 
