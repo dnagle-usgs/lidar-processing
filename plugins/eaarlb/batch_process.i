@@ -123,7 +123,7 @@ func get_tld_names(q) {
 }
 
 func unpackage_tile (fn=,host= ) {
-  extern gga, pnav, tans;
+  extern gga, pnav, tans, ops_conf;
   default, host, "localhost";
   default, rcf_only, 0;
   write, format="Unpackage_tile: %s %s\n", fn, host;
