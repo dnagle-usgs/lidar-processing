@@ -36,7 +36,7 @@ filebuffer_t * filebuffer_open(const char *fn)
   if(!fb->f) y_error("unable to open file");
 
   fseek(fb->f, 0, SEEK_END);
-  fb->size = ftell(fb->f);
+  fb->size = ftell(fb->f) + 1;
 
   fb->offset = -1 * FILEBUFFER_SIZE;
   return fb;
