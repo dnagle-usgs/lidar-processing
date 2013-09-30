@@ -6,6 +6,17 @@
 
 #include "filebuffer.h"
 
+struct filebuffer_t
+{
+  FILE *f;
+  long size;      // file size
+  long offset;    // offset in file where buffer is currently loaded from
+  unsigned char buffer[FILEBUFFER_SIZE];
+};
+
+/* filebuffer_load
+ * Internal function. Loads a block of data from file into the buffer.
+ */
 static void filebuffer_load(filebuffer_t *fb, long offset)
 {
   long len = FILEBUFFER_SIZE;
@@ -19,6 +30,10 @@ static void filebuffer_load(filebuffer_t *fb, long offset)
   fread(fb->buffer, len, 1, fb->f);
 }
 
+/* filebuffer_check
+ * Internal function. Makes sure a request is valid, then makes sure the buffer
+ * can accomodate it.
+ */
 static void filebuffer_check(filebuffer_t *fb, long offset, long len)
 {
   if(offset + len > fb->size) y_error("attempt to read outside file bounds");
@@ -27,6 +42,18 @@ static void filebuffer_check(filebuffer_t *fb, long offset, long len)
     filebuffer_load(fb, offset);
   }
 }
+
+/* filebuffer_close
+ * Internal function. This performs cleanup that must occur prior to Yorick
+ * freeing the handle's memory.
+ */
+static void filebuffer_close(void *ptr)
+{
+  filebuffer_t *fb = ptr;
+  if(fb->f) fclose(fb->f);
+}
+
+// API methods, see filbuffer.h for documentation
 
 filebuffer_t * filebuffer_open(const char *fn)
 {
@@ -42,10 +69,9 @@ filebuffer_t * filebuffer_open(const char *fn)
   return fb;
 }
 
-void filebuffer_close(void *ptr)
+long filebuffer_size(filebuffer_t *fb)
 {
-  filebuffer_t *fb = ptr;
-  fclose(fb->f);
+  return fb->size;
 }
 
 long filebuffer_i32(filebuffer_t *fb, long offset)

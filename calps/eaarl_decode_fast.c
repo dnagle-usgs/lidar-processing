@@ -115,7 +115,7 @@ void Y_eaarl_decode_fast(int nArgs)
   // stop=0 is special for indicating to use the rest of the file
   if(stop == 0)
   {
-    stop = f->size - 1;
+    stop = filebuffer_size(f) - 1;
   }
 
   // Scan to see how many pulses there are
