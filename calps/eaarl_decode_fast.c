@@ -17,7 +17,7 @@ void Y_eaarl_decode_fast(int nArgs)
   static long kglobs[EAARL_DECODE_FAST_KEYCT+1];
 
   char *fn = NULL;
-  long start = 0, stop = 0, rnstart = 0, raw = 0, wfs = 0;
+  long start = 0, stop = 0, rnstart = 0, raw = 0, wfs = 1;
 
   long tx_clean = 0;
   double eaarl_time_offset = 0.;
@@ -74,7 +74,7 @@ void Y_eaarl_decode_fast(int nArgs)
     }
 
     if(kiargs[1] != -1) raw = yarg_true(kiargs[1]);
-    if(kiargs[2] != -1) wfs = yarg_true(kiargs[2]);
+    if(kiargs[2] != -1 && !yarg_nil(kiargs[2])) wfs = yarg_true(kiargs[2]);
 
     fn = ygets_q(iarg_fn);
     start = ygets_l(iarg_start);
