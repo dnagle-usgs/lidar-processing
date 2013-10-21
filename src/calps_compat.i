@@ -29,3 +29,7 @@ if(!is_func(level_short_dips))
 // Added 2013-03-28
 if(!is_func(unique))
   require, "calps/unique.i";
+
+// Added 2013-10-21
+if(!is_func(wf_centroid))
+  require, "calps/wf_centroid.i";
