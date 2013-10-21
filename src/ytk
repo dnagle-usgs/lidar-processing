@@ -57,12 +57,12 @@ package require Expect
 package require Iwidgets
 package require base64
 package require fileutil
-
 package require struct::list
+
+package require alpsrc
+# alpsrc must come before everything else
 package require mixin
 package require yorick
-package require alpsrc
-# alpsrc must come before logger
 package require logger
 package require hook
 
