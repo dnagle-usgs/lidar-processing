@@ -913,7 +913,7 @@ namespace eval ::mission {
                     -type ok \
                     -title "Need data_path" \
                     -message "You must select a \"data_path dir\" before you\
-                        can detect detail options."]
+                        can detect detail options."
             return
         }
 
