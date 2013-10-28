@@ -484,7 +484,6 @@ func eaarl_mission_flights_auto_keys(env) {
     "ops_conf file",
     "bathconf file",
     "rgb dir",
-    "rgb file",
     "nir dir"
   ];
   save, env, keys;
@@ -511,8 +510,6 @@ func eaarl_mission_details_autolist(env) {
     env, result=autoselect_bathconf(path, options=1);
   else if(key == "rgb dir")
     env, result=autoselect_rgb_dir(path, options=1);
-  else if(key == "rgb file")
-    env, result=autoselect_rgb_tar(path, options=1);
   else if(key == "nir dir")
     env, result=autoselect_nir_dir(path, options=1);
   return env;

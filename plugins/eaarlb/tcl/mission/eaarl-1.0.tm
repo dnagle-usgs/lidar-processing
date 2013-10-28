@@ -17,7 +17,6 @@ namespace eval ::mission::eaarl {
         "ops_conf file"
         "bathconf file"
         "rgb dir"
-        "rgb file"
         "nir dir"
     }
 
@@ -43,10 +42,6 @@ namespace eval ::mission::eaarl {
             {{Bathy settings files} {.bathconf}}
             {{JSON files} {.json}}
             {{bctl files} {.bctl}}
-            {{All files} *}
-        }
-        "rgb file" {
-            {{tar files} {.tar}}
             {{All files} *}
         }
     }
@@ -131,10 +126,7 @@ namespace eval ::mission::eaarl {
             grid $f.lbl$row -sticky w
             grid $f.load$row $f.reload$row $f.rgb$row $f.nir$row -sticky ew
 
-            if {
-                [::mission::has $flight "rgb dir"] ||
-                [::mission::has $flight "rgb file"]
-            } {
+            if {[::mission::has $flight "rgb dir"]} {
                 set has_rgb 1
             } else {
                 $f.rgb$row state disabled
@@ -193,11 +185,6 @@ namespace eval ::mission::eaarl {
             set rgb [sf::controller %AUTO%]
             $rgb load $driver -path $path
             ybkg set_sf_bookmark \"$rgb\" \"[ystr $flight]\"
-        } elseif {[::mission::has $flight "rgb file"]} {
-            set rgb [sf::controller %AUTO%]
-            $rgb load rgb::f2001::tarfiles \
-                    -files [list [::mission::get $flight "rgb file"]]
-            ybkg set_sf_bookmark \"$rgb\" \"[ystr $flight]\"
         }
     }
 
@@ -232,18 +219,6 @@ namespace eval ::mission::eaarl {
             $rgb load $driver -paths $paths
             ybkg set_sf_bookmarks \"$rgb\"
             return
-        }
-
-        set paths [list]
-        foreach flight [::mission::get] {
-            if {[::mission::has $flight "rgb file"]} {
-                lappend paths [::mission::get $flight "rgb file"]
-            }
-        }
-        if {[llength $paths]} {
-            set rgb [sf::controller %AUTO%]
-            $rgb load rgb::f2001::tarfiles -files $paths
-            ybkg set_sf_bookmarks \"$rgb\"
         }
     }
 
