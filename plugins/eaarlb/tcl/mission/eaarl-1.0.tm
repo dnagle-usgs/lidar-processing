@@ -15,7 +15,7 @@ namespace eval ::mission::eaarl {
         "pnav file"
         "ins file"
         "ops_conf file"
-        "bath_ctl file"
+        "bathconf file"
         "rgb dir"
         "rgb file"
         "nir dir"
@@ -39,8 +39,10 @@ namespace eval ::mission::eaarl {
             {{Yorick files} {.i}}
             {{All files} *}
         }
-        "bath_ctl file" {
-            {{Bathy settings files} {.json .bctl}}
+        "bathconf file" {
+            {{Bathy settings files} {.bathconf}}
+            {{JSON files} {.json}}
+            {{bctl files} {.bctl}}
             {{All files} *}
         }
         "rgb file" {
