@@ -408,8 +408,18 @@ namespace eval ::mission {
                 -command ::mission::editview_load_data
         ttk::button $f.btnInitialize -text "Initialize Flight by Path" \
                 -command ::mission::initialize_path_flight
-        grid x $f.btnLoad $f.btnInitialize -in $f.fraButtons
-        grid columnconfigure $f.fraButtons {0 3} -weight 1
+        ttk::button $f.btnValidate -text "Validate" \
+                -command ::mission::validate_flight
+        grid x $f.btnLoad $f.btnInitialize $f.btnValidate -in $f.fraButtons
+        grid columnconfigure $f.fraButtons {0 4} -weight 1
+
+        tooltip $f.btnValidate -wrap single \
+                "Performs some basic high-level validation on the selected\
+                flight, including:
+                - Making sure all required fields are present
+                - Making sure the paths selected exist
+                However, it will not check the actual data. You will need to\
+                load the data and test it to ensure the data is good."
 
         ttk::labelframe $f.lfrDetails -text "Flight Details"
 
@@ -787,7 +797,67 @@ namespace eval ::mission {
         if {$choice eq "yes"} {
             handler::invoke "mission_initialize_path_flight" $flight_name $path
         }
+    }
 
+    proc validate_flight {} {
+        variable flight_name
+        if {$flight_name eq ""} {
+            return
+        }
+
+        exp_send "gui_mission_flights_validate, \"$flight_name\";\r"
+    }
+
+    proc validate_flight_report {flight json} {
+        set data [::json::json2dict $json]
+
+        variable top
+        set i 1
+        while {[winfo exists [set w $top.validate$i]]} {incr i}
+        toplevel $w
+        wm title $w "Validation for $flight"
+        ttk::scrollbar $w.sb -command [list $w.doc yview]
+        ::mixin::text::readonly $w.doc -height 25 \
+                -yscrollcommand [list $w.sb set]
+        pack $w.doc -side left -fill both -expand 1
+        pack $w.sb -side left -fill y -expand 0
+
+        set font {list -family Helvetica}
+        set size 10
+
+        $w.doc configure -font [{*}$font -size $size] -wrap word
+        $w.doc tag configure heading \
+                -font [{*}$font -size [expr {$size+1}] -underline 1]
+        $w.doc tag configure blank -font [{*}$font -size [expr {$size/2}]]
+        $w.doc tag configure entry
+        $w.doc tag configure key -font [{*}$font -size $size -weight bold]
+        $w.doc tag configure good
+        $w.doc tag configure bad -foreground #8B0000 -background #FFEF00
+        $w.doc tag configure help -lmargin1 25 -lmargin2 25
+        $w.doc tag configure footer -font [{*}$font -size [expr {$size-1}]]
+
+        $w.doc ins end "Validation for $flight\n" heading
+
+        dict for {key info} $data {
+            dict with info {
+                if {$ok} {
+                    set goodbad good
+                } else {
+                    set goodbad bad
+                }
+
+                $w.doc ins end "\n" blank
+                $w.doc ins end "$key: " [list entry key $goodbad]
+                $w.doc ins end "$msg\n" $goodbad
+                if {!$ok || $msg ne "ok"} {
+                    $w.doc ins end "$help\n" help
+                }
+            }
+        }
+
+        set now [clock format [clock seconds] -format {%Y-%m-%d at %H:%M:%S}]
+        $w.doc ins end "\n" blank
+        $w.doc ins end "Validation performed on $now\n" footer
     }
 
     # Updates the values list for the "Detail type:" field. This will display

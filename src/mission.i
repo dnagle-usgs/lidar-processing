@@ -248,9 +248,9 @@ restore, scratch;
 scratch = save(scratch, cmds, mission_flights_add, mission_flights_remove,
   mission_flights_rename, mission_flights_swap, mission_flights_raise,
   mission_flights_lower, mission_flights_dupe, mission_flights_clear,
-  mission_flights_auto);
+  mission_flights_auto, mission_flights_validate);
 cmds = save(__help, add, remove, rename, swap, raise, lower, dupe, clear,
-  auto);
+  auto, validate);
 
 __help = "Contains subcommands for modifying the configuration for flights.";
 
@@ -392,6 +392,94 @@ func mission_flights_clear {
   mission, tksync;
 }
 clear = mission_flights_clear;
+
+func mission_flights_validate(flight) {
+/* DOCUMENT mission(flights, validate, "<name>")
+  Performs basic validation on the specified flight. Returns an oxy group with
+  details.
+*/
+  cur = save(
+    help="This mission-wide field should be the absolute directory path where the whole mission is located. It should contain one or more flight subdirectories. Without this field being valid, nothing else can be validated.",
+    required=1,
+    ok=1,
+    msg="ok"
+  );
+  if(!is_string(mission.data.path) || !strlen(mission.data.path)) {
+    save, cur, ok=0, msg="invalid or unspecified";
+  } else if(!file_exists(mission.data.path)) {
+    save, cur, ok=0, msg="path does not exist";
+  } else if(!file_isdir(mission.data.path)) {
+    save, cur, ok=0, msg="path exists but is not directory";
+  } else if(file_pathtype(mission.data.path) != "absolute") {
+    save, cur, ok=0, msg="path is not an absolute path";
+  }
+  if(!cur.ok) {
+    return save("mission path", cur);
+  }
+
+  fields = save(
+    "data_path dir", save(
+      "help", "This is the directory that contains the flight data. It should be a subdirectory of the mission directory and is typically named YYYYMMDD or YYYY-MM-DD. All of the flight-specific data such as lidar, gps, ins, and imagery should be in this directory.",
+      required=1
+    ),
+    "date", save(
+      "help", "This is the date of the flight, formatted as YYYY-MM-DD. If the flight crosses midnight, use the date the flight started.",
+      required=1
+    )
+  );
+
+  restore, hook_invoke("mission_flights_validate_fields", save(fields));
+
+  for(i = 1; i <= fields(*); i++) {
+    key = fields(*,i);
+    cur = fields(noop(i));
+
+    save, cur, ok=1, msg="ok";
+
+    if(!mission(has, flight, key)) {
+      save, cur, ok=!cur.required, msg="field not defined";
+      continue;
+    }
+    val = mission(get, flight, key);
+    save, cur, val;
+    if(strpart(key, -3:) == " dir" || strpart(key, -4:) == " file") {
+      if(!is_string(val) || !strlen(val)) {
+        save, cur, ok=0, msg="invalid or unspecified";
+      } else if(!file_exists(val)) {
+        save, cur, ok=0, msg="path does not exist";
+      } else if(strpart(key, -3:) == " dir" && !file_isdir(val)) {
+        save, cur, ok=0, msg="path exists but is not directory";
+      } else if(strpart(key, -4:) == " file" && !file_isfile(val)) {
+        save, cur, ok=0, msg="path exists but is not file";
+      } else if(file_split(file_relative(mission.data.path, val))(1) == "..") {
+        save, cur, ok=0, msg="path exists but is not located in mission path";
+      }
+    }
+  }
+
+  cur = fields("date");
+  if(cur.ok) {
+    if(!cur.val || !is_string(cur.val) || get_date(cur.val) != cur.val) {
+      save, cur, ok=0, msg="date must be formatted as YYYY-MM-DD";
+    }
+  }
+
+  unknown = set_difference(mission(get, flight), fields(*,));
+  for(i = 1; i <= numberof(unknown); i++) {
+    save, fields, unknown(i), save(
+      required=0,
+      ok=0,
+      val=mission(get, flight, unknown(i)),
+      msg="unknown field",
+      help="This field is not recognized. This will not directly hurt anything, but it could be a sign that the field was misnamed."
+    );
+  }
+
+  restore, hook_invoke("mission_flights_validate_post", save(fields));
+
+  return fields;
+}
+validate = mission_flights_validate;
 
 func mission_flights_auto(flight, path, strict=) {
 /* DOCUMENT mission, flights, auto, "<flight>", "<path>", strict=

@@ -23,3 +23,8 @@ func gui_mission_select(flight, key, path) {
   json = json_encode(save(flight, key, path, options));
   tkcmd, swrite(format="::mission::gui_select {%s}", json);
 }
+
+func gui_mission_flights_validate(flight) {
+  tkcmd, swrite(format="::mission::validate_flight_report {%s} {%s}",
+    flight, json_encode(mission(flights, validate, flight)));
+}
