@@ -517,3 +517,69 @@ func eaarl_mission_details_autolist(env) {
     env, result=autoselect_cir_dir(path, options=1);
   return env;
 }
+
+hook_add, "mission_flights_validate_fields", "eaarl_mission_flights_validate_fields";
+func eaarl_mission_flights_validate_fields(env) {
+  save, env.fields,
+    "edb file", save(
+      "help", "The edb file provides an index to the EAARL TLD data. It is usually found in an \"eaarl\" subdirectory and must be alongside the TLD files it indexes. The file usually ends in the extension .idx and can be generated using the command-line program mkeidx.",
+      required=1
+    ),
+    "pnav file", save(
+      "help", "The pnav file provides the GPS trajectory of the flight and is generally at a low sampling resolution such as 2 Hz. The pnav file has the extension .ybin and is generally in a trajectories subdirectory which is generated using the command-line program mktrajfiles. The input for mktrajfiles is a zip containing output from GrafNav.",
+      required=1
+    ),
+    "ins file", save(
+      "help", "The ins file provides the inertial trajectory of the flight and is generally at a higher sampling resolution such as 200 Hz. The ins file has the extension .pbd and is generally in a trajectories subdirectory which is generated using the command-line program mktrajfiles. The input for mktrajfiles is a zip containing output from GrafNav Inertial Explorer.",
+      required=1
+    ),
+    "ops_conf file", save(
+      "help", "The ops_conf file contains operational constants and biases between the individual instruments on the plane. These values are tuned in ALPS and then are written out from the EAARL Processing GUI. The ops_conf has the extension .i and usually has \"ops_conf\" in its name. It is found either in the flight directory (if it is specific to this flight) or in the mission directory (if it is shared across multiple flights).",
+      required=1
+    ),
+    "bathconf file", save(
+      "help", "The bathconf file contains parameters used to process for submerged topography. This file is only required if you will be processing for submerged topography. The bathconf file will usually have the extension .bathconf; however, it may instead end in -bctl.json or .bctl if using older configuration files. The file is found either in the flight directory (if it is specific to this flight) or in the mission directory (if it is shared across multiple flights).",
+      required=0
+    ),
+    "rgb dir", save(
+      "help", "The rgb directory contains RGB imagery acquired during the flight. This is usually a subdirectory in the flight directory named \"rgb\" or \"cam1\". This is optional and does not affect lidar processing.",
+      required=0
+    ),
+    "rgb file", save(
+      "help", "The rgb file is a tar file that contains RGB imagery acquired during the flight. It has the extension .tar and will usually have \"cam1\" in its filename. This is optional and does not affect lidar processing. This field is mutually exclusive with \"rgb dir\" and is generally found on older missions.",
+      required=0
+    ),
+    "cir dir", save(
+      "help", "The cir directory contains CIR imagery acquired during the flight. This is usually a subdirectory in the flight directory named \"cir\". This is optional and does not affect lidar processing.",
+      required=0
+    );
+
+  return env;
+}
+
+hook_add, "mission_flights_validate_post", "eaarl_mission_flights_validate_post";
+func eaarl_mission_flights_validate_post(env) {
+  fields = env.fields;
+
+  rgbd = fields("rgb dir");
+  rgbf = fields("rgb file");
+  if(rgbd(*,"val") && rgbf(*,"val")) {
+    msg = "both \"rgb dir\" and \"rgb file\" are defined";
+    if(rgbd.ok) {
+      save, rgbd, ok=0, msg;
+    } else {
+      save, rgbd, msg=msg + ";" + rgbd.msg;
+    }
+    if(rgbf.ok) {
+      save, rgbf, ok=0, msg;
+    } else {
+      save, rgbf, msg=msg + ";" + rgbf.msg;
+    }
+  }
+
+  if(rgbd(*,"val") && rgbd.ok && !rgbf(*,"val")) {
+    save, env, fields=obj_delete(fields, "rgb file");
+  }
+
+  return env;
+}
