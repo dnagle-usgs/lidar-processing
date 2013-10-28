@@ -542,44 +542,13 @@ func eaarl_mission_flights_validate_fields(env) {
       required=0
     ),
     "rgb dir", save(
-      "help", "The rgb directory contains RGB imagery acquired during the flight. This is usually a subdirectory in the flight directory named \"rgb\" or \"cam1\". This is optional and does not affect lidar processing.",
+      "help", "The rgb directory contains RGB imagery acquired during the flight. This is usually a subdirectory in the flight directory named \"rgb\". This is optional and does not affect lidar processing.",
       required=0
     ),
-    "rgb file", save(
-      "help", "The rgb file is a tar file that contains RGB imagery acquired during the flight. It has the extension .tar and will usually have \"cam1\" in its filename. This is optional and does not affect lidar processing. This field is mutually exclusive with \"rgb dir\" and is generally found on older missions.",
-      required=0
-    ),
-    "cir dir", save(
-      "help", "The cir directory contains CIR imagery acquired during the flight. This is usually a subdirectory in the flight directory named \"cir\". This is optional and does not affect lidar processing.",
+    "nir dir", save(
+      "help", "The nir directory contains NIR imagery acquired during the flight. This is usually a subdirectory in the flight directory named \"nir\". This is optional and does not affect lidar processing.",
       required=0
     );
-
-  return env;
-}
-
-hook_add, "mission_flights_validate_post", "eaarl_mission_flights_validate_post";
-func eaarl_mission_flights_validate_post(env) {
-  fields = env.fields;
-
-  rgbd = fields("rgb dir");
-  rgbf = fields("rgb file");
-  if(rgbd(*,"val") && rgbf(*,"val")) {
-    msg = "both \"rgb dir\" and \"rgb file\" are defined";
-    if(rgbd.ok) {
-      save, rgbd, ok=0, msg;
-    } else {
-      save, rgbd, msg=msg + ";" + rgbd.msg;
-    }
-    if(rgbf.ok) {
-      save, rgbf, ok=0, msg;
-    } else {
-      save, rgbf, msg=msg + ";" + rgbf.msg;
-    }
-  }
-
-  if(rgbd(*,"val") && rgbd.ok && !rgbf(*,"val")) {
-    save, env, fields=obj_delete(fields, "rgb file");
-  }
 
   return env;
 }
