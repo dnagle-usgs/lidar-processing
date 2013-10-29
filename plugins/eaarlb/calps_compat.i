@@ -9,4 +9,7 @@ base = file_dirname(current_include())+"/";
 if(!is_func(eaarl_decode_fast))
   require, base+"calps/eaarl_decode_fast.i";
 
+if(!is_func(cent))
+  require, base+"calps/cent.i";
+
 restore, scratch;
