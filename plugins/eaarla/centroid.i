@@ -122,10 +122,9 @@ func pcr(rast, pulse, forcechannel=) {
 
 func cent(wf, lim=) {
 /* DOCUMENT cent(wf, lim=)
-  Compute the centroid of "wf" using the first LIM points. If wf is an
-    array of type char, it will first be converted to type short and the
-    bias will be removed using the first point method. Otherwise, the wf
-    will be used as is.
+  Compute the centroid of "wf" using the first LIM points. If wf is an array
+  of type char, it will first be inverted, converted to long, and have bias
+  removed using the first point. Otherwise, the wf will be used as is.
 
   lim= Limit number of points considered. If omitted, only the first 12
      points are considered. Must be a non-negative integer if provided.
@@ -134,6 +133,11 @@ func cent(wf, lim=) {
     result(1) = centroid range
     result(2) = peak range
     result(3) = peak power
+
+  If the waveform has fewer than 2 samples, the result will be [0,0,0].
+
+  If a centroid cannot be calculated, then result(1) will be 10000 to indicate
+  an error.
 */
   default, lim, 12;
 
