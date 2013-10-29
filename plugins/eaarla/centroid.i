@@ -142,7 +142,7 @@ func cent(wf, lim=) {
 
   // convert to short and remove bias, if necessary
   if (typeof(wf) == "char")
-    wf = wf_filter_bias(short(~wf), method="first");
+    wf = short(~wf) - short(~(wf(1)));
 
   if (lim < numberof(wf))
     wf = wf(:lim);
