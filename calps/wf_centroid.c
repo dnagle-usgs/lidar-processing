@@ -120,3 +120,107 @@ void Y_wf_centroid(int nArgs)
     yput_global(glob_pos, 0);
   }
 }
+
+// result must be pointer to array with size for 3 doubles
+void cent(long *wf, long count, double *result)
+{
+  if(count < 2) {
+    result[0] = result[1] = result[2] = 0;
+    return;
+  }
+
+  #define centroid result[0]
+  #define max_index result[1]
+  #define max_intensity result[2]
+
+  long i;
+  max_index = 1;
+  max_intensity = wf[0];
+  for(i = 1; i < count; i++)
+  {
+    if(wf[i] > max_intensity)
+    {
+      max_index = i+1;
+      max_intensity = wf[i];
+    }
+  }
+
+  centroid = wf_centroid(wf, count);
+  if(centroid > 10000) centroid = 10000;
+
+  #undef centroid
+  #undef max_index
+  #undef max_intensity
+}
+
+long *retrieve_wf(int iarg, long *count)
+{
+  if(yarg_rank(iarg) != 1) y_error("waveform must be one dimensional");
+  long *wf = NULL;
+
+  if(yarg_typeid(iarg) == Y_CHAR)
+  {
+    long i = 0, dims[Y_DIMSIZE];
+    unsigned char *tmp = ygeta_uc(iarg, count, dims);
+    wf = ypush_d(dims);
+    yarg_swap(0, iarg+1);
+    yarg_drop(1);
+
+    long bias = (long)(~tmp[0]);
+    wf[0] = 0;
+    for(i = 1; i < *count; i++)
+    {
+      wf[i] = (long)(~tmp[i]) - bias;
+    }
+  }
+  else
+  {
+    wf = ygeta_l(iarg, count, NULL);
+  }
+
+  return wf;
+}
+
+#define CENT_KEYCT 1
+void Y_cent(int nArgs)
+{
+  static char *knames[CENT_KEYCT+1] = {"lim", 0};
+  static long kglobs[CENT_KEYCT+1];
+  int kiargs[CENT_KEYCT];
+  yarg_kw_init(knames, kglobs, kiargs);
+
+  int iarg_wf = yarg_kw(nArgs-1, kglobs, kiargs);
+  if(iarg_wf == -1 || yarg_kw(iarg_wf-1, kglobs, kiargs) != -1)
+    y_error("must provide 1 argument");
+
+  long dims[Y_DIMSIZE];
+  dims[0] = 1;
+  dims[1] = 3;
+
+  if(yarg_nil(iarg_wf))
+  {
+    // Yorick initializes it to 0's
+    ypush_d(dims);
+    return;
+  }
+
+  long count = 0;
+  long *wf = retrieve_wf(iarg_wf, &count);
+
+  if(kiargs[0] == -1 || yarg_nil(kiargs[0]))
+  {
+    if(12 < count) count = 12;
+  }
+  else if(yarg_number(kiargs[0]) != 1 || yarg_rank(kiargs[0]) != 0)
+  {
+    y_error("lim= must be a scalar integer");
+  }
+  else
+  {
+    long lim = ygets_l(kiargs[0]);
+    if(lim < count) count = lim;
+  }
+
+  double *result = ypush_d(dims);
+  cent(wf, count, result);
+}
