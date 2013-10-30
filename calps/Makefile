@@ -23,7 +23,7 @@ PKG_I=calps.i
 
 OBJS=triangle.o triangle_y.o interp_angles.o gridding.o region.o \
 	level_short_dips.o ll2utm.o navd88.o set.o unique.o linux.o \
-	profiler.o filebuffer.o eaarl_decode_fast.o wf_centroid.o
+	profiler.o filebuffer.o eaarl_decode_fast.o centroid.o
 
 # change to give the executable a name other than yorick
 PKG_EXENAME=yorick
