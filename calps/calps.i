@@ -252,13 +252,13 @@ extern unique;
   first value will be used.
 */
 
-// *** defined in linux.c
+// *** defined in linux.c ***
 extern get_pid;
 /* DOCUMENT get_pid()
   Returns the process ID for the current Yorick process.
 */
 
-// *** defined in profiler.c
+// *** defined in profiler.c ***
 
 extern profiler_init;
 /* DOCUMENT profiler_init, places
@@ -294,7 +294,7 @@ extern profiler_ticks;
   The time measured is wall time.
 */
 
-// ** defined in eaarl_decode_fast *
+// *** defined in eaarl_decode_fast.c ***
 
 extern eaarl_decode_fast;
 /* DOCUMENT result = eaarl_decode_fast(fn, start, stop)
@@ -335,7 +335,7 @@ extern eaarl_decode_fast;
     extra dimension of size 4.
 */
 
-// ** defined in wf_centroid *
+// *** defined in wf_centroid.c ***
 
 extern wf_centroid;
 /* DOCUMENT position = wf_centroid(wf, lim=)
