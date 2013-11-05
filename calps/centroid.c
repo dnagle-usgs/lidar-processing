@@ -162,7 +162,7 @@ long *retrieve_wf(int iarg, long *count)
   {
     long i = 0, dims[Y_DIMSIZE];
     unsigned char *tmp = ygeta_uc(iarg, count, dims);
-    wf = ypush_d(dims);
+    wf = ypush_l(dims);
     yarg_swap(0, iarg+1);
     yarg_drop(1);
 
