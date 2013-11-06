@@ -163,4 +163,4 @@ func nocalps_eaarl_decode_fast(fn, start, stop, rnstart=, raw=, wfs=) {
   return result;
 }
 
-if(!is_func(eaarl_decode_fast)) eaarl_decode_fast = nocalps_eaarl_decode_fast;
+if(is_func(eaarl_decode_fast) != 2) eaarl_decode_fast = nocalps_eaarl_decode_fast;
