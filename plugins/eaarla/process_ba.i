@@ -76,6 +76,7 @@ func process_ba(start, stop, ext_bad_att=, channel=, opts=) {
 
   // Start out by processing for first surface
   pulses = process_fs(start, stop, ext_bad_att=ext_bad_att, channel=channel);
+  if(is_void(pulses)) return;
 
   // Throw away any pulses that are equal to or above the mirror
   w = where(pulses.fz < pulses.mz);
