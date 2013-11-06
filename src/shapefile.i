@@ -494,19 +494,45 @@ func polygon_highlight(name) {
   plot_shape, _poly_polys(w), color="red";
 }
 
-func polygon_write(filename) {
-/* DOCUMENT polygon_write, filename
+func polygon_write(filename, sox=, color=, width=, geo=, utm=) {
+/* DOCUMENT polygon_write, filename, sox=, color=, width=, geo=, utm=
   Saves the currently defined polygons to a file as an ASCII shapefile. See
   write_ascii_shapefile and read_ascii_shapefile for details.
 
-  Primarily intended for transparent use from the Plotting Tool GUI.
+  Primarily intended for transparent use from the Plotting Tool GUI. However,
+  it also supports some options for command-line use.
+
+  By default, coordinates are used as they are in memory. To force to UTM or
+  Lat/Lon, use utm=1 or geo=1. (Note that this may also update how the
+  coordinates are stored in memory as a side effect.)
+
+  By default, meta information is added with the name of each poly. To add a
+  color, use color="RGB(255,0,0)". To add a line width, use width=3.
+
+  Use sox=1 to flip on the options commonly used for sox map, use sox=1. This
+  is equivalent to color="RGB(255,0,0)", width=3, geo=1.
 */
-// Original David Nagle 2008-10-06
-  extern _poly_polys, _poly_names, _poly_sox;
-  meta = _poly_names;
-  meta = "NAME=" + meta + "\n";
-  if(_poly_sox)
-    meta += "LINE_WIDTH=3\nLINE_COLOR=RGB(255,0,0)\n";
+  extern _poly_polys, _poly_names, curzone;
+  if(sox) {
+    default, color, "RGB(255,0,0)";
+    default, width, 3;
+    default, utm, 0;
+    default, geo, !utm;
+  }
+  if(geo && utm) error, "cannot provide both geo=1 and utm=1";
+
+  meta = "NAME=" + _poly_names + "\n";
+  if(width)
+    meta += swrite(format="LINE_WIDTH=%d\n", long(width));
+  if(color)
+    meta += "LINE_COLOR="+color+"\n";
+
+  if((*_poly_polys(1))(1,)(max) <= 360) {
+    if(utm) polygon_cs2cs, cs_wgs84(), cs_wgs84(zone=curzone);
+  } else {
+    if(geo) polygon_cs2cs, cs_wgs84(zone=curzone), cs_wgs84();
+  }
+
   write_ascii_shapefile, _poly_polys, filename, meta=meta;
 }
 
