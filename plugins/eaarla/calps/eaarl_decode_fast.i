@@ -81,8 +81,11 @@ func nocalps_eaarl_decode_fast(fn, start, stop, rnstart=, raw=, wfs=) {
     rstart = offset;
 
     rlen = u_cast(fi24(f, offset), long);
-    if(rlen < 18 || f.raw(offset+3) != 5) continue;
     rstop = rstart + rlen - 1;
+    if(rlen < 18 || f.raw(offset+3) != 5) {
+      offset = rstop - 1;
+      continue;
+    }
 
     seconds = fi32(f, offset+4);
     fseconds = fi32(f, offset+8);
