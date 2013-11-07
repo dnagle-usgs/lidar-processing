@@ -511,6 +511,7 @@ opts=) {
   _utm = utm;
   utm = ply(1,1) > 360;
   q = pnav_sel_rgn(win=win, region=ply, _batch=1, plot=plot, color="red");
+  q = pnav_rgn_to_idx(q);
   utm = _utm;
 
   if(is_void(q)) {
