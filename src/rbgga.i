@@ -288,6 +288,23 @@ func edb_sods_to_rns(sods, max_rps=, verbose=) {
   return numberof(w) ? rn_arr(,w) : [];
 }
 
+func pnav_rgn_to_idx(sods) {
+/* DOCUMENT idx = pnav_rgn_to_idx(sods)
+  Given an array of sod values, returns the indices into pnav that match them.
+
+  (This converts the newer style "q" to the older style "q".)
+*/
+  extern pnav;
+  if(is_void(sods)) return [];
+
+  match = array(0, dimsof(pnav));
+  count = dimsof(sods)(3);
+  for(i = 1; i <= count; i++)
+    match |= (pnav.sod >= sods(1,i) & pnav.sod <= sods(2,i));
+
+  return where(match);
+}
+
 func sel_region(sods, max_rps=, verbose=) {
 /* DOCUMENT sel_region(sods, max_rps=, verbose=)
   This function extracts the raster numbers for a region selected. It returns a
