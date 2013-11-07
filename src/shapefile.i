@@ -364,22 +364,36 @@ func shapefile_limits(void) {
 
   Primarily intended for transparent use from the Plotting Tool GUI.
 */
-// Original David Nagle 2008-10-06
-  extern _shp_polys;
+  extern _shp_polys, utm, curzone;
   minx = miny =  1e+100;
   maxx = maxy = -1e+100;
 
   for(i = 1; i <= numberof(_shp_polys); i++) {
-    for(j = 1; j <= numberof(*_shp_polys(i)); j++) {
-      minx = min( (*(*_shp_polys(i))(j))(1,min), minx );
-      maxx = max( (*(*_shp_polys(i))(j))(1,max), maxx );
-      miny = min( (*(*_shp_polys(i))(j))(2,min), miny );
-      maxy = max( (*(*_shp_polys(i))(j))(2,max), maxy );
+    shp = *_shp_polys(i);
+    for(j = 1; j <= numberof(shp); j++) {
+      ply = *shp(j);
+      x = ply(1,);
+      y = ply(2,);
+
+      // Make sure coordinates match what's currently plotted
+      if(!is_void(utm)) {
+        if(utm) {
+          if(x(max) <= 360) ll2utm, y, x, y, x, force_zone=curzone;
+        } else {
+          if(x(max) > 360) utm2ll, y, x, curzone, x, y;
+        }
+      }
+
+      minx = min(minx, x(min));
+      maxx = max(maxx, x(max));
+      miny = min(miny, y(min));
+      maxy = max(maxy, y(max));
     }
   }
 
-  xdif = (maxx - minx)/100;
-  ydif = (maxy - miny)/100;
+  // Expand by 1% in each direction
+  xdif = (maxx - minx)/100.;
+  ydif = (maxy - miny)/100.;
   minx -= xdif;
   maxx += xdif;
   miny -= ydif;
