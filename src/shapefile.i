@@ -559,8 +559,7 @@ func polygon_write(filename, sox=, color=, width=, geo=, utm=) {
   it also supports some options for command-line use.
 
   By default, coordinates are used as they are in memory. To force to UTM or
-  Lat/Lon, use utm=1 or geo=1. (Note that this may also update how the
-  coordinates are stored in memory as a side effect.)
+  Lat/Lon, use utm=1 or geo=1.
 
   By default, meta information is added with the name of each poly. To add a
   color, use color="RGB(255,0,0)". To add a line width, use width=3.
@@ -583,13 +582,7 @@ func polygon_write(filename, sox=, color=, width=, geo=, utm=) {
   if(color)
     meta += "LINE_COLOR="+color+"\n";
 
-  if((*_poly_polys(1))(1,)(max) <= 360) {
-    if(utm) polygon_cs2cs, cs_wgs84(), cs_wgs84(zone=curzone);
-  } else {
-    if(geo) polygon_cs2cs, cs_wgs84(zone=curzone), cs_wgs84();
-  }
-
-  write_ascii_shapefile, _poly_polys, filename, meta=meta;
+  write_ascii_shapefile, _poly_polys, filename, meta=meta, geo=geo, utm=utm;
 }
 
 func polygon_read(filename) {
