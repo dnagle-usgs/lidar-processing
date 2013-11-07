@@ -765,6 +765,7 @@ namespace eval ::mission {
             }
         } else {
             set path [tk_chooseDirectory \
+                    -initialdir $::mission::path \
                     -mustexist 1 \
                     -title "Choose flight path"]
 
