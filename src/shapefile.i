@@ -199,6 +199,38 @@ func plot_shape(shp, color=, width=) {
   }
 }
 
+func shape_cs2cs(&shp, src, dst) {
+/* DOCUMENT shape_cs2cs, shp, src, dst
+  -or- shp = shape_cs2cs(shp, src, dst)
+  Converts all polygons in the given shapefile array from one coordinate system
+  to another.
+
+  To convert from UTM to lat/lon:
+    shape_cs2cs, shp, cs_wgs84(zone=16), cs_wgs84()
+
+  To convert from lat/lon to UTM:
+    shape_cs2cs, shp, cs_wgs84(), cs_wgs84(zone=16)
+
+  If a polygon lacks a Z dimension, 0 is temporarily used (and then
+  discarded).
+*/
+  local x, y, z;
+  out = array(pointer, dimsof(shp));
+  for(i = 1; i <= numberof(shp); i++) {
+    has_z = (dimsof(*shp(i))(2) == 3);
+    x = (*shp(i))(1,);
+    y = (*shp(i))(2,);
+    z = has_z ? (*shp(i))(3,) : (x * 0);
+    cs2cs, src, dst, x, y, z;
+    if(has_z)
+      out(i) = &transpose([x,y,z]);
+    else
+      out(i) = &transpose([x,y]);
+  }
+  if(am_subroutine()) shp = out;
+  return out;
+}
+
 func shape_stats(shp) {
 /* DOCUMENT shape_stats, shp
   Displays basic statistics for the shapefile: number of polygons and number
@@ -576,18 +608,7 @@ func polygon_cs2cs(src, dst) {
   discarded).
 */
   extern _poly_polys;
-  local x, y, z;
-  for(i = 1; i <= numberof(_poly_polys); i++) {
-    has_z = (dimsof(*_poly_polys(i))(2) == 3);
-    x = (*_poly_polys(i))(1,);
-    y = (*_poly_polys(i))(2,);
-    z = has_z ? (*_poly_polys(i))(3,) : (x * 0);
-    cs2cs, src, dst, x, y, z;
-    if(has_z)
-      _poly_polys(i) = &transpose([x,y,z]);
-    else
-      _poly_polys(i) = &transpose([x,y]);
-  }
+  shape_cs2cs, _poly_polys, src, dst;
 }
 
 func polygon_summarize {
