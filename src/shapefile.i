@@ -110,7 +110,8 @@ func write_ascii_shapefile(shp, filename, meta=) {
 
   If meta= is provided, it should be an array of strings. Each string must be
   terminated with a newline. They will be written as-is preceeding each
-  segment.
+  segment. Alternately, they may be an oxy group as returned by
+  read_ascii_shapefile.
 */
 // Original David Nagle 2008-10-06
   // Check a polygon and determine if it's in UTM or lat/lon
@@ -121,8 +122,12 @@ func write_ascii_shapefile(shp, filename, meta=) {
 
   f = open(filename, "w");
   for(i = 1; i <= numberof(shp); i++) {
-    if(!is_void(meta)) {
+    if(is_string(meta)) {
       write, f, format="%s", meta(i);
+    } else if(is_obj(meta)) {
+      tmp = meta(noop(i));
+      for(j = 1; j <= tmp(*); j++)
+        write, f, format="%s=%s\n", tmp(*,j), tmp(noop(j));
     }
     ply = *shp(i);
     if(dimsof(ply)(2) > 2) {
