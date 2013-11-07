@@ -102,8 +102,8 @@ func read_ascii_shapefile(filename, &meta) {
   return shp;
 }
 
-func write_ascii_shapefile(shp, filename, meta=) {
-/* DOCUMENT write_ascii_shapefile, shp, filename, meta=
+func write_ascii_shapefile(shp, filename, meta=, geo=, utm=) {
+/* DOCUMENT write_ascii_shapefile, shp, filename, meta=, geo=, utm=
   Creates an ASCII shapefile using the given data.
 
   See read_ascii_shapefile for details on the format of the data array and file.
@@ -112,9 +112,28 @@ func write_ascii_shapefile(shp, filename, meta=) {
   terminated with a newline. They will be written as-is preceeding each
   segment. Alternately, they may be an oxy group as returned by
   read_ascii_shapefile.
+
+  If geo=1 is provided, the shape is written out as geographic coordinates. If
+  utm=1 is provided, the shape is written out as UTM coordinates. If neither
+  are provided, it is written out as is. (If conversions are done, it uses
+  curzone for the UTM zone.)
 */
-// Original David Nagle 2008-10-06
-  // Check a polygon and determine if it's in UTM or lat/lon
+  if(geo && utm) error, "cannot provide both geo=1 and utm=1";
+
+  // Check if conversion is necessary
+  if(utm) {
+    if((*shp(1))(1,)(max) <= 360) {
+      if(!curzone) error, "curzone is not set";
+      shp = shape_cs2cs(shp, cs_wgs84(), cs_wgs84(zone=curzone));
+    }
+  } else if(geo) {
+    if((*shp(1))(1,)(max) > 360) {
+      if(!curzone) error, "curzone is not set";
+      shp = shape_cs2cs(shp, cs_wgs84(zone=curzone), cs_wgs84());
+    }
+  }
+
+  // Check to determine decimal precision
   if((*shp(1))(1,)(max) <= 360)
     fmt = "%.10f,%.10f";
   else
