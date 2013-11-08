@@ -12,4 +12,7 @@ if(!is_func(eaarl_decode_fast))
 if(!is_func(cent))
   require, base+"calps/cent.i";
 
+if(!is_func(eaarl_fs_rx_cent_eaarlb))
+  require, base+"calps/fs_rx.i";
+
 restore, scratch;
