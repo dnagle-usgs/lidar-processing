@@ -387,6 +387,19 @@ extern cent;
   an error.
 */
 
+// *** Defined in fs_rx.c ***
+
+extern eaarl_fs_rx_cent_eaarlb;
+/* DOCUMENT eaarl_fs_rx_cent_eaarlb, pulses
+  Updates the given pulses oxy group object with first return info using the
+  centroid from the specified channel. The following fields are added to
+  pulses:
+    frx - Location in waveform of first return
+    fint - Peak intensity value of first return
+    fchannel - Channel used (=channel except for chan 4, which uses 2)
+    fbias - The channel range bias (ops_conf.chn%d_range_bias)
+*/
+
 __calps_backup = save(
   calps_compatibility,
   _ytriangulate, triangulate,
@@ -402,6 +415,7 @@ __calps_backup = save(
   get_pid,
   profiler_init, profiler_lastinit, profiler_reset, profiler_ticks,
   eaarl_decode_fast,
-  wf_centroid, cent
+  wf_centroid, cent,
+  eaarl_fs_rx_cent_eaarlb
 );
 
