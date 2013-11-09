@@ -156,7 +156,8 @@ while ( $file = <LS> ) {
       mkdir ( $zipdir ) if ( ! $opt_norun );
       chdir ( $zipdir );
       printf("\tunzip ../%s\n", $zipdir) if ( $opt_verbose );
-      system("unzip $startdir/" . $zipdir) if ( ! $opt_norun );
+      # -j junks the directory structure inside the zip file.
+      system("unzip -j $startdir/" . $zipdir) if ( ! $opt_norun );
 
       # Check to see if this was a gps trajectory
       open(FIND2, "find . -follow -name  \"\*cmb-pnav\" -or -name \"\*pnav.txt\"|")
