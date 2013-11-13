@@ -75,6 +75,7 @@ snit::type ::eaarl::raster::embed {
     variable bathy_win 8
     variable transmit_plot 0
     variable transmit_win 16
+    variable lock_channel 0
 
     # The current window width
     variable win_width 450
@@ -123,10 +124,18 @@ snit::type ::eaarl::raster::embed {
             grid columnconfigure $pane 0 -weight 1
         }
 
-        if {$win_width > 600 && $win_width < 1000} {
-            $pane.browse.lblChan configure -text "Chan:"
+        if {$win_width < 500 || ($win_width > 600 && $win_width < 1000)} {
+            $pane.browse.chkChan configure -text "Chan:"
         } else {
-            $pane.browse.lblChan configure -text "Channel:"
+            $pane.browse.chkChan configure -text "Channel:"
+        }
+
+        if {$win_width > 600 && $win_width < 1000} {
+            $pane.browse.lblRast configure -text "Rast:"
+            $pane.browse.lblPulse configure -text "Pls:"
+        } else {
+            $pane.browse.lblRast configure -text "Raster:"
+            $pane.browse.lblPulse configure -text "Pulse:"
         }
     }
 
@@ -145,7 +154,11 @@ snit::type ::eaarl::raster::embed {
     }
 
     method Gui_browse {f} {
-        ttk::label $f.lblChan -text "Channel:"
+        ::mixin::padlock $f.chkChan \
+                -variable [myvar lock_channel] \
+                -text "Chan:" \
+                -compound left
+
         mixin::combobox::mapping $f.cboChan \
                 -mapping {1 1 2 2 3 3 4 4 tx 0} \
                 -altvariable [myvar options](-channel) \
@@ -206,7 +219,7 @@ snit::type ::eaarl::raster::embed {
                 -width 0 \
                 -command [mymethod plot]
 
-        pack $f.lblChan $f.cboChan \
+        pack $f.chkChan $f.cboChan \
                 $f.sepChan \
                 $f.lblRast $f.spnRast $f.spnStep $f.btnRastPrev $f.btnRastNext \
                 $f.sepRast \
@@ -217,6 +230,12 @@ snit::type ::eaarl::raster::embed {
         pack $f.spnRast -fill x -expand 1
         pack $f.sepChan $f.sepRast $f.sepPulse -fill y -padx 2
 
+        tooltip $f.chkChan $f.cboChan \
+                "Channel for this raster.
+
+                Locking the padlock will cause the channel to remain fixed
+                while using tools such as \"Examine Pixels\". Otherwise it will
+                change to reflect the channel of the selected point."
         tooltip $f.lblRast $f.spnRast \
                 "Raster number"
         tooltip $f.spnStep \
@@ -376,6 +395,7 @@ snit::type ::eaarl::raster::embed {
     }
 
     method SetOpt {option value} {
+        if {$option eq "-channel" && $lock_channel} return
         set options($option) $value
         $self UpdateTitle
     }
@@ -420,6 +440,10 @@ snit::type ::eaarl::raster::embed {
     method plotcmd {args} {
         array set opts [array get options]
         array set opts $args
+
+        if {$lock_channel} {
+            set opts(-channel) $options(-channel)
+        }
 
         set cmd ""
         append cmd "show_rast, $opts(-raster), channel=$opts(-channel),\
