@@ -679,6 +679,8 @@ func hook_prep_job_eaarl_process(env) {
     save, wrapped, tans=tans(w), iex_nav=iex_nav(w);
     if(wrapped(*,"bathconf_data"))
       save, wrapped, bathconf_data=serialize(wrapped.bathconf_data);
+    if(wrapped(*,"ops_conf"))
+      save, wrapped, ops_conf=serialize(wrapped.ops_conf);
 
     flightfn = file_join(path,
       file_tail(file_rootname(item.options.pbdfn))+".flight.pbd");
@@ -705,6 +707,8 @@ func hook_run_job_eaarl_process(env) {
   wrapped = pbd2obj(env.conf.flightfn);
   if(wrapped(*,"bathconf_data"))
     save, wrapped, bathconf_data=deserialize(wrapped.bathconf_data);
+  if(wrapped(*,"ops_conf"))
+    save, wrapped, ops_conf=deserialize(wrapped.ops_conf);
   mission, unwrap, wrapped;
   return env;
 }
