@@ -258,7 +258,7 @@ makeflow_fn=, norun=, retconf=, opts=) {
   timer, t0;
 
   restore_if_exists, opts, mode, q, ply, ext_bad_att, channel, verbose,
-    makeflow_fn, retconf=, norun;
+    makeflow_fn, retconf, norun;
   if(is_void(channel)) error, "Must specify channel= option";
 
   extern ops_conf, tans, pnav;
