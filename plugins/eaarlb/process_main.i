@@ -293,6 +293,9 @@ makeflow_fn=, norun=, retconf=, opts=) {
   tempdir = mktempdir("mf_make_eaarl");
   pbdfn = file_join(tempdir, swrite(format="eaarl_%d.pbd", rn_start));
 
+  if(is_void(makeflow_fn))
+    makeflow_fn = file_join(tempdir, "mf_make_eaarl.makeflow");
+
   count = numberof(rn_start);
 
   options = save(string(0), [], mode, channel, ext_bad_att);
