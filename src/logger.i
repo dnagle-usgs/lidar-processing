@@ -1,6 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
 require, "ytime.i";
+require, "alpsrc.i";
 
 /* DOCUMENT __logfh
   This is the file handle used for logging by the logger command.
