@@ -87,9 +87,6 @@ if {![namespace exists ::mission]} {
         variable widget_detail_type
         variable widget_detail_value
 
-        # Currently loaded file (if opened/saved via the GUI)
-        variable currentfile ""
-
         # Used in the detail selection GUI for its radioboxes
         variable keyselect ""
         # Used in detail selection GUI to remember state
@@ -1261,8 +1258,6 @@ namespace eval ::mission {
     # menu command
     # Clears the configuration
     proc new_conf {} {
-        variable currentfile
-        set currentfile ""
         exp_send "mission, flights, clear;\r"
     }
 
@@ -1274,7 +1269,6 @@ namespace eval ::mission {
     # be its parent.
     proc load_conf {args} {
         variable top
-        variable currentfile
         variable mission_filetypes
         set parent $top
         if {[dict exists $args -parent]} {
@@ -1290,7 +1284,6 @@ namespace eval ::mission {
                 -filetypes $mission_filetypes \
                 -title "Select mission configuration to load"]
         if {$fn ne ""} {
-            set currentfile $fn
             set fn [ystr $fn]
             exp_send "mission, read, \"$fn\";\r"
             return 1
@@ -1304,24 +1297,15 @@ namespace eval ::mission {
     # to.
     proc save_conf {} {
         variable top
-        variable currentfile
         variable mission_filetypes
         set initial ""
-        if {$currentfile ne "" && $::mission::path ne ""} {
-            set initial [::fileutil::relative $::mission::path $currentfile]
-            if {[string index $initial 0] eq "."} {
-                set initial ""
-                set currentfile ""
-            }
-        }
         set fn [tk_getSaveFile \
                 -initialdir $::mission::path \
-                -initialfile $initial \
+                -initialfile $::mission::conf_file \
                 -parent $top \
                 -filetypes $mission_filetypes \
                 -title "Select destination for mission configuration"]
         if {$fn ne ""} {
-            set currentfile $fn
             set fn [ystr $fn]
             exp_send "mission, save, \"$fn\";\r"
         }
