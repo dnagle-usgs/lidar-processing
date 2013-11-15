@@ -903,7 +903,6 @@ trace add variable _ytk write trace__ytk
 restore_defaults
 load_options
 
-puts $argv
 set options {
     {D.arg 1 "how to handle duplicate history entries (passed to rlwrap)"}
     {H.arg "" "set the history file name (passed to rlwrap)"}
@@ -914,7 +913,6 @@ set params [::cmdline::getoptions argv $options $usage]
 unset options
 unset usage
 
-puts $params
 set _ytk(rlwrap_nodupes) [dict get $params D]
 set _ytk(rlwrap_histfile) [dict get $params H]
 set _ytk(rlwrap_histsize) [dict get $params s]

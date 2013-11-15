@@ -139,7 +139,6 @@ proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
         if {$::_ytk(rlwrap_histsize) ne ""} {
             lappend switches -s $::_ytk(rlwrap_histsize)
         }
-        puts $switches
         set result [apply $spawner [concat $rlwrap $switches $yorick]]
     }
     # Try vanilla Yorick last
