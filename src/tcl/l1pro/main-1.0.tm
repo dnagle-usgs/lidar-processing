@@ -222,14 +222,14 @@ proc ::l1pro::main::panel_tools w {
             -command [list ::l1pro::tools::auto_cbar stdev 3]
     $f.acmenu add cascade -label "Set using central percentage..." \
             -menu $f.acmenu.pct
-    $f.acmenu.pct add command -label "99%" \
-            -command [list ::l1pro::tools::auto_cbar percentage 0.99]
-    $f.acmenu.pct add command -label "98%" \
-            -command [list ::l1pro::tools::auto_cbar percentage 0.98]
-    $f.acmenu.pct add command -label "95%" \
-            -command [list ::l1pro::tools::auto_cbar percentage 0.95]
     $f.acmenu.pct add command -label "90%" \
             -command [list ::l1pro::tools::auto_cbar percentage 0.90]
+    $f.acmenu.pct add command -label "95%" \
+            -command [list ::l1pro::tools::auto_cbar percentage 0.95]
+    $f.acmenu.pct add command -label "98%" \
+            -command [list ::l1pro::tools::auto_cbar percentage 0.98]
+    $f.acmenu.pct add command -label "99%" \
+            -command [list ::l1pro::tools::auto_cbar percentage 0.99]
     $f.acmenu add cascade -label "Set using delta RCF..." \
             -menu $f.acmenu.rcf
     $f.acmenu.rcf add command -label "5 meter window" \
