@@ -285,6 +285,7 @@ namespace eval ::mission {
         $f.entloaded state readonly
         grid $f.lblloaded $f.entloaded -in $f.loaded -sticky ew -padx 2 -pady 2
         grid $f.lblconf $f.lblloaded -sticky w
+        grid columnconfigure $f.loaded 1 -weight 1
 
         ttk::frame $f.flights
         set load_flights $f.flights
@@ -299,10 +300,11 @@ namespace eval ::mission {
                 -command [list ::mission::change_view edit]
         grid $f.loaded -sticky ew -pady 1
         grid $f.sep1 -sticky ew
-        grid $f.flights -sticky ne -pady 1
+        grid $f.flights -sticky nw -pady 1
         grid $f.sep2 -sticky ew
         grid $f.extra -sticky ew
         grid $f.switch -padx 2 -pady 2
+        grid columnconfigure $f 0 -weight 1
 
         return $w
     }
