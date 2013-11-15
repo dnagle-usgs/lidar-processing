@@ -174,6 +174,7 @@ namespace eval ::mission {
     # trivial access so that they can be refreshed on mouse-overs and such.
     proc refresh_vars {} {
         set ::mission::path $::mission::path
+        set ::mission::conf_file $::mission::conf_file
         set ::mission::loaded $::mission::loaded
         set ::mission::cache_mode $::mission::cache_mode
         set ::mission::cache_what $::mission::cache_what
@@ -278,10 +279,15 @@ namespace eval ::mission {
         set f $w
 
         ttk::frame $f.loaded
+        ttk::label $f.lblconf -text "Loaded conf:"
+        ttk::entry $f.entconf -textvariable ::mission::conf_file
+        $f.entconf state readonly
+        grid $f.lblconf $f.entconf -in $f.loaded -sticky ew -padx 2 -pady 2
         ttk::label $f.lblloaded -text "Loaded flight:"
         ttk::entry $f.entloaded -textvariable ::mission::loaded
         $f.entloaded state readonly
         grid $f.lblloaded $f.entloaded -in $f.loaded -sticky ew -padx 2 -pady 2
+        grid $f.lblconf $f.lblloaded -sticky w
 
         ttk::frame $f.flights
         set load_flights $f.flights
