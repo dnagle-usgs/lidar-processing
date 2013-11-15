@@ -58,6 +58,7 @@ package require Iwidgets
 package require base64
 package require fileutil
 package require struct::list
+package require cmdline
 
 package require alpsrc
 # alpsrc must come before everything else
@@ -67,15 +68,6 @@ package require logger
 package require hook
 
 wm withdraw .
-
-set load_on_start ""
-if { $argc != 0 } {
-    set load_on_start $argv
-}
-
-set ycode_dir "."
-set ytkcode_dir "."
-set Y_SITE ""
 
 ################################################################################
 #                                             Procedures                                             #
@@ -897,6 +889,10 @@ proc bgerror {msg} {
 
 ######## END PROCEDURES ########
 
+set ycode_dir "."
+set ytkcode_dir "."
+set Y_SITE ""
+
 logger debug "Started YTK as: $argv0 $argv"
 logger debug "info library: [info library]"
 logger debug "info nameofexecutable [info nameofexecutable]"
@@ -904,8 +900,30 @@ logger debug "info script: [info script]"
 logger debug "info patchlevel: [info patchlevel]"
 
 trace add variable _ytk write trace__ytk
-restore_defaults        ;# begin with the default settings
+restore_defaults
 load_options
+
+puts $argv
+set options {
+    {D.arg 1 "how to handle duplicate history entries (passed to rlwrap)"}
+    {H.arg "" "set the history file name (passed to rlwrap)"}
+    {s.arg "" "set the history file size (passed to rlwrap)"}
+}
+set usage ": ytk \[options\] filename ...\noptions:"
+set params [::cmdline::getoptions argv $options $usage]
+unset options
+unset usage
+
+puts $params
+set _ytk(rlwrap_nodupes) [dict get $params D]
+set _ytk(rlwrap_histfile) [dict get $params H]
+set _ytk(rlwrap_histsize) [dict get $params s]
+
+set load_on_start ""
+if { $argc != 0 } {
+    set load_on_start $argv
+}
+
 init_hgid
 
 ############################################################
