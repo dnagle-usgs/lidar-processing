@@ -130,12 +130,17 @@ proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
     # Try rlwrap next, if enabled
     if {$result eq "" && $opts(-rlwrap) && $rlwrap ne ""} {
         set switches [list -c -b "'(){}\[],+=&^%$#@;|\""]
-        set dupes [list -D $::_ytk(rlwrap_nodupes)]
-        # Try first with -D option, then without (for older rlwraps)
-        set result [apply $spawner [concat $rlwrap $switches $dupes $yorick]]
-        if {$result eq ""} {
-            set result [apply $spawner [concat $rlwrap $switches $yorick]]
+        if {$::_ytk(rlwrap_nodupes) ne 1} {
+            lappend switches -D $::_ytk(rlwrap_nodupes)
         }
+        if {$::_ytk(rlwrap_histfile) ne ""} {
+            lappend switches -H $::_ytk(rlwrap_histfile)
+        }
+        if {$::_ytk(rlwrap_histsize) ne ""} {
+            lappend switches -s $::_ytk(rlwrap_histsize)
+        }
+        puts $switches
+        set result [apply $spawner [concat $rlwrap $switches $yorick]]
     }
     # Try vanilla Yorick last
     if {$result eq ""} {

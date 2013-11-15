@@ -345,6 +345,8 @@ proc restore_defaults {} {
     set _ytk(ytkcode_dir)           /opt/eaarl/lidar-processing/src/
     set _ytk(initialdir)                /data
     set _ytk(rlwrap_nodupes)        1
+    set _ytk(rlwrap_histfile)       ""
+    set _ytk(rlwrap_histsize)       ""
 }
 
 proc load_options {} {
