@@ -72,9 +72,13 @@ local mission_data;
 
     mission.data.plugins - Array of strings specifying which plugins are
       required.
-      
+
     mission.data.path - Scalar string specifying the path to the mission
       dataset. This is the master path; all other paths are relative to it.
+
+    mission.data.conf_file - Scalar string specifying the path to the conf file
+      that the current configuration was loaded from or last saved to. Empty
+      string if not yet saved/loaded.
 
     mission.data.cache_mode - Scalar string specifying how the cache should be
       used. This can be one of three values:
@@ -105,7 +109,7 @@ local mission_data;
 
     The above four settings can be queried as they are shown. They can also be
     modified directly:
-    
+
       mission, data, plugins=["eaarlb"]
       mission, data, path="/data/0/EAARL/raw/Example"
       mission, data, cache_mode="onload"
@@ -132,6 +136,7 @@ local mission_data;
 data = save(
   plugins=[],
   path="",
+  conf_file="",
   loaded="",
   cache_mode="onchange",  // disabled | onload | onchange
   cache_what="settings",  // everything | settings
@@ -388,7 +393,7 @@ func mission_flights_clear {
   Removes all flights (which means it clears the entire mission configuration).
 */
   if(mission.data.loaded != "") mission, unload;
-  mission, data, conf=save(), cache=save(), soe_bounds=save();
+  mission, data, conf=save(), cache=save(), soe_bounds=save(), conf_file="";
   mission, tksync;
 }
 clear = mission_flights_clear;
@@ -1121,7 +1126,7 @@ unwrap = mission_unwrap;
 func mission_json(cmds, json, compact=) {
 /* DOCUMENT mission, json, "<jsondata>"
   -or- jsondata = mission(json, compact=)
-  
+
   If called as a subroutine, this imports a mission configuration from the
   given JSON data.
 
@@ -1347,6 +1352,7 @@ func mission_save(fn) {
   write, f, format="%s\n", mission(json,);
   close, f;
   if(logger(info)) logger, info, "Saved mission configuration to "+fn;
+  mission, data, conf_file=file_relative(mission.data.path, fn);
 }
 save = mission_save;
 
@@ -1361,6 +1367,8 @@ func mission_read(fn) {
   close, f;
   if(logger(info)) logger, info, "Loaded mission configuration from "+fn;
   mission, plugins, load;
+  // Need to invoke this after loading since loading clears
+  mission, data, conf_file=file_tail(fn);
   // Even though tksync is invoked by "mission, json", need to invoke again to
   // account for changes that plugins make.
   mission, tksync;

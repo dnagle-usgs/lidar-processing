@@ -21,6 +21,10 @@ if {![namespace exists ::mission]} {
         variable path ""
         ybkg tksync add \"mission.data.path\" \"::mission::path\"
 
+        # Corresponds to mission.data.conf_file; read-only.
+        variable conf_file ""
+        ybkg tksync add \"mission.data.conf_file\" \"::mission::conf_file\"
+
         # Corresponds to mission.data.loaded; read-only.
         variable loaded ""
         ybkg tksync add \"mission.data.loaded\" \"::mission::loaded\"
