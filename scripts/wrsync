@@ -8,12 +8,98 @@
 $TIMEOUT = 3072;  # should be 30 according to man, but actual use returned this
 $NOSTART = 7680;  # discovered through use.
 
-$cmd = "rsync --timeout 20 -Pav ";
+
+######################################################################
+
+$Id     = '$Id$';
+$Source = '$Source$';
+
+use Getopt::Long;
+
+undef $opt_help;     # quiet the warning message
+undef $getopt;       # quiet the warning message
+
+sub showusage {
+  print <<EOF;
+$Id
+$Source
+
+$0 [-[no]help] [-[no]tar] [-[no]z] -[R]
+
+-z    : use compression
+-noz  : do NOT use compression
+
+-tar  : rsync only .tar files, do NOT use compresssion unless -z
+-notar: rsync everything but .tar files, use compression unless -noz
+
+Check back again later
+[-nohelp]: better than nothing
+
+EOF
+
+# print out actual GetOptions() used if -nohelp is specified.
+printf("\n%s\n", $options) if ( $opt_help == 0 );
+
+  exit(0);
+}
+
+############################################################
+# defaults are supplied in GetOptions itself
+# use: perldoc Getopt::Long           # to get the manpage #
+
+$options = <<END;
+\$getopt = GetOptions (
+  'help!'      => \\( \$opt_help = -1   ),  # use -nohelp to show this
+  'myint:i'    => \\( \$myint    = -1   ),  # example optional int
+  'myfloat=f'  => \\( \$myfloat  = 1.5  ),  # example floaat
+  'mystr=s'    => \\( \$mystr    = "foo"),  # example string
+  'verbose!'   => \\( \$verbose  = -1   ),  # example bool with negate option
+  'tar!'       => \\( \$tar      = -1   ),  # tar / notar option
+  'z!'         => \\( \$z        = -1   ),  # use -z in rsync
+  'R!'         => \\( \$R        = -1   ),  # use -R in rsync
+);
+&showusage() if (\$opt_help >= 0);
+END
+
+eval $options;
+&showusage() if ($getopt == 0); # result is 1 if no errors
+
+# printf("myint    = %d\n", $myint  ) if ( $myint  );
+# printf("myfloat  = %f\n", $myfloat) if ( $myfloat);
+# printf("magic    = %f\n", $magic  ) if ( $magic  );
+# printf("mystr    = %s\n", $mystr  ) if ( $mystr  );
+# printf("verbose  = not set\n"     ) if ( $verbose == -1 );
+printf("verbose  = %d\n", $verbose) if ( $verbose >=  0 );
+printf("tar      = %d\n", $tar    ) if ( $verbose >-  0 );
+printf("z        = %d\n", $z      ) if ( $verbose >-  0 );
+printf("R        = %d\n", $R      ) if ( $verbose >-  0 );
+
+# exit(0);
+######################################################################
+
+$z = 1 if ( $z == -1 && $tar == 0 );
+
+my $notarstr = "--include\*/ --exclude=\*.tar --include=\* ";
+my   $tarstr = "--include\*/ --include=\*.tar --exclude=\* ";
+my   $zstr   = "-z ";
+my   $Rstr   = "-R ";
+
+my $opt = "";
+   $opt = $notarstr if ( $tar ==  0 );
+   $opt =   $tarstr if ( $tar ==  1 );
+   $opt .=  $zstr   if ( $z   ==  1 );
+   $opt .=  $Rstr   if ( $R   ==  1 );
+
+
+$cmd = "rsync --timeout 20 -PHav $opt";
 for ( $i=0; $i<=$#ARGV; ++$i) {
   $cmd .= $ARGV[$i];
   $cmd .= " ";
 }
 
+printf("%s#\n", $cmd);
+
+exit(0);
 
 $stat = $TIMEOUT;
 
