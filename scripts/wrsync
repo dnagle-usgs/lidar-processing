@@ -19,13 +19,15 @@ undef $getopt;       # quiet the warning message
 sub showusage {
   print <<EOF;
 
-$0 [-[no]help] [-[no]tar] [-[no]z] -[R]
+$0 [-[no]help] [-[no]tar] [-xyz] -[no]z] -[R]
 
 -z    : use compression
 -noz  : do NOT use compression
 
 -tar  : rsync only .tar files, do NOT use compresssion unless -z
 -notar: rsync everything but .tar files, use compression unless -noz
+
+-xyz  : rsync only .xyz files
 
 Check back again later
 [-nohelp]: better than nothing
@@ -50,8 +52,10 @@ $options = <<END;
   'mystr=s'    => \\( \$mystr    = "foo"),  # example string
   'verbose!'   => \\( \$verbose  = -1   ),  # example bool with negate option
   'tar!'       => \\( \$tar      = -1   ),  # tar / notar option
+  'xyz!'       => \\( \$xyz      = -1   ),  # xyz files
   'z!'         => \\( \$z        = -1   ),  # use -z in rsync
   'R!'         => \\( \$R        = -1   ),  # use -R in rsync
+  'n!'         => \\( \$n        = -1   ),  # don't run, only show command to use'
 );
 &showusage() if (\$opt_help >= 0);
 END
@@ -66,6 +70,7 @@ eval $options;
 # printf("verbose  = not set\n"     ) if ( $verbose == -1 );
 printf("verbose  = %d\n", $verbose) if ( $verbose >=  0 );
 printf("tar      = %d\n", $tar    ) if ( $verbose >-  0 );
+printf("xyz      = %d\n", $xyz    ) if ( $verbose >-  0 );
 printf("z        = %d\n", $z      ) if ( $verbose >-  0 );
 printf("R        = %d\n", $R      ) if ( $verbose >-  0 );
 
@@ -76,13 +81,15 @@ $z = 1 if ( $z == -1 && $tar == 0 );
 
 my $notarstr = "--include=\*/ --exclude=\*.tar --include=\* ";
 my   $tarstr = "--include=\*/ --include=\*.tar --exclude=\* ";
+my   $xyzstr = "--include=\*/ --include=\*.xyz --exclude=\* ";
 my   $zstr   = "-z ";
 my   $Rstr   = "-R ";
 
 my $opt = "";
    $opt = $notarstr if ( $tar ==  0 );
    $opt =   $tarstr if ( $tar ==  1 );
-   $opt .=  $zstr   if ( $z   ==  1 );
+   $opt =   $xyzstr if ( $xyz ==  1 );
+   $opt .=  $zstr   if ( $z   ==  1 );  # append these options if selected
    $opt .=  $Rstr   if ( $R   ==  1 );
 
 
@@ -98,10 +105,10 @@ $stat = $TIMEOUT;
 
 while ( $stat == $TIMEOUT || $stat == $NOSTART) {
   system("echo $cmd");
-  system("     $cmd");
+  system("     $cmd") if ( $n == -1 );
   $stat = $?;
   printf("Status = %d\n", $stat);
-  sleep(5);    # Give things a chance to fix
+  sleep(5)            if ( $n == -1 ); # Give things a chance to fix
 }
 
 exit(0);
