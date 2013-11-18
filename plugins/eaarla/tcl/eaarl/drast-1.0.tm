@@ -327,7 +327,6 @@ proc ::eaarl::drast::gui_opts_rast {f labelgrid} {
     ttk::checkbutton $f.autolims -text "Reset Limits" \
             -variable ${ns}::v::rastautolims
     ::mixin::combobox::mapping $f.units -state readonly -width 0 \
-            -modifycmd ${ns}::send_rastunits \
             -altvariable ${ns}::v::rastunits \
             -mapping {
                 Meters         meters
@@ -468,10 +467,6 @@ proc ::eaarl::drast::gui_opts_export {f labelgrid} {
     apply $labelgrid $f.geo -
     apply $labelgrid $f.sline - $f.res "Resolution:"
     apply $labelgrid $f.dest "Destination:"
-}
-
-proc ::eaarl::drast::send_rastunits {} {
-    ybkg set_depth_scale \"$v::rastunits\"
 }
 
 proc ::eaarl::drast::gui_refresh {} {

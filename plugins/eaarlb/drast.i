@@ -1,41 +1,66 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-func set_depth_scale(new_units) {
-/* DOCUMENT set_depth_scale, new_units
-  Updates externs _depth_display_units and _depth_scale per new_units.
+func set_depth_scale(units=, offset=) {
+/* DOCUMENT set_depth_scale, units=, offset=
+  Updates apply_depth_scale to use new defaults for units= and offset=.
 
-  new_units should be one of: "meters", "ns", "feet".
+  units= should be one of: "meters", "ns", "feet"
 
-  _depth_display_units will be set to new_units.
-  _depth_scale will be set to a 250-value span based on the units.
+  offset= should be a value in nanoseconds/samples indicating where in the
+  waveform the water surface lies (so that it is marked as 0).
+
+  The initial values are units="meters", offset=5.
 */
-  extern _depth_display_units, _depth_scale;
-  _depth_display_units = new_units;
-  _depth_scale = apply_depth_scale(span(0, -249, 250));
+  extern apply_depth_scale;
+  default, units, apply_depth_scale.data.units;
+  default, offset, apply_depth_scale.data.offset;
+  apply_depth_scale = closure(apply_depth_scale_f, save(units, offset));
 }
 
-func apply_depth_scale(scale, units=, autoshift=) {
-/* DOCUMENT new_scale = apply_depth_scale(scale, units=, autoshift=)
+func show_depth_scale(void) {
+/* DOCUMENT show_depth_scale;
+  Shows current values used for units and offset by apply_depth_scale.
+*/
+  write, format="apply_depth_scale values: units=\"%s\", offset=%g\n",
+    apply_depth_scale.data.units, double(apply_depth_scale.data.offset);
+}
+
+func apply_depth_scale_f(data, scale, units=, autoshift=, offset=) {
+/* DOCUMENT new_scale = apply_depth_scale(scale, units=, autoshift=, offset=)
   Applies the current depth scale to the given input scale. Input scale should
-  be in nanoseconds. Used for waveform scales. If units= is given, uses that
-  scale instead of current depth scale.
+  be in nanoseconds. Output scale will be in nanoseconds, meters, or feet
+  depending on units=. Used for waveform and raster scales.
+
+  The default values for units= and offset= can be modified using
+  set_depth_scale and can be viewed using show_depth_scale.
+
+  You can alternately provide values for units= and offset= to override the
+  defaults.
+
+  units= should be one of: "meters", "ns", "feet"
+
+  offset= should be a value in nanoseconds/samples indicating where in the
+  waveform the water surface lies (so that it is marked as 0).
+
+  autoshift= specifies whether the scale should be shifted using the offset. If
+  units="ns", the scale is never shifted. If units="meters" or units="feet",
+  the scale is shifted by default.
 */
   extern _depth_display_units;
-  default, units, _depth_display_units;
+  default, units, data.units;
   default, autoshift, 1;
+  default, offset, data.offset;
   // If the units are "ns", no action is necessary and is thus omitted here
   if (units == "meters") {
-    scale = (scale + (autoshift ? 5 : 0)) * CNSH2O2X;
+    scale = (scale + (autoshift ? offset : 0)) * CNSH2O2X;
   } else if (units == "feet") {
-    scale = (scale + (autoshift ? 5 : 0)) * CNSH2O2XF;
+    scale = (scale + (autoshift ? offset : 0)) * CNSH2O2XF;
   }
   return scale;
 }
+apply_depth_scale = closure(apply_depth_scale_f, save(units="meters", offset=5));
 
 local wfa;  // decoded waveform array
-
-default, _depth_display_units, "meters";
-set_depth_scale, _depth_display_units;
 
 func ytk_rast(rn) {
 /* DOCUMENT ytk_rast, rn
