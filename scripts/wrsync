@@ -74,8 +74,8 @@ printf("R        = %d\n", $R      ) if ( $verbose >-  0 );
 
 $z = 1 if ( $z == -1 && $tar == 0 );
 
-my $notarstr = "--include\*/ --exclude=\*.tar --include=\* ";
-my   $tarstr = "--include\*/ --include=\*.tar --exclude=\* ";
+my $notarstr = "--include=\*/ --exclude=\*.tar --include=\* ";
+my   $tarstr = "--include=\*/ --include=\*.tar --exclude=\* ";
 my   $zstr   = "-z ";
 my   $Rstr   = "-R ";
 
@@ -92,7 +92,7 @@ for ( $i=0; $i<=$#ARGV; ++$i) {
   $cmd .= " ";
 }
 
-printf("%s#\n", $cmd);
+# printf("%s#\n", $cmd);
 
 exit(0);
 
