@@ -94,8 +94,6 @@ for ( $i=0; $i<=$#ARGV; ++$i) {
 
 # printf("%s#\n", $cmd);
 
-exit(0);
-
 $stat = $TIMEOUT;
 
 while ( $stat == $TIMEOUT || $stat == $NOSTART) {
