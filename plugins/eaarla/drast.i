@@ -140,11 +140,11 @@ autolims=, pulse=) {
 }
 
 func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=, eoffset=,
-tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=,
+range_bias=, tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=,
 bathyverbose=) {
 /* DOCUMENT show_rast, rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=,
-   eoffset=, tx=, autolims=, showbar=, sfsync=, pulse=, bathy=, bathyoffset=,
-   bathyverbose=
+   eoffset=, range_bias=, tx=, autolims=, showbar=, sfsync=, pulse=, bathy=,
+   bathyoffset=, bathyverbose=
 
   Displays a raster's waveform data as an 2-dimensional image, where the x axis
   is the pulse number and the y axis is depth, time, or elevation (depending on
@@ -175,6 +175,8 @@ bathyverbose=) {
     eoffset= Elevation offset. This gets added to the y-axis values. This is
       only used when geo=1.
         eoffset=0         0 meteers, default
+    range_bias= Set to 1 to adjust the y-axis (depth) to include the range
+      biases defined for each channel in ops_conf.
     tx= Show the transmit raster above the return raster. Ignored if channel=0.
         tx=0              Default
     autolims= Automatically reset the limits.
@@ -189,7 +191,7 @@ bathyverbose=) {
         bathy=0           Default (disabled)
     bathyoffset= Bathy offset. This gets added to the depth values. Value is in
       nanoseconds. Ignored if bathy=0.
-        bathyoffset=5     Default
+        bathyoffset=0     Default
     bathyverbose= Enables a verbose bathy mode. Information about failed
       bottoms will be printed to the console. Ignored if bathy=0.
         bathyverbose=1    Default
@@ -214,6 +216,14 @@ bathyverbose=) {
     tx = 0;
     bathy = 0;
     geo = 0;
+    range_bias = 0;
+  }
+
+  bias = 0;
+  if(range_bias && units != "ns") {
+    key = swrite(format="chn%d_range_bias", channel);
+    if(ops_conf(*,key))
+      bias = ops_conf(noop(key));
   }
 
   local z;
@@ -233,8 +243,8 @@ bathyverbose=) {
     +" -showcbar %d",
     win, long(rn), long(channel), units, long(showcbar));
   if(channel > 0)
-    cmd += swrite(format=" -tx %d -bathy %d -geo %d",
-      long(tx), long(bathy), long(geo));
+    cmd += swrite(format=" -tx %d -bathy %d -geo %d -range_bias %d",
+      long(tx), long(bathy), long(geo), long(range_bias));
   if(!is_void(cmin))
     cmd += swrite(format=" -cmin %g", double(cmin));
   if(!is_void(cmax))
@@ -285,7 +295,7 @@ bathyverbose=) {
     wf = short(~wf);
     wf = transpose([wf]);
 
-    scale = [0, 1-numberof(wf)];
+    scale = [0, 1-numberof(wf)] - bias;
     scale = apply_depth_scale(scale, units=units, autoshift=!geo);
     if(geo) scale += z(pulse);
 
@@ -294,12 +304,6 @@ bathyverbose=) {
   }
 
   if(bathy) {
-    bias_opt = swrite(format="chn%d_range_bias", channel);
-    if(has_member(ops_conf, bias_opt)) {
-      bias = get_member(ops_conf, bias_opt);
-    } else {
-      bias = 0.;
-    }
     bgood = bbad = 0;
     for(pulse = 1; pulse <= 120; pulse++) {
       if(skip(pulse)) continue;
@@ -307,7 +311,7 @@ bathyverbose=) {
       depth = ex_bath(rn, pulse, msg, forcechannel=channel, graph=0, verbose=0,
         keeprejected=1);
       if(depth.idx > -10000) {
-        bottom = bias - depth.idx + bathyoffset;
+        bottom = bathyoffset - bias - depth.idx;
         bottom = apply_depth_scale(bottom, units=units, autoshift=!geo);
         if(geo) bottom += z(pulse);
         if(is_void(msg)) {
@@ -338,8 +342,6 @@ bathyverbose=) {
       maxlen = max(maxlen, numberof(wf));
     }
 
-    offset = top + apply_depth_scale(5+maxlen, units=units, autoshift=0);
-
     for(pulse = 1; pulse <= 120; pulse++) {
       if(skip(pulse)) continue;
       wf = *rast.tx(pulse);
@@ -347,9 +349,8 @@ bathyverbose=) {
       wf = short(~wf);
       wf = transpose([wf]);
 
-      scale = [0, 1-numberof(wf)];
-      scale = apply_depth_scale(scale, units=units, autoshift=0);
-      scale += offset;
+      scale = [maxlen, 1] + 4;
+      scale = top + apply_depth_scale(scale, units=units, autoshift=0);
 
       pli, wf, pulse, scale(1), pulse+1, scale(2), cmin=cmin, cmax=cmax;
     }

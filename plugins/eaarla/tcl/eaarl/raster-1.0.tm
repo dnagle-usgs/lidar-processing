@@ -51,6 +51,7 @@ snit::type ::eaarl::raster::embed {
     option -pulse -default 60 -configuremethod SetOpt
 
     option -units -default ns
+    option -range_bias -default 0
     option -usecmin -default 0
     option -cmin -default 1
     option -usecmax -default 0
@@ -304,9 +305,16 @@ snit::type ::eaarl::raster::embed {
                     } \
                     -statevariable [myvar options](-geo)
         }
+        ttk::checkbutton $f.rangebias -text "Remove range bias" \
+                -variable [myvar options](-range_bias) \
+                -command [mymethod plot]
+        pack $f.lblunits $f.units $f.rangebias \
+                -in $f.fra1 -side left -padx 2
+
+        ttk::frame $f.fra2
         ttk::checkbutton $f.limits -text "Reset limits" \
                 -variable [myvar options](-autolims)
-        ttk::checkbutton $f.tx -text "Stack transmit" \
+        ttk::checkbutton $f.tx -text "Show transmit above return" \
                 -variable [myvar options](-tx) \
                 -command [mymethod plot]
         ttk::checkbutton $f.bathy -text "Show bathy" \
@@ -319,10 +327,10 @@ snit::type ::eaarl::raster::embed {
                     } \
                     -statevariable [myvar options](-channel)
         }
-        pack $f.lblunits $f.units $f.limits $f.tx $f.bathy \
-                -in $f.fra1 -side left -padx 2
+        pack $f.limits $f.tx $f.bathy \
+                -in $f.fra2 -side left -padx 2
 
-        ttk::frame $f.fra2
+        ttk::frame $f.fra3
         ttk::checkbutton $f.showcbar -text "Show colobar" \
                 -variable [myvar options](-showcbar) \
                 -command [mymethod plot -autolims 0]
@@ -355,9 +363,9 @@ snit::type ::eaarl::raster::embed {
                 -valuetype number \
                 -applycommand [mymethod ApplyIdlePlot -autolims 0]
         pack $f.showcbar $f.usecmin $f.cmin $f.usecmax $f.cmax \
-                -in $f.fra2 -side left -padx 2
+                -in $f.fra3 -side left -padx 2
 
-        ttk::frame $f.fra3
+        ttk::frame $f.fra4
         ttk::checkbutton $f.geo -text "Georeference" \
                 -variable [myvar options](-geo) \
                 -command [mymethod plot]
@@ -388,9 +396,9 @@ snit::type ::eaarl::raster::embed {
                     -statevariable [myvar geo_opt_state]
         }
         pack $f.geo $f.lblrcfw $f.rcfw $f.lbleoffset $f.eoffset \
-                -in $f.fra3 -side left -padx 2
+                -in $f.fra4 -side left -padx 2
 
-        pack $f.fra1 $f.fra2 $f.fra3 \
+        pack $f.fra1 $f.fra2 $f.fra3 $f.fra4 \
                 -side top -anchor w -fill x -pady 2
     }
 
@@ -453,6 +461,7 @@ snit::type ::eaarl::raster::embed {
         } else {
             appendif cmd \
                     {!$opts(-geo)}      ", units=\"$opts(-units)\"" \
+                    $opts(-range_bias)  ", range_bias=1" \
                     $opts(-geo)         ", geo=1" \
                     $opts(-geo)         ", rcfw=$opts(-rcfw)" \
                     $opts(-geo)         ", eoffset=$opts(-eoffset)" \
