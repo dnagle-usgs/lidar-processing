@@ -18,6 +18,13 @@
 // Yorick compatibility functions may eventually be removed, typically about a
 // year after the C-ALPS function was implemented.
 
+if(is_func(calps_compatibility)) {
+  if(calps_compatibility() < 2) {
+    // in version 1, unique seg faults on nil string
+    unique = [];
+  }
+}
+
 // Added 2013-03-11
 if(!is_func(interp_angles))
   require, "calps/interp_angles.i";

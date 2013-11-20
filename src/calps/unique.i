@@ -20,19 +20,27 @@ func nocalps_unique(A) {
     // Create a hash table that has a key for each unique item. Set the value
     // to the first index we found it at.
     set = h_new();
+    null = -1;
     for(i = numberof(A); i; i--) {
-      h_set, set, A(i), i;
+      if(A(i))
+        h_set, set, A(i), i;
+      else
+        null = i;
     }
     A = [];
 
     // Sort the list.
     keys = h_keys(set);
+    if(null > 0) grow, keys, string(0);
     keys = keys(sort(keys));
 
     // Manually extract indexes from the hash.
     idx = array(long, dimsof(keys));
     for(i = 1; i <= numberof(keys); i++) {
-      idx(i) = set(keys(i));
+      if(keys(i))
+        idx(i) = set(keys(i));
+      else
+        idx(i) = null;
     }
     return idx;
   }
