@@ -275,14 +275,27 @@ void Y_unique(int nArgs)
   if(yarg_nil(0) || yarg_rank(0) == -1)
     y_error("unique only accepts numeric and string arrays");
 
-  long count, dims[Y_DIMSIZE], *list, i, new_count;
+  long count, dims[Y_DIMSIZE], *list, i, new_count, start;
 
   if(yarg_string(0)) {
     ystring_t *data = ygeta_q(0, &count, dims);
     list = ypush_l(dims);
     for(i = 0; i < count; i++) list[i] = i;
-    new_count = 0;
-    quick_uniq(data, list, 0, count-1, &new_count, 0);
+    start = new_count = 0;
+
+    // Need to weed out any nulls first
+    for(i = 0; i < count; i++) {
+      if(!data[list[i]]) {
+        SWAP(start, i);
+        start++;
+      }
+    }
+    if(start > 0) {
+      assign_first(list, 0, start - 1, &new_count);
+    }
+    if(start < count) {
+      quick_uniq(data, list, start, count-1, &new_count, 0);
+    }
 
     if(new_count < count) {
       // drop strings, no longer needed; this might free up space (only useful

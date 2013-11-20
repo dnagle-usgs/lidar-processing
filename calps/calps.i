@@ -8,17 +8,16 @@ func calps_compatibility(nil) {
   with the previous version of that function, the number returned by this
   function will be incremented and the change will be documented here.
 
-  For example, suppose a function in C-ALPS gets changed to take 6 arguments
-  instead of 5. If a user does a CVS update on lidar-processing/src but
-  doesn't upgrade their C-ALPS alongside that, then they might run into
-  serious problems when their updated Yorick code is trying to use 6 arguments
-  but their old C-ALPS code is only accepting 5. The solution is to ensure
-  that the Yorick code gets updated to check calps_compatibility() and, if the
-  function is the outdated format, adjust behavior accordingly.
+  Version 1
+    Base version.
 
-  This version of calps_compatibility returns 1.
+  Version 2
+    Fixed unique to handle null strings properly. Version 1 seg faulted when
+    encountering string(0).
+
+  This version of calps_compatibility returns 2.
 */
-  return 1;
+  return 2;
 }
 
 // *** defined in triangle_y.c ***
