@@ -304,6 +304,10 @@ bathyverbose=) {
   }
 
   if(bathy) {
+    bathy_bias = 0.;
+    key = swrite(format="chn%d_range_bias", channel);
+    if(ops_conf(*,key))
+      bathy_bias = ops_conf(noop(key));
     bgood = bbad = 0;
     for(pulse = 1; pulse <= 120; pulse++) {
       if(skip(pulse)) continue;
@@ -311,7 +315,7 @@ bathyverbose=) {
       depth = ex_bath(rn, pulse, msg, forcechannel=channel, graph=0, verbose=0,
         keeprejected=1);
       if(depth.idx > -10000) {
-        bottom = bathyoffset - bias - depth.idx;
+        bottom = bathyoffset + bathy_bias - bias - depth.idx;
         bottom = apply_depth_scale(bottom, units=units, autoshift=!geo);
         if(geo) bottom += z(pulse);
         if(is_void(msg)) {
