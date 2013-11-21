@@ -216,6 +216,7 @@ sub file2coords {
    } else {
       $ll = $utm = undef;
    }
+   $ll = [map { sprintf '%.13f', $_ } @$ll] if(defined $ll);
    return ($ll, $utm);
 }
 
