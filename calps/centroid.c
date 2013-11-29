@@ -4,6 +4,10 @@
 #include <math.h>
 #include "yapi.h"
 
+#ifndef INFINITY
+#define INFINITY HUGE_VAL
+#endif
+
 // Calculate the centroid of the given waveform. Returns Inf if unable to
 // calculate.
 double wf_centroid(long *wf, long count)
