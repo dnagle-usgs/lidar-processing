@@ -42,3 +42,4 @@ clean:
 
 uninstall:
 	-cd $(bindir) && $(RM) $(SCRIPTS)
+	-cd $(bindir) && $(RM) '#'
