@@ -23,6 +23,10 @@ if(is_func(calps_compatibility)) {
     // in version 1, unique seg faults on nil string
     unique = [];
   }
+  if(calps_compatibility() < 3) {
+    // in version 2, wf_centroid seg faults on subroutine form of wf_centroid
+    wf_centroid = [];
+  }
 }
 
 // Added 2013-03-11
