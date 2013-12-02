@@ -15,9 +15,13 @@ func calps_compatibility(nil) {
     Fixed unique to handle null strings properly. Version 1 seg faulted when
     encountering string(0).
 
-  This version of calps_compatibility returns 2.
+  Version 3
+    Fixed compatibility issue that caused wf_centroid to seg fault on some
+    systems when called as a subroutine.
+
+  This version of calps_compatibility returns 3.
 */
-  return 2;
+  return 3;
 }
 
 // *** defined in triangle_y.c ***

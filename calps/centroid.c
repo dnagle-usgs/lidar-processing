@@ -113,7 +113,7 @@ void Y_wf_centroid(int nArgs)
 
   if(glob_int != -1)
   {
-    ypush_double(isfinite(position)
+    ypush_double(finite(position)
       ? interp_index(wf, count, position) : INFINITY);
     yput_global(glob_int, 0);
   }
