@@ -312,8 +312,10 @@ save, base, read=bathconfobj_read;
 
 func bathconfobj_clear(void) {
   working = save(
-    channels123=save(channels=[1,2,3]),
-    channel4=save(channels=4)
+    chn1=save(channels=1),
+    chn2=save(channels=2),
+    chn3=save(channels=3),
+    chn4=save(channels=4)
   );
   use_method, groups, working, copy=0;
 }
