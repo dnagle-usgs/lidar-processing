@@ -343,12 +343,12 @@ makeflow_fn=, norun=, retconf=, opts=) {
 }
 
 func mf_batch_eaarl(mode=, outdir=, update=, ftag=, vtag=, date=,
-ext_bad_att=, channel=, pick=, plot=, onlyplot=, win=, ply=, shapefile=,
+ext_bad_att=, channel=, pick=, plot=, onlyplot=, win=, ply=, q=, shapefile=,
 buffer=, force_zone=, log_fn=, makeflow_fn=, norun=, retconf=,
 opts=) {
 /* DOCUMENT mf_batch_eaarl
   Most common options:
-    mf_batch_eaarl, pick=, shapefile=, mode=, channel=, outdir=
+    mf_batch_eaarl, pick=, shapefile=, q=, mode=, channel=, outdir=
 
   Makeflow batch processes EAARL data for the given mode in a region specified
   by the user.
@@ -361,6 +361,8 @@ opts=) {
     ply= Specifies a polygon to use. If used, pick= is ignored.
     shapefile= Specifies the path to a shapefile to load and use. The shapefile
       must contain exactly one polygon. If used, pick= and ply= are ignored.
+    q= Specifies a selected region to process by sod timestamps, as returned by
+      the processing GUI. If used, pick=, ply=, and shapefile= are ignored.
 
   Options for processing:
     mode= Processing mode.
@@ -436,7 +438,7 @@ opts=) {
   timer, t0;
 
   restore_if_exists, opts, mode, outdir, update, ftag, vtag, date,
-    ext_bad_att, channel, pick, plot, onlyplot, win, ply, shapefile,
+    ext_bad_att, channel, pick, plot, onlyplot, win, ply, q, shapefile,
     buffer, force_zone, log_fn, makeflow_fn, norun, retconf;
 
   default, mode, "f";
@@ -494,28 +496,30 @@ opts=) {
   // Default makeflow_fn is log_fn with .makeflow extension
   default, makeflow_fn, file_rootname(log_fn) + ".makeflow";
 
-  // Derive region polygon
-  if(shapefile) {
-    ply = read_ascii_shapefile(shapefile);
-    if(numberof(ply) != 1)
-      error, "shapefile must contain exactly one polygon!";
-    ply = *ply(1);
-  }
-  if(is_void(ply)) {
-    if(pick == "pip")
-      ply = get_poly(win=win);
-    else
-      ply = mouse_bounds(ply=1, win=win);
-  }
+  if(is_void(q)) {
+    // Derive region polygon
+    if(shapefile) {
+      ply = read_ascii_shapefile(shapefile);
+      if(numberof(ply) != 1)
+        error, "shapefile must contain exactly one polygon!";
+      ply = *ply(1);
+    }
+    if(is_void(ply)) {
+      if(pick == "pip")
+        ply = get_poly(win=win);
+      else
+        ply = mouse_bounds(ply=1, win=win);
+    }
 
-  // If given a shapefile, it's possible that there will be a mismatch. Juggle
-  // utm to prevent that issue.
-  extern utm;
-  _utm = utm;
-  utm = ply(1,1) > 360;
-  q = pnav_sel_rgn(win=win, region=ply, _batch=1, plot=plot, color="red");
+    // If given a shapefile, it's possible that there will be a mismatch.
+    // Juggle utm to prevent that issue.
+    extern utm;
+    _utm = utm;
+    utm = ply(1,1) > 360;
+    q = pnav_sel_rgn(win=win, region=ply, _batch=1, plot=plot, color="red");
+    utm = _utm;
+  }
   q = pnav_rgn_to_idx(q);
-  utm = _utm;
 
   if(is_void(q)) {
     write, "No data found in region selected.";
