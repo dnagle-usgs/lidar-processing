@@ -344,7 +344,7 @@ makeflow_fn=, norun=, retconf=, opts=) {
 
 func mf_batch_eaarl(mode=, outdir=, update=, ftag=, vtag=, date=,
 ext_bad_att=, channel=, pick=, plot=, onlyplot=, win=, ply=, q=, shapefile=,
-buffer=, force_zone=, log_fn=, makeflow_fn=, norun=, retconf=,
+buffer=, force_zone=, log_fn=, makeflow_fn=, norun=, retconf=, exactsel=,
 opts=) {
 /* DOCUMENT mf_batch_eaarl
   Most common options:
@@ -363,6 +363,11 @@ opts=) {
       must contain exactly one polygon. If used, pick= and ply= are ignored.
     q= Specifies a selected region to process by sod timestamps, as returned by
       the processing GUI. If used, pick=, ply=, and shapefile= are ignored.
+    exactsel= Toggles the exact selection mode. By default (exactsel=0), the
+      selection is used to determine what tiles to process; then, those tiles
+      are processed in their entirity even if parts of them are outside of the
+      processing selection. Specifying exactsel=1 will cause only the selection
+      to be processed, even if it would result in a partial tile.
 
   Options for processing:
     mode= Processing mode.
@@ -439,7 +444,7 @@ opts=) {
 
   restore_if_exists, opts, mode, outdir, update, ftag, vtag, date,
     ext_bad_att, channel, pick, plot, onlyplot, win, ply, q, shapefile,
-    buffer, force_zone, log_fn, makeflow_fn, norun, retconf;
+    buffer, force_zone, log_fn, makeflow_fn, norun, retconf, exactsel;
 
   default, mode, "f";
   default, buffer, 200.;
@@ -519,17 +524,16 @@ opts=) {
     q = pnav_sel_rgn(win=win, region=ply, _batch=1, plot=plot, color="red");
     utm = _utm;
   }
-  q = pnav_rgn_to_idx(q);
+  idx = pnav_rgn_to_idx(q);
 
-  if(is_void(q)) {
+  if(is_void(idx)) {
     write, "No data found in region selected.";
     return;
   }
 
   // Determine which tiles to process
   local north, east, zone, n, e;
-  ll2utm, pnav(q).lat, pnav(q).lon, north, east, zone, force_zone=force_zone;
-  q = [];
+  ll2utm, pnav(idx).lat, pnav(idx).lon, north, east, zone, force_zone=force_zone;
   zones = zone(unique(zone));
   dtiles = array(pointer, numberof(zones));
   for(i = 1; i <= numberof(zones); i++) {
@@ -539,7 +543,7 @@ opts=) {
     dtiles(i) = &utm2dt_names(e, n, zones(i), dtlength="long", dtprefix=1);
   }
   dtiles = merge_pointers(dtiles);
-  north = east = zone = zones = n = e = [];
+  zone = zones = n = e = [];
 
   // Construct output filenames and variable names
   itiles = dt2it(dtiles, dtlength="long", dtprefix=1);
@@ -594,12 +598,17 @@ opts=) {
   write, f, format="\nOptions used:%s", "\n";
   write, f, format="%s", obj_show(save(
     mode, outdir, update, ftag, vtag, date, ext_bad_att, channel, pick, plot,
-    onlyplot, win, shapefile, buffer, force_zone, log_fn, makeflow_fn,
-    norun, retconf, opts),
+    onlyplot, win, shapefile, buffer, force_zone, exactsel, log_fn,
+    makeflow_fn, norun, retconf, opts),
     maxchild=100, maxary=10);
 
-  write, f, format="\nProcessing area:%s", "\n";
-  write, f, format="%s\n", print(ply);
+  if(!is_void(ply)) {
+    write, f, format="\nProcessing area:%s", "\n";
+    write, f, format="%s\n", print(ply);
+  } else {
+    write, f, format="\nProcessing selection:%s", "\n";
+    write, f, format="%s\n", print(q);
+  }
 
   write, f, format="\nOutput files:%s", "\n";
   write, f, format="%s\n", file_tail(outfiles);
@@ -616,8 +625,14 @@ opts=) {
       remove, outfiles(i);
     }
 
-    q = pnav_sel_rgn(region=[bminx(i), bmaxx(i), bminy(i), bmaxy(i)],
-      win=win, _batch=1, verbose=0, plot=plot);
+    if(exactsel) {
+      w = data_box(east, north, bminx(i), bmaxx(i), bminy(i), bmaxy(i));
+      if(is_void(w)) continue;
+      q = gga_find_times(idx(w));
+    } else {
+      q = pnav_sel_rgn(region=[bminx(i), bmaxx(i), bminy(i), bmaxy(i)],
+        win=win, _batch=1, verbose=0, plot=plot);
+    }
     if(is_void(q)) continue;
     rn_arr = sel_region(q, verbose=0);
     if(is_void(rn_arr)) continue;
