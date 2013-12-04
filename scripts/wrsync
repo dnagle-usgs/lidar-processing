@@ -95,8 +95,15 @@ my $opt = "";
 
 $cmd = "rsync --timeout 20 -PHav $opt";
 for ( $i=0; $i<=$#ARGV; ++$i) {
-  $cmd .= $ARGV[$i];
+  if ( $ARGV[$i] =~ '`' ) {
+    # printf("hit: %s\n", $ARGV[$i] );
+    my ( $left, $right ) = split(/:/, $ARGV[$i]);
+    $cmd .= "$left:'$right'";
+  } else {
+    $cmd .= $ARGV[$i];
+  }
   $cmd .= " ";
+  # printf("%d: %s\n", $i, $cmd );
 }
 
 # printf("%s#\n", $cmd);
