@@ -572,13 +572,8 @@ proc source_ytk_file {filename} {
 #   The file is sourced (in either Yorick or Tcl), which could have any effect
 #   depending on the code in question.
 #
-#   If the file is a .i file, then global ycode_dir is set to its containing
-#   directory and both Tcl and Yorick have their working directory updated to
-#   match it.
-#
 #   If the file is not a Yorck or Tcl file, an error will result.
 ##
-    global ycode_dir
     switch [file extension $filename] {
         ".tcl" -
         ".tk" -
@@ -586,9 +581,6 @@ proc source_ytk_file {filename} {
             uplevel #0 [list source $filename]
         }
         ".i" {
-            set ycode_dir [file dirname $filename]
-            cd $ycode_dir
-            ybkg cd \"$ycode_dir\"
             exp_send "#include \"$filename\"\r"
             expect "> "
         }
@@ -887,7 +879,6 @@ proc bgerror {msg} {
 
 ######## END PROCEDURES ########
 
-set ycode_dir "."
 set Y_SITE ""
 
 logger debug "Started YTK as: $argv0 $argv"
