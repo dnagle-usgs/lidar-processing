@@ -8,12 +8,12 @@ IFS=:
 # willing to use. They are listed in order of priority.
 TCLNAMES="wish8.5:wish:alpstcl:tclsh8.5:tclsh"
 
-# pwd should be something like .../eaarl/lidar-processing/src
-# the root directory for this ALPS is then .../eaarl
-# the binary directory is thus .../eaarl/bin
-# and the Tcl directory is thus .../eaarl/tcl/bin
+# pwd should be something like .../alps/lidar-processing/src
+# the root directory for this ALPS is then .../alps
+# the binary directory is thus .../alps/bin
+# and the Tcl directory is thus .../alps/tcl/bin
 
-# Need to use dirname twice to get to .../eaarl
+# Need to use dirname twice to get to .../alps
 ROOTDIR=`pwd`
 ROOTDIR=`dirname "$ROOTDIR"`
 ROOTDIR=`dirname "$ROOTDIR"`
