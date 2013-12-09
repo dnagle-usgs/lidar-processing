@@ -334,6 +334,7 @@ proc restore_defaults {} {
     set _ytk(use_rlwrap)                Yes
     set _ytk(separate_help_win) Yes
     set _ytk(initialdir)                /data
+    set _ytk(start_alps)            1
     set _ytk(rlwrap_nodupes)        1
     set _ytk(rlwrap_histfile)       ""
     set _ytk(rlwrap_histsize)       ""
@@ -866,6 +867,7 @@ restore_defaults
 load_options
 
 set options {
+    {A "disable ALPS startup (only load ytk)"}
     {D.arg 1 "how to handle duplicate history entries (passed to rlwrap)"}
     {H.arg "" "set the history file name (passed to rlwrap)"}
     {s.arg "" "set the history file size (passed to rlwrap)"}
@@ -875,6 +877,9 @@ set params [::cmdline::getoptions argv $options $usage]
 unset options
 unset usage
 
+if {[dict get $params A]} {
+    set _ytk(start_alps) 0
+}
 set _ytk(rlwrap_nodupes) [dict get $params D]
 set _ytk(rlwrap_histfile) [dict get $params H]
 set _ytk(rlwrap_histsize) [dict get $params s]
@@ -926,6 +931,14 @@ ybkg funcset _user $tcl_platform(user)
 
 set src_path [file dirname [file normalize [info script]]]
 ybkg funcset src_path \"$src_path\"
+
+if {$_ytk(start_alps)} {
+    package require sf
+    set data_path "/data/"
+    ybkg require \"eaarl.i\"
+    source [file join $src_path l1pro.ytk]
+    wm deiconify .l1wid
+}
 
 foreach file_to_load $load_on_start {
     logger info "Loading on startup: $file_to_load"

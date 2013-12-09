@@ -56,4 +56,4 @@ then
 fi
 
 # If we make it this far, then we have a Tcl. Start up ALPS.
-exec $TCL ./ytk -- "$@" eaarl.ytk
+exec $TCL ./ytk -- "$@"
