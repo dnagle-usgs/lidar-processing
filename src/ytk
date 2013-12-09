@@ -591,32 +591,6 @@ proc source_ytk_file {filename} {
     }
 }
 
-proc select_ytk_fn {} {
-##
-# select_ytk_fn
-#   Prompts the user to select a file to source, then sources it.
-#
-# Returns:
-#   Nothing
-#
-# Side effects:
-#   The file is sourced at the global scope, which could have any effect; see
-#   source_ytk_file.
-##
-    set fn [tk_getOpenFile \
-        -filetypes {
-            {{Yorick Specfic Tcl/Tk Programs} {.ytk} }
-            {{Yorick or Tcl/tk program} {.i .ytk}   }
-            {{Yorick Programs} {.i}  }
-            {{Tcl/Tk Programs} {.tcl .tk} }
-            {{All Files}         {*}     }
-        }]
-
-    if {$fn ne ""} {
-        source_ytk_file $fn
-    }
-}
-
 proc start_yorick {}  {
 ##
 # start_yorick
