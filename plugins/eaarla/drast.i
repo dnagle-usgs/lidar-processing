@@ -141,10 +141,10 @@ autolims=, pulse=) {
 
 func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=, eoffset=,
 range_bias=, tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=,
-bathyverbose=) {
+bathyverbose=, bg=) {
 /* DOCUMENT show_rast, rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=,
    eoffset=, range_bias=, tx=, autolims=, showbar=, sfsync=, pulse=, bathy=,
-   bathyoffset=, bathyverbose=
+   bathyoffset=, bathyverbose=, bg=
 
   Displays a raster's waveform data as an 2-dimensional image, where the x axis
   is the pulse number and the y axis is depth, time, or elevation (depending on
@@ -195,6 +195,9 @@ bathyverbose=) {
     bathyverbose= Enables a verbose bathy mode. Information about failed
       bottoms will be printed to the console. Ignored if bathy=0.
         bathyverbose=1    Default
+    bg= Enables plotting of a solid background covering the extent of the main
+      plot.
+        bg=0              Default (no background)
 */
   extern data_path, soe_day_start;
   default, channel, 1;
@@ -210,6 +213,7 @@ bathyverbose=) {
   default, bathy, 0;
   default, bathyoffset, 0;
   default, bathyverbose, 1;
+  default, bg, 0;
 
   // Ignore certain settings if channel=0 (=transmit)
   if(channel == 0) {
@@ -240,8 +244,8 @@ bathyverbose=) {
   // Attach Tcl GUI
   cmd = swrite(format=
     "::eaarl::raster::config %d -raster %d -channel %d -units {%s}"
-    +" -showcbar %d",
-    win, long(rn), long(channel), units, long(showcbar));
+    +" -showcbar %d -bg %d",
+    win, long(rn), long(channel), units, long(showcbar), long(bg));
   if(channel > 0)
     cmd += swrite(format=" -tx %d -bathy %d -geo %d -range_bias %d",
       long(tx), long(bathy), long(geo), long(range_bias));
@@ -287,6 +291,25 @@ bathyverbose=) {
   top = -1e1000;
 
   rast = decode_raster(rn=rn);
+
+  if(bg) {
+    ymin = 1e1000;
+    ymax = -1e1000;
+    for(pulse = 1; pulse <= 120; pulse++) {
+      if(skip(pulse)) continue;
+      wf = channel ? *rast.rx(pulse,channel) : *rast.tx(pulse);
+      if(!numberof(wf)) continue;
+
+      scale = [0, 1-numberof(wf)] - bias;
+      scale = apply_depth_scale(scale, units=units, autoshift=!geo);
+      if(geo) scale += z(pulse);
+
+      ymin = min(ymin, scale(2));
+      ymax = max(ymax, scale(1));
+
+      pli, [[cmin]], 1, ymin, 121, ymax, cmin=cmin, cmax=cmax;
+    }
+  }
 
   for(pulse = 1; pulse <= 120; pulse++) {
     if(skip(pulse)) continue;

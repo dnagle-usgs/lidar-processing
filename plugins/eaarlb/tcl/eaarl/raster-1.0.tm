@@ -63,6 +63,7 @@ snit::type ::eaarl::raster::embed {
     option -autolims -default 1
     option -showcbar -default 0
     option -bathy -default 0
+    option -bg -default 0
 
     component window
     component pane
@@ -308,27 +309,31 @@ snit::type ::eaarl::raster::embed {
         ttk::checkbutton $f.rangebias -text "Remove range bias" \
                 -variable [myvar options](-range_bias) \
                 -command [mymethod plot]
-        pack $f.lblunits $f.units $f.rangebias \
+        ttk::checkbutton $f.limits -text "Reset limits" \
+                -variable [myvar options](-autolims)
+        pack $f.lblunits $f.units $f.rangebias $f.limits \
                 -in $f.fra1 -side left -padx 2
 
         ttk::frame $f.fra2
-        ttk::checkbutton $f.limits -text "Reset limits" \
-                -variable [myvar options](-autolims)
         ttk::checkbutton $f.tx -text "Show transmit above return" \
                 -variable [myvar options](-tx) \
                 -command [mymethod plot]
         ttk::checkbutton $f.bathy -text "Show bathy" \
                 -variable [myvar options](-bathy) \
                 -command [mymethod plot -autolims 0]
-        foreach w [list $f.tx $f.bathy] {
+        ttk::checkbutton $f.bg -text "Solid background" \
+                -variable [myvar options](-bg) \
+                -command [mymethod plot]
+        pack $f.tx $f.bathy $f.bg \
+                -in $f.fra2 -side left -padx 2
+
+        foreach w [list $f.rangebias $f.tx $f.bathy] {
             ::mixin::statevar $w \
                     -statemap {
                         0 disabled 1 normal 2 normal 3 normal 4 normal
                     } \
                     -statevariable [myvar options](-channel)
         }
-        pack $f.limits $f.tx $f.bathy \
-                -in $f.fra2 -side left -padx 2
 
         ttk::frame $f.fra3
         ttk::checkbutton $f.showcbar -text "Show colobar" \
@@ -472,7 +477,8 @@ snit::type ::eaarl::raster::embed {
                 $opts(-usecmin)     ", cmin=$opts(-cmin)" \
                 $opts(-usecmax)     ", cmax=$opts(-cmax)" \
                 $opts(-showcbar)    ", showcbar=1" \
-                {!$opts(-autolims)} ", autolims=0"
+                {!$opts(-autolims)} ", autolims=0" \
+                $opts(-bg)          ", bg=1"
         append cmd "; "
         return $cmd
     }
