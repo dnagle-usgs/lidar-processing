@@ -295,10 +295,13 @@ bathyverbose=, bg=) {
   if(bg) {
     ymin = 1e1000;
     ymax = -1e1000;
+    bgval = 255;
     for(pulse = 1; pulse <= 120; pulse++) {
       if(skip(pulse)) continue;
       wf = channel ? *rast.rx(pulse,channel) : *rast.tx(pulse);
       if(!numberof(wf)) continue;
+      wf = short(~wf);
+      bgval = min(bgval, wf(min));
 
       scale = [0, 1-numberof(wf)] - bias;
       scale = apply_depth_scale(scale, units=units, autoshift=!geo);
@@ -306,9 +309,8 @@ bathyverbose=, bg=) {
 
       ymin = min(ymin, scale(2));
       ymax = max(ymax, scale(1));
-
-      pli, [[cmin]], 1, ymin, 121, ymax, cmin=cmin, cmax=cmax;
     }
+    pli, [[bgval]], 1, ymin, 121, ymax, cmin=cmin, cmax=cmax;
   }
 
   for(pulse = 1; pulse <= 120; pulse++) {
