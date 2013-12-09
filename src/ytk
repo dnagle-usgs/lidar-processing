@@ -557,38 +557,34 @@ proc ytk_exit {code} {
     exit $code
 }
 
-proc source_ytk_file {filename} {
-##
-# source_ytk_file filename
-#   Sources the file defined by $filename -- in Yorick if it's a .i file, in Tcl
-#   if it's a .ytk, .tk, or .tcl file.
-#
-# Arguments:
-#   None
-#
-# Returns:
-#   Nothing
-#
-# Side effects:
-#   The file is sourced (in either Yorick or Tcl), which could have any effect
-#   depending on the code in question.
-#
-#   If the file is not a Yorck or Tcl file, an error will result.
-##
-    switch [file extension $filename] {
-        ".tcl" -
-        ".tk" -
-        ".ytk" {
-            uplevel #0 [list source $filename]
-        }
-        ".i" {
-            exp_send "#include \"$filename\"\r"
-            expect "> "
-        }
-        default {
-            logger error "source_ytk_file: don't know how to handle file $filename"
-            error "don't know how to handle file"
-        }
+proc load_file {fn} {
+    global file_load_associations
+    set ext [file extension $fn]
+    if {[info exists file_load_associations($ext)]} {
+        {*}$file_load_associations($ext) $fn
+    } else {
+        logger error "load_file: don't know how to handle file $filename"
+        error "don't know how to handle file"
+    }
+}
+
+proc load_file_tcl {fn} {
+    uplevel #0 [list source $fn]
+}
+
+proc load_file_yorick {fn} {
+    exp_send "#include \"$fn\"\r"
+    expect "> "
+}
+
+proc init_file_load_associations {} {
+    global file_load_associations
+    array set file_load_associations {
+        .tcl load_file_tcl
+        .tk load_file_tcl
+        .ytk load_file_tcl
+        .tm load_file_tcl
+        .i load_file_yorick
     }
 }
 
@@ -905,6 +901,7 @@ if {[auto_execok yorick] eq ""} {
 }
 
 establish_fifos
+init_file_load_associations
 
 puts " Tcl [info patchlevel], Tk $tk_patchLevel, Expect [exp_version] ready."
 if {[spawn_yorick]} {
@@ -942,7 +939,7 @@ if {$_ytk(start_alps)} {
 
 foreach file_to_load $load_on_start {
     logger info "Loading on startup: $file_to_load"
-    source_ytk_file $file_to_load
+    load_file $file_to_load
 }
 
 start_yorick

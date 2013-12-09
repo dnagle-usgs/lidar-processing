@@ -1294,6 +1294,14 @@ namespace eval ::mission {
         }
     }
 
+    # Allows user to launch mission conf at startup
+    proc load_conf_file {fn} {
+        set fn [ystr $fn]
+        exp_send "mission, read, \"$fn\";\r"
+        mission::launch
+    }
+    set ::file_load_associations(.mission) [namespace current]::load_conf_file
+
     # menu command
     # Prompts the user for a destination, where the configuration is then saved
     # to.
