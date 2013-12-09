@@ -40,7 +40,7 @@ if {![info exists l1pro_data]} {
 
   set gridtype grid
 
-  set data_file_path ""
+  set data_file_path $data_path
 
   set varlist {fs_all depth_all veg_all cveg_all workdata}
 
