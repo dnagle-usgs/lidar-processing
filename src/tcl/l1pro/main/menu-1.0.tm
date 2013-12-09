@@ -326,9 +326,6 @@ proc menu_settings_memory mb {
 
 proc menu_debug mb {
     menu $mb
-    $mb add command {*}[menulabel "&Load a Yorick/Ytk program file..."] \
-            -command select_ytk_fn
-    $mb add separator
     $mb add command {*}[menulabel &Tkcon] \
             -command [list tkcon show]
     $mb add command {*}[menulabel "&Background Command History"] \
