@@ -934,7 +934,7 @@ ybkg funcset src_path \"$src_path\"
 
 if {$_ytk(start_alps)} {
     package require sf
-    set data_path "/data/"
+    set data_path $_ytk(initialdir)
     ybkg require \"eaarl.i\"
     source [file join $src_path l1pro.ytk]
     wm deiconify .l1wid
