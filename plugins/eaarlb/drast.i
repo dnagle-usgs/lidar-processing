@@ -453,8 +453,8 @@ tkpulsevar=) {
     rn: The raster number plotted.
   Options:
     type= Type of plot being queried.
-        type="rast"   ndrast plot (default)
-        type="geo"    geo_rast plot
+        type="rast"   show_rast or ndrast plot (default)
+        type="geo"    geo_rast plot (old style)
     rx= Whether or not to plot the return waveform.
         rx=1          plot return waveform (default)
         rx=0          don't plot return waveform

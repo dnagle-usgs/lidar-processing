@@ -496,9 +496,7 @@ snit::type ::eaarl::raster::embed {
     }
 
     method examine {mode} {
-        set type rast
-        if {$options(-geo)} {set type geo}
-        set cmd "drast_msel, $options(-raster), type=\"$type\""
+        set cmd "drast_msel, $options(-raster)"
         appendif cmd \
                 1                   ", rx=$rawwf_plot" \
                 $transmit_plot      ", tx=1" \
