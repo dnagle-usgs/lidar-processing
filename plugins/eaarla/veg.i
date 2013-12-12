@@ -772,6 +772,7 @@ forcechannel=, header=) {
 
   raw = get_erast(rn=rn);
   pulse = eaarl_decode_pulse(raw, pulse_number, header=header, wfs=1);
+  raw = [];
   irange = pulse.raw_irange;
 
   // setup the return struct
@@ -804,6 +805,7 @@ forcechannel=, header=) {
   } else if (is_void(alg_mode)) {
     ctx = wf_centroid(tx_wf, lim=12);
   }
+  tx_wf = [];
 
   // if out-of-range centroid, return
   if ((ctx(1) == 0)  || (ctx(1) == 1e1000))
@@ -843,6 +845,8 @@ forcechannel=, header=) {
       }
     }
   }
+
+  pulse = [];
 
   wflen = numberof(wf);
   dd = wf(dif);
@@ -889,6 +893,8 @@ forcechannel=, header=) {
     mv1 = wf(mx1);
   }
 
+  // This is enabled when processing with batch_process or when make_veg is
+  // called with use_centroid=1
   if (hard_surface) {
     // check to see if there is only 1 inflection
     if (numberof(xr) == 1) {
@@ -906,14 +912,14 @@ forcechannel=, header=) {
   // now process the trailing edge of the last inflection in the waveform
   if (!is_void(alg_mode)) {
     ex_veg_alg, mx0, mv0, wf, xr, irange, channel, wflen, retdist, alg_mode;
-  } else if (!use_be_centroid && use_be_peak && is_void(alg_mode)) {
-    // this is the algorithm used most commonly in ALPS v1.
+  } else if (!use_be_centroid && use_be_peak) {
+    // This is used when make_veg is called with use_centroid=1 (which is what
+    // batch_process calls)
     ex_veg_noalg_peak, mx0, mv0, wf, xr, irange, channel, wflen, retdist;
-  } else if(use_be_centroid && !use_be_peak && is_void(alg_mode)) {
-    // this is less used in ALPS v1
+  } else if(use_be_centroid && !use_be_peak) {
     ex_veg_noalg_cent, mx0, mv0, wf, xr, irange, channel, wflen, retdist;
-  } else if(!use_be_centroid && !use_be_peak && is_void(alg_mode)) {
-    // no bare earth algorithm selected
+  } else if(!use_be_centroid && !use_be_peak) {
+    // This is used when make_veg is called with use_centroid=0
     ex_veg_noalg_none, mx0, mv0, wf, xr, irange;
   }
 
