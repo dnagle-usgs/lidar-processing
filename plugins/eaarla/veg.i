@@ -322,6 +322,10 @@ Returns:
     use_be_centroid = 0;
     use_be_peak = 1;
     hard_surface=1;
+  } else {
+    use_be_centroid = 0;
+    use_be_peak = 0;
+    hard_surface = 0;
   }
 
   if (use_be_peak) write, "Using peak of last return to find bare earth...";
