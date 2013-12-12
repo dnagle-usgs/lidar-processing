@@ -901,82 +901,16 @@ forcechannel=, header=) {
 
   // now process the trailing edge of the last inflection in the waveform
   if (!is_void(alg_mode)) {
-    // find where the bottom return pulse changes direction after its trailing edge
-    trailing_edge, wf, retdist, idx1;
-
-    //now check to see if it it passes intensity test
-    mxmint = wf(xr(0)+1:xr(0)+retdist)(max);
-    if (abs(wf(xr(0)+1) - wf(xr(0)+retdist)) < 0.8*mxmint) {
-      // This return is good to compute range. compute range
-      // Create array wf_tail for retdist returns beyond the last 
-      // peak leading edge.
-      wf_tail = wf(int(xr(0)+1):int(xr(0)+retdist));
-      if ((min(wf_tail) > 240) && (max(wf_tail) < veg_conf.thresh)) {
-        return rv;
-      }
-      if (wf_tail(sum) != 0) {
-        if (alg_mode=="cent") {
-          wf_tail_peak = wf_centroid(wf_tail);
-        } else if (alg_mode=="peak") {
-          wf_tail_peak = xpeak(wf_tail);
-        } else if (alg_mode=="gauss") {
-          wf_tail_peak = xgauss(wf_tail, add_peak=0);
-        }
-        if (wf_tail_peak(1) <= 0) return rv;
-        if (int(xr(0)+wf_tail_peak(1)) <= wflen) {
-          mx0 = irange + xr(0) - ctx(1) + range_bias + wf_tail_peak(1);
-          mv0 = wf(int(xr(0)+wf_tail_peak(1))) + (channel-1)*300;
-        }
-      }
-    }
-  }
-  else if (!use_be_centroid && use_be_peak && is_void(alg_mode)) {
+    ex_veg_alg, mx0, mv0, wf, xr, irange, channel, wflen, retdist, alg_mode;
+  } else if (!use_be_centroid && use_be_peak && is_void(alg_mode)) {
     // this is the algorithm used most commonly in ALPS v1.
-    // if within 3 ns from xr(0) we find a peak, we can assume this to be noise related and try again using xr(0) from the first positive difference after the last negative difference.
-    nidx = where(dd(xr(0):xr(0)+3) < 0);
-    if (is_array(nidx)) {
-      xr(0) = xr(0) + nidx(1);
-      if (xr(0)+retdist+1 > wflen) retdist = wflen - xr(0)-1;
-    }
-    // using trailing edge algorithm for bottom return
-    trailing_edge, wf, retdist, idx1, xr=xr;
-
-    if (is_array(idx1)) {
-      mx0 = irange+xr(0)+idx1(1)-ctx(1)+range_bias;  // in ns
-      mv0 = wf(int(xr(0)+idx1(1))) + (channel-1)*300;
-    }
-  }
-  else if (use_be_centroid && !use_be_peak && is_void(alg_mode)) {
+    ex_veg_noalg_peak, mx0, mv0, wf, xr, irange, channel, wflen, retdist;
+  } else if(use_be_centroid && !use_be_peak && is_void(alg_mode)) {
     // this is less used in ALPS v1
-    // find where the bottom return pulse changes direction after its
-    // trailing edge
-    trailing_edge, wf, retdist, idx1;
-
-    //now check to see if it it passes intensity test
-    mxmint = wf(xr(0)+1:xr(0)+retdist)(max);
-    if (abs(wf(xr(0)+1) - wf(xr(0)+retdist)) < 0.2*mxmint) {
-      // This return is good to compute centroid.
-      // Create array wf_tail for retdist returns beyond the last peak leading edge.
-      wf_tail = wf(int(xr(0)+1):int(xr(0)+retdist));
-
-      // compute centroid
-      if (wf_tail(sum) != 0) {
-        wf_tail_peak = wf_centroid(wf_tail);
-        if (wf_tail_peak <= 0) return rv;
-        if (int(xr(0)+wf_tail_peak) <= wflen) {
-          mx0 = irange + xr(0) + wf_tail_peak - ctx(1) + range_bias;
-          mv0 = wf(int(xr(0)+wf_tail_peak)) + (channel-1)*300;
-        }
-      }
-    }
-  } 
-  else if (!use_be_centroid && !use_be_peak && is_void(alg_mode)) {
-    // no bare earth algorithm selected.
-    //do not use centroid or trailing edge
-    mvx = wf(xr(0):xr(0)+5)(mxx);
-    // find bottom peak now
-    mx0 = irange + mvx + xr(0) - 1;
-    mv0 = wf(mvx);
+    ex_veg_noalg_cent, mx0, mv0, wf, xr, irange, channel, wflen, retdist;
+  } else if(!use_be_centroid && !use_be_peak && is_void(alg_mode)) {
+    // no bare earth algorithm selected
+    ex_veg_noalg_none, mx0, mv0, wf, xr, irange;
   }
 
   rv.mx0 = mx0;
@@ -992,6 +926,91 @@ forcechannel=, header=) {
     write, format="Range between first and last return %d = %4.2f ns\n", rv.rastpix, (rv.mx0-rv.mx1);
   }
   return rv;
+}
+
+func ex_veg_alg(&mx0, &mv0, wf, xr, irange, channel, wflen, retdist, alg_mode) {
+  // find where the bottom return pulse changes direction after its trailing edge
+  trailing_edge, wf, retdist, idx1;
+
+  //now check to see if it it passes intensity test
+  mxmint = wf(xr(0)+1:xr(0)+retdist)(max);
+  if (abs(wf(xr(0)+1) - wf(xr(0)+retdist)) < 0.8*mxmint) {
+    // This return is good to compute range. compute range
+    // Create array wf_tail for retdist returns beyond the last
+    // peak leading edge.
+    wf_tail = wf(int(xr(0)+1):int(xr(0)+retdist));
+    if ((min(wf_tail) > 240) && (max(wf_tail) < veg_conf.thresh)) {
+      return rv;
+    }
+    if (wf_tail(sum) != 0) {
+      if (alg_mode=="cent") {
+        wf_tail_peak = wf_centroid(wf_tail);
+      } else if (alg_mode=="peak") {
+        wf_tail_peak = xpeak(wf_tail);
+      } else if (alg_mode=="gauss") {
+        wf_tail_peak = xgauss(wf_tail, add_peak=0);
+      }
+      if (wf_tail_peak(1) <= 0) return rv;
+      if (int(xr(0)+wf_tail_peak(1)) <= wflen) {
+        mx0 = irange + xr(0) - ctx(1) + range_bias + wf_tail_peak(1);
+        mv0 = wf(int(xr(0)+wf_tail_peak(1))) + (channel-1)*300;
+      }
+    }
+  }
+}
+
+func ex_veg_noalg_peak(&mx0, &mv0, wf, xr, irange, channel, wflen, retdist) {
+  // this is the algorithm used most commonly in ALPS v1.
+  // if within 3 ns from xr(0) we find a peak, we can assume this to be noise
+  // related and try again using xr(0) from the first positive difference after
+  // the last negative difference.
+  nidx = where(dd(xr(0):xr(0)+3) < 0);
+  if (is_array(nidx)) {
+    xr(0) = xr(0) + nidx(1);
+    if (xr(0)+retdist+1 > wflen) retdist = wflen - xr(0)-1;
+  }
+  // using trailing edge algorithm for bottom return
+  trailing_edge, wf, retdist, idx1, xr=xr;
+
+  if (is_array(idx1)) {
+    mx0 = irange+xr(0)+idx1(1)-ctx(1)+range_bias;  // in ns
+    mv0 = wf(int(xr(0)+idx1(1))) + (channel-1)*300;
+  }
+}
+
+func ex_veg_noalg_cent(&mx0, &mv0, wf, xr, irange, channel, wflen, retdist) {
+  // this is less used in ALPS v1
+  // find where the bottom return pulse changes direction after its
+  // trailing edge
+  local idx1;
+  trailing_edge, wf, retdist, idx1;
+
+  //now check to see if it it passes intensity test
+  mxmint = wf(xr(0)+1:xr(0)+retdist)(max);
+  if (abs(wf(xr(0)+1) - wf(xr(0)+retdist)) < 0.2*mxmint) {
+    // This return is good to compute centroid.
+    // Create array wf_tail for retdist returns beyond the last peak leading edge.
+    wf_tail = wf(int(xr(0)+1):int(xr(0)+retdist));
+
+    // compute centroid
+    if (wf_tail(sum) != 0) {
+      wf_tail_peak = wf_centroid(wf_tail);
+      if (wf_tail_peak <= 0) return rv;
+      if (int(xr(0)+wf_tail_peak) <= wflen) {
+        mx0 = irange + xr(0) + wf_tail_peak - ctx(1) + range_bias;
+        mv0 = wf(int(xr(0)+wf_tail_peak)) + (channel-1)*300;
+      }
+    }
+  }
+}
+
+func ex_veg_noalg_none(&mx0, &mv0, wf, xr, irange) {
+  // no bare earth algorithm selected.
+  //do not use centroid or trailing edge
+  mvx = wf(xr(0):xr(0)+5)(mxx);
+  // find bottom peak now
+  mx0 = irange + mvx + xr(0) - 1;
+  mv0 = wf(mvx);
 }
 
 func xcent(a) {
