@@ -5,7 +5,8 @@ scratch = save(scratch, base);
 // the current file.
 base = file_dirname(current_include())+"/";
 
-// Has to come first, used directly in files at loading
+// Have to come first, used directly in files at loading
+include, base + "eaarl_constants.i";
 include, base + "class_bathconfobj.i";
 
 include, base + "autoselect.i";
@@ -15,7 +16,6 @@ include, base + "bathy.i";
 include, base + "calps_compat.i";
 include, base + "centroid.i";
 include, base + "drast.i";
-include, base + "eaarl_constants.i";
 include, base + "eaarl_json_log.i";
 include, base + "eaarl_raster.i";
 include, base + "eaarl_vector.i";

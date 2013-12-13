@@ -139,14 +139,12 @@ func bathconfobj_groups(newgroups, copy=) {
   use, mapping;
   oldmap = mapping;
 
-  chancount = 4;
-
-  newmap = array(string, chancount);
+  newmap = array(string, CHANNEL_COUNT);
   for(i = 1; i <= newgroups(*); i++) {
     grp = newgroups(noop(i));
     if(!grp(*,"channels"))
       error, "missing channel information";
-    w = where(grp.channels <= chancount);
+    w = where(grp.channels <= CHANNEL_COUNT);
     if(!numberof(w)) continue;
     if(anyof(newmap(grp.channels(w))))
       error, "multiple groups refer to same channel";
@@ -264,10 +262,6 @@ func bathconfobj_read(fn) {
         channels123=save(
           channels=[1,2,3],
           profiles=save(default=obj_copy(prof))
-        ),
-        channel4=save(
-          channels=4,
-          profiles=save(default=obj_copy(prof))
         )
       )
     );
@@ -287,15 +281,6 @@ func bathconfobj_read(fn) {
                 : working.bath_ctl_chn4
               )
             )
-          ),
-          channel4=save(
-            channels=4,
-            profiles=save(
-              default=(working(*,"bath_ctl_chn4")
-                ? working.bath_ctl_chn4
-                : working.bath_ctl
-              )
-            )
           )
         )
       );
@@ -312,15 +297,13 @@ save, base, read=bathconfobj_read;
 
 func bathconfobj_clear(void) {
   working = save(
-    channels123=save(channels=[1,2,3]),
-    channel4=save(channels=4)
+    channels123=save(channels=[1,2,3])
   );
   use_method, groups, working, copy=0;
 }
 save, base, clear=bathconfobj_clear;
 
 func bathconfobj_cleangroups(void) {
-  maxchan = 4;
   groups = use_method(confobj_cleangroups,);
   for(i = 1; i <= groups(*); i++) {
     grp = groups(noop(i));
@@ -329,7 +312,7 @@ func bathconfobj_cleangroups(void) {
       error, "missing require field";
     grp = grp(noop(idx));
 
-    w = where(grp.channels <= maxchan);
+    w = where(grp.channels <= CHANNEL_COUNT);
     save, grp, channels=set_remove_duplicates(grp.channels(w));
 
     for(j = 1; j <= grp.profiles(*); j++) {
