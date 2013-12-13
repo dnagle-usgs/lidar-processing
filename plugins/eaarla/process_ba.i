@@ -143,7 +143,7 @@ func eaarl_ba_tx_copy(pulses) {
 /* DOCUMENT eaarl_ba_tx_copy, pulses
   Updates the given pulses oxy group with the last return transmit location.
   This function simply copies the first return transmit, since the transmit
-  should be the same for both. This adds teh following field to pulses:
+  should be the same for both. This adds the following field to pulses:
     ltx - Location of peak in transmit
 */
   save, pulses, ltx=pulses.ftx;
