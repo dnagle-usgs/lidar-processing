@@ -11,3 +11,10 @@ local REV, SAD, SAD2;
 REV = 8000;          // Counts for 360 degrees of scanner rotation
 SAD = 360.0 / REV;   // Scan Angle Degrees
 SAD2 = 720.0 / REV;
+
+local CHANNEL_COUNT;
+/* DOCUMENT CHANNEL_COUNT
+  EAARL system constant. CHANNEL_COUNT specifies how many active channels there
+  are and is 3 for EAARL-A.
+*/
+CHANNEL_COUNT = 3;
