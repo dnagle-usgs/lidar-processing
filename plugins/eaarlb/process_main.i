@@ -329,9 +329,17 @@ makeflow_fn=, norun=, retconf=, opts=) {
   hook_add, "job_run", "hook_run_job_eaarl_process";
 
   makeflow_run, conf, makeflow_fn, interval=15, norun=norun;
-  if(norun) return;
+  if(norun) {
+    if(verbose)
+      write, "Aborting, norun=1";
+    return;
+  }
 
+  if(verbose)
+    write, "Collating data from temporary files...";
   data = dirload(files=pbdfn, verbose=0);
+  if(verbose)
+    write, "Cleaning up...";
   remove_recursive, tempdir;
 
   if(verbose) {
