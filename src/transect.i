@@ -12,8 +12,8 @@ extern _transect_history;
     > transect_plot_line, recall=0, win=5
 */
 
-func data_transect(data, line, width=, mode=) {
-/* DOCUMENT data_transect(data, line, width=, mode=)
+func data_transect(data, line, width=, mode=, idx=) {
+/* DOCUMENT data_transect(data, line, width=, mode=, idx=)
   Returns the points from DATA that fall along the transect LINE.
 
   Parameters:
@@ -24,10 +24,11 @@ func data_transect(data, line, width=, mode=) {
     width= The width of the transect line.
       width=1.0     Line is 1m wide; gets points within 50cm of line (default)
     mode= Data mode to use.
+    idx= Return an index list instead of the data when idx=1.
 */
   default, width, 1.0;
   ply = line_to_poly(line(1), line(2), line(3), line(4), width=width);
-  return data_in_poly(data, ply, mode=mode);
+  return data_in_poly(data, ply, mode=mode, idx=idx);
 }
 
 func transect_rcf(data, line, mode=, buf=, fw=) {
@@ -430,4 +431,70 @@ func expix_transect(vname, line, recall=, win=, mode=, radius=) {
   }
 
   window_select, wbkp;
+}
+
+func transect_pip_remove(data, ply=, recall=, win=, width=, mode=) {
+/* DOCUMENT data = transect_pip_remove(data, ply=, recall=, win=, width=,
+  mode=)
+
+  Removes points from a point cloud variable as selected from a transect plot.
+  (This function expects that you have the transect plotted.)
+
+  Parameter:
+    data: The array of data.
+
+  Options:
+    ply= Optional. Specifies the polygon to remove. If not provided, the user
+      will be prompted to draw a polygon instead.
+    recall= Required. Must be an integer representing which line from the
+      transect history that was used for the current plot.
+    win= The window where the transect is plotted.
+        win=2       Default (matches transect function's owin=)
+    width= The width of the transect.
+        width=3.0   3 meter width
+    mode= Data mode to use for points.
+        mode="fs    Default
+*/
+  default, win, 2;
+  default, width, 3.0;
+  default, mode, "fs";
+
+  if(is_void(recall)) {
+    write, "No previous transect line selected";
+    return;
+  }
+  line = transect_recall(recall);
+
+  if(is_void(data)) {
+    write, "No data provided";
+    return;
+  }
+
+  idx = data_transect(data, line, width=width, mode=mode, idx=1);
+  if(is_void(idx)) {
+    write, "no data along transect";
+    return;
+  }
+
+  if(is_void(ply))
+    ply = get_poly(win=win);
+
+  local x, y, z, rx, ry;
+  seg = data(idx);
+  data2xyz, seg, x, y, z, mode=mode;
+  project_points_to_line, line, x, y, rx, ry;
+
+  // The window we're using has RX along its X axis ans Z along its Y axis.
+
+  w = testPoly(ply, rx, z);
+  if(numberof(w)) {
+    keep = array(1, numberof(data));
+    keep(idx(w)) = 0;
+    data = data(where(keep));
+  }
+
+  if(is_void(data))
+    write, "Warning: all points eliminated from data";
+
+  return data;
 }

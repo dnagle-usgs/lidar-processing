@@ -17,6 +17,7 @@ namespace eval l1pro::transect {
             variable hide_marker 0
             variable hide_options 0
             variable hide_rcf 1
+            variable hide_pip 1
 
             variable track
             array set track {
@@ -74,6 +75,7 @@ namespace eval l1pro::transect {
         ttk::label ${p}marker -text "Marker"
         ttk::label ${p}options -text "Options"
         ttk::label ${p}rcf -text "RCF"
+        ttk::label ${p}pip -text "PIP Remove"
         ttk::separator ${p}seph -orient horizontal
 
         grid \
@@ -83,9 +85,10 @@ namespace eval l1pro::transect {
             ${p}width ${p}iwin ${p}owin x \
             ${p}marker - - x \
             ${p}options x \
-            ${p}rcf - - \
+            ${p}rcf - - x \
+            ${p}pip - - \
             -padx 2 -pady 2
-        grid ${p}seph -columnspan 27 \
+        grid ${p}seph -columnspan 31 \
                 -padx 2 -pady 0 -sticky ew
 
         gui_add_row
@@ -130,6 +133,10 @@ namespace eval l1pro::transect {
                 -style Small.TCheckbutton \
                 -variable ::l1pro::transect::v::hide_rcf \
                 -command l1pro::transect::gui_hide_or_show
+        ttk::checkbutton $f.hide_pip -text "Hide PIP" \
+                -style Small.TCheckbutton \
+                -variable ::l1pro::transect::v::hide_pip \
+                -command l1pro::transect::gui_hide_or_show
         ttk::separator $f.sep2 -orient vertical
         ttk::button $f.history -text "Show History" -width 0 \
                 -command l1pro::transect::do_show_history
@@ -140,8 +147,8 @@ namespace eval l1pro::transect {
         pack $f.show_track $f.var $f.lblskip $f.skip $f.lblcolor $f.color \
             $f.lblwin $f.win $f.lblsize $f.size $f.utm $f.sep1 \
             -in $f.bottom -padx 2 -pady 2 -side left
-        pack $f.history $f.add_row $f.sep2 $f.hide_rcf $f.hide_options \
-            $f.hide_marker \
+        pack $f.history $f.add_row $f.sep2 $f.hide_pip $f.hide_rcf \
+            $f.hide_options $f.hide_marker \
             -in $f.bottom -padx 2 -pady 2 -side right
         pack configure $f.sep1 $f.sep2 -fill y
 
@@ -178,6 +185,9 @@ namespace eval l1pro::transect {
                 "If enabled, the \"RCF\" column of the GUI will be hidden.
                 Any options set there will still apply. This just hides them to
                 make the GUI smaller."
+        tooltip $f.hide_pip \
+                "If enabled, the \"PIP Remove\" column of the GUI will be
+                hidden."
         tooltip $f.history \
                 "Displays the transect history in the console window."
         tooltip $f.add_row \
@@ -209,6 +219,8 @@ namespace eval l1pro::transect {
         set settings($row,usercf) 0
         set settings($row,rcfbuf) 1.0
         set settings($row,rcffw) 1.0
+        set settings($row,piplock) 1
+        set settings($row,pipvar) $::pro_var
 
         switch -- $::plot_settings(display_mode) {
             be - ch {
@@ -228,7 +240,7 @@ namespace eval l1pro::transect {
         foreach key {
             var userecall recall width iwin owin marker msize scolor connect
             xfma showline showpts flight line channel digitizer mode
-            usercf rcfbuf rcffw
+            usercf rcfbuf rcffw piplock pipvar
         } {
             dict set result $key $v::settings($row,$key)
         }
@@ -247,6 +259,7 @@ namespace eval l1pro::transect {
         ttk::button ${p}transect -text "Transect $row:" -width 0 \
                 -command [list l1pro::transect::do_transect $row]
         ::mixin::combobox ${p}var -state readonly -width 12 \
+                -modifycmd [list l1pro::transect::gui_var_changed $row] \
                 -textvariable ${var}($row,var) \
                 -listvariable ::varlist
         ::mixin::combobox ${p}mode -state readonly -width 2 \
@@ -306,6 +319,14 @@ namespace eval l1pro::transect {
                 -textvariable ${var}($row,rcfbuf)
         ttk::spinbox ${p}rcffw -width 3 \
                 -textvariable ${var}($row,rcffw)
+        ::mixin::padlock ${p}piplock \
+                -variable ${var}($row,piplock) \
+                -command [list l1pro::transect::gui_pip_lock_update $row]
+        ::mixin::combobox ${p}pipvar -state disabled -width 12 \
+                -textvariable ${var}($row,var) \
+                -listvariable ::varlist
+        ttk::button ${p}pipremove -text "Remove" -width 0 \
+                -command [list l1pro::transect::pip_remove $row]
         ttk::button ${p}plotline -text "Line" -width 0 \
                 -command [list l1pro::transect::do_line $row]
         ttk::button ${p}examine -text "Examine" -width 0 \
@@ -326,7 +347,7 @@ namespace eval l1pro::transect {
                 -statemap {0 disabled 1 !disabled} \
                 -statevariable ${var}($row,usercf)
 
-        foreach j {0 1 2 3 4 5 6 7 8} {
+        foreach j {0 1 2 3 4 5 6 7 8 9} {
             ttk::separator ${p}sep$j -orient vertical
         }
         ttk::separator ${p}seph -orient horizontal
@@ -358,14 +379,16 @@ namespace eval l1pro::transect {
                 ${p}sep6 \
                 ${p}usercf ${p}rcfbuf ${p}rcffw \
                 ${p}sep7 \
-                ${p}plotline ${p}examine ${p}delete \
+                ${p}piplock ${p}pipvar ${p}pipremove \
                 ${p}sep8 \
+                ${p}plotline ${p}examine ${p}delete \
+                ${p}sep9 \
                 -padx 2 -pady 2
-        grid ${p}seph -columnspan 27 -padx 2 -pady 0 -sticky ew
+        grid ${p}seph -columnspan 31 -padx 2 -pady 0 -sticky ew
 
         grid ${p}var -sticky ew
 
-        foreach j {0 1 2 3 4 5 6 7 8} {
+        foreach j {0 1 2 3 4 5 6 7 8 9} {
             grid ${p}sep$j -sticky ns -padx 2 -pady 0
         }
 
@@ -542,6 +565,18 @@ namespace eval l1pro::transect {
                 most points.
 
                 $rcf_common"
+        tooltip ${p}piplock \
+                "When locked, PIP Remove will put its output back into the
+                original variable. When unlocked, you can enter a different
+                output variable in the field to the right."
+        tooltip ${p}pipvar \
+                "When the padlock to the left is unlocked, you can enter or
+                select an output variable for the result of PIP Remove.
+
+                This field is disabled when the padlock is locked."
+        tooltip ${p}pipremove \
+                "Prompts you to draw out a polygon on the transect plot. Points
+                in the polygon will be removed from the data."
         tooltip ${p}plotline \
                 "Plots the transect line specified under Recall.
 
@@ -587,6 +622,28 @@ namespace eval l1pro::transect {
         }
     }
 
+    proc gui_var_changed {row} {
+        if {$v::settings($row,piplock)} {
+            set v::settings($row,pipvar) $v::settings($row,var)
+        }
+    }
+
+    proc gui_pip_lock_update {row} {
+        set var ::l1pro::transect::v::settings
+        set f $v::top.f.rows
+        set p $f.row${row}_
+        if {$v::settings($row,piplock)} {
+            ${p}pipvar configure \
+                    -textvariable ${var}($row,var) \
+                    -state disabled
+            set v::settings($row,pipvar) $v::settings($row,var)
+        } else {
+            ${p}pipvar configure \
+                    -textvariable ${var}($row,pipvar) \
+                    -state normal
+        }
+    }
+
     proc gui_hide_or_show {} {
         set sets {
             marker {
@@ -603,6 +660,11 @@ namespace eval l1pro::transect {
                 var v::hide_rcf
                 hdr rcf
                 row {usercf rcfbuf rcffw sep7}
+            }
+            pip {
+                var v::hide_pip
+                hdr pip
+                row {piplock pipvar pipremove sep8}
             }
         }
 
@@ -681,6 +743,39 @@ namespace eval l1pro::transect {
             exp_send "$cmd;\r"
 
             append_varlist tr$row
+        }
+    }
+
+    proc pip_remove {row} {
+        set settings [get_settings $row]
+        dict with settings {
+            if {!$userecall || $usercf} {
+                if {!$userecall} {
+                    set msg "You need to select a line under Recall in order\
+                        to use PIP Remove."
+                } else {
+                    set msg "You cannot use PIP Remove with RCF enabled."
+                }
+                tk_messageBox \
+                        -parent $v::top \
+                        -icon error \
+                        -message $msg \
+                        -type ok
+                return
+            }
+            if {$piplock} {
+                set cmd $var
+            } else {
+                set cmd $pipvar
+                append_varlist $pipvar
+            }
+            append cmd " = transect_pip_remove($var, mode=\"$mode\",\
+                    recall=$recall"
+            appendif cmd \
+                    {$owin != 2}        ", win=$owin" \
+                    {$width != 3}       ", width=$width" \
+                    1                   ")"
+            exp_send "$cmd;\r"
         }
     }
 
