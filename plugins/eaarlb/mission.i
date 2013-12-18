@@ -131,22 +131,23 @@ func eaarl_mission_load_soe(env) {
   Handler for mission_load_soe.
   SEE ALSO: mission_load_soe
 */
-  // Check to see if the current flight contains this soe; if so, do nothing.
-  // This only works if it matches the SOE in all three of GPS, INS, and EDB
-  // (if each is present).
+  // Check to see if the current flight contains this soe using any of GPS,
+  // INS, and EDB (if each is present). If so, use current flight. If multiple
+  // flights contain this soe, best to keep the currently loaded rather than
+  // changing; calling code should be using soe+rn to query in that case.
   if(mission.data.loaded != "") {
-    match = 1;
+    if(!is_void(edb) && edb.seconds(1) <= env.soe & env.soe <= edb.seconds(0)+1)
+        return env;
+
     if(is_numerical(soe_day_start)) {
       sod = env.soe - soe_day_start;
-      if(!is_void(pnav))
-        match = match && pnav.sod(1) <= sod && sod <= pnav.sod(0);
-      if(!is_void(tans))
-        match = match && tans.somd(1) <= sod && sod <= tans.somd(0);
-    }
-    if(!is_void(edb))
-      match = match && edb.seconds(1) <= env.soe & env.soe <= edb.seconds(0)+1;
 
-    if(match) return env;
+      if(!is_void(pnav) && pnav.sod(1) <= sod && sod <= pnav.sod(0))
+          return env;
+
+      if(!is_void(tans) && tans.somd(1) <= sod && sod <= tans.somd(0))
+          return env;
+    }
   }
 
   flights = mission(query_soe, env.soe);
