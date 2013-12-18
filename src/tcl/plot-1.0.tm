@@ -467,7 +467,7 @@ proc ::plot::pane_pnav {pane} {
    ttk::button $f.butLoad -text "Load Track" -command ::plot::track_load
    ttk::entry $f.entLoad -textvariable ::plot::g::pnav_file
    grid $f.butLoad $f.entLoad
-   ::plot::readonly $f.entLoad
+   $f.entLoad state readonly
 
    ttk::button $f.butPlot -text "Plot Track" -command ::plot::track_plot
    grid $f.butPlot -columnspan 2
@@ -610,7 +610,7 @@ proc ::plot::plot_all {} {
    }
 }
 
-proc ::plot::track_load { } {
+proc ::plot::track_load {} {
    if {$g::coordType == "UTM"} {
       set ::utm 1
    } else {
@@ -635,7 +635,7 @@ proc ::plot::track_load { } {
    }
 }
 
-proc ::plot::track_plot { } {
+proc ::plot::track_plot {} {
    set marker [lsearch $c::markerShapes $g::trackMarkerShape]
    if { $g::coordType == "UTM" } {
       set ::utm 1
@@ -651,13 +651,13 @@ proc ::plot::track_plot { } {
    expect {>}
 }
 
-proc ::plot::fma { } {
+proc ::plot::fma {} {
    ::plot::window_set
    set size [expr {[lsearch $c::windowSizes $g::windowSize] + 1}]
    exp_send "lims = limits(); change_window_size, $::_map(window), $size, 1; limits, lims;\r"
 }
 
-proc ::plot::jump { } {
+proc ::plot::jump {} {
    ::plot::window_store
    ::plot::window_set
    exp_send "gga_click_start_isod;\r"
@@ -665,7 +665,7 @@ proc ::plot::jump { } {
    ::plot::window_restore
 }
 
-proc ::plot::limits { } {
+proc ::plot::limits {} {
    ::plot::window_set
    exp_send "limits, square=1\r"
    exp_send "limits\r"
@@ -705,17 +705,17 @@ proc ::plot::limits_swap {} {
    set g::limits_copy_from $tmp
 }
 
-proc ::plot::window_set { } {
+proc ::plot::window_set {} {
    exp_send "window, $::_map(window)\r"
 }
 
-proc ::plot::window_store { } {
+proc ::plot::window_store {} {
    if {$c::windows_track} {
       exp_send "wsav=current_window()\r"
    }
 }
 
-proc ::plot::window_restore { } {
+proc ::plot::window_restore {} {
    if {$c::windows_track} {
       exp_send "window_select, wsav\r"
    }
@@ -744,33 +744,6 @@ proc ::plot::mark_pos { lat lon } {
       exp_send "plmk, $lat, $lon, msize=$g::markSize, marker=$marker, color=\"$g::markColor\"\r"
    }
    ::plot::window_restore
-}
-
-proc ::plot::readonly { widget } {
-   bind $widget <KeyPress> {
-      switch -- %K {
-         "Up" -
-         "Left" -
-         "Right" -
-         "Down" -
-         "Next" -
-         "Prior" -
-         "Home" -
-         "End" { }
-
-         "c" -
-         "C" {
-            if {(%s & 0x04) == 0} {
-               break
-            }
-         }
-         default {
-            break
-         }
-      }
-   }
-   bind $widget <<Paste>> "break"
-   bind $widget <<Cut>> "break"
 }
 
 proc ::plot::plan_remove {} {
@@ -950,7 +923,7 @@ proc ::plot::poly_read {} {
    }
 }
 
-proc ::plot::image_remove { } {
+proc ::plot::image_remove {} {
    set item [$g::imageListBox getcurselection]
    if {![string equal $item ""]} {
       $g::imageListBox delete $item
@@ -965,7 +938,7 @@ proc ::plot::image_add {} {
    }
 }
 
-proc ::plot::image_plot { } {
+proc ::plot::image_plot {} {
    ::plot::window_store
    ::plot::window_set
    foreach img [$g::imageListBox get 0 end] {
