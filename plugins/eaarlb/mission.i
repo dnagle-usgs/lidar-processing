@@ -109,6 +109,10 @@ func eaarl_mission_load_soe_rn(env) {
   }
 
   flight = mission(query_soe_rn, env.soe, env.rn);
+  // Avoid unload/reload if possible
+  if(numberof(flight) == 1 && mission.data.loaded == flight(1))
+    return env;
+
   mission, unload;
   if(numberof(flight) == 0) {
     write, "WARNING: no flight found that matched the given soe+rn";
@@ -146,6 +150,10 @@ func eaarl_mission_load_soe(env) {
   }
 
   flights = mission(query_soe, env.soe);
+  // Avoid unload/reload if possible
+  if(numberof(flights) == 1 && mission.data.loaded == flights(1))
+    return env;
+
   mission, unload;
   if(numberof(flights) == 0) {
     write, "WARNING: no flight found that matched the given soe";
