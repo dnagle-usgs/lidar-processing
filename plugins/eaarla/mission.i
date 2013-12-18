@@ -16,7 +16,7 @@ func eaarl_mission_query_soe_rn(env) {
     if(!is_void(edb) && rn <= numberof(edb))
       dist(i) = abs(env.soe - edb(rn).seconds - edb(rn).fseconds*1.6e-6);
   }
-  if(dist(min) <= 1) env, match=flights(dist(mnx));
+  if(dist(min) < 60) env, match=flights(dist(mnx));
 
   return env;
 }
@@ -105,7 +105,7 @@ func eaarl_mission_load_soe_rn(env) {
   // nothing. Only checks EDB.
   if(mission.data.loaded != "" && !is_void(edb) && env.rn <= numberof(edb)) {
     dist = abs(env.soe - edb(env.rn).seconds - edb(env.rn).fseconds*1.6e-6);
-    if(dist < 1) return env;
+    if(dist < 60) return env;
   }
 
   flight = mission(query_soe_rn, env.soe, env.rn);
