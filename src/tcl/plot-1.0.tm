@@ -86,6 +86,7 @@ if {![namespace exists ::plot]} {
          variable limits_copy_to 6
          variable limits_copy_from 5
          variable poly_next_name poly1
+         variable path ""
       }
    }
 }
@@ -619,16 +620,16 @@ proc ::plot::track_load {} {
 
    if { $g::pnav_file == "" } {
       set ifile ""
-      set idir ""
+      set idir $::data_path
    } else {
       set ifile [file tail $g::pnav_file]
       set idir [file dirname $g::pnav_file]
    }
-   set file [tk_getOpenFile -filetypes {
+   set file [open_file -filetypes {
          { {PNAV ybin files} {*pnav.ybin} }
          { {All ybin files}  {.ybin} }
          { {All files}       { *  } }
-      } -initialfile $ifile -initialdir $idir -parent .plotmenu]
+      } -initialfile $ifile -initialdir $idir]
    if { $file != "" } {
       set g::pnav_file $file
       exp_send "pnav=rbpnav(fn=\"$file\");\r"
@@ -754,11 +755,11 @@ proc ::plot::plan_remove {} {
 }
 
 proc ::plot::plan_add {} {
-   set file [tk_getOpenFile \
+   set file [open_file \
       -filetypes {
          { {Flight plan files} {.fp} }
          { {All files} { *  } }
-      } -parent .plotmenu]
+      }]
    if {$file ne ""} {
       $g::planListBox insert end $file
    }
@@ -787,11 +788,11 @@ proc ::plot::map_remove {} {
 }
 
 proc ::plot::map_add {} {
-   set file [tk_getOpenFile -initialdir $c::mapPath \
+   set file [open_file -initialdir $c::mapPath \
       -filetypes {
          { {PBD files} {.pbd} }
          { {All files} { *  } }
-      } -parent .plotmenu]
+      }]
    if {$file ne ""} {
       $g::mapListBox insert end $file
    }
@@ -823,8 +824,7 @@ proc ::plot::shp_remove {} {
 }
 
 proc ::plot::shp_add {} {
-   set file [tk_getOpenFile -filetypes $c::shape_file_types \
-      -parent .plotmenu]
+   set file [open_file -filetypes $c::shape_file_types]
    if {$file ne ""} {
       $g::shpListBox insert end $file
       exp_send "add_shapefile, \"$file\";\r"
@@ -906,8 +906,7 @@ proc ::plot::poly_highlight {} {
 }
 
 proc ::plot::poly_write {} {
-   set file [tk_getSaveFile -parent .plotmenu \
-      -filetypes $c::shape_file_types]
+   set file [save_file -filetypes $c::shape_file_types]
    if {$file ne ""} {
       exp_send "polygon_write, \"$file\"\r"
       expect ">"
@@ -915,8 +914,7 @@ proc ::plot::poly_write {} {
 }
 
 proc ::plot::poly_read {} {
-   set file [tk_getOpenFile -parent .plotmenu \
-      -filetypes $c::shape_file_types]
+   set file [open_file -filetypes $c::shape_file_types]
    if {$file ne ""} {
       exp_send "polygon_read, \"$file\";\r"
       expect ">"
@@ -931,8 +929,7 @@ proc ::plot::image_remove {} {
 }
 
 proc ::plot::image_add {} {
-   set file [tk_getOpenFile -filetypes $::plot::c::image_file_types \
-      -parent .plotmenu]
+   set file [open_file -filetypes $::plot::c::image_file_types]
    if {$file ne ""} {
       $g::imageListBox insert end $file
    }
@@ -945,4 +942,30 @@ proc ::plot::image_plot {} {
       exp_send "load_and_plot_image, \"$img\", skip=$g::imageSkip\r"
    }
    ::plot::window_restore
+}
+
+proc ::plot::open_file {args} {
+   file_helper tk_getOpenFile {*}$args
+}
+
+proc ::plot::save_file {args} {
+   file_helper tk_getSaveFile {*}$args
+}
+
+proc ::plot::file_helper {cmd args} {
+   set needpath [expr {![dict exists $args -initialdir]}]
+   if {$needpath} {
+      if {$g::path ne ""} {
+         dict set args -initialdir $g::path
+      } elseif {$::mission::path ne ""} {
+         dict set args -initialdir $::mission::path
+      } else {
+         dict set args -initialdir $::data_path
+      }
+   }
+   set file [$cmd -parent .plotmenu {*}$args]
+   if {$needpath && $file ne ""} {
+      set g::path [file dirname $file]
+   }
+   return $file
 }
