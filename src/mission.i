@@ -1362,13 +1362,15 @@ save = mission_save;
 
 func mission_read(fn) {
   mission, data, path=file_dirname(fn);
+  if(file_tail(mission.data.path) == "alps")
+    mission, data, path=file_dirname(mission.data.path);
   f = open(fn, "r");
   mission, json, rdfile(f);
   close, f;
   if(logger(info)) logger, info, "Loaded mission configuration from "+fn;
   mission, plugins, load;
   // Need to invoke this after loading since loading clears
-  mission, data, conf_file=file_tail(fn);
+  mission, data, conf_file=file_relative(mission.data.path, fn);
   // Even though tksync is invoked by "mission, json", need to invoke again to
   // account for changes that plugins make.
   mission, tksync;

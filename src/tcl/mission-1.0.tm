@@ -1309,9 +1309,19 @@ namespace eval ::mission {
         variable top
         variable mission_filetypes
         set initial ""
+        set idir ""
+        set ifile ""
+        if {$::mission::path ne ""} {
+            set idir $::mission::path
+            if {$::mission::conf_file ne ""} {
+                set tmp [file join $::mission::path $::mission::conf_file]
+                set idir [file dirname $tmp]
+                set ifile [file tail $tmp]
+            }
+        }
         set fn [tk_getSaveFile \
-                -initialdir $::mission::path \
-                -initialfile $::mission::conf_file \
+                -initialdir $idir \
+                -initialfile $ifile \
                 -parent $top \
                 -filetypes $mission_filetypes \
                 -title "Select destination for mission configuration"]
