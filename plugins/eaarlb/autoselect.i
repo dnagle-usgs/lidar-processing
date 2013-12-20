@@ -6,14 +6,18 @@ func autoselect_ops_conf(dir, options=) {
   This function attempts to determine the ops_conf.i file to load for a
   dataset. The dir parameter should be the path to the mission day directory.
 
-  The function attempts to find an appropriate ops_conf.i file by following
-  these steps:
+  The function attempts to find an appropriate ops_conf.i file by looking in
+  the following locations:
 
-    1. Is there a file named ops_conf.i in dir? If so, it is returned.
-    2. Do any files in dir match *ops_conf*.i? If so, those files are sorted
-       by name and the last is returned.
-    3. The same as 1, except looking in dir's parent directory.
-    4. The same as 2, except looking in dir's parent directory.
+    1. dir/alps
+    2. dir
+    3. dir/../alps
+    4. dir/..
+
+  It attempts to locate the ops_conf.i by looking for files matching these rules:
+
+    1. ops_conf.i
+    2. *ops_conf*.i
 
   If no file can be found, then the nil string is returned (string(0)).
 
@@ -22,7 +26,9 @@ func autoselect_ops_conf(dir, options=) {
   returned.
 */
   dir = file_join(dir);
-  dirs = [dir, file_dirname(dir)];
+  dirs = [file_join(dir, "alps"), dir];
+  dir = file_dirname(dir);
+  grow, dirs, [file_join(dir, "alps"), dir];
 
   results = [];
   for(i = 1; i <= numberof(dirs); i++) {
@@ -49,15 +55,19 @@ func autoselect_bathconf(dir, options=) {
   This function attempts to determine the bathy settings file to load for a
   dataset. The dir parameter should be the path to the mission day directory.
 
-  The function attempts to find an appropriate bathy settings file by following
-  these steps:
+  The function attempts to find an appropriate bathy settings file by looking
+  in these locations:
 
-    1. Are there any files named *.bathconf in the flight directory?
-    2. Are there any files named *.bathconf in the parent directory?
-    3. Are there any files named *-bctl.json in the flight directory?
-    4. Are there any files named *-bctl.json in the parent directory?
-    5. Are there any files named *.bctl in the flight directory?
-    6. Are there any files named *.bctl in the parent directory?
+    1. dir/alps
+    2. dir
+    3. dir/../alps
+    4. dir/..
+
+  It looks for files matching these patterns:
+
+    1. *.bathconf
+    2. *-bctl.json
+    3. *.bctl
 
   If no file can be found, then the nil string is returned (string(0)).
 
@@ -66,7 +76,10 @@ func autoselect_bathconf(dir, options=) {
   returned.
 */
   dir = file_join(dir);
-  dirs = [dir, file_dirname(dir)];
+  dirs = [file_join(dir, "alps"), dir];
+  dir = file_dirname(dir);
+  grow, dirs, [file_join(dir, "alps"), dir];
+
   globs = ["*.bathconf", "*-bctl.json", "*.bctl"];
 
   results = [];
