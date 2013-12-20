@@ -169,7 +169,7 @@ func hook_makeflow_jobs_env(data, env) {
   if(is_void(data.jobs)) return env;
 
   conf = obj_copy(env.conf, recurse=1);
-  jobenv = file_rootname(env.fn) + ".env.pbd";
+  jobenv = file_rootname(env.fn) + ".env";
   needed = 0;
 
   for(i = 1; i <= conf(*); i++) {
