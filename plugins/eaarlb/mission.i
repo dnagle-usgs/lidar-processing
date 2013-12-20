@@ -450,7 +450,7 @@ func hook_eaarl_mission_jobs_env_wrap(env) {
     save, wrapped, bathconf_data=serialize(wrapped.bathconf_data);
   if(wrapped(*,"ops_conf"))
     save, wrapped, ops_conf=serialize(wrapped.ops_conf);
-  mission_fn = file_rootname(env.fn) + ".flight.pbd";
+  mission_fn = file_rootname(env.fn) + ".flight";
   obj2pbd, wrapped, mission_fn;
   save, env.env, mission_fn;
   return env;
