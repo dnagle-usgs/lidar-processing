@@ -2,6 +2,7 @@
 
 package provide l1pro::dirload 1.0
 package require yorick::util
+package require tilescan
 
 # Global ::data_file_path
 if {![namespace exists ::l1pro::dirload]} {
@@ -9,6 +10,8 @@ if {![namespace exists ::l1pro::dirload]} {
         namespace eval v {
             variable top .l1wid.l1dir
             variable searchstr "*.pbd"
+            variable searchstrlist "*.pbd"
+            variable searchstrdir {}
             variable vname merged
             variable skip 1
             variable unique 0
@@ -51,7 +54,10 @@ proc ::l1pro::dirload::gui {} {
     ttk::button $f.btnPath -text "Browse..." -command ${ns}::browse_path
 
     ttk::label $f.lblSearch -text "Search string:"
-    ttk::entry $f.entSearch -width 8 -textvariable ${ns}::v::searchstr
+    ::mixin::combobox $f.cboSearch -width 8 \
+            -textvariable ${ns}::v::searchstr \
+            -listvariable ${ns}::v::searchstrlist \
+            -postcommand ::l1pro::dirload::update_searchstr
 
     ttk::label $f.lblVname -text "Output variable:"
     ttk::entry $f.entVname -width 8 -textvariable ${ns}::v::vname
@@ -110,7 +116,7 @@ proc ::l1pro::dirload::gui {} {
     grid columnconfigure $f.fraZoneLine {0 2} -weight 1 -uniform 1
 
     grid $f.lblPath $f.entPath $f.btnPath -in $f.f
-    grid $f.lblSearch $f.entSearch x -in $f.f
+    grid $f.lblSearch $f.cboSearch x -in $f.f
     grid $f.lblVname $f.entVname x -in $f.f
     grid $f.lblZone $f.fraZoneLine x -in $f.f
     grid $f.lblRegion $f.entRegion $f.mnuRegion -in $f.f
@@ -122,13 +128,15 @@ proc ::l1pro::dirload::gui {} {
 
     grid configure $f.lblPath $f.lblSearch $f.lblVname $f.lblUnique \
             $f.lblSkip $f.lblZone $f.lblRegion -sticky e -padx {2 0}
-    grid configure $f.entPath $f.entSearch $f.entVname $f.chkUnique \
+    grid configure $f.entPath $f.cboSearch $f.entVname $f.chkUnique \
             $f.spnSkip $f.cboZone $f.entRegion -sticky ew -padx 2
     grid configure $f.btnPath $f.mnuRegion -sticky news
     grid configure $f.fraZoneLine $f.fraButtons -sticky ew
 
     grid rowconfigure $f.f {0 1 2 3 4 5} -uniform 1
     grid columnconfigure $f.f 1 -weight 1
+
+    ::misc::idle ::l1pro::dirload::update_searchstr
 }
 
 proc ::l1pro::dirload::browse_path {} {
@@ -136,6 +144,16 @@ proc ::l1pro::dirload::browse_path {} {
             -mustexist 1 -title "Choose data directory"]
     if {$temp_path ne ""} {
         set ::data_file_path $temp_path
+        ::misc::idle ::l1pro::dirload::update_searchstr
+    }
+}
+
+proc ::l1pro::dirload::update_searchstr {} {
+    if {$v::searchstrdir eq $::data_file_path} return
+    set v::searchstrlist *.pbd
+    set v::searchstrdir $::data_file_path
+    catch {
+        lappend v::searchstrlist {*}[tilescan::patterns $::data_file_path *.pbd]
     }
 }
 
