@@ -371,7 +371,7 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
   // detect surface
   local surface_sat_end, surface_intensity, escale;
   bathy_detect_surface, wf, maxint, conf, surface_sat_end, surface_intensity,
-    escale;
+    escale, forcechannel=channel;
   save, result, fint=surface_intensity;
 
   if(numsat > 14) {
