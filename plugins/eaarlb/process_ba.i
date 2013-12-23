@@ -307,6 +307,7 @@ func eaarl_ba_plot(raster, pulse, channel=, win=, xfma=) {
   result = ba_rx_wf(*pulses.rx(channel), conf, msg, plot=1);
 
   pltitle, swrite(format="rn:%d pulse:%d chan:%d", raster, pulse, channel);
+  xytitles, "Sample Number", "Sample Counts (Relative Intensity)";
 
   if(!is_void(msg)) {
     port = viewport();
