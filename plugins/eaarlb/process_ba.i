@@ -178,7 +178,9 @@ func eaarl_ba_rx_channel(pulses) {
     if(!lchannel(i)) continue;
     if(!pulses.rx(lchannel(i),i)) continue;
 
-    conf = bathconf(settings, lchannel(i));
+    conf = obj_copy(bathconf(settings, lchannel(i)));
+    save, conf, channel=lchannel(i);
+
     lbias(i) = biases(lchannel(i));
 
     tmp = ba_rx_wf(*pulses.rx(lchannel(i),i), conf);
@@ -223,6 +225,9 @@ func eaarl_ba_rx_eaarla(pulses) {
     lchannel(i) = ba_rx_channel(pulses.rx(,i), conf);
     if(!lchannel(i)) continue;
     lbias(i) = biases(lchannel(i));
+
+    conf = obj_copy(conf);
+    save, conf, channel;
 
     tmp = ba_rx_wf(*pulses.rx(lchannel(i),i), conf);
     fint(i) = tmp.fint;
@@ -295,6 +300,9 @@ func eaarl_ba_plot(raster, pulse, channel=, win=, xfma=) {
   } else {
     channel = ba_rx_channel(pulses.rx, conf);
   }
+
+  conf = obj_copy(conf);
+  save, conf, channel;
 
   tkcmd, swrite(format=
     "::eaarl::bathconf::config %d -channel %d -group {%s}",
@@ -371,7 +379,7 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
   // detect surface
   local surface_sat_end, surface_intensity, escale;
   bathy_detect_surface, wf, maxint, conf, surface_sat_end, surface_intensity,
-    escale, forcechannel=channel;
+    escale, forcechannel=conf.channel;
   save, result, fint=surface_intensity;
 
   if(numsat > 14) {
