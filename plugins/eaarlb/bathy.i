@@ -370,12 +370,10 @@ func bathy_detect_surface(wf, maxint, conf, &surface, &surface_intensity,
 
     wfl = numberof(wf);
     if(wfl > wantlen + 8) {
-      wfl = wantlen + 8;
-      surface = wf(1:min(wantlen,wflen))(mxx);
+      surface = wf(1:wantlen)(mxx);
     } else {
       surface = min(wantlen, wflen);
     }
-
     wfl = min(wantlen, wfl);
 
     escale = wf(1:wfl)(max) - 1;
