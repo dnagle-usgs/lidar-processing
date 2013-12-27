@@ -495,6 +495,7 @@ splitchan=, opts=) {
   //    w84_YYYYMMDD_chanNN_T.pbd -or- w84_YYYYMMDD_T.pbd
   // vtag is for variable names and will look like:
   //    w84_MMDD_chanNN_T -or- w84_MMDD_T
+  ftagsingle = [];
   if(is_void(ftag) || is_void(vtag)) {
     if(is_void(date)) {
       date = mission(get, mission.data.loaded, "date");
@@ -511,7 +512,10 @@ splitchan=, opts=) {
 
     if(is_void(ftag)) {
       ftag = "w84_" + date;
-      if(splitchan || chantag) ftag += "_" + chantag;
+      if(splitchan || chantag) {
+        ftagsingle = ftag + "_" + strjoin(chantag, "_") + "_" + mode;
+        ftag += "_" + chantag;
+      }
       ftag += "_" + mode;
     }
 
@@ -523,6 +527,7 @@ splitchan=, opts=) {
 
     chantag = [];
   }
+  if(is_void(ftagsingle)) ftagsingle = ftag;
   // Make sure it's safe for use in a variable name
   for(i = 1; i <= numberof(vtag); i++) {
     vtag(i) = sanitize_vname(vtag(i));
@@ -532,13 +537,15 @@ splitchan=, opts=) {
     if(strpart(ftag(i), 1:1) != "_") ftag(i) = "_" + ftag(i);
     if(file_extension(ftag(i)) != ".pbd") ftag(i) += ".pbd";
   }
+  if(strpart(ftagsingle, 1:1) != "_") ftagsingle = "_" + ftagsingle;
+  ftagsingle = file_rootname(ftagsingle);
 
   // Default makeflow_fn is: YYYYMMDD_HHMMSS_w84_YYMMDD_chanNN_T.log
   if(is_void(log_fn)) {
     // Start out with current timestamp as YYYYMMDD_HHMMSS
     ts = regsub(" ", regsub("-|:", soe2iso8601(now), "", all=1), "_");
-    // Add ftag, then make into full path with extension .log
-    log_fn = file_join(outdir, ts + file_rootname(ftag)(*)(sum) + ".log");
+    // Add ftagsingle, then make into full path with extension .log
+    log_fn = file_join(outdir, ts + ftagsingle + ".log");
     ts = [];
   }
 
