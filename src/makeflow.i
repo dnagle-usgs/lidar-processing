@@ -129,16 +129,14 @@ func makeflow_run(conf, fn, norun=, interval=) {
   job_count = conf(*);
   status, start;
 
-  // Launch and wait for logfile to exist.
+  // Launch
   f = popen(cmd_makeflow, 0);
-  do {
-    pause, 10;
-  } while(!file_exists(makeflow_log));
 
   // Monitor logfile until finished.
   do {
     pause, 250;
     parsed = makeflow_parse_log(makeflow_log);
+    if(is_void(parsed)) continue;
     last = parsed.log(0);
     msg = swrite(format="Makeflow running (W:%d R:%d D:%d",
       last.nodes_waiting, last.nodes_running, last.nodes_complete);
@@ -235,7 +233,10 @@ func makeflow_parse_log(fn) {
 
   These fields are as described in the Makeflow manual at:
     http://www.nd.edu/~ccl/software/manuals/makeflow.html
+
+  If the file does not exist, then [] is returned.
 */
+  if(catch(0x02)) return;
   lines = rdfile(fn);
   started = ended = status = 0;
 
