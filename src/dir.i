@@ -103,9 +103,8 @@ func file_join(..) {
       ignored
 
   If passed multiple arguments, each argument may be either a scalar or an
-  array of strings. If more than one argument is an array of strings, then
-  each such argument must have equivalent dimensions. Other than that, arrays
-  and scalars may be mixed freely.
+  array of strings. Arguments must have conformable dimensions with one
+  another.
 */
   // David Nagle 2008-12-24
   parts = array(pointer, 4);
@@ -188,23 +187,17 @@ func file_join(..) {
     w = where(arrays);
     if(numberof(w)) {
       // Make sure all the arrays have equivalent dimensions
-      dimlist = dimsof(*parts(w(1)));
+      dims = dimsof(*parts(w(1)));
       for(i = 1; i <= numberof(w); i++) {
-        curdims = dimsof(*parts(w(i)));
-        if(numberof(dimlist) != numberof(curdims))
-          error, "Non-conformable arrays were passed.";
-        if(numberof(dimlist) != numberof(where(dimlist==curdims)))
+        accum_dimsof, dims, *parts(w(i));
+        if(is_void(dims))
           error, "Non-conformable arrays were passed.";
       }
-      // Broadcast any scalars to match the arrays
-      w = where(!arrays);
-      if(numberof(w)) {
-        for(i = 1; i <= numberof(w); i++) {
-          parts(w(i)) = &array(*parts(w(i)), dimlist);
-        }
-      }
+      // Broadcast all
+      for(i = 1; i <= numberof(parts); i++)
+        parts(i) = &(*parts(i) + array(string, dims));
       // Now iterate through and join each one
-      result = array(string, dimlist);
+      result = array(string, dims);
       for(i = 1; i <= numberof(*parts(1)); i++) {
         temp = [];
         for(j = 1; j <= numberof(parts); j++) {
