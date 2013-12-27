@@ -129,6 +129,26 @@ func accum_growdims(&dims, d) {
   }
 }
 
+func accum_dimsof(&dims, item, isdims=) {
+/* DOCUMENT accum_dimsof, dims, item
+  Accumulates a dimsof result.
+
+  Usage:
+    dims = dimsof(A)
+    accum_dimsof, dims, B
+    accum_dimsof, dims, C
+
+  The above is equivalent to:
+    dims = dimsof(A, B, C)
+
+  If you want to pass dimensions instead of an array for item, use isdims=1.
+  This is less efficient though as a temp array will be constructed in its
+  place.
+*/
+  if(isdims) item = array(char, item);
+  dims = dimsof(array(char, dims), item);
+}
+
 func assign(args) {
 /* DOCUMENT assign, ary, v1, v2, v3, ...
   Assigns the values in an array to the specified variables. For example:
