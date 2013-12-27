@@ -763,8 +763,10 @@ func hook_prep_job_eaarl_process(env) {
     if(wrapped(*,"ops_conf"))
       save, wrapped, ops_conf=serialize(wrapped.ops_conf);
 
-    flightfn = file_join(path,
-      extract_tile(file_tail(item.options.pbdfn(1)))+".flight");
+    flight = extract_tile(file_tail(item.options.pbdfn(1)));
+    if(!flight) flight = strjoin(file_tail(file_rootname(
+      item.options.pbdfn(*))),"_");
+    flightfn = file_join(path, flight+".flight");
     mkdirp, path;
     obj2pbd, wrapped, flightfn;
     wrapped = [];
