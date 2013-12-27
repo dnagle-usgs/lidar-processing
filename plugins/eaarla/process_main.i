@@ -164,7 +164,7 @@ func make_eaarl_from_tld(tldfn, start, stop, rnstart, mode=, channel=,
 ext_bad_att=, opts=) {
 /* DOCUMENT make_eaarl_from_tld(tldfn, start, stop, rnstart, mode=, channel=,
    ext_bad_att=, opts=)
-  Processes EAARl data. This is a lower-level version of make_eaarl that is
+  Processes EAARL data. This is a lower-level version of make_eaarl that is
   primarily intended for use in jobs.
 
   Parameters:
@@ -208,6 +208,29 @@ ext_bad_att=, opts=) {
   pulses = [];
 
   return merge_pointers(result);
+}
+
+func save_eaarl_for_channels(data, channels, pbdfn, vname, empty=) {
+/* DOCUMENT save_eaarl_for_channels, data, channels, pbdfn, vname, empty=
+  Utility function for job to create processed EAARL data.
+
+  In the trivial case where channels is a scalar or void, this just writes the
+  data to file (using pbd_save) using the pdbfn and vname specified.
+
+  If channels is an array, then pbdfn and vname must be arrays of the same
+  size. The data point cloud will be split apart for each channel and a
+  separate file created.
+*/
+  if(numberof(channels) <= 1) {
+    mkdirp, file_dirname(pbdfn);
+    pbd_save, pbdfn, vname, data, empty=empty;
+  } else {
+    for(i = 1; i <= numberof(channels); i++) {
+      w = where(data.channel == channels(i));
+      mkdirp, file_dirname(pbdfn(i));
+      pbd_save, pbdfn(i), vname(i), data(w), empty=empty;
+    }
+  }
 }
 
 func mf_make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=,
@@ -345,7 +368,7 @@ makeflow_fn=, norun=, retconf=, opts=) {
 func mf_batch_eaarl(mode=, outdir=, update=, ftag=, vtag=, date=,
 ext_bad_att=, channel=, pick=, plot=, onlyplot=, win=, ply=, q=, shapefile=,
 buffer=, force_zone=, log_fn=, makeflow_fn=, norun=, retconf=, exactsel=,
-opts=) {
+splitchan=, opts=) {
 /* DOCUMENT mf_batch_eaarl
   Most common options:
     mf_batch_eaarl, pick=, shapefile=, q=, mode=, channel=, outdir=
@@ -405,7 +428,12 @@ opts=) {
         w84_MMDD_chanNN_T -or- w84_MMDD_T
       Where MMDD is date= with its first four characters removed (YYYY removed)
       and the other values are as described in ftag=.
+    splitchan= By default, if multiple channels are specified, they are all
+      written out to the same output files merged together. Specify splitchan=1
+      to split them into separate per-channel files instead. This option is
+      incompatible with ftag and vtag. This option requires channel=.
     log_fn= Specifies where to write the log describing the batch job.
+
 
   Miscellaneous options:
     buffer= Specifies the buffer to use around each tile, in meters. This is
@@ -444,7 +472,8 @@ opts=) {
 
   restore_if_exists, opts, mode, outdir, update, ftag, vtag, date,
     ext_bad_att, channel, pick, plot, onlyplot, win, ply, q, shapefile,
-    buffer, force_zone, log_fn, makeflow_fn, norun, retconf, exactsel;
+    buffer, force_zone, log_fn, makeflow_fn, norun, retconf, exactsel,
+    splitchan;
 
   default, mode, "f";
   default, buffer, 200.;
@@ -453,6 +482,13 @@ opts=) {
   now = getsoe();
 
   if(is_void(outdir)) error, "Must provide outdir=";
+
+  if(splitchan) {
+    if(!is_void(ftag) || !is_void(vtag))
+      error, "cannot mix splitchan=1 with ftag= or vtag=";
+    if(is_void(channel))
+      error, "splitchan= requires channel=";
+  }
 
   // Determine the metadata part of the filename, if needed
   // ftag is for files and will look like:
@@ -466,35 +502,43 @@ opts=) {
     }
 
     chantag = string(0);
-    if(!is_void(channel))
-      chantag = "chan" + swrite(format="%d", channel)(*)(sum);
+    if(!is_void(channel)) {
+      if(splitchan)
+        chantag = swrite(format="chan%d", channel);
+      else
+        chantag = "chan" + swrite(format="%d", channel)(*)(sum);
+    }
 
     if(is_void(ftag)) {
       ftag = "w84_" + date;
-      if(chantag) ftag += "_" + chantag;
+      if(splitchan || chantag) ftag += "_" + chantag;
       ftag += "_" + mode;
     }
 
     if(is_void(vtag)) {
       vtag = "w84_" + strpart(date, 5:);
-      if(chantag) vtag += "_" + chantag;
+      if(splitchan || chantag) vtag += "_" + chantag;
       vtag += "_" + mode;
     }
 
     chantag = [];
   }
   // Make sure it's safe for use in a variable name
-  vtag = sanitize_vname(vtag);
-  if(strpart(ftag, 1:1) != "_") ftag = "_" + ftag;
-  if(strpart(vtag, 1:1) != "_") vtag = "_" + vtag;
-  if(file_extension(ftag) != ".pbd") ftag += ".pbd";
+  for(i = 1; i <= numberof(vtag); i++) {
+    vtag(i) = sanitize_vname(vtag(i));
+    if(strpart(vtag(i), 1:1) != "_") vtag(i) = "_" + vtag(i);
+  }
+  for(i = 1; i <= numberof(ftag); i++) {
+    if(strpart(ftag(i), 1:1) != "_") ftag(i) = "_" + ftag(i);
+    if(file_extension(ftag(i)) != ".pbd") ftag(i) += ".pbd";
+  }
 
   // Default makeflow_fn is: YYYYMMDD_HHMMSS_w84_YYMMDD_chanNN_T.log
   if(is_void(log_fn)) {
     // Start out with current timestamp as YYYYMMDD_HHMMSS
     ts = regsub(" ", regsub("-|:", soe2iso8601(now), "", all=1), "_");
     // Add ftag, then make into full path with extension .log
-    log_fn = file_join(outdir, file_rootname(ts + ftag) + ".log");
+    log_fn = file_join(outdir, ts + file_rootname(ftag)(*)(sum) + ".log");
     ts = [];
   }
 
@@ -547,8 +591,8 @@ opts=) {
 
   // Construct output filenames and variable names
   itiles = dt2it(dtiles, dtlength="long", dtprefix=1);
-  outfiles = file_join(outdir, itiles, dtiles, dtiles + ftag);
-  vnames = extract_dt(dtiles, dtlength="short", dtprefix=0) + vtag;
+  outfiles = file_join(outdir, itiles, dtiles, dtiles + ftag(-,));
+  vnames = extract_dt(dtiles, dtlength="short", dtprefix=0) + vtag(-,);
 
   // Calculate bounding boxes
   minx = maxx = miny = maxy = 0;
@@ -598,7 +642,7 @@ opts=) {
   write, f, format="\nOptions used:%s", "\n";
   write, f, format="%s", obj_show(save(
     mode, outdir, update, ftag, vtag, date, ext_bad_att, channel, pick, plot,
-    onlyplot, win, shapefile, buffer, force_zone, exactsel, log_fn,
+    onlyplot, win, shapefile, buffer, force_zone, exactsel, splitchan, log_fn,
     makeflow_fn, norun, retconf, opts),
     maxchild=100, maxary=10);
 
@@ -611,19 +655,22 @@ opts=) {
   }
 
   write, f, format="\nOutput files:%s", "\n";
-  write, f, format="%s\n", file_tail(outfiles);
+  write, f, format="%s\n", file_tail(outfiles(sort(outfiles)(*)));
   close, f;
 
   // Build job queue
   local offset_start, offset_stop, tldfn;
-  count = numberof(outfiles);
+  count = dimsof(outfiles)(2);
   conf = save();
   for(i = 1; i <= count; i++) {
     if(update) {
-      if(file_exists(outfiles(i))) continue;
-    } else {
-      remove, outfiles(i);
+      skip = 1;
+      for(j = 1; j <= numberof(outfiles(i,)); j++)
+        skip = skip && file_exists(outfiles(i,j));
+      if(skip) continue;
     }
+    for(j = 1; j <= numberof(outfiles(i,)); j++)
+      remove, outfiles(i);
 
     if(exactsel) {
       w = data_box(east, north, bminx(i), bmaxx(i), bminy(i), bmaxy(i));
@@ -645,16 +692,16 @@ opts=) {
 
     save, conf, string(0), save(
       input=tldfn,
-      output=outfiles(i),
+      output=outfiles(i,),
       command="job_eaarl_process",
       options=obj_merge(options, save(
         "tldfn", tldfn,
-        "pbdfn", outfiles(i),
+        "pbdfn", outfiles(i,),
         "start", offset_start,
         "stop", offset_stop,
         "rnstart", rn_start,
         "rnstop", rn_stop,
-        "vname", vnames(i)
+        "vname", vnames(i,)
       ))
     );
   }
@@ -702,7 +749,7 @@ func hook_prep_job_eaarl_process(env) {
       save, wrapped, ops_conf=serialize(wrapped.ops_conf);
 
     flightfn = file_join(path,
-      file_tail(file_rootname(item.options.pbdfn))+".flight");
+      file_tail(file_rootname(item.options.pbdfn))(*)(sum)+".flight");
     mkdirp, path;
     obj2pbd, wrapped, flightfn;
     wrapped = [];
