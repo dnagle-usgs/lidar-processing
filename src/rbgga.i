@@ -399,12 +399,12 @@ func plot_sel_region(q, win=, lines=, color=) {
     j = lines(i);
     w = where(pnav.sod >= q(1,j) & pnav.sod <= q(2,j));
     show_pnav_track, pnav(w), width=5, color=color, skip=0, marker=0,
-      msize=0.1, utm=1, win=win;
+      msize=0.1, win=win;
   }
 }
 
-func show_track(fs, x=, y=, color=, skip=, msize=, marker=, lines=, utm=, width=, win=) {
-/* DOCUMENT show_track, fs, x=, y=, color=, skip=, msize=, marker=, lines=, utm=, width=, win=
+func show_track(fs, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=) {
+/* DOCUMENT show_track, fs, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=
   fs can either be an FS or PNAV
 
   SEE ALSO: show_pnav_track
@@ -414,13 +414,13 @@ func show_track(fs, x=, y=, color=, skip=, msize=, marker=, lines=, utm=, width=
   if(structeq(a, PNAV)) pn = fs;
 
   show_pnav_track, pn, x=x, y=y, color=color, skip=skip, msize=msize,
-    marker=marker, lines=lines, utm=utm, width=width, win=win;
+    marker=marker, lines=lines, width=width, win=win;
 }
 
-func show_pnav_track(pn, x=, y=, color=, skip=, msize=, marker=, lines=, utm=, width=, win=) {
-/* DOCUMENT func show_pnav_track, pn, x=, y=, color=, skip=, msize=, marker=, lines=, utm=, width=, win=
+func show_pnav_track(pn, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=) {
+/* DOCUMENT func show_pnav_track, pn, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=
 */
-  extern curzone;
+  extern curzone, utm;
 
   default, win, 6;
   default, width, 5.;
@@ -487,7 +487,7 @@ func plot_no_raster_fltlines(pnav, edb) {
     This function overplots the flight lines having no rasters with a different color.
 */
   // amar nayegandhi 08/05/02
-  extern soe_day_start, utm;
+  extern soe_day_start;
 
   w = current_window();
   window, 6;
@@ -510,7 +510,7 @@ func plot_no_raster_fltlines(pnav, edb) {
         indx1 = where((pnav.sod >= f_norast(i)) & (pnav.sod <= l_norast(i)));
         if(is_array(indx1))
           show_pnav_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
-              skip=50, color="yellow", utm=utm;
+              skip=50, color="yellow";
       }
     }
   }
@@ -518,7 +518,7 @@ func plot_no_raster_fltlines(pnav, edb) {
   indx1 = where(pnav.sod < sod_edb(1));
   if(is_array(indx1))
     show_pnav_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
-        skip=50, color="yellow", utm=utm;
+        skip=50, color="yellow";
 
   // also plot over region before first good raster
   lindx = where(sod_edb < 0);
@@ -526,7 +526,7 @@ func plot_no_raster_fltlines(pnav, edb) {
     indx1 = where(pnav.sod <= sod_edb(lindx(0)+2));
   if(is_array(indx1))
     show_pnav_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
-        skip=50, color="yellow", utm=utm;
+        skip=50, color="yellow";
 
   window_select, w;
 }
@@ -536,7 +536,7 @@ func plot_no_tans_fltlines (tans, pnav) {
     This function overplots the flight lines having no rasters with a different color.
 */
   // amar nayegandhi 08/05/02
-  extern soe_day_start, utm;
+  extern soe_day_start;
 
   w = current_window();
   window, 6;
@@ -557,7 +557,7 @@ func plot_no_tans_fltlines (tans, pnav) {
         if(is_array(q)) {
           indx1 = indx1(q);
           show_pnav_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=5,
-              color="magenta", skip=50, msize=0.2, utm=utm, width=width;
+              color="magenta", skip=50, msize=0.2, width=width;
         }
       }
     }
@@ -565,7 +565,7 @@ func plot_no_tans_fltlines (tans, pnav) {
   // also plot over region before the tans system is initially started.
   indx1 = where(pnav.sod < tans.somd(1));
   show_pnav_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=5,
-      color="magenta", skip=1, msize=0.2, utm=utm, width=width;
+      color="magenta", skip=1, msize=0.2, width=width;
 
   window_select, w;
 }
@@ -625,9 +625,9 @@ func gga_limits(void) {
 }
 
 func show_mission_pnav_tracks(void, color=, skip=, msize=, marker=, lines=,
-utm=, width=, win=) {
+width=, win=) {
 /* DOCUMENT show_mission_pnav_tracks, color=, skip=, msize=, marker=, lines=,
-   utm=, width=, win=
+   width=, win=
 
    Displays the pnav tracks for all mission days (as defined in the loaded
    mission configuration).
@@ -652,7 +652,7 @@ utm=, width=, win=) {
       color_tracker--;
       cur_color = is_void(color) ? color_tracker : color;
       show_pnav_track, gps, color=cur_color, skip=skip, msize=msize,
-        marker=marker, lines=lines, utm=utm, width=width, win=win;
+        marker=marker, lines=lines, width=width, win=win;
     }
   }
 }

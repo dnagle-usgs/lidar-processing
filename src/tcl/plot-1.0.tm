@@ -652,7 +652,7 @@ proc ::plot::track_plot_cmd {} {
       set ::utm 0
    }
 
-   return "show_pnav_track, pnav, color=\"$g::trackLineColor\", skip=$g::trackSkip, marker=$marker, msize=$g::trackMarkerSize, utm=$::utm, win=$::_map(window), width=$g::trackLineWidth; utm=$::utm"
+   return "show_pnav_track, pnav, color=\"$g::trackLineColor\", skip=$g::trackSkip, marker=$marker, msize=$g::trackMarkerSize, win=$::_map(window), width=$g::trackLineWidth; utm=$::utm"
 }
 
 proc ::plot::fma {} {

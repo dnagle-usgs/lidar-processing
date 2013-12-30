@@ -806,7 +806,7 @@ namespace eval l1pro::transect {
     proc do_show_track {} {
         set settings [array get v::track]
         dict with settings {
-            exp_send "show_track, $var, utm=$utm, skip=$skip, color=\"$color\", win=$win, msize=$msize;\r"
+            exp_send "utm=$utm; show_track, $var, skip=$skip, color=\"$color\", win=$win, msize=$msize;\r"
         }
     }
 }
