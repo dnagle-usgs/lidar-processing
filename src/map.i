@@ -1,7 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-func load_map(ffn=, color=, utm=, win=) {
-/* DOCUMENT load_map(ffn=, color=, utm=, color=)
+func load_map(ffn=, color=, win=) {
+/* DOCUMENT load_map(ffn=, color=, color=)
   Load a NOAA/USGS geographical coastline lat/lon map into the present
   window.  This is useful if you want to project some GPS positions
   onto a map easily.  Yorick lets you quickly and easily pan and zoom
@@ -12,16 +12,9 @@ func load_map(ffn=, color=, utm=, win=) {
   the first line (which is a comment beginning with a # sign).  This
   function expects the map files to end with a .pbd or .amap extension.
 
-  C. W. Wright wright@web-span.com  99-03-20
-
-  9/4/2002  -ww modified to detect either .pbd or .amap and
-         load accordingly.
-  11/3/2000 -an to display in utm coords.
-
   SEE ALSO:   ll2utm, show_map, convert_map
-
-
 */
+  extern utm;
   extern map_path;
   extern dllmap;          // array of pointers to digital map data
 
@@ -37,23 +30,23 @@ func load_map(ffn=, color=, utm=, win=) {
     dllmap = [];
     restore, mapf;
   } else {
-    convert_map, ffn=ffn, msave=0;
+    convert_map, ffn=ffn, msave=0, utm=utm;
   }
 
   if(is_void(dllmap)) {
     write, "This does not appear to be a pbd map file";
     return;
   }
-  show_map, dllmap, color=color, utm=utm, win=win;
+  show_map, dllmap, color=color, win=win;
 }
 
 
-func show_map(m, color=, utm=, width=, noff=, eoff=, zone=, win=) {
-/* DOCUMENT show_map, m, color=, utm=, width=, noff=, eoff=, zone=, win=
+func show_map(m, color=, width=, noff=, eoff=, zone=, win=) {
+/* DOCUMENT show_map, m, color=, width=, noff=, eoff=, zone=, win=
   This function plots the base map in either lat lon or utm. For utm, if the
   map crosses 2 or more zones, the user is prompted for the zone number.
 */
-  extern curzone;
+  extern curzone, utm;
   if (!is_array(m)) {
     write, "No map data is available.";
     return;
@@ -132,7 +125,7 @@ func map_warning(m) {
   }
 }
 
-func convert_map ( ffn= , utm=, msave=, arcview=) {
+func convert_map(ffn=, utm=, msave=, arcview=) {
 /* DOCUMENT convert_map(ffn=, utm=, msave=, arcview=)
 
   Convert a NOAA/USGS ASCII geographical coastline lat/lon map into
@@ -150,11 +143,7 @@ func convert_map ( ffn= , utm=, msave=, arcview=) {
   the first line (which is a comment beginning with a # sign).  This
   function expects the map files to end with a .amap extension.
 
-  C. W. Wright wright@web-span.com  99-03-20
-
-  Modified 11/3/2000 to display in utm coords.
-
-  SEE ALSO:   ll2utm
+  SEE ALSO: ll2utm
 */
   extern map_path;
   extern dllmap;		// array of pointers to digital map data
@@ -268,8 +257,8 @@ current window
       boxidx = data_box(a(,2),a(,1),emin,emax,nmin,nmax);
       if (is_array(boxidx)) {
         a = a(boxidx,1:2);
-        utm = utm2ll(a(,1), a(,2), utmzone);
-        a = [utm(,2), utm(,1)];
+        u = utm2ll(a(,1), a(,2), utmzone);
+        a = [u(,2), u(,1)];
         smap(i) = &a;
       }
     }

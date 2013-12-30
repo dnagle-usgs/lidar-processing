@@ -420,7 +420,7 @@ modified amar nayegandhi April 2005
   if (is_void(win)) win = w;
   if(!noplot)
     window, win;
-  if (lmap) load_map(utm=1);
+  if (lmap) load_map;
   if (!mode) mode = 2; // defaults to bathymetry
 
   if (!is_array(rgn)) {

@@ -822,7 +822,7 @@ proc ::plot::map_plot_cmd {} {
    }
    set cmdlist {}
    foreach map [$g::mapListBox get 0 end] {
-      lappend cmdlist "load_map, color=\"$g::mapLineColor\", ffn=\"$map\", utm=$::utm, win=$::_map(window)"
+      lappend cmdlist "load_map, color=\"$g::mapLineColor\", ffn=\"$map\", win=$::_map(window)"
    }
    return [cmdlist_join $cmdlist]
 }
