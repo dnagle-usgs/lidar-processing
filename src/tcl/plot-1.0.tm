@@ -698,7 +698,7 @@ proc ::plot::copy_limits_all {} {
 }
 
 proc ::plot::limits_swap {} {
-   set tmp $g::limits_from_to
+   set tmp $g::limits_copy_to
    set g::limits_copy_to $g::limits_copy_from
    set g::limits_copy_from $tmp
 }
