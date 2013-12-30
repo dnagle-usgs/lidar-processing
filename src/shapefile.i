@@ -310,7 +310,7 @@ func add_shapefile(filename) {
   }
 }
 
-func plot_shapefiles(void, color=, random_colors=) {
+func plot_shapefiles(void, color=, random_colors=, win=) {
 /* DOCUMENT plot_shapefiles
   Plots the shapefiles stored in private variables.
 
@@ -320,18 +320,21 @@ func plot_shapefiles(void, color=, random_colors=) {
     color= Specifies a color to pass to plot_shape.
     random_colors= If set to 1, this randomizes the color used per line.
       (Overrides color= if present.)
+    win= Specifies the window to plot in.
 */
-// Original David Nagle 2008-10-06
   extern _shp_polys;
   color_list = ["black", "red", "blue", "yellow", "cyan", "green", "magenta", "white"];
 
   if(is_void(_shp_polys))
     return;
+  wbkp = current_window();
+  window, win;
   for(i = 1; i <= numberof(_shp_polys); i++) {
     if(random_colors)
       color = color_list(i % numberof(color_list));
     plot_shape, *_shp_polys(i), color=color;
   }
+  window_select, win;
 }
 
 func remove_shapefile(filename) {
