@@ -26,7 +26,6 @@ namespace eval l1pro::transect {
                 color   blue
                 win     5
                 msize   0.1
-                utm     1
             }
 
             variable marker_mapping {
@@ -118,8 +117,6 @@ namespace eval l1pro::transect {
         ttk::label $f.lblsize -text "Size:"
         ttk::spinbox $f.size -width 3 \
                 -textvariable ${var}(msize)
-        ttk::checkbutton $f.utm -text "UTM" \
-                -variable ${var}(utm)
         ttk::separator $f.sep1 -orient vertical
         ttk::checkbutton $f.hide_marker -text "Hide marker" \
                 -style Small.TCheckbutton \
@@ -145,7 +142,7 @@ namespace eval l1pro::transect {
 
         lower [ttk::frame $f.bottom]
         pack $f.show_track $f.var $f.lblskip $f.skip $f.lblcolor $f.color \
-            $f.lblwin $f.win $f.lblsize $f.size $f.utm $f.sep1 \
+            $f.lblwin $f.win $f.lblsize $f.size $f.sep1 \
             -in $f.bottom -padx 2 -pady 2 -side left
         pack $f.history $f.add_row $f.sep2 $f.hide_pip $f.hide_rcf \
             $f.hide_options $f.hide_marker \
@@ -170,9 +167,6 @@ namespace eval l1pro::transect {
                 "Specifies the window to plot the track in."
         tooltip $f.size $f.lblsize \
                 "Specifies the size to use for the plotted markers."
-        tooltip $f.utm \
-                "If enabled, plot in UTM coordinates. If disabled, plot in
-                lat/long coordinates."
         tooltip $f.hide_marker \
                 "If enabled, the \"Marker\" column of the GUI will be hidden.
                 Any options set there will still apply. This just hides them to
@@ -806,7 +800,7 @@ namespace eval l1pro::transect {
     proc do_show_track {} {
         set settings [array get v::track]
         dict with settings {
-            exp_send "utm=$utm; show_track, $var, skip=$skip, color=\"$color\", win=$win, msize=$msize;\r"
+            exp_send "show_track, $var, skip=$skip, color=\"$color\", win=$win, msize=$msize;\r"
         }
     }
 }
