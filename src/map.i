@@ -1,7 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-func load_map( ffn=, color=,utm=) {
-/* DOCUMENT load_map(ffn=, color=)
+func load_map(ffn=, color=, utm=, win=) {
+/* DOCUMENT load_map(ffn=, color=, utm=, color=)
   Load a NOAA/USGS geographical coastline lat/lon map into the present
   window.  This is useful if you want to project some GPS positions
   onto a map easily.  Yorick lets you quickly and easily pan and zoom
@@ -32,30 +32,26 @@ func load_map( ffn=, color=,utm=) {
   if(is_void(ffn))
     ffn = select_file(map_path, pattern="\\.pbd$");
 
-  typ = strtok(ffn,".")(2);
-  typ;
-  if  ( typ == "pbd" ) {
+  if(file_extension(ffn) == ".pbd") {
     mapf = openb(ffn);
     dllmap = [];
     restore, mapf;
   } else {
-    convert_map( ffn=ffn, msave=0);
+    convert_map, ffn=ffn, msave=0;
   }
 
-  if ( is_void( dllmap ) ) {
+  if(is_void(dllmap)) {
     write, "This does not appear to be a pbd map file";
     return;
   }
-  show_map( dllmap, color=color,utm=utm );
+  show_map, dllmap, color=color, utm=utm, win=win;
 }
 
 
-func show_map( m,color=,utm=,width=, noff=, eoff=, zone=) {
-/*DOCUMENT show_map( m,color=,utm=,width=, noff=, eoff=, zone=)
-  This function plots the base map in either lat lon or utm.  For utm, if the
+func show_map(m, color=, utm=, width=, noff=, eoff=, zone=, win=) {
+/* DOCUMENT show_map, m, color=, utm=, width=, noff=, eoff=, zone=, win=
+  This function plots the base map in either lat lon or utm. For utm, if the
   map crosses 2 or more zones, the user is prompted for the zone number.
-  Original: C. W. Wright
-  Modified by amar nayegandhi to include utm plot.
 */
   extern curzone;
   if (!is_array(m)) {
@@ -92,6 +88,8 @@ func show_map( m,color=,utm=,width=, noff=, eoff=, zone=) {
       }
     }
   }
+  wbkp = current_window();
+  window, win;
   for (i=1; i<=sz; i++ ) {
     a = *m(i);
     if (utm) {
@@ -110,9 +108,10 @@ func show_map( m,color=,utm=,width=, noff=, eoff=, zone=) {
       plg,a(,1)+noff,a(,2)+eoff,marks=0,color=color, width=width;
     }
   }
+  window_select, wbkp;
 }
 
-func map_warning( m ) {
+func map_warning(m) {
 /* DOCUMENT map_warning, m
 
   Test the size of a map variable (array of pointers) and if it's greater
