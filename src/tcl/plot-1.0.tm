@@ -681,12 +681,7 @@ proc ::plot::limits_shapefiles {} {
 }
 
 proc ::plot::limits_tracklines {} {
-   if {$g::coordType == "UTM"} {
-      set utm 1
-   } else {
-      set utm 0
-   }
-   exp_send "[window_set]; gga_limits, utm=$::utm\r"
+   exp_send "[window_set]; gga_limits;\r"
 }
 
 proc ::plot::copy_limits {} {

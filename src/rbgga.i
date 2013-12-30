@@ -570,8 +570,8 @@ func plot_no_tans_fltlines (tans, pnav) {
   window_select, w;
 }
 
-func gga_limits(utm=) {
-/* DOCUMENT gga_limits(utm=)
+func gga_limits(void) {
+/* DOCUMENT gga_limits
    This will set the limits of the current window to constrain it to the
    gga data. Resulting limits will be similar as those attained if you use
    "limits, square=1; limits" when there is only gga data plotted, but
@@ -579,6 +579,7 @@ func gga_limits(utm=) {
    other data or images plotted to the window. It will even work if the
    gga data isn't plotted at all.
 */
+  extern utm;
   temp = viewport()(dif)(1:3:2);
   plot_aspect = temp(1)/temp(2);
 
