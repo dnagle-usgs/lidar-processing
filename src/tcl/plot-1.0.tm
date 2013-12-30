@@ -860,16 +860,20 @@ proc ::plot::poly_cleanup {} {
 }
 
 proc ::plot::poly_add {closed} {
-   exp_send "polygon_add, get_poly(closed=$closed, win=$::_map(window)), \"$g::poly_next_name\"\r"
-   expect "vertices"
-   $g::polyListBox insert end $g::poly_next_name
-   regexp {^(.*?)([0-9]*)$} $g::poly_next_name - base num
-   if {$num eq ""} {
-      set num 1
-   } else {
-      incr num
+   exp_send "polygon_add, get_poly(closed=$closed, win=$::_map(window)), \"$g::poly_next_name\";\r"
+}
+
+proc ::plot::poly_add_callback {name} {
+   $g::polyListBox insert end $name
+   if {$name eq $g::poly_next_name} {
+      regexp {^(.*?)([0-9]*)$} $g::poly_next_name - base num
+      if {$num eq ""} {
+         set num 1
+      } else {
+         incr num
+      }
+      set g::poly_next_name $base$num
    }
-   set g::poly_next_name $base$num
 }
 
 proc ::plot::poly_remove {} {

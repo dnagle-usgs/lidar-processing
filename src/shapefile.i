@@ -467,6 +467,8 @@ func polygon_add(ply, name) {
     grow, _poly_polys, &ply;
     grow, _poly_names, name;
   }
+
+  tkcmd, swrite(format="::plot::poly_add_callback {%s}", name);
 }
 
 func polygon_remove(name) {
