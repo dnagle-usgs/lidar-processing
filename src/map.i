@@ -41,10 +41,11 @@ func load_map(ffn=, color=, win=) {
 }
 
 
-func show_map(m, color=, width=, noff=, eoff=, zone=, win=) {
-/* DOCUMENT show_map, m, color=, width=, noff=, eoff=, zone=, win=
+func show_map(m, color=, width=, noff=, eoff=, win=) {
+/* DOCUMENT show_map, m, color=, width=, noff=, eoff=, win=
   This function plots the base map in either lat lon or utm. For utm, if the
-  map crosses 2 or more zones, the user is prompted for the zone number.
+  map crosses 2 or more zones, the user is prompted for the zone number if
+  curzone is not in the area covered.
 */
   extern curzone, utm;
   if (!is_array(m)) {
@@ -68,16 +69,16 @@ func show_map(m, color=, width=, noff=, eoff=, zone=, win=) {
     zmaxlon = int(maxlon+180)/6 + 1;
     zminlon = int(minlon+180)/6 + 1;
     zdiff = zmaxlon - zminlon;
-    curzone = 0;
     if (zdiff > 0) {
       // map data definitely crosses atleast 2 zones
-      write, format="Selected Base Map crosses %d UTM Zones. \n",zdiff;
-      if (!is_array(zone)) {		
+      write, format="Selected Base Map crosses %d UTM Zones (%d to %d).\n",
+        zdiff, zminlon, zmaxlon;
+      if(zminlon <= curzone && curzone <= zmaxlon) {
+        write, format="Using curzone (zone %d)\n", curzone;
+      } else {
         write, format="Select Zone Number from %d to %d: \n", zminlon, zmaxlon;
         strzone = rdline( prompt="Enter Zone Number: ");
         sread, strzone, format="%d",curzone;
-      } else {
-        curzone = zone;
       }
     }
   }
