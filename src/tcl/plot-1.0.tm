@@ -580,35 +580,38 @@ proc ::plot::curzone_apply {old new} {
 }
 
 proc ::plot::plot_all {} {
+   set cmdlist {}
+   lappend cmdlist [window_set]
    if {$g::fma} {
-      ::plot::fma
+      lappend cmdlist [fma_cmd]
    }
    # Make sure squared limits are applied
-   exp_send "limits, square=1\r"
+   lappend cmdlist "limits, square=1"
    # Plot images first
    if { $g::enable_plot_images } {
-      ::plot::image_plot
+      lappend cmdlist [image_plot_cmd]
    }
    # Then coastline/map
    if { $g::enable_plot_maps } {
-      ::plot::map_plot
+      lappend cmdlist [map_plot_cmd]
    }
    # Then shapefiles
    if { $g::enable_plot_shapes } {
-      ::plot::shp_plot
+      lappend cmdlist [shp_plot_cmd]
    }
    # Then plans
    if { $g::enable_plot_plans } {
-      ::plot::plan_plot
+      lappend cmdlist [plan_plot_cmd]
    }
    # Then polys
    if { $g::enable_plot_polys } {
-      ::plot::poly_plot
+      lappend cmdlist [poly_plot_cmd]
    }
    # Then trackline
    if { $g::enable_plot_pnav } {
-      ::plot::track_plot
+      lappend cmdlist [track_plot_cmd]
    }
+   exp_send "[cmdlist_join $cmdlist];\r"
 }
 
 proc ::plot::track_load {} {
@@ -637,6 +640,10 @@ proc ::plot::track_load {} {
 }
 
 proc ::plot::track_plot {} {
+   exp_send "[track_plot_cmd];\r"
+}
+
+proc ::plot::track_plot_cmd {} {
    set marker [lsearch $c::markerShapes $g::trackMarkerShape]
    if { $g::coordType == "UTM" } {
       set ::utm 1
@@ -644,38 +651,33 @@ proc ::plot::track_plot {} {
       set ::utm 0
    }
 
-   exp_send "show_pnav_track, pnav, color=\"$g::trackLineColor\", skip=$g::trackSkip, marker=$marker, msize=$g::trackMarkerSize, utm=$::utm, win=$::_map(window), width=$g::trackLineWidth\r"
-   expect {>}
-   exp_send "\r\n"
-   expect {>}
-   exp_send "utm=$::utm\r"
-   expect {>}
+   return "show_pnav_track, pnav, color=\"$g::trackLineColor\", skip=$g::trackSkip, marker=$marker, msize=$g::trackMarkerSize, utm=$::utm, win=$::_map(window), width=$g::trackLineWidth; utm=$::utm"
 }
 
 proc ::plot::fma {} {
-   ::plot::window_set
+   exp_send "[window_set]; [fma_cmd];\r"
+}
+
+proc ::plot::fma_cmd {} {
    set size [expr {[lsearch $c::windowSizes $g::windowSize] + 1}]
-   exp_send "lims = limits(); change_window_size, $::_map(window), $size, 1; limits, lims;\r"
+   return "lims = limits(); change_window_size, $::_map(window), $size, 1; limits, lims"
 }
 
 proc ::plot::jump {} {
-   ::plot::window_store
-   ::plot::window_set
-   exp_send "gga_click_start_isod;\r"
-   expect {>}
-   ::plot::window_restore
+   set cmdlist {}
+   lappend cmdlist [window_store]
+   lappend cmdlist [window_set]
+   lappend cmdlist gga_click_start_isod
+   lappend cmdlist [window_restore]
+   exp_send "[cmdlist_join $cmdlist];\r"
 }
 
 proc ::plot::limits {} {
-   ::plot::window_set
-   exp_send "limits, square=1\r"
-   exp_send "limits\r"
+   exp_send "[window_set]; limits, square=1; limits;\r"
 }
 
 proc ::plot::limits_shapefiles {} {
-   ::plot::window_set
-   exp_send "shapefile_limits;\r"
-   expect ">"
+   exp_send "[window_set]; shapefile_limits;\r"
 }
 
 proc ::plot::limits_tracklines {} {
@@ -684,20 +686,15 @@ proc ::plot::limits_tracklines {} {
    } else {
       set utm 0
    }
-   ::plot::window_set
-   exp_send "gga_limits, utm=$::utm\r"
+   exp_send "[window_set]; gga_limits, utm=$::utm\r"
 }
 
 proc ::plot::copy_limits {} {
-   ::plot::window_store
    exp_send "copy_limits, $g::limits_copy_from, $g::limits_copy_to\r"
-   ::plot::window_restore
 }
 
 proc ::plot::copy_limits_all {} {
-   ::plot::window_store
    exp_send "copy_limits, $g::limits_copy_from;\r"
-   ::plot::window_restore
 }
 
 proc ::plot::limits_swap {} {
@@ -707,18 +704,18 @@ proc ::plot::limits_swap {} {
 }
 
 proc ::plot::window_set {} {
-   exp_send "window, $::_map(window)\r"
+   return "window, $::_map(window)"
 }
 
 proc ::plot::window_store {} {
    if {$c::windows_track} {
-      exp_send "wsav=current_window()\r"
+      return "wsav=current_window()"
    }
 }
 
 proc ::plot::window_restore {} {
    if {$c::windows_track} {
-      exp_send "window_select, wsav\r"
+      return "window_select, wsav"
    }
 }
 
@@ -734,17 +731,22 @@ proc ::plot::mark_pos { lat lon } {
    set d [expr {int($lon / 100.0)}]
    set m [expr {fmod($lon, 100.0)/60.0}]
    set lon [expr {$d + $m}]
-   
-   ::plot::window_store
-   ::plot::window_set
+
+   set cmdlist {}
+   lappend cmdlist [window_store]
+   lappend cmdlist [window_set]
    set marker [lsearch $c::markerShapes $g::markShape]
    if {$g::coordType == "UTM"} {
-      exp_send "fll2utm, $lat, $lon, UTMNorthing, UTMEasting, ZoneNumber\r"
-      exp_send "plmk, UTMNorthing, UTMEasting, msize=$g::markSize, marker=$marker, color=\"$g::markColor\"\r"
+      lappend cmdlist \
+         "fll2utm, $lat, $lon, UTMNorthing, UTMEasting, ZoneNumber"
+      lappend cmdlist \
+         "plmk, UTMNorthing, UTMEasting, msize=$g::markSize, marker=$marker, color=\"$g::markColor\""
    } else {
-      exp_send "plmk, $lat, $lon, msize=$g::markSize, marker=$marker, color=\"$g::markColor\"\r"
+      lappend cmdlist \
+         "plmk, $lat, $lon, msize=$g::markSize, marker=$marker, color=\"$g::markColor\""
    }
-   ::plot::window_restore
+   lappend cmdlist [window_restore]
+   exp_send "[cmdlist_join $cmdlist];\r"
 }
 
 proc ::plot::plan_remove {} {
@@ -766,18 +768,25 @@ proc ::plot::plan_add {} {
 }
 
 proc ::plot::plan_plot {} {
+   set cmd [plan_plot_cmd]
+   if {$cmd ne ""} {
+      exp_send "$cmd;\r"
+   }
+}
+
+proc ::plot::plan_plot_cmd {} {
    if {$g::coordType == "UTM"} {
       set ::utm 1
    } else {
       set ::utm 0
    }
-   ::plot::window_store
-   ::plot::window_set
+   set cmdlist {}
    foreach plan [$g::planListBox get 0 end] {
-      exp_send "fp=read_fp(\"$plan\", plot=1)\r"
-      expect ">"
+      lappend cmdlist "fp=read_fp(\"$plan\", plot=1, win=$::_map(window))"
    }
-   ::plot::window_restore
+   if {[llength $cmdlist]} {
+      return [cmdlist_join $cmdlist]
+   }
 }
 
 proc ::plot::map_remove {} {
@@ -799,19 +808,23 @@ proc ::plot::map_add {} {
 }
 
 proc ::plot::map_plot {} {
+   set cmd [map_plot_cmd]
+   if {$cmd ne ""} {
+      exp_send "$cmd;\r"
+   }
+}
+
+proc ::plot::map_plot_cmd {} {
    if {$g::coordType == "UTM"} {
       set ::utm 1
    } else {
       set ::utm 0
    }
-   ::plot::window_store
-   ::plot::window_set
+   set cmdlist {}
    foreach map [$g::mapListBox get 0 end] {
-      exp_send "load_map, color=\"$g::mapLineColor\", ffn=\"$map\", utm=$::utm\r"
-      exp_send "show_map, dllmap, color=\"$g::mapLineColor\", utm=$::utm\r"
-      expect ">"
+      lappend cmdlist "load_map, color=\"$g::mapLineColor\", ffn=\"$map\", utm=$::utm, win=$::_map(window)"
    }
-   ::plot::window_restore
+   return [cmdlist_join $cmdlist]
 }
 
 proc ::plot::shp_remove {} {
@@ -819,7 +832,6 @@ proc ::plot::shp_remove {} {
    if {![string equal $item ""]} {
       $g::shpListBox delete $item
       exp_send "remove_shapefile, \"$item\";\r"
-      expect ">"
    }
 }
 
@@ -828,35 +840,34 @@ proc ::plot::shp_add {} {
    if {$file ne ""} {
       $g::shpListBox insert end $file
       exp_send "add_shapefile, \"$file\";\r"
-      expect ">"
    }
 }
 
 proc ::plot::shp_plot {} {
-   ::plot::window_store
-   ::plot::window_set
+   exp_send "[shp_plot_cmd];\r"
+}
+
+proc ::plot::shp_plot_cmd {} {
+   set cmdlist {}
    if {$g::coordType == "UTM"} {
-      exp_send "utm=1;\r"
+      lappend cmdlist "utm=1"
    } else {
-      exp_send "utm=0;\r"
+      lappend cmdlist "utm=0"
    }
-   if { $g::shapeLineColor eq "randomize" } {
-      exp_send "plot_shapefiles, random_colors=1;\r"
+   if {$g::shapeLineColor eq "randomize"} {
+      lappend cmdlist "plot_shapefiles, random_colors=1, win=$::_map(window)"
    } else {
-      exp_send "plot_shapefiles, color=\"$g::shapeLineColor\";\r"
+      lappend cmdlist "plot_shapefiles, color=\"$g::shapeLineColor\", win=$::_map(window)"
    }
-   expect ">"
-   ::plot::window_restore
+   return [cmdlist_join $cmdlist]
 }
 
 proc ::plot::poly_sort {} {
    exp_send "polygon_sort;\r"
-   expect ">"
 }
 
 proc ::plot::poly_cleanup {} {
    exp_send "polygon_sanitize;\r"
-   expect ">"
 }
 
 proc ::plot::poly_add {closed} {
@@ -881,7 +892,6 @@ proc ::plot::poly_remove {} {
    if {![string equal $item ""]} {
       $g::polyListBox delete $item
       exp_send "polygon_remove, \"$item\";\r"
-      expect ">"
    }
 }
 
@@ -891,29 +901,29 @@ proc ::plot::poly_rename {} {
       set new_name $item
       if {[::getstring::tk_getString .plotmenu.polyrename new_name "Please enter the new name for this polygon/polyline." -title "New Name"]} {
          exp_send "polygon_rename, \"$item\", \"$new_name\";\r"
-         expect ">"
       }
    }
 }
 
 proc ::plot::poly_plot {} {
-   exp_send "polygon_plot\r"
-   expect ">"
+   exp_send "[poly_plot_cmd];\r"
+}
+
+proc ::plot::poly_plot_cmd {} {
+   return polygon_plot
 }
 
 proc ::plot::poly_highlight {} {
    set item [$g::polyListBox getcurselection]
    if {![string equal $item ""]} {
       exp_send "polygon_highlight, \"$item\";\r"
-      expect ">"
    }
 }
 
 proc ::plot::poly_write {} {
    set file [save_file -filetypes $c::shape_file_types]
    if {$file ne ""} {
-      exp_send "polygon_write, \"$file\"\r"
-      expect ">"
+      exp_send "polygon_write, \"$file\";\r"
    }
 }
 
@@ -921,7 +931,6 @@ proc ::plot::poly_read {} {
    set file [open_file -filetypes $c::shape_file_types]
    if {$file ne ""} {
       exp_send "polygon_read, \"$file\";\r"
-      expect ">"
    }
 }
 
@@ -940,12 +949,18 @@ proc ::plot::image_add {} {
 }
 
 proc ::plot::image_plot {} {
-   ::plot::window_store
-   ::plot::window_set
-   foreach img [$g::imageListBox get 0 end] {
-      exp_send "load_and_plot_image, \"$img\", skip=$g::imageSkip\r"
+   set cmd [image_plot_cmd]
+   if {$cmd ne ""} {
+      exp_send "$cmd;\r"
    }
-   ::plot::window_restore
+}
+
+proc ::plot::image_plot_cmd {} {
+   set cmdlist {}
+   foreach img [$g::imageListBox get 0 end] {
+      lappend cmdlist "load_and_plot_image, \"$img\", skip=$g::imageSkip, win=$::_map(window)"
+   }
+   return [cmdlist_join $cmdlist]
 }
 
 proc ::plot::open_file {args} {
@@ -972,4 +987,8 @@ proc ::plot::file_helper {cmd args} {
       set g::path [file dirname $file]
    }
    return $file
+}
+
+proc ::plot::cmdlist_join {cmdlist} {
+   return [join [struct::list filterfor x $cmdlist {$x ne ""}] "; "]
 }
