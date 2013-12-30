@@ -38,12 +38,6 @@ if {![namespace exists ::plot]} {
             { {ASCII shapefiles} {.xyz} }
             { {All files}        *      }
          }
-         variable windowSizes {
-            {75 dpi}
-            {100 dpi}
-            {75 dpi landscape}
-            {100 dpi landscape}
-         }
          variable colors [list red black blue green cyan magenta yellow white]
       }
 
@@ -76,7 +70,6 @@ if {![namespace exists ::plot]} {
          variable enable_plot_shapes 1
          variable enable_plot_polys 1
          variable enable_plot_pnav 1
-         variable windowSize [lindex $::plot::c::windowSizes 0]
          variable shpListBox
          variable imageListBox
          variable imageSkip 1
@@ -128,7 +121,7 @@ proc ::plot::pane_interact {pane} {
    set f $pane.lfrSettings
    ttk::labelframe $f -text "Settings"
 
-   ttk::label $f.lblCoord -text "Coordinates:" -anchor e
+   ttk::label $f.lblCoord -text "CS:" -anchor e
    ::mixin::combobox $f.cboCoord \
          -values {"UTM" "Lat/Lon"} \
          -width 7 \
@@ -162,21 +155,11 @@ proc ::plot::pane_interact {pane} {
          However, the setting should update immediately when you interact with
          the window afterwards."
 
-   ttk::label $f.lblWindow -text "Window:"
-   ttk::spinbox $f.spnWindow -justify center -textvariable ::_map(window) \
-      -from 0 -to 63 -increment 1 -width 3
-   ::mixin::combobox $f.cboWinSize -values $::plot::c::windowSizes \
-      -textvariable ::plot::g::windowSize -state readonly -width 1
-
-   grid $f.lblCoord $f.cboCoord - $f.lblZone $f.spnZone $f.appZone $f.revZone \
-         -sticky ew -padx 1 -pady 1
-   grid $f.lblWindow $f.spnWindow $f.cboWinSize - - - - \
+   grid $f.lblCoord $f.cboCoord $f.lblZone $f.spnZone $f.appZone $f.revZone \
          -sticky ew -padx 1 -pady 1
    grid configure $f.appZone $f.revZone -padx 0
-   grid configure $f.lblCoord $f.lblWindow -sticky e
 
-   grid columnconfigure $f {1 4} -weight 1
-   grid columnconfigure $f 2 -weight 2
+   grid columnconfigure $f {1 3} -weight 1
 
    # Data to plot
    set f $pane.lfrData
@@ -195,10 +178,14 @@ proc ::plot::pane_interact {pane} {
    ttk::checkbutton $f.chkTrack -text "PNAV flight track" \
          -variable ::plot::g::enable_plot_pnav
 
-   grid $f.chkImages $f.chkShape $f.chkPoly -sticky w
-   grid $f.chkMap $f.chkPlan $f.chkTrack -sticky w
+   grid $f.chkImages -sticky w
+   grid $f.chkMap -sticky w
+   grid $f.chkShape -sticky w
+   grid $f.chkPlan -sticky w
+   grid $f.chkPoly -sticky w
+   grid $f.chkTrack -sticky w
 
-   grid columnconfigure $f {0 1 2} -weight 1
+   grid columnconfigure $f 0 -weight 1
 
    # Plotting
    set f $pane.lfrPlot
@@ -208,8 +195,13 @@ proc ::plot::pane_interact {pane} {
          -command ::plot::plot_all
    ttk::checkbutton $f.chkFma -text "Auto clear" \
          -variable ::plot::g::fma
+   ttk::spinbox $f.spnWindow -justify center -textvariable ::_map(window) \
+      -from 0 -to 63 -increment 1 -width 3
 
-   grid $f.btnPlot $f.chkFma -sticky ew -padx 1 -pady 1
+   ::tooltip::tooltip $f.spnWindow \
+      "Specify the window to plot in."
+
+   grid $f.btnPlot $f.spnWindow $f.chkFma -sticky ew -padx 1 -pady 1
 
    grid columnconfigure $f 0 -weight 1 -uniform 1
 
@@ -229,21 +221,20 @@ proc ::plot::pane_interact {pane} {
    ttk::button $f.btnName -text "Name" -width 1 \
          -command {exp_send "show_grid_location, $::_map(window);\r"}
 
-   grid $f.cboType - -sticky ew -padx 1 -pady 1
-   grid $f.btnPlot $f.btnName -sticky ew -padx 1 -pady 1
-   grid columnconfigure $f {0 1} -weight 1
+   grid $f.cboType $f.btnPlot $f.btnName -sticky ew -padx 1 -pady 1
+   grid columnconfigure $f {0 1 2} -weight 1
 
    # Limits
    set f $pane.lfrLimits
    ttk::labelframe $f -text "Reset limits to..."
    
-   ttk::button $f.btnLimits -text "All Data" \
+   ttk::button $f.btnLimits -text "All" \
          -width 0 \
          -command ::plot::limits
    ttk::button $f.btnLimitsShapes -text "Shapefiles" \
          -width 0 \
          -command ::plot::limits_shapefiles
-   ttk::button $f.btnLimitsTracks -text "PNAV Trackline" \
+   ttk::button $f.btnLimitsTracks -text "PNAV" \
          -width 0 \
          -command ::plot::limits_tracklines
 
@@ -288,12 +279,16 @@ proc ::plot::pane_interact {pane} {
          -textvariable ::plot::g::limits_copy_to
    ttk::button $f.btnSwap -text "Swap" \
          -width 0 -command ::plot::limits_swap
-   ttk::button $f.btnApplyAll -text "Apply to all" \
+   ttk::button $f.btnApplyAll -text "All" \
          -command ::plot::copy_limits_all
 
-   grid $f.lblFrom $f.spnFrom $f.btnApply $f.spnTo $f.btnSwap $f.btnApplyAll \
+   grid $f.lblFrom $f.spnFrom $f.btnSwap \
          -sticky ew -padx 1 -pady 1
-   grid columnconfigure $f {1 3} -weight 1
+   grid $f.btnApply $f.spnTo $f.btnApplyAll \
+         -sticky ew -padx 1 -pady 1
+   grid $f.lblFrom -sticky e
+   grid columnconfigure $f {0 2} -weight 2
+   grid columnconfigure $f 1 -weight 3
 
    # Frames
    lower [ttk::frame $pane.row1]
@@ -301,18 +296,24 @@ proc ::plot::pane_interact {pane} {
          -in $pane.row1 \
          -sticky news -padx 1 -pady 1
    grid columnconfigure $pane.row1 0 -weight 1
+   grid columnconfigure $pane.row1 1 -weight 3
 
    lower [ttk::frame $pane.row2]
-   grid $pane.lfrSettings $pane.lfrGrid \
+   grid $pane.lfrData $pane.lfrSettings \
          -in $pane.row2 \
          -sticky news -padx 1 -pady 1
-   grid columnconfigure $pane.row2 {0 1} -weight 1
+   grid ^ $pane.lfrGrid \
+         -in $pane.row2 \
+         -sticky news -padx 1 -pady 1
+   grid ^ $pane.lfrLimitsCopy \
+         -in $pane.row2 \
+         -sticky news -padx 1 -pady 1
+   grid columnconfigure $pane.row2 0 -weight 1
+   grid columnconfigure $pane.row2 1 -weight 2
 
    grid $pane.row1 -sticky news
    grid $pane.row2 -sticky news
-   grid $pane.lfrData  -sticky news -padx 1 -pady 1
    grid $pane.lfrSFSync  -sticky news -padx 1 -pady 1
-   grid $pane.lfrLimitsCopy  -sticky news -padx 1 -pady 1
 
    grid rowconfigure $pane 100 -weight 1
    grid columnconfigure $pane 0 -weight 1
@@ -659,8 +660,7 @@ proc ::plot::fma {} {
 }
 
 proc ::plot::fma_cmd {} {
-   set size [expr {[lsearch $c::windowSizes $g::windowSize] + 1}]
-   return "lims = limits(); change_window_size, $::_map(window), $size, 1; limits, lims"
+   return "lims = limits(); fma; limits, lims"
 }
 
 proc ::plot::jump {} {
