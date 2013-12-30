@@ -472,6 +472,7 @@ func pl_fp(fp, win=, color=, width=, labels=, skip=) {
     for(i = 1; i <= numberof(fp); i++) {
       pl_fp, fp(i), win=win, color=color, width=width, labels=labels, skip=skip;
     }
+    return;
   }
 
   default, win, 6;
