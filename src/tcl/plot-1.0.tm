@@ -13,6 +13,10 @@ if {![info exists curzone]} {
    set curzone 0
 }
 ybkg tksync add \"curzone\" \"::curzone\"
+if {![info exists utm]} {
+   set utm 1
+}
+ybkg tksync add \"utm\" \"::utm\"
 
 if {![namespace exists ::plot]} {
    namespace eval ::plot {
@@ -44,8 +48,6 @@ if {![namespace exists ::plot]} {
       # GUI variables
       namespace eval g {
          variable fma 1
-         # gga(llu)   utm = 1 or 0
-         variable coordType "UTM"
          # gga(linewidth)
          variable trackLineWidth 1
          # gga(linecolor)
@@ -122,12 +124,16 @@ proc ::plot::pane_interact {pane} {
    ttk::labelframe $f -text "Settings"
 
    ttk::label $f.lblCoord -text "CS:" -anchor e
-   ::mixin::combobox $f.cboCoord \
-         -values {"UTM" "Lat/Lon"} \
-         -width 7 \
-         -textvariable ::plot::g::coordType -state readonly
-   misc::tooltip $f.lblCoord $f.cboCoord \
-         "Specify what kind of coordinates you want to use."
+   ttk::radiobutton $f.rdoGeo \
+         -text "Lat/Lon" \
+         -variable ::utm \
+         -value 0 \
+         -command ::plot::utm_apply
+   ttk::radiobutton $f.rdoUtm \
+         -text "UTM" \
+         -variable ::utm \
+         -value 1 \
+         -command ::plot::utm_apply
 
    ttk::label $f.lblZone -text "Zone:" -anchor e
    ttk::spinbox $f.spnZone \
@@ -155,11 +161,12 @@ proc ::plot::pane_interact {pane} {
          However, the setting should update immediately when you interact with
          the window afterwards."
 
-   grid $f.lblCoord $f.cboCoord $f.lblZone $f.spnZone $f.appZone $f.revZone \
+   grid $f.lblCoord $f.rdoGeo $f.rdoUtm \
+         $f.lblZone $f.spnZone $f.appZone $f.revZone \
          -sticky ew -padx 1 -pady 1
    grid configure $f.appZone $f.revZone -padx 0
 
-   grid columnconfigure $f {1 3} -weight 1
+   grid columnconfigure $f 3 -weight 1
 
    # Data to plot
    set f $pane.lfrData
@@ -580,6 +587,10 @@ proc ::plot::curzone_apply {old new} {
    return -code error
 }
 
+proc ::plot::utm_apply {} {
+   exp_send "utm = $::utm;\r"
+}
+
 proc ::plot::plot_all {} {
    set cmdlist {}
    lappend cmdlist [window_set]
@@ -616,12 +627,6 @@ proc ::plot::plot_all {} {
 }
 
 proc ::plot::track_load {} {
-   if {$g::coordType == "UTM"} {
-      set ::utm 1
-   } else {
-      set ::utm 0
-   }
-
    if { $g::pnav_file == "" } {
       set ifile ""
       set idir $::data_path
@@ -646,13 +651,8 @@ proc ::plot::track_plot {} {
 
 proc ::plot::track_plot_cmd {} {
    set marker [lsearch $c::markerShapes $g::trackMarkerShape]
-   if { $g::coordType == "UTM" } {
-      set ::utm 1
-   } else {
-      set ::utm 0
-   }
 
-   return "show_pnav_track, pnav, color=\"$g::trackLineColor\", skip=$g::trackSkip, marker=$marker, msize=$g::trackMarkerSize, win=$::_map(window), width=$g::trackLineWidth; utm=$::utm"
+   return "show_pnav_track, pnav, color=\"$g::trackLineColor\", skip=$g::trackSkip, marker=$marker, msize=$g::trackMarkerSize, win=$::_map(window), width=$g::trackLineWidth"
 }
 
 proc ::plot::fma {} {
@@ -731,7 +731,7 @@ proc ::plot::mark_pos { lat lon } {
    lappend cmdlist [window_store]
    lappend cmdlist [window_set]
    set marker [lsearch $c::markerShapes $g::markShape]
-   if {$g::coordType == "UTM"} {
+   if {$::utm} {
       lappend cmdlist \
          "fll2utm, $lat, $lon, UTMNorthing, UTMEasting, ZoneNumber"
       lappend cmdlist \
@@ -770,11 +770,6 @@ proc ::plot::plan_plot {} {
 }
 
 proc ::plot::plan_plot_cmd {} {
-   if {$g::coordType == "UTM"} {
-      set ::utm 1
-   } else {
-      set ::utm 0
-   }
    set cmdlist {}
    foreach plan [$g::planListBox get 0 end] {
       lappend cmdlist "fp=read_fp(\"$plan\", plot=1, win=$::_map(window))"
@@ -810,11 +805,6 @@ proc ::plot::map_plot {} {
 }
 
 proc ::plot::map_plot_cmd {} {
-   if {$g::coordType == "UTM"} {
-      set ::utm 1
-   } else {
-      set ::utm 0
-   }
    set cmdlist {}
    foreach map [$g::mapListBox get 0 end] {
       lappend cmdlist "load_map, color=\"$g::mapLineColor\", ffn=\"$map\", win=$::_map(window)"
@@ -844,11 +834,6 @@ proc ::plot::shp_plot {} {
 
 proc ::plot::shp_plot_cmd {} {
    set cmdlist {}
-   if {$g::coordType == "UTM"} {
-      lappend cmdlist "utm=1"
-   } else {
-      lappend cmdlist "utm=0"
-   }
    if {$g::shapeLineColor eq "randomize"} {
       lappend cmdlist "plot_shapefiles, random_colors=1, win=$::_map(window)"
    } else {
