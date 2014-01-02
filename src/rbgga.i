@@ -1,5 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+if(is_void(utm)) utm = 1;
+
 func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=) {
 /* DOCUMENT pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=)
   The user is prompted to draw out a box or polygon. The points of PNAV within
