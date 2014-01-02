@@ -22,6 +22,7 @@ if {![namespace exists ::plot]} {
    namespace eval ::plot {
       # Constants
       namespace eval c {
+         variable top .plotmenu
          variable markerShapes [list None Square Cross Triangle Circle \
             Diamond Cross45 Inv-Triangle]
          variable markerSizes [list .1 .2 .3 .4 .5 .6 .7 1.0 1.5 2.0 2.5 \
@@ -88,7 +89,7 @@ if {![namespace exists ::plot]} {
 ybkg tksetsym \"::plot::c::mapPath\" \"alpsrc.maps_dir\"
 
 proc ::plot::gui {} {
-   set w .plotmenu
+   set w $c::top
    destroy $w
    toplevel $w
    wm title $w "Plotting Tool"
@@ -879,7 +880,7 @@ proc ::plot::poly_rename {} {
    set item [$g::polyListBox getcurselection]
    if {![string equal $item ""]} {
       set new_name $item
-      if {[::getstring::tk_getString .plotmenu.polyrename new_name "Please enter the new name for this polygon/polyline." -title "New Name"]} {
+      if {[::getstring::tk_getString $c::top.polyrename new_name "Please enter the new name for this polygon/polyline." -title "New Name"]} {
          exp_send "polygon_rename, \"$item\", \"$new_name\";\r"
       }
    }
@@ -962,7 +963,7 @@ proc ::plot::file_helper {cmd args} {
          dict set args -initialdir $::data_path
       }
    }
-   set file [$cmd -parent .plotmenu {*}$args]
+   set file [$cmd -parent $c::top {*}$args]
    if {$needpath && $file ne ""} {
       set g::path [file dirname $file]
    }
