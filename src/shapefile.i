@@ -148,7 +148,7 @@ func write_ascii_shapefile(shp, filename, meta=, geo=, utm=) {
       for(j = 1; j <= tmp(*); j++)
         write, f, format="%s=%s\n", tmp(*,j), tmp(noop(j));
     }
-    ply = *shp(i);
+    ply = double(*shp(i));
     if(dimsof(ply)(2) > 2) {
       write, f, format=fmt+",%.3f\n", ply(1,), ply(2,), ply(3,);
     } else {
