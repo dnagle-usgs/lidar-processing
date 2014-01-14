@@ -70,23 +70,36 @@ if {![namespace exists ::plot]} {
          variable enable_plot_images 1
          variable enable_plot_maps 1
          variable enable_plot_plans 1
-         variable enable_plot_shapes 1
          variable enable_plot_polys 1
          variable enable_plot_pnav 1
-         variable shpListBox
          variable imageListBox
          variable imageSkip 1
          variable mapListBox
          variable planListBox
-         variable polyListBox
          variable limits_copy_to 6
          variable limits_copy_from 5
+         variable poly_data {Local {}}
+         variable poly_tree {}
+         variable poly_selected none
+         variable poly_name ""
+         variable poly_color ""
+         variable poly_width ""
+         variable poly_closed 0
          variable poly_next_name poly1
+         variable poly_next_closed 1
+         variable poly_export_geo 0
+         variable poly_export_meta 1
          variable path ""
       }
    }
 }
 ybkg tksetsym \"::plot::c::mapPath\" \"alpsrc.maps_dir\"
+
+namespace eval ::plot {
+   namespace import ::misc::tooltip
+   namespace import ::misc::appendif
+   namespace import ::yorick::ystr
+}
 
 proc ::plot::gui {} {
    set w $c::top
@@ -99,10 +112,9 @@ proc ::plot::gui {} {
 
    foreach {pane label} {
       interact Interact
-      poly Polys
+      poly Poly
       pnav PNAV
       img Image
-      shp Shapefile
       map Coastline
       plan "Flight Plan"
    } {
@@ -177,18 +189,15 @@ proc ::plot::pane_interact {pane} {
          -variable ::plot::g::enable_plot_images
    ttk::checkbutton $f.chkMap -text "Coastline Maps" \
          -variable ::plot::g::enable_plot_maps
-   ttk::checkbutton $f.chkShape -text "Shapefiles" \
-         -variable ::plot::g::enable_plot_shapes
    ttk::checkbutton $f.chkPlan -text "Flight plans" \
          -variable ::plot::g::enable_plot_plans
-   ttk::checkbutton $f.chkPoly -text "Polygons" \
+   ttk::checkbutton $f.chkPoly -text "Polys" \
          -variable ::plot::g::enable_plot_polys
    ttk::checkbutton $f.chkTrack -text "PNAV flight track" \
          -variable ::plot::g::enable_plot_pnav
 
    grid $f.chkImages -sticky w
    grid $f.chkMap -sticky w
-   grid $f.chkShape -sticky w
    grid $f.chkPlan -sticky w
    grid $f.chkPoly -sticky w
    grid $f.chkTrack -sticky w
@@ -331,98 +340,318 @@ proc ::plot::pane_interact {pane} {
 
 proc ::plot::pane_poly {pane} {
    ttk::frame $pane
-   
-   set g::polyListBox $pane.slbPolys
 
-   iwidgets::scrolledlistbox $g::polyListBox \
-      -hscrollmode dynamic -vscrollmode dynamic -height 5
-   grid $g::polyListBox - -sticky news
+   set g::poly_tree $pane.tvwPolys
+   ttk::treeview $pane.tvwPolys \
+         -show tree \
+         -columns {} \
+         -height 4 \
+         -selectmode browse \
+         -yscroll [list $pane.vsbPolys set]
+   ttk::scrollbar $pane.vsbPolys -orient vertical \
+         -command [list $pane.tvwPolys yview]
 
-   set f $pane.fraNextName
-   ttk::frame $f
-   grid $f - -sticky wen
+   set tree $g::poly_tree
+   $tree column #0 -width 10
+   bind $tree <<TreeviewSelect>> ::plot::poly_refresh_sel
 
-   ttk::label $f.labName -text "Next poly's name:" -anchor e
-   ttk::entry $f.entName -textvariable ::plot::g::poly_next_name
-   grid $f.labName $f.entName -sticky ew
+   ttk::button $pane.tbnX -style Toolbutton \
+         -image ::imglib::x \
+         -command ::plot::poly_remove
+   ttk::button $pane.tbnUp -style Toolbutton \
+         -image ::imglib::arrow::up \
+         -command ::plot::poly_up
+   ttk::button $pane.tbnDown -style Toolbutton \
+         -image ::imglib::arrow::down \
+         -command ::plot::poly_down
+   ttk::button $pane.tbnPlus -style Toolbutton \
+         -image ::imglib::plus \
+         -command ::plot::poly_add_group
 
-   grid columnconfigure $f 1 -weight 1
+   tooltip $pane.tbnX \
+         "If a poly is selected, delete that poly.
 
-   ttk::button $pane.butAddGon -text "Add polygon" \
-      -command [list ::plot::poly_add 1]
+         If a group is selected, delete that group and all polys in it."
+   tooltip $pane.tbnUp \
+         "If a poly is selected, move that poly up a spot. If the poly is first
+         in its group, it will be placed in the group above.
 
-   ttk::button $pane.butAddLine -text "Add polyline" \
-      -command [list ::plot::poly_add 0]
+         If a group is selected, move that group up a spot. All polys in that
+         group will remain in the group, with their current ordering."
+   tooltip $pane.tbnDown \
+         "If a poly is selected, move that poly down a spot. If the poly is last
+         in its group, it will be placed in the group below.
 
-   grid $pane.butAddGon $pane.butAddLine -sticky ew
+         If a group is selected, move that group down a spot. All polys in that
+         group will remain in the group, with their current ordering."
+   tooltip $pane.tbnPlus \
+         "Add a new group. The new group will be created with a generic name.
 
-   ttk::button $pane.butRemove -text "Remove poly" \
-      -command ::plot::poly_remove
+         If you want to add a new poly, use the \"Add New:\" button towards the
+         bottom of the GUI."
 
-   ttk::button $pane.butRename -text "Rename poly" \
-      -command ::plot::poly_rename
+   ttk::label $pane.lblName -text "Name:"
+   ttk::entry $pane.entName \
+         -width 0
+   ::mixin::revertable $pane.entName \
+         -textvariable ::plot::g::poly_name \
+         -applycommand {::plot::poly_apply name}
+   ttk::button $pane.btnNameApp -text "Apply" \
+         -command [list $pane.entName apply] \
+         -width 0
+   ttk::button $pane.btnNameRev -text "Revert" \
+         -command [list $pane.entName revert] \
+         -width 0
+   tooltip $pane.lblName $pane.entName \
+         "Specify the name for the current poly or group."
 
-   grid $pane.butRemove $pane.butRename -sticky ew
+   ttk::label $pane.lblColor -text "Color:"
+   mixin::combobox $pane.cboColor \
+         -width 0 \
+         -values {black white red green blue cyan magenta yellow}
+   ::mixin::revertable $pane.cboColor \
+         -textvariable ::plot::g::poly_color \
+         -applycommand {::plot::poly_apply color}
+   ttk::button $pane.btnColorApp -text "Apply" \
+         -command [list $pane.cboColor apply] \
+         -width 0
+   ttk::button $pane.btnColorRev -text "Revert" \
+         -command [list $pane.cboColor revert] \
+         -width 0
+   tooltip $pane.lblColor $pane.cboColor \
+         "If a poly is selected, this specifies that poly's color.
 
-   ttk::button $pane.butPlot -text "Plot polys" -command ::plot::poly_plot
+         If a group is selected, this field will be blank if the polys in the
+         group have different colors. If they all have the same color, it will
+         show that color. If you specify and apply a color, that color will be
+         applied to all polys in the group.
 
-   ttk::button $pane.butHlite -text "Highlight poly" -command ::plot::poly_highlight
+         There are two formats you can specify a color in. The simple format is
+         to use a Yorick color name; these are provided in the dropdown box for
+         convenience. The alternate format is to specify an RGB color using
+         three decimal numbers separated by commas. For example, red would be
+         255,0,0."
 
-   grid $pane.butPlot $pane.butHlite -sticky ew
+   ttk::label $pane.lblWidth -text "Width:"
+   ttk::spinbox $pane.spnWidth \
+         -from 1 -to 100 -increment 1 \
+         -width 0
+   ::mixin::revertable $pane.spnWidth \
+         -textvariable ::plot::g::poly_width \
+         -applycommand {::plot::poly_apply width} \
+         -valuetype number
+   ttk::button $pane.btnWidthApp -text "Apply" \
+         -command [list $pane.spnWidth apply] \
+         -width 0
+   ttk::button $pane.btnWidthRev -text "Revert" \
+         -command [list $pane.spnWidth revert] \
+         -width 0
+   tooltip $pane.lblWidth $pane.spnWidth \
+         "If a poly is selected, this specifies that poly's line width.
 
-   ttk::button $pane.butSort -text "Sort polys" -command ::plot::poly_sort
+         If a group is selected, this field will be blank if the polys in the
+         group have different widths. If they all have the same width, it will
+         show that width. If you specify and apply a width, that width will be
+         applied to all polys in the group."
 
-   ttk::button $pane.butClean -text "Clean/Sanitize" \
-      -command ::plot::poly_cleanup
+   ttk::checkbutton $pane.chkClosed -text "Closed" \
+         -variable ::plot::g::poly_closed \
+         -command {::plot::poly_apply closed - -}
+   tooltip $pane.chkClosed \
+         "If checked, the selected poly is a closed polygon. If not checked,
+         the selected poly is a polyline.
 
-   grid $pane.butSort $pane.butClean -sticky ew
+         This setting is disabled for groups. If you want to change all of the
+         polys in a group to closed or open, you will have to do it one at a
+         time."
 
-   ttk::button $pane.butSave -text "Save ASCII shapefile" \
-      -command ::plot::poly_write
+   ttk::button $pane.btnHighlight -text "Highlight" \
+         -command {::plot::poly_plot 1} \
+         -width 0
+   tooltip $pane.btnHighlight \
+         "Highlights the selected poly (or if a group is selected, all polys in
+         that group). This plots the poly, adding 1 to its width and adding
+         dots at each vertex in an attempt to make the poly stand out."
 
-   ttk::button $pane.butLoad -text "Load ASCII shapefile" \
-      -command ::plot::poly_read
+   ttk::button $pane.btnPlot -text "Plot" \
+         -command {::plot::poly_plot 0} \
+         -width 0
+   tooltip $pane.btnPlot \
+         "Plots the selected poly (or if a group is selected, all polys in that
+         group) using the poly's defined settings."
 
-   grid $pane.butSave $pane.butLoad -sticky ew
+   ttk::button $pane.btnAdd -text "Add New:" \
+         -command ::plot::poly_add \
+         -width 0
+   tooltip $pane.btnAdd \
+         "Adds a new poly using the specified name. This poly will be added at
+         the bottom of the selected group (or the group that the selected poly
+         belongs to, or to the first group if nothing is selected).
 
+         The poly will be named as specified in the field to the right. If the
+         name already exists, it will be incremented until a unique name is
+         found. Names must be unique across all groups."
+   ttk::entry $pane.entAdd \
+         -textvariable ::plot::g::poly_next_name \
+         -width 0
+   tooltip $pane.entAdd \
+         "Specifies the name to use for the next poly.
+
+         After the next poly is added, this field will automatically update. If
+         the name ends with no number, a number will be appended. If it ends
+         with a number, the number will be incremented to the next unused
+         name.
+         
+         Names must be unique across all groups."
+   ttk::checkbutton $pane.chkAdd -text "Closed" \
+         -variable ::plot::g::poly_next_closed
+   tooltip $pane.chkAdd \
+         "Specifies whether the next poly added should be closed (polygon) or
+         open (polyline)."
+
+   ttk::button $pane.btnImport -text "Import" \
+         -command ::plot::poly_import \
+         -width 0
+   tooltip $pane.btnImport \
+         "Imports polys from an ASCII shapefile.
+         
+         A new group will be added based on the shapefile's filename. The polys
+         from the file will be added to that group. If an imported poly has
+         NAME, LINE_COLOR, LINE_WIDTH, or CLOSED metadata, the information will
+         be parsed and used. Otherwise, appropriate defaults will be set."
+
+   ttk::button $pane.btnExport -text "Export" \
+         -command ::plot::poly_export \
+         -width 0
+   tooltip $pane.btnExport \
+         "Exports polys to an ASCII shapefile.
+
+         If a poly is selected, only that poly is exported. If a group is
+         selected, then that entire group is exported.
+
+         The exported shapefile will include metadata for NAME, LINE_COLOR,
+         LINE_WIDTH, and CLOSED."
+
+   mixin::combobox::mapping $pane.cboExpCoord -width 2 \
+         -state readonly \
+         -altvariable ::plot::g::poly_export_geo \
+         -mapping {
+            "UTM" 0
+            "Geo" 1
+         }
+   tooltip $pane.cboExpCoord \
+         "Specifies whether to export polys using UTM coordinates or geographic
+         coordinates."
+
+   ttk::checkbutton $pane.chkExpMeta \
+         -text "Meta" \
+         -variable ::plot::g::poly_export_meta
+   tooltip $pane.chkExpMeta \
+         "Specifies whether or not metadata should be included when exporting."
+
+   ttk::button $pane.btnPlotAll -text "Plot All" \
+         -command ::plot::poly_plot_all \
+         -width 0
+   tooltip $pane.btnPlotAll \
+         "Plots all polys."
+
+   foreach widget {tbnX tbnUp tbnDown lblName entName btnNameApp btnNameRev} {
+      ::mixin::statevar $pane.$widget \
+         -statemap {
+            none disabled
+            poly !disabled
+            empty !disabled
+            group !disabled
+         } \
+         -statevariable ::plot::g::poly_selected
+   }
+   foreach widget {
+      lblColor cboColor btnColorApp btnColorRev lblWidth spnWidth btnWidthApp
+      btnWidthRev btnPlot btnHighlight btnExport cboExpCoord chkExpMeta
+   } {
+      ::mixin::statevar $pane.$widget \
+         -statemap {
+            none disabled
+            poly !disabled
+            empty disabled
+            group !disabled
+         } \
+         -statevariable ::plot::g::poly_selected
+   }
+   foreach widget {chkClosed} {
+      ::mixin::statevar $pane.$widget \
+         -statemap {
+            none disabled
+            poly !disabled
+            empty disabled
+            group disabled
+         } \
+         -statevariable ::plot::g::poly_selected
+   }
+
+   ttk::separator $pane.sep1 -orient horizontal
+   ttk::separator $pane.sep2 -orient vertical
+   ttk::separator $pane.sep3 -orient horizontal
+   ttk::separator $pane.sep4 -orient horizontal
+
+   lower [ttk::frame $pane.fraTool]
+   pack $pane.tbnX $pane.tbnUp $pane.tbnDown \
+         -in $pane.fraTool -side top
+   pack $pane.tbnPlus \
+         -in $pane.fraTool -side bottom
+
+   lower [ttk::frame $pane.fraSettings]
+   grid $pane.lblName $pane.entName $pane.btnNameApp $pane.btnNameRev \
+         -in $pane.fraSettings -sticky ew -padx 2 -pady 2
+   grid $pane.lblColor $pane.cboColor $pane.btnColorApp $pane.btnColorRev \
+         -in $pane.fraSettings -sticky ew -padx 2 -pady 2
+   grid $pane.lblWidth $pane.spnWidth $pane.btnWidthApp $pane.btnWidthRev \
+         -in $pane.fraSettings -sticky ew -padx 2 -pady 2
+   grid columnconfigure $pane.fraSettings 1 -weight 1
+
+   lower [ttk::frame $pane.fraClosed]
+   pack $pane.chkClosed \
+         -in $pane.fraClosed -side left -padx 2 -pady 2
+   pack $pane.btnPlot $pane.btnHighlight \
+         -in $pane.fraClosed -side right -padx 2 -pady 2
+
+   lower [ttk::frame $pane.fraAdd]
+   grid $pane.btnAdd $pane.entAdd $pane.chkAdd \
+         -in $pane.fraAdd -sticky ew -padx 2 -pady 2
+   grid columnconfigure $pane.fraAdd 1 -weight 1
+
+   lower [ttk::frame $pane.fraButtons]
+   pack $pane.btnImport $pane.sep3 \
+         $pane.btnExport $pane.cboExpCoord $pane.chkExpMeta \
+         -in $pane.fraButtons -side top -fill x -padx 2 -pady 2
+   pack $pane.btnPlotAll $pane.sep4 \
+         -in $pane.fraButtons -side bottom -fill x -padx 2 -pady 2
+   pack configure $pane.sep3 $pane.sep4 -padx 0
+
+   lower [ttk::frame $pane.fraTop]
+   grid $pane.fraTool $pane.tvwPolys $pane.vsbPolys \
+         -in $pane.fraTop -sticky news
+   grid columnconfigure $pane.fraTop 1 -weight 1
+   grid rowconfigure $pane.fraTop 0 -weight 1
+
+   lower [ttk::frame $pane.fraBottom]
+   grid $pane.fraSettings $pane.sep2 $pane.fraButtons \
+         -in $pane.fraBottom -sticky news
+   grid $pane.fraClosed ^ ^ \
+         -in $pane.fraBottom -sticky news
+   grid $pane.sep1 ^ ^ \
+         -in $pane.fraBottom -sticky news -pady 2
+   grid $pane.fraAdd ^ ^ \
+         -in $pane.fraBottom -sticky news
+   grid $pane.sep2 -padx 2
+   grid columnconfigure $pane.fraBottom 0 -weight 1
+
+   grid $pane.fraTop -sticky news -padx 2 -pady 2
+   grid $pane.fraBottom -sticky news -padx 2 -pady 2
    grid rowconfigure $pane 0 -weight 1
    grid columnconfigure $pane 0 -weight 1
-   grid columnconfigure $pane 1 -weight 1
 
-   return $pane
-}
-
-proc ::plot::pane_shp {pane} {
-   ttk::frame $pane
-   
-   set g::shpListBox $pane.slbShapes
-
-   iwidgets::scrolledlistbox $g::shpListBox \
-      -hscrollmode dynamic -vscrollmode dynamic -height 5
-   grid $g::shpListBox - -sticky news
-
-   ttk::label $pane.labLineColor -text "Line Color:" -anchor e
-   ::mixin::combobox $pane.cboLineColor \
-      -values [concat randomize $::plot::c::colors] \
-      -textvariable ::plot::g::shapeLineColor -state readonly
-   ::tooltip::tooltip $pane.cboLineColor \
-      "Specify the color to use for plotted lines."
-   grid $pane.labLineColor $pane.cboLineColor
-   grid $pane.labLineColor -sticky w
-   grid $pane.cboLineColor -sticky ew
-
-   ttk::button $pane.butAdd -text "Add ASCII shapefile" -command ::plot::shp_add
-   grid $pane.butAdd - -sticky ew
-
-   ttk::button $pane.butRemove -text "Remove selected shapefile" \
-      -command ::plot::shp_remove
-   grid $pane.butRemove - -sticky ew
-
-   ttk::button $pane.butPlot -text "Plot shapefiles" -command ::plot::shp_plot
-   grid $pane.butPlot - -sticky ew
-
-   grid rowconfigure $pane 0 -weight 1
-   grid columnconfigure $pane 1 -weight 1
+   ::misc::idle ::plot::poly_refresh_data
 
    return $pane
 }
@@ -607,10 +836,6 @@ proc ::plot::plot_all {} {
    # Then coastline/map
    if { $g::enable_plot_maps } {
       lappend cmdlist [map_plot_cmd]
-   }
-   # Then shapefiles
-   if { $g::enable_plot_shapes } {
-      lappend cmdlist [shp_plot_cmd]
    }
    # Then plans
    if { $g::enable_plot_plans } {
@@ -813,105 +1038,317 @@ proc ::plot::map_plot_cmd {} {
    return [cmdlist_join $cmdlist]
 }
 
-proc ::plot::shp_remove {} {
-   set item [$g::shpListBox getcurselection]
-   if {![string equal $item ""]} {
-      $g::shpListBox delete $item
-      exp_send "remove_shapefile, \"$item\";\r"
-   }
+proc ::plot::poly_sync {json} {
+   set g::poly_data [::json::json2dict $json]
+   ::misc::idle ::plot::poly_refresh_data
 }
 
-proc ::plot::shp_add {} {
-   set file [open_file -filetypes $c::shape_file_types]
-   if {$file ne ""} {
-      $g::shpListBox insert end $file
-      exp_send "add_shapefile, \"$file\";\r"
-   }
-}
+proc ::plot::poly_refresh_data {} {
+   set tree $g::poly_tree
+   set data $g::poly_data
 
-proc ::plot::shp_plot {} {
-   exp_send "[shp_plot_cmd];\r"
-}
+   if {![winfo exists $tree]} return
 
-proc ::plot::shp_plot_cmd {} {
-   set cmdlist {}
-   if {$g::shapeLineColor eq "randomize"} {
-      lappend cmdlist "plot_shapefiles, random_colors=1, win=$::_map(window)"
-   } else {
-      lappend cmdlist "plot_shapefiles, color=\"$g::shapeLineColor\", win=$::_map(window)"
-   }
-   return [cmdlist_join $cmdlist]
-}
-
-proc ::plot::poly_sort {} {
-   exp_send "polygon_sort;\r"
-}
-
-proc ::plot::poly_cleanup {} {
-   exp_send "polygon_sanitize;\r"
-}
-
-proc ::plot::poly_add {closed} {
-   exp_send "polygon_add, get_poly(closed=$closed, win=$::_map(window)), \"$g::poly_next_name\";\r"
-}
-
-proc ::plot::poly_add_callback {name} {
-   $g::polyListBox insert end $name
-   if {$name eq $g::poly_next_name} {
-      regexp {^(.*?)([0-9]*)$} $g::poly_next_name - base num
-      if {$num eq ""} {
-         set num 1
+   # Backup information about current tree
+   set selected [lindex [$tree selection] 0]
+   set selgroup ""
+   set selpoly ""
+   set idxgroup -1
+   set idxpoly -1
+   # If we have a selection, determine if it's a group or a poly then store the
+   # info accordingly
+   if {$selected ne ""} {
+      set selgroup [$tree parent $selected]
+      if {$selgroup eq ""} {
+         set selgroup $selected
+         set idxgroup [$tree index $selgroup]
       } else {
-         incr num
-      }
-      set g::poly_next_name $base$num
-   }
-}
-
-proc ::plot::poly_remove {} {
-   set item [$g::polyListBox getcurselection]
-   if {![string equal $item ""]} {
-      $g::polyListBox delete $item
-      exp_send "polygon_remove, \"$item\";\r"
-   }
-}
-
-proc ::plot::poly_rename {} {
-   set item [$g::polyListBox getcurselection]
-   if {![string equal $item ""]} {
-      set new_name $item
-      if {[::getstring::tk_getString $c::top.polyrename new_name "Please enter the new name for this polygon/polyline." -title "New Name"]} {
-         exp_send "polygon_rename, \"$item\", \"$new_name\";\r"
+         set selpoly $selected
+         set idxgroup [$tree index $selgroup]
+         set idxpoly [$tree index $selpoly]
       }
    }
+
+   # Note whether groups are expanded or not
+   set open {}
+   foreach child [$tree children {}] {
+      dict set open $child [$tree item $child -open]
+   }
+
+   # Clear tree
+   $tree delete [$tree children {}]
+
+   # Repopulate tree
+   foreach {group polys} $data {
+      $tree insert {} end -id $group -text $group -open true
+      if {[dict exists $open $group]} {
+         $tree item $group -open [dict get $open $group]
+      }
+      foreach {poly -} $polys {
+         $tree insert $group end -id $poly -text $poly
+      }
+   }
+
+   # Attempt to restore the selection
+   # Clear stored info if it is now invalid
+   if {$selpoly ne "" && ![$tree exists $selpoly]} {
+      set selpoly ""
+   }
+   if {$selgroup ne "" && ![$tree exists $selgroup]} {
+      set selgroup ""
+      set idxpoly -1
+   }
+   # Simplest case: selection was poly that still exists
+   if {$selpoly ne ""} {
+      $tree selection set [list $selpoly]
+   # Cases where selection involved a group that still exists
+   } elseif {$selgroup ne ""} {
+      # Group exists and was selected
+      if {$idxpoly < 0} {
+         $tree selection set [list $selgroup]
+      # Group exists and poly under it was selected
+      } else {
+         set selpoly [lindex [$tree children $selgroup] $idxpoly]
+         # In case selection was final element in list
+         if {$selpoly eq ""} {
+            set selpoly [lindex [$tree children $selgroup] end]
+         }
+         # If all polys in a group were deleted, select the group
+         if {$selpoly eq ""} {
+            $tree selection set [list $selgroup]
+         # Otherwise, select the same (or last) index
+         } else {
+            $tree selection set [list $selpoly]
+         }
+      }
+   # Case where selection involves a group that no longer exists: attempt to
+   # select same (or last) index, but if cannot, then select nothing
+   } elseif {$idxgroup >= 0} {
+      set selgroup [lindex [$tree children {}] $idxgroup]
+      if {$selgroup eq ""} {
+         set selgroup [lindex [$tree children {}] end]
+      }
+      if {$selgroup ne ""} {
+         $tree selection set [list $selgroup]
+      }
+   }
+
+   ::misc::idle ::plot::poly_refresh_sel
 }
 
-proc ::plot::poly_plot {} {
-   exp_send "[poly_plot_cmd];\r"
+proc ::plot::poly_refresh_sel {} {
+   set tree $g::poly_tree
+   set data $g::poly_data
+
+   if {![winfo exists $tree]} return
+
+   # poly_selected:
+   # none - nothing, disable all
+   # poly - poly, enable all
+   # empty - empty group, disable all except name
+   # group - populated group, enable all except closed
+
+   set selected [lindex [$tree selection] 0]
+   if {$selected eq ""} {
+      set g::poly_selected none
+      set g::poly_name ""
+      set g::poly_color ""
+      set g::poly_width ""
+      set g::poly_closed 0
+      return
+   }
+
+   set selgroup [$tree parent $selected]
+   if {$selgroup eq ""} {
+      set selgroup $selected
+      set selpoly ""
+   } else {
+      set selpoly $selected
+   }
+
+   # Poly selected, show its info
+   if {$selpoly ne ""} {
+      set g::poly_selected poly
+      set g::poly_name $selpoly
+      set g::poly_color [dict get $data $selgroup $selpoly color]
+      set g::poly_width [dict get $data $selgroup $selpoly width]
+      set g::poly_closed [dict get $data $selgroup $selpoly closed]
+   # Group selected, show its info
+   } else {
+      set g::poly_name $selgroup
+      set g::poly_closed 0
+      set polys [dict keys [dict get $data $selgroup]]
+
+      if {![llength $polys]} {
+         set g::poly_selected empty
+         set g::poly_color ""
+         set g::poly_width ""
+         return
+      }
+
+      set g::poly_selected group
+
+      dict with data $selgroup [lindex $polys 0] {
+         set g::poly_color $color
+         set g::poly_width $width
+      }
+
+      foreach poly $polys {
+         dict with data $selgroup $poly {
+            if {$g::poly_color ne $color} {
+               set g::poly_color ""
+            }
+            if {$g::poly_width ne $width} {
+               set g::poly_width ""
+            }
+         }
+      }
+   }
+}
+
+proc ::plot::poly_selection {} {
+   set tree $g::poly_tree
+
+   if {$g::poly_selected eq "none"} {
+      return [list]
+   }
+
+   set selected [lindex [$tree selection] 0]
+
+   if {$g::poly_selected eq "poly"} {
+      return [list [$tree parent $selected] $selected]
+   }
+
+   # poly_selected = empty or group
+   return [list $selected]
+}
+
+proc ::plot::poly_sel_quoted {} {
+   set result {}
+   foreach item [poly_selection] {
+      lappend result "\"[ystr $item]\""
+   }
+   return [join $result ", "]
+}
+
+proc ::plot::poly_apply {type old new} {
+   lassign [poly_selection] group poly
+
+   if {$type eq "closed"} {
+      set new $g::poly_closed
+   }
+
+   if {$old eq $new} return
+
+   if {$type eq "name"} {
+      set cmd "polyplot, rename"
+      if {$poly ne ""} {
+         append cmd ", \"$group\""
+      }
+      append cmd ", \"[ystr $old]\", \"[ystr $new]\""
+   } else {
+      set cmd "polyplot, update, \"$group\""
+      if {$poly ne ""} {
+         append cmd ", \"$poly\""
+      }
+      append cmd ", ${type}=\"[ystr $new]\""
+   }
+
+   exp_send "$cmd;\r"
 }
 
 proc ::plot::poly_plot_cmd {} {
-   return polygon_plot
+   set tree $g::poly_tree
+   foreach group [$tree children {}] {
+      if {[llength [$tree children $group]]} {
+         return "polyplot, plot, win=$::_map(window)"
+      }
+   }
+   return ""
 }
 
-proc ::plot::poly_highlight {} {
-   set item [$g::polyListBox getcurselection]
-   if {![string equal $item ""]} {
-      exp_send "polygon_highlight, \"$item\";\r"
+proc ::plot::poly_plot_all {} {
+   set cmd [poly_plot_cmd]
+   if {$cmd ne ""} {
+      exp_send "$cmd;\r"
+   } else {
+      warnmsg "Nothing to plot: no polys are defined."
    }
 }
 
-proc ::plot::poly_write {} {
-   set file [save_file -filetypes $c::shape_file_types]
-   if {$file ne ""} {
-      exp_send "polygon_write, \"$file\";\r"
+proc ::plot::poly_plot {{highlight 0}} {
+   lassign [poly_selection] group poly
+   set cmd "polyplot, plot, \"[ystr $group]\""
+   if {$poly ne ""} {
+      append cmd ", \"[ystr $poly]\""
    }
+   append cmd ", win=$::_map(window)"
+   if {$highlight} {
+      append cmd ", highlight=1"
+   }
+   exp_send "$cmd;\r"
 }
 
-proc ::plot::poly_read {} {
+proc ::plot::poly_add {} {
+   lassign [poly_selection] group poly
+
+   if {$group eq ""} {
+      set group [lindex $g::poly_data 0]
+   }
+   if {$group eq ""} {
+      set group Local
+   }
+
+   exp_send "polyplot, add, \"[ystr $group]\", \"[ystr $g::poly_next_name]\", win=$::_map(window), closed=$g::poly_next_closed;\r"
+}
+
+proc ::plot::poly_add_callback {name next_name} {
+   set g::poly_next_name $next_name
+   poly_select $name
+}
+
+proc ::plot::poly_select {item} {
+   ::misc::idle [list $g::poly_tree selection set [list $item]]
+   ::misc::idle [list $g::poly_tree see $item]
+}
+
+proc ::plot::poly_remove {} {
+   exp_send "polyplot, remove, [poly_sel_quoted];\r"
+}
+
+proc ::plot::poly_up {} {
+   exp_send "polyplot, raise, [poly_sel_quoted];\r"
+}
+
+proc ::plot::poly_down {} {
+   exp_send "polyplot, lower, [poly_sel_quoted];\r"
+}
+
+proc ::plot::poly_add_group {} {
+   set newgroup "New Group"
+   set i 1
+   while {[$g::poly_tree exists $newgroup]} {
+      set newgroup "New Group [incr i]"
+   }
+   exp_send "polyplot, add, \"[ystr $newgroup]\";\r"
+}
+
+proc ::plot::poly_import {} {
    set file [open_file -filetypes $c::shape_file_types]
    if {$file ne ""} {
-      exp_send "polygon_read, \"$file\";\r"
+      exp_send "polyplot, import, \"[ystr $file]\";\r"
+   }
+}
+
+proc ::plot::poly_export {} {
+   set file [save_file -filetypes $c::shape_file_types]
+   if {$file ne ""} {
+      lassign [poly_selection] group poly
+      set cmd "polyplot, export, \"[ystr $group]\", \"[ystr $file]\""
+      appendif cmd \
+            $g::poly_export_geo        ", geo=1" \
+            {!$g::poly_export_meta}    ", meta=0"
+      exp_send "$cmd;\r"
    }
 }
 
@@ -972,4 +1409,12 @@ proc ::plot::file_helper {cmd args} {
 
 proc ::plot::cmdlist_join {cmdlist} {
    return [join [struct::list filterfor x $cmdlist {$x ne ""}] "; "]
+}
+
+proc ::plot::errmsg {msg} {
+   tk_messageBox -parent $c::top -message $msg -icon error -type ok
+}
+
+proc ::plot::warnmsg {msg} {
+   tk_messageBox -parent $c::top -message $msg -icon warning -type ok
 }

@@ -132,6 +132,7 @@ require, "parse.i";
 require, "pip.i";
 require, "plugins.i";
 require, "polyfit_smooth.i";
+require, "polyplot.i";
 require, "rbgga.i";
 require, "rbpnav.i";
 require, "rbtans.i";
