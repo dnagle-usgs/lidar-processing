@@ -1110,9 +1110,9 @@ func batch_automerge_tiles(path, searchstr=, verbose=, update=) {
 }
 
 func batch_merge_tiles(path, searchstr=, file_suffix=, vname_suffix=,
-verbose=, update=) {
+verbose=, update=, uniq=) {
 /* DOCUMENT batch_merge_tiles, path, searchstr=, file_suffix=, vname_suffix=,
-  verbose=, update=
+  verbose=, update=, uniq=
 
   Performs a batch merge over data that has been stored in a tiled format.
 
@@ -1151,6 +1151,11 @@ verbose=, update=) {
         update=0    Existing files are overwritten
         update=1    Existing files are skipped
 
+    uniq= Turns on or off uniqueness. Points are considered duplicate if they
+      share the same timestamp, raster, pulse, and channel.
+        uniq=1      Throw away duplicate points (default)
+        uniq=0      Keep duplicate points.
+
   Each of the three kinds of tiles has a different set of conventions that
   governs how their filenames and vnames are constructed, as follows.
 
@@ -1180,6 +1185,7 @@ verbose=, update=) {
   default, vname_suffix, "_merged";
   default, verbose, 1;
   default, update, 0;
+  default, uniq, 1;
 
   files_in = find(path, searchstr=searchstr);
   if(is_void(files_in)) {
@@ -1227,7 +1233,7 @@ verbose=, update=) {
     vname = extract_tile(file_tail(cur_out), dtlength="short", qqprefix=1);
     vname += vname_suffix;
 
-    dirload, files=files_in(w), outfile=cur_out, outvname=vname, uniq=1,
+    dirload, files=files_in(w), outfile=cur_out, outvname=vname, uniq=uniq,
       skip=1, verbose=0;
   }
 }
