@@ -145,6 +145,7 @@ require, "set.i";
 require, "sf.i";
 require, "shapefile.i";
 require, "statistics.i";
+require, "sox.i";
 require, "tiles.i";
 require, "transect.i";
 require, "util_cast.i";
