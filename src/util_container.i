@@ -752,7 +752,7 @@ func msort_array(x, which) {
   If WHICH is omitted, then the smallest dimension will be used. The code for
   this function is modeled on msort.
 
-  SEE ALSO: sort, msort, msort_rank
+  SEE ALSO: sort, msort, msort_rank, msort_struct
 */
   local list;
   dims = dimsof(x);
@@ -778,6 +778,58 @@ func msort_array(x, which) {
   }
 
   return sort(rank+indgen(0:mxrank)*norm);
+}
+
+func msort_struct(x, fields, tiebreak=, rank=) {
+/* DOCUMENT idx = msort_struct(x, fields, tiebreak=, rank=)
+  This is like msort, but instead of operating over multiple arrays, it
+  operates over a single array using specified fields. Thus, this:
+    > data = array(FS, 100)
+    > idx = msort(data.raster, data.pulse)
+  Is equivalent to this:
+    > data = array(FS, 100)
+    > idx = msort_struct(data, ["raster", "pulse"])
+  If FIELDS is omitted, then all fields will be used. The code for
+  this function is modeled on msort.
+
+  If rank=1 is specified, then instead of returning an index list, the final
+  ranking will be returned. The smallest/first element will have rank 0. Items
+  that are equal will have the same rank.
+
+  Option tiebreak= provides an array of values that will be used to break ties.
+  This can be any array of sortable values, including a ranking returned by
+  using rank=1.
+
+  Ties will otherwise be kept in their original order.
+
+  SEE ALSO: sort, msort, msort_rank, msort_array
+*/
+  local list;
+
+  if(is_void(fields)) fields = get_members(x);
+  count = numberof(fields);
+
+  mxrank = numberof(x)-1;
+  _rank = msort_rank(get_member(x, fields(1)), list);
+  if(max(_rank) == mxrank) return list;
+
+  norm = 1./(mxrank+1.);
+  if(1.+norm == 1.) error, pr1(mxrank+1)+" is too large an arrange";
+
+  for(i = 2; i <= count; i++) {
+    _rank += msort_rank(get_member(x, fields(i)))*norm;
+    _rank = msort_rank(_rank, list);
+    if(max(_rank) == mxrank) return (rank ? _rank : list);
+  }
+
+  if(!is_void(tiebreak)) {
+    _rank += msort_rank(tiebreak)*norm;
+    _rank = msort_rank(_rank, list);
+    if(max(_rank) == mxrank) return (rank ? _rank : list);
+  }
+
+  if(rank) return _rank;
+  return sort(_rank+indgen(0:mxrank)*norm);
 }
 
 func range_to_index(rng, size) {
