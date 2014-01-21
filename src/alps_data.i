@@ -1087,8 +1087,10 @@ func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=) {
   If the .soe field is not present, if all soe values are the same, or if
   forcexy=1, then the x and y coordinates of the data are used instead. In
   this case, points located at the same x,y coordinate are considered
-  duplicates. If enablez=1, then points located at the same x,y,z coordinate
-  are instead considered duplicates.
+  duplicates.
+
+  If enablez=1, then elevation is used to help determine uniqueness in addition
+  to .soe, [.soe, .channel], or [x, y].
 
   This allows the function to work on almost any kind of data:
     * data generated within ALPS
@@ -1113,9 +1115,7 @@ func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=) {
     forcexy= Forces the use of x/y values.
         forcexy=0   Do not force use of x/y values (default)
         forcexy=1   Force use of x/y values.
-    enablez= Enables the use of z values. If the soe values get used, this
-      has no effect. If the x/y values get used, then causes z to get used
-      as well.
+    enablez= Enables the use of z values.
         enablez=0   Ignore z values (default)
         enablez=1   Include z values in uniqueness check
     mode= Specifies which data mode to use to extract x/y/z points when using
@@ -1135,14 +1135,14 @@ func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=) {
   if(numberof(data) == 1)
     return (bool || idx) ? [1] : data;
 
-  // First, we assume that we want to keep everything.
-  keep = array(char(1), dimsof(data));
-
   if(forcesoe && !has_member(data, "soe"))
     error, "You cannot use forcesoe=1 when the data does not have an soe field.";
 
   if(forcesoe && forcexy)
     error, "You cannot use both of forcesoe=1 and forcexy=1 together."
+
+  // First, we assume that we want to keep everything.
+  keep = array(char(1), dimsof(data));
 
   // Determine how to determine uniqueness. Start by assuming soe.
   usesoe = 1;
@@ -1157,6 +1157,11 @@ func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=) {
   if(usesoe && !forcesoe && allof(data.soe == data.soe(1)))
     usesoe = 0;
 
+  // Unique points are found implicitly by identifying the duplicates. All of
+  // the paths below do the same basic thing: sort the data using the fields we
+  // are comparing with; then comparing adjacent points to see if they are
+  // equal on all those fields. If they are, then it's a duplicate.
+
   if(usesoe) {
     // Determine whether to use the channel to help determine uniqueness. Start
     // by assuming yes.
@@ -1169,18 +1174,24 @@ func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=) {
       usechannel = 0;
 
     if(usechannel) {
-      // Use using soe + channel to determine uniqueness, duplicate points are
-      // determined by points where soe and channel both match.
-      srt = msort(data.soe, data.channel);
-      dupe = where(!data.soe(srt)(dif) & !data.channel(srt)(dif));
+      if(enablez) {
+        data2xyz, data, , , z, native=1, mode=mode;
+        srt = msort(data.soe, data.channel, z);
+        dupe = where(!data.soe(srt)(dif) & !data.channel(srt)(dif) & !z(srt)(dif));
+      } else {
+        srt = msort(data.soe, data.channel);
+        dupe = where(!data.soe(srt)(dif) & !data.channel(srt)(dif));
+      }
     } else {
-      // When using soe to determine uniqueness, duplicate points are
-      // determined by points where the soe value matches.
-      srt = sort(data.soe);
-      dupe = where(!data.soe(srt)(dif));
+      if(enablez) {
+        data2xyz, data, , , z, native=1, mode=mode;
+        srt = msort(data.soe, z);
+        dupe = where(!data.soe(srt)(dif) & !z(srt)(dif));
+      } else {
+        srt = sort(data.soe);
+        dupe = where(!data.soe(srt)(dif));
+      }
     }
-    if(numberof(dupe))
-      keep(srt(dupe)) = 0;
   } else {
     data2xyz, data, x, y, z, native=1, mode=mode;
 
@@ -1188,24 +1199,16 @@ func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=) {
     // data, this will prevent errors.
     keep = array(char(1), dimsof(x));
 
-    // Now, do we use just x/y to determine uniqueness... or z as well?
-    // Assume just xyz by default
-
-    srt = enablez ? msort(x, y, z) : msort(x, y);
-    dupex = where(x(srt(:-1)) == x(srt(2:)));
-    if(numberof(dupex)) {
-      dupey = where(y(srt(dupex)) == y(srt(dupex+1)));
-      if(numberof(dupey)) {
-        if(enablez) {
-          dupez = where(z(srt(dupex(dupey))) == z(srt(dupex(dupey+1))));
-          if(numberof(dupez))
-            keep(srt(dupex(dupey(dupez)))) = 0;
-        } else {
-          keep(srt(dupex(dupey))) = 0;
-        }
-      }
+    if(enablez) {
+      srt = msort(x, y, z);
+      dupe = where(!x(srt)(dif) & !y(srt)(dif) & !z(srt)(dif));
+    } else {
+      srt = msort(x, y);
+      dupe = where(!x(srt)(dif) & !y(srt)(dif));
     }
   }
+  if(numberof(dupe))
+    keep(srt(dupe)) = 0;
 
   if(bool)
     return keep;
