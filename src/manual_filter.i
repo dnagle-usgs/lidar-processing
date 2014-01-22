@@ -362,8 +362,104 @@ fudge=, mode=, native=, verbose=) {
     timer_finished, t0;
 }
 
-func extract_corresponding_data(data, ref, soefudge=) {
-/* DOCUMENT extracted = extract_corresponding_data(data, ref, soefudge=)
+scratch = save(scratch, extract_corr_or_uniq_data);
+func extract_corr_or_uniq_data(which, data, ref, soefudge=, mode=, enablez=, idx=,
+keep=) {
+  default, soefudge, 0.001;
+  _keep = array(char(!which), numberof(data));
+
+  i = j = 1;
+  ndata = numberof(data);
+  nref = numberof(ref);
+
+  fields = [];
+
+  if(
+    has_member(data, "raster") && has_member(data, "pulse") &&
+    has_member(ref, "raster") && has_member(ref, "pulse")
+  ) {
+    grow, fields, ["raster", "pulse"];
+  } else {
+    grow, fields, "rn";
+  }
+
+  if(has_member(data, "channel") && has_member(ref, "channel")) {
+    grow, fields, "channel";
+  }
+
+  grow, fields, "soe";
+
+  dataz = refz = [];
+  if(enablez) {
+    dataz = data2xyz(data, mode=mode, native=1)(..,3);
+    refz = data2xyz(ref, mode=mode, native=1)(..,3);
+  }
+
+  // Can't apply sort directly to data in case they use keep=1 or idx=1.
+
+  dsrt = msort_struct(data, fields, tiebreak=dataz);
+
+  rsrt = msort_struct(ref, fields, tiebreak=refz);
+  if(enablez) refz = refz(rsrt);
+  ref = ref(rsrt);
+  rsrt = [];
+
+  nfields = numberof(fields);
+  fudge = array(0., nfields);
+  fudge(0) = soefudge;
+
+  while(i <= ndata && j <= nref) {
+    A = data(dsrt(i));
+    B = ref(j);
+    for(k = 1; k <= nfields; k++) {
+      a = get_member(A, fields(k));
+      b = get_member(B, fields(k));
+      if(fudge(k)) {
+        if(a < b - fudge(k)) {
+          i++;
+          goto next;
+        } else if(a > b + fudge(k)) {
+          j++;
+          goto next;
+        }
+      } else {
+        if(a < b) {
+          i++;
+          goto next;
+        } else if(a > b) {
+          j++;
+          goto next;
+        }
+      }
+    }
+
+    if(enablez) {
+      a = dataz(dsrt(i));
+      b = refz(j);
+      if(a < b) {
+        i++;
+        goto next;
+      } else if(a > b) {
+        j++;
+        goto next;
+      }
+    }
+
+    _keep(dsrt(i)) = which;
+    i++;
+
+    next:
+  }
+
+  if(keep) return _keep;
+  if(idx) return where(_keep);
+  return data(dsrt)(where(_keep(dsrt)));
+}
+
+local extract_corresponding_data;
+extract_corresponding_data = closure(extract_corr_or_uniq_data, 1);
+/* DOCUMENT extracted = extract_corresponding_data(data, ref, soefudge=, mode=,
+   enablez=, idx=, keep=)
 
   This extracts points from "data" that exist in "ref".
 
@@ -391,6 +487,16 @@ func extract_corresponding_data(data, ref, soefudge=) {
     Both variables are now restricted to those points that existed in both
     original point clouds.
 
+  Fields used in comparison:
+
+    Correspondence is determined by looking at a subset of the struct's fields
+    as follows:
+      - if both data and ref have .raster and .pulse, they are used; otherwise,
+        .rn is used
+      - if both data and ref have .channel, it is used
+      - .soe is always used
+      - if enablez=1, then the elevation (per mode=) is used
+
   Parameters:
     data: The source data. The return result will contain points from this
       variable.
@@ -403,69 +509,29 @@ func extract_corresponding_data(data, ref, soefudge=) {
       same if they are within 0.001 seconds of one another. Changing this
       might be helpful if one of your variables was recreated from XYZ or
       LAS data and seems to have lost some timestamp resolution.
+    mode= Specifies the mode to use when retrieving elevation values. Only used
+      when enablez=1.
+    enablez= When enablez=1, elevation values are used to help determine
+      correspondence.
+    idx= If idx=1, an index list into data is returned instead.
+    keep= If keep=1, a "keep" list is returned: an array of bools indicating
+      which values in data correspond.
 
   SEE ALSO: extract_unique_data, batch_extract_corresponding_data
 */
-  default, soefudge, 0.001;
-  keep = array(char(0), numberof(data));
 
-  i = j = 1;
-  ndata = numberof(data);
-  nref = numberof(ref);
+local extract_unique_data;
+extract_unique_data = closure(extract_corr_or_uniq_data, 0);
+/* DOCUMENT extracted = extract_unique_data(data, ref, soefudge=, mode=,
+   enablez=, idx=, keep=)
+  Extracts data that doesn't exist in ref. This is the opposite of
+  extract_corresponding_data: it will extract every point that
+  extract_corresponding wouldn't.
 
-  if(
-    has_member(data, "channel") && has_member(data, "raster") &&
-    has_member(data, "pulse") &&
-    has_member(ref, "channel") && has_member(ref, "raster") &&
-    has_member(ref, "pulse")
-  ) {
-    data = data(msort(data.raster, data.channel, data.pulse, data.soe));
-    ref = ref(msort(ref.raster, ref.channel, ref.pulse, ref.soe));
-    while(i <= ndata && j <= nref) {
-      if(data(i).raster < ref(j).raster) {
-        i++;
-      } else if(data(i).raster > ref(j).raster) {
-        j++;
-      } else if(data(i).channel < ref(j).channel) {
-        i++;
-      } else if(data(i).channel > ref(j).channel) {
-        j++;
-      } else if(data(i).pulse < ref(j).pulse) {
-        i++;
-      } else if(data(i).pulse > ref(j).pulse) {
-        j++;
-      } else if(data(i).soe < ref(j).soe - soefudge) {
-        i++;
-      } else if(data(i).soe > ref(j).soe + soefudge) {
-        j++;
-      } else {
-        keep(i) = 1;
-        i++;
-        j++;
-      }
-    }
-  } else {
-    data = data(msort(data.rn, data.soe));
-    ref = ref(msort(ref.rn, ref.soe));
-    while(i <= ndata && j <= nref) {
-      if(data(i).rn < ref(j).rn) {
-        i++;
-      } else if(data(i).rn > ref(j).rn) {
-        j++;
-      } else if(data(i).soe < ref(j).soe - soefudge) {
-        i++;
-      } else if(data(i).soe > ref(j).soe + soefudge) {
-        j++;
-      } else {
-        keep(i) = 1;
-        i++;
-        j++;
-      }
-    }
-  }
+  SEE ALSO: extract_corresponding_data
+*/
 
-  return data(where(keep));
-}
+restore, scratch;
 
 func extract_corresponding_xyz(data, ref, fudge=, mode=, native=) {
 /* DOCUMENT extracted = extract_corresponding_xyz(data, ref, fudge=, mode=,
@@ -558,75 +624,6 @@ func extract_corresponding_xyz(data, ref, fudge=, mode=, native=) {
       keep(i) = 1;
       i++;
       j++;
-    }
-  }
-
-  return data(where(keep));
-}
-
-func extract_unique_data(data, ref, soefudge=) {
-/* DOCUMENT extracted = extract_unique_data(data, ref, soefudge=)
-  Extracts data that doesn't exist in ref. This is the opposite of
-  extract_corresponding_data: it will extract every point that
-  extract_corresponding wouldn't.
-
-  SEE ALSO: extract_corresponding_data
-*/
-  default, soefudge, 0.001;
-  keep = array(char(1), numberof(data));
-
-  i = j = 1;
-  ndata = numberof(data);
-  nref = numberof(ref);
-
-  if(
-    has_member(data, "channel") && has_member(data, "raster") &&
-    has_member(data, "pulse") &&
-    has_member(ref, "channel") && has_member(ref, "raster") &&
-    has_member(ref, "pulse")
-  ) {
-    data = data(msort(data.raster, data.channel, data.pulse, data.soe));
-    ref = ref(msort(ref.raster, ref.channel, ref.pulse, ref.soe));
-    while(i <= ndata && j <= nref) {
-      if(data(i).raster < ref(j).raster) {
-        i++;
-      } else if(data(i).raster > ref(j).raster) {
-        j++;
-      } else if(data(i).channel < ref(j).channel) {
-        i++;
-      } else if(data(i).channel > ref(j).channel) {
-        j++;
-      } else if(data(i).pulse < ref(j).pulse) {
-        i++;
-      } else if(data(i).pulse > ref(j).pulse) {
-        j++;
-      } else if(data(i).soe < ref(j).soe - soefudge) {
-        i++;
-      } else if(data(i).soe > ref(j).soe + soefudge) {
-        j++;
-      } else {
-        keep(i) = 0;
-        i++;
-        j++;
-      }
-    }
-  } else {
-    data = data(msort(data.rn, data.soe));
-    ref = ref(msort(ref.rn, ref.soe));
-    while(i <= ndata && j <= nref) {
-      if(data(i).rn < ref(j).rn) {
-        i++;
-      } else if(data(i).rn > ref(j).rn) {
-        j++;
-      } else if(data(i).soe < ref(j).soe - soefudge) {
-        i++;
-      } else if(data(i).soe > ref(j).soe + soefudge) {
-        j++;
-      } else {
-        keep(i) = 0;
-        i++;
-        j++;
-      }
     }
   }
 
