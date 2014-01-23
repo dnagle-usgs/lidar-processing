@@ -6,7 +6,7 @@ scratch = save(scratch, tmp,
     confobj_profile_rename,
   confobj_groups, confobj_groups_migrate,
   confobj_validate, confobj_write, confobj_read, confobj_clear,
-  confobj_json, confobj_cleangroups, confobj_upgrade,
+  confobj_json, confobj_dumpgroups, confobj_cleangroups, confobj_upgrade,
   confobj_display
 );
 tmp = save(
@@ -14,7 +14,7 @@ tmp = save(
   profile_select, profile_add, profile_del, profile_rename,
   groups, groups_migrate,
   validate, write, read, clear,
-  json, cleangroups, upgrade,
+  json, dumpgroups, cleangroups, upgrade,
   display
 );
 
@@ -121,6 +121,10 @@ func confobj(base, data) {
       suitable for future import. With compact=1, the output is more compact
       but shouldn't be used for long-term storage. This is primarily used by
       conf,write.
+
+    <dumped> = conf(dumpgroups, compact=<0|1>)
+      Internal method used to prepare group data to be encapsulated by
+      conf(json,).
 
     <groups> = conf(cleangroups,)
       This returns a "clean" form of the groups data. While the validate method
@@ -391,22 +395,28 @@ func confobj_json(json, compact=) {
   }
 
   if(!am_subroutine()) {
-    output = save();
-    if(!compact)
-      save, output, confver=1;
-    save, output, groups=use_method(cleangroups,);
-    if(!compact) {
-      save, output, "save environment", save(
-        "user", get_user(),
-        "host", get_host(),
-        "timestamp", soe2iso8601(getsoe()),
-        "repository", _hgid
-      );
-    }
+    output = use_method(dumpgroups, compact=compact);
     return json_encode(output, indent=(compact ? [] : 2));
   }
 }
 json = confobj_json;
+
+func confobj_dumpgroups(compact=) {
+  output = save();
+  if(!compact)
+    save, output, confver=1;
+  save, output, groups=use_method(cleangroups,);
+  if(!compact) {
+    save, output, "save environment", save(
+      "user", get_user(),
+      "host", get_host(),
+      "timestamp", soe2iso8601(getsoe()),
+      "repository", _hgid
+    );
+  }
+  return output;
+}
+dumpgroups = confobj_dumpgroups;
 
 func confobj_cleangroups(void) {
   use, data;
