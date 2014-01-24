@@ -1,14 +1,5 @@
 require, "class_confobj.i";
 
-scratch = save(scratch, base,
-  bathconfobj_settings_group,
-  bathconfobj_settings, bathconfobj_groups, bathconfobj_validate,
-  bathconfobj_prompt_groups,
-  bathconfobj_read, bathconfobj_clear, bathconfobj_cleangroups,
-  bathconfobj_json, bathconfobj_upgrade,
-  bathconfobj_profile_add, bathconfobj_profile_del, bathconfobj_profile_rename
-);
-
 func bathconfobj(base, data) {
 /* DOCUMENT bathconf = bathconfobj()
   -or- bathconf = bathconfobj(save(...))
@@ -89,27 +80,16 @@ func bathconfobj(base, data) {
   return obj;
 }
 
+scratch = save(scratch, base);
 base = obj_copy(confobj.data, recurse=1);
 
-// Backup parent class methods that we'll be clobbering
-save, base,
-  confobj_settings=base.settings,
-  confobj_groups=base.groups,
-  confobj_validate=base.validate,
-  confobj_read=base.read,
-  confobj_clear=base.clear,
-  confobj_cleangroups=base.cleangroups,
-  confobj_json=base.json,
-  confobj_upgrade=base.upgrade,
-  confobj_profile_add=base.profile_add,
-  confobj_profile_del=base.profile_del,
-  confobj_profile_rename=base.profile_rename;
-
+save, scratch, bathconfobj_settings;
 func bathconfobj_settings(channel) {
   use, data;
   use, mapping;
   return data(mapping(channel)).active;
 }
+save, base, confobj_settings=base.settings;
 save, base, settings=bathconfobj_settings;
 
 func bathconfobj_settings_group(channel) {
@@ -118,6 +98,7 @@ func bathconfobj_settings_group(channel) {
 }
 save, base, settings_group=bathconfobj_settings_group;
 
+save, scratch, bathconfobj_groups;
 func bathconfobj_groups(newgroups, copy=) {
   default, copy, 1;
   use, data;
@@ -184,8 +165,10 @@ func bathconfobj_groups(newgroups, copy=) {
       strjoin("{"+data(noop(i)).profiles(*,)+"}", " ");
   }
 }
+save, base, confobj_groups=base.groups;
 save, base, groups=bathconfobj_groups;
 
+save, scratch, bathconfobj_validate;
 func bathconfobj_validate(group) {
   use_method, confobj_validate, group;
 
@@ -226,8 +209,10 @@ func bathconfobj_validate(group) {
     swrite(format="bathconf.data.%s.active_name", group),
     swrite(format="::eaarl::bathconf::active_profile(%s)", group);
 }
+save, base, confobj_validate=base.validate;
 save, base, validate=bathconfobj_validate;
 
+save, scratch, bathconfobj_prompt_groups;
 func bathconfobj_prompt_groups(win) {
   use, data;
 
@@ -243,6 +228,7 @@ func bathconfobj_prompt_groups(win) {
 }
 save, base, prompt_groups=bathconfobj_prompt_groups;
 
+save, scratch, bathconfobj_read;
 func bathconfobj_read(fn) {
   f = open(fn, "r");
 
@@ -293,8 +279,10 @@ func bathconfobj_read(fn) {
 
   if(logger(info)) logger, info, "Loaded bathy settings from "+fn;
 }
+save, base, confobj_read=base.read;
 save, base, read=bathconfobj_read;
 
+save, scratch, bathconfobj_clear;
 func bathconfobj_clear(void) {
   working = save(
     chn1=save(channels=1),
@@ -304,8 +292,10 @@ func bathconfobj_clear(void) {
   );
   use_method, groups, working, copy=0;
 }
+save, base, confobj_clear=base.clear;
 save, base, clear=bathconfobj_clear;
 
+save, scratch, bathconfobj_cleangroups;
 func bathconfobj_cleangroups(void) {
   groups = use_method(confobj_cleangroups,);
   for(i = 1; i <= groups(*); i++) {
@@ -340,8 +330,10 @@ func bathconfobj_cleangroups(void) {
   }
   return groups;
 }
+save, base, confobj_cleangroups=base.cleangroups;
 save, base, cleangroups=bathconfobj_cleangroups;
 
+save, scratch, bathconfobj_json;
 func bathconfobj_json(json, compact=) {
   if(!is_void(json)) {
     use_method, confobj_json, json, compact=compact;
@@ -363,8 +355,10 @@ func bathconfobj_json(json, compact=) {
     return json_encode(output, indent=(compact ? [] : 2));
   }
 }
+save, base, confobj_json=base.json;
 save, base, json=bathconfobj_json;
 
+save, scratch, bathconfobj_upgrade;
 func bathconfobj_upgrade(versions, working) {
   working = use_method(confobj_upgrade, working);
 
@@ -391,6 +385,7 @@ func bathconfobj_upgrade(versions, working) {
 scratch = save(scratch, versions);
 versions = save();
 
+save, scratch, bathconfobj_upgrade_version1;
 func bathconfobj_upgrade_version1(working) {
   for(i = 1; i <= working.groups(*); i++) {
     grp = working.groups(noop(i));
@@ -410,31 +405,38 @@ func bathconfobj_upgrade_version1(working) {
 }
 save, versions, bathconfobj_upgrade_version1;
 
-save, base, upgrade=closure(bathconfobj_upgrade, restore(versions));
+save, base, confobj_upgrade=base.upgrade;
+save, base, upgrade=closure(bathconfobj_upgrade, versions);
 restore, scratch;
 
+save, scratch, bathconfobj_profile_add;
 func bathconfobj_profile_add(group, profile) {
   use, data;
   use_method, confobj_profile_add, group, profile;
   tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", group),
     strjoin("{"+data(noop(group)).profiles(*,)+"}", " ");
 }
+save, base, confobj_profile_add=base.profile_add;
 save, base, profile_add=bathconfobj_profile_add;
 
+save, scratch, bathconfobj_profile_del;
 func bathconfobj_profile_del(group, profile) {
   use, data;
   use_method, confobj_profile_del, group, profile;
   tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", group),
     strjoin("{"+data(noop(group)).profiles(*,)+"}", " ");
 }
+save, base, confobj_profile_del=base.profile_del;
 save, base, profile_del=bathconfobj_profile_del;
 
+save, scratch, bathconfobj_profile_rename;
 func bathconfobj_profile_rename(group, oldname, newname) {
   use, data;
   use_method, confobj_profile_rename, group, oldname, newname;
   tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", group),
     strjoin("{"+data(noop(group)).profiles(*,)+"}", " ");
 }
+save, base, confobj_profile_rename=base.profile_rename;
 save, base, profile_rename=bathconfobj_profile_rename;
 
 bathconfobj = closure(bathconfobj, base);
