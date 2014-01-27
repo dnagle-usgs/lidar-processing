@@ -52,6 +52,7 @@ $options = <<END;
   'mystr=s'    => \\( \$mystr    = "foo"),  # example string
   'verbose!'   => \\( \$verbose  = -1   ),  # example bool with negate option
   'tar!'       => \\( \$tar      = -1   ),  # tar / notar option
+  'ash!'       => \\( \$ash      = -1   ),  # ash / noash option
   'xyz!'       => \\( \$xyz      = -1   ),  # xyz files
   'z!'         => \\( \$z        = -1   ),  # use -z in rsync
   'R!'         => \\( \$R        = -1   ),  # use -R in rsync
@@ -70,6 +71,7 @@ eval $options;
 # printf("verbose  = not set\n"     ) if ( $verbose == -1 );
 printf("verbose  = %d\n", $verbose) if ( $verbose >=  0 );
 printf("tar      = %d\n", $tar    ) if ( $verbose >-  0 );
+printf("ash      = %d\n", $ash    ) if ( $verbose >-  0 );
 printf("xyz      = %d\n", $xyz    ) if ( $verbose >-  0 );
 printf("z        = %d\n", $z      ) if ( $verbose >-  0 );
 printf("R        = %d\n", $R      ) if ( $verbose >-  0 );
@@ -81,6 +83,7 @@ $z = 1 if ( $z == -1 && $tar == 0 );
 
 my $notarstr = "--include=\*/ --exclude=\*.tar --include=\* ";
 my   $tarstr = "--include=\*/ --include=\*.tar --exclude=\* ";
+my   $ashstr = "--include=\*/ --include=\*.ash --exclude=\* ";
 my   $xyzstr = "--include=\*/ --include=\*.xyz --exclude=\* ";
 my   $zstr   = "-z ";
 my   $Rstr   = "-R ";
@@ -88,6 +91,7 @@ my   $Rstr   = "-R ";
 my $opt = "";
    $opt = $notarstr if ( $tar ==  0 );
    $opt =   $tarstr if ( $tar ==  1 );
+   $opt =   $ashstr if ( $ash ==  1 );
    $opt =   $xyzstr if ( $xyz ==  1 );
    $opt .=  $zstr   if ( $z   ==  1 );  # append these options if selected
    $opt .=  $Rstr   if ( $R   ==  1 );
