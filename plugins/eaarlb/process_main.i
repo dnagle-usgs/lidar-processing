@@ -15,6 +15,10 @@ save, eaarl_processing_modes,
   b=save(
     process=process_ba,
     cast=ba_struct_from_obj
+  ),
+  v=save(
+    process=process_be,
+    cast=be_struct_from_obj
   );
 
 func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, opts=) {
