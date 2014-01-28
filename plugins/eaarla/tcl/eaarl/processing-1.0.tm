@@ -110,30 +110,30 @@ proc ::eaarl::processing::process {} {
 
     set cmd ""
     switch -- $processing_mode {
-        fs_new {
+        f {
             set cmd "$::pro_var = ${make_eaarl}(mode=\"f\",\
                     q=q, ext_bad_att=$ext_bad_att)"
         }
-        ba_new {
+        b {
             set cmd "$::pro_var = ${make_eaarl}(mode=\"b\",\
                     q=q, ext_bad_att=$ext_bad_att)"
         }
-        fs {
+        old_fs {
             set cmd "$::pro_var = make_fs(latutm=1, q=q,\
                     ext_bad_att=$ext_bad_att,\
                     usecentroid=$usecentroid)"
         }
-        bathy {
+        old_bathy {
             set cmd "$::pro_var = make_bathy(latutm=1, q=q,\
                     ext_bad_att=$ext_bad_att,\
                     avg_surf=$avg_surf)"
             }
-        veg {
+        old_veg {
             set cmd "$::pro_var = make_veg(latutm=1, q=q,\
                     ext_bad_att=$ext_bad_att,\
                     use_centroid=$usecentroid)"
         }
-        cveg {
+        old_cveg {
             set cmd "$::pro_var = make_veg(latutm=1, q=q,\
                     use_centroid=$usecentroid, multi_peaks=1)"
         }
@@ -145,7 +145,7 @@ proc ::eaarl::processing::process {} {
     if {$cmd ne ""} {
         if {
             $::eaarl::autoclean_after_process
-            && $processing_mode ni {fs_new ba_new}
+            && $processing_mode ni {f b}
         } {
             append cmd "; test_and_clean, $::pro_var"
         }

@@ -130,11 +130,11 @@ proc ::eaarl::processing::process {} {
     set channels \[[join $channels ,]\]
     set cmd ""
     switch -- $processing_mode {
-        fs_new {
+        f {
             set cmd "$::pro_var = ${make_eaarl}(mode=\"f\", q=q,\
                     ext_bad_att=$ext_bad_att, channel=$channels)"
         }
-        ba_new {
+        b {
             set cmd "$::pro_var = ${make_eaarl}(mode=\"b\", q=q,\
                     ext_bad_att=$ext_bad_att, channel=$channels)"
         }
@@ -151,7 +151,7 @@ proc ::eaarl::processing::process {} {
     set forced 0
     foreach channel {1 2 3 4} {
         if {[set ::forcechannel_$channel]} {
-            if {$processing_mode ni {fs bathy veg}} {
+            if {$processing_mode ni {old_fs old_veg old_bathy}} {
                 error "Invalid processing mode: $processing_mode"
             }
             if {!$forced} {
@@ -179,17 +179,17 @@ proc ::eaarl::processing::process_channel {channel} {
     variable ::eaarl::ext_bad_att
     variable ::eaarl::avg_surf
     switch -- $processing_mode {
-        fs {
+        old_fs {
             set cmd "grow, $::pro_var, &make_fs(latutm=1, q=q,\
                     ext_bad_att=$ext_bad_att, usecentroid=$usecentroid,\
                     forcechannel=$channel)"
         }
-        bathy {
+        old_bathy {
             set cmd "grow, $::pro_var, &make_bathy(latutm=1, q=q,\
                     ext_bad_att=$ext_bad_att, avg_surf=$avg_surf,\
                     forcechannel=$channel)"
             }
-        veg {
+        old_veg {
             set cmd "grow, $::pro_var, &make_veg(latutm=1, q=q,\
                     ext_bad_att=$ext_bad_att, use_centroid=$usecentroid,\
                     forcechannel=$channel)"

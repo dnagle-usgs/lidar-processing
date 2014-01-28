@@ -20,12 +20,12 @@ package require eaarl::tscheck
 
 namespace eval ::eaarl {
    variable process_mapping {
-      "First Return Topo"  fs
-      "Submerged Topo"     bathy
-      "Topo Under Veg"     veg
-      "Multi Peak Veg"     cveg
-      "Test: New First Return Topo"  fs_new
-      "Test: New Submerged Topo"     ba_new
+      "First Return Topo"  f
+      "Submerged Topo"     b
+      "OLD: First Return Topo"  old_fs
+      "OLD: Submerged Topo"     old_bathy
+      "OLD: Topo Under Veg"     old_veg
+      "OLD: Multi Peak Veg"     old_cveg
    }
 
    variable autoclean_after_process 1
@@ -34,17 +34,17 @@ namespace eval ::eaarl {
    variable ext_bad_att 20
    variable interactive_batch 0
 
-   variable processing_mode fs
+   variable processing_mode f
    variable pro_var_next fs_all
 
    proc processing_mode_changed {a b c} {
       variable pro_var_next
       variable processing_mode
       set mapping {
-         fs fs_all veg veg_all bathy depth_all cveg cveg_all
-         fs_new fs_all ba_new depth_all
+         f fs_all b depth_all
+         old_fs fs_all old_bathy depth_all old_veg veg_all old_cveg cveg_all
       }
-      if {$pro_var_next in [list fs_all depth_all veg_all cveg_all wave_data]} {
+      if {$pro_var_next in [list fs_all depth_all veg_all cveg_all]} {
          set pro_var_next [dict get $mapping $processing_mode]
       }
    }
