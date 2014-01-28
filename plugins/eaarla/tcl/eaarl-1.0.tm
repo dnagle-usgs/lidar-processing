@@ -22,6 +22,7 @@ namespace eval ::eaarl {
    variable process_mapping {
       "First Return Topo"  f
       "Submerged Topo"     b
+      "Topo Under Veg"     v
       "OLD: First Return Topo"  old_fs
       "OLD: Submerged Topo"     old_bathy
       "OLD: Topo Under Veg"     old_veg
@@ -41,7 +42,7 @@ namespace eval ::eaarl {
       variable pro_var_next
       variable processing_mode
       set mapping {
-         f fs_all b depth_all
+         f fs_all v veg_all b depth_all
          old_fs fs_all old_bathy depth_all old_veg veg_all old_cveg cveg_all
       }
       if {$pro_var_next in [list fs_all depth_all veg_all cveg_all]} {

@@ -110,12 +110,8 @@ proc ::eaarl::processing::process {} {
 
     set cmd ""
     switch -- $processing_mode {
-        f {
-            set cmd "$::pro_var = ${make_eaarl}(mode=\"f\",\
-                    q=q, ext_bad_att=$ext_bad_att)"
-        }
-        b {
-            set cmd "$::pro_var = ${make_eaarl}(mode=\"b\",\
+        f - v - b {
+            set cmd "$::pro_var = ${make_eaarl}(mode=\"$processing_mode\",\
                     q=q, ext_bad_att=$ext_bad_att)"
         }
         old_fs {
@@ -145,7 +141,7 @@ proc ::eaarl::processing::process {} {
     if {$cmd ne ""} {
         if {
             $::eaarl::autoclean_after_process
-            && $processing_mode ni {f b}
+            && $processing_mode ni {f b v}
         } {
             append cmd "; test_and_clean, $::pro_var"
         }

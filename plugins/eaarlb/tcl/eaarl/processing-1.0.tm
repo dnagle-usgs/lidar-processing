@@ -130,13 +130,9 @@ proc ::eaarl::processing::process {} {
     set channels \[[join $channels ,]\]
     set cmd ""
     switch -- $processing_mode {
-        f {
-            set cmd "$::pro_var = ${make_eaarl}(mode=\"f\", q=q,\
-                    ext_bad_att=$ext_bad_att, channel=$channels)"
-        }
-        b {
-            set cmd "$::pro_var = ${make_eaarl}(mode=\"b\", q=q,\
-                    ext_bad_att=$ext_bad_att, channel=$channels)"
+        f - v - b {
+            set cmd "$::pro_var = ${make_eaarl}(mode=\"$processing_mode\",\
+                    q=q, ext_bad_att=$ext_bad_att, channel=$channels)"
         }
     }
 
