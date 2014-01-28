@@ -163,6 +163,7 @@ func eaarl_be_rx_channel(pulses) {
   npulses = numberof(pulses.tx);
 
   lrx = fint = lint = lbias = array(float, npulses);
+  rets = array(char, npulses);
   lchannel = pulses.channel;
 
   for(i = 1; i <= npulses; i++) {
@@ -173,12 +174,12 @@ func eaarl_be_rx_channel(pulses) {
     lbias(i) = biases(lchannel(i));
 
     tmp = be_rx_wf(*pulses.rx(lchannel(i),i), conf);
-    fint(i) = tmp.fint;
     lint(i) = tmp.lint;
     lrx(i) = tmp.lrx;
+    rets(i) = tmp.rets;
   }
 
-  save, pulses, lrx, fint, lint, lbias, lchannel;
+  save, pulses, lrx, lint, lbias, lchannel, rets;
 }
 
 func eaarl_be_rx_eaarla(pulses) {
