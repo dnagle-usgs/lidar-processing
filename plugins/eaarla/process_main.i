@@ -413,8 +413,8 @@ splitchan=, opts=) {
     outdir= Output directory; this often ends in "Index_Tiles". This is a
       required option.
     update= Specifies how to handle existing files.
-        update=0    Skip tiles that already exist, default
-        update=1    Delete and re-create tiles that already exist
+        update=0    Delete and re-create tiles that already exist, default
+        update=1    Skip tiles that already exist
     date= The date of the flight. This must be a string in "YYYYMMDD" format.
       Optionally, it can have additional information after the date. If
       omitted, the date defined for the current loaded flight (from the mission
