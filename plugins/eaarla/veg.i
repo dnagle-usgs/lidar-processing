@@ -938,6 +938,7 @@ forcechannel=, header=) {
   return rv;
 }
 
+// unused
 func ex_veg_alg(&mx0, &mv0, wf, xr, irange, channel, wflen, retdist, alg_mode) {
   // find where the bottom return pulse changes direction after its trailing edge
   trailing_edge, wf, retdist, idx1;
@@ -969,6 +970,7 @@ func ex_veg_alg(&mx0, &mv0, wf, xr, irange, channel, wflen, retdist, alg_mode) {
   }
 }
 
+// make_veg with use_centroid=1 (batch_process uses this)
 func ex_veg_noalg_peak(&mx0, &mv0, wf, xr, irange, channel, wflen, retdist) {
   // this is the algorithm used most commonly in ALPS v1.
   // if within 3 ns from xr(0) we find a peak, we can assume this to be noise
@@ -988,6 +990,7 @@ func ex_veg_noalg_peak(&mx0, &mv0, wf, xr, irange, channel, wflen, retdist) {
   }
 }
 
+// unused
 func ex_veg_noalg_cent(&mx0, &mv0, wf, xr, irange, channel, wflen, retdist) {
   // this is less used in ALPS v1
   // find where the bottom return pulse changes direction after its
@@ -1014,6 +1017,7 @@ func ex_veg_noalg_cent(&mx0, &mv0, wf, xr, irange, channel, wflen, retdist) {
   }
 }
 
+// make_veg when use_centroid=0
 func ex_veg_noalg_none(&mx0, &mv0, wf, xr, irange) {
   // no bare earth algorithm selected.
   //do not use centroid or trailing edge
