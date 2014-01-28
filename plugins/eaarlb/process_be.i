@@ -60,6 +60,8 @@ func process_be(start, stop, ext_bad_att=, channel=, opts=) {
 
   default, channel, 0;
 
+  define_veg_conf;
+
   sample_interval = 1.0;
   be_tx = eaarl_be_tx_copy;
   if(channel(1)) {
