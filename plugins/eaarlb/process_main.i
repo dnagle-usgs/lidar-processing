@@ -9,16 +9,16 @@ local eaarl_processing_modes;
 if(is_void(eaarl_processing_modes)) eaarl_processing_modes = save();
 save, eaarl_processing_modes,
   f=save(
-    process=process_fs,
-    cast=fs_struct_from_obj
+    process="process_fs",
+    cast="fs_struct_from_obj"
   ),
   b=save(
-    process=process_ba,
-    cast=ba_struct_from_obj
+    process="process_ba",
+    cast="ba_struct_from_obj"
   ),
   v=save(
-    process=process_be,
-    cast=be_struct_from_obj
+    process="process_be",
+    cast="be_struct_from_obj"
   );
 
 func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, opts=) {
@@ -61,6 +61,8 @@ func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, opts=) {
     error, "invalid mode";
   local process, cast;
   restore, eaarl_processing_modes(noop(mode)), process, cast;
+  if(is_string(process)) process = symbol_def(process);
+  if(is_string(cast)) cast = symbol_def(cast);
 
   passopts = save(start, stop, mode, ext_bad_att, channel);
   if(opts)
