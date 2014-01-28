@@ -105,12 +105,6 @@ func process_be(start, stop, ext_bad_att=, channel=, opts=) {
   dist = (becnt - fscnt) * sample_interval * NS2MAIR;
   fscnt = becnt = [];
 
-  // Throw away bottoms that are above surface
-  w = where(dist >= 0);
-  if(!numberof(w)) return;
-  pulses = obj_index(pulses, w);
-  dist = dist(w);
-
   ref = [pulses.mx, pulses.my, pulses.mz];
   fs = [pulses.fx, pulses.fy, pulses.fz];
 
