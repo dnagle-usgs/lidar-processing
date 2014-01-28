@@ -22,7 +22,7 @@ func be_struct_from_obj(pulses) {
   result.lelv = long(pulses.lz * 100);
   result.fint = pulses.fint;
   result.lint = pulses.lint;
-  result.nx = 0; // number of return pulses found
+  result.nx = pulses.rets;
   result.channel = pulses.lchannel;
   result.soe = pulses.soe;
 
@@ -212,7 +212,7 @@ func eaarl_be_rx_eaarla(pulses) {
   npulses = numberof(pulses.tx);
 
   lrx = lint = lbias = array(float, npulses);
-  lchannel = array(char, npulses);
+  lchannel = rets = array(char, npulses);
 
   for(i = 1; i <= npulses; i++) {
     lchannel(i) = be_rx_channel(pulses.rx(,i), conf);
@@ -222,9 +222,10 @@ func eaarl_be_rx_eaarla(pulses) {
     tmp = be_rx_wf(*pulses.rx(lchannel(i),i), conf);
     lint(i) = tmp.lint;
     lrx(i) = tmp.lrx;
+    rets(i) = tmp.rets;
   }
 
-  save, pulses, lrx, lint, lbias, lchannel;
+  save, pulses, lrx, lint, lbias, lchannel, rets;
 }
 
 func eaarl_be_rx_eaarla_channel(rx, &conf) {
