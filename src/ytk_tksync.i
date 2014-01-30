@@ -31,6 +31,9 @@ local tksync;
       back to the object until scope exits, which can lead to inconsistent
       results. By waiting until Yorick is next idle, you avoid that issue.
 
+    tksync, idlerem, "<yvar>", "<tkvar>"
+      Like tksync,idleadd except it removes instead of adds.
+
     tksync, check
       Checks to see if any Yorick variables have changed and, if so, sends an
       update to Tcl. This normally isn't needed, but it may be helpful to
@@ -59,8 +62,9 @@ local tksync;
 
 // tksync_background intentionally omitted from scratch
 scratch = save(scratch, tmp, tksync_add, tksync_remove, tksync_check,
-  tksync_idleadd);
-tmp = save(cache, pending, interval, add, idleadd, remove, check, background);
+  tksync_idleadd, tksync_idlerem);
+tmp = save(cache, pending, interval, add, idleadd, idlerem, remove, check,
+  background);
 
 if(is_obj(tksync) && is_obj(tksync.cache)) {
   cache = tksync.cache;
@@ -70,7 +74,7 @@ if(is_obj(tksync) && is_obj(tksync.cache)) {
 if(is_obj(tksync) && is_obj(tksync.pending)) {
   pending = tksync.pending;
 } else {
-  pending = save(yvar=[], tkvar=[]);
+  pending = save(yvar=[], tkvar=[], action=[]);
 }
 if(is_obj(tksync) && is_numerical(tksync.interval)) {
   interval = tksync.interval;
@@ -81,15 +85,28 @@ if(is_obj(tksync) && is_numerical(tksync.interval)) {
 func tksync_idleadd(yvar, tkvar) {
   pending = tksync.pending;
   save, pending, yvar=grow(pending.yvar, yvar),
-    tkvar=grow(pending.tkvar, tkvar);
+    tkvar=grow(pending.tkvar, tkvar),
+    action=grow(pending.action, array("add", numberof(yvar)));
 }
 idleadd = tksync_idleadd;
+
+func tksync_idlerem(yvar, tkvar) {
+  pending = tksync.pending;
+  save, pending, yvar=grow(pending.yvar, yvar),
+    tkvar=grow(pending.tkvar, tkvar),
+    action=grow(pending.action, array("rem", numberof(yvar)));
+}
+idlerem = tksync_idlerem;
 
 func tksync_add(yvar, tkvar) {
   cache = tksync.cache;
 
   count = numberof(yvar);
   if(numberof(tkvar) != count) error, "count mismatch";
+
+  if(numberof(tksync.pending.yvar)) {
+    tksync, idlerem, yvar, tkvar;
+  }
 
   for(i = 1; i <= count; i++) {
     // Retrieve value for current yvar
@@ -121,6 +138,10 @@ func tksync_remove(yvar, tkvar) {
   count = numberof(yvar);
   if(numberof(tkvar) != count) error, "count mismatch";
 
+  if(numberof(tksync.pending.yvar)) {
+    tksync, idlerem, yvar, tkvar;
+  }
+
   for(i = 1; i <= count; i++) {
     // If yvar isn't present, nothing to do
     if(!cache(*,yvar(i))) continue;
@@ -146,8 +167,12 @@ func tksync_check(void) {
   if(numberof(pending.yvar)) {
     yvar = pending.yvar;
     tkvar = pending.tkvar;
-    save, pending, yvar=[], tkvar=[];
-    tksync, add, yvar, tkvar;
+    action = pending.action;
+    save, pending, yvar=[], tkvar=[], action=[];
+    w = where(action == "add");
+    if(numberof(w)) tksync, add, yvar(w), tkvar(w);
+    w = where(action == "rem");
+    if(numberof(w)) tksync, remove, yvar(w), tkvar(w);
   }
 
   cache = tksync.cache;
