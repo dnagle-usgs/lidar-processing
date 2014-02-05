@@ -140,8 +140,8 @@ autolims=, pulse=) {
 }
 
 func show_rast(rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=, eoffset=,
-range_bias=, tx=, autolims=, showcbar=, sfsync=, pulse=, bathy=, bathyoffset=,
-bathyverbose=, bg=) {
+range_bias=, tx=, autolims=, showcbar=, sfsync=, pulse=, highlight=, bathy=,
+bathyoffset=, bathyverbose=, bg=) {
 /* DOCUMENT show_rast, rn, channel=, units=, win=, cmin=, cmax=, geo=, rcfw=,
    eoffset=, range_bias=, tx=, autolims=, showbar=, sfsync=, pulse=, bathy=,
    bathyoffset=, bathyverbose=, bg=
@@ -185,6 +185,10 @@ bathyverbose=, bg=) {
         showcbar=0        Default
     sfsync= Sync with SF.
         sfsync=0          Default
+    highlight= Highlight the specified pulse(s) by putting a red triangle at
+      the top of the raster.
+        highlight=[]      Highlight nothing, default
+        highlight=30      Highlight pulse 30
     pulse= Initialize the GUI with the specified pulse number.
         pulse=60          Default
     bathy= Enables bathy mode: bottom markers will be overlaid on the raster.
@@ -326,6 +330,14 @@ bathyverbose=, bg=) {
 
     pli, wf, pulse, scale(1), pulse+1, scale(2), cmin=cmin, cmax=cmax;
     top = max(top, scale(1));
+  }
+
+  if(numberof(highlight)) {
+    scale = array(-bias, numberof(highlight));
+    scale = apply_depth_scale(scale, units=units, autoshift=!geo);
+    if(geo) scale += z(pulse);
+    plmk, scale, highlight+.5, color="red", msize=.01, width=10,
+      marker=[[0,-.5,.5],[-0.866,0,0]];
   }
 
   if(bathy) {
