@@ -24,8 +24,13 @@ namespace eval ::eaarl::raster {
 # sending via expect)
 
 proc ::eaarl::raster::plotcmd {window args} {
+    set extra [list]
+    if {[dict exists $args -highlight]} {
+        dict set extra -highlight [dict get $args -highlight]
+        dict unset args -highlight
+    }
     set gui [config $window {*}$args]
-    return [$gui plotcmd]
+    return [$gui plotcmd {*}$extra]
 }
 
 proc ::eaarl::raster::plot {window args} {
@@ -451,6 +456,7 @@ snit::type ::eaarl::raster::embed {
 
     # Returns the command that can be used to (re)plot this window
     method plotcmd {args} {
+        array set opts [list -highlight 0]
         array set opts [array get options]
         array set opts $args
 
@@ -474,6 +480,7 @@ snit::type ::eaarl::raster::embed {
                     $opts(-bathy)       ", bathy=1"
         }
         appendif cmd \
+                $opts(-highlight)   ", highlight=$opts(-highlight)" \
                 $opts(-usecmin)     ", cmin=$opts(-cmin)" \
                 $opts(-usecmax)     ", cmax=$opts(-cmax)" \
                 $opts(-showcbar)    ", showcbar=1" \

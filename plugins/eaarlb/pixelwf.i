@@ -114,7 +114,7 @@ func pixelwf_plot(void) {
     return;
 
   cmd = swrite(format="::eaarl::sync::sendyorick plotcmd"
-    +" -raster %d -pulse %d", sel.raster, sel.pulse);
+    +" -raster %d -pulse %d -highlight %d", sel.raster, sel.pulse, sel.pulse);
   if(sel.channel)
     cmd += swrite(format=" -channel %d", sel.channel);
   if(sync.rawwf)

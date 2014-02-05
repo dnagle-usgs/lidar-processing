@@ -15,6 +15,7 @@ proc ::eaarl::sync::multicmd {args} {
         -bathwin    8
         -tx         0
         -txwin      16
+        -highlight  0
     }
     array set opts $args
 
@@ -25,9 +26,13 @@ proc ::eaarl::sync::multicmd {args} {
     if {$opts(-channel)} {
         lappend chanopts -channel $opts(-channel)
     }
+    set rastopts $chanopts
+    if {$opts(-highlight)} {
+        lappend rastopts -highlight $opts(-highlight)
+    }
 
     if {$opts(-rast)} {
-        append cmd [::eaarl::raster::plotcmd $opts(-rastwin) {*}$chanopts]
+        append cmd [::eaarl::raster::plotcmd $opts(-rastwin) {*}$rastopts]
     }
     if {$opts(-rawwf)} {
         append cmd [::eaarl::rawwf::plotcmd $opts(-rawwfwin) {*}$baseopts]
