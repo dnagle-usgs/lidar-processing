@@ -71,6 +71,7 @@ local FS;
     short intensity;    surface return intensity
     double soe;         seconds of the epoch
     char channel;       channel used if forced; 0 if auto chosen
+    long ptime;         processing time identifier
   };
 
   SEE ALSO: R, VEG__, GEO
@@ -84,6 +85,7 @@ struct FS {
   short intensity;
   double soe;
   char channel;
+  long ptime;
 }
 
 local VEG__, VEG_, VEG;
@@ -111,6 +113,7 @@ local VEG__, VEG_, VEG;
     char nx;          number of return pulses found
     char channel;     channel used if forced; 0 if auto chosen
     double soe;       seconds of the epoch
+    long ptime;         processing time identifier
   }
 
   Older data may use VEG_ instead. VEG_ is no longer in use, and is documented
@@ -150,6 +153,7 @@ struct VEG__ {
   short fint, lint;
   char nx, channel;
   double soe;
+  long ptime;
 }
 
 struct VEG_ {
@@ -193,6 +197,7 @@ local GEO;
     short depth;        water depth in cm
     double soe;         seconds of the epoch
     char channel;       channel used if forced; 0 if auto chosen
+    long ptime;         processing time identifier
   }
 
   SEE ALSO: GEOALL, R, VEG__
@@ -208,6 +213,7 @@ struct GEO {
   short depth;
   double soe;
   char channel;
+  long ptime;
 }
 
 local R;
