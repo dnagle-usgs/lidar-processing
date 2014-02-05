@@ -253,6 +253,23 @@ func eaarl_be_plot(raster, pulse, channel=, win=, xfma=) {
 /* DOCUMENT eaarl_be_plot, raster, pulse, channel=, win=, xfma=
   Executes the veg algorithm for a single pulse and plots the result.
 
+  The plot will consist of the following elements:
+    - The waveform will be plotted in black
+    - The first derivitive will be plotted in red
+    - The location of each leading edge will be marked with a hollow red
+      triangle
+    - The location of the last leading edge (the one used for the last return)
+      will be marked with a solid red triangle
+    - The section of the waveform that will be examined for a peak will be
+      highlighted in blue
+    - The peak found will be marked with a solid blue square
+
+  Additionally, three values will be displayed to the console:
+    - lrx, which is where the peak was found (sample number in wf)
+    - lint, which is the intensity at the peak
+    - rets, which is how many leading edges (and thus candidate returns) were
+      detected; this number will match how many triangles are plotted
+
   Parameters:
     raster - Raster number to use.
     pulse - Pulse number to use.
