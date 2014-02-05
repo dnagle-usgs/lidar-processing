@@ -16,6 +16,7 @@ func job_eaarl_process(conf) {
 
   ext_bad_att = pass_void(atod, conf.ext_bad_att);
   channel = pass_void(atoi, conf.channel);
+  ptime = pass_void(atoi, conf.ptime);
 
   if(
     numberof(start) != numberof(stop)
@@ -25,7 +26,7 @@ func job_eaarl_process(conf) {
     error, "input options not conformable";
   }
 
-  opts = save(tldfn, start, stop, rnstart, mode, ext_bad_att, channel);
+  opts = save(tldfn, start, stop, rnstart, mode, ext_bad_att, channel, ptime);
 
   restore, hook_invoke("job_eaarl_process", save(opts, conf, pdbfn, vname));
 

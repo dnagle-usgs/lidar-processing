@@ -21,8 +21,9 @@ save, eaarl_processing_modes,
     cast="be_struct_from_obj"
   );
 
-func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, opts=) {
-/* DOCUMENT process_eaarl(start, stop, mode=, ext_bad_att=, channel=, opts=)
+func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, ptime=, opts=) {
+/* DOCUMENT process_eaarl(start, stop, mode=, ext_bad_att=, channel=, ptime=,
+   opts=)
   Processes EAARL data for the given raster ranges as specified by the given
   mode.
 
@@ -43,6 +44,8 @@ func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, opts=) {
       (in elevation) are discarded. By default, this is 0 and is not applied.
     channel= Specifies which channel or channels to process. Required. This can
       be an integer or array of integers for the channels to process.
+    ptime= Processing time identifier. By default this will be the current SOE
+      value times -1.
     opts= Oxy group that provides an alternative interface for providing
       function arguments/options. Any key/value pairs not used by process_eaarl
       will be passed through as-is to the underlying processing function.
@@ -51,11 +54,12 @@ func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, opts=) {
     An array of EAARL point cloud data, in the struct appropriate for the
     data's type.
 */
-  restore_if_exists, opts, start, stop, mode, ext_bad_att, channel;
+  restore_if_exists, opts, start, stop, mode, ext_bad_att, channel, ptime;
   if(is_void(channel)) error, "Must specify channel= option";
 
   extern eaarl_processing_modes;
   default, mode, "f";
+  default, ptime, -getsoe();
 
   if(!eaarl_processing_modes(*,mode))
     error, "invalid mode";
@@ -68,7 +72,9 @@ func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, opts=) {
   if(opts)
     passopts = obj_merge(opts, passopts);
 
-  return cast(process(opts=passopts));
+  result = cast(process(opts=passopts));
+  result.ptime = ptime;
+  return result;
 }
 
 func make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=) {
@@ -138,7 +144,8 @@ func make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=) {
   count = numberof(rn_start);
   data = array(pointer, count);
 
-  passopts = save(mode, channel, ext_bad_att, verbose);
+  ptime = -getsoe();
+  passopts = save(mode, channel, ext_bad_att, verbose, ptime);
   if(opts)
     passopts = obj_delete(obj_merge(opts, passopts), start, stop);
 
@@ -167,9 +174,9 @@ func make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=) {
 }
 
 func make_eaarl_from_tld(tldfn, start, stop, rnstart, mode=, channel=,
-ext_bad_att=, opts=) {
+ext_bad_att=, ptime=, opts=) {
 /* DOCUMENT make_eaarl_from_tld(tldfn, start, stop, rnstart, mode=, channel=,
-   ext_bad_att=, opts=)
+   ext_bad_att=, ptime=, opts=)
   Processes EAARL data. This is a lower-level version of make_eaarl that is
   primarily intended for use in jobs.
 
@@ -188,6 +195,8 @@ ext_bad_att=, opts=) {
       (in elevation) are discarded. By default, this is 0 and is not applied.
     channel= Specifies which channel or channels to process. Required. This can
       be an integer or array of integers for the channels to process.
+    ptime= Processing time identifier. By default this will be the current SOE
+      value times -1.
     opts= Oxy group that provides an alternative interface for providing
       function arguments/options. Any key/value pairs not used by this function
       will be passed through as-is to the underlying processing function.
@@ -197,10 +206,12 @@ ext_bad_att=, opts=) {
     data's type.
 */
   restore_if_exists, opts, tldfn, start, stop, rnstart, mode, channel,
-    ext_bad_att;
+    ext_bad_att, ptime;
   if(is_void(channel)) error, "Must specify channel= option";
 
-  passopts = save(mode, channel, ext_bad_att);
+  default, ptime, -getsoe();
+
+  passopts = save(mode, channel, ext_bad_att, ptime);
   if(opts)
     passopts = obj_delete(obj_merge(opts, passopts),
       tldfn, start, stop, rnstart);
@@ -327,7 +338,9 @@ makeflow_fn=, norun=, retconf=, opts=) {
 
   count = numberof(rn_start);
 
-  options = save(string(0), [], mode, channel, ext_bad_att);
+  ptime = -getsoe();
+
+  options = save(string(0), [], mode, channel, ext_bad_att, ptime);
   if(opts)
     options = obj_delete(obj_merge(opts, options),
       q, ply, makeflow_fn, norun);
@@ -637,7 +650,8 @@ splitchan=, opts=) {
   }
 
   // Set base options
-  options = save(string(0), [], mode, channel, ext_bad_att);
+  ptime = getsoe();
+  options = save(string(0), [], mode, channel, ext_bad_att, ptime);
   if(opts)
     options = obj_delete(obj_merge(opts, options),
       makeflow_fn, norun);
@@ -648,6 +662,8 @@ splitchan=, opts=) {
   write, f, format="Batch processing log file%s", "\n";
   write, f, format="%s\n", soe2iso8601(now);
   write, f, format="Makeflow created on %s by %s\n\n", get_host(), get_user();
+
+  write, f, format="ptime: %d\n\n", ptime;
 
   write, f, format="data_path: %s\n", data_path;
   write, f, format="edb_filename: %s\n", edb_filename;
