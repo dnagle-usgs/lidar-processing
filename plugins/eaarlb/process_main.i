@@ -424,10 +424,10 @@ splitchan=, opts=) {
     update= Specifies how to handle existing files.
         update=0    Delete and re-create tiles that already exist, default
         update=1    Skip tiles that already exist
-    date= The date of the flight. This must be a string in "YYYYMMDD" format.
+    date= The date of the flight. This should be a string in "YYYYMMDD" format.
       Optionally, it can have additional information after the date. If
-      omitted, the date defined for the current loaded flight (from the mission
-      configuration) will be used. This should normally be omitted.
+      omitted, the date is determined by sanitizing the flight's directory
+      name.
     ftag= Specifies the "tag" to use in the filename. Output files are
       formatted as "<tile>_<tag>.pbd" where <tile> is the full tile name
       (t_e###000_n####000_##). The default ftag is:
@@ -512,8 +512,8 @@ splitchan=, opts=) {
   ftagsingle = [];
   if(is_void(ftag) || is_void(vtag)) {
     if(is_void(date)) {
-      date = mission(get, mission.data.loaded, "date");
-      date = regsub("-", date, "", all=1);
+      date = file_tail(mission(get, mission.data.loaded, "data_path dir"));
+      date = regsub("[^A-Za-z0-9]", date, "", all=1);
     }
 
     chantag = string(0);
