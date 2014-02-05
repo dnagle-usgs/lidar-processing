@@ -44,10 +44,10 @@ scratch = save(scratch, tmp, mission_plugins, mission_cache, mission_flights,
   mission_details, mission_auto, mission_get, mission_has, mission_load_soe,
   mission_load_soe_rn, mission_query_soe, mission_query_soe_rn, mission_load,
   mission_reload, mission_unload, mission_wrap, mission_unwrap, mission_json,
-  mission_save, mission_read, mission_tksync, mission_help);
+  mission_save, mission_read, mission_tksync, mission_tksel, mission_help);
 tmp = save(__help, data, plugins, cache, flights, details, auto, get, has,
   load_soe, load_soe_rn, query_soe, query_soe_rn, load, reload, unload, wrap,
-  unwrap, json, save, read, tksync, help);
+  unwrap, json, save, read, tksync, tksel, help);
 
 __help = "\
 Store and manages the mission configuration. This is an oxy object and thus \
@@ -270,6 +270,7 @@ func mission_flights_add(name) {
     error, "an entry already exists for "+pr1(name);
   save, mission.data.conf, noop(name), save();
   mission, tksync;
+  mission, tksel, name;
 }
 add = mission_flights_add;
 
@@ -581,6 +582,7 @@ func mission_details_set(flight, key, val, raw=) {
   fconf = mission.data.conf(noop(flight));
   if(fconf(*,key) && fconf(noop(key)) == val)
     return;
+  setsel = !fconf(*,key);
 
   // Remove the cached data for this key, if necessary
   if(mission.data.cache(*,flight)) {
@@ -590,6 +592,7 @@ func mission_details_set(flight, key, val, raw=) {
 
   save, mission.data.conf(noop(flight)), noop(key), val;
   mission, tksync;
+  if(setsel) mission, tksel, flight, key;
 }
 set = mission_details_set;
 
@@ -1388,6 +1391,18 @@ func mission_tksync {
   }
 }
 tksync = mission_tksync;
+
+/*******************************************************************************
+  mission, tksel, "<flight>", "<key>"
+*/
+
+func mission_tksel(flight, key) {
+  if(!_ytk) return;
+  default, key, "";
+  tkcmd, swrite(format="::mission::update_selection {%s} {%s}", flight, key);
+}
+tksel = mission_tksel;
+
 
 /*******************************************************************************
   mission, help, ...

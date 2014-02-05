@@ -1103,6 +1103,23 @@ namespace eval ::mission {
         }
     }
 
+    proc update_selection {flight {key {}}} {
+        variable flights
+        variable details
+        if {[$flights exists $flight]} {
+            $flights selection set [list $flight]
+            $flights see $flight
+        }
+        refresh_details
+        if {$key ne ""} {
+            if {[$details exists $key]} {
+                $details selection set [list $key]
+                $details see $key
+                ::misc::idle ::mission::refresh_fields
+            }
+        }
+    }
+
     # Refreshes the GUI in response to updated flight information.
     proc refresh_flights {} {
         variable flights
