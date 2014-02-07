@@ -928,8 +928,8 @@ Input:
   return data_out;
 }
 
-func batch_automerge_tiles(path, searchstr=, verbose=, update=) {
-/* DOCUMENT batch_automerge_tiles(path, searchstr=, verbose=, update=)
+func batch_automerge_tiles(path, searchstr=, verbose=, update=, uniq=) {
+/* DOCUMENT batch_automerge_tiles(path, searchstr=, verbose=, update=, uniq=)
   Specialized batch merging function for the initial merge of processed data.
   By default, it will find all files matching *_v.pbd, *_b.pbd, and *_f.pbd. It
   will then merge everything it can. It makes distinctions between _v, _b, and
@@ -960,6 +960,11 @@ func batch_automerge_tiles(path, searchstr=, verbose=, update=) {
         update=0    Overwrite files if they exist
         update=1    Skip files if they exist
 
+    uniq= Specifies whether only unique points are used, or whether duplicates
+      are kept.
+        uniq=0      Use all points, including duplicates (default)
+        uniq=1      Use unique points, discard duplicates
+
   Output:
     This will create the merged files in the directory specified, alongside
     the input files.
@@ -976,6 +981,7 @@ func batch_automerge_tiles(path, searchstr=, verbose=, update=) {
   default, searchstr, ["*_v.pbd", "*_b.pbd", "*_f.pbd"];
   default, verbose, 1;
   default, update, 0;
+  default, uniq, 0;
 
   // Locate files and split into dirs/tails
   files = find(path, searchstr=searchstr);
@@ -1102,8 +1108,8 @@ func batch_automerge_tiles(path, searchstr=, verbose=, update=) {
       timer_tick, tstamp, k, outuniq;
     while(j < count && outfiles(j+1) == outfiles(i))
       j++;
-    dirload, files=files(i:j), outfile=outfiles(i), outvname=vnames(i), uniq=0,
-      soesort=1, skip=1, verbose=0;
+    dirload, files=files(i:j), outfile=outfiles(i), outvname=vnames(i),
+      uniq=uniq, soesort=1, skip=1, verbose=0;
     i = j = j + 1;
     k++;
   }
