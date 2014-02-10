@@ -73,7 +73,7 @@ func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, ptime=, opts=) {
     passopts = obj_merge(opts, passopts);
 
   result = cast(process(opts=passopts));
-  result.ptime = ptime;
+  if(has_member(result, "ptime")) result.ptime = ptime;
   return result;
 }
 
