@@ -507,6 +507,103 @@ func dlfilter_bbox(bbox, prev=, next=, mode=) {
   return dlfilter_poly(poly, prev=prev, next=next, mode=mode);
 }
 
+func __dlfilter_files_tile(&files, filter, state) {
+/* DOCUMENT __dlfilter_files_tile, files, filter, state;
+  Support function for dlfilter_tile.
+*/
+  target = tile2bbox(filter.tile);
+  nmin = target(1);
+  emax = target(2);
+  nmax = target(3);
+  emin = target(4);
+  tzone = target(5);
+
+  fcount = numberof(files);
+  keep = array(short(1), fcount);
+  for(i = 1; i <= fcount; i++) {
+    bbox = tile2bbox(file_tail(files(i)));
+    if(is_void(bbox)) continue;
+
+    // Get coordinates for each corner; then nudge a bit in every direction to
+    // hit adjacent tiles.
+    n = bbox([1,1,3,3])(-,) + [-1,-1,-1, 0,0,0, 1,1,1];
+    e = bbox([2,4,2,4])(-,) + [-1, 0, 1,-1,0,1,-1,0,1];
+    z = filter.zone ? filter.zone : long(bbox(5));
+
+    if(z != tzone) rezone_utm, n, e, z, tzone;
+
+    keep(i) = is_array(data_box(e, n, emin, emax, nmin, nmax));
+  }
+
+  files = files(where(keep));
+}
+
+func __dlfilter_data_tile(&data, filter, state) {
+/* DOCUMENT __dlfilter_data_tile, data, filter, state;
+  Support function for dlfilter_tile.
+*/
+  if(filter.zone == 0) {
+    zone = tile2uz(file_tail(state.fn));
+    if(!zone) {
+      data = [];
+      return;
+    }
+  } else if(filter.zone < 0) {
+    zone = data.zone;
+  } else {
+    zone = filter.zone;
+  }
+
+  data2xyz, data, x, y, mode=filter.mode;
+
+  tile_zone = long(tile2uz(filter.tile));
+  // Coerce zone if needed
+  if(anyof(tile_zone != zone))
+    rezone_data_utm, data, zone, tile_zone;
+
+  w = extract_for_tile(x, y, zone, filter.tile, buffer=filter.buffer);
+  if(numberof(w))
+    data = data(w);
+  else
+    data = [];
+}
+
+func dlfilter_tile(tile, prev=, next=, mode=, buffer=, zone=, dataonly=) {
+/* DOCUMENT filter = dlfilter_tile(tile, prev=, next=, mode=, buffer=, zone=,
+   dataonly=)
+  Creates a filter for dirload that will filter using the given tile. This
+  filters only the data, not the file names (due to buffers).
+
+  Options:
+    mode= Data's mode
+    buffer= Buffer to include around the tile.
+    zone= The zone that the data is in. By default (zone=0), zone is detected
+      from the file name. If zone=-1, then data.zone is used (for ATM).
+      Otherwise, zone specifies the zone to assume for all data.
+    dataonly= Only filters the data. This omits the step where files are
+      filtered (which is useful if you are specifying files and want all of
+      them considered).
+
+  Note: If the zone of a file's data does not match the zone of the specified
+  tile, the data will be re-zoned to the tile's zone. This allows this filter
+  to operate intelligently at zone boundaries.
+*/
+  default, mode, "fs";
+  default, buffer, 0;
+  default, zone, 0;
+  filter = h_new(
+    data = h_new(function=__dlfilter_data_tile, tile=tile, mode=mode,
+      buffer=buffer, zone=zone)
+  );
+  if(zone >= 0 && !dataonly) {
+    h_set, filter, files = h_new(
+      function=__dlfilter_files_tile, tile=tile, zone=zone
+    );
+  }
+
+  return dlfilter_merge_filters(filter, prev=prev, next=next);
+}
+
 // *** ALPS INTEGRATION ***
 
 func dirload_l1pro_selpoly {
