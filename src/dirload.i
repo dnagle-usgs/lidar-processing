@@ -91,7 +91,7 @@ skip=, filter=, verbose=) {
   default, soesort, 0;
   default, skip, 1;
   default, verbose, 1;
-  default, filter, h_new();
+  default, filter, save();
 
   // Set up filter
   if(remove_buffers)
@@ -115,7 +115,7 @@ skip=, filter=, verbose=) {
     files = find(dir, searchstr=searchstr);
 
   // filter file list ...
-  __dirload_apply_filter, files, h_new(), filter, "files";
+  __dirload_apply_filter, files, save(), filter, "files";
 
   if(is_void(files)) {
     if(verbose)
@@ -192,7 +192,7 @@ skip=, filter=, verbose=) {
     }
 
     // filter data ...
-    state = h_new(fn=files(i), cur=i, cnt=numberof(files));
+    state = save(fn=files(i), cur=i, cnt=numberof(files));
     __dirload_apply_filter, temp, state, filter, "data";
 
     // The filter is allowed to eliminate all data for a file
@@ -225,7 +225,7 @@ skip=, filter=, verbose=) {
     data = sortdata(data, method="soe");
   }
 
-  __dirload_apply_filter, data, h_new(), filter, "merged";
+  __dirload_apply_filter, data, save(), filter, "merged";
 
   if(!is_void(outfile))
     __dirload_write, outfile, outvname, &data;
@@ -262,14 +262,14 @@ func dircopy(dir, outdir, searchstr=, files=, filter=, verbose=) {
   // no defaults for: outfile, files; default for outvname established later
   default, searchstr, "*.pbd";
   default, verbose, 1;
-  default, filter, h_new();
+  default, filter, save();
 
   // Generate list of input files
   if(is_void(files))
     files = find(dir, searchstr=searchstr);
 
   // filter file list ...
-  __dirload_apply_filter, files, h_new(), filter, "files";
+  __dirload_apply_filter, files, save(), filter, "files";
 
   if(is_void(files)) {
     if(verbose)
@@ -289,7 +289,7 @@ func dircopy(dir, outdir, searchstr=, files=, filter=, verbose=) {
       continue;
 
     // filter data ...
-    state = h_new(fn=files(i), cur=i, cnt=numberof(files));
+    state = save(fn=files(i), cur=i, cnt=numberof(files));
     __dirload_apply_filter, data, state, filter, "data";
 
     // The filter is allowed to eliminate all data for a file
@@ -395,11 +395,11 @@ func dircopydiff(src, ref, dest, searchstr=, files=, verbose=) {
 
 /*** PRIVATE FUNCTIONS FOR dirload ***/
 func __dirload_apply_filter(&input, state, filters, name) {
-  if(h_has(filters, name)) {
-    filter = filters(name);
+  if(filters(*,name)) {
+    filter = filters(noop(name));
     while(!is_void(filter) && !is_void(input)) {
       void = filter.function(input, filter, state);
-      filter = h_has(filter, "next") ? filter.next : [];
+      filter = filter.next;
     }
   }
 }
@@ -442,16 +442,15 @@ func dlfilter_merge_filters(filter, prev=, next=) {
   if(!is_void(prev))
     filter = dlfilter_merge_filters(prev, next=filter);
   if(!is_void(next)) {
-    keys = h_keys(next);
-    for(i = 1; i <= numberof(keys); i++) {
-      if(h_has(filter, keys(i))) {
+    keys = next(*,);
+    kcount = numberof(keys);
+    for(i = 1; i <= kcount; i++) {
+      if(filter(*,keys(i))) {
         temp = filter(keys(i));
-        while(h_has(temp, "next")) {
-          temp = temp.next;
-        }
-        h_set, temp, next=next(keys(i));
+        while(temp(*,"next")) temp = temp.next;
+        save, temp, next=next(keys(i));
       } else {
-        h_set, filter, keys(i), next(keys(i));
+        save, filter, keys(i), next(keys(i));
       }
     }
   }
@@ -470,8 +469,8 @@ func dlfilter_skip(skip, prev=, next=) {
 /* DOCUMENT filter = dlfilter_skip(skip, prev=, next=)
   Creates a filter for dirload that will subsample data by a skip factor.
 */
-  filter = h_new(
-    data=h_new(function=__dlfilter_data_skip, skip=skip)
+  filter = save(
+    data=save(function=__dlfilter_data_skip, skip)
   );
   return dlfilter_merge_filters(filter, prev=prev, next=next);
 }
@@ -491,8 +490,8 @@ func dlfilter_rezone(zone, prev=, next=) {
 /* DOCUMENT filter = dlfilter_rezone(zone, prev=, next=)
   Creates a filter for dirload that will rezone the data.
 */
-  filter = h_new(
-    data=h_new(function=__dlfilter_data_rezone, zone=zone)
+  filter = save(
+    data=save(function=__dlfilter_data_rezone, zone)
   );
   return dlfilter_merge_filters(filter, prev=prev, next=next);
 }
@@ -537,9 +536,9 @@ func dlfilter_poly(poly, prev=, next=, mode=) {
   default, mode, "fs";
   if(dimsof(poly)(2) != 2)
     poly = transpose(poly);
-  filter = h_new(
-    files=h_new(function=__dlfilter_files_poly, poly=poly),
-    data=h_new(function=__dlfilter_data_poly, poly=poly, mode=mode)
+  filter = save(
+    files=save(function=__dlfilter_files_poly, poly),
+    data=save(function=__dlfilter_data_poly, poly, mode)
   );
   return dlfilter_merge_filters(filter, prev=prev, next=next);
 }
@@ -636,14 +635,11 @@ func dlfilter_tile(tile, prev=, next=, mode=, buffer=, zone=, dataonly=) {
   default, mode, "fs";
   default, buffer, 0;
   default, zone, 0;
-  filter = h_new(
-    data = h_new(function=__dlfilter_data_tile, tile=tile, mode=mode,
-      buffer=buffer, zone=zone)
+  filter = save(
+    data = save(function=__dlfilter_data_tile, tile, mode, buffer, zone)
   );
   if(zone >= 0 && !dataonly) {
-    h_set, filter, files = h_new(
-      function=__dlfilter_files_tile, tile=tile, zone=zone
-    );
+    save, filter, files=save(function=__dlfilter_files_tile, tile, zone);
   }
 
   return dlfilter_merge_filters(filter, prev=prev, next=next);
@@ -669,8 +665,8 @@ func dlfilter_remove_buffers(prev=, next=, mode=) {
   parseable tile names.
 */
   default, mode, "fs";
-  filter = h_new(
-    data = h_new(function=__dlfilter_data_remove_buffers, mode=mode)
+  filter = save(
+    data = save(function=__dlfilter_data_remove_buffers, mode)
   );
   return dlfilter_merge_filters(filter, prev=prev, next=next);
 }
