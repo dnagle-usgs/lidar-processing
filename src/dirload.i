@@ -8,8 +8,9 @@ elsewhere, including:
   data_rgn_selector.i -- sel_rgn_from_datatiles
 */
 
-func dirload(dir, outfile=, outvname=, uniq=, soesort=, skip=, searchstr=,
-files=, filter=, verbose=) {
+func dirload(dir, searchstr=, files=, outfile=, outvname=, mode=,
+remove_buffers=, bbox=, ply=, tile=, buffer=, force_zone=, uniq=, soesort=,
+skip=, filter=, verbose=) {
 /* DOCUMENT data = dirload(dir, outfile=, outvname=, uniq=, soesort=, skip=,
   searchstr=, files=, filter=, verbose=)
 
@@ -68,12 +69,27 @@ files=, filter=, verbose=) {
         verbose=1   Provide basic progress information (default)
 */
   // no defaults for: outfile, files; default for outvname established later
+  default, searchstr, "*.pbd";
+  default, mode, "fs";
+  default, remove_buffers, 0;
+  default, buffer, 0;
   default, uniq, 0;
   default, soesort, 0;
   default, skip, 1;
-  default, searchstr, "*.pbd";
   default, verbose, 1;
   default, filter, h_new();
+
+  // Set up filter
+  if(remove_buffers)
+    filter = dlfilter_remove_buffers(mode=mode, prev=filter);
+  if(!is_void(bbox))
+    filter = dlfilter_bbox(bbox, mode=mode, prev=filter);
+  if(!is_void(ply))
+    filter = dlfilter_poly(ply, mode=mode, prev=filter);
+  if(tile)
+    filter = dlfilter_tile(tile, mode=mode, buffer=buffer, prev=filter);
+  if(force_zone)
+    filter = dlfilter_rezone(force_zone, prev=filter);
 
   // Necessary to avoid clobbering external variables for some reason.
   local idx;
