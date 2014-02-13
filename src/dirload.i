@@ -412,7 +412,7 @@ func dlfilter_merge_filters(filter, prev=, next=) {
     The merged filter.
 */
   if(!is_void(prev))
-    filter = __dlfilter_merge_filters(prev, next=filter);
+    filter = dlfilter_merge_filters(prev, next=filter);
   if(!is_void(next)) {
     keys = h_keys(next);
     for(i = 1; i <= numberof(keys); i++) {
