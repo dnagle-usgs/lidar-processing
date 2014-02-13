@@ -603,6 +603,32 @@ func dlfilter_tile(tile, prev=, next=, mode=, buffer=, zone=, dataonly=) {
   return dlfilter_merge_filters(filter, prev=prev, next=next);
 }
 
+func __dlfilter_data_remove_buffers(&data, filter, state) {
+/* DOCUMENT __dlfilter_data_remove_buffers, data, filter, state;
+  Support function for dlfilter_remove_buffers.
+*/
+  data2xyz, data, x, y, mode=filter.mode;
+  tile = extract_tile(file_tail(state.fn));
+  zone = long(tile2uz(tile));
+  w = extract_for_tile(x, y, zone, tile, buffer=0);
+  if(numberof(w))
+    data = data(w);
+  else
+    data = [];
+}
+
+func dlfilter_remove_buffers(prev=, next=, mode=) {
+/* DOCUMENT filter = dlfilter_remove_buffers(prev=, next=, mode=)
+  Creates a filter for dirload that will remove buffers from files that have
+  parseable tile names.
+*/
+  default, mode, "fs";
+  filter = h_new(
+    data = h_new(function=__dlfilter_data_remove_buffers, mode=mode)
+  );
+  return dlfilter_merge_filters(filter, prev=prev, next=next);
+}
+
 // *** ALPS INTEGRATION ***
 
 func dirload_l1pro_selpoly {
