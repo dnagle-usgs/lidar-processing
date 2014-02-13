@@ -102,6 +102,8 @@ skip=, filter=, verbose=) {
     filter = dlfilter_poly(ply, mode=mode, prev=filter);
   if(tile)
     filter = dlfilter_tile(tile, mode=mode, buffer=buffer, prev=filter);
+  if(skip > 1)
+    filter = dlfilter_skip(skip, prev=filter);
   if(force_zone)
     filter = dlfilter_rezone(force_zone, prev=filter);
 
@@ -197,10 +199,6 @@ skip=, filter=, verbose=) {
     if(!numberof(temp))
       continue;
 
-    // Skip gets applied on a file by file basis to keep the total memory
-    // usage down
-    if(numberof(temp) > 1)
-      temp = unref(temp)(::skip);
     new_end = end + numberof(temp);
 
     // Make sure the data variable has enough space allocated
@@ -458,6 +456,24 @@ func dlfilter_merge_filters(filter, prev=, next=) {
     }
   }
   return filter;
+}
+
+func __dlfilter_data_skip(&data, filter, state) {
+/* DOCUMENT __dlfilter_data_skip, data, filter, state;
+  Support function for dlfilter_skip.
+*/
+  if(filter.skip > 1 && numberof(data))
+    data = data(1::filter.skip);
+}
+
+func dlfilter_skip(skip, prev=, next=) {
+/* DOCUMENT filter = dlfilter_skip(skip, prev=, next=)
+  Creates a filter for dirload that will subsample data by a skip factor.
+*/
+  filter = h_new(
+    data=h_new(function=__dlfilter_data_skip, skip=skip)
+  );
+  return dlfilter_merge_filters(filter, prev=prev, next=next);
 }
 
 func __dlfilter_data_rezone(&data, filter, state) {
