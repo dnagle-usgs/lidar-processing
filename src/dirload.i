@@ -11,8 +11,9 @@ elsewhere, including:
 func dirload(dir, searchstr=, files=, outfile=, outvname=, mode=,
 remove_buffers=, bbox=, ply=, tile=, buffer=, force_zone=, uniq=, soesort=,
 skip=, filter=, verbose=) {
-/* DOCUMENT data = dirload(dir, outfile=, outvname=, uniq=, soesort=, skip=,
-  searchstr=, files=, filter=, verbose=)
+/* DOCUMENT data = dirload(dir, searchstr=, files=, outfile=, outvname=, mode=,
+   remove_buffers=, bbox=, ply=, tile=, buffer=, force_zone=, uniq=, soesort=,
+   skip=, filter=, verbose=)
 
   Loads and merges the data found in the specified directory.
 
@@ -21,6 +22,16 @@ skip=, filter=, verbose=) {
     dir: The directory containing files to load.
 
   Options:
+
+    searchstr= A search string to use for locating files to load and marge.
+      Examples:
+        searchstr="*.pbd"       All pbd files (default)
+        searchstr="*fs*.pbd"    All first surface files
+        searchstr="*.edf"       All edf files
+        searchstr="*.las"       All las files
+
+    files= Specifies an array of file names to load and merge. If provided,
+      then the dir parameter and the searchstr option are ignored.
 
     outfile= If specified, the merged data will be written to this filename.
       By default, no file is created.
@@ -33,6 +44,25 @@ skip=, filter=, verbose=) {
         VEG__    ->  outvname="bet_merged"
         CVEG_ALL ->  outvname="mvt_merged"
         (other)  ->  outvname="merged"
+
+    mode= Specifies what mode to treate the data as. This is used by many of
+      the filtering methods (remove_buffers, bbox, ply, tile).
+        mode="fs"   Default
+
+    remove_buffers= Specifies whether buffers should be removed from each tile
+      prior to merging.
+        remove_buffers=0    No, don't remove buffers (default)
+        remove_buffers=1    Yes, remove buffers
+
+    bbox= Specifies a bounding box to restrict data loading to.
+
+    ply= Specifies a polygon to restrict data loading to.
+
+    tile= Specifies a tile name to restrict data loading to.
+
+    buffer= If tile= is used, this specifies a buffer to add around the tile.
+
+    force_zone= Specifies a zone to force the data into.
 
     uniq= Specifies whether the merged data should be restricted to unique
       points using the soe values. Possible settings:
@@ -50,16 +80,6 @@ skip=, filter=, verbose=) {
     soesort= Specifies whether the data should be sorted by soe.
         soesort=0   Don't sort (default)
         soesort=1   Sort
-
-    searchstr= A search string to use for locating files to load and marge.
-      Examples:
-        searchstr="*.pbd"       All pbd files (default)
-        searchstr="*fs*.pbd"    All first surface files
-        searchstr="*.edf"       All edf files
-        searchstr="*.las"       All las files
-
-    files= Specifies an array of file names to load and merge. If provided,
-      then the dir parameter and the searchstr option are ignored.
 
     filter= Advanced option. Used for specifying a filter configuration. See
       source code for details.
