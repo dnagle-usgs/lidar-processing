@@ -571,8 +571,7 @@ func __dlfilter_data_tile(&data, filter, state) {
 func dlfilter_tile(tile, prev=, next=, mode=, buffer=, zone=, dataonly=) {
 /* DOCUMENT filter = dlfilter_tile(tile, prev=, next=, mode=, buffer=, zone=,
    dataonly=)
-  Creates a filter for dirload that will filter using the given tile. This
-  filters only the data, not the file names (due to buffers).
+  Creates a filter for dirload that will filter using the given tile.
 
   Options:
     mode= Data's mode
