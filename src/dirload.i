@@ -2,12 +2,6 @@
 require, "alps_data.i";
 require, "dir.i";
 
-/*
-The functionality in this file is intended to supercede similar functions
-elsewhere, including:
-  data_rgn_selector.i -- sel_rgn_from_datatiles
-*/
-
 func dirload(dir, searchstr=, files=, outfile=, outvname=, mode=,
 remove_buffers=, bbox=, ply=, tile=, buffer=, force_zone=, uniq=, soesort=,
 skip=, filter=, verbose=) {
