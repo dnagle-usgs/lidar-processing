@@ -119,6 +119,7 @@ func filters_create(args) {
   filters = filters(noop(w));
   return filters_merge(filters, prev=prev, next=next);
 }
+wrap_args, filters_create;
 
 func filters_merge(stack, prev=, next=) {
   if(!stack) stack = save();
