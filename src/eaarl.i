@@ -95,6 +95,7 @@ require, "distributions.i";
 require, "dmars.i";
 require, "edf.i";
 require, "expix.i";
+require, "filter.i";
 require, "flight_planning.i";
 require, "geometry.i";
 require, "geotiff_tags.i";
