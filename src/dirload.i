@@ -115,7 +115,7 @@ skip=, filter=, verbose=) {
     files = find(dir, searchstr=searchstr);
 
   // filter file list ...
-  __dirload_apply_filter, files, save(), filter, "files";
+  filters_apply, files, save(), filter, "files";
 
   if(is_void(files)) {
     if(verbose)
@@ -193,7 +193,7 @@ skip=, filter=, verbose=) {
 
     // filter data ...
     state = save(fn=files(i), cur=i, cnt=numberof(files));
-    __dirload_apply_filter, temp, state, filter, "data";
+    filters_apply, temp, state, filter, "data";
 
     // The filter is allowed to eliminate all data for a file
     if(!numberof(temp))
@@ -225,7 +225,7 @@ skip=, filter=, verbose=) {
     data = sortdata(data, method="soe");
   }
 
-  __dirload_apply_filter, data, save(), filter, "merged";
+  filters_apply, data, save(), filter, "merged";
 
   if(!is_void(outfile))
     __dirload_write, outfile, outvname, &data;
@@ -269,7 +269,7 @@ func dircopy(dir, outdir, searchstr=, files=, filter=, verbose=) {
     files = find(dir, searchstr=searchstr);
 
   // filter file list ...
-  __dirload_apply_filter, files, save(), filter, "files";
+  filters_apply, files, save(), filter, "files";
 
   if(is_void(files)) {
     if(verbose)
@@ -290,7 +290,7 @@ func dircopy(dir, outdir, searchstr=, files=, filter=, verbose=) {
 
     // filter data ...
     state = save(fn=files(i), cur=i, cnt=numberof(files));
-    __dirload_apply_filter, data, state, filter, "data";
+    filters_apply, data, state, filter, "data";
 
     // The filter is allowed to eliminate all data for a file
     if(!numberof(data))
@@ -394,16 +394,6 @@ func dircopydiff(src, ref, dest, searchstr=, files=, verbose=) {
 }
 
 /*** PRIVATE FUNCTIONS FOR dirload ***/
-func __dirload_apply_filter(&input, state, filters, name) {
-  if(filters(*,name)) {
-    filter = filters(noop(name));
-    while(!is_void(filter) && !is_void(input)) {
-      void = filter.function(input, filter, state);
-      filter = filter.next;
-    }
-  }
-}
-
 func __dirload_write(outfile, outvname, ptr) {
 /* DOCUMENT __dirload_write, outfile, outvname, ptr;
   Used internally by dirload. Writes the merged data to a pbd file.
@@ -421,42 +411,6 @@ func __dirload_write(outfile, outvname, ptr) {
 
 /* FILTERS */
 
-func dlfilter_merge_filters(filter, prev=, next=) {
-/* DOCUMENT filter = dlfilter_merge_filters(filter, prev=, next=)
-  Merges filters intended for dirload.
-
-  Parameters:
-    filter: Should be a filter suitable for dirload.
-
-  Options:
-    prev= If provided, should be a filter suitable for dirload. This will be
-      merged with the filter parameter such that everything in prev will
-      occur first.
-    next= If provided, should be a filter suitable for dirload. This will be
-      merged with the filter parameter such that everything in next will
-      occur last.
-
-  Returns:
-    The merged filter.
-*/
-  if(!is_void(prev))
-    filter = dlfilter_merge_filters(prev, next=filter);
-  if(!is_void(next)) {
-    keys = next(*,);
-    kcount = numberof(keys);
-    for(i = 1; i <= kcount; i++) {
-      if(filter(*,keys(i))) {
-        temp = filter(keys(i));
-        while(temp(*,"next")) temp = temp.next;
-        save, temp, next=next(keys(i));
-      } else {
-        save, filter, keys(i), next(keys(i));
-      }
-    }
-  }
-  return filter;
-}
-
 func __dlfilter_data_skip(&data, filter, state) {
 /* DOCUMENT __dlfilter_data_skip, data, filter, state;
   Support function for dlfilter_skip.
@@ -469,16 +423,16 @@ func dlfilter_skip(skip, prev=, next=) {
 /* DOCUMENT filter = dlfilter_skip(skip, prev=, next=)
   Creates a filter for dirload that will subsample data by a skip factor.
 */
-  filter = save(
+  return filters_create(next=next, prev=prev,
     data=save(function=__dlfilter_data_skip, skip)
   );
-  return dlfilter_merge_filters(filter, prev=prev, next=next);
 }
 
 func __dlfilter_data_rezone(&data, filter, state) {
 /* DOCUMENT __dlfilter_data_rezone, data, filter, state;
   Support function for dlfilter_rezone.
 */
+  if(!numberof(data)) return;
   zone = tile2uz(file_tail(state.fn));
   if(zone == 0)
     data = [];
@@ -490,10 +444,9 @@ func dlfilter_rezone(zone, prev=, next=) {
 /* DOCUMENT filter = dlfilter_rezone(zone, prev=, next=)
   Creates a filter for dirload that will rezone the data.
 */
-  filter = save(
+  return filters_create(next=next, prev=prev,
     data=save(function=__dlfilter_data_rezone, zone)
   );
-  return dlfilter_merge_filters(filter, prev=prev, next=next);
 }
 
 func __dlfilter_files_poly(&files, filter, state) {
@@ -521,6 +474,7 @@ func __dlfilter_data_poly(&data, filter, state) {
 /* DOCUMENT __dlfilter_data_poly, data, filter, state;
   Support function for dlfilter_poly.
 */
+  if(!numberof(data)) return;
   data2xyz, data, x, y, mode=filter.mode;
   idx = testPoly(filter.poly, unref(x), unref(y));
   if(numberof(idx))
@@ -536,11 +490,10 @@ func dlfilter_poly(poly, prev=, next=, mode=) {
   default, mode, "fs";
   if(dimsof(poly)(2) != 2)
     poly = transpose(poly);
-  filter = save(
+  return filters_create(next=next, prev=prev,
     files=save(function=__dlfilter_files_poly, poly),
     data=save(function=__dlfilter_data_poly, poly, mode)
   );
-  return dlfilter_merge_filters(filter, prev=prev, next=next);
 }
 
 func dlfilter_bbox(bbox, prev=, next=, mode=) {
@@ -587,6 +540,8 @@ func __dlfilter_data_tile(&data, filter, state) {
 /* DOCUMENT __dlfilter_data_tile, data, filter, state;
   Support function for dlfilter_tile.
 */
+  if(!numberof(data)) return;
+
   if(filter.zone == 0) {
     zone = tile2uz(file_tail(state.fn));
     if(!zone) {
@@ -642,13 +597,14 @@ func dlfilter_tile(tile, prev=, next=, mode=, buffer=, zone=, dataonly=) {
     save, filter, files=save(function=__dlfilter_files_tile, tile, zone);
   }
 
-  return dlfilter_merge_filters(filter, prev=prev, next=next);
+  return filters_merge(filter, prev=prev, next=next);
 }
 
 func __dlfilter_data_remove_buffers(&data, filter, state) {
 /* DOCUMENT __dlfilter_data_remove_buffers, data, filter, state;
   Support function for dlfilter_remove_buffers.
 */
+  if(!numberof(data)) return;
   data2xyz, data, x, y, mode=filter.mode;
   tile = extract_tile(file_tail(state.fn));
   zone = long(tile2uz(tile));
@@ -665,10 +621,9 @@ func dlfilter_remove_buffers(prev=, next=, mode=) {
   parseable tile names.
 */
   default, mode, "fs";
-  filter = save(
+  return filters_create(next=next, prev=prev,
     data = save(function=__dlfilter_data_remove_buffers, mode)
   );
-  return dlfilter_merge_filters(filter, prev=prev, next=next);
 }
 
 // *** ALPS INTEGRATION ***
