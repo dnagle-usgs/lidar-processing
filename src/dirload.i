@@ -406,6 +406,7 @@ func __dirload_write(outfile, outvname, ptr) {
     else outvname = "merged";
   }
 
+  mkdirp, file_dirname(outfile);
   pbd_save, outfile, outvname, *ptr;
 }
 
