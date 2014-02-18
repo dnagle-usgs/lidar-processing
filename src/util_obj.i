@@ -166,7 +166,7 @@ wrap_args, keyrequire;
 func restore_if_exists(args) {
 /* DOCUMENT restore_if_exists, <obj|hash|file>, <var1>, <var2>, ...
   The first argument must be something with named fields (such that has_members
-  would return 1). The remaining arguments must be simple varaiable references.
+  would return 1). The remaining arguments must be simple variable references.
   This works like a simplified restore that only restores those variables if
   they exist in the container. If they do not exist, they are left at their
   current value.
