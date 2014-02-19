@@ -105,3 +105,53 @@ func parse_rn(rn, &raster, &pulse) {
     return [rn&0xffffff, rn >> 24];
   }
 }
+
+func parse_keyval(str) {
+/* DOCUMENT result = parse_keyval(str)
+  Parses a key-value string into an oxy group.
+
+  The string should comprise of key names and values. Here is an example that
+  illustrates the various possible entries you can provide:
+
+  > obj_show, parse_keyval("a=1 b=two c='see sea' d=\"a b c\" e='\"' f= g =h")
+   TOP (oxy_object, 8 entries)
+   |- a (string) "1"
+   |- b (string) "two"
+   |- c (string) "see sea"
+   |- d (string) "a b c"
+   |- e (string) "\""
+   |- f (string) (nil)
+   |- g (string) (nil)
+   `- (nil) (string) "h"
+
+  However, in the simpler typical case, you would just provide key=val, such as
+  "a=1 b=2 foo=bar".
+
+  All values are left as strings.
+*/
+  local match, key, val;
+  pairs = strsplit(str, " ");
+  count = numberof(pairs);
+  result = save();
+
+  while(strlen(str)) {
+    str = regsub("^ +", str, "");
+    if(regmatch("^([^= ]*)=\"([^\"]*)\"( |$)", str, match, key, val)) {
+      save, result, noop(key), val;
+      str = strpart(str, strlen(match)+1:);
+    } else if(regmatch("^([^= ]*)='([^']*)'( |$)", str, match, key, val)) {
+      save, result, noop(key), val;
+      str = strpart(str, strlen(match)+1:);
+    } else if(regmatch("^([^= ]*)=([^ ]*)( |$)", str, match, key, val)) {
+      save, result, noop(key), val;
+      str = strpart(str, strlen(match)+1:);
+    } else if(regmatch("^([^ ]+)( |$)", str, match, key)) {
+      save, result, noop(key), string(0);
+      str = strpart(str, strlen(match)+1:);
+    } else {
+      break;
+    }
+  }
+
+  return result;
+}
