@@ -1083,8 +1083,9 @@ suffix_remove=, suffix=) {
   timer_finished, t0;
 }
 
-func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=) {
-/* DOCUMENT uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=)
+func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=, optstr=) {
+/* DOCUMENT uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=,
+   optstr=)
   Returns the unique data in the given array.
 
   By default, uniqueness is determined based on the .soe field. When using the
@@ -1129,12 +1130,32 @@ func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=) {
     mode= Specifies which data mode to use to extract x/y/z points when using
       them to determine uniqueness.
         mode="fs"   Default
+
+  Option for calling functions to pass through:
+    optstr= Provides an option string. This can contain any of the key/value
+      pairs accepted by this function, but provided as a string. For example:
+        optstr="forcexy=1 enablez=1 mode=fs"
+      Unknown key names are ignored. If optstr is not a string, it is ignored.
+      This makes it slightly easier for calling functions to juggle the option.
+      For example, a calling function may have a uniq= option that normally
+      accepts 1 or 0; you can extend it to now accept an option string. Passing
+      optstr=uniq will not cause a problem even if uniq=1.
 */
   local w, x, y, z, keep, srt, dupe;
   default, idx, 0;
   default, forcesoe, 0;
   default, forcexy, 0;
   default, enablez, 0;
+
+  if(is_string(optstr)) {
+    opt = parse_keyval(optstr);
+    if(opt(*,"idx")) idx = atoi(opt.idx);
+    if(opt(*,"bool")) bool = atoi(opt.bool);
+    if(opt(*,"forcesoe")) forcesoe = atoi(opt.forcesoe);
+    if(opt(*,"forcexy")) forcexy = atoi(opt.forcexy);
+    if(opt(*,"enablez")) enablez = atoi(opt.enablez);
+    if(opt(*,"mode")) mode = opt.mode;
+  }
 
   // Edge case
   if(is_void(data))
