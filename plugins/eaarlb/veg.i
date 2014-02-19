@@ -66,7 +66,7 @@ func define_veg_conf {
 */
   extern veg_conf, ops_conf;
   if(is_void(veg_conf)) {
-    veg_conf = VEG_CONF(thresh=4.0, noiseadj=1);
+    veg_conf = VEG_CONF(thresh=4.0, noiseadj=0);
     if(!is_void(ops_conf))
       veg_conf.max_sat(*) = ops_conf.max_sfc_sat;
   }

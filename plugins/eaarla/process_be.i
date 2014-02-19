@@ -155,6 +155,8 @@ func eaarl_be_rx_channel(pulses) {
   local conf;
   extern ops_conf;
 
+  define_veg_conf;
+
   be_rx_wf = eaarl_be_rx_wf;
 
   biases = [ops_conf.chn1_range_bias, ops_conf.chn2_range_bias,
@@ -170,7 +172,14 @@ func eaarl_be_rx_channel(pulses) {
     if(!lchannel(i)) continue;
     if(!pulses.rx(lchannel(i),i)) continue;
 
-    conf = bathconf(settings, lchannel(i));
+    conf = save(
+      thresh=veg_conf.thresh,
+      max_sat=veg_conf.max_sat(lchannel(i)),
+      noiseadj=veg_conf.noiseadj,
+      // Channels 1 and 2 define saturation as < 5, whereas channel 3 defines
+      // saturation as == 0.
+      sat_thresh=(lchannel(i) == 3 ? 0 : 4)
+      );
     lbias(i) = biases(lchannel(i));
 
     tmp = be_rx_wf(*pulses.rx(lchannel(i),i), conf);
