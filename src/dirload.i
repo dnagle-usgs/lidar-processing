@@ -62,6 +62,8 @@ skip=, filter=, verbose=) {
       points using the soe values. Possible settings:
         uniq=0   Use all data points, even duplicates (default)
         uniq=1   Restrict to unique points
+      You can also specify an option string for uniq= which will be passed
+      through to uniq_data as optstr=.
 
     skip= Specifies the "skip factor". One out of this many points will be
       kept. This must be an integer greater than or equal to one. Examples:
@@ -219,7 +221,7 @@ skip=, filter=, verbose=) {
   if(uniq) {
     if(verbose)
       write, "Removing duplicates...";
-    data = uniq_data(data);
+    data = uniq_data(data, mode=mode, optstr=uniq);
   }
   if(soesort && numberof(data)) {
     data = sortdata(data, method="soe");
