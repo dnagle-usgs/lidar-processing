@@ -234,6 +234,7 @@ func eaarl_be_rx_eaarla_channel(rx, &conf) {
     conf = save(
       thresh=veg_conf.thresh,
       max_sat=veg_conf.max_sat(i),
+      noiseadj=veg_conf.noiseadj,
       // Channels 1 and 2 define saturation as < 5, whereas channel 3 defines
       // saturation as == 0.
       sat_thresh=(i == 3 ? 0 : 4)
@@ -308,6 +309,7 @@ func eaarl_be_plot(raster, pulse, channel=, win=, xfma=) {
     conf = save(
       thresh=veg_conf.thresh,
       max_sat=veg_conf.max_sat(i),
+      noiseadj=veg_conf.noiseadj,
       // Channels 1 and 2 define saturation as < 5, whereas channel 3 defines
       // saturation as == 0.
       sat_thresh=(channel == 3 ? 0 : 4)
@@ -411,6 +413,20 @@ func eaarl_be_rx_wf(rx, conf, &msg, plot=) {
 
   // Noise pulses
   if(max_ret_len < 5) return result;
+
+  if(conf.noiseadj) {
+    noise = where(wfd1(edges(0):edges(0)+3) < 0);
+    if(is_array(noise)) {
+      if(plot)
+        plmk, wf(edges(0)+1), xaxis(edges(0)+1), marker=marker, msize=.01,
+          color="magenta", width=1;
+      edges(0) = edges(0) + noise(1);
+      if(edges(0) + max_ret_len + 1 > wflen) max_ret_len = wflen - edges(0) - 1;
+      if(plot)
+        plmk, wf(edges(0)+1), xaxis(edges(0)+1), marker=marker, msize=.01,
+          color="red", width=1;
+    }
+  }
 
   // Find where the bottom return pulse changes direction after its trailing
   // edge.

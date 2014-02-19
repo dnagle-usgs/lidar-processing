@@ -12,6 +12,7 @@ local VEG_CONF;
 struct VEG_CONF {
   float thresh;
   int max_sat(3);
+  short noiseadj;
 };
 
 local VEGPIX;
@@ -65,7 +66,7 @@ func define_veg_conf {
 */
   extern veg_conf, ops_conf;
   if(is_void(veg_conf)) {
-    veg_conf = VEG_CONF(thresh=4.0);
+    veg_conf = VEG_CONF(thresh=4.0, noiseadj=1);
     if(!is_void(ops_conf))
       veg_conf.max_sat(*) = ops_conf.max_sfc_sat;
   }
