@@ -257,3 +257,70 @@ func job_las2pbd(conf) {
     vname=conf.vname, fakemirror=fakemirror, rgbrn=rgbrn, verbose=0,
     date=conf.date, geo=geo, zone=zone;
 }
+
+func job_retile_scan(conf) {
+/* DOUMENT job_retile_scan, conf
+  This is a wrapper around _batch_retile_scan. Each accepted command-line
+  option corresponds to an option of _batch_retile_scan with the same name.
+*/
+  require, "eaarl.i";
+  keyrequire, conf, infile=, outfile=;
+
+  if(conf(*,"remove_buffers"))
+    save, conf, remove_buffers=atoi(conf.remove_buffers);
+  if(conf(*,"zone"))
+    save, conf, zone=atoi(conf.zone);
+  if(conf(*,"force_zone"))
+    save, conf, force_zone=atoi(conf.force_zone);
+  if(conf(*,"buffer"))
+    save, conf, buffer=atod(conf.buffer);
+  if(conf(*,"split_days"))
+    save, conf, split_days=atoi(conf.split_days);
+  if(conf(*,"dayshift"))
+    save, conf, dayshift=atod(conf.dayshift);
+
+  _batch_retile_scan, opts=conf;
+}
+
+func job_retile_assemble(conf) {
+/* DOUMENT job_retile_assemble, conf
+  This is a wrapper around _batch_retile_assemble. Each accepted command-line
+  option corresponds to an option of _batch_retile_assemble with the same name.
+*/
+  require, "eaarl.i";
+  keyrequire, conf, infiles=, outfile=, vname=, tile=;
+
+  if(conf(*,"zone"))
+    save, conf, zone=atoi(conf.zone);
+  if(conf(*,"buffer"))
+    save, conf, buffer=atod(conf.buffer);
+  if(conf(*,"force_zone"))
+    save, conf, force_zone=atoi(conf.force_zone);
+  if(conf(*,"uniq") && strlen(conf.uniq) <= 1)
+    save, conf, uniq=atoi(conf.uniq);
+
+  _batch_retile_assemble, opts=conf;
+}
+
+func job_retile_assemble_dates(conf) {
+/* DOUMENT job_retile_assemble_dates, conf
+  This is a wrapper around _batch_retile_assemble_dates. Each accepted
+  command-line option corresponds to an option of _batch_retile_assemble_dates
+  with the same name.
+*/
+  require, "eaarl.i";
+  keyrequire, conf, infiles=, outfiles=, vnames=, dates=, tile=;
+
+  if(conf(*,"zone"))
+    save, conf, zone=atoi(conf.zone);
+  if(conf(*,"buffer"))
+    save, conf, buffer=atod(conf.buffer);
+  if(conf(*,"force_zone"))
+    save, conf, force_zone=atoi(conf.force_zone);
+  if(conf(*,"uniq") && strlen(conf.uniq) <= 1)
+    save, conf, uniq=atoi(conf.uniq);
+  if(conf(*,"dayshift"))
+    save, conf, dayshift=atod(conf.dayshift);
+
+  _batch_retile_assemble_dates, opts=conf;
+}
