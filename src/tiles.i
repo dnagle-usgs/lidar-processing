@@ -308,8 +308,8 @@ func extract_match_tile(east, north, zone, tile) {
   return where(tile == tiles);
 }
 
-func restrict_data_extent(data, tile, buffer=, mode=) {
-/* DOCUMENT data = restrict_data_extent(data, tile, buffer=, mode=)
+func restrict_data_extent(data, tile, buffer=, exact=, mode=) {
+/* DOCUMENT data = restrict_data_extent(data, tile, buffer=, exact=, mode=)
   Restricts the extent of the data based on its tile.
 
   Parameters:
@@ -322,6 +322,10 @@ func restrict_data_extent(data, tile, buffer=, mode=) {
     buffer= A buffer in meters to apply around the tile. Default is 0, which
       constrains to the exact tile boundaries. A larger buffer will include
       more data.
+    exact= Contrains the data to exactly the tile specified. This ignores
+      buffer=. This differs from buffer=0 in how border points are handled.
+      With buffer=0, border points go into both adjacent tiles; with exact=1,
+      border points only go into exactly one tile.
     mode= The mode of the data. Can be any setting valid for data2xyz.
       "fs": First surface
       "be": Bare earth (default)
@@ -334,7 +338,10 @@ func restrict_data_extent(data, tile, buffer=, mode=) {
 
   data2xyz, data, e, n, mode=mode;
   zone = tile2uz(tile);
-  idx = extract_for_tile(e, n, zone, tile, buffer=buffer);
+  if(exact)
+    idx = extract_match_tile(e, n, zone, tile);
+  else
+    idx = extract_for_tile(e, n, zone, tile, buffer=buffer);
   return numberof(idx) ? data(idx) : [];
 }
 
