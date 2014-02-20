@@ -294,6 +294,20 @@ func extract_for_tile(east, north, zone, tile, buffer=) {
   }
 }
 
+func extract_match_tile(east, north, zone, tile) {
+/* DOCUMENT idx = extract_match_tile(east, north, zone, tile)
+  Returns an index into north/east of all coordinates that exactly match the
+  given tile. This is similar to using extract_for_tile with buffer=0, except
+  for the edge case of points that fall exactly on a border. Such points will
+  show up in both adjacent tiles for extract_for_tile but will only show up in
+  exactly one tile for extract_match_tile.
+*/
+  tile = extract_tile(tile);
+  type = tile_type(tile);
+  tiles = utm2tile(east, north, zone, type);
+  return where(tile == tiles);
+}
+
 func restrict_data_extent(data, tile, buffer=, mode=) {
 /* DOCUMENT data = restrict_data_extent(data, tile, buffer=, mode=)
   Restricts the extent of the data based on its tile.
