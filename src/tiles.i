@@ -223,6 +223,14 @@ func tile2centroid(tile) {
   return [];
 }
 
+func plot_tile(tile, color=, width=) {
+/* DOCUMENT plot_tile, tile, color=, width=
+  Simple wrapper around tile2bbox + plg that plots a tile boundary.
+*/
+  bbox = tile2bbox(tile);
+  plg, bbox([1,3,3,1,1]), bbox([2,2,4,4,2]), color=color, width=width, closed=1;
+}
+
 func show_grid_location(m) {
 /* DOCUMENT show_grid_location, win
   -or- show_grid_location, point
