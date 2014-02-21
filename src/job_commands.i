@@ -294,6 +294,8 @@ func job_retile_assemble(conf) {
     save, conf, zone=atoi(conf.zone);
   if(conf(*,"buffer"))
     save, conf, buffer=atod(conf.buffer);
+  if(conf(*,"remove_buffers"))
+    save, conf, remove_buffers=atoi(conf.remove_buffers);
   if(conf(*,"force_zone"))
     save, conf, force_zone=atoi(conf.force_zone);
   if(conf(*,"uniq") && strlen(conf.uniq) <= 1)
@@ -315,6 +317,8 @@ func job_retile_assemble_dates(conf) {
     save, conf, zone=atoi(conf.zone);
   if(conf(*,"buffer"))
     save, conf, buffer=atod(conf.buffer);
+  if(conf(*,"remove_buffers"))
+    save, conf, remove_buffers=atoi(conf.remove_buffers);
   if(conf(*,"force_zone"))
     save, conf, force_zone=atoi(conf.force_zone);
   if(conf(*,"uniq") && strlen(conf.uniq) <= 1)
