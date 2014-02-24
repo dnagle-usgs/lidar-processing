@@ -160,7 +160,7 @@ remove_buffers=, buffer=, zone=, force_zone=, uniq=) {
   restore_if_exists, opts, infiles, outfile, vname, tile, mode, remove_buffers,
     buffer, zone, force_zone, uniq;
   dirload, files=infiles, outfile=outfile, outvname=vname, skip=1, soesort=1,
-    remove_buffers=remove_buffers, force_zone=force_zone, uniq=uniq,
+    remove_buffers=remove_buffers, force_zone=force_zone, uniq=uniq, verbose=0,
     filter=dlfilter_tile(tile, mode=mode, buffer=buffer, zone=zone, dataonly=1);
 }
 
