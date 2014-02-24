@@ -367,9 +367,12 @@ func pbd_load(file, &err, &vname) {
 
   // Compatibility -- re-cast the data against its own struct. If the struct
   // has had new fields added, this will make sure they get included.
-  data = struct_cast(data, symbol_def(nameof(structof(data))));
+  s = structof(data);
+  n = nameof(s);
+  if(symbol_exists(n) && !structeq(s, symbol_def(n)))
+    data = struct_cast(data, symbol_def(n));
 
-  return unref(data);
+  return data;
 }
 
 func is_pbd(file) {
