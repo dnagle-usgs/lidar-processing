@@ -143,6 +143,23 @@ func job_rcf_eaarl(conf) {
       prefilter_max=prefilter_max, verbose=0;
 }
 
+func job_pbd2edf(conf) {
+/* DOCUMENT job_pbd2edf, conf
+  Wrapper around pbd2edf. Command line optoins correspond to parameters/options
+  in pbd2edf:
+
+    --pbd
+    --edf
+    --type
+    --words
+*/
+  require, "eaarl.i";
+  keyrequire, conf, pbd=, edf=;
+  type = pass_void(atoi, conf.type);
+  words = pass_void(atoi, conf.words);
+  pbd2edf, conf.pbd, edf=conf.edf, type=type, words=words;
+}
+
 func job_pbd2las(conf) {
 /* DOCUMENT job_pbd2las, conf
   This is a wrapper around pbd2las. Each accepted command-line option

@@ -487,6 +487,9 @@ func batch_pbd2edf(dirname, files=, searchstr=, outdir=, update=, type=, words=)
 
   SEE ALSO: pbd2edf, edf_export
 */
+  t0 = array(double, 3);
+  timer, t0;
+
   default, searchstr, "*.pbd";
   default, update, 0;
 
@@ -498,32 +501,34 @@ func batch_pbd2edf(dirname, files=, searchstr=, outdir=, update=, type=, words=)
   if(!is_void(outdir))
     edfs = file_join(outdir, file_tail(edfs));
 
-  sizes = file_size(pbds);
-  exists = file_exists(edfs);
-  if(update && anyof(exists))
-    sizes(where(exists)) = 0;
-  if(numberof(sizes) > 1)
-    sizes = sizes(cum)(2:);
-  if(!sizes(0))
-    sizes(0) = 1;
+  if(update) {
+    w = where(!file_exists(edfs));
+    if(!numberof(w)) {
+      write, "All files already exist, aborting";
+      return;
+    }
+    pbds = pbds(w):
+    edfs = edfs(w);
+  }
+
+  options = save(string(0), []);
+  if(type) save, options, type;
+  if(words) save, options, words;
 
   count = numberof(pbds);
-  t0 = array(double, 3);
-  timer, t0;
+  conf = save();
   for(i = 1; i <= count; i++) {
-    write, format="%d/%d: %s\n", i, count, file_tail(edfs(i));
-    if(exists(i)) {
-      if(update) {
-        write, "-- exists, skipping";
-        continue;
-      } else {
-        write, "-- exists, overwriting";
-      }
-    }
-    pbd2edf, pbds(i), edf=edfs(i), type=type, words=words;
-    timer_remaining, t0, sizes(i), sizes(0);
-    write, "";
+    remove, edfs(i);
+    save, conf, string(0), save(
+      input=pbds(i),
+      output=edfs(i),
+      command="job_pbd2edf",
+      options=obj_merge(options, save(pbd=pbds(i), edf=edfs(i)))
+    );
   }
+
+  makeflow_run, conf, interval=15;
+
   timer_finished, t0;
 }
 
