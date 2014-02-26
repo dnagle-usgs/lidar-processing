@@ -317,7 +317,7 @@ func eaarl_be_plot(raster, pulse, channel=, win=, xfma=) {
   if(channel) {
     conf = save(
       thresh=veg_conf.thresh,
-      max_sat=veg_conf.max_sat(i),
+      max_sat=veg_conf.max_sat(channel),
       noiseadj=veg_conf.noiseadj,
       // Channels 1 and 2 define saturation as < 5, whereas channel 3 defines
       // saturation as == 0.
