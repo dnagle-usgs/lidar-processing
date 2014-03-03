@@ -68,7 +68,7 @@ func profiler_leave(name) {
   profiler_depth--;
 }
 
-func profiler_report(names, srt=, searchstr=) {
+func profiler_report(names, srt=, searchstr=, divide=) {
 /* DOCUMENT profiler_report, names, srt=, searchstr=
   Provides a profiling report.
 
@@ -86,6 +86,10 @@ func profiler_report(names, srt=, searchstr=) {
 
   searchstr= Allows you to restrict output to profiling names that match a
     given search string (or array of search strings).
+
+  divide= Specifies an integer value to divide the total ticks for each entry
+    by. This is usually useful as a second report run to divide sub-steps by
+    the total time of the whole, to get percent-of-total.
 */
   extern profiler_data;
   if(is_void(names)) names = h_keys(profiler_data);
@@ -122,14 +126,18 @@ func profiler_report(names, srt=, searchstr=) {
     names = names(msort(key, names));
   }
 
+  nfmt = swrite(format="%%-%ds", max(strlen(names)));
+
   for(i = 1; i <= numberof(names); i++) {
-    write, format="%s\n", names(i);
+    write, format=nfmt, names(i);
     if(!h_has(profiler_data, names(i))) {
-      write, format="  %d calls\n", 0;
+      if(divide) write, format="  %8.3f", 0.;
+      write, format="\n  %d calls\n", 0;
       continue;
     }
     cur = profiler_data(names(i));
-    write, format="  %d calls\n", cur.calls;
+    if(divide) write, format="  %8.3f", cur.time/double(divide);
+    write, format="\n  %d calls\n", cur.calls;
     if(!cur.calls) continue;
     write, format="  %d ticks\n", cur.time;
     write, format="  %d ticks/call\n", cur.time/cur.calls;
