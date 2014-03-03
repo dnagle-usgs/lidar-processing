@@ -204,7 +204,7 @@ func tans_check_times(sods, verbose=) {
   if(verbose)
     write, format=" Number of flightline segments selected = %d\n", count;
 
-  tans_bounds = digitize(sods, tans.somd) - 1;
+  tans_bounds = max(1, digitize(sods, tans.somd) - 1);
   tans_start = tans_bounds(1,);
   tans_stop = tans_bounds(2,);
   tans_bounds = [];
