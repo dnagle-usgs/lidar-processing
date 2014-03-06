@@ -75,7 +75,7 @@ xy=) {
     mode = ["fs","ba","be"](mode);
 
   // Integer meters area of cells. Must be at least 2, though.
-  narea = min(2, long(gridsize^2));
+  narea = max(2, long(gridsize^2));
   // Number of random points
   if(is_void(nrand))
     nrand = long(narea/ndivide) + 1;
