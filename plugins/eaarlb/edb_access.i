@@ -207,21 +207,37 @@ func load_edb(fn=, update=, verbose=, override_offset=) {
   // need this first, cuz get_erast uses it.
   eaarl_time_offset = 0;
 
-  edb_fn1 = file_join(file_dirname(edb_filename), file_tail(edb_files(1)));
   if(!is_void(override_offset)) {
     eaarl_time_offset = override_offset;
-  } else if(file_exists(edb_fn1)) {
-    eaarl_time_offset = edb(1).seconds - decode_raster(rn=1).soe;
   } else {
-    write, "WARNING: Unable to determine eaarl_time_offset, using 0"
-    if(file_exists(edb_fn1+".bz2"))
-      write, "         EAARL TLD files appear to be compressed, please decompress";
-    else
-      write, "         EAARL TLD files appear to be missing";
-    eaarl_time_offset = 0.;
+    // If an offsets file exists alongside the edb, load and use it
+    off_fn = file_rootname(edb_filename) + ".offsets";
+    if(file_exists(off_fn)) {
+      foff = openb(off_fn);
+      if(has_member(foff, "eaarl_time_offset"))
+        eaarl_time_offset = foff.eaarl_time_offset;
+      close, foff;
+
+      if(numberof(eaarl_time_offset) != numberof(edb))
+        write, "WARNING: numberof(eaarl_time_offset) != numberof(edb)";
+    }
   }
-  // Coerce to scalar
-  eaarl_time_offset = eaarl_time_offset(*)(1);
+
+  if(is_scalar(eaarl_time_offset) && is_void(override_offset)) {
+    edb_fn1 = file_join(file_dirname(edb_filename), file_tail(edb_files(1)));
+    if(file_exists(edb_fn1)) {
+      eaarl_time_offset = edb(1).seconds - decode_raster(rn=1).soe;
+    } else {
+      write, "WARNING: Unable to determine eaarl_time_offset, using 0"
+      if(file_exists(edb_fn1+".bz2"))
+        write, "         EAARL TLD files appear to be compressed, please decompress";
+      else
+        write, "         EAARL TLD files appear to be missing";
+      eaarl_time_offset = 0.;
+    }
+    // Coerce back to scalar
+    eaarl_time_offset = eaarl_time_offset(*)(1);
+  }
 
   // Set these up with some suitable fall-back values
   data_begins = 1;
@@ -287,7 +303,7 @@ To see a raster, try:\n\
     tksetval, "edb(data_ends)", data_ends;
     tksetval, "edb(mission_duration)", mission_duration;
     tksetval, "edb(soe)", soe_day_start;
-    tksetval, "edb(eaarl_time_offset)", eaarl_time_offset;
+    tksetval, "edb(eaarl_time_offset)", eaarl_time_offset(1);
     tksetval, "edb(path)", data_path;
     tksetval, "edb(idx_file)", fn;
     tksetval, "edb(nbr_rasters)", numberof(edb);
@@ -583,7 +599,10 @@ func decode_raster(raw, rn=) {
   if(!eaarl_header_valid(header))
     return result;
 
-  seconds = header.seconds + eaarl_time_offset;
+  if(is_scalar(eaarl_time_offset))
+    seconds = header.seconds + eaarl_time_offset;
+  else
+    seconds = header.seconds + eaarl_time_offset(rn);
   if(!is_void(tca) && numberof(tca) >= header.raster_number)
     seconds += tca(header.raster_number);
 

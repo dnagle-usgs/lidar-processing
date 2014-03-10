@@ -179,7 +179,11 @@ func irg_replot(temp_time_offset=, range_offset=) {
   extern irg_t, rtrs, soe_day_start, gga, data_path;
   default, range_offset, 0;
   default, temp_time_offset, eaarl_time_offset;
-  irg_t = (rtrs.soe - soe_day_start) + temp_time_offset;
+  if(is_scalar(temp_time_offset)) {
+    irg_t = (rtrs.soe - soe_day_start) + temp_time_offset;
+  } else {
+    irg_t = (rtrs.soe - soe_day_start) + temp_time_offset(rtrs.raster);
+  }
   window, 7;
   fma;
   plg, gga.alt, gga.sod, marks=0;

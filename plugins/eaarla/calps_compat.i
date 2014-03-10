@@ -5,6 +5,14 @@
 scratch = save(scratch, base);
 base = file_dirname(current_include())+"/";
 
+if(is_func(calps_compatibility)) {
+  if(calps_compatibility() < 4) {
+    // Prior to version 4, eaarl_decode_fast only supports scalar
+    // eaarl_time_offset
+    eaarl_decode_fast = [];
+  }
+}
+
 // Added 2013-09-24
 if(!is_func(eaarl_decode_fast))
   require, base+"calps/eaarl_decode_fast.i";

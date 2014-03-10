@@ -17,7 +17,8 @@ func nocalps_eaarl_decode_fast(fn, start, stop, rnstart=, raw=, wfs=) {
   Options:
     rnstart= Starting raster number. If provided, then the raster field will be
       added, treating the raster found at START as raster RNSTART and numbering
-      the ones that follow sequentially.
+      the ones that follow sequentially. This is required when
+      eaarl_time_offset is an array.
     raw= Specifies whether raw data is desired.
       raw=0   Default; soe will be updated using eaarl_time_offset
       raw=1   All data returned as it was in the file
@@ -40,6 +41,10 @@ func nocalps_eaarl_decode_fast(fn, start, stop, rnstart=, raw=, wfs=) {
 */
   extern eaarl_time_offset;
   default, wfs, 1;
+
+  if(!rnstart && !is_scalar(eaarl_time_offset)) {
+    error, "if eaarl_time_offset is array, must provide rnstart";
+  }
 
   f = open(fn, "rb");
   add_variable, f, -1, "raw", char, sizeof(f);
@@ -108,7 +113,7 @@ func nocalps_eaarl_decode_fast(fn, start, stop, rnstart=, raw=, wfs=) {
 
       offset_time=fi24(f, offset);
       soe(pidx) = seconds + (fseconds + offset_time) * 1.6e-6 +
-        eaarl_time_offset;
+        (is_scalar(eaarl_time_offset) ? eaarl_time_offset : eaarl_time_offset(rn));
 
       scan_angle(pidx) = fi16(f, offset+9);
 
