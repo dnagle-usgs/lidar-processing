@@ -754,10 +754,6 @@ Added server/client support (2009-01) Richard Mitchell
   default, win, 6;
   window, win;
 
-  eaarl_time_offset = 0;	// need this first, cuz get_erast uses it.
-  eaarl_time_offset = edb(1).seconds - decode_raster( get_erast(rn=1) ).soe;
-
-
   // Create output directory for tile cmd files:
   mkdirp, "/tmp/batch/prep";
   mkdirp, "/tmp/batch/jobs";
