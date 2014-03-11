@@ -324,19 +324,136 @@ func time_correct(path) {
   close, f;
 }
 
-func edb_update(time_correction) {
-/* DOCUMENT edb_update, time_correction;
+func edb_update(adj) {
+/* DOCUMENT edb_update, adj;
   Writes the memory version of edb back into the file.  Used to correct time
   of day problems.
+
+  The argument should be the adjustment to make. This is added to the existing
+  times. So if your previous eaarl_time_offset was 1 and you want to make the
+  new one 5, you should call "edb_update, 4". If the previous was 9 and the new
+  one should be 3, use "edb_update, -6".
 */
   extern edb_filename, edb;
   if(!is_void(edb_filename) && !is_void(edb)) {
-    edb.seconds += time_correction;
+    edb.seconds += adj;
     f = edb_open(edb_filename, filemode="r+b");
     f.records = edb;
     close, f;
     write, "edb updated";
   }
+}
+
+func edb_time_save(void) {
+/* DOCUMENT edb_time_save;
+  Saves the current eaarl_time_offset information. This invokes edb_update with
+  the proper adjustment value and, if necessary, creates or deletes an offsets
+  file.
+*/
+  extern edb_filename, edb, eaarl_time_offset;
+
+  off_fn = file_rootname(edb_filename) + ".offsets";
+  if(file_exists(off_fn)) {
+    f = openb(off_fn);
+    adj = eaarl_time_offset - f.eaarl_time_offset;
+    close, f;
+  } else {
+    tmp = eaarl_time_offset;
+    eaarl_time_offset = 0;
+    adj = tmp - edb(1).seconds + (decode_raster(rn=1).soe)(1);
+    eaarl_time_offset = tmp;
+  }
+  edb_update, adj;
+
+  if(is_scalar(eaarl_time_offset)) {
+    if(file_exists(off_fn)) remove, off_fn;
+  } else {
+    save, createb(off_fn, i86_primitives), eaarl_time_offset;
+  }
+}
+
+func edb_time_insert(val, start, stop) {
+/* DOCUMENT edb_time_insert, offset, start
+  -or- edb_time_insert, offset, start, stop
+
+  Updates the array of eaarl_time_offset to insert the given offset at the
+  given location.
+
+  In the first form, rasters starting at START up through the end of that
+  raster's current range will be updated to OFFSET.
+
+  In the second form, rasters from START to STOP will be updated to OFFSET.
+
+  The range of rasters updated will be printed at the command line. Then the
+  output from edb_time_show will be displayed.
+*/
+  extern edb, eaarl_time_offset;
+
+  if(start < 1 || start > numberof(edb))
+    error, "raster value out of range";
+
+  if(is_scalar(eaarl_time_offset))
+    eaarl_time_offset = array(eaarl_time_offset, numberof(edb));
+
+  if(is_real(val) && is_integer(eaarl_time_offset))
+    eaarl_time_offset = double(eaarl_time_offset);
+
+  if(is_void(stop)) {
+    w = where(eaarl_time_offset(dif));
+    if(!numberof(w)) {
+      stop = numberof(edb);
+    } else {
+      q = where(w > start);
+      if(!numberof(q)) {
+        stop = numberof(edb);
+      } else {
+        stop = w(q(1));
+      }
+    }
+  } else {
+    if(stop < 1 || stop > numberof(edb))
+      error, "raster value out of range";
+  }
+
+  eaarl_time_offset(start:stop) = val;
+  write, format="Updating range %d to %d = %s\n", start, stop, pr1(val);
+  write, "";
+  edb_time_show;
+}
+
+func edb_time_show(void) {
+/* DOCUMENT edb_time_show
+  Displays a summary of the current eaarl_time_offset. This will show whether
+  eaarl_time_offset is scalar or array and will give a summary of its current
+  ranges and offsets if it is an array.
+*/
+  extern edb, eaarl_time_offset;
+
+  write, format="%d total rasters\n", numberof(edb);
+
+  if(is_scalar(eaarl_time_offset)) {
+    write, format="Simple offset: %s\n", pr1(eaarl_time_offset);
+    return;
+  }
+
+  if(numberof(edb) != numberof(eaarl_time_offset)) {
+    write, format="WARNING: eaarl_time_offset has different number of rasters: %d\n", numberof(eaarl_time_offset);
+  }
+
+  w = where(eaarl_time_offset(dif));
+  if(!numberof(w)) {
+    write, format="Array of offsets, all same: %s\n", pr1(eaarl_time_offset(1));
+    return;
+  }
+
+  start = grow(1, w+1);
+  stop = grow(w, numberof(edb));
+
+  fmt1 = swrite(format="%%%dd", long(ceil(log10(1+start(max)))));
+  fmt2 = swrite(format="%%%dd", long(ceil(log10(1+stop(max)))));
+  fmt3 = is_real(eaarl_time_offset) ? "%f" : "%d";
+  fmt = fmt1 + " - " + fmt2 + " = " + fmt3 + "\n";
+  write, format=fmt, start, stop, eaarl_time_offset(start);
 }
 
 func edb_raster_range_files(start, stop, &fnum, &fstart, &fstop) {
