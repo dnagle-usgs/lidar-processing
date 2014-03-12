@@ -20,7 +20,9 @@ void Y_eaarl_decode_fast(int nArgs)
   long start = 0, stop = 0, rnstart = 0, raw = 0, wfs = 1;
 
   long tx_clean = 0;
+  // one for scalar, the other for array
   double eaarl_time_offset = 0.;
+  double *eaarl_time_offsets = NULL;
 
   filebuffer_t *f = NULL;
   long count = 0, offset = 0, pidx = -1, rn = 0, rstart = 0, rstop = 0;
@@ -105,7 +107,14 @@ void Y_eaarl_decode_fast(int nArgs)
     if(idx != -1)
     {
       ypush_global(idx);
-      eaarl_time_offset = ygets_d(0);
+      if(yarg_rank(0) == 0) {
+        eaarl_time_offset = ygets_d(0);
+      } else if(yarg_rank(0) == 1) {
+        if(!rnstart) {
+          y_error("if eaarl_time_offset is array, must provide rnstart");
+        }
+        eaarl_time_offsets = ygeta_d(0, 0, 0);
+      }
       yarg_drop(1);
     }
   }
@@ -197,7 +206,7 @@ void Y_eaarl_decode_fast(int nArgs)
       digitizer[pidx] = dig;
 
       soe[pidx] = seconds + (fseconds + i24(f, offset)) * 1.6e-6 +
-          eaarl_time_offset;
+          (eaarl_time_offsets ? eaarl_time_offsets[rn-1] : eaarl_time_offset);
 
       scan_angle[pidx] = i16(f, offset+9);
 

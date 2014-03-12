@@ -19,9 +19,13 @@ func calps_compatibility(nil) {
     Fixed compatibility issue that caused wf_centroid to seg fault on some
     systems when called as a subroutine.
 
-  This version of calps_compatibility returns 3.
+  Version 4
+    Extended eaarl_decode_fast to cope with possibility of array for
+    eaarl_time_offset.
+
+  This version of calps_compatibility returns 4.
 */
-  return 3;
+  return 4;
 }
 
 // *** defined in triangle_y.c ***
