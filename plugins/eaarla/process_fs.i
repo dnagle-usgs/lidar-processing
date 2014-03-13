@@ -108,6 +108,12 @@ func process_fs(start, stop, ext_bad_att=, channel=, opts=) {
   // Interpolate trajectory
   traj = fs_traj(pulses.soe);
 
+  // Get rid of anything with bogus trajectory (out of bounds)
+  w = where(traj.easting);
+  if(!numberof(w)) return;
+  pulses = obj_index(pulses, w);
+  traj = obj_index(traj, w);
+
   // mirror offsets
   dx = ops_conf.x_offset; // perpendicular to fuselage
   dy = ops_conf.y_offset; // along fuselage
@@ -266,6 +272,11 @@ func eaarl_fs_trajectory(soe) {
   ins = tans(bound1:bound0);
   bound0 = bound1 = bounds = [];
 
+  if(numberof(ins) == 1) {
+    easting = northing = alt = pitch = roll = yaw = array(0, numberof(soe));
+    return save(easting, northing, alt, pitch, roll, yaw);
+  }
+
   if(has_member(ops_conf, "use_ins_for_gps") && ops_conf.use_ins_for_gps) {
     gps = ins;
     gps_sod = gps.somd;
@@ -292,6 +303,15 @@ func eaarl_fs_trajectory(soe) {
   pitch += ops_conf.pitch_bias;
   roll += ops_conf.roll_bias;
   yaw = -heading + ops_conf.yaw_bias;
+
+  // Set anything out of bounds to 0
+  w = where(
+    ins.somd(max) < sod | sod < ins.somd(min) |
+    gps_sod(max) < sod | sod < gps_sod(min)
+  );
+  if(numberof(w)) {
+    easting(w) = northing(w) = alt(w) = pitch(w) = roll(w) = yaw(w) = 0;
+  }
 
   return save(easting, northing, alt, pitch, roll, yaw);
 }
