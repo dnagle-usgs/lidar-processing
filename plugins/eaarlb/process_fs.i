@@ -262,7 +262,7 @@ func eaarl_fs_trajectory(soe) {
   // Store tans in ins, reduced down to just the range we need
   bounds = digitize([sod(*)(min), sod(*)(max)], tans.somd);
   bound1 = max(bounds(1) - 1, 1);
-  bound0 = bounds(0);
+  bound0 = min(bounds(0), numberof(tans));
   ins = tans(bound1:bound0);
   bound0 = bound1 = bounds = [];
 
