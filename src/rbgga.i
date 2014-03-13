@@ -194,46 +194,32 @@ func gga_find_times(q) {
 }
 
 func tans_check_times(sods, verbose=) {
+/* DOCUMENT sods = tans_check_times(sods, verbose=)
+  Given a range of times found against pnav, re-work them to be a range of
+  times found against tans.
+*/
   default, verbose, 1;
   sod_start = sods(1,);
   sod_stop = sods(2,);
 
-  // now loop through the times and find corresponding start and stop raster
-  // numbers
-  count = numberof(sods(1,));
-  if(verbose)
-    write, format=" Number of flightline segments selected = %d\n", count;
-
-  tans_bounds = max(1, digitize(sods, tans.somd) - 1);
-  tans_start = tans_bounds(1,);
-  tans_stop = tans_bounds(2,);
-  tans_bounds = [];
-
-  // Detect gaps
+  count = numberof(sod_start);
+  keep = array(0, numberof(tans));
   for(i = 1; i <= count; i++) {
-    if(tans_start(i) == tans_stop(i))
-      continue;
-    gaps = where(tans.somd(tans_start(i):tans_stop(i))(dif) > 0.5);
-    if(numberof(gaps)) {
-      // Change to index into tans.somd
-      gaps = gaps + tans_start(i) - 1;
+    keep |= (sod_start(i) <= tans.somd & tans.somd <= sod_stop(i));
+  }
 
-      if(verbose)
-        write, format="Segment #%d has gaps in TANS data, splitting into %d segments\n", i, numberof(gaps)+1;
-      sod_stop(i) = tans.somd(gaps(1));
-      if(numberof(gaps) > 1) {
-        grow, sod_start, tans.somd(gaps(:-1)+1);
-        grow, sod_start, tans.somd(gaps(2:));
-      }
-      grow, sod_start, tans.somd(gaps(0)+1);
-      grow, sod_stop, tans.somd(bounds(0));
+  q = where(keep);
+  start = [1];
+  stop = [numberof(q)];
+  if(numberof(q) > 1) {
+    w = where(q(dif) > 2);
+    if(numberof(w)) {
+      start = grow([0], w) + 1;
+      stop = grow(w, numberof(q));
     }
   }
 
-  sod_start = sod_start(sort(sod_start));
-  sod_stop = sod_stop(sort(sod_stop));
-
-  return transpose([sod_start,sod_stop]);
+  return tans.somd(transpose(q([start,stop])));
 }
 
 func edb_sods_to_rns(sods, max_rps=, verbose=) {
