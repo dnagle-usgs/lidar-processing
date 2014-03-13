@@ -209,6 +209,8 @@ func tans_check_times(sods, verbose=) {
   }
 
   q = where(keep);
+  if(!numberof(q)) return;
+
   start = [1];
   stop = [numberof(q)];
   if(numberof(q) > 1) {
