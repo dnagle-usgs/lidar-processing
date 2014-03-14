@@ -507,7 +507,7 @@ func batch_pbd2edf(dirname, files=, searchstr=, outdir=, update=, type=, words=)
       write, "All files already exist, aborting";
       return;
     }
-    pbds = pbds(w):
+    pbds = pbds(w);
     edfs = edfs(w);
   }
 
