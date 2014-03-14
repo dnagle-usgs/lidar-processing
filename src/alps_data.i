@@ -164,7 +164,7 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
     mode="fint" (First return intensity)
       x = .east
       y = .north
-      z = .intensity OR .fint (whichever is available)
+      z = .intensity OR .fint OR .first_peak (whichever is available)
 
     mode="fs" (First return)
       x = .east
@@ -172,9 +172,9 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
       z = .elevation
 
     mode="lint" (Last return intensity)
-      x = .least
-      y = .lnorth
-      z = .lint
+      x = .least OR .east
+      y = .lnorth OR .north
+      z = .lint OR .bottom_peak (whichever is available)
 
     mode="mir" (Mirror)
       x = .meast
@@ -283,7 +283,10 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
 
   // Most data modes use east/north for x/y. Only bare earth and be intensity
   // use least/lnorth.
-  if(anyof(["ba","ch","de","fint","fs"] == mode)) {
+  if(
+    anyof(["ba","ch","de","fint","fs"] == mode) ||
+    ("lint"==mode && !has_member(data,"least"))
+  ) {
     x = data.east;
     y = data.north;
   } else if(anyof(["be","lint"] == mode)) {
@@ -308,12 +311,17 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
   } else if("fint" == mode) {
     if(has_member(data, "intensity"))
       z = data.intensity;
-    else
+    else if(has_member(data, "fint"))
       z = data.fint;
+    else
+      z = data.first_peak;
   } else if("fs" == mode) {
     z = data.elevation;
   } else if("lint" == mode) {
-    z = data.lint;
+    if(has_member(data, "bottom_peak"))
+      z = data.bottom_peak;
+    else
+      z = data.lint;
   } else if("mir" == mode) {
     z = data.melevation;
   }
