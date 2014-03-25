@@ -531,13 +531,13 @@ itcl::body SegmentedDataWindow::close_clear {} {
    if {$response eq "yes"} {
       set cmd ""
       foreach var $vars {
-         append cmd "$var = \[\];"
+         append cmd "$var = "
          delete_varlist $var
       }
+      append cmd "\[\];"
       exp_send "$cmd\r"
+      itcl::delete object $this
    }
-
-   itcl::delete object $this
 }
 
 itcl::body SegmentedDataWindow::selected {cmd} {
