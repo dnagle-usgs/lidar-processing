@@ -31,19 +31,19 @@ if(is_func(calps_compatibility)) {
 
 // Added 2013-03-11
 if(!is_func(interp_angles))
-  require, "calps/interp_angles.i";
+  include, "calps/interp_angles.i";
 
 // Added 2013-03-12
 if(!is_func(level_short_dips))
-  require, "calps/level_short_dips.i";
+  include, "calps/level_short_dips.i";
 
 // Added 2013-03-28
 if(!is_func(unique))
-  require, "calps/unique.i";
+  include, "calps/unique.i";
 
 // Added 2013-10-21
 if(!is_func(wf_centroid))
-  require, "calps/wf_centroid.i";
+  include, "calps/wf_centroid.i";
 
 // Added 2014-03-28
 // Back up msort, if msort is interpreted
@@ -56,8 +56,8 @@ if(!is_func(msort) && is_func(ymsort)) msort = ymsort;
 // Added 2014-03-28
 if(is_func(timsort_obj)) msort_obj = timsort_obj;
 if(!is_func(msort_obj))
-  require, "calps/msort_obj.i";
+  include, "calps/msort_obj.i";
 
 // Added 2014-03-28
 if(!is_func(sortedness))
-  require, "calps/sortedness.i";
+  include, "calps/sortedness.i";
