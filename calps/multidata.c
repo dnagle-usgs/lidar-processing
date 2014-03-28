@@ -198,7 +198,7 @@ long unfold_stack_obj(int i)
 
   // Parameter i was the position in stack. We no longer need it, so re-use it
   // for the loop iterator.
-  for(i = 0; i < fields; i++) ops->get_i(obj, i);
+  for(i = 1; i <= fields; i++) ops->get_i(obj, i);
 
   return fields;
 }
