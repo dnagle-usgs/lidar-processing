@@ -407,6 +407,46 @@ extern eaarl_fs_rx_cent_eaarlb;
     fbias - The channel range bias (ops_conf.chn%d_range_bias)
 */
 
+// *** Defined in multidata.c ***
+
+extern sortedness;
+extern sortedness_obj;
+/* DOCUMENT metric = sortedness(A, B, C, ...)
+  metric = sortedness_obj(obj)
+
+  Given one or more arrays to be considered in parallel (or an object with
+  members to be considered in parallel), returns a value in the range -1 to 1
+  that estimates the degree of sortedness present in the data. A value of 1
+  means the data is likely sorted ascending. A value of -1 means the data is
+  likely sorted descending. A value of 0 means the data is random. And a value
+  of something like 0.8 means that the data appears to have a lot of ordering
+  to it but isn't entirely sorted.
+
+  Note that the result is only a rough estimate, based on looking at a small
+  sub-set of the arrays.
+*/
+
+// *** Defined in timsort.c ***
+extern timsort;
+extern timsort_obj;
+/* DOCUMENT srt = timsort(A, B, C, ...)
+  srt = timsort_obj(obj)
+
+  Given one or more arrays to be considered in parallel (or an object with
+  members to be considered in parallel), returns an index list which sorts the
+  data into increasing order. This is a stable sort.
+
+  timsort is a hybrid sorting algorithm developed by Tim Peters for the Python
+  programming language. It is derived from both the merge sort and the binary
+  insertion sort algorithms. It works especially well for data with some degree
+  of sortedness, as it has many heuristics that allow it to take advantage of
+  sortedness. However, its performance for highly random data can be an order
+  of magnitude (or more) slower. Nonetheless, timsort universally outperforms
+  msort, often by orders of magnitude.
+
+  SEE ALSO: sort, msort
+*/
+
 __calps_backup = save(
   calps_compatibility,
   _ytriangulate, triangulate,
@@ -423,6 +463,7 @@ __calps_backup = save(
   profiler_init, profiler_lastinit, profiler_reset, profiler_ticks,
   eaarl_decode_fast,
   wf_centroid, cent,
-  eaarl_fs_rx_cent_eaarlb
+  eaarl_fs_rx_cent_eaarlb,
+  sortedness, sortedness_obj,
+  timsort, timsort_obj
 );
-

@@ -23,7 +23,8 @@ PKG_I=calps.i
 
 OBJS=triangle.o triangle_y.o interp_angles.o gridding.o region.o \
 	level_short_dips.o ll2utm.o navd88.o set.o unique.o linux.o \
-	profiler.o filebuffer.o eaarl_decode_fast.o centroid.o fs_rx.o
+	profiler.o filebuffer.o eaarl_decode_fast.o centroid.o fs_rx.o \
+	timsort.o multidata.o
 
 # change to give the executable a name other than yorick
 PKG_EXENAME=yorick
@@ -81,5 +82,8 @@ triangle_y.o: triangle.h
 
 filebuffer.o: filebuffer.h
 eaarl_decode_fast.o: filebuffer.h
+
+multidata.o: multidata.h
+timsort.o: multidata.h timsort.h
 
 # -------------------------------------------------------- end of Makefile
