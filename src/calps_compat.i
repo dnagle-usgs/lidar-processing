@@ -44,3 +44,20 @@ if(!is_func(unique))
 // Added 2013-10-21
 if(!is_func(wf_centroid))
   require, "calps/wf_centroid.i";
+
+// Added 2014-03-28
+// Back up msort, if msort is interpreted
+if(is_func(msort) == 1) ymsort = msort;
+// Clobber msort with timsort, if timsort is defined
+if(is_func(timsort)) msort = timsort;
+// Assign msort to ymsort, if needed
+if(!is_func(msort) && is_func(ymsort)) msort = ymsort;
+
+// Added 2014-03-28
+if(is_func(timsort_obj)) msort_obj = timsort_obj;
+if(!is_func(msort_obj))
+  require, "calps/msort_obj.i";
+
+// Added 2014-03-28
+if(!is_func(sortedness))
+  require, "calps/sortedness.i";
