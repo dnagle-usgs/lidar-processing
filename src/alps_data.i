@@ -1083,8 +1083,8 @@ suffix_remove=, suffix=) {
   timer_finished, t0;
 }
 
-func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=, optstr=) {
-/* DOCUMENT uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=,
+func uniq_data(data, idx=,  mode=, forcesoe=, forcexy=, enablez=, optstr=) {
+/* DOCUMENT uniq_data(data, idx=, mode=, forcesoe=, forcexy=, enablez=,
    optstr=)
   Returns the unique data in the given array.
 
@@ -1109,12 +1109,10 @@ func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=, optstr=)
 
   Options that change what gets returned:
     idx= Returns index into data.
-    bool= Returns boolean array corresponding to data.
 
-    These are all equivalent:
+    These are equivalent:
       result = uniq_data(data);
       result = data(uniq_data(data, idx=1));
-      result = data(where(uniq_data(data, bool=1)));
 
   Options that change how uniqueness is determined:
     forcesoe= Forces the use of soe values, even if it's determined to be
@@ -1150,7 +1148,6 @@ func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=, optstr=)
   if(is_string(optstr)) {
     opt = parse_keyval(optstr);
     if(opt(*,"idx")) idx = atoi(opt.idx);
-    if(opt(*,"bool")) bool = atoi(opt.bool);
     if(opt(*,"forcesoe")) forcesoe = atoi(opt.forcesoe);
     if(opt(*,"forcexy")) forcexy = atoi(opt.forcexy);
     if(opt(*,"enablez")) enablez = atoi(opt.enablez);
@@ -1162,7 +1159,7 @@ func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=, optstr=)
     return [];
   // Edge case
   if(numberof(data) == 1)
-    return (bool || idx) ? [1] : data;
+    return idx ? [1] : data;
 
   if(forcesoe && !has_member(data, "soe"))
     error, "You cannot use forcesoe=1 when the data does not have an soe field.";
@@ -1170,84 +1167,33 @@ func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=, optstr=)
   if(forcesoe && forcexy)
     error, "You cannot use both of forcesoe=1 and forcexy=1 together."
 
-  // First, we assume that we want to keep everything.
-  keep = array(char(1), dimsof(data));
-
-  // Determine how to determine uniqueness. Start by assuming soe.
   usesoe = 1;
-  // If they have forcexy=1, then we don't want soe.
   if(usesoe && forcexy)
     usesoe = 0;
-  // If there is no .soe member, then we can't use soe.
   if(usesoe && !has_member(data, "soe"))
     usesoe = 0;
-  // Unless we're forcing use of soe, there has to be some variation in the
-  // .soe values. Otherwise, we can't use them.
   if(usesoe && !forcesoe && allof(data.soe == data.soe(1)))
     usesoe = 0;
 
-  // Unique points are found implicitly by identifying the duplicates. All of
-  // the paths below do the same basic thing: sort the data using the fields we
-  // are comparing with; then comparing adjacent points to see if they are
-  // equal on all those fields. If they are, then it's a duplicate.
-
-  if(usesoe) {
-    // Determine whether to use the channel to help determine uniqueness. Start
-    // by assuming yes.
-    usechannel = 1;
-    // If there's no channel field, then channel can't be used.
-    if(usechannel && !has_member(data, "channel"))
-      usechannel = 0;
-    // If there's no variation in channel, then there's no point in using it.
-    if(usechannel && allof(data.channel == data.channel(1)))
-      usechannel = 0;
-
-    if(usechannel) {
-      if(enablez) {
-        data2xyz, data, , , z, native=1, mode=mode;
-        srt = msort(data.soe, data.channel, z);
-        dupe = where(!data.soe(srt)(dif) & !data.channel(srt)(dif) & !z(srt)(dif));
-      } else {
-        srt = msort(data.soe, data.channel);
-        dupe = where(!data.soe(srt)(dif) & !data.channel(srt)(dif));
-      }
-    } else {
-      if(enablez) {
-        data2xyz, data, , , z, native=1, mode=mode;
-        srt = msort(data.soe, z);
-        dupe = where(!data.soe(srt)(dif) & !z(srt)(dif));
-      } else {
-        srt = sort(data.soe);
-        dupe = where(!data.soe(srt)(dif));
-      }
-    }
-  } else {
+  local x, y, z;
+  if(enablez || !usesoe)
     data2xyz, data, x, y, z, native=1, mode=mode;
 
-    // Redefine keep based on x. If they passed an XYZ array instead of EAARL
-    // data, this will prevent errors.
-    keep = array(char(1), dimsof(x));
-
-    if(enablez) {
-      srt = msort(x, y, z);
-      dupe = where(!x(srt)(dif) & !y(srt)(dif) & !z(srt)(dif));
-    } else {
-      srt = msort(x, y);
-      dupe = where(!x(srt)(dif) & !y(srt)(dif));
-    }
+  obj = save();
+  if(usesoe) {
+    save, obj, string(0), data.soe;
+    if(usesoe && has_member(data, "channel"))
+      save, obj, string(0), data.channel;
+  } else {
+    save, obj, x, y;
   }
-  if(numberof(dupe))
-    keep(srt(dupe)) = 0;
+  if(enablez)
+    save, obj, string(0), z;
 
-  if(bool)
-    return keep;
-  w = where(unref(keep));
-  if(idx)
-    return w;
-  else if(is_numerical(data)) // Special case for XYZ input.
-    return [x(w), y(w), z(w)];
-  else
-    return data(w);
+  w = munique_obj(obj);
+  if(idx) return w;
+  if(is_numerical(data)) return [x(w), y(w), z(w)];
+  return data(w);
 }
 
 func sortdata(data, mode=, method=, desc=) {
