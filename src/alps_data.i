@@ -1083,9 +1083,10 @@ suffix_remove=, suffix=) {
   timer_finished, t0;
 }
 
-func uniq_data(data, idx=,  mode=, forcesoe=, forcexy=, enablez=, optstr=) {
+func uniq_data(data, idx=,  mode=, forcesoe=, forcexy=, enableptime=, enablez=,
+optstr=) {
 /* DOCUMENT uniq_data(data, idx=, mode=, forcesoe=, forcexy=, enablez=,
-   optstr=)
+   enableptime=, optstr=)
   Returns the unique data in the given array.
 
   By default, uniqueness is determined based on the .soe field. When using the
@@ -1125,6 +1126,10 @@ func uniq_data(data, idx=,  mode=, forcesoe=, forcexy=, enablez=, optstr=) {
     enablez= Enables the use of z values.
         enablez=0   Ignore z values (default)
         enablez=1   Include z values in uniqueness check
+    enableptime= Enables the use of ptime values, if there is a ptime field on
+      the data.
+        enableptime=0   Ignore ptime values (default)
+        enableptime=1   Include ptime values in uniqueness check
     mode= Specifies which data mode to use to extract x/y/z points when using
       them to determine uniqueness.
         mode="fs"   Default
@@ -1151,6 +1156,7 @@ func uniq_data(data, idx=,  mode=, forcesoe=, forcexy=, enablez=, optstr=) {
     if(opt(*,"forcesoe")) forcesoe = atoi(opt.forcesoe);
     if(opt(*,"forcexy")) forcexy = atoi(opt.forcexy);
     if(opt(*,"enablez")) enablez = atoi(opt.enablez);
+    if(opt(*,"enableptime")) enableptime = atoi(opt.enableptime);
     if(opt(*,"mode")) mode = opt.mode;
   }
 
@@ -1189,6 +1195,8 @@ func uniq_data(data, idx=,  mode=, forcesoe=, forcexy=, enablez=, optstr=) {
   }
   if(enablez)
     save, obj, string(0), z;
+  if(enableptime && has_member(data, "ptime"))
+    save, obj, string(0), data.ptime;
 
   w = munique_obj(obj);
   if(idx) return w;
