@@ -129,39 +129,6 @@ skip=, filter=, verbose=) {
   // This is safer when pushing up against the limits of memory.
   files = files(sort(-file_size(files)));
 
-  // Determine data structure; user's responsibility to ensure all files have
-  // the same one.
-  eaarl_struct = [];
-  for(i = 1; i <= numberof(files); i++) {
-    ext = strlower(file_extension(files(i)));
-    if(anyof(ext == [".bin", ".edf"])) {
-      require, "edf.i";
-      temp = edf_import(files(i));
-    } else if(ext == ".las") {
-      require, "las.i";
-      temp = las_to_alps(files(i));
-    } else {
-      require, "util_container.i";
-      temp = pbd_load(files(i));
-    }
-    if(!is_void(temp)) {
-      eaarl_struct = structof(temp);
-      break;
-    }
-  }
-  temp = [];
-
-  if(!is_struct(eaarl_struct)) {
-    if(verbose)
-      write, "Unable to determine struct for data. Aborting.";
-    return [];
-  }
-
-  // data - the output data, as we build it up
-  // start with an array of size 10MB
-  sz = long(10485760 / sizeof(eaarl_struct)) + 1;
-  data = array(eaarl_struct, sz);
-  sz = [];
   // end - last valid index for the data
   end = 0;
 
@@ -202,6 +169,10 @@ skip=, filter=, verbose=) {
       continue;
 
     new_end = end + numberof(temp);
+
+    if(is_void(data)) {
+      data = array(structof(temp), long(10485760 / sizeof(temp(1))) + 1);
+    }
 
     // Make sure the data variable has enough space allocated
     array_allocate, data, new_end;
