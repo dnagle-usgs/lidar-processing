@@ -528,12 +528,12 @@ func __dlfilter_data_tile(&data, filter, state) {
     zone = filter.zone;
   }
 
-  data2xyz, data, x, y, mode=filter.mode;
-
   tile_zone = long(tile2uz(filter.tile));
   // Coerce zone if needed
   if(anyof(tile_zone != zone))
     rezone_data_utm, data, zone, tile_zone;
+
+  data2xyz, data, x, y, mode=filter.mode;
 
   w = extract_for_tile(x, y, zone, filter.tile, buffer=filter.buffer);
   if(numberof(w))
