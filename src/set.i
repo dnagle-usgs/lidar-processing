@@ -215,30 +215,37 @@ func set_remove_duplicates(A, idx=) {
   return A(unique(A));
 }
 
-func munique(x, ..) {
-/* DOCUMENT munique(x1, x2, x3, ...)
-  Returns the indexes into the given arrays that correspond to unique tuples
-  of values. For example, if you have a set of points identified by x and y,
-  then munique(x,y) is all unique x,y points.
+local munique, munique_obj;
+/* DOCUMENT idx = munique(x1, x2, x3, ...)
+  idx = munique_obj(obj)
 
-  The Xi may be numbers or strings in any combination, but must all be
-  conformable arrays.
+  Given one or more arrays to be considered in parallel (or an object with
+  members to be considered in parallel), returns an index list that specifies
+  the unique items, in sorted order.
 
   SEE ALSO: unique munique_array msort
 */
-  mxrank = numberof(x)-1;
-  rank = msort_rank(x);
 
-  norm = 1./(mxrank+1.);
-  if(1.+norm == 1.) error, pr1(mxrank+1)+" is too large an array";
-
-  while(max(rank) != mxrank && more_args()) {
-    x = next_arg();
-    rank += msort_rank(x) * norm;
-    rank = msort_rank(rank);
+func munique_obj(obj) {
+  srt = msort_obj(obj);
+  if(numberof(srt) < 2) return srt;
+  idx = indgen(2:numberof(srt));
+  for(i = 1; i <= obj(*); i++) {
+    work = obj(noop(i));
+    if(is_void(work)) continue;
+    w = where(work(srt(idx)) == work(srt(idx-1)));
+    if(!numberof(w)) return srt;
+    idx = idx(w);
   }
+  keep = array(1, numberof(srt));
+  keep(idx) = 0;
+  return srt(where(keep));
+}
 
-  return unique(rank);
+func munique(x, ..) {
+  obj = save(string(0), x);
+  while(more_args()) save, obj, string(0), next_arg();
+  return munique_obj(obj);
 }
 
 func munique_array(x, which) {
