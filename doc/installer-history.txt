@@ -2,6 +2,22 @@ This file documents the changes made to the ALPS installer package. These
 installer packages are typically available on lidar.net under
 /mnt/alps/install/.
 
+2014-04-01
+    - Updated installer to tip 276f7349b5a2
+    - Upgraded cctools to 4.1.3
+    - Python changes:
+        - Upgraded Python to 2.7.6
+        - Upgraded Mercurial to 2.9.1
+        - Upgraded paramiko to 1.13.0
+        - Upgraded pycrypto to 2.6.1
+        - Removed distribute
+    - Tcl changes:
+        - Upgraded Tcl/Tk to 8.6.1
+        - Upgraded Expect to CVS revision as of 2013-11-04
+        - Upgraded tkimg to SVN revision as of 2013-11-21
+        - Upgraded Tktable to CVS revision as of 2013-04-18
+    - Upgraded Yorick to Git revision as of 2014-03-24 (tip 1f54a78)
+
 2013-12-18
     - Updated installer to tip a513bb896e4c
     - Upgraded Yorick to Git revision as of 2013-12-13 (tip 6a54c75a6f)
