@@ -144,7 +144,7 @@ func makeflow_run(conf, fn, norun=, interval=) {
     if(last.nodes_aborted) msg += swrite(format=" A:%d", last.nodes_aborted);
     msg += ")";
     status, progress, parsed.jobs_finished, job_count, msg=msg;
-  } while(!parsed.status);
+  } while(!is_void(parsed) && !parsed.status);
   close, f;
   status, finished;
 
