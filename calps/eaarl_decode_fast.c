@@ -139,6 +139,12 @@ void Y_eaarl_decode_fast(int nArgs)
     offset += rlen;
   }
 
+  // Edge case: no output found
+  if(!count) {
+    ypush_nil();
+    return;
+  }
+
   // Initialize output arrays and group
 
   obj = yo_new_group(&ops);
