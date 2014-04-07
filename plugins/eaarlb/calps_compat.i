@@ -9,8 +9,8 @@ if(is_func(calps_compatibility)) {
   if(calps_compatibility() < 5) {
     // Prior to version 4, eaarl_decode_fast only supports scalar
     // eaarl_time_offset
-    // Prior to version 5, eaarl_decode_fast hangs (possible infinite loop) on
-    // some datasets
+    // Prior to version 5, eaarl_decode_fast contained bugs that led to an
+    // infinite loop when invalid rasters were encountered
     eaarl_decode_fast = [];
   }
 }
