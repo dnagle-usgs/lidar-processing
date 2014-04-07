@@ -23,9 +23,13 @@ func calps_compatibility(nil) {
     Extended eaarl_decode_fast to cope with possibility of array for
     eaarl_time_offset.
 
-  This version of calps_compatibility returns 4.
+  Version 5
+    Fixes eaarl_decode_fast to cope with invalid rasters. Previous version
+    encountered infinite loop.
+
+  This version of calps_compatibility returns 5.
 */
-  return 4;
+  return 5;
 }
 
 // *** defined in triangle_y.c ***
