@@ -2,6 +2,9 @@ This file documents the changes made to the ALPS installer package. These
 installer packages are typically available on lidar.net under
 /mnt/alps/install/.
 
+2014-04-07
+    - Updated installer to tip 95bdfc99d86f
+
 2014-04-01
     - Updated installer to tip 276f7349b5a2
     - Upgraded cctools to 4.1.3
