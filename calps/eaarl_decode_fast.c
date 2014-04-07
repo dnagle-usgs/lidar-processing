@@ -132,7 +132,7 @@ void Y_eaarl_decode_fast(int nArgs)
   while(offset < stop)
   {
     rlen = (unsigned long) i24(f, offset);
-    if(rlen >= 18 || i8(f, offset+3) == 5)
+    if(rlen >= 18 && i8(f, offset+3) == 5)
       count += (i16(f, offset+16) & 0x7fff);
     else if(!rlen)
       break;
