@@ -64,6 +64,9 @@ func nocalps_eaarl_decode_fast(fn, start, stop, rnstart=, raw=, wfs=) {
     offset += rlen;
   }
 
+  // Edge case: no rasters contain valid data
+  if(!count) return [];
+
   digitizer = dropout = pulse = array(int8_t, count);
   irange = scan_angle = array(int16_t, count);
   soe = array(double, count);
