@@ -6,9 +6,11 @@ scratch = save(scratch, base);
 base = file_dirname(current_include())+"/";
 
 if(is_func(calps_compatibility)) {
-  if(calps_compatibility() < 4) {
+  if(calps_compatibility() < 5) {
     // Prior to version 4, eaarl_decode_fast only supports scalar
     // eaarl_time_offset
+    // Prior to version 5, eaarl_decode_fast hangs (possible infinite loop) on
+    // some datasets
     eaarl_decode_fast = [];
   }
 }
