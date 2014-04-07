@@ -224,15 +224,26 @@ dtlength=, dtprefix=, qqprefix=) {
         mode="ba"         Bathy
     searchstr= Search string to use when locating input data. Example:
         searchstr="*.pbd"    (default)
-update=
+    update= Turns on update mode, which skips existing files.
+        update=0          Existing files are deleted and re-created
+        update=1          Existing files are skipped
     file_suffix= Suffix to append to file names when creating them. If your
       suffix does not end in .pbd, it will be auto-appended. If it does not
       start with an underscore, it will be added. Examples:
         file_suffix=[]          Default is no suffix
         file_suffix="w84_fs"
         file_suffix="n88_g09_merged_be.pbd"
-vname_suffix=
-suffix=
+    vname_suffix= Suffix to append to tile name when creating the merged
+      variable name. f it does not start with an underscore, it will be added.
+      Examples:
+        vname_suffix=[]         Default is no suffix
+        vname_suffix="_merged"
+        vname_suffix="_v_merged"
+    suffix= Shortcut to specify the same value for both file_suffix and
+      vname_suffix. For example:
+        suffix="_merged"  ==  file_suffix="_merged", vname_suffix="_merged"
+      If you also specify vname_suffix or file_suffix, then those will take
+      priority over suffix.
     remove_buffers= Specifies whether buffers should be removed from
       already-tiled data. Removing the buffers is important when data has been
       manually editted; otherwise, removed points will be re-added from
