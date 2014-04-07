@@ -15,12 +15,12 @@ if(is_func(calps_compatibility)) {
 
 // Added 2013-09-24
 if(!is_func(eaarl_decode_fast))
-  require, base+"calps/eaarl_decode_fast.i";
+  include, base+"calps/eaarl_decode_fast.i";
 
 if(!is_func(cent))
-  require, base+"calps/cent.i";
+  include, base+"calps/cent.i";
 
 if(!is_func(eaarl_fs_rx_cent_eaarlb))
-  require, base+"calps/fs_rx.i";
+  include, base+"calps/fs_rx.i";
 
 restore, scratch;
