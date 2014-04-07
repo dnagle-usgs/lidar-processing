@@ -183,8 +183,11 @@ void Y_eaarl_decode_fast(int nArgs)
     rstart = offset;
 
     rlen = (unsigned long) i24(f, offset);
-    if(rlen < 18 || i8(f, offset+3) != 5) continue;
     rstop = rstart + rlen - 1;
+    if(rlen < 18 || i8(f, offset+3) != 5) {
+      offset = rstop - 1;
+      continue;
+    }
 
     seconds = i32(f, offset+4);
     fseconds = i32(f, offset+8);
