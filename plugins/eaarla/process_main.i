@@ -564,7 +564,7 @@ splitchan=, opts=) {
     // Start out with current timestamp as YYYYMMDD_HHMMSS
     ts = regsub(" ", regsub("-|:", soe2iso8601(now), "", all=1), "_");
     // Add ftagsingle, then make into full path with extension .log
-    log_fn = file_join(outdir, ts + ftagsingle + ".log");
+    log_fn = file_join(outdir, "log", ts + ftagsingle + ".log");
     ts = [];
   }
 
