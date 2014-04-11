@@ -453,7 +453,7 @@ splitchan=, opts=) {
       incompatible with ftag and vtag. This option requires channel=.
     log_fn= Specifies where to write the log describing the batch job. If not
       provided, a path will be automatically determeind based on the current
-      time and the output parameters and will be stored in a log subdirectory
+      time and the output parameters and will be stored in a logs subdirectory
       under outdir.
 
   Miscellaneous options:
@@ -567,7 +567,7 @@ splitchan=, opts=) {
     // Start out with current timestamp as YYYYMMDD_HHMMSS
     ts = regsub(" ", regsub("-|:", soe2iso8601(now), "", all=1), "_");
     // Add ftagsingle, then make into full path with extension .log
-    log_fn = file_join(outdir, "log", ts + ftagsingle + ".log");
+    log_fn = file_join(outdir, "logs", ts + ftagsingle + ".log");
     ts = [];
   }
 
