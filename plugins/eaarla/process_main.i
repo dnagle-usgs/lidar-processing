@@ -451,8 +451,10 @@ splitchan=, opts=) {
       written out to the same output files merged together. Specify splitchan=1
       to split them into separate per-channel files instead. This option is
       incompatible with ftag and vtag. This option requires channel=.
-    log_fn= Specifies where to write the log describing the batch job.
-
+    log_fn= Specifies where to write the log describing the batch job. If not
+      provided, a path will be automatically determeind based on the current
+      time and the output parameters and will be stored in a log subdirectory
+      under outdir.
 
   Miscellaneous options:
     buffer= Specifies the buffer to use around each tile, in meters. This is
@@ -476,9 +478,10 @@ splitchan=, opts=) {
         win=6         Default, window 6
 
   Options for makeflow:
-    makeflow_fn= The filename to use when writing out the makeflow. Ignored if
-      called as a function. If not provided, a temporary file will be used then
-      discarded.
+    makeflow_fn= The filename to use when writing out the makeflow. If not
+      provided, this will be given the same base filename as log_fn but will be
+      created in a work subdirectory under outdir. Other related makeflow files
+      will also be created alongside this.
     norun= Don't actually run makeflow; just create the makeflow file.
         norun=0   Runs makeflow, default
         norun=1   Doesn't run makeflow
