@@ -44,7 +44,7 @@ $(filter-out $(NEEDSMATH),$(PROGS)) : % : %.o
 	$(CC) -o $@ $<
 
 $(NEEDSMATH) : % : %.o
-	$(CC) -lm -o $@ $<
+	$(CC) -o $@ $< -lm
 
 all: $(PROGS)
 
