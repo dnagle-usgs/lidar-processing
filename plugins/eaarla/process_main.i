@@ -568,8 +568,12 @@ splitchan=, opts=) {
     ts = [];
   }
 
-  // Default makeflow_fn is log_fn with .makeflow extension
-  default, makeflow_fn, file_rootname(log_fn) + ".makeflow";
+  // Model makeflow_fn after log_fn, but put in work directory for easier
+  // deletion
+  if(is_void(makeflow_fn)) {
+    makeflow_fn = file_join(outdir, "work",
+      file_tail(file_rootname(log_fn)) + ".makeflow");
+  }
 
   if(is_void(q)) {
     // Derive region polygon
