@@ -158,6 +158,7 @@ func jobs_env_wrap(fn) {
   restore, hook_invoke("jobs_env_wrap", save(env, fn));
 
   save, env, vars=serialize(env.vars);
+  mkdirp, file_dirname(fn);
   obj2pbd, env, fn;
 }
 
