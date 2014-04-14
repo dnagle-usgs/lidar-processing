@@ -175,10 +175,7 @@ func eaarl_be_rx_channel(pulses) {
     conf = save(
       thresh=veg_conf.thresh,
       max_sat=veg_conf.max_sat(lchannel(i)),
-      noiseadj=veg_conf.noiseadj,
-      // Channels 1 and 2 define saturation as < 5, whereas channel 3 defines
-      // saturation as == 0.
-      sat_thresh=(lchannel(i) == 3 ? 0 : 4)
+      noiseadj=veg_conf.noiseadj
       );
     lbias(i) = biases(lchannel(i));
 
@@ -243,16 +240,16 @@ func eaarl_be_rx_eaarla_channel(rx, &conf) {
     conf = save(
       thresh=veg_conf.thresh,
       max_sat=veg_conf.max_sat(i),
-      noiseadj=veg_conf.noiseadj,
-      // Channels 1 and 2 define saturation as < 5, whereas channel 3 defines
-      // saturation as == 0.
-      sat_thresh=(i == 3 ? 0 : 4)
+      noiseadj=veg_conf.noiseadj
       );
     wf = *rx(i);
     if(!numberof(wf)) return 0;
+    // Channels 1 and 2 define saturation as < 5, whereas channel 3 defines
+    // saturation as == 0.
+    sat_thresh=(i == 3 ? 0 : 4)
 
     np = min(numberof(wf), 12);
-    saturated = where(wf(1:np) <= conf.sat_thresh);
+    saturated = where(wf(1:np) <= sat_thresh);
     numsat = numberof(saturated);
     if(numsat <= conf.max_sat) return i;
   }
@@ -318,10 +315,7 @@ func eaarl_be_plot(raster, pulse, channel=, win=, xfma=) {
     conf = save(
       thresh=veg_conf.thresh,
       max_sat=veg_conf.max_sat(channel),
-      noiseadj=veg_conf.noiseadj,
-      // Channels 1 and 2 define saturation as < 5, whereas channel 3 defines
-      // saturation as == 0.
-      sat_thresh=(channel == 3 ? 0 : 4)
+      noiseadj=veg_conf.noiseadj
       );
   } else {
     channel = be_rx_channel(pulses.rx, conf);
