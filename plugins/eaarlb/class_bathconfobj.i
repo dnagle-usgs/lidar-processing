@@ -3,7 +3,7 @@
 func bathconfobj(base, data) {
 /* DOCUMENT bathconf = bathconfobj()
   -or- bathconf = bathconfobj(save(...))
-  -or- bathconf = bathconfobj("/path/to/file.bathy")
+  -or- bathconf = bathconfobj("/path/to/file.bathconf")
 
   This returns a bathconf object. This is a specialized subclass built on
   chanconfobj that adds bathy-specific configuration elements to the framework.
@@ -21,7 +21,7 @@ func bathconfobj(base, data) {
     bathconf, groups, <groups>, copy=<0|1>
       In addition to the behavior of the base class, this updates Tcl syncs.
 
-    bathconf, read, "/path/to/file.bathy"
+    bathconf, read, "/path/to/file.bathconf"
       Overloaded to handle legacy bathy formats.
 
     bathconf, profile_add, "<group>", "<profile>"
