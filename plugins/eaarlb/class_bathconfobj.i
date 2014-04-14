@@ -1,4 +1,4 @@
-require, "class_confobj.i";
+// vim: set ts=2 sts=2 sw=2 ai sr et:
 
 func bathconfobj(base, data) {
 /* DOCUMENT bathconf = bathconfobj()
@@ -6,43 +6,23 @@ func bathconfobj(base, data) {
   -or- bathconf = bathconfobj("/path/to/file.bathy")
 
   This returns a bathconf object. This is a specialized subclass built on
-  confobj that adds bathy-specific configuration elements to the framework.
+  chanconfobj that adds bathy-specific configuration elements to the framework.
 
-  Please see help, confobj for basic information on the confobj framework.
-  Follows are details on how the base class has been specialized.
+  Please see help, chanconfobj for information on the chanconfobj framework, as
+  well as help, confobj for more information on the underlying confobj
+  framework. Follows are details on how the base class has been specialized.
 
-  The primary difference from the base class is that bathconfobj permits
-  multiple groups. Each group has a "channels" value that specifies which
-  channels it should be used for.
-
-  Additionally, bathconfobj has specific knowledge of which keys are expected
-  and what format they should be in (integer, double, etc.).
-
-  Added method:
-
-    group = bathconf(settings_group, <channel>)
-      Given a CHANNEL, returns the name of the GROUP used for that channel.
+  The primary difference from the base class is that  bathconfobj has specific
+  knowledge of which keys are expected and what format they should be in
+  (integer, double, etc.).
 
   Modified methods:
 
-    conf = bathconf(settings, <channel>)
-      Given a CHANNEL, this will return the active profile settings for that
-      channel.
-
     bathconf, groups, <groups>, copy=<0|1>
-      In addition to the behavior of the base class, this expects that each
-      group will have a member named "channels" that stores an array of channel
-      numbers. Each channel should be assigned to exactly one group. If any
-      channels are missing, they are assigned to the first group. If any
-      channels appear multiple times, an error occurs. Also removes unneeded
-      syncs for Tcl.
+      In addition to the behavior of the base class, this updates Tcl syncs.
 
     bathconf, read, "/path/to/file.bathy"
       Overloaded to handle legacy bathy formats.
-
-    bathconf, clear
-      Modified to account for the requirement of channels in the empty
-      initialized configuration.
 
     bathconf, profile_add, "<group>", "<profile>"
     bathconf, profile_del, "<group>", "<profile>"
@@ -57,6 +37,9 @@ func bathconfobj(base, data) {
       selection of keys based on "decay" setting. Also enforces proper types on
       them (double or integer). Also applies syncing to Tcl.
 
+    bathconf(dumpgroups, compact=<0|1>)
+      Extends base class to add bathver to output when compact=0.
+
     bathconf(cleangroups,)
       Ensures that only the relevant keys are kept. In particular, if you've
       swapped back and forth between "decay" settings on a profile, you'll end
@@ -64,7 +47,7 @@ func bathconfobj(base, data) {
       This makes sure that only the selected decay type's settings get written
       out to file.
 
-  SEE ALSO: confobj
+  SEE ALSO: confobj, chanconfobj
 */
   obj = obj_copy(base);
   save, obj, data=save(null=save()), mapping=[];
@@ -81,34 +64,17 @@ func bathconfobj(base, data) {
 }
 
 scratch = save(scratch, base);
-base = obj_copy(confobj.data, recurse=1);
-
-save, scratch, bathconfobj_settings;
-func bathconfobj_settings(channel) {
-  use, data;
-  use, mapping;
-  return data(mapping(channel)).active;
-}
-save, base, confobj_settings=base.settings;
-save, base, settings=bathconfobj_settings;
-
-func bathconfobj_settings_group(channel) {
-  use, mapping;
-  return mapping(channel);
-}
-save, base, settings_group=bathconfobj_settings_group;
+base = obj_copy(chanconfobj.data, recurse=1);
 
 save, scratch, bathconfobj_groups;
 func bathconfobj_groups(newgroups, copy=) {
-  default, copy, 1;
   use, data;
-  oldgroups = data;
 
   // Remove syncs
-  for(i = 1; i <= oldgroups(*); i++) {
-    if(!oldgroups(noop(i))(*,"active")) continue;
-    group = oldgroups(*,i);
-    drop = oldgroups(noop(i)).active(*,);
+  for(i = 1; i <= data(*); i++) {
+    if(!data(noop(i))(*,"active")) continue;
+    group = data(*,i);
+    drop = data(noop(i)).active(*,);
     tksync, remove,
       swrite(format="bathconf.data.%s.active.%s", group, drop),
       swrite(format="::eaarl::bathconf::settings(%s,%s)", group, drop);
@@ -117,60 +83,20 @@ func bathconfobj_groups(newgroups, copy=) {
       swrite(format="::eaarl::bathconf::active_profile(%s)", group);
   }
 
-  use, mapping;
-  oldmap = mapping;
+  use_method, chanconfobj_groups, newgroups, copy=copy;
 
-  newmap = array(string, CHANNEL_COUNT);
-  for(i = 1; i <= newgroups(*); i++) {
-    grp = newgroups(noop(i));
-    if(!grp(*,"channels"))
-      error, "missing channel information";
-    w = where(grp.channels <= CHANNEL_COUNT);
-    if(!numberof(w)) continue;
-    if(anyof(newmap(grp.channels(w))))
-      error, "multiple groups refer to same channel";
-    newmap(grp.channels(w)) = newgroups(*,i);
-  }
-
-  if(noneof(newmap))
-    error, "no channels found";
-
-  if(nallof(newmap)) {
-    first = newmap(where(newmap)(1));
-    missing = where(!newmap);
-    write, format=" WARNING: no groups found for these channels: %s\n",
-      pr1(missing);
-    write, format="          using this group for missing channels: %s\n",
-      first;
-    grp = newgroups(noop(first));
-    save, grp, channels=set_remove_duplicates(grow(grp.channels, missing));
-    newmap(missing) = first;
-  }
-
-  if(nallof(newmap))
-    error, "not all channels are assigned";
-
-  if(copy)
-    use_method, groups_migrate, oldgroups, newgroups, oldmap, newmap;
-
-  keep = unique(newmap);
-  keep = keep(sort(keep));
-
-  data = newgroups(newmap(keep));
-  mapping = newmap;
-
+  // Add syncs
   for(i = 1; i <= data(*); i++) {
-    use_method, validate, data(*,i);
     tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", data(*,i)),
       strjoin("{"+data(noop(i)).profiles(*,)+"}", " ");
   }
 }
-save, base, confobj_groups=base.groups;
+save, base, chanconfobj_groups=base.groups;
 save, base, groups=bathconfobj_groups;
 
 save, scratch, bathconfobj_validate;
 func bathconfobj_validate(group) {
-  use_method, confobj_validate, group;
+  use_method, chanconfobj_validate, group;
 
   // Only validate fields on active profile.
   use, data;
@@ -209,7 +135,7 @@ func bathconfobj_validate(group) {
     swrite(format="bathconf.data.%s.active_name", group),
     swrite(format="::eaarl::bathconf::active_profile(%s)", group);
 }
-save, base, confobj_validate=base.validate;
+save, base, chanconfobj_validate=base.validate;
 save, base, validate=bathconfobj_validate;
 
 save, scratch, bathconfobj_prompt_groups;
@@ -279,34 +205,14 @@ func bathconfobj_read(fn) {
 
   if(logger(info)) logger, info, "Loaded bathy settings from "+fn;
 }
-save, base, confobj_read=base.read;
+save, base, chanconfobj_read=base.read;
 save, base, read=bathconfobj_read;
-
-save, scratch, bathconfobj_clear;
-func bathconfobj_clear(void) {
-  working = save(
-    chn1=save(channels=1),
-    chn2=save(channels=2),
-    chn3=save(channels=3),
-    chn4=save(channels=4)
-  );
-  use_method, groups, working, copy=0;
-}
-save, base, confobj_clear=base.clear;
-save, base, clear=bathconfobj_clear;
 
 save, scratch, bathconfobj_cleangroups;
 func bathconfobj_cleangroups(void) {
-  groups = use_method(confobj_cleangroups,);
+  groups = use_method(chanconfobj_cleangroups,);
   for(i = 1; i <= groups(*); i++) {
     grp = groups(noop(i));
-    idx = grp(*,["channels","active_name","profiles"]);
-    if(nallof(idx))
-      error, "missing require field";
-    grp = grp(noop(idx));
-
-    w = where(grp.channels <= CHANNEL_COUNT);
-    save, grp, channels=set_remove_duplicates(grp.channels(w));
 
     for(j = 1; j <= grp.profiles(*); j++) {
       prof = grp.profiles(noop(j));
@@ -330,37 +236,22 @@ func bathconfobj_cleangroups(void) {
   }
   return groups;
 }
-save, base, confobj_cleangroups=base.cleangroups;
+save, base, chanconfobj_cleangroups=base.cleangroups;
 save, base, cleangroups=bathconfobj_cleangroups;
 
-save, scratch, bathconfobj_json;
-func bathconfobj_json(json, compact=) {
-  if(!is_void(json)) {
-    use_method, confobj_json, json, compact=compact;
-  }
-
-  if(!am_subroutine()) {
-    output = save();
-    if(!compact)
-      save, output, confver=1, bathver=2;
-    save, output, groups=use_method(cleangroups,);
-    if(!compact) {
-      save, output, "save environment", save(
-        "user", get_user(),
-        "host", get_host(),
-        "timestamp", soe2iso8601(getsoe()),
-        "repository", _hgid
-      );
-    }
-    return json_encode(output, indent=(compact ? [] : 2));
-  }
+save, scratch, bathconfobj_dumpgroups;
+func bathconfobj_dumpgroups(compact=) {
+  output = use_method(chanconfobj_dumpgroups, compact=compact);
+  if(!compact)
+    save, output, bathver=2;
+  return output;
 }
-save, base, confobj_json=base.json;
-save, base, json=bathconfobj_json;
+save, base, chanconfobj_dumpgroups=base.dumpgroups;
+save, base, dumpgroups=bathconfobj_dumpgroups;
 
 save, scratch, bathconfobj_upgrade;
 func bathconfobj_upgrade(versions, working) {
-  working = use_method(confobj_upgrade, working);
+  working = use_method(chanconfobj_upgrade, working);
 
   if(!working(*,"bathver"))
     save, working, bathver=2;
@@ -405,38 +296,38 @@ func bathconfobj_upgrade_version1(working) {
 }
 save, versions, bathconfobj_upgrade_version1;
 
-save, base, confobj_upgrade=base.upgrade;
+save, base, chanconfobj_upgrade=base.upgrade;
 save, base, upgrade=closure(bathconfobj_upgrade, versions);
 restore, scratch;
 
 save, scratch, bathconfobj_profile_add;
 func bathconfobj_profile_add(group, profile) {
   use, data;
-  use_method, confobj_profile_add, group, profile;
+  use_method, chanconfobj_profile_add, group, profile;
   tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", group),
     strjoin("{"+data(noop(group)).profiles(*,)+"}", " ");
 }
-save, base, confobj_profile_add=base.profile_add;
+save, base, chanconfobj_profile_add=base.profile_add;
 save, base, profile_add=bathconfobj_profile_add;
 
 save, scratch, bathconfobj_profile_del;
 func bathconfobj_profile_del(group, profile) {
   use, data;
-  use_method, confobj_profile_del, group, profile;
+  use_method, chanconfobj_profile_del, group, profile;
   tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", group),
     strjoin("{"+data(noop(group)).profiles(*,)+"}", " ");
 }
-save, base, confobj_profile_del=base.profile_del;
+save, base, chanconfobj_profile_del=base.profile_del;
 save, base, profile_del=bathconfobj_profile_del;
 
 save, scratch, bathconfobj_profile_rename;
 func bathconfobj_profile_rename(group, oldname, newname) {
   use, data;
-  use_method, confobj_profile_rename, group, oldname, newname;
+  use_method, chanconfobj_profile_rename, group, oldname, newname;
   tksetval, swrite(format="::eaarl::bathconf::profiles(%s)", group),
     strjoin("{"+data(noop(group)).profiles(*,)+"}", " ");
 }
-save, base, confobj_profile_rename=base.profile_rename;
+save, base, chanconfobj_profile_rename=base.profile_rename;
 save, base, profile_rename=bathconfobj_profile_rename;
 
 bathconfobj = closure(bathconfobj, base);

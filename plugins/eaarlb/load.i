@@ -7,6 +7,7 @@ base = file_dirname(current_include())+"/";
 
 // Have to come first, used directly in files at loading
 include, base + "eaarl_constants.i";
+include, base + "class_chanconfobj.i";
 include, base + "class_bathconfobj.i";
 
 include, base + "autoselect.i";
