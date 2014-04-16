@@ -356,9 +356,13 @@ snit::type ::sf::model::collection::tar::files {
     #   tar::untar to extract the file. With vfs::tar, the mount will remain
     #   mounted for performance reason.
     method ExtractFile {tar file dest} {
+        if {[llength $mounted] > 10} {
+            ::vfs::tar::Unmount {*}[lindex $mounted 0]
+            set mounted [lrange $mounted 1 end]
+        }
         if {![file isdirectory ${tar}.vfs] && [file size $tar] > 30000000} {
-            ::vfs::tar::Mount $tar ${tar}.vfs
-            lappend mounted ${tar}.vfs
+            set fd [::vfs::tar::Mount $tar ${tar}.vfs]
+            lappend mounted [list $fd ${tar}.vfs]
         }
         if {[file isdirectory ${tar}.vfs]} {
             set extracted [file join $dest [file tail $file]]
