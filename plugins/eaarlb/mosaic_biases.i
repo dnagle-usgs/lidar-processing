@@ -67,6 +67,10 @@ ge2040c_rgb_bias_n5308f.pitch = 1.2;
 ge2040c_rgb_bias_n5308f.roll = -0.6;
 ge2040c_rgb_bias_n5308f.heading = 0.;
 
+ge2040c_n7793q_dummy = CAMERA_MOUNTING_BIAS();
+ge2040c_n7793q_dummy.name = "Dummy settings for n7793q";
+ge2040c_n7793q_dummy.heading = 180.;
+
 //=================================================
 // Camera specifications.
 //=================================================
