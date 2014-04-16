@@ -398,7 +398,6 @@ func __kml_jgw_build_product_pmk_tree(tiers, lat, lon, desc) {
     for(i = 1; i <= count; i++) {
       ptrs(i) = &strchar(kml_Placemark(
         kml_Point(lon(i), lat(i)),
-        kml_Snippet("", maxLines=0),
         name=curtier(i), visibility=0, styleUrl="#pmk",
         description=strchar(*desc(i))
       ));
