@@ -271,7 +271,7 @@ func mosaic_gather_tans(photo_soes, progress=, mounting_bias=) {
     if(progress)
       write, format=" - %d: Interpolating for %s...\n", i, days(i);
     mission, load, days(i);
-    if(is_void(tans)) continue;
+    if(is_void(tans) || is_void(soe_day_start)) continue;
 
     tans_soe = soe_day_start + tans.somd;
 
