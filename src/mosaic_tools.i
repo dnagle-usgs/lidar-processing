@@ -703,6 +703,36 @@ func filter_cirdata_by_pbd_data(cirdata, pbd_dir, searchstr=, mode=) {
   return filter_cirdata_by_index(cirdata, idx);
 }
 
+func filter_cirdata_by_shapefile(cirdata, shapefile) {
+/* DOCUMENT newcirdata = filter_cirdata_by_shapefile(cirdata, shapefile)
+
+  This will reduce the dataset respresented by cirdata by only keeping those
+  images that would fall into the areas covered by the specified shapefile(s).
+
+  You may specify an array of shapefiles or a single shapefile. If you specify
+  an array, then they are used additively: an image is used if it's in the
+  extent of any shapefile.
+*/
+  keep = array(0, numberof(cirdata.tans));
+  for(i = 1; i <= numberof(shapefile); i++) {
+    shp = read_ascii_shapefile(shapefile(i));
+    for(j = 1; j <= numberof(shp); j++) {
+      ply = *shp(j);
+
+      // if lat/lon change to utm
+      if(ply(1,1) < 360) {
+        u = fll2utm(ply(2,), ply(1,), force_zone=curzone);
+        ply(1,) = u(2,);
+        ply(2,) = u(1,);
+      }
+
+      idx = testPoly(ply, cirdata.tans.easting, cirdata.tans.northing);
+      if(numberof(idx)) keep(idx) = 1;
+    }
+  }
+  return filter_cirdata_by_index(cirdata, where(keep));
+}
+
 func filter_cirdata_by_index(cirdata, idx) {
 /* DOCUMENT newdata = filter_cirdata_by_index(cirdata, idx);
   Returns a new cirdata that contains only the images represented by the given
