@@ -72,9 +72,12 @@ void Y_interp_angles(int nArgs)
       y_error("ANG and X must have same dimensions");
 
     long num_y, num_x;
+    if(yarg_rank(iarg_y) != yarg_rank(iarg_x))
+      y_error("X and Y must have same dimensionality");
     y = ygeta_d(iarg_y, &num_y, 0);
     x = ygeta_d(iarg_x, &num_x, 0);
-    if(num_y != num_x) y_error("X and Y must have same dimensions");
+    if(num_y != num_x)
+      y_error("X and Y must have same size");
     count = num_x;
 
     long num_xp, dims[Y_DIMSIZE];
