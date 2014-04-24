@@ -27,6 +27,10 @@ if(is_func(calps_compatibility)) {
     // in version 2, wf_centroid seg faults on subroutine form of wf_centroid
     wf_centroid = [];
   }
+  if(calps_compatibility() < 6) {
+    // in version 5, interp_angles gives wrong result when xp is scalar
+    interp_angles = [];
+  }
 }
 
 // Added 2013-03-11
