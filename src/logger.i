@@ -188,7 +188,11 @@ func logger_term(void) {
   logger_level, "none";
 
   fn = logger_logfn();
-  system, "gzip -q '"+fn+"'* &";
+  if(_ytk) {
+    tkcmd, "exec gzip -q {*}[glob {"+fn+"*}] &";
+  } else {
+    system, "gzip -q '"+fn+"'* &";
+  }
 }
 
 /*
