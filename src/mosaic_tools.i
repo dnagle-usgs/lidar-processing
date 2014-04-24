@@ -1216,7 +1216,12 @@ func gen_jgw(ins, elev, camera=, mounting_bias=) {
   FH = Z + (-1.0 * elev);
   PixSz = (FH * CCD_XY)/FL;
 
-  // Convert heading to - clockwise and + CCW for 1st and 3rd rotation matrix
+  // Bring angles into range 0..360
+  while(H > 360) H -= 360;
+  while(H < 0) H += 360;
+
+  // Convert heading to - clockwise and + CCW for 1st and 3rd rotation
+  // matrix
   if (H >= 180.0)
     H2 = 360.0 - H;
   else
@@ -1269,8 +1274,8 @@ func gen_jgw(ins, elev, camera=, mounting_bias=) {
     M33 * mounting_bias.z +
     (s_inv *(M31* Xi + M32 * Yi + M33 * FLneg)) + FH;
 
-  //Calculate Upper left corner (from center) in mapping space, rotate, apply
-  //to center coords in mapping space
+  // Calculate Upper left corner (from center) in mapping space, rotate,
+  // apply to center coords in mapping space
   Yoff0 = PixSz * (dimension_y / 2.);
   Xoff0 = PixSz * -1 * (dimension_x / 2.);
 
@@ -1280,13 +1285,13 @@ func gen_jgw(ins, elev, camera=, mounting_bias=) {
   NewX = Xoff1 + CP_X;
   NewY = Yoff1 + CP_Y;
 
-  //Calculate offset to move corner to the ground "0" won't need this again
-  //until we start doing orthos
+  // Calculate offset to move corner to the ground "0" won't need this
+  // again until we start doing orthos
   //Xoff0 = (tan(Ang_X + Prad)) * UL_Z
   //Yoff0 = (tan(Ang_Y + Rrad)) * UL_Z
 
-  //Rotate offset to cartesian (+ y up +x right), rotate to mapping frame,
-  //apply to mapping frame
+  // Rotate offset to cartesian (+ y up +x right), rotate to mapping
+  // frame, apply to mapping frame
   //Xoff1 = -1.00 * Yoff0
   //Yoff1 = Xoff0
 
