@@ -44,7 +44,7 @@ void Y_interp_angles(int nArgs)
 
   double *y, *x, *xp, *yp;
   long count, countp;
-  int rad;
+  int rad, scalar;
 
   {
     int kiargs[INTERP_ANGLES_KEYCT];
@@ -80,9 +80,19 @@ void Y_interp_angles(int nArgs)
       y_error("X and Y must have same size");
     count = num_x;
 
-    long num_xp, dims[Y_DIMSIZE];
-    xp = ygeta_d(iarg_xp, &num_xp, dims);
-    countp = num_xp;
+    // If it's a scalar and we retrieve it with ygeta_d, Yorick gets confused.
+    // So note if it's a scalar and instead copy it to a temporary array.
+    scalar = yarg_rank(iarg_xp) == 0;
+    long dims[Y_DIMSIZE];
+    if(scalar) {
+      dims[0] = dims[1] = countp = 1;
+      xp = ypush_d(dims);
+      xp[0] = ygets_d(iarg_xp+1);
+      yarg_swap(0, iarg_xp+1);
+      yarg_drop(1);
+    } else {
+      xp = ygeta_d(iarg_xp, &countp, dims);
+    }
 
     if(!rad) {
       long i;
@@ -119,6 +129,11 @@ void Y_interp_angles(int nArgs)
     long i;
     for(i = 0; i < countp; i++)
       yp[i] *= RAD2DEG;
+  }
+
+  // If input xp was scalar, then be sure to return a scalar.
+  if(scalar) {
+    ypush_double(yp[0]);
   }
 }
 

@@ -27,9 +27,13 @@ func calps_compatibility(nil) {
     Fixes eaarl_decode_fast to cope with invalid rasters. Previous version
     encountered infinite loop.
 
-  This version of calps_compatibility returns 5.
+  Version 6
+    Fixes interp_angles to cope with scalar xp. Previous version was returning
+    invalid results when xp was scalar.
+
+  This version of calps_compatibility returns 6.
 */
-  return 5;
+  return 6;
 }
 
 // *** defined in triangle_y.c ***
