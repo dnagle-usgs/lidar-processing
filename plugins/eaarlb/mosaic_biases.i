@@ -68,7 +68,7 @@ ge2040c_rgb_bias_n5308f.roll = -0.6;
 ge2040c_rgb_bias_n5308f.heading = 0.;
 
 ge2040c_n7793q_dummy = CAMERA_MOUNTING_BIAS();
-ge2040c_n7793q_dummy.name = "Dummy settings for n7793q";
+ge2040c_n7793q_dummy.name = "Dummy settings for ge2040c on n7793q";
 ge2040c_n7793q_dummy.heading = 180.;
 
 //=================================================
@@ -119,5 +119,5 @@ ge2040c_specs.pix_x = 7.4e-6; // 7.4 micron
 ge2040c_specs.pix_y = 7.4e-6; // 7.4 micron
 
 // Defaults for CIR imagery
-camera_specs = ms4000_specs;
-camera_mounting_bias = ms4000_cir_bias_n111x;
+camera_specs = ge2040c_specs;
+camera_mounting_bias = ge2040c_n7793q_dummy;
