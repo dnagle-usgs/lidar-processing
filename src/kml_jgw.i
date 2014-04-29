@@ -347,7 +347,7 @@ func __kml_jgw_build_product_image(name, raw, zone, offset, vis) {
   overlays = [];
   for(i = 1; i <= numberof(raw); i++)
     grow, overlays, &strchar(kml_GroundOverlay(strchar(*raw(i)),
-      drawOrder=order(i), visibility=vis));
+      drawOrder=order(i), visibility=1));
   return kml_Folder(
     kml_Style(kml_ListStyle(listItemType="checkHideChildren")),
     strchar(merge_pointers(overlays)), name=name, visibility=vis);
