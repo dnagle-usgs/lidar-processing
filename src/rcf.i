@@ -260,7 +260,7 @@ func old_gridded_rcf(x, y, z, w, buf, n) {
   return where(keep);
 }
 
-func gridded_rcf(x, y, z, w, buf, n, progress=) {
+func gridded_rcf(x, y, z, w, buf, n, progress=, progress_step=, progress_count=) {
 /* DOCUMENT idx = gridded_rcf(x, y, z, w, buf, n, progress=)
   Returns an index into the x/y/z data for those points that survive the RCF
   filter with the given parameters.
@@ -289,6 +289,14 @@ func gridded_rcf(x, y, z, w, buf, n, progress=) {
 
   SEE ALSO: old_gridded_rcf
 */
+  if(progress) {
+    progress_manage = !is_void(progress_step);
+    default, progress_step, 1;
+    default, progress_count, 1;
+    // Shift from 1-based to 0-based
+    progress_step--;
+  }
+
   // We want to ensure that x has a smaller range than y so that we end up
   // doing fewer set_remove_duplicates calls.
   if(x(max) - x(min) > y(max) - y(min))
@@ -305,7 +313,7 @@ func gridded_rcf(x, y, z, w, buf, n, progress=) {
   // keep is our result... anything set to 1 gets kept
   keep = array(char(0), dimsof(x));
 
-  if(progress)
+  if(progress_manage)
     status, start, msg="Running RCF filter...";
 
   // iterate over each x-column
@@ -331,7 +339,9 @@ func gridded_rcf(x, y, z, w, buf, n, progress=) {
       result = rcf(z(idx), w, mode=2);
 
       if(progress)
-        status, progress, xgi - 1 + double(ygi)/ygrid_count, xgrid_count;
+        status, progress,
+          xgi - 1 + double(ygi)/ygrid_count + xgrid_count * progress_step,
+          xgrid_count * progress_count;
 
       if(*result(2) < n)
         continue;
@@ -339,15 +349,92 @@ func gridded_rcf(x, y, z, w, buf, n, progress=) {
       keep(idx(*result(1))) = 1;
     }
   }
-  if(progress)
+  if(progress_manage)
     status, finished;
 
   return where(keep);
 }
 
-func rcf_filter_eaarl(eaarl, mode=, rcfmode=, buf=, w=, n=, idx=, progress=) {
+func dual_gridded_rcf(x, y, z, w, buf, n, factor, progress=) {
+/* DOCUMENT idx = dual_gridded_rcf(x, y, z, w, buf, n, factor, progress=)
+  Returns an index into the x/y/z data for those points that survive the filter
+  with the given parameters.
+
+  This is a wrapper around gridded_rcf. It runs it twice. The first time it
+  runs it normally. The second time it runs it by shifting the grid based on
+  factor, which should be a decimal value between 0 and 1 representing how much
+  to shift the grid. A factor of 0.5 will shift the grid 50%. Points that pass
+  either run are kept.
+*/
+  if(progress)
+    status, start, msg="Running RCF filter...";
+  keep = array(char(0), dimsof(x));
+  idx = gridded_rcf(x, y, z, w, buf, n, progress=progress,
+    progress_step=1, progress_count=2);
+  keep(idx) = 1;
+  shift = buf * factor;
+  idx = gridded_rcf(x+shift, y+shift, z, w, buf, n, progress=progress,
+    progress_step=2, progress_count=2);
+  keep(idx) = 1;
+  if(progress)
+    status, finished;
+  return where(keep);
+}
+
+func multi_gridded_rcf(x, y, z, w, buf, n, factor, progress=) {
+/* DOCUMENT idx = multi_gridded_rcf(x, y, z, w, buf, n, factor, progress=)
+  Returns an index into the x/y/z data for those points that survive the filter
+  with the given parameters.
+
+  This is a wrapper around gridded_rcf. The factor parameter specifies how to
+  more evenly distribute the grid. This algorithm is best explained by way of
+  example:
+
+    Suppose buf is 1 meter and factor=4. In this case, gridded_rcf will be run
+    16 times. Each time it will use a 1 meter grid, but the grid will be offset
+    in the x and y directions in 25cm increments. So the first run will be
+    offset by 0,0. The second run will be offset by 0,25. The third by 0,50.
+    And so on.
+
+  The end result is that each point gets considered in a wider and fairer set
+  of contexts that more evenly represent its neighborhood. For a 1 meter cell,
+  an ideal point would be in the center so that it will consider points within
+  50cm in any direction. However, in practice, gridded_rcf will result in
+  points that aren't anywhere near the center. For instance, a point near a
+  corner might consider points 10cm in one direction and 90cm in another. In
+  the example above, that effect is evened out so that the point would instead
+  look 85cm in one direction and 90cm in another (though in separate contexts),
+  balancing it out better.
+
+  The run time of this is proportional to the square of the factor. A factor of
+  2 will take 4x as long as gridded_rcf. A factor of 10 will take 100x as long
+  as gridded_rcf.
+*/
+  buf = double(buf);
+  keep = array(char(0), dimsof(x));
+  progress_step = 0;
+  progress_count = factor * factor;
+  if(progress)
+    status, start, msg="Running RCF filter...";
+  for(i = 0; i < factor; i++) {
+    xshift = buf * i / factor;
+    for(j = 0; j < factor; j++) {
+      progress_step++;
+      yshift = buf * j / factor;
+      idx = gridded_rcf(x+xshift, y+yshift, z, w, buf, n, progress=progress,
+        progress_step=progress_step, progress_count=progress_count);
+      keep(idx) = 1;
+    }
+  }
+  if(progress)
+    status, finished;
+  return where(keep);
+}
+
+func rcf_filter_eaarl(eaarl, mode=, rcfmode=, buf=, w=, n=, factor=, idx=,
+progress=) {
 /* DOCUMENT filtered = rcf_filter_eaarl(data, mode=, rcfmode=, buf=, w=, n=,
-   idx=, progress=)
+   factor=, idx=, progress=)
   Applies an RCF filter to eaarl data.
 
   Parameter:
@@ -363,6 +450,8 @@ func rcf_filter_eaarl(eaarl, mode=, rcfmode=, buf=, w=, n=, idx=, progress=) {
     rcfmode= Specifies which rcf filter function to use. Possible settings:
         rcfmode="grcf"    Use gridded_rcf (default)
         rcfmode="rcf"     Use old_gridded_rcf (deprecated)
+        rcfmode="dgrcf"   Use dual_gridded_rcf (experimental)
+        rcfmode="mgrcf"   Use multi_gridded_rcf (experimental)
 
     buf= Defines the size of the x/y neighborhood the filter uses, in
       centimeters. Default is 500 cm.
@@ -372,6 +461,12 @@ func rcf_filter_eaarl(eaarl, mode=, rcfmode=, buf=, w=, n=, idx=, progress=) {
 
     n= Defines the minimum number of points that are required in a window in
       order to count as successful. Default is 3.
+
+    factor= The meaning of this parameter varies depending on rcfmode=.
+      For grcf and rcf, it is ignored. For dgrcf and mgrcf, it is passed
+      through as factor. Default varies by rcfmode.
+        factor=0.5    Default for rcfmode="dgrcf"
+        factor=2      Default for rcfmode="mgrcf"
 
     idx= Specifies that the index into the data should be returned instead of
       the filtered data itself. Settings:
@@ -388,6 +483,9 @@ func rcf_filter_eaarl(eaarl, mode=, rcfmode=, buf=, w=, n=, idx=, progress=) {
   default, rcfmode, "grcf";
   default, idx, 0;
 
+  if(rcfmode == "dgrcf") default, factor, 0.5;
+  if(rcfmode == "mgrcf") default, factor, 2;
+
   data2xyz, eaarl, x, y, z, mode=mode;
 
   buf /= 100.;
@@ -399,6 +497,10 @@ func rcf_filter_eaarl(eaarl, mode=, rcfmode=, buf=, w=, n=, idx=, progress=) {
     keep = gridded_rcf(unref(x), unref(y), unref(z), w, buf, n, progress=progress);
   else if(rcfmode == "rcf")
     keep = old_gridded_rcf(unref(x), unref(y), unref(z), w, buf, n);
+  else if(rcfmode == "dgrcf")
+    keep = dual_gridded_rcf(unref(x), unref(y), unref(z), w, buf, n, factor, progress=progress);
+  else if(rcfmode == "mgrcf")
+    keep = multi_gridded_rcf(unref(x), unref(y), unref(z), w, buf, n, factor, progress=progress);
   else
     error, "Please specify a valid rcfmode=.";
 
@@ -409,9 +511,9 @@ func rcf_filter_eaarl(eaarl, mode=, rcfmode=, buf=, w=, n=, idx=, progress=) {
 }
 
 func rcf_filter_eaarl_file(file_in, file_out, mode=, rcfmode=, buf=, w=, n=,
-prefilter_min=, prefilter_max=, verbose=) {
+factor=, prefilter_min=, prefilter_max=, verbose=) {
 /* DOCUMENT rcf_filter_eaarl_file(file_in, file_out, mode=, rcfmode=, buf=, w=,
-   n=, prefilter_min=, prefilter_max=, verbose=)
+   n=, factor=, prefilter_min=, prefilter_max=, verbose=)
 
   Applies the RCF filter to a file.
 
@@ -456,6 +558,8 @@ prefilter_min=, prefilter_max=, verbose=) {
     n= Defines the minimum number of points that are required in a window in
       order to count as successful. Default is 3.
 
+    factor= Passed through to rcf alg depending on which rcfmode is used.
+
     verbose= Specifies how talkative the function should be as it runs. Valid
       settings:
         verbose=1   Shows progress as the file is filtered (default)
@@ -489,7 +593,7 @@ prefilter_min=, prefilter_max=, verbose=) {
 
   // Apply rcf filter
   data = rcf_filter_eaarl(unref(data), buf=buf, w=w, n=n, mode=mode,
-      rcfmode=rcfmode);
+      rcfmode=rcfmode, factor=factor);
 
   if(is_void(data)) {
     if(verbose)

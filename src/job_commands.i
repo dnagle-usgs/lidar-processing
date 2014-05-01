@@ -117,6 +117,7 @@ func job_rcf_eaarl(conf) {
     --buf             corresponds to  buf=
     --w               corresponds to  w=
     --n               corresponds to  n=
+    --factor          corresponds to  factor=
     --prefilter-min   corresponds to  prefilter_min=
     --prefilter-max   corresponds to  prefilter_max=
 */
@@ -134,13 +135,16 @@ func job_rcf_eaarl(conf) {
     if(conf.prefilter(*,"min")) prefilter_min = atod(conf.prefilter("min"));
     if(conf.prefilter(*,"max")) prefilter_max = atod(conf.prefilter("max"));
   }
+  factor = [];
+  if(conf.rcfmode == "dgrcf") factor = pass_void(atod, conf.factor);
+  if(conf.rcfmode == "mgrcf") factor = pass_void(atoi, conf.factor);
 
   require, "alps_data.i";
   require, "dir.i";
   require, "rcf.i";
   rcf_filter_eaarl_file, conf.file.in, conf.file.out, mode=conf.mode,
-      rcfmode=conf.rcfmode, buf=buf, w=w, n=n, prefilter_min=prefilter_min,
-      prefilter_max=prefilter_max, verbose=0;
+      rcfmode=conf.rcfmode, buf=buf, w=w, n=n, factor=factor,
+      prefilter_min=prefilter_min, prefilter_max=prefilter_max, verbose=0;
 }
 
 func job_pbd2edf(conf) {

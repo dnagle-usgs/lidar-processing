@@ -482,9 +482,11 @@ Original amar nayegandhi. Started 12/06/02.
 }
 
 func new_batch_rcf(dir, searchstr=, merge=, files=, update=, mode=,
-prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
+prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, factor=, filter=, meta=,
+verbose=) {
 /* DOCUMENT new_batch_rcf, dir, searchstr=, merge=, files=, update=, mode=,
-  prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=
+  prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, factor=, filter=, meta=,
+  verbose=
 
   This is a rewritten batch_rcf function. It iterates over each file in a set
   of files and applies an RCF filter to its data.
@@ -546,6 +548,8 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
 
     n= Defines the minimum number of points that are required in a window in
       order to count as successful. Default is 3.
+
+    factor= Passed to the underlying rcf alg depending on rcfmode.
 
     meta= Specifies whether the filter parameters should be included in the
       output filename. Settings:
@@ -677,7 +681,7 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
     }
 
     rcf_filter_eaarl_file, file_in, file_out, mode=mode, rcfmode=rcfmode,
-      buf=buf, w=w, n=n, prefilter_min=prefilter_min,
+      buf=buf, w=w, n=n, factor=factor, prefilter_min=prefilter_min,
       prefilter_max=prefilter_max, verbose=(verbose > 1);
     status, progress, sizes(i), sizes(0);
   }

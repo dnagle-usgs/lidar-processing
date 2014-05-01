@@ -186,11 +186,11 @@ norun=) {
 }
 
 func mf_batch_rcf(dir, searchstr=, merge=, files=, update=, mode=,
-prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, makeflow_fn=,
-norun=) {
+prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, factor=, meta=,
+makeflow_fn=, norun=) {
 /* DOCUMENT new_batch_rcf, dir, searchstr=, merge=, files=, update=, mode=,
-   prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, makeflow_fn=,
-   norun=
+   prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, factor=, meta=,
+   makeflow_fn=, norun=
 
   This iterates over each file in a set of files and applies an RCF filter to
   its data.
@@ -253,6 +253,9 @@ norun=) {
 
     n= Defines the minimum number of points that are required in a window in
       order to count as successful. Default is 3.
+
+    factor= Passed through to underlying rcf alg depending on which rcfmode is
+      used.
 
     meta= Specifies whether the filter parameters should be included in the
       output filename. Settings:
@@ -342,16 +345,13 @@ norun=) {
       string(0), [],
       "file-in", file_in,
       "file-out", file_out,
-      mode=mode,
-      rcfmode=rcfmode,
+      mode, rcfmode, factor,
       buf=swrite(format="%d", buf),
       w=swrite(format="%d", w),
-      n=swrite(format="%d", n)
+      n=swrite(format="%d", n),
+      "prefilter-min", prefilter_min,
+      "prefilter-max", prefilter_max
     );
-    if(!is_void(prefilter_min))
-      save, options, "prefilter-min", prefilter_min;
-    if(!is_void(prefilter_max))
-      save, options, "prefilter-max", prefilter_max;
 
     save, conf, string(0), save(
       input=file_in,
