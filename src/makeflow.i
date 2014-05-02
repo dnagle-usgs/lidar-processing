@@ -295,7 +295,8 @@ func makeflow_conf_to_script(conf, fn) {
   mem = array(0, conf(*));
   for(i = 1; i <= conf(*); i++)
     mem(i) = conf(noop(i))(*,"memory") ? conf(noop(i)).memory : 100;
-  conf = conf(sort(mem));
+  // msort makes it stable
+  conf = conf(msort(mem));
 
   flow = "";
 
