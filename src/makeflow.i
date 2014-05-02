@@ -394,27 +394,6 @@ func sans_makeflow(conf, interval=, current=, count=) {
   t0 = t1 = tp = array(double, 3);
   timer, t0;
 
-  // Scan through the conf and do two things:
-  //    - calculate the size of input (plus 1 byte, to avoid 0 byte files)
-  //    - make sure input exists; if it doesn't, we defer all items after the
-  //      first with missing input
-  defer = save();
-  sizes = array(1., conf(*));
-  for(i = 1; i <= conf(*); i++) {
-    cur = conf(noop(i));
-    if(nallof(file_exists(cur.input))) {
-      defer = conf(i:);
-      conf = conf(:i-1);
-      sizes = sizes(:i-1);
-      break;
-    }
-
-    sizes(i) += double(file_size(cur.input))(*)(sum);
-  }
-
-  // Recast sizes to be cumulative
-  sizes = sizes(cum)(2:);
-
   if(defer(*)) {
     write, format="Processing %d jobs; %d deferred\n", conf(*), defer(*);
   } else {
