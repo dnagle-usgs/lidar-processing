@@ -1,8 +1,9 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-func kml_jgw_make_levels(dir, levels=, searchstr=, update=, fast=, quality=) {
-/* DOCUMENT kml_jgw_make_levels, dir, levels=, searchstr=, update=, fast=,
-  quality=
+func kml_jgw_make_levels(util, dir, levels=, searchstr=, jgw=, update=, fast=,
+quality=) {
+/* DOCUMENT kml_jgw_make_levels, dir, levels=, searchstr=, jgw=, update=,
+  fast=, quality=
 
   Generates downsampled images for multiple view levels for a CIR dataset.
   Each level is half the width and half the height of the previous level.
@@ -18,6 +19,11 @@ func kml_jgw_make_levels(dir, levels=, searchstr=, update=, fast=, quality=) {
         levels=7          Seven levels (default)
     searchstr= Search pattern to find images with.
         searchstr="*-cir.jpg"      Default
+    jgw= Instead of searching for jpg files, search for jgw files. Then use the
+      corresponding jpg files. This also changes the meaning of searchstr= to
+      target jgw (and changes its default to "*.jgw").
+        jgw=1             Use jpgs alongside jgw files that match searchstr=.
+        jgw=0             Search for files matching searchstr=.
     update= Whether to skip existing images or not.
         update=0          Re-create existing images, overwriting
         update=1          Skip images that already exist (default)
@@ -26,37 +32,77 @@ func kml_jgw_make_levels(dir, levels=, searchstr=, update=, fast=, quality=) {
 
   SEE ALSO: kml_jgw_make_levels_single, jpg_shrink
 */
-  default, searchstr, "*-cir.jpg";
-  files = find(dir, searchstr=searchstr);
-  num = numberof(files);
+  default, searchstr, (jgw ? "*.jgw" : "*-cir.jpg");
+  default, levels, 7;
+  default, update, 1;
+
   t0 = array(double, 3);
   timer, t0;
-  tp = t0;
-  for(i = 1; i <= num; i++) {
-    kml_jgw_make_levels_single, files(i), levels=levels, update=update,
-      fast=fast, quality=quality;
-    timer_remaining, t0, i, num, tp, interval=15;
+
+  write, "Finding files...";
+  files = find(dir, searchstr=searchstr);
+
+  if(jgw) {
+    write, "Finding corresponding images...";
+    files = file_rootname(files) + ".jpg";
+    w = where(file_exists(files));
+    files = files(w);
   }
+  num = numberof(files);
+  write, format=" Found %d images.\n", num;
+
+  ljpgs = file_rootname(files) + swrite(format="_d%d.jpg", indgen(levels))(-,);
+  if(!update) {
+    write, "Deleting existing images...";
+    for(i = 1; i <= num; i++) for(j = 1; j <= levels; j++) remove, ljpgs(i,j);
+  }
+
+  conf = save();
+  write, "Building jobs...";
+  for(i = 1; i <= num; i++) {
+    tmp = (levels > 1 ? ljpgs(i,1)+".tmp" : []);
+    raw = util.cmd(files(i), ljpgs(i,1), tmp, init=1);
+    for(j = 2; j <= levels; j++) {
+      prev = ljpgs(i,j-1)+".tmp";
+      tmp = (j < levels ? ljpgs(i,j)+".tmp" : []);
+      raw += " ; " + util.cmd(prev, ljpgs(i,j), tmp);
+    }
+    save, conf, string(0), save(
+      input=files(i),
+      output=ljpgs(i,),
+      raw
+    );
+  }
+  if(!am_subroutine()) return conf;
+  if(!conf(*)) {
+    write, "All images already exist, aborting.";
+    return;
+  }
+  write, "Running jobs...";
+  makeflow_run, conf, interval=15;
   timer_finished, t0;
 }
 
-func kml_jgw_make_levels_single(jpg, levels=, update=, fast=, quality=) {
-/* DOCUMENT kml_jgw_make_levels_single, jpg, levels=, update=, fast=, quality=
-  Generates downsampled images for multiple view levels for a single jpg
-  image. Each level is half the width and height of the previous level.
-  Options are as documented in kml_jgw_make_levels. This is not normally run
-  directly; most users will want to use kml_jgw_make_levels.
-*/
-  default, levels, 7;
-  default, update, 1;
-  reduces = 2^indgen(1:levels);
-  ljpgs = file_rootname(jpg) + swrite(format="_d%d.jpg", indgen(levels));
-  w = indgen(levels);
-  if(update)
-    w = where(!file_exists(ljpgs));
-  if(numberof(w))
-    jpg_shrink, jpg, ljpgs(w), reduces(w), fast=fast, quality=quality;
+scratch = save(scratch, kml_jgw_make_levels_cmd);
+
+func kml_jgw_make_levels_cmd(in, out, tmp, init=) {
+  if(init) {
+    cmd = swrite(format="jpegtopnm -dct fast -nosmooth '%s' 2>/dev/null | ", in);
+  } else {
+    cmd = swrite(format="cat '%s' | ", in);
+  }
+  cmd += "pnmscalefixed -reduce 2 - 2> /dev/null | ";
+  if(tmp) cmd += swrite(format="tee '%s' | ", tmp);
+  cmd += swrite(format="pnmtojpeg -optimize -quality 70 -dct fast > '%s'", out);
+  if(!init) {
+    cmd += swrite(format=" ; rm -f '%s'", in);
+  }
+  return cmd;
 }
+
+kml_jgw_make_levels = closure(kml_jgw_make_levels,
+  save(cmd=kml_jgw_make_levels_cmd));
+restore, scratch;
 
 func kml_jgw_tree(dir, ofn, root=, name=, searchstr=) {
 /* DOCUMENT kml_jgw_tree, dir, ofn, root=, name=, searchstr=
