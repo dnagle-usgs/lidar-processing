@@ -332,6 +332,12 @@ func makeflow_conf_to_script(conf, fn) {
         input = (" " + item.input(*))(sum);
     }
 
+    if(item(*,"raw")) {
+      write, f, format="\n%s:%s\n", output, input;
+      write, f, format="\t%s\n", item.raw;
+      continue;
+    }
+
     args = [];
     if(!is_void(item.options)) {
       args = makeflow_obj_to_switches(item.options(2:));
@@ -402,6 +408,14 @@ func sans_makeflow(conf, interval=, current=, count=) {
     status, start, msg="Running jobs, finished CURRENT of COUNT", count=count;
   for(i = 1; i <= conf(*); i++) {
     cur = conf(noop(i));
+
+    if(cur(*,"raw")) {
+      system, cur.raw;
+      current++;
+      status, progress, current, count;
+      continue;
+    }
+
     cmd = cur.command;
     opt = cur.options;
 
@@ -426,8 +440,8 @@ func sans_makeflow(conf, interval=, current=, count=) {
 
     f = symbol_def(cmd);
     f, opt;
-    current++;
 
+    current++;
     status, progress, current, count;
   }
 
