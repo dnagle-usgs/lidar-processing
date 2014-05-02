@@ -459,15 +459,13 @@ func batch_kml_jgw(dir, zone, levels=, searchstr=) {
 */
   default, searchstr, "*.jgw";
   files = find(dir, searchstr=searchstr);
-  t0 = array(double, 3);
-  timer, t0;
-  tp = t0;
   n = numberof(files);
+  status, start, msg="Generating KML files...";
   for(i = 1; i <= n; i++) {
     kml_jgw, files(i), zone, levels=levels;
-    timer_remaining, t0, i, n, tp, interval=10;
+    status, progress, i, n;
   }
-  timer_finished, t0;
+  status, finished;
 }
 
 func kml_jgw(jgw, zone, kml=, levels=) {
