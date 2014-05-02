@@ -284,12 +284,15 @@ func makeflow_parse_log(fn) {
 
 func makeflow_conf_to_script(conf, fn) {
 /* DOCUMENT makeflow_conf_to_script, conf, fn
-  script = makeflow_conf_to_script(conf)
 
   Given a configuration, generates a makeflow script.
 
   SEE ALSO: makeflow
 */
+  f = [];
+  if(is_string(fn))
+    f = open(fn, "w");
+
   // Make a copy, then sort by memory requirement
   conf = obj_copy(conf);
   mem = array(0, conf(*));
@@ -298,10 +301,8 @@ func makeflow_conf_to_script(conf, fn) {
   // msort makes it stable
   conf = conf(msort(mem));
 
-  flow = "";
-
-  flow += swrite(format="YORICK=%syorick\n", Y_LAUNCH);
-  flow += swrite(format="JOB=%sjob.i\n", get_cwd());
+  write, f, format="YORICK=%syorick\n", Y_LAUNCH;
+  write, f, format="JOB=%sjob.i\n", get_cwd();
 
   lastmem = -1;
   for(i = 1; i <= conf(*); i++) {
@@ -312,8 +313,8 @@ func makeflow_conf_to_script(conf, fn) {
     if(!mem) mem = 100;
     mem = long(ceil(mem/100.)*100);
     if(lastmem != mem) {
-      flow += swrite(format="CATEGORY=\"memory%d\"\n", mem);
-      flow += swrite(format="CORES=1\nMEMORY=%d\n", mem);
+      write, f, format="CATEGORY=\"memory%d\"\n", mem;
+      write, f, format="CORES=1\nMEMORY=%d\n", mem;
       lastmem = mem;
     }
 
@@ -341,16 +342,12 @@ func makeflow_conf_to_script(conf, fn) {
 
     cmd = item.command;
 
-    flow += "\n";
-    flow += swrite(format="%s:%s\n", output, input);
-    flow += swrite(format="\t$YORICK -batch $JOB %s %s\n",
-      cmd, args);
+    write, f, format="\n%s:%s\n", output, input;
+    write, f, format="\t$YORICK -batch $JOB %s %s\n",
+      cmd, args;
   }
 
-  if(is_string(fn))
-    write, open(fn, "w"), format="%s", flow;
-
-  return flow;
+  if(f) close, f;
 }
 
 func makeflow_obj_to_switches(obj, prefix) {
