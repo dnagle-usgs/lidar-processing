@@ -15,8 +15,10 @@ quality=) {
     dir: The directory to find images in.
 
   Options:
-    levels= The number of levels to generate.
-        levels=7          Seven levels (default)
+    levels= The number of levels to generate. Alternately, this may be an array
+      of the specific levels to generate.
+        levels=7          Generate seven levels (default)
+        levels=[3,5]      Only generate levels 3 and 5
     searchstr= Search pattern to find images with.
         searchstr="*-cir.jpg"      Default
     jgw= Instead of searching for jpg files, search for jgw files. Then use the
@@ -36,6 +38,16 @@ quality=) {
   default, levels, 7;
   default, update, 1;
 
+  if(is_scalar(levels)) {
+    levels = indgen(0:levels);
+  } else {
+    levels = levels(sort(levels));
+    levels = grow(0, levels);
+  }
+  factors = 2^levels(dif);
+  levels = levels(2:);
+  nlevels = numberof(levels);
+
   t0 = array(double, 3);
   timer, t0;
 
@@ -51,21 +63,25 @@ quality=) {
   num = numberof(files);
   write, format=" Found %d images.\n", num;
 
-  ljpgs = file_rootname(files) + swrite(format="_d%d.jpg", indgen(levels))(-,);
-  if(!update) {
+  ljpgs = file_rootname(files) + swrite(format="_d%d.jpg", levels)(-,);
+  if(update) {
+    write, "Detecting existing images...";
+    exists = file_exists(ljpgs);
+  } else {
     write, "Deleting existing images...";
-    for(i = 1; i <= num; i++) for(j = 1; j <= levels; j++) remove, ljpgs(i,j);
+    for(i = 1; i <= num; i++) for(j = 1; j <= nlevels; j++) remove, ljpgs(i,j);
   }
 
   conf = save();
   write, "Building jobs...";
   for(i = 1; i <= num; i++) {
-    tmp = (levels > 1 ? ljpgs(i,1)+".tmp" : []);
-    raw = util.cmd(files(i), ljpgs(i,1), tmp, init=1);
-    for(j = 2; j <= levels; j++) {
+    if(update && allof(exists(i,))) continue;
+    tmp = (nlevels > 1 ? ljpgs(i,1)+".tmp" : []);
+    raw = util.cmd(files(i), ljpgs(i,1), factors(1), tmp, init=1);
+    for(j = 2; j <= nlevels; j++) {
       prev = ljpgs(i,j-1)+".tmp";
-      tmp = (j < levels ? ljpgs(i,j)+".tmp" : []);
-      raw += " ; " + util.cmd(prev, ljpgs(i,j), tmp);
+      tmp = (j < nlevels ? ljpgs(i,j)+".tmp" : []);
+      raw += " ; " + util.cmd(prev, ljpgs(i,j), factors(j), tmp);
     }
     save, conf, string(0), save(
       input=files(i),
@@ -85,13 +101,13 @@ quality=) {
 
 scratch = save(scratch, kml_jgw_make_levels_cmd);
 
-func kml_jgw_make_levels_cmd(in, out, tmp, init=) {
+func kml_jgw_make_levels_cmd(in, out, factor, tmp, init=) {
   if(init) {
     cmd = swrite(format="jpegtopnm -dct fast -nosmooth '%s' 2>/dev/null | ", in);
   } else {
     cmd = swrite(format="cat '%s' | ", in);
   }
-  cmd += "pnmscalefixed -reduce 2 - 2> /dev/null | ";
+  cmd += swrite(format="pnmscalefixed -reduce %d - 2> /dev/null | ", factor);
   if(tmp) cmd += swrite(format="tee '%s' | ", tmp);
   cmd += swrite(format="pnmtojpeg -optimize -quality 70 -dct fast > '%s'", out);
   if(!init) {
