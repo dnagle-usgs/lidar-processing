@@ -613,3 +613,104 @@ func kml_jgw_image(jgw, zone, &params, levels=, root=) {
 
   return overlays;
 }
+
+func kml_jgw_index(dir, ofn, root=, name=, zone=, searchstr=) {
+/* DOCUMENT kml_jgw_tree, dir, ofn, root=, name=, searchstr=
+  Generates a KML product for a directory tree of imagery. All jgw files will be located and a placemark will be generated for each.
+
+  Prerequisites:
+    - You must already have run kml_jgw_make_levels to generate 3 levels of
+      downsampled imagery.
+    - You must already have run batch_kml_jgw to generate kml files alongside
+      the jgw files.
+
+  Parameters:
+    dir: Path to the images
+    ofn: Path and filename for the output kml file.
+  Options:
+    root= If provided, this is a path to prefix to the links for purposes of
+      putting on the web. Examples:
+        root="http://localhost:8080/"
+        root="http://getafix.er.usgs.gov/data/"
+      When applying the root, it will basically sub in for "dir". So when
+      you upload to your web server, make sure that you put the contents of
+      "dir" into "root".
+    name= A name to apply to the top-level container in the KML file,
+      describing the dataset as a whole.
+    searchstr= Search string used to find jgw files.
+        searchstr="*.jgw"   (default)
+
+  SEE ALSO: kml_jgw_build_product
+*/
+  default, root, "";
+  default, searchstr, "*.jgw";
+  default, name, file_tail(file_rootname(ofn));
+  default, zone, curzone;
+  fix_dir, dir;
+
+  style = kml_Style(
+    kml_IconStyle(
+      scale=0.8, color="bf00ffff",
+      href="http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png"
+    ),
+    id="pmk");
+
+  contents = kml_jgw_index_recurse(dir, dir, root, zone, searchstr);
+
+  kml_save, ofn, style, contents, name=name, visibility=1, Open=0;
+}
+
+func kml_jgw_index_recurse(base, dir, root, zone, searchstr) {
+/* DOCUMENT kml_jgw_index_recurse, base, dir, root, zone, searchstr
+  Worker function for kml_jgw_index. Do not call directly.
+*/
+  local files, subdirs, lon, lat;
+  fix_dir, dir;
+  fix_dir, root;
+  result = [];
+  files = lsdir(dir, subdirs);
+  if(numberof(subdirs))
+    subdirs = subdirs(sort(subdirs));
+  for(i = 1; i <= numberof(subdirs); i++) {
+    grow, result, &strchar(kml_Folder(
+      kml_jgw_index_recurse(base, dir+subdirs(i), root, zone, searchstr),
+      name=subdirs(i)));
+  }
+  if(numberof(files))
+    files = files(where(strglob(searchstr, files)));
+  if(numberof(files))
+    files = files(sort(files));
+  for(i = 1; i <= numberof(files); i++) {
+    file = dir+file_rootname(files(i));
+    rel = file_relative(base, file);
+    tail = file_tail(file);
+
+    dims = image_size(file+".jpg");
+    params = jgw_decompose(read_ascii(file+".jgw")(*), dims);
+    utm2ll, params.centery, params.centerx, zone, lon, lat;
+
+    desc = swrite(format= \
+"<![CDATA[\
+<b>%s</b><br />\
+Acquired: %s<br />\
+<br />\
+<img src=\"%s\" /><br />\
+<br />\
+<a href=\"%s\">Load in Google Earth</a><br />\
+<a href=\"%s\">Download full resolution image</a>\
+]]>",
+      tail+".jpg",
+      soe2iso8601(cir_to_soe(tail+".jpg")),
+      root+rel+"_d3.jpg",
+      root+rel+".kml",
+      root+rel+".jpg"
+      );
+
+    grow, result, &strchar(kml_Placemark(
+      kml_Point(lon, lat),
+      visibility=1, styleUrl="#pmk",
+      description=desc
+    ));
+  }
+  return strchar(merge_pointers(result));
+}
