@@ -485,7 +485,7 @@ func batch_kml_jgw(dir, zone, levels=, searchstr=, footprint=) {
   status, finished;
 }
 
-func kml_jgw(jgw, zone, kml=, levels=, footprint=) {
+func kml_jgw(jgw, zone, &params, kml=, levels=, footprint=) {
 /* DOCUMENT kml_jgw, jgw, zone, kml=, levels=, footprint=
   Generates a KML file for a JGW file.
 
@@ -501,7 +501,8 @@ func kml_jgw(jgw, zone, kml=, levels=, footprint=) {
   default, levels, 0;
   default, kml, file_rootname(jgw)+".kml";
 
-  raw_overlays = kml_jgw_image(jgw, zone, levels=levels, footprint=footprint);
+  raw_overlays = kml_jgw_image(jgw, zone, params, levels=levels,
+    footprint=footprint);
   order = indgen(numberof(raw_overlays):1:-1);
 
   overlays = [];
@@ -660,15 +661,16 @@ func kml_jgw_image(jgw, zone, &params, levels=, root=, footprint=) {
   return overlays;
 }
 
-func kml_jgw_index(dir, ofn, root=, name=, zone=, searchstr=) {
-/* DOCUMENT kml_jgw_tree, dir, ofn, root=, name=, searchstr=
-  Generates a KML product for a directory tree of imagery. All jgw files will be located and a placemark will be generated for each.
+func kml_jgw_index(dir, ofn, root=, name=, zone=, levels=, searchstr=) {
+/* DOCUMENT kml_jgw_tree, dir, ofn, root=, name=, zone=, searchstr=
+  Generates a KML product for a directory tree of imagery. All jgw files will
+  be located and a placemark will be generated for each.
 
   Prerequisites:
-    - You must already have run kml_jgw_make_levels to generate 3 levels of
-      downsampled imagery.
-    - You must already have run batch_kml_jgw to generate kml files alongside
-      the jgw files.
+    - Images must be organized by flightline. You should have created the
+      directory using copy_cirdata_images_by_flightline (with jgw=1).
+    - You must already have run kml_jgw_make_levels using levels=[2,3,5],
+      jgw=1.
 
   Parameters:
     dir: Path to the images
@@ -694,46 +696,60 @@ func kml_jgw_index(dir, ofn, root=, name=, zone=, searchstr=) {
   default, zone, curzone;
   fix_dir, dir;
 
-  style = kml_Style(
+  styles = [];
+  grow, styles, kml_Style(
     kml_IconStyle(
-      scale=0.8, color="bf00ffff",
+      scale=0.5, color="bf00ffff",
       href="http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png"
     ),
     id="pmk");
+  grow, styles, kml_Style(
+    kml_LineStyle(color="#ff00ff00", width=1),
+    id="line");
 
-  contents = kml_jgw_index_recurse(dir, dir, root, zone, searchstr);
+  doc = kml_Placemark(
+    name="Troubleshooting",
+    description="If the links in the placemark balloons do not work, then your Google Earth is configured to prevent access to local files. To fix this, open the Google Earth Options window by going to the \"Tools\" menu and selecting \"Options...\". Then select the \"General\" tab. In the section labeled \"Placemark balloons\", make sure that \"Allow access to local files and personal data\" is checked/enabled."
+    );
 
-  kml_save, ofn, style, contents, name=name, visibility=1, Open=0;
+  local subdirs;
+  lsdir, dir, subdirs;
+  if(!numberof(subdirs)) error, "No subdirs found";
+  subdirs = subdirs(sort(subdirs));
+  nsub = numberof(subdirs);
+  contents = array(pointer, nsub);
+  status, start, msg="Processing folders...";
+  for(i = 1; i <= nsub; i++) {
+    contents(i) = &strchar(kml_jgw_index_folder(dir, root, subdirs(i), zone,
+      searchstr, levels));
+    status, progress, i, nsub;
+  }
+  status, finished;
+  contents = kml_Folder(strchar(merge_pointers(contents)), name="Flightlines");
+
+  kml_save, ofn, styles, doc, contents, name=name, visibility=1, Open=1;
 }
 
-func kml_jgw_index_recurse(base, dir, root, zone, searchstr) {
-/* DOCUMENT kml_jgw_index_recurse, base, dir, root, zone, searchstr
-  Worker function for kml_jgw_index. Do not call directly.
-*/
-  local files, subdirs, lon, lat;
-  fix_dir, dir;
-  fix_dir, root;
-  result = [];
-  files = lsdir(dir, subdirs);
-  if(numberof(subdirs))
-    subdirs = subdirs(sort(subdirs));
-  for(i = 1; i <= numberof(subdirs); i++) {
-    grow, result, &strchar(kml_Folder(
-      kml_jgw_index_recurse(base, dir+subdirs(i), root, zone, searchstr),
-      name=subdirs(i)));
-  }
-  if(numberof(files))
-    files = files(where(strglob(searchstr, files)));
-  if(numberof(files))
-    files = files(sort(files));
+func kml_jgw_index_folder(base, root, subdir, zone, searchstr, levels) {
+  local lon, lat, params;
+
+  files = find(base+subdir, searchstr=searchstr);
+  if(!numberof(files)) return string(0);
+  files = files(sort(files));
+  nfiles = numberof(files);
+
+  pmarks = array(pointer, nfiles);
+  lons = array(double, nfiles);
+  lats = array(double, nfiles);
   for(i = 1; i <= numberof(files); i++) {
-    file = dir+file_rootname(files(i));
+    file = file_rootname(files(i));
     rel = file_relative(base, file);
     tail = file_tail(file);
 
-    dims = image_size(file+".jpg");
-    params = jgw_decompose(read_ascii(file+".jgw")(*), dims);
+    kml_jgw, file+".jgw", zone, params, levels=levels, footprint=0;
     utm2ll, params.centery, params.centerx, zone, lon, lat;
+    lons(i) = lon;
+    lats(i) = lat;
 
     desc = swrite(format= \
 "<![CDATA[\
@@ -752,11 +768,34 @@ Acquired: %s UTC<br />\
       root+rel+".jpg"
       );
 
-    grow, result, &strchar(kml_Placemark(
+    pmarks(i) = &strchar(kml_Placemark(
       kml_Point(lon, lat),
       visibility=1, styleUrl="#pmk",
       description=desc
     ));
   }
-  return strchar(merge_pointers(result));
+  pmarks = strchar(merge_pointers(pmarks));
+
+  line = kml_Placemark(
+    kml_LineString(lons, lats, tessellate=1),
+    visibility=1, styleUrl="#line",
+    name="Flightline"
+  );
+
+  soeA = cir_to_soe(file_tail(file_rootname(files(1))+".jpg"));
+  soeZ = cir_to_soe(file_tail(file_rootname(files(0))+".jpg"));
+  dateA = soe2date(soeA);
+  dateZ = soe2date(soeZ);
+  timeA = soe2time(soeA);
+  timeZ = soe2time(soeZ);
+  name = "Flightline "+subdir;
+  if(dateA == dateZ) {
+    name += swrite(format=": %s %d:%02d - %d:%02d UTC",
+      dateA, timeA(4), timeA(5), timeZ(4), timeZ(5));
+  } else {
+    name += swrite(format=": %s %d:%02d - %s %d:%02d UTC",
+      dateA, timeA(4), timeA(5), dateB, timeZ(4), timeZ(5));
+  }
+
+  return kml_Folder(line, pmarks, name=name);
 }
