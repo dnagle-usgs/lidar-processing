@@ -508,7 +508,8 @@ func kml_jgw(jgw, zone, kml=, levels=) {
     grow, overlays, &strchar(kml_GroundOverlay(strchar(*raw_overlays(i)),
       drawOrder=order(i)));
   overlays = strchar(merge_pointers(overlays));
-  kml_save, kml, overlays, name=file_rootname(file_tail(jgw))+".jpg";
+  style = kml_Style(kml_ListStyle(listItemType="checkHideChildren"));
+  kml_save, kml, style, overlays, name=file_rootname(file_tail(jgw))+".jpg";
 }
 
 func kml_jgw_image(jgw, zone, &params, levels=, root=) {
