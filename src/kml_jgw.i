@@ -468,24 +468,25 @@ func __kml_jgw_build_product_pmk_tree(tiers, lat, lon, desc) {
   }
 }
 
-func batch_kml_jgw(dir, zone, levels=, searchstr=) {
+func batch_kml_jgw(dir, zone, levels=, searchstr=, footprint=) {
 /* DOCUMENT batch_kml_jgw, dir, zone, levels=, searchstr=
   Runs kml_jgw in batch mode. This creates individual per-image KML files for
-  each image. This function is deprecated in favor of kml_jgw_build_product/
+  each image. This function is deprecated in favor of kml_jgw_build_product.
 */
   default, searchstr, "*.jgw";
   files = find(dir, searchstr=searchstr);
   n = numberof(files);
+  files = files(sort(files));
   status, start, msg="Generating KML files...";
   for(i = 1; i <= n; i++) {
-    kml_jgw, files(i), zone, levels=levels;
+    kml_jgw, files(i), zone, levels=levels, footprint=footprint;
     status, progress, i, n;
   }
   status, finished;
 }
 
-func kml_jgw(jgw, zone, kml=, levels=) {
-/* DOCUMENT kml_jgw, jgw, zone, kml=, levels=
+func kml_jgw(jgw, zone, kml=, levels=, footprint=) {
+/* DOCUMENT kml_jgw, jgw, zone, kml=, levels=, footprint=
   Generates a KML file for a JGW file.
 
   Parameters:
@@ -500,7 +501,7 @@ func kml_jgw(jgw, zone, kml=, levels=) {
   default, levels, 0;
   default, kml, file_rootname(jgw)+".kml";
 
-  raw_overlays = kml_jgw_image(jgw, zone, levels=levels);
+  raw_overlays = kml_jgw_image(jgw, zone, levels=levels, footprint=footprint);
   order = indgen(numberof(raw_overlays):1:-1);
 
   overlays = [];
@@ -512,8 +513,8 @@ func kml_jgw(jgw, zone, kml=, levels=) {
   kml_save, kml, style, overlays, name=file_rootname(file_tail(jgw))+".jpg";
 }
 
-func kml_jgw_image(jgw, zone, &params, levels=, root=) {
-/* DOCUMENT overlays = kml_jgw_image(jgw, zone, &params, levels=, root=)
+func kml_jgw_image(jgw, zone, &params, levels=, root=, footprint=) {
+/* DOCUMENT overlays = kml_jgw_image(jgw, zone, &params, levels=, root=, footprint=)
   Returns an array of pointers to arrays of characters. Each array of
   characters represents an array of strings that comprise the ground overlay
   components for a view level.
@@ -539,18 +540,33 @@ func kml_jgw_image(jgw, zone, &params, levels=, root=) {
       image's jgw file.
   Options:
     levels= The number of levels to generate. By default, uses whatever's
-      available.
+      available. May be specified as a scalar number of levels or as an array
+      of specific levels.
     root= Prefix to attach to icon links. By default, none is used.
+    footprint= Specifies whether a blue footprint should be displayed when you
+      are zoomed too far out for any existing view level.
+        footprint=1     Default, show a blue footprint
+        footprint=0     No footprint, show lowest resolution image instead
 */
-  local lon, lat;
+  local lon, lat, tmp;
   default, root, string(0);
+  default, footprint, 1;
   fix_dir, root;
 
   // If levels is not provided, then determine based on available images
   if(is_void(levels)) {
     ljpgs = find(file_dirname(jgw), searchstr=file_rootname(file_tail(jgw))+"_d*.jpg");
-    levels = numberof(ljpgs);
+    valid = regmatch("_d([0-9]+)\\.jpg$", ljpgs, , tmp);
+    if(nallof(valid)) error, "invalid downsampled image detected";
+    levels = atoi(tmp);
+    levels = levels(sort(levels));
     ljpgs = [];
+  // If scalar, turn into array
+  } else if(is_scalar(levels)) {
+    levels = indgen(1:levels);
+  // If array, ensure it is sorted
+  } else {
+    levels = levels(sort(levels));
   }
 
   jpg = file_rootname(jgw)+".jpg";
@@ -599,8 +615,12 @@ func kml_jgw_image(jgw, zone, &params, levels=, root=) {
   lodbasis = sqrt(dims(1)*dims(2));
 
   // The full resolution image gets 64 pixel lod if there are no subsequent
-  // layers
-  minlod = levels ? long(lodbasis/(2.^.5)) : 64;
+  // layers and we are using a footprint
+  if(numberof(levels)) {
+    minlod = long(lodbasis/(2.^(levels(1)-.5)));
+  } else {
+    minlod = footprint ? 64 : 0;
+  }
   region = kml_Region(north=rnorth, south=rsouth, east=reast, west=rwest,
     minLodPixels=minlod);
   icon = kml_Icon(href=root + file_tail(jpg));
@@ -608,11 +628,18 @@ func kml_jgw_image(jgw, zone, &params, levels=, root=) {
   grow, overlays, &strchar(strjoin(overlay, "\n"));
 
   // Add additional layers, in decreasing resolution order
-  if(levels) {
-    ljpgs = file_rootname(jpg) + swrite(format="_d%d.jpg", indgen(levels));
-    for(i = 1; i <= levels; i++) {
+  if(numberof(levels)) {
+    ljpgs = file_rootname(jpg) + swrite(format="_d%d.jpg", levels);
+    nlevels = numberof(levels);
+    for(i = 1; i <= nlevels; i++) {
       ljpg = ljpgs(i);
-      minlod = long(lodbasis/(2.^(i+.5)));
+      if(i < nlevels) {
+        minlod = long(lodbasis/2.^(levels(i+1)-.5));
+      } else if(footprint) {
+        minlod = long(lodbasis/2.^(levels(i)+.5));
+      } else {
+        minlod = 0;
+      }
       region = kml_Region(north=rnorth, south=rsouth, east=reast, west=rwest,
         minLodPixels=minlod);
       icon = kml_Icon(href=root + file_tail(ljpg));
@@ -623,10 +650,12 @@ func kml_jgw_image(jgw, zone, &params, levels=, root=) {
 
   // Last layer is a blue box that shows footprint and should be viewable at
   // all view levels
-  region = kml_Region(north=rnorth, south=rsouth, east=reast, west=rwest,
-    minLodPixels=0);
-  overlay = [region, latlonbox, kml_element("color", kml_color(0,0,255,127))];
-  grow, overlays, &strchar(strjoin(overlay, "\n"));
+  if(footprint) {
+    region = kml_Region(north=rnorth, south=rsouth, east=reast, west=rwest,
+      minLodPixels=0);
+    overlay = [region, latlonbox, kml_element("color", kml_color(0,0,255,127))];
+    grow, overlays, &strchar(strjoin(overlay, "\n"));
+  }
 
   return overlays;
 }
