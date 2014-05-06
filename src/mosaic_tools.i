@@ -862,8 +862,8 @@ func split_cir_by_maxcount(cirdata, maxfiles) {
   h_set, cirdata, "chunks", chunks(:cidx);
 }
 
-func copy_cirdata_images(cirdata, dest, verbose=) {
-/* DOCUMENT copy_cirdata_images, cirdata, dest;
+func copy_cirdata_images(cirdata, dest, verbose=, jgw=) {
+/* DOCUMENT copy_cirdata_images, cirdata, dest, verbose=, jgw=;
   Copies the images defined in cirdata to dest.
 */
   default, verbose, 1;
@@ -879,10 +879,17 @@ func copy_cirdata_images(cirdata, dest, verbose=) {
     mkdirp, dest;
     file_copy, cirdata.files(i), file_join(dest, file_tail(cirdata.files(i))),
       force=1;
+    if(jgw) {
+      f = file_rootname(cirdata.files(i));
+      if(file_exists(f+".jgw"))
+        file_copy, f+".jgw", file_join(dest, file_tail(f)+".jgw"), force=1;
+      if(file_exists(f+".prj"))
+        file_copy, f+".prj", file_join(dest, file_tail(f)+".prj"), force=1;
+    }
   }
 }
 
-func copy_cirdata_images_by_flightline(cirdata, dest_dir, verbose=) {
+func copy_cirdata_images_by_flightline(cirdata, dest_dir, verbose=, jgw=) {
 /* DOCUMENT copy_cirdata_images_by_flightline, cirdata, dest_dir;
   Copies the images defined in cirdata to dest_dir, separating them by
   flightline.
@@ -896,12 +903,12 @@ func copy_cirdata_images_by_flightline(cirdata, dest_dir, verbose=) {
   for(i = 1; i <= numberof(flightlines); i++) {
     curcirdata = filter_cirdata_by_index(cirdata, *flightlines(i));
     fltdir = file_join(dest_dir, swrite(format=fstr, i));
-    copy_cirdata_images, curcirdata, fltdir, verbose=verbose;
+    copy_cirdata_images, curcirdata, fltdir, verbose=verbose, jgw=jgw;
   }
 }
 
 func copy_cirdata_tiles(cirdata, scheme, dest_dir, split_fltlines=, buffer=,
-subdir=) {
+subdir=, jgw=) {
 /* DOCUMENT copy_cirdata_tiles, cirdata, scheme, dest_dir, split_fltlines=,
   buffer=, subdir=
   This copies the images represented by cirdata to dest_dir, but partitions
@@ -925,6 +932,8 @@ subdir=) {
     subdir= If provided, images will be placed in a subdirectory of this
       name. (If split_fltlines=1, the flightline directories will be in the
       subdirectory.)
+    jgw= If set to jgw=1, then any .jgw or .prj alongside each image is copied
+      as well.
 
   Returns:
     An array of the tile directories created.
@@ -976,15 +985,15 @@ subdir=) {
       tiledir = file_join(tiledir, subdir);
 
     if(split_fltlines)
-      copy_cirdata_images_by_flightline, curcirdata, tiledir, verbose=0
+      copy_cirdata_images_by_flightline, curcirdata, tiledir, verbose=0, jgw=jgw;
     else
-      copy_cirdata_images, curcirdata, tiledir;
+      copy_cirdata_images, curcirdata, tiledir, jgw=jgw;
   }
 
   return tile_dirs;
 }
 
-func copy_cirdata_images_splitdirs(cirdata, imgdir, maxfiles) {
+func copy_cirdata_images_splitdirs(cirdata, imgdir, maxfiles, jgw=) {
 /* DOCUMENT copy_cirdata_images_splitdirs, cirdata, imgdir, maxfiles;
   Copies the images defined by cirdata to imgdir, splitting it up into
   subdirectories to ensure that no directory contains more than maxfiles.
@@ -997,7 +1006,7 @@ func copy_cirdata_images_splitdirs(cirdata, imgdir, maxfiles) {
     subdata = filter_cirdata_by_index(cirdata, idx);
     dirname = swrite(format=fmt, j);
     mkdirp, file_join(imgdir, dirname);
-    copy_cirdata_images, subdata, file_join(imgdir, dirname);
+    copy_cirdata_images, subdata, file_join(imgdir, dirname), jgw=jgw;
   }
 }
 
