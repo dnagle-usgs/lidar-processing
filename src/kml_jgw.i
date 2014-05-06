@@ -708,7 +708,7 @@ func kml_jgw_index_recurse(base, dir, root, zone, searchstr) {
     desc = swrite(format= \
 "<![CDATA[\
 <b>%s</b><br />\
-Acquired: %s<br />\
+Acquired: %s UTC<br />\
 <br />\
 <img src=\"%s\" /><br />\
 <br />\
