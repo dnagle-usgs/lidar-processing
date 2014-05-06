@@ -762,7 +762,7 @@ func split_cir_by_fltline(cirdata, timediff=) {
   array of pointers, each pointer points to an array of indices into the
   images that comprises a flightline.
 */
-  default, timediff, 180;
+  default, timediff, 60;
   time_idx = [];
   if(numberof(cirdata.soes) > 1)
     time_idx = where(cirdata.soes(dif) > timediff);
