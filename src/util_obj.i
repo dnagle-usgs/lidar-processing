@@ -946,3 +946,33 @@ func obj_keys(obj) {
   keys = obj(*,);
   return keys(where(strlen(keys)));
 }
+
+func obj_hier_save(args) {
+/* DOCUMENT obj_heir_save, obj, "name1", "name2", .., val
+  Saves values to a heirarchical object. Intermediate levels are created as
+  needed. For example:
+
+    > obj = save()
+    > obj_hier_save, obj, "a", "b", "c", 1
+    > obj_hier_save, obj, "a", "b", "d", 2
+    > obj_hier_save, obj, "a", "e", "f", 3
+    > obj_show, obj
+     TOP (oxy_object, 1 entry)
+     `- a (oxy_object, 2 entries)
+        |- b (oxy_object, 2 entries)
+        |  |- c (long) 1
+        |  `- d (long) 2
+        `- e (oxy_object, 1 entry)
+           `- f (long) 3
+*/
+  if(args(0) < 3) error, "too few params";
+  if(!is_void(args(-))) error, "no keywords allowed";
+  n = args(0);
+  obj = args(1);
+  for(i = 2; i < n-1; i++) {
+    if(!obj(*,args(i))) save, obj, args(i), save();
+    obj = obj(args(i));
+  }
+  save, obj, args(n-1), args(n);
+}
+wrap_args, obj_hier_save;
