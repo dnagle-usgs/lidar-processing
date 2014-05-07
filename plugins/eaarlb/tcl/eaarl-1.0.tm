@@ -58,4 +58,22 @@ namespace eval ::eaarl {
          catch [list uplevel #0 $script]
       }
    }
+
+   proc set_interactive_batch {} {
+      set fp [open "/proc/cpuinfo" r]
+      while {[ eof $fp] != 1} {
+         gets $fp content
+         set res [regexp [lindex vendor 0] $content]
+         if { $res >= 1} {
+            incr count
+         }
+      }
+      if { $count > 2 } {
+         variable interactive_batch 1
+         puts "CPU Count: $count"
+         puts "interactive_batch mode will default to on"
+      }
+   }
 }
+
+::eaarl::set_interactive_batch
