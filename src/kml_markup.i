@@ -20,14 +20,15 @@ func kml_color(r, g, b, a) {
 }
 
 local kml_Document, kml_Style, kml_BalloonStyle, kml_IconStyle, kml_LineStyle,
-  kml_ListStyle, kml_PolyStyle, kml_Folder, kml_Placemark, kml_NetworkLink,
-  kml_Feature, kml_Snippet, kml_MultiGeometry, kml_LineString, kml_Point,
-  kml_coordinates, kml_Link, kml_Region, kml_LatLonBox, kml_Icon,
+  kml_ListStyle, kml_PolyStyle, kml_LabelStyle, kml_Folder, kml_Placemark,
+  kml_NetworkLink, kml_Feature, kml_Snippet, kml_MultiGeometry, kml_LineString,
+  kml_Point, kml_coordinates, kml_Link, kml_Region, kml_LatLonBox, kml_Icon,
   kml_GroundOverlay;
 /* DOCUMENT kml_Document kml_Style kml_BalloonStyle kml_IconStyle kml_LineStyle
-  kml_ListStyle kml_PolyStyle kml_Folder kml_Placemark kml_NetworkLink
-  kml_Feature kml_Snippet kml_MultiGeometry kml_LineString kml_Point
-  kml_coordinates kml_Link kml_Region kml_LatLonBox kml_Icon kml_GroundOverlay
+  kml_ListStyle kml_PolyStyle kml_LabelStyle kml_Folder kml_Placemark
+  kml_NetworkLink kml_Feature kml_Snippet kml_MultiGeometry kml_LineString
+  kml_Point kml_coordinates kml_Link kml_Region kml_LatLonBox kml_Icon
+  kml_GroundOverlay
 
   The above functions each correspond directly to the KML tags they are named
   for. These functions are constructed such that:
@@ -134,6 +135,14 @@ func kml_PolyStyle(void, id=, color=, colorMode=, fill=, outline=) {
   grow, elems, kml_element("fill", fill);
   grow, elems, kml_element("outline", outline);
   return kml_element("PolyStyle", elems, id=id);
+}
+
+func kml_LabelStyle(void, id=, color=, colorMode=, scale=) {
+  elems = [];
+  grow, elems, kml_element("color", color);
+  grow, elems, kml_element("colorMode", colorMode);
+  grow, elems, kml_element("scale", scale);
+  return kml_element("LabelStyle", elems, id=id);
 }
 
 func kml_Folder(items, .., id=, name=, visibility=, Open=, description=,
