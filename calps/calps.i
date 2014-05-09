@@ -455,6 +455,25 @@ extern timsort_obj;
   SEE ALSO: sort, msort
 */
 
+extern file_exists;
+/* DOCUMENT file_exists(filename)
+
+  Checks if the file 'filename' exists.
+
+  Returns '0' if the file does not exist, and '1' if the file exists
+*/
+
+extern file_readable;
+/* DOCUMENT file_readable(filename)
+  Returns 1 or 0 indicating whether the specified filename is readable.
+*/
+
+extern file_size;
+/* DOCUMENT size = file_size(fn)
+  Returns the size of the given file in bytes. The file must exist and must be
+  readable. Accepts both scalar and array input.
+*/
+
 __calps_backup = save(
   calps_compatibility,
   _ytriangulate, triangulate,
