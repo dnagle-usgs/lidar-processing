@@ -485,7 +485,7 @@ func batch_kml_jgw(dir, zone, levels=, searchstr=, footprint=) {
   status, finished;
 }
 
-func kml_jgw(jgw, zone, &params, kml=, levels=, footprint=) {
+func kml_jgw(jgw, zone, &params, kml=, levels=, footprint=, name=) {
 /* DOCUMENT kml_jgw, jgw, zone, kml=, levels=, footprint=
   Generates a KML file for a JGW file.
 
@@ -500,6 +500,7 @@ func kml_jgw(jgw, zone, &params, kml=, levels=, footprint=) {
   local lon, lat;
   default, levels, 0;
   default, kml, file_rootname(jgw)+".kml";
+  default, name, file_rootname(file_tail(jgw))+".jpg";
 
   raw_overlays = kml_jgw_image(jgw, zone, params, levels=levels,
     footprint=footprint);
@@ -511,7 +512,7 @@ func kml_jgw(jgw, zone, &params, kml=, levels=, footprint=) {
       drawOrder=order(i)));
   overlays = strchar(merge_pointers(overlays));
   style = kml_Style(kml_ListStyle(listItemType="checkHideChildren"));
-  kml_save, kml, style, overlays, name=file_rootname(file_tail(jgw))+".jpg";
+  kml_save, kml, style, overlays, name=name;
 }
 
 func kml_jgw_image(jgw, zone, &params, levels=, root=, footprint=) {
