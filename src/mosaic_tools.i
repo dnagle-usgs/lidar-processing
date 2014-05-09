@@ -149,7 +149,7 @@ maxfiles=, cir_soe_offset=) {
   mkdirp, file_join(inpho_dir, "tiles");
 }
 
-func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=, searchstr=, norezone=) {
+func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=, searchstr=, norezone=, uniq=) {
 /* DOCUMENT gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=)
   This creates a Yeti hash that represents a set of CIR images, including
   per-image data interpolated from tans.
@@ -176,6 +176,7 @@ func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=, search
 // Original David B. Nagle 2009-03-15
   default, downsample, 0;
   default, searchstr, "*.jpg";
+  default, uniq, 1;
   if(!is_void(conf_file))
     mission, read, conf_file;
 
@@ -185,7 +186,9 @@ func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=, search
     error, "No files found.";
 
   // Remove duplicate files under different paths
-  photo_files = photo_files(unique(file_tail(photo_files)));
+  if(uniq) {
+    photo_files = photo_files(unique(file_tail(photo_files)));
+  }
 
   write, format="Found %d images\n", numberof(photo_files);
   write, format="Determining second-of-epoch values...%s", "\n";
@@ -393,15 +396,16 @@ func cirdata_hull(cirdata, elev=, camera=, buffer=) {
   return bounds;
 }
 
-func gen_jgws_rough(photo_dir, conf_file=, elev=, camera=, cir_soe_offset=, norezone=) {
+func gen_jgws_rough(photo_dir, conf_file=, elev=, camera=, cir_soe_offset=, norezone=, uniq=) {
 /* DOCUMENT gen_jgws_rough, photo_dir, conf_file=, elev=, camera=, cir_soe_offset=
   Performs a rough georeferencing of the images in photo_dir. Faster than
   gen_jgws_with_lidar, but less accurate. Do not use for anything important.
 */
   default, elev, 0;
+  default, uniq, 0;
 
-  cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1,
-    cir_soe_offset=cir_soe_offset, norezone=norezone);
+  cirdata = gather_cir_data(photo_dir, conf_file=conf_file,
+    cir_soe_offset=cir_soe_offset, norezone=norezone, uniq=uniq);
 
   status, start, msg="Generating JGWs...";
   count = numberof(cirdata.files);
