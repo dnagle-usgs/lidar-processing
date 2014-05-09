@@ -800,3 +800,280 @@ Acquired: %s UTC<br />\
 
   return kml_Folder(line, pmarks, name=name);
 }
+
+func kml_jgw_flight_index(dir, ofn=, name=, zone=, levels=) {
+/* DOCUMENT kml_jgw_flight_index, dir, ofn=, name=, zone=, levels=
+  Creates a flight imagery index KML.
+
+  Prerequisites:
+    - You must have the correct mission flight data loaded.
+    - <dir> should be a date folder with images organized as thus:
+        <dir>/photos/<type>/HHMM/<image>
+      where <type> is rgb or nir. If you ise "Dump NIR" and "Dump RGB" from the
+      Mission Configuration Manager, the files will end up organized that way.
+    - You must have generated JGW files.
+    - You must have run kml_jgw_make_levels to generate at least levels=[3].
+      You may add additional levels optionally, but level 3 is required for the
+      thumbnails.
+
+  Options:
+    ofn= Defaults to <dir>/index.kml
+    zone= Defaults to curzone
+    levels= Defaults to [3]
+    name= Defaults to the last component of <dir>
+*/
+  t0 = array(double, 3);
+  timer, t0;
+  local types, minutes;
+
+  default, ofn, file_join(dir, "index.kml");
+  default, zone, curzone;
+  default, levels, [3];
+  default, name, file_tail(dir);
+
+  // Downsample pnav to reduce overall size and complexity
+  write, "Downsampling pnav...";
+  utm = fll2utm(pnav.lat, pnav.lon);
+  idx = downsample_line(utm(2,), utm(1,), idx=1, maxdist=2);
+  pn = pnav(idx);
+  utm = idx = [];
+
+  // Sanity check
+  photos_dir = file_join(dir, "photos");
+  if(!file_exists(photos_dir)) error, "photos subdir does not exist";
+
+  // Get a list of the types available
+  lsdir, photos_dir, types;
+  if(!numberof(types)) error, "no imagery folders under photos";
+  types = types(sort(types));
+  ntypes = numberof(types);
+
+  write, "Finding images...";
+  data = save();
+  // For each type, get a list of the files available
+  for(i = 1; i <= ntypes; i++) {
+    files = find(file_join(photos_dir, types(i)), searchstr="*.jgw");
+    if(!numberof(files)) continue;
+    files = file_relative(photos_dir, files);
+    base = file_rootname(files);
+    stag = soe2iso8601(cir_to_soe(file_tail(base)+".jpg"));
+    mtag = strpart(stag, :16);
+
+    n = numberof(files);
+    for(j = 1; j <= n; j++) {
+      obj_hier_save, data, mtag(j), stag(j), types(i), base(j);
+    }
+  }
+
+  // Static KML elements
+  dot_style = kml_Style(
+    kml_LabelStyle(scale=0),
+    kml_IconStyle(
+      scale=0.45, color="ff00ffff",
+      href="http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png"
+    ),
+    id="dot");
+
+  write, "Building KML...";
+  // Now build KMLs based on data in data obj
+  minutes = data(*,);
+  minutes = minutes(sort(minutes));
+  bigdots = array(pointer, data(*));
+
+  local placemark;
+  status, start, msg="Building KML...";
+  for(i = 1; i <= data(*); i++) {
+    kml_jgw_flight_index_minute, photos_dir,
+      data(minutes(i)), minutes(i), pn, levels,
+      placemark;
+    bigdots(i) = &strchar(placemark);
+
+    status, progress, i, data(*);
+  }
+  status, finished;
+
+  // Create KML for per-minute images
+  minutefn = file_join(photos_dir, "images.kml");
+
+  bigdots = strchar(merge_pointers(bigdots));
+
+  write, "Finalizing images...";
+  kml_save, minutefn, bigdots, name="Images", visibility=1, Open=0;
+
+  // Create KML for main index
+
+  doc = kml_Placemark(
+    name="Troubleshooting",
+    description="If the links in the placemark balloons do not work, then your Google Earth is configured to prevent access to local files. To fix this, open the Google Earth Options window by going to the \"Tools\" menu and selecting \"Options...\". Then select the \"General\" tab. In the section labeled \"Placemark balloons\", make sure that \"Allow access to local files and personal data\" is checked/enabled."
+    );
+
+  flight = kml_Placemark(
+    kml_Style(kml_LineStyle(color="#ffff0000", width=2)),
+    kml_LineString(pn.lon, pn.lat, tessellate=1),
+    name="Flightline"
+    );
+
+  images = kml_NetworkLink(
+    kml_Link(href="photos/images.kml"),
+    name="Images");
+
+  write, "Finalizing...";
+  kml_save, ofn, style, doc, flight, images, name=name, visibility=1, Open=1;
+
+  timer_finished, t0;
+}
+
+func kml_jgw_flight_index_minute(dir, data, mtag, pnav, levels, &placemark) {
+// Worker function for a minute
+// This calls _second for each second (producing KMLs for each JPG/JGW)
+// This creates the minute's KML file, containing all seconds except the center
+// This assigns the center placemark to &placemark
+
+  seconds = data(*,);
+  seconds = seconds(sort(seconds));
+
+  imgs = 0;
+  dots = array(string, data(*));
+  sods = array(double, data(*));
+  lon = array(double, data(*));
+  lat = array(double, data(*));
+
+  local desc, sod;
+  for(i = 1; i <= data(*); i++) {
+    sdata = data(seconds(i));
+
+    kml_jgw_flight_index_second, dir, sdata, seconds(i), levels, desc, sod;
+
+    imgs += sdata(*);
+    dots(i) = desc;
+    sods(i) = sod;
+  }
+
+  lat = interp(pnav.lat, pnav.sod, sods);
+  lon = interp(pnav.lon, pnav.sod, sods);
+
+  // mtag is YYYY-MM-DD HH:MM
+  // mtagclean is YYYYMMDD_HHMM
+  mtagclean = regsub(" ", regsub("-|:", mtag, "", all=1), "_");
+  // output filename, if needed
+  fn = file_join(dir, mtagclean+".kml");
+
+  // Edge case: if there's only one entry for this minute, it only gets a big
+  // dot.
+  if(numberof(dots) == 1) {
+    single = 1;
+    w = 1;
+    bigsod = sods(w);
+    footer = "<i>No more images available during this minute.</i>";
+  } else {
+    single = 0;
+    // Find dot closest to center (timewise) and pull it out for the big dot
+    w = abs(sods - [sods(1),sods(0)](avg))(mnx);
+    bigsod = long(abs(sods - sods(w))(max));
+    footer = swrite(format=\
+"<a href=\"%s\">Load %d additional nearby locations</a> \
+representing %d images within +/- %d seconds",
+      mtagclean+".kml", numberof(dots)-1,
+      imgs, bigsod
+    );
+  }
+
+  desc = swrite(format="<![CDATA[%s<hr />%s]]>", dots(w), footer);
+
+  heading = interp(tans.heading, tans.somd, sods(w));
+  // Force into range [0,360)
+  heading = (heading + 360) % 360;
+
+  // placemark is an output variable
+  placemark = kml_Placemark(
+    kml_Style(
+      kml_LabelStyle(scale=0),
+      kml_IconStyle(
+        href="http://maps.google.com/mapfiles/kml/shapes/airports.png",
+        scale=0.8, heading=heading
+      )
+    ),
+    kml_Point(lon(w),lat(w)),
+    visibility=1,
+    name=mtag,
+    description=desc
+  );
+
+  // For edge case of only one second, no KML file gets generated.
+  if(single) return;
+
+  // Get rid of the entry we used for the big dot
+  keep = array(1, numberof(dots));
+  keep(w) = 0;
+  w = where(keep);
+  dots = dots(w);
+  seconds = seconds(w);
+
+  // Now create placemarks for this minute
+  n = numberof(dots);
+  for(i = 1; i <= n; i++) {
+    desc = swrite(format="<![CDATA[%s]]>", dots(i));
+    dots(i) = kml_Placemark(
+      kml_Point(lon(i),lat(i)),
+      visibility=1, styleUrl="#dot",
+      name=seconds(i),
+      description=desc
+    );
+  }
+
+  style = kml_Style(
+    kml_LabelStyle(scale=0),
+    kml_IconStyle(
+      scale=0.45, color="ff00ffff",
+      href="http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png"
+    ),
+    id="dot");
+
+  // Write out KML file for this minute
+  kml_save, fn, style, dots, name=mtag, visibility=1, Open=0;
+}
+
+func kml_jgw_flight_index_second(dir, data, stag, levels, &desc, &sod) {
+// Worker function for a single second
+// This creates the KML files for each individual JPG/JGW
+// This assigns description for this second to &desc
+// This assigns the sod value to &sod
+
+  thumbs = array(string, data(*));
+
+  for(i = 1; i <= data(*); i++) {
+    type = data(*,i);
+    base = data(noop(i));
+    full = file_join(dir, base);
+
+    // Create KML for current image
+    name = file_tail(full)+".jpg ("+type+")";
+    kml_jgw, full+".jgw", zone, levels=levels, footprint=0, name=name;
+
+    // Create cell content for placemark
+    thumbs(i) = swrite(format=\
+"<td>\
+<center><b>%s</b></center>\
+<img src=\"%s\" /><br />\
+<br />\
+<a href=\"%s\">Load in Google Earth</a><br />\
+<a href=\"%s\">Download full resolution image</a>\
+</td>",
+      type,
+      base+"_d3.jpg",
+      base+".kml",
+      base+".jpg");
+  }
+
+  // desc and sod are the output variables
+
+  // Combine thumbs to make the placemark desc
+  desc = swrite(format=\
+"Acquired: %s UTC<br />\
+<br />\
+<table><tr valign=\"top\">%s</tr></table>",
+    stag, thumbs(sum));
+
+  // Determine sod value
+  sod = cir_to_soe(file_tail(data(1))+".jpg") - soe_day_start;
+}
