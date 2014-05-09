@@ -529,45 +529,6 @@ func mktempdir(name) {
   return dir;
 }
 
-func file_exists(filename) {
-/* DOCUMENT file_exists(filename)
-
-  Checks if the file 'filename' exists.
-
-  Returns '0' if the file does not exist, and '1' if the file exists
-*/
-  fdir = file_dirname(filename);
-  fname = file_tail(filename);
-  if(dimsof(filename)(1)) {
-    result = array(0, dimsof(filename));
-    for(i = 1; i <= numberof(filename); i++) {
-      result(i) = numberof(lsfiles(fdir(i), glob=fname(i)));
-    }
-    return result;
-  } else {
-    return numberof(lsfiles(fdir, glob=fname));
-  }
-}
-
-func file_readable(filename) {
-/* DOCUMENT file_readable(filename)
-  Returns 1 or 0 indicating whether the specified filename is readable.
-*/
-  if(dimsof(filename)(1)) {
-    result = array(short, dimsof(filename));
-    for(i = 1; i <= numberof(filename); i++) {
-      result(i) = file_readable(filename(i));
-    }
-    return result;
-  } else {
-    if(catch(-1)) {
-      return 0;
-    }
-    f = open(filename, "rb");
-    return 1;
-  }
-}
-
 func file_isdir(filename) {
 /* DOCUMENT file_isdir(filename)
 
@@ -628,21 +589,6 @@ func file_copy(src, dest, force=) {
     _write, fd, 0, c;
     close, fd;
     remove, dest + "L";
-  }
-}
-
-func file_size(fn) {
-/* DOCUMENT size = file_size(fn)
-  Returns the size of the given file in bytes. The file must exist and must be
-  readable. Accepts both scalar and array input.
-*/
-  if(is_scalar(fn)) {
-    return sizeof(open(fn, "rb"));
-  } else {
-    result = array(long, dimsof(fn));
-    for(i = 1; i <= numberof(result); i++)
-      result(i) = file_size(fn(i));
-    return result;
   }
 }
 

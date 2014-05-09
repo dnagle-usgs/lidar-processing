@@ -65,3 +65,11 @@ if(!is_func(msort_obj))
 // Added 2014-03-28
 if(!is_func(sortedness))
   include, "calps/sortedness.i";
+
+// Added 2014-05-09
+if(!is_func(file_exists))
+  include, "calps/file_exists.i";
+if(!is_func(file_readable))
+  include, "calps/file_readable.i";
+if(!is_func(file_size))
+  include, "calps/file_size.i";
