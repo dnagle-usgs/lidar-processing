@@ -149,7 +149,7 @@ maxfiles=, cir_soe_offset=) {
   mkdirp, file_join(inpho_dir, "tiles");
 }
 
-func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=, searchstr=) {
+func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=, searchstr=, norezone=) {
 /* DOCUMENT gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=)
   This creates a Yeti hash that represents a set of CIR images, including
   per-image data interpolated from tans.
@@ -213,11 +213,17 @@ func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=, search
     "photo_dir", photo_dir
   );
 
+  write, format="Checking for images without coordinates...%s", "\n";
   w = where(photo_tans.lat != 0 & photo_tans.lon != 0);
-  if(numberof(w) < numberof(photo_tans))
+  if(numberof(w) < numberof(photo_tans)) {
+    write, format="  Found %d, removing...\n", numberof(photo_tans) - numberof(w);
     data = filter_cirdata_by_index(data, w);
+  }
 
-  cirdata_correct_zoning, data;
+  if(!norezone) {
+    write, format="Checking for possible zone corrections...%s", "\n";
+    cirdata_correct_zoning, data;
+  }
 
   return data;
 }
@@ -387,7 +393,7 @@ func cirdata_hull(cirdata, elev=, camera=, buffer=) {
   return bounds;
 }
 
-func gen_jgws_rough(photo_dir, conf_file=, elev=, camera=, cir_soe_offset=) {
+func gen_jgws_rough(photo_dir, conf_file=, elev=, camera=, cir_soe_offset=, norezone=) {
 /* DOCUMENT gen_jgws_rough, photo_dir, conf_file=, elev=, camera=, cir_soe_offset=
   Performs a rough georeferencing of the images in photo_dir. Faster than
   gen_jgws_with_lidar, but less accurate. Do not use for anything important.
@@ -395,7 +401,7 @@ func gen_jgws_rough(photo_dir, conf_file=, elev=, camera=, cir_soe_offset=) {
   default, elev, 0;
 
   cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1,
-    cir_soe_offset=cir_soe_offset);
+    cir_soe_offset=cir_soe_offset, norezone=norezone);
 
   status, start, msg="Generating JGWs...";
   count = numberof(cirdata.files);
