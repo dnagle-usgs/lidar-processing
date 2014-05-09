@@ -397,15 +397,16 @@ func gen_jgws_rough(photo_dir, conf_file=, elev=, camera=, cir_soe_offset=) {
   cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1,
     cir_soe_offset=cir_soe_offset);
 
-  tstamp = [];
-  timer_init, tstamp;
-  for(i = 1; i <= numberof(cirdata.files); i++) {
-    timer_tick, tstamp, i, numberof(cirdata.files);
+  status, start, msg="Generating JGWs...";
+  count = numberof(cirdata.files);
+  for(i = 1; i <= count; i++) {
     jgw_data = gen_jgw(cirdata.tans(i), elev, camera=camera);
     jgw_file = file_rootname(cirdata.files(i)) + ".jgw";
     write_jgw, jgw_file, jgw_data;
     batch_gen_prj, files=jgw_file, zone=cirdata.tans(i).zone, datum="n88";
+    status, progress, i, count;
   }
+  status, finished;
 }
 
 func gen_jgws_with_lidar(photo_dir, pbd_dir, conf_file=, elev=, camera=,
