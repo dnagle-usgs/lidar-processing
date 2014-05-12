@@ -997,10 +997,10 @@ snit::type ::eaarl::bathconf::embed {
     # Returns the command that can be used to (re)plot this window
     method plotcmd {} {
         set cmd ""
-        append cmd "ex_bath, $options(-raster), $options(-pulse), graph=1,\
+        append cmd "eaarl_ba_plot, $options(-raster), $options(-pulse),\
                 win=$options(-window), xfma=1"
         if {$options(-channel)} {
-            append cmd ", forcechannel=$options(-channel)"
+            append cmd ", channel=$options(-channel)"
         }
         append cmd "; "
         return $cmd
