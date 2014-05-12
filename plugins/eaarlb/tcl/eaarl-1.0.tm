@@ -46,17 +46,47 @@ namespace eval ::eaarl {
    proc processing_mode_changed {a b c} {
       variable pro_var_next
       variable processing_mode
+      variable usechannel_1
+      variable usechannel_2
+      variable usechannel_3
+      variable usechannel_4
+
       set mapping {
-         f fs_all v veg_all b depth_all
-         old_fs fs_all old_bathy depth_all old_veg veg_all old_cveg cveg_all
+         f fs v veg b depth
+         old_fs fs old_bathy depth old_veg veg old_cveg cveg
       }
-      if {$pro_var_next in [list fs_all depth_all veg_all cveg_all]} {
-         set pro_var_next [dict get $mapping $processing_mode]
+
+      set tokens [split $pro_var_next _]
+      set prefix [join [lrange $tokens 0 end-1] _]
+      set suffix [lindex $tokens end]
+
+      # Only change if suffix matches valid pattern
+      if {![regexp {^(all|ch(a?n)?(?!$)1?2?3?4?)$} $suffix]} return
+
+      # Only change prefix if prefix is in known list
+      if {$prefix in [list fs veg depth cveg]} {
+         set prefix [dict get $mapping $processing_mode]
       }
+
+      set oldsuffix $suffix
+      set suffix "chn"
+      if {$usechannel_1} {append suffix 1}
+      if {$usechannel_2} {append suffix 2}
+      if {$usechannel_3} {append suffix 3}
+      if {$usechannel_4} {append suffix 4}
+      if {$suffix eq "chn"} {set suffix all}
+
+      set pro_var_next "${prefix}_${suffix}"
    }
 
-   trace add variable \
-         ::eaarl::processing_mode write ::eaarl::processing_mode_changed
+   foreach var {
+      usechannel_1 usechannel_2 usechannel_3 usechannel_4 processing_mode
+   } {
+      trace add variable \
+            ::eaarl::$var write ::eaarl::processing_mode_changed
+   }
+   unset var
+
 
    proc on_load {} {
       foreach script $::l1pro::on_eaarl_load {
