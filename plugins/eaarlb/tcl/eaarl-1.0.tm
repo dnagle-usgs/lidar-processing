@@ -61,7 +61,8 @@ namespace eval ::eaarl {
       set suffix [lindex $tokens end]
 
       # Only change if suffix matches valid pattern
-      if {![regexp {^(all|ch(a?n)?(?!$)1?2?3?4?)$} $suffix]} return
+      if {![regexp {^(?:all|(ch(?:a?n)?)(?!$)1?2?3?4?)$} $suffix - chan]} return
+      if {$chan eq ""} {set chan "chn"}
 
       # Only change prefix if prefix is in known list
       if {$prefix in [list fs veg depth cveg]} {
@@ -69,12 +70,12 @@ namespace eval ::eaarl {
       }
 
       set oldsuffix $suffix
-      set suffix "chn"
+      set suffix $chan
       if {$usechannel_1} {append suffix 1}
       if {$usechannel_2} {append suffix 2}
       if {$usechannel_3} {append suffix 3}
       if {$usechannel_4} {append suffix 4}
-      if {$suffix eq "chn"} {set suffix all}
+      if {$suffix eq $chan} {set suffix all}
 
       set pro_var_next "${prefix}_${suffix}"
    }
