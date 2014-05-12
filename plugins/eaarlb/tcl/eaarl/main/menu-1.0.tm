@@ -92,13 +92,13 @@ namespace eval ::eaarl::main::menu {
         $mb add checkbutton -variable ::eaarl::autoclean_after_process \
                 -label "Automatically test and clean after processing"
         $mb add separator
-        $mb add checkbutton -variable ::forcechannel_1 \
+        $mb add checkbutton -variable ::eaarl::usechannel_1 \
                 -label "Use channel 1"
-        $mb add checkbutton -variable ::forcechannel_2 \
+        $mb add checkbutton -variable ::eaarl::usechannel_2 \
                 -label "Use channel 2"
-        $mb add checkbutton -variable ::forcechannel_3 \
+        $mb add checkbutton -variable ::eaarl::usechannel_3 \
                 -label "Use channel 3"
-        $mb add checkbutton -variable ::forcechannel_4 \
+        $mb add checkbutton -variable ::eaarl::usechannel_4 \
                 -label "Use channel 4"
         return $mb
     }

@@ -35,7 +35,7 @@ proc ::eaarl::main::gui {} {
     foreach chan {1 2 3 4} {
         ttk::checkbutton $f.chan$chan \
                 -text $chan \
-                -variable ::forcechannel_$chan
+                -variable ::eaarl::usechannel_$chan
     }
 
     ttk::label $f.minhtlbl -text "Minimum height:"

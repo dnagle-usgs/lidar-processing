@@ -3,11 +3,6 @@
 package provide eaarl::processing 1.0
 package require yorick::util
 
-set forcechannel_1 0
-set forcechannel_2 0
-set forcechannel_3 0
-set forcechannel_4 0
-
 namespace eval ::eaarl::processing {
     namespace import ::misc::appendif
     namespace import ::l1pro::file::prefix
@@ -113,7 +108,7 @@ proc ::eaarl::processing::process {} {
 
     set channels [list]
     foreach channel {1 2 3 4} {
-        if {[set ::forcechannel_$channel]} {
+        if {[set ::eaarl::usechannel_$channel]} {
             lappend channels $channel
         }
     }
@@ -146,7 +141,7 @@ proc ::eaarl::processing::process {} {
     set cmd ""
     set forced 0
     foreach channel {1 2 3 4} {
-        if {[set ::forcechannel_$channel]} {
+        if {[set ::eaarl::usechannel_$channel]} {
             if {$processing_mode ni {old_fs old_veg old_bathy}} {
                 error "Invalid processing mode: $processing_mode"
             }

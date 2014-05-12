@@ -35,6 +35,11 @@ namespace eval ::eaarl {
    variable ext_bad_att 20
    variable interactive_batch 0
 
+   variable usechannel_1 0
+   variable usechannel_2 0
+   variable usechannel_3 0
+   variable usechannel_4 0
+
    variable processing_mode f
    variable pro_var_next fs_all
 
