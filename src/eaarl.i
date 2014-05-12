@@ -9,6 +9,9 @@ if(is_func(calps_compatibility))
 if(is_void(src_path))
   src_path = pwd();
 
+// Comptibility routines for CALPS
+require, "calps_compat.i";
+
 // Configure doubles and floats so that northing values will render with two
 // decimal places interactively by default
 print_format, float="%.10g", double="%.10g";
@@ -57,9 +60,6 @@ require, "patches/2013-05-help.i";
 if(is_void(ymedian))
   ymedian = median;
 median = quick_median;
-
-// Comptibility routines for CALPS
-require, "calps_compat.i";
 
 // ALPS requires
 // These must come first, since some other functions make use of them at the
