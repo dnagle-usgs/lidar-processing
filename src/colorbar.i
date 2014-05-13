@@ -180,8 +180,8 @@ func auto_cbar(data, method, mode=, factor=) {
     cmin = rcf(z, cdelta, mode=0)(1);
     cmax = cmin + cdelta;
   } else if(method == "all") {
-    cmin = z(min);
-    cmax = z(max);
+    cmin = z(min) - 0.01;
+    cmax = z(max) + 0.01;
     cdelta = cmax - cmin;
   }
 
