@@ -109,8 +109,8 @@ skip=, filter=, verbose=) {
   if(force_zone)
     filter = dlfilter_rezone(force_zone, prev=filter);
 
-  // Necessary to avoid clobbering external variables for some reason.
-  local idx;
+  // Necessary to avoid clobbering external variables
+  local idx, data;
 
   // Generate list of input files
   if(is_void(files))
@@ -177,7 +177,7 @@ skip=, filter=, verbose=) {
     // Make sure the data variable has enough space allocated
     array_allocate, data, new_end;
 
-    data(end+1:new_end) = unref(temp);
+    data(end+1:new_end) = temp;
     end = new_end;
   }
 
@@ -187,7 +187,7 @@ skip=, filter=, verbose=) {
     return [];
   }
 
-  data = unref(data)(:end);
+  data = data(:end);
 
   if(uniq) {
     if(verbose)
