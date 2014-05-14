@@ -261,6 +261,7 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
   default, title, "Histogram";
   if(is_void(xtitle) && !is_void(mode))
     xtitle = datamode2name(mode, which="zunits");
+  default, xtitle, string(0);
   if(is_void(ytitle))
     ytitle = ["Counts", "Density"](normalize+1);
   title = regsub("_", title, "!_", all=1);
