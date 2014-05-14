@@ -313,7 +313,7 @@ func gridded_rcf(x, y, z, w, buf, n, progress=, progress_step=, progress_count=)
   // keep is our result... anything set to 1 gets kept
   keep = array(char(0), dimsof(x));
 
-  if(progress_manage)
+  if(!progress_manage)
     status, start, msg="Running RCF filter...";
 
   // iterate over each x-column
@@ -349,7 +349,7 @@ func gridded_rcf(x, y, z, w, buf, n, progress=, progress_step=, progress_count=)
       keep(idx(*result(1))) = 1;
     }
   }
-  if(progress_manage)
+  if(!progress_manage)
     status, finished;
 
   return where(keep);
