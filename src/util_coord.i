@@ -338,15 +338,17 @@ func lldist(lat0, lon0, lat1, lon1) {
   lon0 *= DEG2RAD;
   lat1 *= DEG2RAD;
   lon1 *= DEG2RAD;
-  // Calculate the central angle between the two points, using the spherical
-  // law of cosines
-  // Have to clip to -1..1, since floating point math sometimes exceeds the
-  // range acos accepts by tiny amounts.
-  tmp = sin(lat0)*sin(lat1) + cos(lat0)*cos(lat1)*cos(lon0-lon1);
-  ca = acos(max(-1, min(1, tmp)));
-  // Convert the central angle into degrees; then convert degrees into nautical
-  // miles. A nautical mile is defined as a minute of arc along a meridian, so
-  // we can approximate the conversion by multiplying by 60 (the number of
-  // arcminutes in a degree).
-  return ca * RAD2DEG * 60;
+
+  dlat = lat0-lat1;
+  dlon = lon0-lon1;
+
+  // Calculate distance using the haversine formula
+  tmp = sqrt(sin(dlat/2)^2 + cos(lat0)*cos(lat1)*sin(dlon/2)^2);
+  dist = 2 * asin(min(1, tmp));
+
+  // Convert the radian distance into degrees; then convert degrees into
+  // nautical miles. A nautical mile is defined as a minute of arc along a
+  // meridian, so we can approximate the conversion by multiplying by 60 (the
+  // number of arcminutes in a degree).
+  return dist * RAD2DEG * 60;
 }
