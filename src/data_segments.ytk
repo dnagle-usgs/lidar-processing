@@ -282,7 +282,6 @@ itcl::body SegmentedDataWindow::size_optimally {} {
       -vscrollmode none \
       -hscrollmode none
    
-   set offset [join [lrange [split [wm geometry $hull] +] 1 2] +]
    wm geometry $hull ""
 
    set hw [winfo width $hull]
@@ -297,17 +296,18 @@ itcl::body SegmentedDataWindow::size_optimally {} {
    set padh [expr {[[$f childsite] cget -pady] * 2}]
    set nh [expr {$hh + ($frh - $fsh) + $padh + 4}]
 
+   set sw [winfo screenwidth $hull]
+   set sh [winfo screenheight $hull]
+
    set too_w 0
-   set sw [expr {[winfo screenwidth $hull] - 100}]
-   if {$nw > $sw} {
-      set nw $sw
+   if {$nw > $sw - 100} {
+      set nw [expr {$sw - 100}]
       set too_w 1
    }
 
    set too_h 0
-   set sh [expr {[winfo screenheight $hull] - 100}]
-   if {$nh > $sh} {
-      set nh $sh
+   if {$nh > $sh - 100} {
+      set nh [expr {$sh - 100}]
       set too_h 1
    }
 
@@ -323,7 +323,10 @@ itcl::body SegmentedDataWindow::size_optimally {} {
       -vscrollmode dynamic \
       -hscrollmode dynamic
 
-   wm geometry $hull "${nw}x${nh}+$offset"
+   set ow [expr {($sw - $nw)/2}]
+   set oh [expr {($sh - $nh)/2}]
+
+   wm geometry $hull "${nw}x${nh}+$ow+$oh"
 
    $f configure \
       -vscrollmode none \
