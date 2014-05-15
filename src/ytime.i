@@ -484,23 +484,18 @@ func gpssow2soe(sow, refsoe) {
 
 func determine_gps_time_correction(fn, verbose=) {
 /* DOCUMENT determine_gps_time_correction(fn, verbose=)
-  This function determines the gps_time_correction automatically based on the year of the survey.
-  If survey date is before year 2006, gps_time_correction = -13.
-  If survey date is after year 2006, gps_time_correction = -14.
-  The survey date is read from the fn input variable which can either be the global data_path variable or the edb file name when the eaarl database is loaded.
-  It is assumed that the data set mission day directory has the following naming convention: yyyy-mm-dd or yyyymmdd.
+
+  This function determines the gps_time_correction automatically based on the
+  year of the survey.
+
+  The survey date is read from the fn input variable which can either be the
+  global data_path variable or the edb file name when the eaarl database is
+  loaded.
+
+  It is assumed that the data set mission day directory has the following
+  naming convention: yyyy-mm-dd or yyyymmdd.
+
   If extern gps_time_correction is set, the function returns 1, else returns 0.
-
-  Amar Nayegandhi, 12/23/2007.
-
-  Modified David Nagle 2008-12-24:
-  * Now uses gps_utc_offset from ytime.i, which will more easily accomodate
-    future leap seconds.
-  * No longer requires a mission day directory with name of yyyy-mm-dd or
-    yyyymmdd. It will parse out a yyyy-mm-dd or yyyymmdd from the last path
-    element that starts with such a sequence.
-  * Now outputs a status message so the user knows that the correction has
-    been set (or that it hasn't, if this fails).
 */
   require, "dir.i";
   extern gps_time_correction;
