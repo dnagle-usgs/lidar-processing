@@ -48,9 +48,9 @@ main( int argc, char *argv[] ) {
   int sv; 
   float pdop;
   char ns;
-  float lat;
+  double lat, lon;
   char ew;
-  float lon, alt, rms;
+  float alt, rms;
   int flag;
   float veast, vnorth, vup;
 
@@ -97,17 +97,18 @@ main( int argc, char *argv[] ) {
      fgets( str, MAXSTR-4, idf );
 //      printf( "%s", str );
     line++; good++;
-  sscanf(str,"%s %d/%d/%d %d:%d:%f %d %f %c %f %c %f %f %f %d %f %f %f",
-                     junk,
-                        &mt,&dd,&yy,
-                                 &hh,&mm,&ss,&sv,&pdop,
-                                                &ns,&lat,
-                                                      &ew,&lon,
-                                                            &alt,
-                                                               &rms,
-                                                                  &flag,
-                                                                     &veast,&vnorth,
-                                                                            &vup); 
+  sscanf(str,"%s %d/%d/%d %d:%d:%f %d %f %c %lf %c %lf %f %f %d %f %f %f",
+              junk,
+                 &mt,&dd,&yy,
+                          &hh,&mm,&ss,
+                                   &sv,&pdop,
+                                         &ns,&lat,
+                                                &ew,&lon,
+                                                      &alt,
+                                                         &rms,
+                                                            &flag,
+                                                               &veast,&vnorth,
+                                                                     &vup); 
 
   sod = hh*3600 + mm*60 + ss;
   lat = ( toupper(ns) == 'N' ) ?  lat : -lat;
