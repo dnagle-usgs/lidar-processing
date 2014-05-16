@@ -167,3 +167,37 @@ func viewport_justify(justify, &x, &y) {
 
   return [x,y];
 }
+
+
+struct LEGEND {
+  string label;
+  string color;
+}
+
+func legend_add(color, label ) {
+
+  local t;
+  t= LEGEND();
+  t.label = label;
+  t.color = color;
+
+  if ( is_void(_legend)) _legend = t;
+  else grow, _legend, t;
+}
+
+func legend_show(junk) {
+  if(!is_void(_legend)) {
+    vp = viewport();
+    for (i=1, yy=.01; i <= numberof(_legend); ++i, yy += .02 ) {
+      plt,
+        _legend(i).label,  vp(1) + .01, vp(4) - yy,
+        justify="LT", height=12,
+        color=_legend(i).color;
+    }
+  }
+  // Reset values for next call;
+  _legend = [];
+
+}
+
+
