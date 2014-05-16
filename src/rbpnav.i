@@ -297,3 +297,205 @@ func fs2pnav(fs) {
   pn.sod = fs.soe - offset;
   return pn;
 }
+
+
+func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=) {
+  /* DOCUMENT pnav_diff_alt(pn1, pn2)
+   */
+
+  if ( is_void(swin) ) swin = 20;
+  if ( is_void(iwin) ) iwin =  4;
+
+  window, swin+woff; fma;   // Plot track in UTM
+
+  w1 = set_intersection(pn1.sod, pn2.sod, idx=1);
+  w2 = set_intersection(pn2.sod, pn1.sod, idx=1);
+  pn1=pn1(w1);
+  pn2=pn2(w2);
+  // allof(pn1.sod == pn2.sod);
+
+  pn1.alt = pn1.alt - pn2.alt;
+
+  if ( !is_void(xfma) ) fma;
+
+  legend_add, "red", "delta Altitude";
+  legend_show;
+  plg, pn1.alt, pn1.sod, color="red";
+  xytitles, "Seconds of day", "Meters", [-0.005, -0.01];
+
+  grow, title, "Trajectory Altitude Difference";
+  title = strjoin( title, "\n");
+  pltitle, title;
+
+  return pn1;
+}
+
+func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
+/* DOCUMENT pnav_diff_latlon(pn1, pn2)
+ */
+  extern u1, u2, ur, p1, p2;
+  w1 = set_intersection(pn1.sod, pn2.sod, idx=1);
+  w2 = set_intersection(pn2.sod, pn1.sod, idx=1);
+  pn1=pn1(w1);
+  pn2=pn2(w2);
+  // info, pn1; info, pn2;
+  // allof(pn1.sod == pn2.sod);
+
+  if ( is_void(swin) ) swin = 30;
+  if ( is_void(iwin) ) iwin =  4;
+
+  llr = lldist(pn1.lat, pn1.lon, pn2.lat, pn2.lon);
+  llr *= 1852.0;
+
+// llsr = slldist(pn1.lat, pn1.lon, pn2.lat, pn2.lon);
+// llsr *= 1852.0;
+
+// now do it again using utm
+  u1 = ll2utm(pn1.lat, pn1.lon);
+  u2 = ll2utm(pn2.lat, pn2.lon);
+
+  window, swin+woff; swin += iwin; fma;   // Plot track in UTM
+  // plmk(u1(1,), u1(2,), color="blue");
+  // plmk(u2(1,), u2(2,), color="red" );
+
+  legend_add, "green", "lat";
+  legend_add, "cyan",  "lon";
+  plmk, ((pn1.lat - pn2.lat) * 111120), pn1.sod, color="green";
+  plmk, ((pn1.lon - pn2.lon) * 111120), pn1.sod, color="cyan";
+
+  ttitle = title;
+  grow, ttitle, "Delta Lat / Delta Lon";
+  ttitle = strjoin( ttitle, "\n");
+  pltitle, ttitle;
+
+  legend_show;
+
+  // ur = pow((u2(1,)-u1(1,)),2.0) + pow((u2(2,)-u1(2,)),2.0);
+  // info, u1; info, u2;
+  // u2(1,7000:7005); u1(1,7000:7005);
+  t1 = u2(1,) - u1(1,);
+  t2 = u2(2,) - u1(2,);
+  window, swin+woff; swin += iwin; fma;  // Plot delta UTM lat / lon
+  legend_add, "red",    "EAST";       // XYZZY - which is which??
+  legend_add, "green", "NORTH";
+  plmk, t1, pn1.sod, color="red";
+  plmk, t2, pn1.sod, color="green";
+  legend_show;
+  t1 = t1^2;
+  t2 = t2^2;
+  ur = (t1+t2) ^ .5;
+  ttitle = title;
+  grow, ttitle, "UTM differences";
+  ttitle = strjoin( ttitle, "\n");
+  pltitle, ttitle;
+
+
+  window, swin+woff; swin += iwin;
+  if ( !is_void(xfma) ) fma;
+  legend_add, "red", "latlon range";
+  plmk, llr, pn1.sod, color="red";
+  // plmk, llsr, pn1.sod, color="cyan";
+  legend_add, "blue", "utm range";
+  plmk, ur,  pn1.sod, color="blue";
+  legend_show;
+  xytitles, "Seconds of day", "Meters", [-0.005, -0.01];
+
+  ttitle = title;
+  grow, ttitle, "Trajectory Horizontal Difference";
+  ttitle = strjoin( ttitle, "\n");
+  pltitle, ttitle;
+
+  window, swin+woff; swin += iwin; fma;  // delta lat
+  plmk, pn1.lat-pn2.lat, pn1.sod;
+  ttitle = title;
+  grow, ttitle, "Lat1 - Lat2";
+  ttitle = strjoin( ttitle, "\n");
+  pltitle, ttitle;
+
+  hist_data_plot, llr, win=46+woff,
+    title="Delta Range Histogram",
+    xtitle="Range",
+    ytitle="Counts",
+    dofma=1,
+    binsize=.001;
+
+  return llr;
+}
+
+
+func pnav_diff_base_latlon(pn1, pn2, lat, lon, plot=, xfma=, swin=, iwin=, woff=) {
+  /* DOCUMENT pnav_diff_latlon(pn1, pn2)
+   */
+  extern u1, u2, ur, p1, p2;
+
+  w1 = set_intersection(pn1.sod, pn2.sod, idx=1);
+  w2 = set_intersection(pn2.sod, pn1.sod, idx=1);
+  pn1=pn1(w1);
+  pn2=pn2(w2);
+
+  // allof(pn1.sod == pn2.sod);
+
+  p1 = pn1;
+  p2 = pn2;
+
+  if ( is_void(swin) ) swin = 50;
+  if ( is_void(iwin) ) iwin =  4;
+
+  // lat/lon range  or delta ll
+  llr = lldist(pn1.lat, pn1.lon, pn2.lat, pn2.lon);
+  llr *= 1852.0;
+
+  // lat/base range
+  lbr = lldist(pn1.lat, pn1.lon, lat, lon);
+  lbr *= 1.8520;
+
+  // delta altitude
+  pn1.alt = pn1.alt - pn2.alt;
+
+  // Plot delta position from base in meters
+  // window, swin+woff; swin += iwin; fma;
+  // xytitles, "Seconds of day", "Meters", [-0.005, -0.01];
+  // pltitle, "delta lat and lon from Base";
+  //
+  // plmk( ((pn1.lat - lat) * 111120), pn1.sod, color="green");
+  // plmk( ((pn1.lon - lon) * 111120), pn1.sod, color="cyan");
+
+  window, swin+woff, style="work2.gs"; swin += iwin; fma;
+
+  plsys,1;
+  legend_add, "blue", "Pdop";
+  legend_add, "red",  "altitude";
+  plmk, pn1.pdop, pn1.sod, color="blue";
+  plsys,2;
+  plg, pn1.alt, pn1.sod, color="red";
+  legend_show;
+  xytitles, "Seconds of day", "Meters", [ 0.505, -0.01];
+
+  ttitle = title;
+  grow, ttitle, "Trajectory Altitude Difference";
+  ttitle = strjoin( ttitle, "\n");
+  pltitle, ttitle;
+
+  window, swin+woff, style="work2.gs"; swin += iwin;
+  if ( !is_void(xfma) ) fma;
+
+  legend_add, "blue", "Pdop";
+  legend_add, "red", "Range";
+  legend_show;
+
+  // plg, pn1.alt, lbr, color="red";
+  plsys,1;
+  plmk, pn1.pdop, lbr, color="blue";
+  plsys,2;
+  plmk, pn1.alt, lbr, color="red";
+  // plmk, llsr, pn1.sod, color="cyan";
+  xytitles, "Range from Base(km)", "Meters", [0.505, -0.01];
+
+  ttitle = title;
+  grow, ttitle, "Trajectory Range Difference";
+  ttitle = strjoin( ttitle, "\n");
+  pltitle, ttitle;
+
+  return llr;
+}
+
