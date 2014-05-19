@@ -270,6 +270,63 @@ func eaarl_ba_plot(raster, pulse, channel=, win=, xfma=) {
   default, win, 4;
   default, xfma, 1;
 
+  wbkp = current_window();
+  window, win;
+  gridxy, 2, 2;
+  if(xfma) fma;
+
+  tkcmd, swrite(format=
+    "::eaarl::bathconf::config %d -raster %d -pulse %d -channel %d -group {%s}",
+      win, raster, pulse, max(channel, 1),
+      bathconf(settings_group, max(channel, 1)));
+
+  msg = [];
+  result = ba_analyze_pulse(raster, pulse, msg, channel=channel, plot=1);
+
+  if(!is_void(msg)) {
+    port = viewport();
+    plt, strwrap(msg, width=25, paragraph="\n"), port(2), port(4),
+      justify="RT", tosys=0, color="red";
+  }
+
+  if(is_void(result)) {
+    write, msg;
+    window_select, wbkp;
+    return;
+  }
+
+  tkcmd, swrite(format=
+    "::eaarl::bathconf::config %d -channel %d -group {%s}",
+    win, channel, bathconf(settings_group, channel));
+
+  pltitle, swrite(format="rn:%d pulse:%d chan:%d", raster, pulse, channel);
+  xytitles, "Sample Number", "Sample Counts (Relative Intensity)";
+
+  window_select, wbkp;
+
+  write, format=" lrx: %.2f\n fint: %.2f\n lint: %.2f\n",
+    double(result.lrx), double(result.fint), double(result.lint);
+  if(!is_void(msg)) write, msg;
+}
+
+func ba_analyze_pulse(raster, pulse, &msg, channel=, plot=) {
+/* DOCUMENT result = ba_analyze_pulse(raster, pulse, msg, channel=, plot=)
+  Executes the bathy algorithm for a single pulse.
+
+  Parameters:
+    raster - Raster number to use.
+    pulse - Pulse number to use.
+    msg - Output parameter containing an error/notice message. Will be [] if no
+      message applies.
+  Options:
+    channel= Channel to force use of. Default is 0, which means to auto-select.
+    plot= Passes through to underlying rx_wf function to enable plotting. (If
+      you want to plot bathy, do not use this function directly. Use
+      eaarl_ba_plot instead.)
+*/
+  default, channel, 0;
+  default, plot, 0;
+
   local conf;
 
   ba_rx_channel = eaarl_ba_rx_eaarla_channel;
@@ -278,22 +335,14 @@ func eaarl_ba_plot(raster, pulse, channel=, win=, xfma=) {
   // Allow functions to be overridden via hook
   restore, hook_invoke("eaarl_ba_rx_funcs", save(ba_rx_channel, ba_rx_wf));
 
-  wbkp = current_window();
-  window, win;
-
-  tkcmd, swrite(format=
-    "::eaarl::bathconf::config %d -raster %d -pulse %d -channel %d -group {%s}",
-      win, raster, pulse, max(channel, 1),
-      bathconf(settings_group, max(channel, 1)));
-
   pulses = decode_rasters(raster, raster);
   w = where(pulses.pulse == pulse);
   if(!numberof(w)) {
-    write, format=" Aborting: raster %d does not contain pulse %d\n",
-      raster, pulse;
-    window_select, wbkp;
+    msg = swrite(format="raster %d does not contain pulse %d\n",
+      raster, pulse);
     return;
   }
+
   pulses = obj_index(pulses, w(1));
   if(channel) {
     conf = bathconf(settings, channel);
@@ -304,29 +353,8 @@ func eaarl_ba_plot(raster, pulse, channel=, win=, xfma=) {
   conf = obj_copy(conf);
   save, conf, channel;
 
-  tkcmd, swrite(format=
-    "::eaarl::bathconf::config %d -channel %d -group {%s}",
-    win, channel, bathconf(settings_group, channel));
-
-  gridxy, 2, 2;
-  if(xfma) fma;
-
   msg = [];
-  result = ba_rx_wf(*pulses.rx(channel), conf, msg, plot=1);
-
-  pltitle, swrite(format="rn:%d pulse:%d chan:%d", raster, pulse, channel);
-  xytitles, "Sample Number", "Sample Counts (Relative Intensity)";
-
-  if(!is_void(msg)) {
-    port = viewport();
-    plt, strwrap(msg, width=25, paragraph="\n"), port(2), port(4),
-      justify="RT", tosys=0, color="red";
-  }
-
-  window_select, wbkp;
-
-  write, format="lrx: %.2f\nfint: %.2f\nlint: %.2f\n",
-    double(result.lrx), double(result.fint), double(result.lint);
+  return ba_rx_wf(*pulses.rx(channel), conf, msg, plot=plot);
 }
 
 func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
