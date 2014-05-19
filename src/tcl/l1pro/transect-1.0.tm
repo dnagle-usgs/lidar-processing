@@ -196,7 +196,7 @@ namespace eval l1pro::transect {
         set settings($row,var) $::pro_var
         set settings($row,userecall) 0
         set settings($row,recall) 0
-        set settings($row,width) 3.0
+        set settings($row,width) 1.0
         set settings($row,iwin) 5
         set settings($row,owin) 2
         set settings($row,marker) 1
@@ -437,7 +437,7 @@ namespace eval l1pro::transect {
         tooltip ${p}width \
                 "The width of the transect, in meters.
 
-                A width of 3.0 means that points within 1.5 meters on either
+                A width of 1.0 means that points within .5 meters on either
                 side of the line will be used."
         tooltip ${p}iwin \
                 "Input window. This is the window where your point cloud is
