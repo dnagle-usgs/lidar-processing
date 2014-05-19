@@ -365,11 +365,12 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
       lrx - location of bottom in waveform
       fint - intensity at surface
       lint - intensity at bottom
+      candidate_lrx - candidate location of bottom in waveform
 */
   conf = obj_copy(conf);
   sample_interval = 1.0;
 
-  result = save(lrx=0, fint=0, lint=0);
+  result = save(lrx=0, fint=0, lint=0, candidate_lrx=0);
 
   // Retrieve the waveform, figure out the max intensity value, and remove
   // bias
@@ -438,7 +439,7 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
   bathy_compensate_saturation, saturated, bottom_peak;
 
   bottom_intensity = wf_decay(bottom_peak);
-  save, result, lint = wf(bottom_peak);
+  save, result, candidate_lrx=bottom_peak, lint=wf(bottom_peak);
 
   // validate bottom
   msg = [];
