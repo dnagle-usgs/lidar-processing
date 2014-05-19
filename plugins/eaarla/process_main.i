@@ -40,6 +40,8 @@ func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, ptime=, opts=) {
   Options:
     mode= Processing mode.
         mode="f"    Process for first surface (default)
+        mode="b"    Process for bathymetry (submerged topography)
+        mode="v"    Process for vegetation (bare earth)
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
     channel= Specifies which channel or channels to process. If omitted or set
@@ -91,6 +93,8 @@ func make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=) {
   Options for processing:
     mode= Processing mode.
         mode="f"    Process for first surface (default)
+        mode="b"    Process for bathymetry (submerged topography)
+        mode="v"    Process for vegetation (bare earth)
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
     channel= Specifies which channel or channels to process. If omitted or set
