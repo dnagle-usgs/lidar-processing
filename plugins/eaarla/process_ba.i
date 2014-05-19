@@ -333,7 +333,7 @@ func ba_analyze_pulse(raster, pulse, &msg, channel=, plot=) {
   pulses = decode_rasters(raster, raster);
   w = where(pulses.pulse == pulse);
   if(!numberof(w)) {
-    msg = swrite(format="raster %d does not contain pulse %d\n",
+    msg = swrite(format="raster %d does not contain pulse %d",
       raster, pulse);
     return;
   }
