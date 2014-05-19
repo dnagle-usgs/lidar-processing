@@ -349,19 +349,18 @@ bathyoffset=, bathyverbose=, bg=) {
     for(pulse = 1; pulse <= 120; pulse++) {
       if(skip(pulse)) continue;
       msg = [];
-      depth = ex_bath(rn, pulse, msg, forcechannel=channel, graph=0, verbose=0,
-        keeprejected=1);
-      if(depth.idx > -10000) {
-        bottom = bathyoffset + bathy_bias - bias - depth.idx;
-        bottom = apply_depth_scale(bottom, units=units, autoshift=!geo);
-        if(geo) bottom += z(pulse);
-        if(is_void(msg)) {
-          bgood++;
-          plmk, bottom, pulse+.5, color="green", marker=7, msize=0.25;
-        } else {
-          bbad++;
-          plmk, bottom, pulse+.5, color="white", marker=6, msize=0.25;
-        }
+      depth = ba_analyze_pulse(rn, pulse, msg, channel=channel, plot=0);
+      if(is_void(depth)) continue;
+
+      bottom = bathyoffset + bathy_bias - bias - depth.candidate_lrx;
+      bottom = apply_depth_scale(bottom, units=units, autoshift=!geo);
+      if(geo) bottom += z(pulse);
+      if(is_void(msg)) {
+        bgood++;
+        plmk, bottom, pulse+.5, color="green", marker=7, msize=0.25;
+      } else {
+        bbad++;
+        plmk, bottom, pulse+.5, color="white", marker=6, msize=0.25;
       }
     }
     if(bathyverbose) {
