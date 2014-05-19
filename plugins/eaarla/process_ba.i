@@ -375,8 +375,9 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
   // Retrieve the waveform, figure out the max intensity value, and remove
   // bias
   wf = float(~(rx));
-  maxint = 255 - long(wf(1));
-  wf -= wf(1);
+  bias = wf(1:min(15,numberof(wf)))(min);
+  maxint = 255 - long(bias);
+  wf -= bias;
 
   // Apply moving average to smooth wf
   if(conf.smoothwf > 0) {
