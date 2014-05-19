@@ -300,13 +300,27 @@ func fs2pnav(fs) {
 
 
 func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=) {
-  /* DOCUMENT pnav_diff_alt(pn1, pn2)
-   */
+/* DOCUMENT pnav_diff_alt(pn1, pn2)
+   Given two trajectories produced for the same flight,
+   compute the altitude difference for each identical point
+   in time.
+
+   -xfma=[0|1]
+   -swin=N : specify the starting window number for each plot.
+             This function only produces one plot window, but this keeps
+             it consistent with the other pnav_diff_ functions that generate
+             multiple plot windows.
+   -woff=N : [0-3] added to swin when comparing more than one pair
+             of trajectories.
+   -title="TITLE"
+*/
 
   if ( is_void(swin) ) swin = 20;
   if ( is_void(iwin) ) iwin =  4;
+  if ( is_void(woff) ) woff =  0;
 
-  window, swin+woff; fma;   // Plot track in UTM
+  window, swin+woff;   // Plot track in UTM
+  if ( !is_void(xfma) ) fma;
 
   w1 = set_intersection(pn1.sod, pn2.sod, idx=1);
   w2 = set_intersection(pn2.sod, pn1.sod, idx=1);
@@ -316,7 +330,6 @@ func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=) {
 
   pn1.alt = pn1.alt - pn2.alt;
 
-  if ( !is_void(xfma) ) fma;
 
   legend_add, "red", "delta Altitude";
   legend_show;
@@ -332,6 +345,22 @@ func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=) {
 
 func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
 /* DOCUMENT pnav_diff_latlon(pn1, pn2)
+   Given two trajectories produced for the same flight,
+   compute the lat/lon positional difference for each identical point
+   in time.
+
+   -xfma=[0|1]
+   -swin=N : specify the starting window number for each plot.
+             This function produces 4 plot windows.
+   -woff=N : [0-3] added to swin when comparing more than one pair
+             of trajectories.
+   -title="TITLE"
+
+   4 plots are generated.
+   Plot 1 shows the differences between lat and lon individually.
+   Plot 2 is the same as plot 1, but computed using UTM values.
+   Plot 3 is the delta range vs seconds-of-day.
+   Plot 4 shows a histogram of the delta values.
  */
   extern u1, u2, ur, p1, p2;
   w1 = set_intersection(pn1.sod, pn2.sod, idx=1);
@@ -343,6 +372,7 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
 
   if ( is_void(swin) ) swin = 30;
   if ( is_void(iwin) ) iwin =  4;
+  if ( is_void(woff) ) woff =  0;
 
   llr = lldist(pn1.lat, pn1.lon, pn2.lat, pn2.lon);
   llr *= 1852.0;
@@ -354,7 +384,8 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
   u1 = ll2utm(pn1.lat, pn1.lon);
   u2 = ll2utm(pn2.lat, pn2.lon);
 
-  window, swin+woff; swin += iwin; fma;   // Plot track in UTM
+  window, swin+woff; swin += iwin;    // Plot track in UTM
+  if ( !is_void(xfma) ) fma;
   // plmk(u1(1,), u1(2,), color="blue");
   // plmk(u2(1,), u2(2,), color="red" );
 
@@ -375,7 +406,8 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
   // u2(1,7000:7005); u1(1,7000:7005);
   t1 = u2(1,) - u1(1,);
   t2 = u2(2,) - u1(2,);
-  window, swin+woff; swin += iwin; fma;  // Plot delta UTM lat / lon
+  window, swin+woff; swin += iwin;    // Plot delta UTM lat / lon
+  if ( !is_void(xfma) ) fma;
   legend_add, "red",    "EAST";       // XYZZY - which is which??
   legend_add, "green", "NORTH";
   plmk, t1, pn1.sod, color="red";
@@ -405,13 +437,6 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
   ttitle = strjoin( ttitle, "\n");
   pltitle, ttitle;
 
-  window, swin+woff; swin += iwin; fma;  // delta lat
-  plmk, pn1.lat-pn2.lat, pn1.sod;
-  ttitle = title;
-  grow, ttitle, "Lat1 - Lat2";
-  ttitle = strjoin( ttitle, "\n");
-  pltitle, ttitle;
-
   hist_data_plot, llr, win=46+woff,
     title="Delta Range Histogram",
     xtitle="Range",
@@ -424,8 +449,19 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
 
 
 func pnav_diff_base_latlon(pn1, pn2, lat, lon, plot=, xfma=, swin=, iwin=, woff=) {
-  /* DOCUMENT pnav_diff_latlon(pn1, pn2)
-   */
+/* DOCUMENT pnav_diff_base_latlon(pn1, pn2, lat, lon)
+   Given two trajectories produced for the same flight and the lat/lon values
+   for the base station, compute the lat/lon positional difference for each
+   identical point in time and then plots that value relative to the range
+   from the base station.
+
+   -xfma=[0|1]
+   -swin=N : specify the starting window number for each plot.
+             This function produces 4 plot windows.
+   -woff=N : [0-3] added to swin when comparing more than one pair
+             of trajectories.
+   -title="TITLE"
+*/
   extern u1, u2, ur, p1, p2;
 
   w1 = set_intersection(pn1.sod, pn2.sod, idx=1);
@@ -440,6 +476,7 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, plot=, xfma=, swin=, iwin=, woff=
 
   if ( is_void(swin) ) swin = 50;
   if ( is_void(iwin) ) iwin =  4;
+  if ( is_void(woff) ) woff =  0;
 
   // lat/lon range  or delta ll
   llr = lldist(pn1.lat, pn1.lon, pn2.lat, pn2.lon);
@@ -460,7 +497,8 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, plot=, xfma=, swin=, iwin=, woff=
   // plmk( ((pn1.lat - lat) * 111120), pn1.sod, color="green");
   // plmk( ((pn1.lon - lon) * 111120), pn1.sod, color="cyan");
 
-  window, swin+woff, style="work2.gs"; swin += iwin; fma;
+  window, swin+woff, style="work2.gs"; swin += iwin;
+  if ( !is_void(xfma) ) fma;
 
   plsys,1;
   legend_add, "blue", "Pdop";
