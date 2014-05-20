@@ -379,14 +379,14 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
   maxint = 255 - long(bias);
   wf -= bias;
 
-  // Apply moving average to smooth wf
-  if(conf.smoothwf > 0) {
-    wf = moving_average(wf, bin=(conf.smoothwf*2+1), taper=1);
-  }
-
   if(plot) {
     plmk, wf, msize=.275, marker=1, color="black";
     plg, wf, color="black", width=4;
+  }
+
+  // Apply moving average to smooth wf
+  if(conf.smoothwf > 0) {
+    wf = moving_average(wf, bin=(conf.smoothwf*2+1), taper=1);
   }
 
   saturated = wf == maxint;
