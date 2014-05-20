@@ -320,7 +320,7 @@ func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=) {
   if ( is_void(woff) ) woff =  0;
 
   window, swin+woff;   // Plot track in UTM
-  if ( !is_void(xfma) ) fma;
+  if(xfma) fma;
 
   w1 = set_intersection(pn1.sod, pn2.sod, idx=1);
   w2 = set_intersection(pn2.sod, pn1.sod, idx=1);
@@ -385,7 +385,7 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
   u2 = ll2utm(pn2.lat, pn2.lon);
 
   window, swin+woff; swin += iwin;    // Plot track in UTM
-  if ( !is_void(xfma) ) fma;
+  if(xfma) fma;
   // plmk(u1(1,), u1(2,), color="blue");
   // plmk(u2(1,), u2(2,), color="red" );
 
@@ -407,7 +407,7 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
   t1 = u2(1,) - u1(1,);
   t2 = u2(2,) - u1(2,);
   window, swin+woff; swin += iwin;    // Plot delta UTM lat / lon
-  if ( !is_void(xfma) ) fma;
+  if(xfma) fma;
   legend_add, "red",    "EAST";       // XYZZY - which is which??
   legend_add, "green", "NORTH";
   plmk, t1, pn1.sod, color="red";
@@ -423,7 +423,7 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
 
 
   window, swin+woff; swin += iwin;
-  if ( !is_void(xfma) ) fma;
+  if(xfma) fma;
   legend_add, "red", "latlon range";
   plmk, llr, pn1.sod, color="red";
   // plmk, llsr, pn1.sod, color="cyan";
@@ -498,7 +498,7 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, plot=, xfma=, swin=, iwin=, woff=
   // plmk( ((pn1.lon - lon) * 111120), pn1.sod, color="cyan");
 
   window, swin+woff, style="work2.gs"; swin += iwin;
-  if ( !is_void(xfma) ) fma;
+  if(xfma) fma;
 
   plsys,1;
   legend_add, "blue", "Pdop";
@@ -515,7 +515,7 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, plot=, xfma=, swin=, iwin=, woff=
   pltitle, ttitle;
 
   window, swin+woff, style="work2.gs"; swin += iwin;
-  if ( !is_void(xfma) ) fma;
+  if(xfma) fma;
 
   legend_add, "blue", "Pdop";
   legend_add, "red", "Range";
@@ -536,4 +536,3 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, plot=, xfma=, swin=, iwin=, woff=
 
   return llr;
 }
-
