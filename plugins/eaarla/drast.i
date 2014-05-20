@@ -351,8 +351,9 @@ bathyoffset=, bathyverbose=, bg=) {
       msg = [];
       depth = ba_analyze_pulse(rn, pulse, msg, channel=channel, plot=0);
       if(is_void(depth)) continue;
+      if(!depth.candidate_lrx) continue;
 
-      bottom = bathyoffset + bathy_bias - bias - depth.candidate_lrx;
+      bottom = bathyoffset - bias - depth.candidate_lrx;
       bottom = apply_depth_scale(bottom, units=units, autoshift=!geo);
       if(geo) bottom += z(pulse);
       if(is_void(msg)) {
