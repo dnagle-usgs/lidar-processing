@@ -168,36 +168,76 @@ func viewport_justify(justify, &x, &y) {
   return [x,y];
 }
 
+local legend;
+/* DOCUMENT
+    legend, reset;
+    legend, add, "<color>", "<label>";
+    legend, show;
 
-struct LEGEND {
-  string label;
-  string color;
+  These functions are used for putting a color-coded legend into your plot. For
+  example, if your plot has several lines in different colors, you might put a
+  legend on the plot that shows what each color represents.
+
+  legend, reset
+    This function resets the internal data. It is recommended to use this at
+    the beginning in case some earlier invocation didn't clean up after itself.
+
+  legend, add, "<color>", "<label>"
+    For each item that you want to add to the legend, call this function and
+    specify the color and the label. This will not get plotted immediately.
+    Instead, the information is stored locally until you call the show method.
+
+  legend, show
+    Shows the currently defined legend information, then clears that info out
+    (via reset). If you want to display the legend again later, you will have
+    to rebuild it. The legend will be placed in the top left corner of the
+    current window.
+*/
+
+scratch = save(scratch, tmp);
+legend = save(labels=[], colors=[]);
+
+save, scratch, legend_add;
+func legend_add(color, label) {
+  use, labels;
+  use, colors;
+
+  grow, colors, color;
+  grow, labels, label;
 }
+save, legend, add=legend_add;
 
-func legend_add(color, label ) {
+save, scratch, legend_reset;
+func legend_reset(void) {
+  use, labels;
+  use, colors;
 
-  local t;
-  t= LEGEND();
-  t.label = label;
-  t.color = color;
-
-  if ( is_void(_legend)) _legend = t;
-  else grow, _legend, t;
+  labels = colors = [];
 }
+save, legend, reset=legend_reset;
 
-func legend_show(junk) {
-  if(!is_void(_legend)) {
-    vp = viewport();
-    for (i=1, yy=.01; i <= numberof(_legend); ++i, yy += .02 ) {
-      plt,
-        _legend(i).label,  vp(1) + .01, vp(4) - yy,
-        justify="LT", height=12,
-        color=_legend(i).color;
-    }
+save, scratch, legend_show;
+func legend_show(void) {
+  use, labels;
+  use, colors;
+
+  // This should never happen:
+  if(numberof(labels) != numberof(colors))
+    error, "internal data corruption";
+
+  // Abort if no legends set
+  if(!numberof(labels)) return;
+
+  vp = viewport();
+  count = numberof(labels);
+  for(i=1, yy=.01; i <= count; ++i, yy += .02) {
+    plt, labels(i), vp(1) + .01, vp(4) - yy,
+      justify="LT", height=12, color=colors(i);
   }
-  // Reset values for next call;
-  _legend = [];
 
+  // Clear data now that they're plotted
+  use_method, reset;
 }
+save, legend, show=legend_show;
 
-
+restore, scratch;
