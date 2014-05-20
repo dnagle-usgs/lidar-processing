@@ -219,8 +219,8 @@ INPUT:
   }
 }
 
-func sel_rgn_by_shapefile(data, shapefile, buffer=) {
-/* DOCUMENT sel_rgn_by_shapefile(data, shapefile, buffer=)
+func sel_rgn_by_shapefile(data, shapefile, mode=, buffer=, invert=, alg=) {
+/* DOCUMENT sel_rgn_by_shapefile(data, shapefile, mode=, buffer=, invert=, alg=)
 
   Selects a region defined by the supplied Global Mapper formatted
   ascii shapefile. Handles complex shapefiles i.e. those with multiple
@@ -230,26 +230,49 @@ func sel_rgn_by_shapefile(data, shapefile, buffer=) {
     data: Input data array
     shapefile: Name of shapefile to use for data extraction
   Options:
+    mode= Mode of data (fs, be, ba).
     buffer= A buffer in meters to apply around each polygon in the shapefile.
       When this option is used, the convex hull of each polygon + this buffer
       (in meters) is calculated and used. Holes are ignored.
+    invert= By default, points within the shapefile polys will be kept. If
+      invert=1, then the selection is inverted: points -outside- the shapefile
+      polys will be kept instead.
+    alg= Specifies the point-in-poly algorithm to use.
+        alg="sum"   Uses the sum-of-angles algorithm
+        alg="ray"   Uses the ray-casting algorithm (default)
+      The ray casting algorithm is much, much faster than the sum-of-angles
+      algorithm. However, the two algorithms differ in how they handle areas of
+      self-intersection: "sum" will consider such regions as inside the poly
+      whereas "ray" will vary depending on how many times the poly
+      self-intersects for that sub-region.
 */
   default, buffer, 0;
   shp = read_ascii_shapefile(shapefile, meta);
-  tmp_data = data_out = [];
 
-  for (i=1; i<=numberof(shp); i++) {
-    if (has_member(meta(noop(i)), "ISLAND")) {
+  default, alg, "ray";
+  test = [];
+  if(alg == "ray") test = testPoly2;
+  if(alg == "sum") test = testPoly;
+  if(is_void(alg)) error, "invalid alg= specified";
+
+  x = y = [];
+  data2xyz, data, x, y, mode=mode;
+
+  keep = array(0, numberof(data));
+  for(i=1; i<=numberof(shp); i++) {
+    if(has_member(meta(noop(i)), "ISLAND")) {
       if(!buffer) {
-        data_out = sel_data_rgn(data_out, mode=3, rgn=*shp(i), exclude=1,
-          noplot=1, silent=1);
+        idx = test(*shp(i), x, y);
+        if(numberof(idx)) keep(idx) = 0;
       }
     } else {
       ply = buffer ? buffer_hull(*shp(i), buffer) : *shp(i);
-      grow, data_out, sel_data_rgn(data, mode=3, rgn=ply, noplot=1, silent=1);
+      idx = test(*shp(i), x, y);
+      if(numberof(idx)) keep(idx) = 1;
     }
   }
-  return data_out;
+  if(invert) keep = !keep;
+  return anyof(keep) ? data(where(keep)) : [];
 }
 
 func sel_data_ptRadius(data, point=, radius=, win=, msize=, retindx=, silent=) {
