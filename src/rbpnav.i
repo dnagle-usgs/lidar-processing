@@ -298,7 +298,6 @@ func fs2pnav(fs) {
   return pn;
 }
 
-
 func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=) {
 /* DOCUMENT pnav_diff_alt(pn1, pn2)
    Given two trajectories produced for the same flight,
@@ -314,10 +313,9 @@ func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=) {
              of trajectories.
    -title="TITLE"
 */
-
-  if ( is_void(swin) ) swin = 20;
-  if ( is_void(iwin) ) iwin =  4;
-  if ( is_void(woff) ) woff =  0;
+  default, swin, 20;
+  default, iwin, 4;
+  default, woff, 0;
 
   window, swin+woff;   // Plot track in UTM
   if(xfma) fma;
@@ -370,9 +368,9 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
   // info, pn1; info, pn2;
   // allof(pn1.sod == pn2.sod);
 
-  if ( is_void(swin) ) swin = 30;
-  if ( is_void(iwin) ) iwin =  4;
-  if ( is_void(woff) ) woff =  0;
+  default, swin, 30;
+  default, iwin, 4;
+  default, woff, 0;
 
   llr = lldist(pn1.lat, pn1.lon, pn2.lat, pn2.lon);
   llr *= 1852.0;
@@ -474,9 +472,9 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, plot=, xfma=, swin=, iwin=, woff=
   p1 = pn1;
   p2 = pn2;
 
-  if ( is_void(swin) ) swin = 50;
-  if ( is_void(iwin) ) iwin =  4;
-  if ( is_void(woff) ) woff =  0;
+  default, swin, 50;
+  default, iwin, 4;
+  default, woff, 0;
 
   // lat/lon range  or delta ll
   llr = lldist(pn1.lat, pn1.lon, pn2.lat, pn2.lon);
