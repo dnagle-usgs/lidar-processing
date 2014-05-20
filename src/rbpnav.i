@@ -329,8 +329,9 @@ func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=) {
   pn1.alt = pn1.alt - pn2.alt;
 
 
-  legend_add, "red", "delta Altitude";
-  legend_show;
+  legend, reset;
+  legend, add, "red", "delta Altitude";
+  legend, show;
   plg, pn1.alt, pn1.sod, color="red";
   xytitles, "Seconds of day", "Meters", [-0.005, -0.01];
 
@@ -387,8 +388,9 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
   // plmk(u1(1,), u1(2,), color="blue");
   // plmk(u2(1,), u2(2,), color="red" );
 
-  legend_add, "green", "lat";
-  legend_add, "cyan",  "lon";
+  legend, reset;
+  legend, add, "green", "lat";
+  legend, add, "cyan",  "lon";
   plmk, ((pn1.lat - pn2.lat) * 111120), pn1.sod, color="green";
   plmk, ((pn1.lon - pn2.lon) * 111120), pn1.sod, color="cyan";
 
@@ -397,7 +399,7 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
   ttitle = strjoin( ttitle, "\n");
   pltitle, ttitle;
 
-  legend_show;
+  legend, show;
 
   // ur = pow((u2(1,)-u1(1,)),2.0) + pow((u2(2,)-u1(2,)),2.0);
   // info, u1; info, u2;
@@ -406,11 +408,11 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
   t2 = u2(2,) - u1(2,);
   window, swin+woff; swin += iwin;    // Plot delta UTM lat / lon
   if(xfma) fma;
-  legend_add, "red",    "EAST";       // XYZZY - which is which??
-  legend_add, "green", "NORTH";
+  legend, add, "red",    "EAST";       // XYZZY - which is which??
+  legend, add, "green", "NORTH";
   plmk, t1, pn1.sod, color="red";
   plmk, t2, pn1.sod, color="green";
-  legend_show;
+  legend, show;
   t1 = t1^2;
   t2 = t2^2;
   ur = (t1+t2) ^ .5;
@@ -422,12 +424,12 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
 
   window, swin+woff; swin += iwin;
   if(xfma) fma;
-  legend_add, "red", "latlon range";
+  legend, add, "red", "latlon range";
   plmk, llr, pn1.sod, color="red";
   // plmk, llsr, pn1.sod, color="cyan";
-  legend_add, "blue", "utm range";
+  legend, add, "blue", "utm range";
   plmk, ur,  pn1.sod, color="blue";
-  legend_show;
+  legend, show;
   xytitles, "Seconds of day", "Meters", [-0.005, -0.01];
 
   ttitle = title;
@@ -499,12 +501,13 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, plot=, xfma=, swin=, iwin=, woff=
   if(xfma) fma;
 
   plsys,1;
-  legend_add, "blue", "Pdop";
-  legend_add, "red",  "altitude";
+  legend, reset;
+  legend, add, "blue", "Pdop";
+  legend, add, "red",  "altitude";
   plmk, pn1.pdop, pn1.sod, color="blue";
   plsys,2;
   plg, pn1.alt, pn1.sod, color="red";
-  legend_show;
+  legend, show;
   xytitles, "Seconds of day", "Meters", [ 0.505, -0.01];
 
   ttitle = title;
@@ -515,9 +518,9 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, plot=, xfma=, swin=, iwin=, woff=
   window, swin+woff, style="work2.gs"; swin += iwin;
   if(xfma) fma;
 
-  legend_add, "blue", "Pdop";
-  legend_add, "red", "Range";
-  legend_show;
+  legend, add, "blue", "Pdop";
+  legend, add, "red", "Range";
+  legend, show;
 
   // plg, pn1.alt, lbr, color="red";
   plsys,1;
