@@ -303,14 +303,27 @@ func iex2pnav(iex) {
    Convert an iex_nav (IEX_ATTITUDE) variable to pnav and subsample it
    to the normal pnav side to make it more managable.
 */
-  if ( structeq(iex, IEX_ATTIDUDE)) {
+  if ( structeq(structof(iex), IEX_ATTITUDE)) {
     sample=long(0.5/iex.somd(dif)(avg)+0.5);
-    if ( sample > 1) iex = iex(::sample);
 
-    pn = struct_cat(iex, PNAV);
+    sample;
+    if ( sample > 1 ) {
+      idx = (iex.somd - long(iex.somd))(mnx) % sample;
+      iex = iex(idx::sample);
+    }
+
+    pn = struct_cast(iex, PNAV);
+    pn(1:20).sod;
+
+    day_start = long(pn.sod(1)/86400) * 86400;
+    pn.sod = pn.sod - day_start;
+    if (anyof(pn.sod < 0 )) {
+      w = where(pn.sod < 0 );
+      pn.sod(w) += 86400;
+    }
 
     if ( pn.sod(min) > 86400)
-      pn.sod = soe2sod(pn.sod);
+      pn.sod = soe2somd(pn.sod);
   }
 
   return(pn);
@@ -389,7 +402,7 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
   w2 = set_intersection(pn2.sod, pn1.sod, idx=1);
   pn1=pn1(w1);
   pn2=pn2(w2);
-  
+
   p1 = pn1;
   p2 = pn2;
   // info, pn1; info, pn2;
