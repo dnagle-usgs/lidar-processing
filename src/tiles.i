@@ -302,6 +302,27 @@ func extract_for_tile(east, north, zone, tile, buffer=) {
   }
 }
 
+func data_extract_for_tile(data, tile, zone=, mode=, buffer=, idx=) {
+/* DOCUMENT data_extract_for_tile(data, tile, zone=, mode=, buffer=, idx=)
+  Wrapper around extract_for_tile for ALPS point cloud arrays.
+
+  Options:
+    zone= Zone of data. If omitted, then it is assumed that the data is in the
+      same zone as TILE. May be array or scalar.
+    mode= Mode of data (fs, be, ba).
+    buffer= Buffer to extend around the tile, defaults to 100. Set buffer=0 to
+      disable buffer.
+    idx= By default, the data in the tile will be returned. Use idx=1 to return
+      an index into data instead.
+*/
+  default, idx, 0;
+  local x, y;
+  if(is_void(zone)) zone = tile2uz(tile);
+  data2xyz, data, x, y, mode=mode;
+  w = extract_for_tile(x, y, zone, tile, buffer=buffer);
+  return idx ? w : data(w);
+}
+
 func extract_match_tile(east, north, zone, tile) {
 /* DOCUMENT idx = extract_match_tile(east, north, zone, tile)
   Returns an index into north/east of all coordinates that exactly match the
