@@ -247,13 +247,12 @@ func pbd_save(file, vname, data, empty=) {
 
   SEE ALSO: pbd_append pbd_load
 */
-// Original David Nagle 2009-12-28
   default, empty, 0;
   default, vname, file_rootname(file_tail(file));
   sanitize_vname, vname;
 
   if(is_void(data)) {
-    if(empty == 1) {
+    if(empty) {
       open, file, "w";
       return;
     } else {
