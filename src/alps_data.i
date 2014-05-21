@@ -749,6 +749,8 @@ func struct_cast(&data, dest, verbose=, special=) {
       data2xyz(input). Sets .least, .lnorth, and .lelv to match .east,
       .north, and .elevation.
 
+  Additionally, fields named "sod" and "somd" are treated as equivalent.
+
   By default, this function is silent. Use verbose=1 to make it chatty.
 */
 // Original David Nagle 2010-02-05
@@ -1006,6 +1008,13 @@ func struct_cast(&data, dest, verbose=, special=) {
     parse_rn, result.rn, raster, pulse;
     result.raster = raster;
     result.pulse = pulse;
+  }
+
+  if(has_member(data, "sod") && has_member(result, "somd")) {
+    result.somd = data.sod;
+  }
+  if(has_member(data, "somd") && has_member(result, "sod")) {
+    result.sod = data.somd;
   }
 
   if(am_subroutine())
