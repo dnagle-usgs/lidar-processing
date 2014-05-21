@@ -300,20 +300,17 @@ func fs2pnav(fs) {
 
 func iex2pnav(iex) {
 /* DOCUMENT iex2pnav(iex)
-   Convert an iex_nav (IEX_ATTITUDE) variable to pnav.
+   Convert an iex_nav (IEX_ATTITUDE) variable to pnav and subsample it
+   to the normal pnav side to make it more managable.
 */
   if ( structeq(iex, IEX_ATTIDUDE)) {
     sample=long(0.5/iex.somd(dif)(avg)+0.5);
-    if ( sampe > 1) pn = pn(::sample);
-        )
-    num=numberof(iex)/100+1;
-    pn = array(PNAV, num);
-    pn.sod = iex(::100).somd;
-    if ( pn.sod(min)) > 86400)
+    if ( sample > 1) iex = iex(::sample);
+
+    pn = struct_cat(iex, PNAV);
+
+    if ( pn.sod(min) > 86400)
       pn.sod = soe2sod(pn.sod);
-    pn.lon = iex(::100).lon;
-    pn.lat = iex(::100).lat;
-    pn.alt = iex(::100).alt;
   }
 
   return(pn);
