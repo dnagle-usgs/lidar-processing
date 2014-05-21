@@ -298,6 +298,27 @@ func fs2pnav(fs) {
   return pn;
 }
 
+func iex2pnav(iex) {
+/* DOCUMENT iex2pnav(iex)
+   Convert an iex_nav (IEX_ATTITUDE) variable to pnav.
+*/
+  if ( structeq(iex, IEX_ATTIDUDE)) {
+    sample=long(0.5/iex.somd(dif)(avg)+0.5);
+    if ( sampe > 1) pn = pn(::sample);
+        )
+    num=numberof(iex)/100+1;
+    pn = array(PNAV, num);
+    pn.sod = iex(::100).somd;
+    if ( pn.sod(min)) > 86400)
+      pn.sod = soe2sod(pn.sod);
+    pn.lon = iex(::100).lon;
+    pn.lat = iex(::100).lat;
+    pn.alt = iex(::100).alt;
+  }
+
+  return(pn);
+}
+
 func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=) {
 /* DOCUMENT pnav_diff_alt(pn1, pn2)
    Given two trajectories produced for the same flight,
@@ -317,6 +338,8 @@ func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=) {
   default, iwin, 4;
   default, woff, 0;
 
+  extern p1, p2;
+
   window, swin+woff;   // Plot track in UTM
   if(xfma) fma;
 
@@ -328,12 +351,15 @@ func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=) {
 
   pn1.alt = pn1.alt - pn2.alt;
 
+  p1 = pn1;
+  p2 = pn2;
+
 
   legend, reset;
   legend, add, "red", "delta Altitude";
   legend, show;
-  plg, pn1.alt, pn1.sod, color="red";
-  xytitles, "Seconds of day", "Meters", [-0.005, -0.01];
+  plg, pn1.alt, pn1.sod/3600.0, color="red";
+  xytitles, "Hours of day", "Meters", [-0.005, -0.01];
 
   grow, title, "Trajectory Altitude Difference";
   title = strjoin( title, "\n");
@@ -366,6 +392,9 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
   w2 = set_intersection(pn2.sod, pn1.sod, idx=1);
   pn1=pn1(w1);
   pn2=pn2(w2);
+  
+  p1 = pn1;
+  p2 = pn2;
   // info, pn1; info, pn2;
   // allof(pn1.sod == pn2.sod);
 
@@ -388,14 +417,35 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
   // plmk(u1(1,), u1(2,), color="blue");
   // plmk(u2(1,), u2(2,), color="red" );
 
-  legend, reset;
-  legend, add, "green", "lat";
-  legend, add, "cyan",  "lon";
-  plmk, ((pn1.lat - pn2.lat) * 111120), pn1.sod, color="green";
-  plmk, ((pn1.lon - pn2.lon) * 111120), pn1.sod, color="cyan";
 
-  ttitle = title;
-  grow, ttitle, "Delta Lat / Delta Lon";
+  // plot the intersection of each pnav
+  if ( 1 ) {
+    legend, reset;
+    legend, add, "red",  "pnav1";
+    legend, add, "blue", "pnav2";
+//  plmk(pn1.lat, pn1.lon, color="red");
+//  plmk(pn2.lat, pn2.lon, color="blue");
+
+    // plot in UTM instead of lat/lon
+    plmk(u1(1,), u1(2,), color="red");
+    plmk(u2(1,), u2(2,), color="blue" );
+
+    ttitle = title;
+    grow, ttile, "Intersection Map";
+  }
+
+  
+  // plot delta lat and delta lon
+  if ( 0 ) {
+    legend, reset;
+    legend, add, "red", "lat";
+    legend, add, "blue","lon";
+    plmk, ((pn1.lat - pn2.lat) * 111120), pn1.sod/3600.0, color="red";
+    plmk, ((pn1.lon - pn2.lon) * 111120), pn1.sod/3600.0, color="blue";
+
+    ttitle = title;
+    grow, ttitle, "Delta Lat / Delta Lon";
+  }
   ttitle = strjoin( ttitle, "\n");
   pltitle, ttitle;
 
@@ -408,10 +458,10 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
   t2 = u2(2,) - u1(2,);
   window, swin+woff; swin += iwin;    // Plot delta UTM lat / lon
   if(xfma) fma;
-  legend, add, "red",    "EAST";       // XYZZY - which is which??
-  legend, add, "green", "NORTH";
-  plmk, t1, pn1.sod, color="red";
-  plmk, t2, pn1.sod, color="green";
+  legend, add, "red",  "EAST";       // XYZZY - which is which??
+  legend, add, "blue", "NORTH";
+  plmk, t1, pn1.sod/3600.0, color="red";
+  plmk, t2, pn1.sod/3600.0, color="blue";
   legend, show;
   t1 = t1^2;
   t2 = t2^2;
@@ -425,12 +475,12 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=) {
   window, swin+woff; swin += iwin;
   if(xfma) fma;
   legend, add, "red", "latlon range";
-  plmk, llr, pn1.sod, color="red";
-  // plmk, llsr, pn1.sod, color="cyan";
+  plmk, llr, pn1.sod/3600.0, color="red";
+  // plmk, llsr, pn1.sod/3600.0, color="cyan";
   legend, add, "blue", "utm range";
-  plmk, ur,  pn1.sod, color="blue";
+  plmk, ur,  pn1.sod/3600.0, color="blue";
   legend, show;
-  xytitles, "Seconds of day", "Meters", [-0.005, -0.01];
+  xytitles, "Hours of day", "Meters", [-0.005, -0.01];
 
   ttitle = title;
   grow, ttitle, "Trajectory Horizontal Difference";
@@ -494,8 +544,8 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, plot=, xfma=, swin=, iwin=, woff=
   // xytitles, "Seconds of day", "Meters", [-0.005, -0.01];
   // pltitle, "delta lat and lon from Base";
   //
-  // plmk( ((pn1.lat - lat) * 111120), pn1.sod, color="green");
-  // plmk( ((pn1.lon - lon) * 111120), pn1.sod, color="cyan");
+  // plmk( ((pn1.lat - lat) * 111120), pn1.sod/3600.0, color="green");
+  // plmk( ((pn1.lon - lon) * 111120), pn1.sod/3600.0, color="cyan");
 
   window, swin+woff, style="work2.gs"; swin += iwin;
   if(xfma) fma;
@@ -504,11 +554,11 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, plot=, xfma=, swin=, iwin=, woff=
   legend, reset;
   legend, add, "blue", "Pdop";
   legend, add, "red",  "altitude";
-  plmk, pn1.pdop, pn1.sod, color="blue";
+  plmk, pn1.pdop, pn1.sod/3600.0, color="blue";
   plsys,2;
-  plg, pn1.alt, pn1.sod, color="red";
+  plg, pn1.alt, pn1.sod/3600.0, color="red";
   legend, show;
-  xytitles, "Seconds of day", "Meters", [ 0.505, -0.01];
+  xytitles, "Hours of day", "Meters", [ 0.505, -0.01];
 
   ttitle = title;
   grow, ttitle, "Trajectory Altitude Difference";
@@ -527,7 +577,7 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, plot=, xfma=, swin=, iwin=, woff=
   plmk, pn1.pdop, lbr, color="blue";
   plsys,2;
   plmk, pn1.alt, lbr, color="red";
-  // plmk, llsr, pn1.sod, color="cyan";
+  // plmk, llsr, pn1.sod/3600.0, color="cyan";
   xytitles, "Range from Base(km)", "Meters", [0.505, -0.01];
 
   ttitle = title;
