@@ -261,8 +261,32 @@ func load_ins(fn, &head) {
 */
   extern gps_time_correction, ops_conf;
   extern ins_filename;
+  extern data_path;
 
-  if(is_void(fn))
+  if(is_void(fn)) {
+
+    if ( batch() )
+      error, "filename not specified";
+
+    if ( is_void(data_path) || data_path == "" ) {
+      data_path = rdline(prompt="Enter data path:");
+    }
+    path = data_path;
+
+    if ( _ytk ) {
+      path = data_path + "/trajectories/";
+      fn = get_openfn(initialdir=path, filetype="*ins.pbd");
+      if ( strmatch(fn, "pbd") == 0 ) {
+        exit, "NO FILE CHOSEN, Please Try Again\r";
+      }
+      path = file_dirname(file_dirname(fn));
+    } else {
+      write, format="data_path=%s\n", path;
+      fn = select_file(path, pattern="\\.pbd$");
+    }
+  }
+
+  if ( is_void(fn))
     error, "Must provide filename";
 
   ins_filename = fn;
