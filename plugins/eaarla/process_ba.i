@@ -449,7 +449,7 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
 
   // validate bottom
   msg = [];
-  bathy_validate_bottom, wf_decay, bottom_peak, conf, msg;
+  bathy_validate_bottom, wf_decay, bottom_peak, conf, msg, graph=plot;
 
   if(!is_void(msg)) return result;
 

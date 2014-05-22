@@ -257,7 +257,7 @@ win=, xfma=, verbose=, keeprejected=) {
   result.bottom_peak = wf(bottom_peak);
 
   msg = [];
-  bathy_validate_bottom, wf_decay, bottom_peak, conf, msg;
+  bathy_validate_bottom, wf_decay, bottom_peak, conf, msg, graph=graph;
 
   if(is_void(msg) || keeprejected) {
     result.idx = bottom_peak + get_member(ops_conf, swrite(format="chn%d_range_bias", channel));
@@ -517,8 +517,8 @@ func bathy_compensate_saturation(saturated, &bottom) {
   bottom = long(0.5*(sat0+sat1));
 }
 
-func bathy_validate_bottom(wf, bottom, conf, &msg) {
-/* DOCUMENT bathy_validate_bottom(wf, bottom, conf, &msg)
+func bathy_validate_bottom(wf, bottom, conf, &msg, graph=) {
+/* DOCUMENT bathy_validate_bottom(wf, bottom, conf, &msg, graph=)
   Performs some analysis on a detected bottom to see if it seems legitimate.
 */
   msg = [];
