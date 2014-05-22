@@ -372,6 +372,11 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
 
   result = save(lrx=0, fint=0, lint=0, candidate_lrx=0);
 
+  if(is_void(rx)) {
+    msg = "no waveform";
+    return result;
+  }
+
   // Retrieve the waveform, figure out the max intensity value, and remove
   // bias
   wf = float(~(rx));
