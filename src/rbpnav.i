@@ -359,12 +359,12 @@ func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
   extern p1, p2;
 
   if ( ! structeq(structof(pn1), PNAV)) {
-    "first argument is not a PNAV";
+    write, "first argument is not a PNAV";
     return;
   }
 
   if ( ! structeq(structof(pn2), PNAV)) {
-    "second argument is not a PNAV";
+    write, "second argument is not a PNAV";
     return;
   }
 
@@ -421,12 +421,12 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=, kill=) {
   extern u1, u2, ur, p1, p2;
 
   if ( ! structeq(structof(pn1), PNAV)) {
-    "first argument is not a PNAV";
+    write, "first argument is not a PNAV";
     return;
   }
 
   if ( ! structeq(structof(pn2), PNAV)) {
-    "second argument is not a PNAV";
+    write, "second argument is not a PNAV";
     return;
   }
 
@@ -567,22 +567,22 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, iwin=, woff=, title
   extern u1, u2, ur, p1, p2;
 
   if ( ! structeq(structof(pn1), PNAV)) {
-    "first argument is not a PNAV";
+    write, "first argument is not a PNAV";
     return;
   }
 
   if ( ! structeq(structof(pn2), PNAV)) {
-    "second argument is not a PNAV";
+    write, "second argument is not a PNAV";
     return;
   }
 
   if ( ! is_real(lat) ) {
-    "third argument is not a double";
+    write, "third argument is not a double";
     return;
   }
 
   if ( ! is_real(lon) ) {
-    "forth argument is not a double";
+    write, "fourth argument is not a double";
     return;
   }
 
