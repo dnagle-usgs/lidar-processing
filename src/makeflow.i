@@ -398,6 +398,18 @@ func sans_makeflow(conf, interval=, current=, count=) {
   t0 = t1 = tp = array(double, 3);
   timer, t0;
 
+  // Scan through the conf and make sure input exists; if it doesn't, we defer
+  // all items after the first with missing input
+  defer = save();
+  for(i = 1; i <= conf(*); i++) {
+    cur = conf(noop(i));
+    if(nallof(file_exists(cur.input))) {
+      defer = conf(i:);
+      conf = conf(:i-1);
+      break;
+    }
+  }
+
   if(defer(*)) {
     write, format="Processing %d jobs; %d deferred\n", conf(*), defer(*);
   } else {
