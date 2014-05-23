@@ -253,7 +253,7 @@ func sel_rgn_by_shapefile(data, shapefile, mode=, buffer=, invert=, alg=) {
   test = [];
   if(alg == "ray") test = testPoly2;
   if(alg == "sum") test = testPoly;
-  if(is_void(alg)) error, "invalid alg= specified";
+  if(is_void(test)) error, "invalid alg= specified";
 
   x = y = [];
   data2xyz, data, x, y, mode=mode;
