@@ -146,6 +146,7 @@ require, "serialize.i";
 require, "set.i";
 require, "sf.i";
 require, "shapefile.i";
+require, "shapefile_extract.i";
 require, "statistics.i";
 require, "sox.i";
 require, "tiles.i";

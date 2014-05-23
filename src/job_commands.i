@@ -332,3 +332,22 @@ func job_retile_assemble_dates(conf) {
 
   _batch_retile_assemble_dates, opts=conf;
 }
+
+func job_shapefile_extract(conf) {
+/* DOCUMENT job_shapefile_extract, conf
+  This is a wrapper around shapefile_extract_pbd.
+*/
+  require, "eaarl.i";
+  keyrequire, conf, shapefile=, infile=, outfile=, suffix=;
+
+  if(conf(*,"invert"))
+    save, conf, invert=atoi(conf.invert);
+  if(conf(*,"remove_buffers"))
+    save, conf, remove_buffers=atoi(conf.remove_buffers);
+  if(conf(*,"uniq") && strlen(conf.uniq) <= 1)
+    save, conf, uniq=atoi(conf.uniq);
+  if(conf(*,"empty"))
+    save, conf, empty=atoi(conf.empty);
+
+  shapefile_extract_pbd, opts=conf;
+}
