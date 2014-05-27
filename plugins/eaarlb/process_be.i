@@ -253,7 +253,7 @@ func eaarl_be_rx_eaarla_channel(rx, &conf) {
     np = min(numberof(wf), 12);
     saturated = where(wf(1:np) <= sat_thresh);
     numsat = numberof(saturated);
-    if(numsat <= conf.max_sat) return i;
+    if(numsat <= ops_conf.max_sfc_sat) return i;
   }
   return 0;
 }
