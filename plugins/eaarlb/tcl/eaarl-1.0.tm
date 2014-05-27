@@ -106,8 +106,6 @@ namespace eval ::eaarl {
       }
       if { $count > 2 } {
          variable interactive_batch 1
-         puts "CPU Count: $count"
-         puts "interactive_batch mode will default to on"
       }
    }
 }
