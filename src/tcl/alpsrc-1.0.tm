@@ -43,6 +43,12 @@ namespace eval ::alpsrc {
         return $conf
     }
 
+    proc post {conf} {
+        if {[dict get $conf cores_local] == -1} {
+            dict set conf cores_local [exec grep ^processor /proc/cpuinfo | wc -l]
+        }
+    }
+
     proc defaults {} {
         # IMPORTANT: When this changes, also change alpsrc.i
         set conf [list]
@@ -58,6 +64,9 @@ namespace eval ::alpsrc {
         dict set conf log_dir /tmp/alps.log/
         dict set conf log_level debug
         dict set conf log_keep 30
+        dict set conf cores_local -1
+        dict set conf cores_remote 0
+        return $conf
     }
 
     proc load {} {
@@ -65,6 +74,7 @@ namespace eval ::alpsrc {
         array set ::alpsrc [load_and_merge [array get ::alpsrc] "/etc/alpsrc"]
         array set ::alpsrc [load_and_merge [array get ::alpsrc] "~/.alpsrc"]
         array set ::alpsrc [load_and_merge [array get ::alpsrc] "./.alpsrc"]
+        array set ::alpsrc [post [array get ::alpsrc]]
     }
 }
 

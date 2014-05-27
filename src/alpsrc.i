@@ -50,6 +50,16 @@ local alpsrc;
     log_keep = 30
       Specifies how many days to keep log files around for.
 
+    cores_local = [auto detected]
+      Specifies how many local cores may be used. By default, the number of
+      cores will be detected from /proc/cpuinfo. Makeflow will only be used if
+      cores_local > 1. The special value -1 means that the core count should be
+      auto-detected.
+
+    cores_remote = 0
+      This setting is unused at present. In the future, it may be used to
+      specify how many remote cores may be used.
+
   SEE ALSO: alpsrc_load
 */
 
@@ -76,11 +86,21 @@ func alpsrc_load(void) {
   __alpsrc_load_and_merge, alpsrc, "/etc/alpsrc";
   __alpsrc_load_and_merge, alpsrc, "~/.alpsrc";
   __alpsrc_load_and_merge, alpsrc, "./.alpsrc";
+  __alpsrc_post, alpsrc;
 }
 
 func __alpsrc_load_and_merge(&hash, fn) {
   if(file_exists(fn)) {
     hash = h_merge(hash, json_decode(rdfile(open(fn, "r"))));
+  }
+}
+
+func __alpsrc_post(&hash) {
+/* DOCUMENT __alpsrc_post, hash;
+  Performs some post-load operations on the alpsrc settings.
+*/
+  if(hash.cores_local == -1) {
+    h_set, hash, cores_local = atoi(popen_rdfile("grep ^processor /proc/cpuinfo | wc -l"))(1);
   }
 }
 
@@ -104,6 +124,8 @@ func __alpsrc_set_defaults(&hash) {
   h_set, hash, log_dir="/tmp/alps.log/";
   h_set, hash, log_level="debug";
   h_set, hash, log_keep=30;
+  h_set, hash, cores_local=-1;
+  h_set, hash, cores_remote=0;
 }
 
 __alpsrc_set_defaults, __alpsrc_defaults;
