@@ -35,11 +35,20 @@ local alpsrc;
     cctools_bin = ../../cctools/bin
       Defines the directory where the cctools binaries may be found.
 
-    makeflow_opts = -N alps -T local
-      Options to pass to makeflow. Use 'makeflow -h' for list of options.
+    makeflow_opts = [none]
+      Options to pass to makeflow. Use 'makeflow -h' for list of options. This
+      setting should only be used for advanced options. If you want to set -T,
+      -N, or -j, use makeflow_type, makeflow_project, or cores_local instead.
 
     makeflow_enable = 1
       Use 1 to enable use of Makeflow. Use 0 to disable.
+
+    makeflow_type = local
+      Specifies the batch system type to use for makeflow (makeflow's -T
+      option).
+
+    makeflow_project = alps
+      Specifies the project name to use for makeflow (makeflow's -N option).
 
     log_dir = /tmp/alps.log/
       Specifies the default directory where to write out ALPS logs.
@@ -54,7 +63,9 @@ local alpsrc;
       Specifies how many local cores may be used. By default, the number of
       cores will be detected from /proc/cpuinfo. Makeflow will only be used if
       cores_local > 1. The special value -1 means that the core count should be
-      auto-detected.
+      auto-detected. This value is passed to makeflow as a maximum number of
+      local jobs to run at once (makeflow's -j option). It is also used in
+      initializing some settings in ALPS.
 
     cores_remote = 0
       This setting is unused at present. In the future, it may be used to
@@ -118,8 +129,10 @@ func __alpsrc_set_defaults(&hash) {
   h_set, hash, maps_dir=file_join(sharedir, "maps");
   h_set, hash, gdal_bin=file_join(get_cwd(), "..", "..", "gdal", "bin");
   h_set, hash, cctools_bin=file_join(get_cwd(), "..", "..", "cctools", "bin");
-  h_set, hash, makeflow_opts="-N alps -T local";
+  h_set, hash, makeflow_opts="";
   h_set, hash, makeflow_enable=1;
+  h_set, hash, makeflow_type="local";
+  h_set, hash, makeflow_project="alps";
   h_set, hash, memory_autorefresh=5;
   h_set, hash, log_dir="/tmp/alps.log/";
   h_set, hash, log_level="debug";
