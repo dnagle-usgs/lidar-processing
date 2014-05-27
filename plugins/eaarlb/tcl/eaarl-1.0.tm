@@ -33,7 +33,7 @@ namespace eval ::eaarl {
    variable usecentroid 1
    variable avg_surf 1
    variable ext_bad_att 20
-   variable interactive_batch 0
+   variable interactive_batch [expr {$::alpsrc(cores_local) >= 3}]
 
    variable usechannel_1 0
    variable usechannel_2 0
@@ -94,12 +94,4 @@ namespace eval ::eaarl {
          catch [list uplevel #0 $script]
       }
    }
-
-   proc set_interactive_batch {} {
-      if { $::alpsrc(cores_local) > 2 } {
-         variable interactive_batch 1
-      }
-   }
 }
-
-::eaarl::set_interactive_batch
