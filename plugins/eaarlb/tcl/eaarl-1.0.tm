@@ -17,6 +17,7 @@ package require eaarl::settings
 package require eaarl::sync
 package require eaarl::transmit
 package require eaarl::tscheck
+package require eaarl::vegconf
 
 namespace eval ::eaarl {
    variable process_mapping {

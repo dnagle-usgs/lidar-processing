@@ -1,5 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+if(is_void(vegconf)) vegconf = vegconfobj();
+
 func be_struct_from_obj(pulses) {
 /* DOCUMENT result = be_struct_from_obj(pulses)
   Converts the return result from process_ba (which is an oxy group) into the
@@ -301,6 +303,9 @@ func eaarl_be_plot(raster, pulse, channel=, win=, xfma=) {
   window, win;
 
   // TODO: trigger Tcl here
+  tkcmd, swrite(format=
+    "::eaarl::vegconf::config %d -raster %d -pulse %d -channel %d -group {%s}",
+    win, raster, pulse, channel, vegconf(settings_group, max(channel, 1)));
 
   pulses = decode_rasters(raster, raster);
   w = where(pulses.pulse == pulse);
@@ -312,16 +317,14 @@ func eaarl_be_plot(raster, pulse, channel=, win=, xfma=) {
   }
   pulses = obj_index(pulses, w(1));
   if(channel) {
-    conf = save(
-      thresh=veg_conf.thresh,
-      max_sat=veg_conf.max_sat(channel),
-      noiseadj=veg_conf.noiseadj
-      );
+    conf = vegconf(settings, channel);
   } else {
     channel = be_rx_channel(pulses.rx, conf);
-  }
 
-  // TODO: Update Tcl with channel/group here
+    tkcmd, swrite(format=
+      "::eaarl::vegconf::config %d -channel %d -group {%s}",
+      win, channel, vegconf(settings_group, channel));
+  }
 
   //gridxy, 2, 2;
   if(xfma) fma;

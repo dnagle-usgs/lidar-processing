@@ -9,6 +9,7 @@ base = file_dirname(current_include())+"/";
 include, base + "eaarl_constants.i";
 include, base + "class_chanconfobj.i";
 include, base + "class_bathconfobj.i";
+include, base + "class_vegconfobj.i";
 
 include, base + "autoselect.i";
 include, base + "batch_process.i";
