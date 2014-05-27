@@ -86,7 +86,12 @@ func makeflow_run(conf, fn, norun=, interval=) {
 
   // If makeflow is enabled, attempt to find a makeflow executable
   makeflow_exe = "";
-  if(alpsrc.makeflow_enable)
+  enabled = alpsrc.makeflow_enable;
+  // If enabled but using local mode with 1 core, force disable (unless
+  // makeflow_enable is set to 2 to force enable)
+  if(enabled == 1 && alpsrc.makeflow_type == "local" && alpsrc.cores_local <= 1)
+    enabled = 0;
+  if(enabled)
     makeflow_exe = file_join(alpsrc.cctools_bin, "makeflow");
 
   // If no makeflow executable is available/allowed, fall back to pure Yorick.

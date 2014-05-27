@@ -41,7 +41,10 @@ local alpsrc;
       -N, or -j, use makeflow_type, makeflow_project, or cores_local instead.
 
     makeflow_enable = 1
-      Use 1 to enable use of Makeflow. Use 0 to disable.
+      Use 1 to enable use of Makeflow. Use 0 to disable. As a special case, if
+      makeflow_type = "local" and cores_local = 1, then makeflow is
+      auto-disabled even if makeflow_enable = 1; to force enable, use
+      makeflow_enable = 2.
 
     makeflow_type = local
       Specifies the batch system type to use for makeflow (makeflow's -T
@@ -68,8 +71,8 @@ local alpsrc;
       initializing some settings in ALPS.
 
     cores_remote = 0
-      This setting is unused at present. In the future, it may be used to
-      specify how many remote cores may be used.
+      This setting specifies how many remote cores may be used. It is only used
+      if makeflow_type != "local".
 
   SEE ALSO: alpsrc_load
 */
