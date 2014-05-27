@@ -23,11 +23,11 @@ namespace eval ::eaarl {
    variable process_mapping {
       "First Return Topo"  f
       "Submerged Topo"     b
+      "Topo Under Veg"     v
       "OLD: First Return Topo"  old_fs
       "OLD: Submerged Topo"     old_bathy
       "OLD: Topo Under Veg"     old_veg
       "OLD: Multi Peak Veg"     old_cveg
-      "NEW: Topo Under Veg"     v
    }
 
    variable autoclean_after_process 1
