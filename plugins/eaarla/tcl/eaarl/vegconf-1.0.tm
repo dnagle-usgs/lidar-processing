@@ -404,22 +404,13 @@ snit::type ::eaarl::vegconf::embed {
         ::mixin::revertable $f.spnThresh \
                 -command [list $f.spnThresh apply] \
                 -valuetype number
-        ttk::label $f.lblSat -text "Max Sat:"
-        ttk::spinbox $f.spnSat \
-                -from 0 -to 1000 -increment 1 \
-                -width 4
-        ::mixin::revertable $f.spnSat \
-                -command [list $f.spnSat apply] \
-                -valuetype number
         ttk::checkbutton $f.chkNoise \
                 -text "Noise Adj"
 
-        pack $f.lblThresh $f.spnThresh $f.lblSat $f.spnSat $f.chkNoise \
-                -side left
+        pack $f.lblThresh $f.spnThresh $f.chkNoise -side left
 
-        lappend controls $f.spnThresh $f.spnSat $f.chkNoise
+        lappend controls $f.spnThresh $f.chkNoise
         dict set wantsetting $f.spnThresh thresh
-        dict set wantsetting $f.spnSat max_sat
         dict set wantsetting $f.chkNoise noiseadj
     }
 

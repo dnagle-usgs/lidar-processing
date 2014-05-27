@@ -104,7 +104,7 @@ func vegconfobj_validate(group) {
 
   // Values that all confs have
   defaults = save(
-    thresh=4.0, max_sat=1, noiseadj=0
+    thresh=4.0, noiseadj=0
   );
   key_default_and_cast, active, defaults;
   tksync, idleadd,
@@ -150,7 +150,7 @@ func vegconfobj_cleangroups(void) {
 
     for(j = 1; j <= grp.profiles(*); j++) {
       prof = grp.profiles(noop(j));
-      idx = prof(*, ["thresh", "max_sat", "noiseadj"]);
+      idx = prof(*, ["thresh", "noiseadj"]);
       idx = idx(where(idx));
       if(numberof(idx))
         prof = prof(noop(idx));
