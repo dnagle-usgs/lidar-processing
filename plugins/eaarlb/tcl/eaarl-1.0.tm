@@ -96,15 +96,7 @@ namespace eval ::eaarl {
    }
 
    proc set_interactive_batch {} {
-      set fp [open "/proc/cpuinfo" r]
-      while {[ eof $fp] != 1} {
-         gets $fp content
-         set res [regexp [lindex vendor 0] $content]
-         if { $res >= 1} {
-            incr count
-         }
-      }
-      if { $count > 2 } {
+      if { $::alpsrc(cores_local) > 2 } {
          variable interactive_batch 1
       }
    }
