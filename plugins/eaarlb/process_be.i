@@ -62,8 +62,6 @@ func process_be(start, stop, ext_bad_att=, channel=, opts=) {
 
   default, channel, 0;
 
-  define_veg_conf;
-
   sample_interval = 1.0;
   be_tx = eaarl_be_tx_copy;
   if(channel(1)) {
@@ -157,8 +155,6 @@ func eaarl_be_rx_channel(pulses) {
   local conf;
   extern ops_conf;
 
-  define_veg_conf;
-
   be_rx_wf = eaarl_be_rx_wf;
 
   biases = [ops_conf.chn1_range_bias, ops_conf.chn2_range_bias,
@@ -174,11 +170,7 @@ func eaarl_be_rx_channel(pulses) {
     if(!lchannel(i)) continue;
     if(!pulses.rx(lchannel(i),i)) continue;
 
-    conf = save(
-      thresh=veg_conf.thresh,
-      max_sat=veg_conf.max_sat(lchannel(i)),
-      noiseadj=veg_conf.noiseadj
-      );
+    conf = vegconf(settings, lchannel(i));
     lbias(i) = biases(lchannel(i));
 
     tmp = be_rx_wf(*pulses.rx(lchannel(i),i), conf);
@@ -238,12 +230,10 @@ func eaarl_be_rx_eaarla_channel(rx, &conf) {
   Determines which channel to use for veg. The channel number is returned,
   and &conf is updated to the veg conf for that channel.
 */
+  extern ops_conf;
+
   for(i = 1; i <= 3; i++) {
-    conf = save(
-      thresh=veg_conf.thresh,
-      max_sat=veg_conf.max_sat(i),
-      noiseadj=veg_conf.noiseadj
-      );
+    conf = vegconf(settings, i);
     wf = *rx(i);
     if(!numberof(wf)) return 0;
     // Channels 1 and 2 define saturation as < 5, whereas channel 3 defines
