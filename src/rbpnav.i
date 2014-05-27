@@ -596,7 +596,7 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, iwin=, woff=, title
   p1 = pn1;
   p2 = pn2;
 
-  default, swin, 50;
+  default, swin, 47;
   default, iwin, 4;
   default, woff, 0;
 
@@ -604,6 +604,7 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, iwin=, woff=, title
     winkill, swin+woff; swin += iwin;    // Plot track in UTM
     winkill, swin+woff; swin += iwin;    // Delta altitude vs time
     winkill, swin+woff; swin += iwin;    // Altitude vs Time
+    winkill, swin+woff; swin += iwin;    // hist_data_plot
     return;
   }
   // lat/lon range  or delta ll
@@ -677,6 +678,7 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, iwin=, woff=, title
   plg,  pn1.alt, pn1.sod/3600.0, color="red";
   legend, show;
   xytitles, "Hours of day", "Meters", [ 0.505, -0.01];
+  range, -.05, .05;
 
   ttitle = title;
   grow, ttitle, "Altitude / Time Difference";
@@ -696,11 +698,20 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, iwin=, woff=, title
   plsys,2; plmk, pn1.alt, lbr, color="red";
   // plmk, llsr, pn1.sod/3600.0, color="cyan";
   xytitles, "Range from Base(km)", "Meters", [0.505, -0.01];
+  range, -.05, .05;
 
   ttitle = title;
   grow, ttitle, "Altitude / Range Difference";
   ttitle = strjoin( ttitle, "\n");
   pltitle, ttitle;
+
+  hist_data_plot, pn1.alt, win=swin+woff,   // histogram
+    title="Altitude",
+    xtitle="Difference",
+    ytitle="Counts",
+    dofma=1,
+    normalize=0,
+    binsize=.001;
 
   return lbr;
 }
