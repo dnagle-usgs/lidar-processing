@@ -460,3 +460,57 @@ func eaarl_be_rx_wf(rx, conf, &msg, plot=) {
 
   return result;
 }
+
+func eaarl_be_rx_channel_shallow(pulses) {
+/* DOCUMENT eaarl_be_rx_channel_shallow(pulses)
+  This is a hack that tweaks the veg algorithm for shallow bathy mode.
+*/
+  npulses = numberof(pulses.tx);
+  lchannel = pulses.channel;
+
+  for(i = 1; i <= npulses; i++) {
+    if(!lchannel(i)) continue;
+    if(!pulses.rx(lchannel(i),i)) continue;
+
+    wf = *pulses.rx(lchannel(i),i);
+    if(numberof(wf) > 20)
+      pulses.rx(lchannel(i),i) = &wf(:20);
+  }
+
+  eaarl_be_rx_channel, pulses;
+}
+
+func hook_eaarl_be_shallow(env) {
+/* DOCUMENT hook_be_shallow(env)
+  This hook is attached to process_be_funcs to enable shallow bathy hacks.
+*/
+  save, env, be_rx=eaarl_be_rx_channel_shallow;
+  return env;
+}
+
+func eaarl_be_shallow(action) {
+/* DOCUMENT
+  eaarl_be_shallow, "enable";
+  eaarl_be_shallow, "disable";
+  eaarl_be_shallow, "status";
+
+  Enables, disables, or gives the status of the shallow bathy hacks for veg
+  processing.
+*/
+  if(action == "enable") {
+    hook_add, "process_be_funcs", "hook_eaarl_be_shallow";
+    write, "shallow bathy hacks ENABLED";
+  } else if(action == "disable") {
+    hook_remove, "process_be_funcs", "hook_eaarl_be_shallow";
+    write, "shallow bathy hacks DISABLED";
+  } else if(action == "status") {
+    hooks = hook_query("process_be_funcs");
+    if(anyof(hooks == "hook_eaarl_be_shallow")) {
+      write, "veg processing currently IS using shallow bathy hacks";
+    } else {
+      write, "veg processing currently IS NOT using shallow bathy hacks";
+    }
+  } else {
+    write, "Invalid parameter given. Can be invoked only in these ways:\n   eaarl_be_shallow, \"enable\";\n   eaarl_be_shallow, \"disable\";\n   eaarl_be_shallow, \"status\";";
+  }
+}
