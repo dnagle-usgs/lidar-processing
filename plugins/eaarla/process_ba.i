@@ -287,6 +287,9 @@ func eaarl_ba_plot(raster, pulse, channel=, win=, xfma=) {
       justify="RT", tosys=0, color="red";
   }
 
+  write, format=" bathymetric analysis for raster %d, pulse %d, channel %d\n",
+    long(raster), long(pulse), long(channel);
+
   if(is_void(result)) {
     write, msg;
     window_select, wbkp;
@@ -302,9 +305,9 @@ func eaarl_ba_plot(raster, pulse, channel=, win=, xfma=) {
 
   window_select, wbkp;
 
-  write, format=" lrx: %.2f\n fint: %.2f\n lint: %.2f\n",
+  write, format="   lrx: %.2f\n   fint: %.2f\n   lint: %.2f\n",
     double(result.lrx), double(result.fint), double(result.lint);
-  if(!is_void(msg)) write, msg;
+  if(!is_void(msg)) write, format="   %s\n", msg;
 }
 
 func ba_analyze_pulse(raster, pulse, &msg, &chan, channel=, plot=) {

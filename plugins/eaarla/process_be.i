@@ -292,7 +292,6 @@ func eaarl_be_plot(raster, pulse, channel=, win=, xfma=) {
   wbkp = current_window();
   window, win;
 
-  // TODO: trigger Tcl here
   tkcmd, swrite(format=
     "::eaarl::vegconf::config %d -raster %d -pulse %d -channel %d -group {%s}",
     win, raster, pulse, channel, vegconf(settings_group, max(channel, 1)));
@@ -300,7 +299,7 @@ func eaarl_be_plot(raster, pulse, channel=, win=, xfma=) {
   pulses = decode_rasters(raster, raster);
   w = where(pulses.pulse == pulse);
   if(!numberof(w)) {
-    write, format=" Aborting: raster %d does not contain pulse %d\n",
+    write, format=" raster %d does not contain pulse %d\n",
       raster, pulse;
     window_select, wbkp;
     return;
@@ -316,7 +315,9 @@ func eaarl_be_plot(raster, pulse, channel=, win=, xfma=) {
       win, channel, vegconf(settings_group, channel));
   }
 
-  //gridxy, 2, 2;
+  write, format=" vegetation analysis for raster %d, pulse %d, channel %d\n",
+    long(raster), long(pulse), long(channel);
+
   if(xfma) fma;
 
   result = be_rx_wf(*pulses.rx(channel), conf, plot=1);
@@ -325,11 +326,11 @@ func eaarl_be_plot(raster, pulse, channel=, win=, xfma=) {
 
   window_select, wbkp;
 
-  write, format="lrx: %.2f\nlint: %.2f\nrets: %d\n",
+  write, format="   lrx: %.2f\n   lint: %.2f\n   rets: %d\n",
     double(result.lrx), double(result.lint), long(result.rets);
 
   if(!result.lrx) {
-    write, format="%s\n", "No return found.";
+    write, format="   %s\n", "No return found.";
   }
 }
 
