@@ -871,6 +871,7 @@ snit::type ::eaarl::bathconf::embed {
         set fn [tk_getOpenFile \
                 -parent $window \
                 -title "Select file to load" \
+                -initialdir [::mission::conf_dir] \
                 -filetypes {
                     {{Bathy configuration files} {.bathconf}}
                     {{JSON files} {.json}}
@@ -887,6 +888,7 @@ snit::type ::eaarl::bathconf::embed {
         set fn [tk_getSaveFile \
                 -parent $window \
                 -title "Select destination" \
+                -initialdir [::mission::conf_dir] \
                 -filetypes {
                     {{Bathy configuration files} {.bathconf}}
                     {{All files} {*}}
