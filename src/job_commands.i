@@ -121,8 +121,7 @@ func job_rcf_eaarl(conf) {
     --prefilter-min   corresponds to  prefilter_min=
     --prefilter-max   corresponds to  prefilter_max=
 */
-  require, "util_obj.i";
-  require, "util_str.i";
+  require, "eaarl.i";
   keyrequire, conf, file=;
   keyrequire, conf.file, in=, out=;
   buf = pass_void(atoi, conf.buf);
@@ -139,9 +138,6 @@ func job_rcf_eaarl(conf) {
   if(conf.rcfmode == "dgrcf") factor = pass_void(atod, conf.factor);
   if(conf.rcfmode == "mgrcf") factor = pass_void(atoi, conf.factor);
 
-  require, "alps_data.i";
-  require, "dir.i";
-  require, "rcf.i";
   rcf_filter_eaarl_file, conf.file.in, conf.file.out, mode=conf.mode,
       rcfmode=conf.rcfmode, buf=buf, w=w, n=n, factor=factor,
       prefilter_min=prefilter_min, prefilter_max=prefilter_max, verbose=0;
