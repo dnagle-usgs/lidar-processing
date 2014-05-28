@@ -204,7 +204,7 @@ func eaarl_be_rx_eaarla(pulses) {
   restore, hook_invoke("eaarl_be_rx_funcs", save(be_rx_channel, be_rx_wf));
 
   biases = [ops_conf.chn1_range_bias, ops_conf.chn2_range_bias,
-    ops_conf.chn3_range_bias];
+    ops_conf.chn3_range_bias, ops_conf.chn4_range_bias];
 
   npulses = numberof(pulses.tx);
 
