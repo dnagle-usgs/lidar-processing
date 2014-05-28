@@ -27,6 +27,7 @@ if(1 || batch()) {
   set_path, src_path + strpart(get_path(), 3:);
 
   require, "rrequire.i";
+  require, "calps_compat.i";
   require, "job_support.i";
   __job_run, get_argv();
 }
