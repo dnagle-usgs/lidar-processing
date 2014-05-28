@@ -448,9 +448,7 @@ snit::type ::eaarl::vegconf::embed {
                 -title "Select file to load" \
                 -initialdir [::mission::conf_dir] \
                 -filetypes {
-                    {{Bathy configuration files} {.vegconf}}
-                    {{JSON files} {.json}}
-                    {{bctl files} {.bctl}}
+                    {{Veg configuration files} {.vegconf}}
                     {{All files} {*}}
                 }]
         if {$fn ne ""} {
@@ -465,7 +463,7 @@ snit::type ::eaarl::vegconf::embed {
                 -title "Select destination" \
                 -initialdir [::mission::conf_dir] \
                 -filetypes {
-                    {{Bathy configuration files} {.vegconf}}
+                    {{Veg configuration files} {.vegconf}}
                     {{All files} {*}}
                 }]
         if {$fn ne ""} {
