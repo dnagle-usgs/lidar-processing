@@ -16,6 +16,7 @@ namespace eval ::mission::eaarl {
         "ins file"
         "ops_conf file"
         "bathconf file"
+        "vegconf file"
         "rgb dir"
         "rgb file"
         "cir dir"
@@ -43,6 +44,10 @@ namespace eval ::mission::eaarl {
             {{Bathy settings files} {.bathconf}}
             {{JSON files} {.json}}
             {{bctl files} {.bctl}}
+            {{All files} *}
+        }
+        "vegconf file" {
+            {{Veg settings files} {.vegconf}}
             {{All files} *}
         }
         "rgb file" {

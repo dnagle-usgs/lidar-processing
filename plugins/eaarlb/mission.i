@@ -277,6 +277,12 @@ func eaarl_mission_load(env) {
       write, "         (using null defaults)";
       bathconf, clear;
     }
+
+    if(test_key(env.flight, "vegconf file")) {
+      vegconf, read, mission(get, env.flight, "vegconf file");
+    } else {
+      write, "         (using defaults)";
+    }
   }
 
   // edb -- defines a few variables (such as soe_day_start) that are needed by
@@ -358,6 +364,9 @@ func eaarl_mission_unload(env) {
   extern bathconf;
   bathconf, clear;
 
+  extern vegconf;
+  vegconf, clear;
+
   return env;
 }
 
@@ -377,11 +386,13 @@ func eaarl_mission_wrap(env) {
   extern iex_nav, iex_head, tans, ins_filename;
   extern ops_conf, ops_conf_filename;
   extern bathconf;
+  extern vegconf;
 
   save, env.wrapped,
     cache_what,
     ops_conf, ops_conf_filename,
-    bathconf_data=bathconf.data;
+    bathconf_data=bathconf.data,
+    vegconf_data=vegconf.data;
 
   if(cache_what == "everything") {
     save, env.wrapped,
@@ -408,9 +419,11 @@ func eaarl_mission_unwrap(env) {
   extern iex_nav, iex_head, tans, ins_filename;
   extern ops_conf, ops_conf_filename;
   extern bathconf;
+  extern vegconf;
 
   cache_what = env.data.cache_what;
   bathconf_data = env.data.bathconf_data;
+  vegconf_data = env.data.vegconf_data;
 
   idx = env.data(*,[
     "data_path",
@@ -426,6 +439,11 @@ func eaarl_mission_unwrap(env) {
     bathconf, clear;
   else
     bathconf, groups, bathconf_data, copy=0;
+
+  if(is_void(vegconf_data))
+    vegconf, clear;
+  else
+    vegconf, groups, vegconf_data, copy=0;
 
   save, env, cache_what;
 
@@ -448,6 +466,8 @@ func hook_eaarl_mission_jobs_env_wrap(env) {
   wrapped = mission(wrap, cache_what="everything");
   if(wrapped(*,"bathconf_data"))
     save, wrapped, bathconf_data=serialize(wrapped.bathconf_data);
+  if(wrapped(*,"vegconf_data"))
+    save, wrapped, vegconf_data=serialize(wrapped.vegconf_data);
   if(wrapped(*,"ops_conf"))
     save, wrapped, ops_conf=serialize(wrapped.ops_conf);
   mission_fn = file_rootname(env.fn) + ".flight";
@@ -460,6 +480,8 @@ func hook_eaarl_mission_jobs_env_unwrap(env) {
   wrapped = pbd2obj(env.env.mission_fn);
   if(wrapped(*,"bathconf_data"))
     save, wrapped, bathconf_data=deserialize(wrapped.bathconf_data);
+  if(wrapped(*,"vegconf_data"))
+    save, wrapped, vegconf_data=deserialize(wrapped.vegconf_data);
   if(wrapped(*,"ops_conf"))
     save, wrapped, ops_conf=deserialize(wrapped.ops_conf);
   mission, unwrap, wrapped;
@@ -492,6 +514,7 @@ func eaarl_mission_flights_auto_keys(env) {
     "ins file",
     "ops_conf file",
     "bathconf file",
+    "vegconf file",
     "rgb dir",
     "nir dir"
   ];
@@ -517,6 +540,8 @@ func eaarl_mission_details_autolist(env) {
     env, result=autoselect_ops_conf(path, options=1);
   else if(key == "bathconf file")
     env, result=autoselect_bathconf(path, options=1);
+  else if(key == "vegconf file")
+    env, result=autoselect_vegconf(path, options=1);
   else if(key == "rgb dir")
     env, result=autoselect_rgb_dir(path, options=1);
   else if(key == "nir dir")
@@ -545,6 +570,10 @@ func eaarl_mission_flights_validate_fields(env) {
     ),
     "bathconf file", save(
       "help", "The bathconf file contains parameters used to process for submerged topography. This file is only required if you will be processing for submerged topography. The bathconf file will usually have the extension .bathconf; however, it may instead end in -bctl.json or .bctl if using older configuration files. The file is found either in the flight directory (if it is specific to this flight) or in the mission directory (if it is shared across multiple flights).",
+      required=0
+    ),
+    "vegconf file", save(
+      "help", "The vegconf file contains parameters used to process for vegetation. This file is only required if you will be processing for vegetation and the defaults are not acceptable. The vegconf file will have the extension .vegconf. The file is found in the alps configuration subdirectory.",
       required=0
     ),
     "rgb dir", save(
