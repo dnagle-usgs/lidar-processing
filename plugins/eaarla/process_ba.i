@@ -277,8 +277,9 @@ func eaarl_ba_plot(raster, pulse, channel=, win=, xfma=) {
       win, raster, pulse, max(channel, 1),
       bathconf(settings_group, max(channel, 1)));
 
-  msg = [];
-  result = ba_analyze_pulse(raster, pulse, msg, channel=channel, plot=1);
+  msg = chan = [];
+  result = ba_analyze_pulse(raster, pulse, msg, chan, channel=channel, plot=1);
+  channel = chan;
 
   if(!is_void(msg)) {
     port = viewport();
@@ -306,8 +307,8 @@ func eaarl_ba_plot(raster, pulse, channel=, win=, xfma=) {
   if(!is_void(msg)) write, msg;
 }
 
-func ba_analyze_pulse(raster, pulse, &msg, channel=, plot=) {
-/* DOCUMENT result = ba_analyze_pulse(raster, pulse, msg, channel=, plot=)
+func ba_analyze_pulse(raster, pulse, &msg, &chan, channel=, plot=) {
+/* DOCUMENT result = ba_analyze_pulse(raster, pulse, msg, &chan, channel=, plot=)
   Executes the bathy algorithm for a single pulse.
 
   Parameters:
@@ -315,6 +316,8 @@ func ba_analyze_pulse(raster, pulse, &msg, channel=, plot=) {
     pulse - Pulse number to use.
     msg - Output parameter containing an error/notice message. Will be [] if no
       message applies.
+    chan - Output parameter specifying which channel was used. This will equal
+      what was passed for channel, unless channel was 0.
   Options:
     channel= Channel to force use of. Default is 0, which means to auto-select.
     plot= Passes through to underlying rx_wf function to enable plotting. (If
@@ -332,6 +335,8 @@ func ba_analyze_pulse(raster, pulse, &msg, channel=, plot=) {
   // Allow functions to be overridden via hook
   restore, hook_invoke("eaarl_ba_rx_funcs", save(ba_rx_channel, ba_rx_wf));
 
+  chan = channel;
+
   pulses = decode_rasters(raster, raster);
   w = where(pulses.pulse == pulse);
   if(!numberof(w)) {
@@ -344,7 +349,7 @@ func ba_analyze_pulse(raster, pulse, &msg, channel=, plot=) {
   if(channel) {
     conf = bathconf(settings, channel);
   } else {
-    channel = ba_rx_channel(pulses.rx, conf);
+    chan = channel = ba_rx_channel(pulses.rx, conf);
   }
 
   msg = [];
