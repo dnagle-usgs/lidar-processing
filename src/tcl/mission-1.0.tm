@@ -177,6 +177,12 @@ namespace eval ::mission {
         set ::mission::cache_what $::mission::cache_what
     }
 
+    # Utility command to grab the conf directory
+    # This will usually be either $::mission::path or ${::mission::path}/alps
+    proc conf_dir {} {
+        return [file dirname [file join $::mission::path $::mission::conf_file]]
+    }
+
     # Launch the GUI
     proc launch {} {
         # If the GUI already exists, make sure it's visible and abort
