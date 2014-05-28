@@ -523,7 +523,7 @@ snit::type ::eaarl::vegconf::embed {
                 } elseif {[winfo class $path] eq "TCheckbutton"} {
                     $path configure \
                             -variable ${ns}::settings(${group},${key}) \
-                            -command [mymethod SetKey $key -]
+                            -command [mymethod SetKeyVar $key]
                 } else {
                     error "invalid control"
                 }
@@ -554,6 +554,12 @@ snit::type ::eaarl::vegconf::embed {
         exp_send "vegconf, set, \"$options(-group)\", \"$key\", \"$new\"; "
         $self plot
         return -code error
+    }
+
+    method SetKeyVar {key} {
+        set val $::eaarl::vegconf::settings(${options(-group)},${key})
+        exp_send "vegconf, set, \"$options(-group)\", \"$key\", \"$val\"; "
+        $self plot
     }
 
     method SetProfile {old new} {
