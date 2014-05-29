@@ -120,7 +120,8 @@ func mission_constants(args) {
   conf = args2obj(args);
   defaults = save(
     type="EAARL-A",
-    name=string(0),
+    name="",
+    comment="",
     x_offset=0.,
     y_offset=0.,
     z_offset=0.,

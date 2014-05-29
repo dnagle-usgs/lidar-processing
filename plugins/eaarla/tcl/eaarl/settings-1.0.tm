@@ -10,6 +10,7 @@ namespace eval ::eaarl::settings::ops_conf::v {
     variable settings {
         name            {gui_entry}
         varname         {gui_entry}
+        comment         {gui_entry}
         roll_bias       {gui_spinbox -45 45 0.01}
         pitch_bias      {gui_spinbox -45 45 0.01}
         yaw_bias        {gui_spinbox -45 45 0.01}
