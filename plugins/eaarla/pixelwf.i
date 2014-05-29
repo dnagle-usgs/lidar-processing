@@ -52,7 +52,7 @@ func expix_pixelwf_hook(env) {
 
   extern rn, pixelwfvars;
   if(pixelwfvars.selection.missionload)
-    mission, load_soe_rn, point.soe, point.rn;
+    mission, load_soe_rn, point.soe, point.raster;
   rp = parse_rn(point.rn);
   channel = has_member(point, "channel") ? short(point.channel) : 0;
   h_set, pixelwfvars.selection, raster=rp(1), pulse=rp(2), channel=channel;
