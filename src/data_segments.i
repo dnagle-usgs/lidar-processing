@@ -639,7 +639,7 @@ func tk_dsw_get_data(data, type, var, sod_field) {
   days = mission(get,);
   for(i = 1; i <= numberof(segment_ptrs); i++) {
     temp = *segment_ptrs(i);
-    mission, load_soe_rn, temp.soe(1), temp.rn(1);
+    mission, load_soe_rn, temp.soe(1), temp.raster(1);
     if(!numberof(symbol_def(var)))
       continue;
     ex_data = symbol_def(var);
