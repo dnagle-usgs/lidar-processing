@@ -133,6 +133,7 @@ proc ::eaarl::settings::ops_conf::gui_dead {} {
 proc ::eaarl::settings::ops_conf::save {} {
     set fn [tk_getSaveFile -parent .l1wid \
             -title "Select destination to save current ops_conf settings" \
+            -initialdir [::mission::conf_dir] \
             -filetypes {
                 {"Yorick files" .i}
                 {"All files" *}
