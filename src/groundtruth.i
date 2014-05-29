@@ -253,9 +253,9 @@ func gt_metrics(z1, z2, metrics) {
     else if(metrics(i) == "NRMSE")
       result(i) = swrite(format="%.1f%%", normalized_rmse(z2, z1) * 100);
     else if(metrics(i) == "SEM")
-      result(i) = swrite(format="%.3f\n", standard_error_of_mean(zdif));
+      result(i) = swrite(format="%.3f", standard_error_of_mean(zdif));
     else if(metrics(i) == "STME")
-      result(i) = swrite(format="%.3f\n", standardized_mean_error(z2, z1));
+      result(i) = swrite(format="%.3f", standardized_mean_error(z2, z1));
     else if(metrics(i) == "E StdDev")
       result(i) = swrite(format="%.3f", zdif(rms));
     else if (metrics(i) == "MAE")
