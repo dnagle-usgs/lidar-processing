@@ -185,12 +185,12 @@ norun=) {
   makeflow_run, conf, makeflow_fn, interval=10, norun=norun;
 }
 
-func mf_batch_rcf(dir, searchstr=, merge=, files=, update=, mode=,
+func mf_batch_rcf(dir, searchstr=, merge=, files=, outdir=, update=, mode=,
 prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, factor=, meta=,
 makeflow_fn=, norun=) {
-/* DOCUMENT new_batch_rcf, dir, searchstr=, merge=, files=, update=, mode=,
-   prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, factor=, meta=,
-   makeflow_fn=, norun=
+/* DOCUMENT new_batch_rcf, dir, searchstr=, merge=, files=, outdir=, update=,
+   mode=, prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, factor=,
+   meta=, makeflow_fn=, norun=
 
   This iterates over each file in a set of files and applies an RCF filter to
   its data.
@@ -223,6 +223,10 @@ makeflow_fn=, norun=) {
 
     files= Manually provides a list of files to filter. This will result in
       searchstr= being ignored and is not compatible with merge=1.
+
+    outdir= Specify an output directory. By default output files are created
+      alongside input files, but outdir= allows you to dump them all in a
+      different folder instead.
 
     update= Specifies that this is an update run and that existing files
       should be skipped. Settings:
@@ -332,6 +336,9 @@ makeflow_fn=, norun=) {
     // _mf
     // .pbd
     file_out += ".pbd";
+
+    if(outdir)
+      file_out = file_join(outdir, file_tail(file_out));
 
     if(file_exists(file_out)) {
       if(update) {

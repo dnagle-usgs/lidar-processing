@@ -605,6 +605,7 @@ factor=, prefilter_min=, prefilter_max=, verbose=) {
     write, format=" %s", "saving...";
   vname = regsub("_(f|v|b)$", vname, "");
   vname += swrite(format="_%s_%s", mode, rcfmode);
+  mkdirp, file_dirname(file_out);
   pbd_save, file_out, vname, data;
 
   if(verbose)
