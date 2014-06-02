@@ -670,3 +670,137 @@ func polygon_summarize {
   write, format=fmt, "---", array("-", fmtlen)(sum), array("-", strlen(_poly_names)(max))(sum);
   write, format=fmt, css, sizes, _poly_names;
 }
+
+func region_to_shp(region, utm=, ll=) {
+/* DOCUMENT shp = region_to_shp(region, utm=, ll=)
+  Returns a shapefile array for the area(s) defined by REGION.
+
+  The return result is an array of pointers. Each pointee is a poly array.
+
+  REGION can be any of the following:
+
+    - A scalar string that matches an existing file is treated as a shapefile.
+    - A scalar string that does not match an existing file and does not contain
+      a / is parsed as a tile name (such as "e234_n5234_15").
+    - A two-element string array is interpreted as a group,name pair for
+      polyplot(get,) (to reference a poly defined in the plotting tool).
+    - A four-element numerical vector is interpreted as an array of [xmin,
+      xmax, ymin, ymax].
+    - A five-element numerical vector is interpreted as the output of limits()
+      (which is [xmin, xmax, ymin, ymax, flags]; flags is ignored).
+    - A two-dimensional numerical array is interpreted as a single poly.
+    - An array of pointers is interpreted as a shapefile array.
+
+  If REGION does not match any of the above, an error will be triggered.
+
+  By default, the polys in the output array will be in their native coordinate
+  systems (and may not be consistent from one poly to the next). Use utm=1 to
+  coerce all of them to UTM or use ll=1 to coerce all of them to lat/lon. Using
+  one of these options is strongly recommended since you otherwise cannot be
+  sure what coordiante system your polys are in (or if they are even
+  consistent).
+*/
+  extern curzone;
+
+  if(utm && ll) error, "cannot use both utm=1 and ll=1 at the same time";
+
+  if(is_string(region)) {
+    if(is_scalar(region)) {
+      if(file_exists(region)) {
+        shp = read_ascii_shapefile(region);
+      } else if(!strmatch(region, "/")) {
+        tile = extract_tile(region);
+        if(strlen(tile))
+          region = tile2bbox(tile)([2,4,1,3]);
+      }
+    } else if(is_vector(region) && numberof(region) == 2) {
+      shp = polyplot(get, region);
+      if(is_numerical(shp)) shp = [&shp];
+    }
+  }
+
+  if(is_numerical(region)) {
+    if(is_vector(region)) {
+      // for normal bounds or for the result of limits()
+      if(numberof(region) == 4 || numberof(region) == 5) {
+        shp = [&region([[1,3],[1,4],[2,4],[2,3],[1,3]])];
+      }
+    } else if(is_matrix(region)) {
+      shp = [&region];
+    }
+  }
+
+  if(is_pointer(region) && is_vector(region)) {
+    // (*) forces a copy so that utm/ll do not alter the original
+    shp = region(*);
+  }
+
+  n = numberof(shp);
+  if(!n) error, "unable to handle region provided";
+
+  if(utm) {
+    for(i = 1; i <= n; i++) {
+      ply = *shp(i);
+      if(ply(1,1) <= 360) {
+        shp(i) = &(ll2utm(ply(2,), ply(1,), force_zone=curzone)([2,1],));
+      }
+    }
+  }
+  if(ll) {
+    for(i = 1; i <= n; i++) {
+      ply = *shp(i);
+      if(ply(1,1) > 360) {
+        shp(i) = &transpose(utm2ll(ply(2,), ply(1,), curzone));
+      }
+    }
+  }
+
+  return shp;
+}
+
+func region_to_string(region) {
+/* DOCUMENT region_to_string(region)
+  Given a region (as accepted by region_to_shp), this returns a string that
+  describes the region. See region_to_shp for details on what is accepted.
+*/
+  if(is_string(region)) {
+    if(is_scalar(region)) {
+      if(file_exists(region)) {
+        result = "shapefile: "+region;
+      } else if(!strmatch(region, "/")) {
+        tile = extract_tile(region);
+        if(strlen(tile))
+          result = "tile: "+region;
+      }
+    } else if(is_vector(region) && numberof(region) == 2) {
+      result = "polyplot selection: "+print(region)(sum);
+      // Hacky little trick to also include poly coordinates
+      result += strpart(region_to_string(region_to_shp(region)), 17:);
+    }
+  }
+
+  if(is_numerical(region)) {
+    if(is_vector(region)) {
+      // for normal bounds or for the result of limits()
+      if(numberof(region) == 4 || numberof(region) == 5) {
+        result = "bounding box: "+print(region(:4))(sum);
+      }
+    } else if(is_matrix(region)) {
+      result = "polygon:\n";
+      result += strjoin(print(region), "\n");
+    }
+  }
+
+  if(is_pointer(region)) {
+    result = "shapefile array:";
+    n = numberof(region);
+    for(i = 1; i <= n; i++) {
+      result += swrite(format="\nshp(%d) =\n", i);
+      result += strjoin(print(*region(i)), "\n");
+    }
+  }
+
+  if(is_void(result))
+    error, "unable to handle region provided";
+  return result;
+}
