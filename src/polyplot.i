@@ -404,7 +404,15 @@ func polyplot_get(group, name) {
     return shp;
   }
 
-  return data(noop(group), noop(name)).ply;
+  item = data(noop(group), noop(name));
+  ply = item.ply;
+
+  // If it's a closed poly, make sure it has the closing line
+  if(item.closed && (ply(1,1) != ply(1,0) || ply(2,1) != ply(2,0))) {
+    grow, ply, ply(,1);
+  }
+
+  return ply;
 }
 polyplot, get=polyplot_get;
 
