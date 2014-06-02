@@ -350,6 +350,64 @@ func polyplot_plot(group, name, win=, highlight=) {
 }
 polyplot, plot=polyplot_plot;
 
+save, scratch, polyplot_get;
+func polyplot_get(group, name) {
+/* DOCUMENT shp = polyplot(get,);
+  -or- shp = polyplot(get, "<group>");
+  -or- ply = polyplot(get, "<group>", "<name>");
+
+  -or- shp = polyplot(get, ["", ""]);
+  -or- shp = polyplot(get, ["<group>", ""]);
+  -or- ply = polyplot(get, ["<group", "<name>"]);
+
+  Retrieves a poly or a shapefile (array of polys) defined in the Plotting
+  Tool.
+
+  There are two ways you can call polyplot(get,). The first way is to pass it
+  zero, one, or two scalar string arguments. The second way is to pass it a
+  two-element string array. These possibilities are shown in the example syntax
+  above; the first three examples provide the same output as the last three
+  examples.
+
+  The two-element string array is to make it easier to specific a poly through
+  a calling function. If both strings are zero-length, then it retrieves all
+  polys. If only the second string is zero-length, then a single group's polys
+  are retrieved. If neither string is zero-length, then a specific poly in a
+  specific group is retrieved.
+*/
+  if(numberof(group) == 2) {
+    if(strlen(group(2)))
+      return polyplot(get, group(1), group(2));
+    if(strlen(group(1)))
+      return polyplot(get, group(1));
+    return polyplot(get,);
+  }
+
+  use, data;
+
+  if(is_void(group)) {
+    if(!data(*)) return [];
+    tmp = array(pointer, data(*));
+    for(i = 1; i <= data(*); i++) {
+      tmp(i) = &polyplot(get, data(*,i));
+    }
+    return merge_pointers(tmp);
+  }
+
+  if(is_void(name)) {
+    grp = data(noop(group));
+    if(!grp(*)) return [];
+    shp = array(pointer, grp(*));
+    for(i = 1; i <= grp(*); i++) {
+      shp(i) = &polyplot(get, group, grp(*,i));
+    }
+    return shp;
+  }
+
+  return data(noop(group), noop(name)).ply;
+}
+polyplot, get=polyplot_get;
+
 save, scratch, polyplot_export;
 func polyplot_export(group, file, geo=, meta=) {
 /* DOCUMENT polyplot, export, "<group>", "<file>", geo=, meta=
