@@ -68,6 +68,20 @@ func get_poly(void, closed=, win=) {
   return ply;
 }
 
+func points_in_shp(shp, ptx, pty) {
+/* DOCUMENT idx = points_in_shp(shp, ptx, pty)
+  Returns an index array specifying which of the points in pty,pty are
+  contained within the polys defined by shapefile array SHP.
+*/
+  n = numberof(shp);
+  match = array(0, numberof(ptx));
+  for(i = 1; i <= n; i++) {
+    w = testPoly2(*shp(i), ptx, pty);
+    if(numberof(w)) match(w) = 1;
+  }
+  return where(match);
+}
+
 func testPoly(pl, ptx, pty) {
 /* DOCUMENT idx = testPoly(pl, ptx, pty)
   This function determines whether points from a given set are inside or
