@@ -17,11 +17,9 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=) {
     mode= The selection mode to use.
         mode="box"    The user will be prompted to drag out a box (default)
         mode="pip"    The user will be prompted to draw a polygon
-    region= If provided, then these coordinates are used instead of prompting
-      the user to draw a box. This can accept two kinds of input:
-        - If region is a 4-element vector, it will be interpreted as an array
-          [min_x, max_x, min_y, max_y].
-        - Otherwise, region must be a 2xN array of vertices for a polygon.
+    region= If provided, this defines the processing region and the user will
+      not be prompted. This can accept any kind of region accepted by
+      region_to_shp; see region_to_shp for details.
     verbose= By default informational output is displayed to the console. Use
       verbose=0 to disable.
     plot= Specify whether to plot the region selected.
@@ -31,9 +29,8 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=) {
       region. Otherwise, too large a selection will result in an warning.
 
   Additionally, three externs are used:
-    utm: If utm=1, then the input coordinates are considered to be in UTM and
-      will be converted to lat/lon prior to use.
-    curzone: If utm=1, then curzone must be set to the current zone.
+    curzone: If the plot is in UTM or if a poly/shapefile with UTM coordinates
+      is provided, then curzone must be set to the current zone.
     pnav: The array of PNAV data.
 */
   extern utm, curzone, pnav;
@@ -49,27 +46,22 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=) {
 
   if(is_void(region)) {
     if(mode == "pip") {
-      ply = get_poly();
+      region = get_poly();
     } else {
-      ply = mouse_bounds(ply=1);
-    }
-  } else {
-    if(dimsof(region)(1) == 1 && numberof(region) == 4) {
-      ply = region([[1,3],[1,4],[2,4],[2,3]]);
-    } else {
-      ply = region;
+      region = mouse_bounds(ply=1);
     }
   }
+  shp = region_to_shp(region);
 
   if(plot) {
-    plpoly, ply, color=color;
+    tmp = region_to_shp(shp, utm=utm, ll=!utm);
+    plot_shape, tmp, color=color;
+    tmp = [];
   }
 
-  if(utm) {
-    ply = transpose(utm2ll(ply(2,), ply(1,), curzone));
-  }
+  shp = region_to_shp(shp, ll=1);
+  q = points_in_shp(shp, pnav.lon, pnav.lat);
 
-  q = testPoly(ply, pnav.lon, pnav.lat);
   if(is_void(q)) {
     if(verbose) write, "No GGA records found, aborting";
     window_select, wbkp;
