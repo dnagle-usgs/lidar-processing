@@ -1352,6 +1352,61 @@ proc ::plot::poly_export {} {
    }
 }
 
+# Utility command for outside use
+proc ::plot::poly_menu {mb args} {
+   array set opts {
+      -groups 0
+      -empty 0
+      -callback {}
+   }
+   array set opts $args
+
+   $mb delete 0 end
+   foreach child [winfo children $mb] {
+      destroy $child
+   }
+
+   set ngroups 0
+   foreach {group polys} $g::poly_data {
+      if {[llength $polys] == 0 && !$opts(-empty)} { continue }
+      incr ngroups
+
+      set pmb $mb.$ngroups
+      menu $pmb
+      $mb add cascade -label $group -menu $pmb
+
+      if {[llength $polys] == 0} {
+         $pmb add command -label "(No polys defined)"
+         continue
+      }
+
+      if {$opts(-groups) && $opts(-callback) ne "" && [llength $polys] > 2} {
+         $pmb add command -label "All polys" \
+               -command [list {*}$opts(-callback) $group ""]
+         $pmb add separator
+      }
+
+      foreach {poly -} $polys {
+         $pmb add command -label $poly
+         if {$opts(-callback) ne ""} {
+            $pmb entryconfigure end \
+                  -command [list {*}$opts(-callback) $group $poly]
+         }
+      }
+   }
+
+   if {!$ngroups} {
+      $mb add command -label "(No groups defined)"
+   } elseif {
+      $opts(-groups) && $opts(-callback) ne "" && $ngroups > 1
+   } {
+      $mb insert 0 separator
+      $mb insert 0 command -label "All polys" \
+            -command [list {*}$opts(-callback) "" ""]
+   }
+
+}
+
 proc ::plot::image_remove {} {
    set item [$g::imageListBox getcurselection]
    if {![string equal $item ""]} {
