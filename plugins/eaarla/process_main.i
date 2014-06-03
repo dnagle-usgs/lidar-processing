@@ -79,16 +79,18 @@ func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, ptime=, opts=) {
   return result;
 }
 
-func make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=) {
-/* DOCUMENT make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=)
+func make_eaarl(mode=, q=, region=, ply=, ext_bad_att=, channel=, verbose=,
+opts=) {
+/* DOCUMENT make_eaarl(mode=, q=, region=, ext_bad_att=, channel=, verbose=,
+   opts=)
   Processes EAARL data for the given mode in a region specified by the user.
 
   Options for selection:
     q= An index into pnav for the region to process.
-    ply= A polygon that specifies an area to process. If Q is provided, PLY is
-      ignored.
-    Note: if neither Q nor PLY are provided, the user will be prompted to draw
-    a box to select the region.
+    region= A region to process. See region_to_shp for what can be used as a
+      region. If Q is provided, REGION is ignored.
+    Note: if neither Q nor REGION are provided, the user will be prompted to
+    draw a box to select the region.
 
   Options for processing:
     mode= Processing mode.
@@ -114,7 +116,10 @@ func make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=) {
   t0 = array(double, 3);
   timer, t0;
 
-  restore_if_exists, opts, mode, q, ply, ext_bad_att, channel, verbose;
+  restore_if_exists, opts, mode, q, ply, region, ext_bad_att, channel, verbose;
+  if(!is_void(ply)) {
+    error, "ply= is no longer accepted by make_eaarl; use region= instead";
+  }
 
   extern ops_conf, tans, pnav;
 
@@ -129,7 +134,7 @@ func make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=, opts=) {
     error, "pnav is not set";
 
   if(is_void(q))
-    q = pnav_sel_rgn(region=ply);
+    q = pnav_sel_rgn(region=region);
 
   // find start and stop raster numbers for all flightlines
   rn_arr = sel_region(q, verbose=verbose);
@@ -254,9 +259,9 @@ func save_eaarl_for_channels(data, channels, pbdfn, vname, empty=) {
   }
 }
 
-func mf_make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=,
+func mf_make_eaarl(mode=, q=, region=, ply=, ext_bad_att=, channel=, verbose=,
 makeflow_fn=, norun=, retconf=, opts=) {
-/* DOCUMENT mf_make_eaarl(mode=, q=, ply=, ext_bad_att=, channel=, verbose=,
+/* DOCUMENT mf_make_eaarl(mode=, q=, region=, ext_bad_att=, channel=, verbose=,
    makeflow_fn=, norun=, retconf=, opts=)
   Processes EAARL data for the given mode in a region specified by the user.
   Unlike make_eaarl, mf_make_eaarl uses Makeflow to run flightlines in
@@ -264,10 +269,10 @@ makeflow_fn=, norun=, retconf=, opts=) {
 
   Options for selection:
     q= An index into pnav for the region to process.
-    ply= A polygon that specifies an area to process. If Q is provided, PLY is
-      ignored.
-    Note: if neither Q nor PLY are provided, the user will be prompted to draw
-    a box to select the region.
+    region= A region to process. See region_to_shp for what can be used as a
+      region. If Q is provided, REGION is ignored.
+    Note: if neither Q nor REGION are provided, the user will be prompted to
+    draw a box to select the region.
 
   Options for processing:
     mode= Processing mode.
@@ -302,8 +307,11 @@ makeflow_fn=, norun=, retconf=, opts=) {
   t0 = array(double, 3);
   timer, t0;
 
-  restore_if_exists, opts, mode, q, ply, ext_bad_att, channel, verbose,
+  restore_if_exists, opts, mode, q, ply, region, ext_bad_att, channel, verbose,
     makeflow_fn, retconf, norun;
+  if(!is_void(ply)) {
+    error, "ply= is no longer accepted by mf_make_eaarl; use region= instead";
+  }
 
   extern ops_conf, tans, pnav;
 
@@ -318,7 +326,7 @@ makeflow_fn=, norun=, retconf=, opts=) {
     error, "pnav is not set";
 
   if(is_void(q))
-    q = pnav_sel_rgn(region=ply);
+    q = pnav_sel_rgn(region=region);
 
   // find start and stop raster numbers for all flightlines
   rn_arr = sel_region(q, verbose=verbose);
@@ -347,7 +355,7 @@ makeflow_fn=, norun=, retconf=, opts=) {
   options = save(string(0), [], mode, channel, ext_bad_att, ptime);
   if(opts)
     options = obj_delete(obj_merge(opts, options),
-      q, ply, makeflow_fn, norun);
+      q, region, makeflow_fn, norun);
 
   conf = save();
   for(i = 1; i <= count; i++) {
@@ -389,12 +397,12 @@ makeflow_fn=, norun=, retconf=, opts=) {
 }
 
 func mf_batch_eaarl(mode=, outdir=, update=, ftag=, vtag=, date=,
-ext_bad_att=, channel=, pick=, plot=, onlyplot=, win=, ply=, q=, shapefile=,
-buffer=, force_zone=, log_fn=, makeflow_fn=, norun=, retconf=, exactsel=,
-splitchan=, opts=) {
+ext_bad_att=, channel=, pick=, plot=, onlyplot=, win=, region=, ply=, q=,
+shapefile=, buffer=, force_zone=, log_fn=, makeflow_fn=, norun=, retconf=,
+exactsel=, splitchan=, opts=) {
 /* DOCUMENT mf_batch_eaarl
   Most common options:
-    mf_batch_eaarl, pick=, shapefile=, q=, mode=, channel=, outdir=
+    mf_batch_eaarl, pick=, region=, q=, mode=, channel=, outdir=
 
   Makeflow batch processes EAARL data for the given mode in a region specified
   by the user.
@@ -404,11 +412,10 @@ splitchan=, opts=) {
       processing region.
         pick="box"    The will be prompted to drag out a box (default)
         pick="pip"    The user will be prompted to draw a polygon
-    ply= Specifies a polygon to use. If used, pick= is ignored.
-    shapefile= Specifies the path to a shapefile to load and use. The shapefile
-      must contain exactly one polygon. If used, pick= and ply= are ignored.
+    region= A region to process. See region_to_shp for what can be used as a
+      region. If used, pick= is ignored.
     q= Specifies a selected region to process by sod timestamps, as returned by
-      the processing GUI. If used, pick=, ply=, and shapefile= are ignored.
+      the processing GUI. If used, pick= and region= are ignored.
     exactsel= Toggles the exact selection mode. By default (exactsel=0), the
       selection is used to determine what tiles to process; then, those tiles
       are processed in their entirity even if parts of them are outside of the
@@ -497,9 +504,15 @@ splitchan=, opts=) {
   timer, t0;
 
   restore_if_exists, opts, mode, outdir, update, ftag, vtag, date,
-    ext_bad_att, channel, pick, plot, onlyplot, win, ply, q, shapefile,
+    ext_bad_att, channel, pick, plot, onlyplot, win, region, ply, q, shapefile,
     buffer, force_zone, log_fn, makeflow_fn, norun, retconf, exactsel,
     splitchan;
+  if(!is_void(ply)) {
+    error, "ply= is no longer accepted by mf_batch_eaarl; use region= instead";
+  }
+  if(!is_void(shapefile)) {
+    error, "shapefile= is no longer accepted by mf_batch_eaarl; use region= instead";
+  }
 
   default, mode, "f";
   default, buffer, 200.;
@@ -582,29 +595,8 @@ splitchan=, opts=) {
       file_tail(file_rootname(log_fn)) + ".makeflow");
   }
 
-  if(is_void(q)) {
-    // Derive region polygon
-    if(shapefile) {
-      ply = read_ascii_shapefile(shapefile);
-      if(numberof(ply) != 1)
-        error, "shapefile must contain exactly one polygon!";
-      ply = *ply(1);
-    }
-    if(is_void(ply)) {
-      if(pick == "pip")
-        ply = get_poly(win=win);
-      else
-        ply = mouse_bounds(ply=1, win=win);
-    }
-
-    // If given a shapefile, it's possible that there will be a mismatch.
-    // Juggle utm to prevent that issue.
-    extern utm;
-    _utm = utm;
-    utm = ply(1,1) > 360;
-    q = pnav_sel_rgn(win=win, region=ply, _batch=1, plot=plot, color="red");
-    utm = _utm;
-  }
+  if(is_void(q))
+    q = pnav_sel_rgn(region=region);
   idx = pnav_rgn_to_idx(q);
 
   if(is_void(idx)) {
@@ -682,13 +674,12 @@ splitchan=, opts=) {
   write, f, format="\nOptions used:%s", "\n";
   write, f, format="%s", obj_show(save(
     mode, outdir, update, ftag, vtag, date, ext_bad_att, channel, pick, plot,
-    onlyplot, win, shapefile, buffer, force_zone, exactsel, splitchan, log_fn,
-    makeflow_fn, norun, retconf, opts),
-    maxchild=100, maxary=10);
+    onlyplot, win, buffer, force_zone, exactsel, splitchan, log_fn,
+    makeflow_fn, norun, retconf, opts), maxchild=100, maxary=10);
 
-  if(!is_void(ply)) {
+  if(!is_void(region)) {
     write, f, format="\nProcessing area:%s", "\n";
-    write, f, format="%s\n", print(ply);
+    write, f, format="%s\n", region_to_string(region);
   } else {
     write, f, format="\nProcessing selection:%s", "\n";
     write, f, format="%s\n", print(q);
