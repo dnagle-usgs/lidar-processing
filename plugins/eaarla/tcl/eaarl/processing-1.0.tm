@@ -6,6 +6,7 @@ package require yorick::util
 namespace eval ::eaarl::processing {
     namespace import ::misc::appendif
     namespace import ::l1pro::file::prefix
+    namespace import ::yorick::ystr
 }
 
 proc ::eaarl::processing::define_region_box {} {
@@ -18,6 +19,19 @@ proc ::eaarl::processing::define_region_poly {} {
 
 proc ::eaarl::processing::define_region_rect {} {
     define_region_rect::gui [prefix]%AUTO%
+}
+
+proc ::eaarl::processing::define_region_limits {} {
+    exp_send "window, $::_map(window); q = pnav_sel_rgn(win=$::_map(window),\
+            region=limits());\r"
+}
+
+proc ::eaarl::processing::define_region_tile {} {
+    set tile [::misc::getstring -prompt "Enter tile name:" -title "Tile"]
+    if {[lindex $tile 0] eq "cancel"} { return }
+    set tile [lindex $tile 1]
+    exp_send "q = pnav_sel_rgn(win=$::_map(window),\
+            region=\"[ystr $tile]\");\r"
 }
 
 namespace eval ::eaarl::processing::define_region_rect {

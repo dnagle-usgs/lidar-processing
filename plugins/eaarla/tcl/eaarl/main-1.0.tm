@@ -26,6 +26,10 @@ proc ::eaarl::main::gui {} {
             -command ${ns}::define_region_box
     $m add command -label "Points in polygon" \
             -command ${ns}::define_region_poly
+    $m add command -label "Window limits" \
+            -command ${ns}::define_region_limits
+    $m add command -label "Tile" \
+            -command ${ns}::define_region_tile
     $m add command -label "Rectangular coords" \
             -command ${ns}::define_region_rect
     ttk::menubutton $f.region -text "Define Region" -menu $m \
