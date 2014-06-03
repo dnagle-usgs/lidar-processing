@@ -34,6 +34,11 @@ proc ::eaarl::processing::define_region_tile {} {
             region=\"[ystr $tile]\");\r"
 }
 
+proc ::eaarl::processing::define_region_poly_callback {group poly} {
+    exp_send "q = pnav_sel_rgn(win=$::_map(window),\
+            region=\[\"[ystr $group]\", \"[ystr $poly]\"\]);\r"
+}
+
 namespace eval ::eaarl::processing::define_region_rect {
     namespace import ::l1pro::file::prefix
 }

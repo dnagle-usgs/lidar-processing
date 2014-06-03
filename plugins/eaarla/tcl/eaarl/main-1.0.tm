@@ -32,6 +32,9 @@ proc ::eaarl::main::gui {} {
             -command ${ns}::define_region_tile
     $m add command -label "Rectangular coords" \
             -command ${ns}::define_region_rect
+    menu $m.polys -postcommand [list ::plot::poly_menu $m.polys \
+            -groups 1 -callback ${ns}::define_region_poly_callback]
+    $m add cascade -label "Plotting Tool poly..." -menu $m.polys
     ttk::menubutton $f.region -text "Define Region" -menu $m \
             -style Panel.TMenubutton
 
