@@ -17,6 +17,7 @@ namespace eval ::mission::eaarl {
         "ops_conf file"
         "bathconf file"
         "vegconf file"
+        "sbconf file"
         "rgb dir"
         "nir dir"
     }
@@ -47,6 +48,10 @@ namespace eval ::mission::eaarl {
         }
         "vegconf file" {
             {{Veg settings files} {.vegconf}}
+            {{All files} *}
+        }
+        "sbconf file" {
+            {{Shallow bathy settings files} {.sbconf}}
             {{All files} *}
         }
     }

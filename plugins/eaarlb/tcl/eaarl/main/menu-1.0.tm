@@ -68,6 +68,8 @@ namespace eval ::eaarl::main::menu {
                 -command [list ::eaarl::bathconf::plot 8]
         $mb add command {*}[menulabel "&Veg Settings..."] \
                 -command [list ::eaarl::vegconf::plot 16]
+        $mb add command {*}[menulabel "S&hallow Bathy Settings..."] \
+                -command [list ::eaarl::sbconf::plot 18]
         return $mb
     }
 

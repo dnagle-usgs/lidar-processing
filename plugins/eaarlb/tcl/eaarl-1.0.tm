@@ -13,6 +13,7 @@ package require eaarl::pixelwf
 package require eaarl::processing
 package require eaarl::raster
 package require eaarl::rawwf
+package require eaarl::sbconf
 package require eaarl::settings
 package require eaarl::sync
 package require eaarl::transmit
@@ -24,6 +25,7 @@ namespace eval ::eaarl {
       "First Return Topo"  f
       "Submerged Topo"     b
       "Topo Under Veg"     v
+      "Shallow Bathy"      sb
       "OLD: First Return Topo"  old_fs
       "OLD: Submerged Topo"     old_bathy
       "OLD: Topo Under Veg"     old_veg
@@ -53,7 +55,7 @@ namespace eval ::eaarl {
       variable usechannel_4
 
       set mapping {
-         f fs v veg b depth
+         f fs v veg b depth sb shallow
          old_fs fs old_bathy depth old_veg veg old_cveg cveg
       }
 
@@ -66,7 +68,7 @@ namespace eval ::eaarl {
       if {$chan eq ""} {set chan "chn"}
 
       # Only change prefix if prefix is in known list
-      if {$prefix in [list fs veg depth cveg]} {
+      if {$prefix in [list fs veg depth shallow cveg]} {
          set prefix [dict get $mapping $processing_mode]
       }
 
