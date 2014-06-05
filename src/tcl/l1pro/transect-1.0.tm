@@ -211,8 +211,8 @@ namespace eval l1pro::transect {
         set settings($row,channel) 0
         set settings($row,digitizer) 0
         set settings($row,usercf) 0
-        set settings($row,rcfbuf) 1.0
-        set settings($row,rcffw) 1.0
+        set settings($row,rcfbuf) 200.0
+        set settings($row,rcffw) 100.0
         set settings($row,piplock) 1
         set settings($row,pipvar) $::pro_var
 
@@ -309,9 +309,9 @@ namespace eval l1pro::transect {
                 -style Small.TCheckbutton
         ttk::checkbutton ${p}usercf -text "" \
                 -variable ${var}($row,usercf)
-        ttk::spinbox ${p}rcfbuf -width 3 \
+        ttk::spinbox ${p}rcfbuf -width 6 -justify right\
                 -textvariable ${var}($row,rcfbuf)
-        ttk::spinbox ${p}rcffw -width 3 \
+        ttk::spinbox ${p}rcffw -width 6 -justify right\
                 -textvariable ${var}($row,rcffw)
         ::mixin::padlock ${p}piplock \
                 -variable ${var}($row,piplock) \
@@ -548,13 +548,13 @@ namespace eval l1pro::transect {
                 $rcf_common"
         tooltip ${p}rcfbuf \
                 "Specifies the horizontal buffer to use along the transect, in
-                meters. This buffer will be centered on each point. (Thus,
+                centimeters. This buffer will be centered on each point. (Thus,
                 points with plus or minus half this buffer will be considered
                 as its neighborhood.)
 
                 $rcf_common"
         tooltip ${p}rcffw \
-                "Specifies the vertical filter width to use, in meters. The RCF
+                "Specifies the vertical filter width to use, in centimeters. The RCF
                 filter will look for the vertical window of this size with the
                 most points.
 

@@ -249,10 +249,12 @@ showpts=) {
       will happen and plot will be in one color.
         segment="line"                Segment by line
         segment=["line", "channel"]   Segment by line and channel
-    rcf_buf= Applies transect_rcf filter with buf=rcf_buf. If this is used,
+    rcf_buf= Applies transect_rcf filter with buf=rcf_buf cm. If this is used,
       rcf_fw= must also be used. See transect_rcf for details on buf=.
-    rcf_fw= Applies transect_rcf filter with fw=rcf_fw. If this is used,
+    rcf_fw= Applies transect_rcf filter with fw=rcf_fw cm. If this is used,
       rcf_buf must also be used. See transect_rcf for details on fw=.
+      rcf_buf and rcf_fw is in centimeters to match the values used
+      in the Random Consensus Filter GUI tool.
     iwin= "Input" window, where the point cloud to transect is plotted. This
       window is used when prompting the user to draw a transect. It is also
       used to plot the transect line (if showline=1 or =2) and to highligh the
@@ -345,7 +347,8 @@ showpts=) {
     return;
   }
   if(!is_void(rcf_buf) && !is_void(rcf_fw)) {
-    data = transect_rcf(data, line, mode=mode, buf=rcf_buf, fw=rcf_fw);
+    // transect_rcf expects rcf_buf and rcf_fw to be in meters.
+    data = transect_rcf(data, line, mode=mode, buf=rcf_buf/100., fw=rcf_fw/100.);
     if(is_void(data)) {
       write, "RCF filter removed all data";
       return;
