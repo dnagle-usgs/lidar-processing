@@ -673,8 +673,9 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, iwin=, woff=, title
   legend, reset;
   legend, add, "blue", "Pdop";
   legend, add, "red",  "altitude";
-  plsys,1; plmk, pn1.pdop, pn1.sod/3600.0, color="blue";
-  plsys,2; plmk, pn1.alt, pn1.sod/3600.0, color="black", msize=.1;
+  // plsys,1; plmk, pn1.pdop, pn1.sod/3600.0, color="blue";
+  // plsys,2; plmk, pn1.alt, pn1.sod/3600.0, color="black", msize=.1;
+  plmk, pn1.alt, pn1.sod/3600.0, color="black", msize=.1;
   plg,  pn1.alt, pn1.sod/3600.0, color="red";
   legend, show;
   xytitles, "Hours of day", "Meters", [ 0.505, -0.01];
@@ -694,8 +695,9 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, iwin=, woff=, title
   legend, show;
 
   // plg, pn1.alt, lbr, color="red";
-  plsys,1; plmk, pn1.pdop, lbr, color="blue";
-  plsys,2; plmk, pn1.alt, lbr, color="red";
+  // plsys,1; plmk, pn1.pdop, lbr, color="blue";
+  // plsys,2; plmk, pn1.alt, lbr, color="red";
+  plmk, pn1.alt, lbr, color="red";
   // plmk, llsr, pn1.sod/3600.0, color="cyan";
   xytitles, "Range from Base(km)", "Meters", [0.505, -0.01];
   range, -.05, .05;
