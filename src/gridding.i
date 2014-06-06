@@ -644,29 +644,19 @@ func display_grid(data, cmin=, cmax=) {
   }
 
   z = *(data.zgrid);
-  x = y = array(double, dimsof(z));
-  xmax = data.xmin + dimsof(x)(2) * data.cell;
-  ymax = data.ymin + dimsof(y)(3) * data.cell;
-  hc = 0.5 * data.cell;
-  x(,) = span(data.xmin+hc, xmax-hc, dimsof(x)(2))(,-);
-  y(,) = span(data.ymin+hc, ymax-hc, dimsof(y)(3))(-,);
-  w = where(z != data.nodata);
-  if(numberof(w)) {
-    x = x(w);
-    y = y(w);
-    z = z(w);
-  } else {
-    write, "No data to display";
-    return;
-  }
 
-  xo = [-1,1,1,-1] * 0.5 * data.cell;
-  yo = [-1,-1,1,1] * 0.5 * data.cell;
-  xx = (x(-,) + xo)(*);
-  yy = (y(-,) + yo)(*);
+  x = data.xmin + indgen(0:dimsof(z)(2)) * data.cell;
+  y = data.ymin + indgen(0:dimsof(z)(3)) * data.cell;
 
-  n = array(short(4), numberof(z));
-  plfp, z, yy, xx, n, cmin=cmin, cmax=cmax;
+  dims = [2, numberof(x), numberof(y)];
+
+  xx = array(0, dims) + x(,-);
+  yy = array(0, dims) + y(-,);
+
+  ireg = array(0, dims);
+  ireg(2:,2:) = z != data.nodata;
+
+  plf, z, yy, xx, ireg, cmin=cmin, cmax=cmax;
 }
 
 func downsample_grid(data, factor) {
