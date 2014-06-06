@@ -191,7 +191,7 @@ snit::widget ::yorick::window::embedded {
                     -command [mymethod SquarePlot] \
                     -width 0
             ::misc::tooltip $f.square \
-                    "Clicking on this will square the plot"
+                    "Square the plot"
 
             set mb $f.resize.mb
             ttk::menubutton $f.resize \
@@ -336,7 +336,7 @@ snit::widget ::yorick::window::embedded {
     }
 
     method SquarePlot {} {
-        exp_send "win_square\r"
+        exp_send "window, $options(-window); win_square\r"
     }
 
     method palette {pal} {
