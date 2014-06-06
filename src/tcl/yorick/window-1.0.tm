@@ -185,6 +185,14 @@ snit::widget ::yorick::window::embedded {
             ::misc::tooltip $f.limits \
                     "Resets the limits for this window."
 
+            ttk::button $f.square \
+                    -image ::imglib::vcr::stop \
+                    -style Toolbutton \
+                    -command [mymethod SquarePlot] \
+                    -width 0
+            ::misc::tooltip $f.square \
+                    "Clicking on this will square the plot"
+
             set mb $f.resize.mb
             ttk::menubutton $f.resize \
                     -image ::imglib::resize \
@@ -270,7 +278,7 @@ snit::widget ::yorick::window::embedded {
                     "Click to collapse the toolbar down to a single button (in
                     case you need to see the Yorick text behind it)."
 
-            pack $f.limits $f.resize $f.palette $f.snapshot $f.close $f.hide \
+            pack $f.limits $f.square $f.resize $f.palette $f.snapshot $f.close $f.hide \
                     -side left -padx 1
         } else {
             ttk::button $f.show \
@@ -325,6 +333,10 @@ snit::widget ::yorick::window::embedded {
 
     method limits {} {
         exp_send "window, $options(-window); limits;\r"
+    }
+
+    method SquarePlot {} {
+        exp_send "win_square\r"
     }
 
     method palette {pal} {
