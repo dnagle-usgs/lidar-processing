@@ -160,3 +160,24 @@ func window2image(file, win=) {
   remove, xwdfile;
   rmdir, dir;
 }
+
+func win_square {
+/* DOCUMENT win_square
+    squares the current window by taking the max x/y delta and applying it
+    to both dimensions.
+*/
+  lm = limits();
+  vp = viewport();
+  sc = vp(1:2)(dif) / vp(3:4)(dif);
+
+  xf = max( lm(1:2)(dif), lm(3:4)(dif));
+  yf = xf / sc;
+
+  lm(1) = (lm(1) + ( lm(1:2)(dif)/2.) - (xf/2.));
+  lm(3) = (lm(3) + ( lm(3:4)(dif)/2.) - (yf/2.));
+
+  lm(2) = lm(1)+xf;
+  lm(4) = lm(3)+yf;
+
+  limits, lm;
+}
