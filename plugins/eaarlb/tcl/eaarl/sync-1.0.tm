@@ -12,6 +12,8 @@ namespace eval eaarl::sync {
             {-raster -pulse}
         bath bathconf Bath 8
             {-raster -pulse -channel}
+        veg vegconf Veg 20
+            {-raster -pulse -channel}
     }
 }
 
