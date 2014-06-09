@@ -1,47 +1,43 @@
 
 package provide eaarl::sync  1.0
-namespace eval eaarl::sync {}
+
+namespace eval eaarl::sync {
+    # id ns name win opts
+    variable viewers {
+        rast raster Rast 11
+            {-raster -pulse -channel -highlight}
+        rawwf rawwf "Raw WF" 9
+            {-raster -pulse}
+        tx transmit Transmit 16
+            {-raster -pulse}
+        bath bathconf Bath 8
+            {-raster -pulse -channel}
+    }
+}
 
 proc ::eaarl::sync::multicmd {args} {
+    variable viewers
+
     array set opts {
         -raster     1
-        -channel    0
         -pulse      1
-        -rast       0
-        -rastwin    11
-        -rawwf      0
-        -rawwfwin   9
-        -bath       0
-        -bathwin    8
-        -tx         0
-        -txwin      16
-        -highlight  0
     }
     array set opts $args
 
     set cmd ""
-
-    set baseopts [list -raster $opts(-raster) -pulse $opts(-pulse)]
-    set chanopts $baseopts
-    if {$opts(-channel)} {
-        lappend chanopts -channel $opts(-channel)
-    }
-    set rastopts $chanopts
-    if {$opts(-highlight)} {
-        lappend rastopts -highlight $opts(-highlight)
-    }
-
-    if {$opts(-rast)} {
-        append cmd [::eaarl::raster::plotcmd $opts(-rastwin) {*}$rastopts]
-    }
-    if {$opts(-rawwf)} {
-        append cmd [::eaarl::rawwf::plotcmd $opts(-rawwfwin) {*}$baseopts]
-    }
-    if {$opts(-bath)} {
-        append cmd [::eaarl::bathconf::plotcmd $opts(-bathwin) {*}$chanopts]
-    }
-    if {$opts(-tx)} {
-        append cmd [::eaarl::transmit::plotcmd $opts(-txwin) {*}$baseopts]
+    foreach {id ns name win want} $viewers {
+        if {[info exists opts(-${id})] && $opts(-${id})} {
+            if {[info exists opts(-${id}win)]} {
+                set win $opts(-${id}win)
+            }
+            set params [list]
+            foreach p $want {
+                if {[info exists opts($p)]} {
+                    lappend params $p $opts($p)
+                }
+            }
+            append cmd [::eaarl::${ns}::plotcmd $win {*}$params]
+        }
     }
 
     return $cmd
