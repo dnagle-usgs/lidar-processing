@@ -179,7 +179,7 @@ proc menu_window mb {
     $mb add cascade {*}[menulabel "&Grid lines..."] \
             -menu [menu_window_grid $mb.grid]
     $mb add separator
-    $mb add cascade {*}[menulabel "&Cascade arrange..."] \
+    $mb add cascade {*}[menulabel "C&ascade arrange..."] \
             -menu [menu_window_cascade $mb.cascade]
     $mb add cascade {*}[menulabel "Raise &window..."] \
             -menu [menu $mb.raisewin -postcommand \
