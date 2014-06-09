@@ -171,6 +171,8 @@ proc menu_window mb {
     $mb add separator
     $mb add command {*}[menulabel "&Capture a display..."] \
             -command ::misc::xwd
+    $mb add command {*}[menulabel "Capture all displays..."] \
+            -command ::misc::xwdall::gui
     $mb add separator
     $mb add cascade {*}[menulabel Palette...] \
             -menu [menu_window_palette $mb.pal]

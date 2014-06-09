@@ -2,6 +2,7 @@
 
 package provide misc 1.0
 package require misc::getstring
+package require misc::xwdall
 
 package require imglib
 package require snit
