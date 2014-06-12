@@ -62,16 +62,10 @@ snit::type ::eaarl::rawwf::embed {
 
     component window
     component pane
+    component sync
 
     # Step amount for raster stepping
     variable raststep 2
-
-    variable raster_plot 0
-    variable raster_win 11
-    variable bathy_plot 0
-    variable bathy_win 8
-    variable transmit_plot 0
-    variable transmit_win 16
 
     # The current window width
     variable win_width 450
@@ -221,22 +215,10 @@ snit::type ::eaarl::rawwf::embed {
     }
 
     method Gui_sync {f} {
-        foreach type {raster bathy transmit} {
-            set name [string totitle $type]
-            ttk::checkbutton $f.lbl$name \
-                    -text ${name}: \
-                    -variable [myvar ${type}_plot]
-            pack $f.lbl$name -side left
-
-            ttk::spinbox $f.spn$name \
-                    -width 2 \
-                    -from 0 -to 63 -increment 1 \
-                    -textvariable [myvar ${type}_win]
-            ::mixin::statevar $f.spn$name \
-                    -statemap {0 disabled 1 normal} \
-                    -statevariable [myvar ${type}_plot]
-            pack $f.spn$name -side left -padx {0 1}
-        }
+        ::eaarl::sync::selframe $f.fraSync \
+                -exclude rawwf
+        pack $f.fraSync -side left -anchor nw -fill x -expand 1
+        set sync $f.fraSync
     }
 
     method Gui_settings {f} {
@@ -321,11 +303,8 @@ snit::type ::eaarl::rawwf::embed {
     # (Re)plots the window
     method plot {} {
         set cmd [$self plotcmd]
-        append cmd [::eaarl::sync::multicmd \
-                -raster $options(-raster) -pulse $options(-pulse) \
-                -rast $raster_plot -rastwin $raster_win \
-                -bath $bathy_plot -bathwin $bathy_win \
-                -tx $transmit_plot -txwin $transmit_win]
+        append cmd [$sync plotcmd \
+                -raster $options(-raster) -pulse $options(-pulse)]
         exp_send "$cmd\r"
     }
 
