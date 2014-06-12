@@ -72,16 +72,11 @@ snit::type ::eaarl::raster::embed {
 
     component window
     component pane
+    component sync
 
     # Step amount for raster stepping
     variable raststep 2
 
-    variable rawwf_plot 0
-    variable rawwf_win 9
-    variable bathy_plot 0
-    variable bathy_win 8
-    variable transmit_plot 0
-    variable transmit_win 16
     variable lock_channel 0
 
     # The current window width
@@ -257,23 +252,10 @@ snit::type ::eaarl::raster::embed {
     }
 
     method Gui_sync {f} {
-        foreach type {rawwf bathy transmit} {
-            set name [string totitle $type]
-            ttk::checkbutton $f.lbl$name \
-                    -text ${name}: \
-                    -variable [myvar ${type}_plot]
-            pack $f.lbl$name -side left
-
-            ttk::spinbox $f.spn$name \
-                    -width 2 \
-                    -from 0 -to 63 -increment 1 \
-                    -textvariable [myvar ${type}_win]
-            ::mixin::statevar $f.spn$name \
-                    -statemap {0 disabled 1 normal} \
-                    -statevariable [myvar ${type}_plot]
-            pack $f.spn$name -side left -padx {0 1}
-        }
-        $f.lblRawwf configure -text "Raw WF"
+        ::eaarl::sync::selframe $f.fraSync \
+                -exclude rast
+        pack $f.fraSync -side left -anchor nw -fill x -expand 1
+        set sync $f.fraSync
 
         ttk::button $f.btnSelect \
                 -image ::imglib::handup \
@@ -285,7 +267,7 @@ snit::type ::eaarl::raster::embed {
                 -style Toolbutton \
                 -width 0 \
                 -command [mymethod examine browse]
-        pack $f.btnBrowse $f.btnSelect -side right
+        pack $f.btnBrowse $f.btnSelect -side right -anchor ne
 
         tooltip $f.btnSelect \
                 "Allows you to click on the plot once to select a waveform to
@@ -493,25 +475,17 @@ snit::type ::eaarl::raster::embed {
     # (Re)plots the window
     method plot {args} {
         set cmd [$self plotcmd {*}$args]
-        append cmd [::eaarl::sync::multicmd \
+        append cmd [$sync plotcmd \
                 -raster $options(-raster) -pulse $options(-pulse) \
-                -channel $options(-channel) \
-                -rawwf $rawwf_plot -rawwfwin $rawwf_win \
-                -bath $bathy_plot -bathwin $bathy_win \
-                -tx $transmit_plot -txwin $transmit_win]
+                -channel $options(-channel)]
         exp_send "$cmd\r"
     }
 
     method examine {mode} {
         set cmd "drast_msel, $options(-raster)"
         appendif cmd \
-                1                   ", rx=$rawwf_plot" \
-                $transmit_plot      ", tx=1" \
-                $bathy_plot         ", bath=1" \
                 1                   ", winsel=$options(-window)" \
-                $rawwf_plot         ", winrx=$rawwf_win" \
-                $transmit_plot      ", wintx=$transmit_win" \
-                $bathy_plot         ", winbath=$bathy_win" \
+                1                   ", optstr=\"[$sync getopts]\"" \
                 {$mode eq "single"} ", single=1"
         exp_send "$cmd\r"
     }

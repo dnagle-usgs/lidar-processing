@@ -451,10 +451,8 @@ bathyoffset=, bathyverbose=, bg=) {
     return ndrast(rn, channel=channel, graph=0, sfsync=sfsync);
 }
 
-func drast_msel(rn, type=, rx=, tx=, bath=, winsel=, winrx=, wintx=, winbath=,
-single=, pulse=) {
-/* DOCUMENT drast_msel, rn, type=, rx=, tx=, bath=, winsel=, winrx=, wintx=,
-   winbath=, single=, pulse=
+func drast_msel(rn, type=, winsel=, single=, pulse=, optstr=) {
+/* DOCUMENT drast_msel, rn, type=, winsel=, single=, pulse=, optstr=
 
   Enters an interactive mode that allows the user to query waveforms on an
   ndrast plot.
@@ -465,43 +463,27 @@ single=, pulse=) {
     type= Type of plot being queried.
         type="rast"   show_rast or ndrast plot (default)
         type="geo"    geo_rast plot (old style)
-    rx= Whether or not to plot the return waveform.
-        rx=1          plot return waveform (default)
-        rx=0          don't plot return waveform
-    tx= Whether or not to plot the transmit waveform.
-        tx=1          plot return waveform
-        tx=0          don't plot return waveform (default)
-    bath= Whether or not to plot the bathy waveform.
-        tx=1          plot return waveform
-        tx=0          don't plot return waveform (default)
     winsel= Window to use for mouse selection (where ndrast is plotted).
         winsel=11     default
-    winrx= Window to use for plotting return waveform(s).
-        window=9      default
-    wintx= Window to use for plotting transmit waveform.
-        window=16     default
-    winbath= Window to use for plotting bathy waveform.
-        window=4      default
     single= Enters single-click mode. After a single pulse is selected, it
       immediately exits interactive mode.
     pulse= Specifies a plot to pulse. The user will not be queried at all.
+    optstr= An option string to be passed to ::eaarl::sync::sendyorick
+      indicating which plots are wanted and which windows should be used.
+        optstr="-rast 1 -rastwin 9"   default
 
   Extern dependency:
     xm: Set by geo_rast and used to determine which pixel is clicked on.
 */
   default, type, "rast";
-  default, rx, 1;
-  default, tx, 0;
-  default, bath, 0;
   default, winsel, 11;
-  default, winrx, 9;
-  default, wintx, 16;
-  default, winbath, 4;
   default, single, 0;
   default, pulse, 0;
 
-  if(noneof([rx,tx,bath])) {
-    write, " ABORTING: You must select at least one of rx=, tx=, or bath=.";
+  default, optstr, "-rast 1 -rastwin 9";
+
+  if(!is_string(optstr) ||  !strlen(optstr)) {
+    write, " ABORTING: You must provide optstr= as a string";
     return;
   }
 
@@ -542,14 +524,7 @@ single=, pulse=) {
     if(pulse) {
       write, format=" - Pulse %d\n", pulse;
       cmd = swrite(format="::eaarl::sync::sendyorick plotcmd"
-        +" -raster %d -pulse %d", rn, pulse);
-      if(rx)
-        cmd += swrite(format=" -rawwf 1 -rawwfwin %d", winrx);
-      if(bath)
-        cmd += swrite(format=" -bath 1 -bathwin %d", winbath);
-      if(tx)
-        cmd += swrite(format=" -tx 1 -txwin %d", wintx);
-
+        +" -raster %d -pulse %d %s", rn, pulse, optstr);
       scratch = save(scratch, plotcmd);
       plotcmd = [];
       tkcmd, cmd;
