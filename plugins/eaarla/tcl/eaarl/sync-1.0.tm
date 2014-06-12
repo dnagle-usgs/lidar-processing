@@ -26,9 +26,9 @@ snit::widgetadaptor ::eaarl::sync::selframe {
     option {-exclude exclude Exclude} \
             -readonly 1 \
             -default {}
-    option {-orient orient Orient} \
-            -default horizontal \
-            -configuremethod SetOrient
+    option {-layout layout Layout} \
+            -default wrappack \
+            -configuremethod SetLayout
 
     variable window
     variable plot
@@ -73,16 +73,26 @@ snit::widgetadaptor ::eaarl::sync::selframe {
                     -statemap {0 disabled 1 normal} \
                     -statevariable [myvar plot]($id)
 
-            if {$options(-orient) eq "horizontal"} {
-                lower [ttk::frame $f.fra$id]
-                pack $f.chk$id $f.spn$id -side left -in $f.fra$id
-                wrappack $f.fra$id -padx 2 -pady 1
-            } else {
-                grid $f.chk$id $f.spn$id -sticky ew
-                grid $f.chk$id -sticky w
+            switch -- $options(-layout) {
+                wrappack {
+                    lower [ttk::frame $f.fra$id]
+                    pack $f.chk$id $f.spn$id -side left -in $f.fra$id
+                    wrappack $f.fra$id -padx 2 -pady 1
+                }
+                pack {
+                    pack $f.chk$id $f.spn$id -side left
+                }
+                onecol {
+                    grid $f.chk$id $f.spn$id -sticky ew
+                    grid $f.chk$id -sticky w
+                }
+                default {
+                    # This should never happen
+                    error "unknown -layout option"
+                }
             }
         }
-        if {$options(-orient) eq "vertical"} {
+        if {$options(-layout) eq "onecol"} {
             grid columnconfigure $f 0 -weight 2 -uniform 1
             grid columnconfigure $f 1 -weight 3 -uniform 1
         }
@@ -120,12 +130,12 @@ snit::widgetadaptor ::eaarl::sync::selframe {
         return [::eaarl::sync::multicmd {*}$args]
     }
 
-    method SetOrient {option value} {
-        if {$value ni {horizontal vertical}} {
-            error "invalid -orient value: $value"
+    method SetLayout {option value} {
+        if {$value ni {wrappack pack onecol}} {
+            error "invalid -layout value: $value"
         }
-        if {$value ne $options(-orient)} {
-            set options(-orient) $value
+        if {$value ne $options(-layout)} {
+            set options(-layout) $value
             if {$ready} {
                 $self rebuild
             }

@@ -289,12 +289,12 @@ snit::type ::eaarl::bathconf::embed {
 
     method Gui_sync {f} {
         if {$win_width > 600} {
-            set orient vertical
+            set layout onecol
         } else {
-            set orient horizontal
+            set layout wrappack
         }
         ::eaarl::sync::selframe $f.fraSync \
-                -orient $orient \
+                -layout $layout \
                 -exclude bath
         pack $f.fraSync -side left -anchor nw -fill x -expand 1
         set sync $f.fraSync
