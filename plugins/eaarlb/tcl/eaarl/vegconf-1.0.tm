@@ -73,6 +73,7 @@ snit::type ::eaarl::vegconf::embed {
 
     component window
     component pane
+    component sync
 
     # Group currently connected to. Used so that we don't need to repeatedly
     # change the GUI configuration. An empty string is used to indicate that no
@@ -97,13 +98,6 @@ snit::type ::eaarl::vegconf::embed {
 
     # Empty variable. Used for controls when they're disabled. Keep empty.
     variable empty ""
-
-    variable raster_plot 0
-    variable raster_win 11
-    variable rawwf_plot 0
-    variable rawwf_win 9
-    variable transmit_plot 0
-    variable transmit_win 16
 
     # Step amount for raster stepping
     variable raststep 2
@@ -292,33 +286,16 @@ snit::type ::eaarl::vegconf::embed {
     }
 
     method Gui_sync {f} {
-        foreach type {raster rawwf transmit} {
-            set name [string totitle $type]
-            ttk::checkbutton $f.chk$name \
-                    -text ${name}: \
-                    -variable [myvar ${type}_plot]
-
-            ttk::spinbox $f.spn$name \
-                    -width 2 \
-                    -from 0 -to 63 -increment 1 \
-                    -textvariable [myvar ${type}_win]
-            ::mixin::statevar $f.spn$name \
-                    -statemap {0 disabled 1 normal} \
-                    -statevariable [myvar ${type}_plot]
-
-            if {$win_width > 600} {
-                grid $f.chk$name $f.spn$name -sticky ew
-                grid $f.chk$name -sticky w
-            } else {
-                pack $f.chk$name -side left
-                pack $f.spn$name -side left -padx {0 1}
-            }
-        }
-        $f.chkRawwf configure -text "Raw WF"
         if {$win_width > 600} {
-            grid columnconfigure $f 0 -weight 2 -uniform 1
-            grid columnconfigure $f 1 -weight 3 -uniform 1
+            set orient vertical
+        } else {
+            set orient horizontal
         }
+        ::eaarl::sync::selframe $f.fraSync \
+                -orient $orient \
+                -exclude veg
+        pack $f.fraSync -side left -anchor nw -fill x -expand 1
+        set sync $f.fraSync
     }
 
     method Gui_settings {f} {
@@ -586,12 +563,9 @@ snit::type ::eaarl::vegconf::embed {
     # (Re)plots the window
     method plot {} {
         set cmd [$self plotcmd]
-        append cmd [::eaarl::sync::multicmd \
+        append cmd [$sync plotcmd \
                 -raster $options(-raster) -pulse $options(-pulse) \
-                -channel $options(-channel) \
-                -rast $raster_plot -rastwin $raster_win \
-                -rawwf $rawwf_plot -rawwfwin $rawwf_win \
-                -tx $transmit_plot -txwin $transmit_win]
+                -channel $options(-channel)]
         exp_send "$cmd\r"
     }
 
