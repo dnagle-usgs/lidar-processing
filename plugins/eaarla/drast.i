@@ -899,7 +899,7 @@ func show_wf_transmit(rast, pix, win=, xfma=) {
     xfma= By default, an fma is issued (xfma=1). Use xfma=0 to prevent that.
 */
   extern data_path;
-  default, win, window();
+  default, win, current_window();
   default, xfma, 1;
 
   raster = [];
