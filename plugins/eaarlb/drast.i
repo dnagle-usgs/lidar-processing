@@ -451,12 +451,10 @@ bathyoffset=, bathyverbose=, bg=) {
     return ndrast(rn, channel=channel, graph=0, sfsync=sfsync);
 }
 
-func drast_msel(rn, type=, rx=, tx=, bath=, cb=, amp_bias=, range_bias=, rxtx=,
-units=, bathchan=, winsel=, winrx=, wintx=, winbath=, single=, pulse=,
-tkpulsevar=) {
-/* DOCUMENT drast_msel, rn, type=, rx=, tx=, cb=, bath=, rxtx=, units=,
-   amp_bias=, range_bias=, bathchan=, winsel=, winrx=, wintx=, winbath=,
-   single=, pulse=, tkpulsevar=
+func drast_msel(rn, type=, rx=, tx=, bath=, winsel=, winrx=, wintx=, winbath=,
+single=, pulse=) {
+/* DOCUMENT drast_msel, rn, type=, rx=, tx=, bath=, winsel=, winrx=, wintx=,
+   winbath=, single=, pulse=
 
   Enters an interactive mode that allows the user to query waveforms on an
   ndrast plot.
@@ -476,24 +474,6 @@ tkpulsevar=) {
     bath= Whether or not to plot the bathy waveform.
         tx=1          plot return waveform
         tx=0          don't plot return waveform (default)
-    cb= Channel bitmask, indicating which channels to plot (ignored if rx=0).
-      Bit 1 is channel 1, bit 2 is channel 2, bit 3 is channel 3, and bit 4 is
-      channel 4.
-        cb=7          plot channels 1, 2, 3 (default)
-        cb=15         plot channels 1, 2, 3, 4
-    amp_bias= Set to 1 to remove amplitude bias (and invert waveform).
-    range_bias= Set to 1 to remove channel range biases.
-    rxtx= Set to 1 to show the transmit waveform in the same plot as the return
-      waveform(s). This is in addition to a separate plot if tx=1 is given.
-    units= Units to plot the return waveform in. Defaults to externally set
-      value.
-        units="meters"
-        units="ns"
-        units="feet"
-    bathchan= Channel to use for bathy plot (ignored if bath=0).
-        bathchan=0    automatically determine channel as for EAARL-A (default)
-        bathchan=1    use channel 1
-        bathchan=4    use channel 4
     winsel= Window to use for mouse selection (where ndrast is plotted).
         winsel=11     default
     winrx= Window to use for plotting return waveform(s).
@@ -505,13 +485,11 @@ tkpulsevar=) {
     single= Enters single-click mode. After a single pulse is selected, it
       immediately exits interactive mode.
     pulse= Specifies a plot to pulse. The user will not be queried at all.
-    tkpulsevar= The name of a variable to set to the selected pulse in Tcl/Tk.
 
   Extern dependency:
     xm: Set by geo_rast and used to determine which pixel is clicked on.
 */
   default, type, "rast";
-  default, cb, 7;
   default, rx, 1;
   default, tx, 0;
   default, bath, 0;
