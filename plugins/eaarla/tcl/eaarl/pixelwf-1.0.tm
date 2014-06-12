@@ -37,25 +37,6 @@ if {![namespace exists ::eaarl::pixelwf]} {
                 variable txwin 16
                 variable sf 0
             }
-            namespace eval fit_gauss {
-                variable enabled 0
-                variable win 10
-                variable add_peak 0
-                variable verbose 0
-                variable dest_action 0
-                variable dest_variable ""
-            }
-            namespace eval ex_veg {
-                variable enabled 0
-                variable last 250
-                variable win 0
-                variable verbose 0
-                variable use_be_peak 1
-                variable use_be_centroid 0
-                variable hard_surface 0
-                variable dest_action 0
-                variable dest_variable ""
-            }
             # Backup all the variables we just created...
             variable defaults {}
             foreach ns [namespace children [namespace current]] {
@@ -65,10 +46,6 @@ if {![namespace exists ::eaarl::pixelwf]} {
             }
         }
         namespace eval gui {
-            variable widgets_tied_to_enabled {
-                fit_gauss {}
-                ex_veg {}
-            }
             variable missionday_list {}
         }
         namespace eval constants {
@@ -84,14 +61,10 @@ if {![namespace exists ::eaarl::pixelwf]} {
             variable valid_ranges {
                 {1 100000000} {
                     selection raster
-                    ex_veg last
                 }
                 {1 240} {selection pulse}
                 {0 4} {selection channel}
-                {0 5} {fit_gauss add_peak}
                 {0 63} {
-                    fit_gauss win
-                    ex_veg win
                     sync {rawwfwin rastwin bathwin txwin}
                 }
                 {-1000 1000 0.01} {geo_rast eoffset}
@@ -107,14 +80,7 @@ if {![namespace exists ::eaarl::pixelwf]} {
             variable valid_values {
                 {0 1} {
                     selection {background extended missionload}
-                    fit_gauss {enabled verbose}
-                    ex_veg {enabled verbose use_be_peak use_be_centroid \
-                            hard_surface}
                     sync {rawwf rast bath tx sf}
-                }
-                {0 1 2} {
-                    fit_gauss dest_action
-                    ex_veg dest_action
                 }
             }
             # output_possibilities is a list specifying the options that can be
@@ -133,7 +99,7 @@ if {![namespace exists ::eaarl::pixelwf]} {
 
     # Keep Yorick updated for all variables in the specified namespaces
     namespace eval ::eaarl::pixelwf::vars {
-        foreach ns {selection sync fit_gauss ex_veg} {
+        foreach ns {selection sync} {
             foreach var [info vars ${ns}::*] {
                 set var [namespace tail $var]
                 tky_tie add broadcast ${ns}::$var to pixelwfvars.$ns.$var \
@@ -222,27 +188,7 @@ namespace eval ::eaarl::pixelwf::gui {
                 -values [::eaarl::pixelwf::util::valid_values $v]
     }
 
-    proc set_default_enabled {} {
-        set ns ::eaarl::pixelwf::vars
-        set ${ns}::fit_gauss::enabled 0
-        #set ${ns}::show_wf::enabled 1
-        #set ${ns}::show_wf_transmit::enabled 0
-        #set ${ns}::geo_rast::enabled 0
-        #set ${ns}::ndrast::enabled 1
-        # We're currently not changing behavior based on data mode, but this
-        # logic is left in place in case we want to again in the future.
-        if {$::plot_settings(display_mode) eq "ba"} {
-            #set ${ns}::ex_bath::enabled 0
-            set ${ns}::ex_veg::enabled 0
-        } else {
-            #set ${ns}::ex_bath::enabled 0
-            set ${ns}::ex_veg::enabled 0
-        }
-    }
-
     proc panels_hook {w} {
-        set_default_enabled
-
         set f $w.lfr_selection
         ttk::labelframe $f -text Selection
         add_panel $f
@@ -258,20 +204,6 @@ namespace eval ::eaarl::pixelwf::gui {
         set childsite $f.child
         sync $childsite
         grid $childsite -sticky news
-
-        set titles {
-            fit_gauss "Gaussian Decomposition"
-            ex_veg "Topo Under Veg"
-        }
-
-        foreach type {fit_gauss ex_veg} {
-            set f $w.lfr_$type
-            ::mixin::labelframe::collapsible $f \
-                    -text "Enable [dict get $titles $type]" \
-                    -variable ::eaarl::pixelwf::vars::${type}::enabled
-            add_panel $f
-            $type [$f interior]
-        }
     }
 
     proc helper_update_days {} {
@@ -384,77 +316,6 @@ namespace eval ::eaarl::pixelwf::gui {
             $f.chkRast $f.spnRast $f.chkBath $f.spnBath \
             $f.chkRawwf $f.spnRawwf $f.chkTx $f.spnTx \
             $f.chkSf
-        grid columnconfigure $f {0 2} -weight 0 -uniform 2
-        grid columnconfigure $f {1 3} -weight 1 -uniform 1
-    }
-
-    proc fit_gauss f {
-        set ns ::eaarl::pixelwf::vars::fit_gauss
-
-        ttk::label $f.lblWindow -text Window:
-        helper_spinbox $f.spnWindow ${ns}::win
-
-        ttk::label $f.lblAddPeak -text add_peak:
-        helper_spinbox $f.spnAddPeak ${ns}::add_peak
-
-        helper_output_dest $f.cboAction $f.entVariable $ns
-
-        ttk::checkbutton $f.chkVerbose -text Verbose -variable ${ns}::verbose
-        ttk::button $f.btnGraph -text Plot \
-                -command [list [namespace current]::yorcmd pixelwf_fit_gauss]
-
-        grid $f.lblWindow $f.spnWindow $f.lblAddPeak $f.spnAddPeak
-        grid $f.cboAction - $f.entVariable -
-        grid $f.chkVerbose $f.btnGraph - -
-
-        default_sticky \
-                $f.lblWindow $f.spnWindow $f.lblAddPeak $f.spnAddPeak \
-                $f.cboAction $f.entVariable \
-                $f.chkVerbose $f.btnGraph
-
-        grid columnconfigure $f {0 2} -weight 0 -uniform 2
-        grid columnconfigure $f {1 3} -weight 1 -uniform 1
-    }
-
-    proc ex_veg f {
-        set ns ::eaarl::pixelwf::vars::ex_veg
-
-        ttk::label $f.lblWindow -text Window:
-        helper_spinbox $f.spnWindow ${ns}::win
-
-        ttk::label $f.lblLast -text last:
-        helper_spinbox $f.spnLast ${ns}::last
-
-        helper_output_dest $f.cboAction $f.entVariable $ns
-
-        ttk::checkbutton $f.chkBePeak -text Peak \
-                -variable ${ns}::use_be_peak
-        ttk::checkbutton $f.chkBeCent -text Centroid \
-                -variable ${ns}::use_be_centroid
-        ttk::checkbutton $f.chkHardSf -text "Hard Surface" \
-                -variable ${ns}::hard_surface
-
-        ttk::button $f.btnGraph -text Plot \
-                -command [list [namespace current]::yorcmd pixelwf_ex_veg]
-
-        ttk::checkbutton $f.chkVerbose -text Verbose -variable ${ns}::verbose
-
-        ttk::frame $f.fraChks
-        lower $f.fraChks
-        grid $f.chkBePeak $f.chkBeCent $f.chkHardSf -in $f.fraChks
-        grid columnconfigure $f.fraChks 2 -weight 1
-
-        grid $f.lblWindow $f.spnWindow $f.lblLast $f.spnLast
-        grid $f.cboAction - $f.entVariable -
-        grid $f.fraChks - - -
-        grid $f.chkVerbose - $f.btnGraph -
-
-        default_sticky \
-                $f.lblWindow $f.spnWindow $f.lblLast $f.spnLast \
-                $f.cboAction $f.entVariable \
-                $f.fraChks $f.btnGraph \
-                $f.chkVerbose
-
         grid columnconfigure $f {0 2} -weight 0 -uniform 2
         grid columnconfigure $f {1 3} -weight 1 -uniform 1
     }

@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "fit_gauss.i";
 
 if(is_void(pixelwfvars)) {
   pixelwfvars = h_new(
@@ -22,25 +21,6 @@ if(is_void(pixelwfvars)) {
       tx=0,
       txwin=16,
       sf=0
-    ),
-    fit_gauss=h_new(
-      enabled=1,  //bool
-      win=10,     //int
-      add_peak=0, //int; num peaks to add
-      verbose=0,  //bool
-      dest_action=0,
-      dest_variable=""
-    ),
-    ex_veg=h_new(
-      enabled=1,              //bool
-      last=250,               //int; last point to consider
-      win=0,                  //int
-      verbose=0,
-      use_be_peak=1,          //bool
-      use_be_centroid=0,      //bool
-      hard_surface=0,         //bool
-      dest_action=0,
-      dest_variable=""
     )
   );
 }
@@ -152,37 +132,6 @@ func pixelwf_load_data(void) {
 
   if(day != mission.data.loaded)
     mission, load, day;
-}
-
-func pixelwf_fit_gauss(void) {
-  extern pixelwfvars;
-  raster = pixelwfvars.selection.raster;
-  pulse = pixelwfvars.selection.pulse;
-  vars = pixelwfvars.fit_gauss;
-  pixelwf_load_data;
-
-  result = fit_gauss(raster, pulse, graph=1, add_peak=vars.add_peak,
-    verbose=vars.verbose, win=vars.win);
-  pixelwf_handle_result, vars, &result;
-}
-
-func pixelwf_ex_veg(void) {
-  extern pixelwfvars;
-  channel = pixelwfvars.selection.channel;
-  raster = pixelwfvars.selection.raster;
-  pulse = pixelwfvars.selection.pulse;
-  vars = pixelwfvars.ex_veg;
-  pixelwf_load_data;
-
-  if(!channel) channel = [];
-
-  win = current_window();
-  result = ex_veg(raster, pulse, win=vars.win, graph=1, last=vars.last,
-    use_be_peak=vars.use_be_peak, use_be_centroid=vars.use_be_centroid,
-    hard_surface=vars.hard_surface, verbose=vars.verbose,
-    forcechannel=channel);
-  pixelwf_handle_result, vars, result;
-  window_select, win;
 }
 
 func pixelwf_set_soe(soe) {
