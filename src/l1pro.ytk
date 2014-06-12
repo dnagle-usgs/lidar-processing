@@ -15,6 +15,7 @@ package require struct::set
 package require misc
 package require mixin
 package require tooltip
+package require wrappack
 
 #load all yorick support functions
 ybkg require \"l1pro.i\"
