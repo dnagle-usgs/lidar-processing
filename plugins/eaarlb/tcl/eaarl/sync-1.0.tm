@@ -1,5 +1,5 @@
 
-package provide eaarl::sync  1.0
+package provide eaarl::sync 1.0
 
 namespace eval eaarl::sync {
     # id ns name win opts
@@ -37,63 +37,78 @@ namespace eval eaarl::sync {
     }
 }
 
-# Provides the checkbutton/spinboxes for syncing a raster/wf gui to the other
-# raster/wf guis
-snit::widgetadaptor ::eaarl::sync::selframe {
-    delegate method * to hull
-    delegate option * to hull
+# A bit of a hack/workaround for a minor snit deficiency: the snit::type
+# definition is unable to reference external variables during type definition,
+# so this forces them in via a snit macro
+snit::macro ::eaarl::sync::viewer_options {} [string map \
+    [list %VIEWERS% $::eaarl::sync::viewers] {
+    foreach {id settings} {%VIEWERS%} {
+        option -$id -default 0
+        option -${id}win -default [dict get $settings win]
+    }
+}]
 
-    option {-exclude exclude Exclude} \
-            -readonly 1 \
-            -default {}
-    option {-layout layout Layout} \
-            -default wrappack \
-            -configuremethod SetLayout
-
-    variable window
-    variable plot
-    variable ready 0
+# Manages the broadcasting of needed syncing for a raster-based GUI. It can
+# also populate a frame with the necessary controls to allow the user to manage
+# the settings.
+snit::type ::eaarl::sync::manager {
+    ::eaarl::sync::viewer_options
 
     constructor {args} {
-        if {[winfo exists $win]} {
-            installhull $win
-        } else {
-            installhull using ttk::frame
-        }
-
         $self configure {*}$args
-
-        foreach {id settings} $::eaarl::sync::viewers {
-            set plot($id) 0
-            set window($id) [dict get $settings win]
-        }
-
-        set ready 1
-        $self rebuild
     }
 
-    method rebuild {} {
-        set f $win.f
-        destroy $f
-        ttk::frame $f
-        pack $f -fill both -expand 1
+    # Returns the -ID and -IDwin options for all enabled items
+    method getopts {} {
+        set opts [list]
+        foreach {id -} $::eaarl::sync::viewers {
+            if {$options(-$id)} {
+                lappend opts -$id 1 -${id}win $options(-${id}win)
+            }
+        }
+        return $opts
+    }
+
+    method plotcmd {args} {
+        lappend args {*}[$self getopts]
+        return [::eaarl::sync::multicmd {*}$args]
+    }
+
+    # f should be an empty frame; if it doesn't exist, it will be created
+    # args can be:
+    #   -exclude [list]
+    #   -layout <wrappack|pack|onecol>
+    method build_gui {f args} {
+        set exclude [from args -exclude {}]
+        set layout [from args -layout wrappack]
+        if {[llength $args]} {
+            error "unknown options: $args"
+        }
+
+        if {$layout ni {wrappack pack onecol}} {
+            error "invalid -layout: $layout"
+        }
+
+        if {![winfo exists $f]} {
+            ttk::frame $f
+        }
 
         foreach {id settings} $::eaarl::sync::viewers {
-            if {$id in $options(-exclude)} {continue}
+            if {$id in $exclude} {continue}
 
             ttk::checkbutton $f.chk$id \
                     -text "[dict get $settings label]: " \
-                    -variable [myvar plot]($id)
+                    -variable [myvar options](-$id)
 
             ttk::spinbox $f.spn$id \
                     -width 2 \
                     -from 0 -to 63 -increment 1 \
-                    -textvariable [myvar window]($id)
+                    -textvariable [myvar options](-${id}win)
             ::mixin::statevar $f.spn$id \
                     -statemap {0 disabled 1 normal} \
-                    -statevariable [myvar plot]($id)
+                    -statevariable [myvar options](-$id)
 
-            switch -- $options(-layout) {
+            switch -- $layout {
                 wrappack {
                     lower [ttk::frame $f.fra$id]
                     pack $f.chk$id $f.spn$id -side left -in $f.fra$id
@@ -106,59 +121,11 @@ snit::widgetadaptor ::eaarl::sync::selframe {
                     grid $f.chk$id $f.spn$id -sticky ew
                     grid $f.chk$id -sticky w
                 }
-                default {
-                    # This should never happen
-                    error "unknown -layout option"
-                }
             }
         }
-        if {$options(-layout) eq "onecol"} {
+        if {$layout eq "onecol"} {
             grid columnconfigure $f 0 -weight 2 -uniform 1
             grid columnconfigure $f 1 -weight 3 -uniform 1
-        }
-    }
-
-    method getstate {{key {}}} {
-        set state {}
-        foreach {id -} $::eaarl::sync::viewers {
-            lappend state -$id $plot($id) -${id}win $window($id)
-        }
-
-        if {$key ne ""} {
-            if {[dict exists $state $key]} {
-                return [dict get $state $key]
-            } else {
-                error "unknown key: $key"
-            }
-        }
-
-        return $state
-    }
-
-    method getopts {} {
-        set opts [list]
-        foreach {id -} $::eaarl::sync::viewers {
-            if {$plot($id)} {
-                lappend opts -$id 1 -${id}win $window($id)
-            }
-        }
-        return $opts
-    }
-
-    method plotcmd {args} {
-        lappend args {*}[$self getopts]
-        return [::eaarl::sync::multicmd {*}$args]
-    }
-
-    method SetLayout {option value} {
-        if {$value ni {wrappack pack onecol}} {
-            error "invalid -layout value: $value"
-        }
-        if {$value ne $options(-layout)} {
-            set options(-layout) $value
-            if {$ready} {
-                $self rebuild
-            }
         }
     }
 }

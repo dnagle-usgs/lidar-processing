@@ -98,6 +98,8 @@ snit::type ::eaarl::raster::embed {
 
         set pane [$window pane bottom]
 
+        set sync [::eaarl::sync::manager create %AUTO%]
+
         trace add variable [myvar options](-channel) write \
                 [mymethod TraceGeoOptState]
         trace add variable [myvar options](-geo) write \
@@ -107,6 +109,10 @@ snit::type ::eaarl::raster::embed {
         $window configure -resizecmd [mymethod Resize]
 
         $self configure {*}$args
+    }
+
+    destructor {
+        $sync destroy
     }
 
     method Resize {width height} {
@@ -252,10 +258,8 @@ snit::type ::eaarl::raster::embed {
     }
 
     method Gui_sync {f} {
-        ::eaarl::sync::selframe $f.fraSync \
-                -exclude rast
+        $sync build_gui $f.fraSync -exclude rast
         pack $f.fraSync -side left -anchor nw -fill x -expand 1
-        set sync $f.fraSync
 
         ttk::button $f.btnSelect \
                 -image ::imglib::handup \

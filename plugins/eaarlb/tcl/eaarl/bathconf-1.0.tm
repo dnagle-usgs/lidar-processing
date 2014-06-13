@@ -119,10 +119,16 @@ snit::type ::eaarl::bathconf::embed {
 
         set pane [$window pane bottom]
 
+        set sync [::eaarl::sync::manager create %AUTO%]
+
         $self Gui
         $window configure -resizecmd [mymethod Resize]
 
         $self configure {*}$args
+    }
+
+    destructor {
+        $sync destroy
     }
 
     method Resize {width height} {
@@ -289,15 +295,11 @@ snit::type ::eaarl::bathconf::embed {
 
     method Gui_sync {f} {
         if {$win_width > 600} {
-            set layout onecol
+            $sync build_gui $f.fraSync -exclude bath -layout onecol
         } else {
-            set layout wrappack
+            $sync build_gui $f.fraSync -exclude bath -layout wrappack
         }
-        ::eaarl::sync::selframe $f.fraSync \
-                -layout $layout \
-                -exclude bath
         pack $f.fraSync -side left -anchor nw -fill x -expand 1
-        set sync $f.fraSync
     }
 
     method Gui_settings {f} {

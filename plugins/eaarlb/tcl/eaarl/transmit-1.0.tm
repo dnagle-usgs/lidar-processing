@@ -71,10 +71,16 @@ snit::type ::eaarl::transmit::embed {
 
         set pane [$window pane bottom]
 
+        set sync [::eaarl::sync::manager create %AUTO%]
+
         $self Gui
         $window configure -resizecmd [mymethod Resize]
 
         $self configure {*}$args
+    }
+
+    destructor {
+        $sync destroy
     }
 
     method Resize {width height} {
@@ -181,15 +187,11 @@ snit::type ::eaarl::transmit::embed {
 
     method Gui_sync {f} {
         if {$win_width > 600} {
-            set layout pack
+            $sync build_gui $f.fraSync -exclude tx -layout pack
         } else {
-            set layout wrappack
+            $sync build_gui $f.fraSync -exclude tx -layout wrappack
         }
-        ::eaarl::sync::selframe $f.fraSync \
-                -layout $layout \
-                -exclude tx
         pack $f.fraSync -side left -anchor nw -fill x -expand 1
-        set sync $f.fraSync
     }
 
     method SetOpt {option value} {
