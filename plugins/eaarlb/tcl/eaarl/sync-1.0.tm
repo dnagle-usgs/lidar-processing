@@ -4,16 +4,36 @@ package provide eaarl::sync  1.0
 namespace eval eaarl::sync {
     # id ns name win opts
     variable viewers {
-        rast raster Rast 11
-            {-raster -pulse -channel -highlight}
-        rawwf rawwf "Raw WF" 9
-            {-raster -pulse}
-        tx transmit Transmit 16
-            {-raster -pulse}
-        bath bathconf Bath 8
-            {-raster -pulse -channel}
-        veg vegconf Veg 20
-            {-raster -pulse -channel}
+        rast {
+            ns      raster
+            label   Raster
+            win     11
+            opts    {-raster -pulse -channel -highlight}
+        }
+        rawwf {
+            ns      rawwf
+            label   "Raw WF"
+            win     9
+            opts    {-raster -pulse}
+        }
+        tx {
+            ns      transmit
+            label   Transmit
+            win     16
+            opts    {-raster -pulse}
+        }
+        bath {
+            ns      bathconf
+            label   Bath
+            win     8
+            opts    {-raster -pulse -channel}
+        }
+        veg {
+            ns      vegconf
+            label   Veg
+            win     20
+            opts    {-raster -pulse -channel}
+        }
     }
 }
 
@@ -43,9 +63,9 @@ snit::widgetadaptor ::eaarl::sync::selframe {
 
         $self configure {*}$args
 
-        foreach {id - - w -} $::eaarl::sync::viewers {
+        foreach {id settings} $::eaarl::sync::viewers {
             set plot($id) 0
-            set window($id) $w
+            set window($id) [dict get $settings win]
         }
 
         set ready 1
@@ -58,11 +78,11 @@ snit::widgetadaptor ::eaarl::sync::selframe {
         ttk::frame $f
         pack $f -fill both -expand 1
 
-        foreach {id - name - -} $::eaarl::sync::viewers {
+        foreach {id settings} $::eaarl::sync::viewers {
             if {$id in $options(-exclude)} {continue}
 
             ttk::checkbutton $f.chk$id \
-                    -text "${name}: " \
+                    -text "[dict get $settings label]: " \
                     -variable [myvar plot]($id)
 
             ttk::spinbox $f.spn$id \
@@ -100,7 +120,7 @@ snit::widgetadaptor ::eaarl::sync::selframe {
 
     method getstate {{key {}}} {
         set state {}
-        foreach {id - - - -} $::eaarl::sync::viewers {
+        foreach {id -} $::eaarl::sync::viewers {
             lappend state -$id $plot($id) -${id}win $window($id)
         }
 
@@ -117,7 +137,7 @@ snit::widgetadaptor ::eaarl::sync::selframe {
 
     method getopts {} {
         set opts [list]
-        foreach {id - - - -} $::eaarl::sync::viewers {
+        foreach {id -} $::eaarl::sync::viewers {
             if {$plot($id)} {
                 lappend opts -$id 1 -${id}win $window($id)
             }
@@ -153,17 +173,19 @@ proc ::eaarl::sync::multicmd {args} {
     array set opts $args
 
     set cmd ""
-    foreach {id ns name win want} $viewers {
+    foreach {id settings} $viewers {
         if {[info exists opts(-${id})] && $opts(-${id})} {
+            set win [dict get $settings win]
             if {[info exists opts(-${id}win)]} {
                 set win $opts(-${id}win)
             }
             set params [list]
-            foreach p $want {
+            foreach p [dict get $settings opts] {
                 if {[info exists opts($p)]} {
                     lappend params $p $opts($p)
                 }
             }
+            set ns [dict get $settings ns]
             append cmd [::eaarl::${ns}::plotcmd $win {*}$params]
         }
     }
