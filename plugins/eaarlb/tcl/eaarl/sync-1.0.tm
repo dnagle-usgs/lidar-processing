@@ -34,6 +34,12 @@ namespace eval eaarl::sync {
             win     20
             opts    {-raster -pulse -channel}
         }
+        shallow {
+            ns      sbconf
+            label   Shallow
+            win     21
+            opts    {-raster -pulse -channel}
+        }
     }
 }
 
