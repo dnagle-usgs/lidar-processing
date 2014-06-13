@@ -118,22 +118,6 @@ func sbconfobj_validate(group) {
 save, base, chanconfobj_validate=base.validate;
 save, base, validate=sbconfobj_validate;
 
-save, scratch, sbconfobj_prompt_groups;
-func sbconfobj_prompt_groups(win) {
-  use, data;
-
-  cmd = swrite(format="::eaarl::sbconf::prompt_groups .yorwin%d.pg", win);
-  parts = [];
-  for(i = 1; i <= data(*); i++) {
-    chans = strjoin(swrite(format="%d", data(noop(i)).channels), " " );
-    grow, parts, swrite(format="%s {%s}", data(*,i), chans);
-  }
-  cmd += " {"+strjoin(parts, " ")+"}";
-  cmd += swrite(format=" -window %d", win);
-  tkcmd, cmd;
-}
-save, base, prompt_groups=sbconfobj_prompt_groups;
-
 save, scratch, sbconfobj_read;
 func sbconfobj_read(fn) {
   use_method, chanconfobj_read, fn;
