@@ -11,7 +11,6 @@ snit::widgetadaptor ::eaarl::chanconf::prompt_groups {
     option -yobj -default ""
 
     # Array
-    variable chanlist
     variable groups
     variable chans
 
@@ -31,11 +30,9 @@ snit::widgetadaptor ::eaarl::chanconf::prompt_groups {
             error "missing required option: -yobj"
         }
 
-        set chanlist [list]
-        for {set i 1} {$i <= $::eaarl::channel_count} {incr i} {
+        foreach i $::eaarl::channel_list {
             set groups($i) ""
             set chans($i) 1
-            lappend chanlist $i
         }
 
         set i 0
@@ -54,7 +51,7 @@ snit::widgetadaptor ::eaarl::chanconf::prompt_groups {
 
         set f [$hull getframe]
 
-        foreach i $chanlist {
+        foreach i $::eaarl::channel_list {
             ttk::label $f.lblChan$i -text $i
             grid $f.lblChan$i -row 0 -column $i -sticky w
 
@@ -64,9 +61,9 @@ snit::widgetadaptor ::eaarl::chanconf::prompt_groups {
                     -textvariable [myvar groups]($i)
         }
 
-        foreach grp $chanlist {
+        foreach grp $::eaarl::channel_list {
             grid $f.entGrp$grp -row $grp -column 0 -sticky w
-            foreach chan $chanlist {
+            foreach chan $::eaarl::channel_list {
                 ttk::radiobutton $f.rdo$grp$chan \
                         -text "" \
                         -variable [myvar chans]($chan) \
@@ -100,11 +97,11 @@ snit::widgetadaptor ::eaarl::chanconf::prompt_groups {
         set data [list]
 
         # To make sure they go in the given order
-        foreach grp $chanlist {
+        foreach grp $::eaarl::channel_list {
             dict set data $groups($grp) [list]
         }
 
-        foreach chan $chanlist {
+        foreach chan $::eaarl::channel_list {
             dict lappend data $groups($chans($chan)) $chan
         }
 
