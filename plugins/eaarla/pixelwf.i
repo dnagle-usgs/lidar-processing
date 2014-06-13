@@ -10,17 +10,6 @@ if(is_void(pixelwfvars)) {
       missionday="",
       extended=0,
       missionload=1
-    ),
-    sync=h_new(
-      rast=1,
-      rastwin=11,
-      rawwf=1,
-      rawwfwin=9,
-      bath=0,
-      bathwin=8,
-      tx=0,
-      txwin=16,
-      sf=0
     )
   );
 }
@@ -90,21 +79,10 @@ func pixelwf_plot(void) {
   sync = pixelwfvars.sync;
   sel = pixelwfvars.selection;
 
-  if(noneof([sync.rawwf, sync.rast, sync.bath, sync.tx]))
-    return;
-
-  cmd = swrite(format="::eaarl::sync::sendyorick plotcmd"
+  cmd = swrite(format="::eaarl::pixelwf::sendyorick plotcmd"
     +" -raster %d -pulse %d -highlight %d", sel.raster, sel.pulse, sel.pulse);
   if(sel.channel)
     cmd += swrite(format=" -channel %d", sel.channel);
-  if(sync.rawwf)
-    cmd += swrite(format=" -rawwf 1 -rawwfwin %d", sync.rawwfwin);
-  if(sync.rast)
-    cmd += swrite(format=" -rast 1 -rastwin %d", sync.rastwin);
-  if(sync.bath)
-    cmd += swrite(format=" -bath 1 -bathwin %d", sync.bathwin);
-  if(sync.tx)
-    cmd += swrite(format=" -tx 1 -txwin %d", sync.txwin);
 
   scratch = save(scratch, plotcmd);
   plotcmd = [];

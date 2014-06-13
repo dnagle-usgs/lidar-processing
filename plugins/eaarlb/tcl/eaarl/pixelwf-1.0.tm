@@ -7,6 +7,7 @@ package require misc
 package require sf
 package require hook
 package require l1pro::expix
+package require eaarl::sync
 
 if {![namespace exists ::eaarl::pixelwf]} {
     # Initialization and Traces only happen first time ::eaarl::pixelwf is
@@ -16,6 +17,7 @@ if {![namespace exists ::eaarl::pixelwf]} {
 #                                Initialization                                #
 ################################################################################
     namespace eval ::eaarl::pixelwf {
+        variable manager [::eaarl::sync::manager %AUTO% -rast 1 -rawwf 1]
         namespace eval vars {
             namespace eval selection {
                 variable background 1
@@ -27,14 +29,6 @@ if {![namespace exists ::eaarl::pixelwf]} {
                 variable missionload 1
             }
             namespace eval sync {
-                variable rast 1
-                variable rastwin 11
-                variable rawwf 1
-                variable rawwfwin 9
-                variable bath 0
-                variable bathwin 8
-                variable tx 0
-                variable txwin 16
                 variable sf 0
             }
             # Backup all the variables we just created...
@@ -64,9 +58,6 @@ if {![namespace exists ::eaarl::pixelwf]} {
                 }
                 {1 240} {selection pulse}
                 {0 4} {selection channel}
-                {0 63} {
-                    sync {rawwfwin rastwin bathwin txwin}
-                }
                 {-1000 1000 0.01} {geo_rast eoffset}
                 {0.01 100 0.5} {selection}
             }
@@ -80,7 +71,7 @@ if {![namespace exists ::eaarl::pixelwf]} {
             variable valid_values {
                 {0 1} {
                     selection {background extended missionload}
-                    sync {rawwf rast bath tx sf}
+                    sync {sf}
                 }
             }
             # output_possibilities is a list specifying the options that can be
@@ -97,19 +88,17 @@ if {![namespace exists ::eaarl::pixelwf]} {
 #                               Variable Traces                                #
 ################################################################################
 
-    # Keep Yorick updated for all variables in the specified namespaces
+    # Keep Yorick updated for all variables in the selection namespace
     namespace eval ::eaarl::pixelwf::vars {
-        foreach ns {selection sync} {
-            foreach var [info vars ${ns}::*] {
-                set var [namespace tail $var]
-                tky_tie add broadcast ${ns}::$var to pixelwfvars.$ns.$var \
-                        -initialize 1
-            }
-            unset var
+        foreach var [info vars selection::*] {
+            set var [namespace tail $var]
+            tky_tie add broadcast selection::$var \
+                    to pixelwfvars.selection.$var \
+                    -initialize 1
         }
-        unset ns
+        unset var
     }
-    # Special cases:
+    # Special case:
     tky_tie add broadcast ::win_no to pixelwfvars.selection.win \
         -initialize 1
 
@@ -118,6 +107,15 @@ if {![namespace exists ::eaarl::pixelwf]} {
 ################################################################################
 #                               Core Procedures                                #
 ################################################################################
+
+namespace eval ::eaarl::pixelwf {
+    proc sendyorick {var args} {
+        variable manager
+        lappend args {*}[$manager getopts]
+        ::eaarl::sync::sendyorick $var {*}$args
+    }
+}
+
 namespace eval ::eaarl::pixelwf::util {
     proc helper_valid {type var} {
         # Not intended to be called directly... called by valid_*
@@ -196,6 +194,7 @@ namespace eval ::eaarl::pixelwf::gui {
         set childsite $f.child
         selection $childsite
         grid $childsite -sticky news
+        grid columnconfigure $f 0 -weight 1
 
         set f $w.lfr_sync
         ttk::labelframe $f -text Sync
@@ -204,6 +203,7 @@ namespace eval ::eaarl::pixelwf::gui {
         set childsite $f.child
         sync $childsite
         grid $childsite -sticky news
+        grid columnconfigure $f 0 -weight 1
     }
 
     proc helper_update_days {} {
@@ -289,33 +289,25 @@ namespace eval ::eaarl::pixelwf::gui {
     }
 
     proc sync {f} {
+        variable ::eaarl::pixelwf::manager
         set ns ::eaarl::pixelwf::vars::sync
         ttk::frame $f
 
-        foreach type {rast rawwf bath tx} {
-            set name [string totitle $type]
-            ttk::checkbutton $f.chk$name \
-                    -text ${name}: \
-                    -variable ${ns}::$type
-            ttk::spinbox $f.spn$name \
-                    -width 2 \
-                    -from 0 -to 63 -increment 1 \
-                    -textvariable ${ns}::${type}win
-            mixin::statevar $f.spn$name \
-                    -statemap {0 disabled 1 normal} \
-                    -statevariable ${ns}::$type
-        }
-        $f.chkRawwf configure -text "Raw WF:"
+        $manager build_gui $f -layout twocol
+
         ttk::checkbutton $f.chkSf \
                 -text "SF Viewer" \
                 -variable ${ns}::sf
-        grid $f.chkRast $f.spnRast $f.chkBath $f.spnBath
-        grid $f.chkRawwf $f.spnRawwf $f.chkTx $f.spnTx
-        grid $f.chkSf - x x
-        default_sticky \
-            $f.chkRast $f.spnRast $f.chkBath $f.spnBath \
-            $f.chkRawwf $f.spnRawwf $f.chkTx $f.spnTx \
-            $f.chkSf
+
+        set row [expr {[lindex [grid size $f] 1] - 1}]
+        if {[llength [grid slaves $f -row $row]] == 2} {
+            set col 2
+        } else {
+            incr row
+            set col 0
+        }
+        grid $f.chkSf -row $row -column $col -padx 2 -pady 1 -sticky w
+
         grid columnconfigure $f {0 2} -weight 0 -uniform 2
         grid columnconfigure $f {1 3} -weight 1 -uniform 1
     }
