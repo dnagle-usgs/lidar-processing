@@ -23,6 +23,7 @@ package require eaarl::vegconf
 
 namespace eval ::eaarl {
    variable channel_count 3
+   variable channel_list {1 2 3}
 
    variable process_mapping {
       "First Return Topo"  f
