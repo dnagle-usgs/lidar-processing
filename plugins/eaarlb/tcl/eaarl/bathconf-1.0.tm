@@ -888,8 +888,9 @@ snit::type ::eaarl::bathconf::embed {
     }
 
     method UpdateTitle {} {
-        wm title $window "Window $options(-window) - Raster $options(-raster)\
-                Pulse $options(-pulse) Channel $options(-channel)"
+        wm title $window "Window $options(-window) - Bathy -\
+                Raster $options(-raster) Pulse $options(-pulse)\
+                Channel $options(-channel)"
     }
 
     method UpdateGroup {{force 0}} {

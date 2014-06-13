@@ -300,7 +300,8 @@ func eaarl_ba_plot(raster, pulse, channel=, win=, xfma=) {
     "::eaarl::bathconf::config %d -channel %d -group {%s}",
     win, channel, bathconf(settings_group, channel));
 
-  pltitle, swrite(format="rn:%d pulse:%d chan:%d", raster, pulse, channel);
+  pltitle, swrite(format="bathy - rn:%d pulse:%d chan:%d",
+    raster, pulse, channel);
   xytitles, "Sample Number", "Sample Counts (Relative Intensity)";
 
   window_select, wbkp;
