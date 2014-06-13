@@ -138,22 +138,6 @@ func bathconfobj_validate(group) {
 save, base, chanconfobj_validate=base.validate;
 save, base, validate=bathconfobj_validate;
 
-save, scratch, bathconfobj_prompt_groups;
-func bathconfobj_prompt_groups(win) {
-  use, data;
-
-  cmd = swrite(format="::eaarl::bathconf::prompt_groups .yorwin%d.pg", win);
-  parts = [];
-  for(i = 1; i <= data(*); i++) {
-    chans = strjoin(swrite(format="%d", data(noop(i)).channels), " " );
-    grow, parts, swrite(format="%s {%s}", data(*,i), chans);
-  }
-  cmd += " {"+strjoin(parts, " ")+"}";
-  cmd += swrite(format=" -window %d", win);
-  tkcmd, cmd;
-}
-save, base, prompt_groups=bathconfobj_prompt_groups;
-
 save, scratch, bathconfobj_read;
 func bathconfobj_read(fn) {
   f = open(fn, "r");

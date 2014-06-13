@@ -19,10 +19,13 @@ func chanconfobj(base, data) {
   multiple groups. Each group has a "channels" value that specifies which
   channels it should be used for.
 
-  Added method:
+  Added methods:
 
     group = chanconf(settings_group, <channel>)
-        Given a CHANNEL, returns the name of the GROUP used for that channel.
+      Given a CHANNEL, returns the name of the GROUP used for that channel.
+
+    chanconf, prompt_groups, "<ns>", "<yobj>", <win>
+      Used by GUI for updating group/channel mapping.
 
   Modified methods:
 
@@ -181,6 +184,22 @@ func chanconfobj_cleangroups(void) {
 }
 save, base, confobj_cleangroups=base.cleangroups;
 save, base, cleangroups=chanconfobj_cleangroups;
+
+save, scratch, chanconfobj_prompt_groups;
+func chanconfobj_prompt_groups(ns, yobj, win) {
+  use, data;
+
+  cmd = swrite(format="::eaarl::chanconf::prompt_groups .yorwin%d.pg", win);
+  parts = [];
+  for(i = 1; i <= data(*); i++) {
+    chans = strjoin(swrite(format="%d", data(noop(i)).channels), " " );
+    grow, parts, swrite(format="%s {%s}", data(*,i), chans);
+  }
+  cmd += " {"+strjoin(parts, " ")+"}";
+  cmd += swrite(format=" -ns %s -yobj %s -window %d", ns, yobj, win);
+  tkcmd, cmd;
+}
+save, base, prompt_groups=chanconfobj_prompt_groups;
 
 chanconfobj = closure(chanconfobj, base);
 

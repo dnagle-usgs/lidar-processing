@@ -118,22 +118,6 @@ func vegconfobj_validate(group) {
 save, base, chanconfobj_validate=base.validate;
 save, base, validate=vegconfobj_validate;
 
-save, scratch, vegconfobj_prompt_groups;
-func vegconfobj_prompt_groups(win) {
-  use, data;
-
-  cmd = swrite(format="::eaarl::vegconf::prompt_groups .yorwin%d.pg", win);
-  parts = [];
-  for(i = 1; i <= data(*); i++) {
-    chans = strjoin(swrite(format="%d", data(noop(i)).channels), " " );
-    grow, parts, swrite(format="%s {%s}", data(*,i), chans);
-  }
-  cmd += " {"+strjoin(parts, " ")+"}";
-  cmd += swrite(format=" -window %d", win);
-  tkcmd, cmd;
-}
-save, base, prompt_groups=vegconfobj_prompt_groups;
-
 save, scratch, vegconfobj_read;
 func vegconfobj_read(fn) {
   use_method, chanconfobj_read, fn;
