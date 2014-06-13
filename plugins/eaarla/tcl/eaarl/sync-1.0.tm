@@ -77,7 +77,7 @@ snit::type ::eaarl::sync::manager {
     # f should be an empty frame; if it doesn't exist, it will be created
     # args can be:
     #   -exclude [list]
-    #   -layout <wrappack|pack|onecol>
+    #   -layout <wrappack|pack|onecol|twocol>
     method build_gui {f args} {
         set exclude [from args -exclude {}]
         set layout [from args -layout wrappack]
@@ -85,12 +85,17 @@ snit::type ::eaarl::sync::manager {
             error "unknown options: $args"
         }
 
-        if {$layout ni {wrappack pack onecol}} {
+        if {$layout ni {wrappack pack onecol twocol}} {
             error "invalid -layout: $layout"
         }
 
         if {![winfo exists $f]} {
             ttk::frame $f
+        }
+
+        if {$layout eq "twocol"} {
+            set row 0
+            set col 0
         }
 
         foreach {id settings} $::eaarl::sync::viewers {
@@ -120,6 +125,18 @@ snit::type ::eaarl::sync::manager {
                 onecol {
                     grid $f.chk$id $f.spn$id -sticky ew
                     grid $f.chk$id -sticky w
+                }
+                twocol {
+                    grid $f.chk$id -row $row -column $col \
+                            -sticky w -padx 2 -pady 1
+                    incr col
+                    grid $f.spn$id -row $row -column $col \
+                            -sticky ew -padx 2 -pady 1
+                    incr col
+                    if {$col == 4} {
+                        incr row
+                        set col 0
+                    }
                 }
             }
         }
