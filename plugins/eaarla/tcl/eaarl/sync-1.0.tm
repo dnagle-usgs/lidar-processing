@@ -162,5 +162,8 @@ proc ::eaarl::sync::multicmd {args} {
 
 proc ::eaarl::sync::sendyorick {yvar args} {
     set cmd [multicmd {*}$args]
+    if {$cmd eq ""} {
+        set cmd noop
+    }
     ybkg funcset $yvar \"[::base64::encode [zlib compress $cmd]]\"
 }
