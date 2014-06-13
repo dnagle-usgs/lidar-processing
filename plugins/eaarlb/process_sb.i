@@ -223,7 +223,8 @@ func eaarl_sb_plot(raster, pulse, channel=, win=, xfma=) {
 
   result = sb_rx_wf(*pulses.rx(channel), conf, plot=1);
 
-  pltitle, swrite(format="rn:%d pulse:%d chan:%d", raster, pulse, channel);
+  pltitle, swrite(format="shallow - rn:%d pulse:%d chan:%d",
+    raster, pulse, channel);
   xytitles, "Sample Number", "Sample Counts (Relative Intensity)";
 
   window_select, wbkp;
