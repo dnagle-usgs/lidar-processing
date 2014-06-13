@@ -174,7 +174,7 @@ snit::type ::eaarl::vegconf::embed {
                 -textvariable [myvar options](-channel) \
                 -state readonly \
                 -width 2 \
-                -values {1 2 3 4}
+                -values $::eaarl::channel_list
         ::mixin::revertable $f.cboChan \
                 -applycommand [mymethod IdlePlot]
         bind $f.cboChan <<ComboboxSelected>> +[list $f.cboChan apply]
