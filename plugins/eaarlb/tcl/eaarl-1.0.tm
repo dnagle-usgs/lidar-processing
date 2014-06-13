@@ -21,6 +21,8 @@ package require eaarl::tscheck
 package require eaarl::vegconf
 
 namespace eval ::eaarl {
+   variable channel_count 3
+
    variable process_mapping {
       "First Return Topo"  f
       "Submerged Topo"     b
