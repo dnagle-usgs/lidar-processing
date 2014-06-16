@@ -1092,6 +1092,8 @@ namespace eval ::l1pro::tools::varmanage {
                     exp_send "$var = \[\];\r"
                     delete_varlist $var
                 }
+
+                $v::lb selection clear 0 end
             }
         }
     }
