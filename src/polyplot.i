@@ -423,7 +423,12 @@ func polyplot_limits(void, win=, geo=, expand=, square=) {
   expand is set to 0.02 by default.
 */
   default, expand, 0.02;
-  region_limits, polyplot(get,), win=win, geo=geo, expand=expand,
+  shp = polyplot(get,);
+  if(is_void(shp)) {
+    write, "no polys defined; aborting";
+    return;
+  }
+  region_limits, shp, win=win, geo=geo, expand=expand,
     square=square;
 }
 polyplot, limits=polyplot_limits;
