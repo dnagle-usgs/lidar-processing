@@ -248,14 +248,14 @@ proc ::plot::pane_interact {pane} {
    ttk::button $f.btnLimits -text "All" \
          -width 0 \
          -command ::plot::limits
-   ttk::button $f.btnLimitsShapes -text "Shapefiles" \
+   ttk::button $f.btnLimitsPolys -text "Polys" \
          -width 0 \
-         -command ::plot::limits_shapefiles
+         -command ::plot::limits_polys
    ttk::button $f.btnLimitsTracks -text "PNAV" \
          -width 0 \
          -command ::plot::limits_tracklines
 
-   grid $f.btnLimits $f.btnLimitsShapes $f.btnLimitsTracks \
+   grid $f.btnLimits $f.btnLimitsPolys $f.btnLimitsTracks \
          -sticky ew -padx 1 -pady 1
    grid columnconfigure $f {0 1 2} -weight 1
 
@@ -902,7 +902,7 @@ proc ::plot::limits {} {
    exp_send "[window_set]; limits, square=1; limits;\r"
 }
 
-proc ::plot::limits_shapefiles {} {
+proc ::plot::limits_polys {} {
    exp_send "[window_set]; polyplot, limits;\r"
 }
 
