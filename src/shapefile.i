@@ -804,3 +804,63 @@ func region_to_string(region) {
     error, "unable to handle region provided";
   return result;
 }
+
+func region_limits(region, win=, geo=, expand=, square=) {
+/* DOCUMENT region_limits, region, win=, geo=, expand=, square=
+  Resets the window's limits to the specified region. REGION should be any
+  region accepted by region_to_shp.
+
+  Options:
+    win= The window to apply the limits to. Uses the current window by default.
+    geo= By default, UTM coordinates are assumed. Use geo=1 to force lat/lon
+      coordinates.
+    expand= This specifies a factor by which to expand the limits, leaving a
+      bit of extra space around the plot.
+        expand=0      By default, no expansion
+        expand=0.02   Expand by 2%, which is 1% on each side
+    square= By default, the plot will be squared (the x and y scales will be
+      forced to be equal). If you do not want that, use square=0.
+*/
+  default, geo, 0;
+  default, expand, 0;
+  default, square, 1;
+
+  shp = region_to_shp(region, utm=!geo, ll=geo);
+
+  minx = miny =  1e+100;
+  maxx = maxy = -1e+100;
+
+  for(i = 1; i <= numberof(shp); i++) {
+    x = (*shp(i))(1,);
+    y = (*shp(i))(2,);
+
+    minx = min(minx, x(min));
+    maxx = max(maxx, x(max));
+    miny = min(miny, y(min));
+    maxy = max(maxy, y(max));
+  }
+
+  if(expand > 0) {
+    // Cut expand in half so that it can be applied on each side.
+    expand /= 2;
+
+    xdif = (maxx - minx) * expand;
+    ydif = (maxy - miny) * expand;
+    minx -= xdif;
+    maxx += xdif;
+    miny -= ydif;
+    maxy += ydif;
+  } else if(expand < 0) {
+    write, "WARNING: region_limits: expand= is less than 0; ignoring"
+  }
+
+  if(square) {
+    win_square, [minx, maxx, miny, maxy], win=win;
+  } else {
+    default, win, current_window();
+    wbkp = current_window();
+    window, win;
+    limits, minx, maxx, miny, maxy, square=0;
+    window_select, wbkp;
+  }
+}
