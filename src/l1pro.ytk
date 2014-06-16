@@ -123,6 +123,13 @@ proc delete_varlist {delvar} {
   global varlist
   set idx [lsearch -exact $varlist $delvar]
   if {$idx != -1} {
+    if {$::pro_var eq $delvar} {
+      if {$idx < [llength $varlist]-1} {
+        set ::pro_var [lindex $varlist [expr {$idx+1}]]
+      } else {
+        set ::pro_var [lindex $varlist [expr {$idx-1}]]
+      }
+    }
     set varlist [lreplace $varlist $idx $idx]
   }
 }
