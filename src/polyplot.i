@@ -416,6 +416,18 @@ func polyplot_get(group, name) {
 }
 polyplot, get=polyplot_get;
 
+save, scratch, polyplot_limits;
+func polyplot_limits(void, win=, geo=, expand=, square=) {
+/* DOCUMENT polyplot, limits, win=, geo=, expand=, square=
+  Wrapper around region_limits that calls it with polyplot's data. However,
+  expand is set to 0.02 by default.
+*/
+  default, expand, 0.02;
+  region_limits, polyplot(get,), win=win, geo=geo, expand=expand,
+    square=square;
+}
+polyplot, limits=polyplot_limits;
+
 save, scratch, polyplot_export;
 func polyplot_export(group, file, geo=, meta=) {
 /* DOCUMENT polyplot, export, "<group>", "<file>", geo=, meta=
