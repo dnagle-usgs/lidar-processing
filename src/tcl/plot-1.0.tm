@@ -903,7 +903,7 @@ proc ::plot::limits {} {
 }
 
 proc ::plot::limits_shapefiles {} {
-   exp_send "[window_set]; shapefile_limits;\r"
+   exp_send "[window_set]; polyplot, limits;\r"
 }
 
 proc ::plot::limits_tracklines {} {
