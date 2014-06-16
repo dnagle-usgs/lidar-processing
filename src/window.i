@@ -161,23 +161,38 @@ func window2image(file, win=) {
   rmdir, dir;
 }
 
-func win_square {
-/* DOCUMENT win_square
-    squares the current window by taking the max x/y delta and applying it
-    to both dimensions.
+func win_square(lims, win=) {
+/* DOCUMENT win_square, lims, win=
+  Forces the x and y scales to be equal (similar to limits,square=1) while
+  keeping the viewport zoomed and centered as per the existing limits.
+
+  If LIMS is specified, it is used for the limits. If it is omitted, the
+  current limits are used.
+
+  If win= is specified, that window's limits are updated. If omitted, the
+  current window is used.
 */
-  lm = limits();
-  vp = viewport();
-  sc = vp(1:2)(dif) / vp(3:4)(dif);
+  default, win, current_window();
+  wbkp = current_window();
+  window, win;
 
-  xf = max( lm(1:2)(dif), lm(3:4)(dif));
-  yf = xf / sc;
+  if(is_void(lims)) lims = limits();
 
-  lm(1) = (lm(1) + ( lm(1:2)(dif)/2.) - (xf/2.));
-  lm(3) = (lm(3) + ( lm(3:4)(dif)/2.) - (yf/2.));
+  temp = lims(dif)([1,3]);
+  lims_aspect = temp(1)/temp(2);
 
-  lm(2) = lm(1)+xf;
-  lm(4) = lm(3)+yf;
+  temp = viewport()(dif)([1,3]);
+  plot_aspect = temp(1)/temp(2);
 
-  limits, lm;
+  limits, square=1;
+
+  if(lims_aspect < plot_aspect) {
+    x = lims(1:2)(avg) - (lims(4)-lims(3))*plot_aspect/2;
+    limits, x, "e", lims(3), lims(4);
+  } else {
+    y = lims(3:4)(avg) - (lims(2)-lims(1))/plot_aspect/2;
+    limits, lims(1), lims(2), y, "e";
+  }
+
+  window_select, wbkp;
 }
