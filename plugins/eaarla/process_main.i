@@ -658,6 +658,7 @@ exactsel=, splitchan=, opts=) {
   write, f, format="%s\n", soe2iso8601(now);
   write, f, format="Makeflow created on %s by %s\n\n", get_host(), get_user();
 
+  write, f, format="hg id: %s\n", _hgid;
   write, f, format="ptime: %d\n\n", ptime;
 
   write, f, format="data_path: %s\n", data_path;
