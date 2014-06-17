@@ -187,11 +187,12 @@ local legend;
     specify the color and the label. This will not get plotted immediately.
     Instead, the information is stored locally until you call the show method.
 
-  legend, show
+  legend, show, height=
     Shows the currently defined legend information, then clears that info out
     (via reset). If you want to display the legend again later, you will have
     to rebuild it. The legend will be placed in the top left corner of the
-    current window.
+    current window. The optional height= argument specifies the font height and
+    defaults to 12.
 */
 
 scratch = save(scratch, tmp);
@@ -217,9 +218,10 @@ func legend_reset(void) {
 save, legend, reset=legend_reset;
 
 save, scratch, legend_show;
-func legend_show(void) {
+func legend_show(void, height=) {
   use, labels;
   use, colors;
+  default, height, 12;
 
   // This should never happen:
   if(numberof(labels) != numberof(colors))
@@ -228,11 +230,13 @@ func legend_show(void) {
   // Abort if no legends set
   if(!numberof(labels)) return;
 
+  yshift = height/12. * .02;
+
   vp = viewport();
   count = numberof(labels);
-  for(i=1, yy=.01; i <= count; ++i, yy += .02) {
+  for(i=1, yy=.008; i <= count; ++i, yy += yshift) {
     plt, labels(i), vp(1) + .01, vp(4) - yy,
-      justify="LT", height=12, color=colors(i);
+      justify="LT", height=height, color=colors(i);
   }
 
   // Clear data now that they're plotted
