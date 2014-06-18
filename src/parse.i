@@ -49,8 +49,7 @@ func parse_datum(text) {
   Four pieces of information will be returned: [datum, geoid, prefix, suffix]
   These pieces are:
     datum: The datum string, one of "w84", "n83", or "n88".
-    geoid: The geoid string, one of "96", "99", "03", "03dep", "06", or
-      "09". ("03dep" is for the deprecated version of GEOID03.)
+    geoid: The geoid string, such as "96", "09", "12A", etc..
     prefix: Anything in "text" that came before the datum/geoid.
     suffix: Anything in "text" that came after the datum/geoid.
 

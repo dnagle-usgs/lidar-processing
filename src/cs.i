@@ -207,7 +207,7 @@ func cs_navd88(nil, zone=, geoid=) {
   datum and NAVD-88 for the vertical datum. If zone is provided, the
   coordinate system will be UTM using that zone. If zone is omitted (or
   specified as zero), then the coordinate system will be geographic. If geoid=
-  is not specified, it will default to "09".
+  is not specified, it will default to "12A".
 
   Examples:
     Coordinate system for NAVD-88, geoid 03, geographic:
@@ -218,7 +218,7 @@ func cs_navd88(nil, zone=, geoid=) {
   SEE ALSO: coordinate_system cs_parse cs_wgs84 cs_nad83 cs2cs
 */
   default, zone, 0;
-  default, geoid, "09";
+  default, geoid, "12A";
   cs = h_new(ellps="GRS80", datum="NAD83", vert="NAVD88", geoid=geoid);
   if(zone)
     h_set, cs, proj="utm", zone=zone;

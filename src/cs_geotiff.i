@@ -73,7 +73,7 @@ func cs_decode_geotiff(gtif, geoid=) {
   If a coordinate system cannot be determined or if an error is encountered,
   [] is returned.
 */
-  default, geoid, "09";
+  default, geoid, "12A";
   cs = h_new();
 
   if(gtif.GTModelTypeGeoKey == "ModelTypeGeographic") {

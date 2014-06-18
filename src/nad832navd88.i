@@ -236,7 +236,7 @@ func navd88_geoids_available(void) {
   For example:
 
     > navd88_geoids_available()
-    ["06","99","03","09","96"]
+    ["09","03dep","03","12A","12","96","99","06"]
 */
   dirs = lsdirs(alpsrc.geoid_data_root, glob="GEOID*");
   if(!is_void(dirs))

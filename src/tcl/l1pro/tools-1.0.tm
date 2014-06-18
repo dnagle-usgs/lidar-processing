@@ -803,7 +803,7 @@ if {![namespace exists ::l1pro::tools::datum]} {
             variable ingeoid 03
             variable outvar {}
             variable outdatum n88
-            variable outgeoid 09
+            variable outgeoid 12A
             variable datumlist {w84 n83 n88}
             variable geoidlist {}
         }
@@ -899,7 +899,7 @@ proc ::l1pro::tools::datum::convert {} {
             }                       ", src_geoid=\"$v::ingeoid\"" \
             {$v::outdatum ne "n88"} ", dst_datum=\"$v::outdatum\"" \
             {
-                $v::outdatum eq "n88" && $v::outgeoid ne "09"
+                $v::outdatum eq "n88" && $v::outgeoid ne "12A"
             }                       ", dst_geoid=\"$v::outgeoid\"" \
             1                       ")"
 

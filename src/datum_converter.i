@@ -53,9 +53,9 @@ dst_geoid=, verbose=) {
         dst_geoid="03"    - for GEOID03
         dst_geoid="03dep" - for GEOID03, deprecated version
         dst_geoid="06"    - for GEOID06
-        dst_geoid="09"    - for GEOID09 (default)
+        dst_geoid="09"    - for GEOID09
         dst_geoid="12"    - for GEOID12
-        dst_geoid="12A"   - for GEOID12A
+        dst_geoid="12A"   - for GEOID12A (default)
       If dst_datum is not set to n88, then dst_geoid has no effect.
 
   The default for dst_geoid will change in the future when new GEOID models
@@ -209,7 +209,7 @@ dst_geoid=, verbose=) {
   default, src_datum, "w84";
   default, src_geoid, "03";
   default, dst_datum, "n88";
-  default, dst_geoid, "09";
+  default, dst_geoid, "12A";
   default, verbose, 2;
 
   src_geoid = regsub("^g", src_geoid, "");
@@ -483,7 +483,7 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
     src_datum= If omitted, will be detected from the filename.
     src_geoid= If omitted, will be detected from the filename.
     dst_datum= Default: dst_datum="n88"
-    dst_geoid= Default: dst_geoid="09"
+    dst_geoid= Default: dst_geoid="12A"
   See datum_convert_data for what each option actually means.
 
   Notes:
@@ -513,7 +513,7 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
   default, searchstr, "*w84*.pbd";
   default, update, 0;
   default, dst_datum, "n88";
-  default, dst_geoid, "09";
+  default, dst_geoid, "12A";
   default, force, 0;
 
   if(!is_void(src_geoid))
