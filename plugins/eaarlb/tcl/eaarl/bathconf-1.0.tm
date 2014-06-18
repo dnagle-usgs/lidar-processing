@@ -882,8 +882,10 @@ snit::type ::eaarl::bathconf::embed {
     }
 
     method SetGroup {option value} {
-        set options($option) $value
-        $self Gui
+        if {$value ne $options(-group)} {
+            set options(-group) $value
+            $self Gui
+        }
     }
 
     method UpdateTitle {} {
