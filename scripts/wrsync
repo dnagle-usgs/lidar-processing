@@ -29,7 +29,14 @@ $0 [-[no]help] [-[no]tar] [-xyz] -[no]z] -[R]
 
 -xyz  : rsync only .xyz files
 
-Check back again later
+-alps : rsync only the alps and soxmap directories.
+
+-n    : show the rsync command to use, but don't issue it.
+
+-norsync: pass -n to rsync
+
+The trajectories subdirectory is not synced.
+
 [-nohelp]: better than nothing
 
 EOF
@@ -54,9 +61,11 @@ $options = <<END;
   'tar!'       => \\( \$tar      = -1   ),  # tar / notar option
   'ash!'       => \\( \$ash      = -1   ),  # ash / noash option
   'xyz!'       => \\( \$xyz      = -1   ),  # xyz files
+  'alps!'      => \\( \$alps     = -1   ),  # alps files
   'z!'         => \\( \$z        = -1   ),  # use -z in rsync
   'R!'         => \\( \$R        = -1   ),  # use -R in rsync
   'n!'         => \\( \$n        = -1   ),  # don't run, only show command to use'
+  'norsync!'   => \\( \$norsync  = -1   ),  # pass -n to rsync
 );
 &showusage() if (\$opt_help >= 0);
 END
@@ -69,32 +78,41 @@ eval $options;
 # printf("magic    = %f\n", $magic  ) if ( $magic  );
 # printf("mystr    = %s\n", $mystr  ) if ( $mystr  );
 # printf("verbose  = not set\n"     ) if ( $verbose == -1 );
-printf("verbose  = %d\n", $verbose) if ( $verbose >=  0 );
-printf("tar      = %d\n", $tar    ) if ( $verbose >-  0 );
-printf("ash      = %d\n", $ash    ) if ( $verbose >-  0 );
-printf("xyz      = %d\n", $xyz    ) if ( $verbose >-  0 );
-printf("z        = %d\n", $z      ) if ( $verbose >-  0 );
-printf("R        = %d\n", $R      ) if ( $verbose >-  0 );
+printf("verbose  = %2d\n", $verbose) if ( $verbose >=  0 );
+printf("tar      = %2d\n", $tar    ) if ( $verbose >-  0 );
+printf("ash      = %2d\n", $ash    ) if ( $verbose >-  0 );
+printf("xyz      = %2d\n", $xyz    ) if ( $verbose >-  0 );
+printf("alps     = %2d\n", $alps   ) if ( $verbose >-  0 );
+printf("z        = %2d\n", $z      ) if ( $verbose >-  0 );
+printf("R        = %2d\n", $R      ) if ( $verbose >-  0 );
+printf("n        = %2d\n", $n      ) if ( $verbose >-  0 );
+printf("norsync  = %2d\n", $norsync) if ( $verbose >-  0 );
 
 # exit(0);
 ######################################################################
 
 $z = 1 if ( $z == -1 && $tar == 0 );
 
-my $notarstr = "--include=\*/ --exclude=\*.tar --include=\* ";
-my   $tarstr = "--include=\*/ --include=\*.tar --exclude=\* ";
-my   $ashstr = "--include=\*/ --include=\*.ash --exclude=\* ";
-my   $xyzstr = "--include=\*/ --include=\*.xyz --exclude=\* ";
+my $notraj   = "--exclude=trajectories/ ";
+my $notarstr = "--include=\*/ --exclude=\*.tar $notraj --include=\* ";
+my   $tarstr = "--include=\*/ --include=\*.tar $notraj --exclude=\* ";
+my   $ashstr = "--include=\*/ --include=\*.ash $notraj --exclude=\* ";
+my   $xyzstr = "--include=\*/ --include=\*.xyz $notraj --exclude=\* ";
+my   $alpstr = "--include=alps/ --include=soxmap/ --exclude=20\*/ ";
 my   $zstr   = "-z ";
 my   $Rstr   = "-R ";
+my   $nors   = "-n ";
 
 my $opt = "";
    $opt = $notarstr if ( $tar ==  0 );
    $opt =   $tarstr if ( $tar ==  1 );
    $opt =   $ashstr if ( $ash ==  1 );
    $opt =   $xyzstr if ( $xyz ==  1 );
+   $opt =   $alpstr if ( $alps==  1 );
    $opt .=  $zstr   if ( $z   ==  1 );  # append these options if selected
    $opt .=  $Rstr   if ( $R   ==  1 );
+   $opt =   $notraj if ( $opt eq "" );
+   $opt .=  $nors   if ( $norsync == 1 );
 
 
 $cmd = "rsync --timeout 20 -PHav $opt";
