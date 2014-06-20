@@ -92,48 +92,82 @@ func split_sequence_by_gaps(seq, gap=) {
   return ptr;
 }
 
-func split_by_flight(data, timediff=, daythresh=, pulsecount=) {
+func split_by_flight(data, timediff=, daythresh=, pulsecount=, spr=) {
   default, daythresh, 20;
   default, pulsecount, 119;
+  default, spr, 0.05;
   local rn, pulse;
+
+  // Convert daythresh from minutes to seconds
+  daythresh *= 60;
 
   lines = split_by_line(data, timediff=timediff);
 
-  // bbar: The average y-intercept in linear fit for
-  //    raster = intercept + slope * time
-  // This thus gives an approximate time for when the rasters for this flight
-  // started.
-  bbar = array(double, numberof(lines));
+  // Solve linear equations -----------------------------------------------
+  // Derive the parameters for the linear equation:
+  //    soe = start_time + rate * raster
+  start_time = array(double, numberof(lines));
+  rate = array(double, numberof(lines));
   for(i = 1; i <= numberof(lines); i++) {
     data = *lines(i);
+    // data must be sorted by soe for interpolation
     data = data(sort(data.soe));
     parse_rn, data.rn, rn, pulse;
-    // rnu: Combines raster and pulse into a unified form that better
-    // reflects position in sequence. A pulse is effectively converted into a
-    // fractional raster number.
-    rnu = rn + (pulse-1.)/pulsecount;
-    rn = pulse = [];
 
-    model = poly1_fit(unref(data).soe, rnu, 1);
-    bbar(i) = model(1);
+    // Convert pulse into a fractional value such that the central pulse is at
+    // 0.5 and such that all other pulses are spaced between 0 and 1 (but
+    // strictly 0 < val < 1). These will be combined with the raster number to
+    // give a floating point value that we can interpolate against; avoiding 0
+    // and 1 allows us to distinguish between rasters (so that pulses first and
+    // last don't get merged).
+
+    // Instead of mapping 1..pulsecount to 0..1, map 0..pulsecount+1 to 0..1
+    // which ensures that 1 and pulsecount are not at 0 and 1
+    pf = double(pulse)/(pulsecount+1);
+
+    // In order to properly interpolate for the middle, we only want to use
+    // rasters where there's points both below and above the middle. (In other
+    // words, we want to avoid interpolating using adjacent rasters.)
+
+    w = where(pf <= .5);
+    rnlo = rn(w);
+    w = where(pf >= .5);
+    rnhi = rn(w);
+    rnlist = set_intersection(rnlo, rnhi);
+    w = rnlo = rnhi = [];
+
+    // lmfit doesn't like it when there are 2 or fewer data points to work
+    // with; leave the values at 0 and attempt to deal with further below
+    if(numberof(rnlist) < 3) continue;
+
+    // Interpolate soe to center of each raster
+    rnsoe = interp(data.soe, rn + pf, rnlist + 0.5);
+
+    // Make an initial estimate for the model using spr
+    model = [data.soe(1) - data.raster(1) * spr, spr];
+
+    // Solve linear equation
+    lmfit, poly1, rnlist, model, rnsoe, tol=0.001;
+    start_time(i) = model(1);
+    rate(i) = model(2);
   }
 
-  // Downgrade resolution of bbar from fractional seconds to integer minutes
-  bbar = long(bbar/60);
-
-  // Sort the bbars (and keep the lines sorted with them)
-  idx = sort(bbar);
-  bbar = bbar(idx);
+  // Sort the start_times (and keep the lines sorted with them) so that each
+  // can be easily compared to its nearest neighbor.
+  idx = sort(start_time);
+  start_time = start_time(idx);
+  rate = rate(idx);
   lines = lines(idx);
 
-  // Group lines together based on similar bbars; they are in the same flight
+  // Group lines together based on similar start_times; they are in the same flight
   group = array(1, numberof(lines));
   j = 1;
-  for(i = 2; i <= numberof(bbar); i++) {
-    if(abs(bbar(i) - bbar(i-1)) > daythresh) j++;
+  for(i = 2; i <= numberof(start_time); i++) {
+    if(start_time(i) && abs(start_time(i) - start_time(i-1)) > daythresh) j++;
     group(i) = j;
   }
-  // Merge grouped lines
+
+  // Merge and return grouped lines
   merged = array(pointer, j);
   for(i = 1; i <= j; i++) {
     merged(i) = &merge_pointers(lines(where(group == i)));
