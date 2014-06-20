@@ -126,19 +126,19 @@ func split_by_flight(data, timediff=, daythresh=, pulsecount=) {
   bbar = bbar(idx);
   lines = lines(idx);
 
-  // Merge lines that have similar bbars, they are from the same flight.
-  merged = array(pointer, numberof(lines));
-  merged(1) = &(*lines(1));
+  // Group lines together based on similar bbars; they are in the same flight
+  group = array(1, numberof(lines));
   j = 1;
   for(i = 2; i <= numberof(bbar); i++) {
-    if(abs(bbar(i) - bbar(i-1)) < daythresh) {
-      merged(j) = &grow(*merged(j), *lines(i));
-    } else {
-      j++;
-      merged(j) = &(*lines(i));
-    }
+    if(abs(bbar(i) - bbar(i-1)) > daythresh) j++;
+    group(i) = j;
   }
-  return merged(:j);
+  // Merge grouped lines
+  merged = array(pointer, j);
+  for(i = 1; i <= j; i++) {
+    merged(i) = &merge_pointers(lines(where(group == i)));
+  }
+  return merged;
 }
 
 func split_by_line(data, timediff=) {
