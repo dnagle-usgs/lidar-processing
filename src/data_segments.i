@@ -152,6 +152,41 @@ func split_by_flight(data, timediff=, daythresh=, pulsecount=, spr=) {
     rate(i) = model(2);
   }
 
+  // Check unsolvable segments --------------------------------------------
+  // If there were any segments where we couldn't derive an equation, then go
+  // through and see if any of the equations we did derive properly predict
+  // them.
+  if(nallof(start_time) && anyof(start_time)) {
+    need = where(!start_time);
+    ncount = numberof(need);
+
+    valid = where(start_time);
+    vcount = numberof(valid);
+
+    for(i = 1; i <= ncount; i++) {
+      n = need(i);
+      data = *lines(n);
+
+      // Note non-standard stop condition: it aborts if a start_time is
+      // populated
+      for(j = 1; j <= vcount && !start_time(n); j++) {
+        v = valid(j);
+
+        // Predicted soe values
+        sp = start_time(v) + rate(v) * data.raster;
+        // Upper and lower bounds for letting it pass daythresh
+        slo = sp - daythresh;
+        shi = sp + daythresh;
+
+        // Only allow it to pass if it successfully predicts all points
+        if(allof(slo <= data.soe & data.soe <= shi)) {
+          start_time(n) = start_time(v);
+          rate(n) = rate(v);
+        }
+      }
+    }
+  }
+
   // Sort the start_times (and keep the lines sorted with them) so that each
   // can be easily compared to its nearest neighbor.
   idx = sort(start_time);
