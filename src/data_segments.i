@@ -93,6 +93,44 @@ func split_sequence_by_gaps(seq, gap=) {
 }
 
 func split_by_flight(data, timediff=, daythresh=, pulsecount=, spr=) {
+/* DOCUMENT split_by_flight(data, timediff=, daythresh=, pulsecount=, spr=)
+  Attempts to split a data variable up into chunks based on which flight the
+  points are from.
+
+  Determining a point's flight is non-trivial as we do not store any values in
+  the structs that specifically map a point to its source flight. We also
+  cannot just split them up by date because sometimes multiple flights occur in
+  one day and sometimes a flight crosses through midnight.
+
+  This function exploits the linear relationship between time and raster number
+  in order to group rasters together. Rasters are collected at a steady rate,
+  which means that there exists an equation TIME = START_TIME + RATE * RASTER
+  that fairly accurately relates the two variables.
+
+  The data is first split by line. Each line is analyzed to derive its linear
+  equation for start_time and rate. If there are lines that cannot be properly
+  analyzed (for example, due to too few points), then another pass is made to
+  see if any of the derived linear equations also works for them. Then the
+  per-line segments are merged together based on similarity of their start_time
+  values.
+
+  Options:
+    timediff= This is passed to split_by_line to handle the initial line
+      splitting.
+    daythresh= Specifies a threshold to use when comparing the start_time
+      values of two segments. If their start_time values are within DAYTHRESH
+      minutes of one another, they are merged. In order to account for the
+      possibility of the laser turning on and off, this should be at least a
+      few minutes.
+        daythresh=20    Default, 20 minutes
+    pulsecount= The number of pulses in a raster. Since a raster actually
+      covers a time period rather than a single point of time, the pulsecount
+      is used to estimate the time of the center of each raster.
+    spr= Seconds per pulse. This is used to derive an initial estimate of the
+      linear equation, which improves the results of the lmfit algorithm.
+        spr= 0.05       Default, 0.05 which corresponds to 20 Hz, which is the
+          scan rate of EAARL-A and EAARL-B.
+*/
   default, daythresh, 20;
   default, pulsecount, 119;
   default, spr, 0.05;
