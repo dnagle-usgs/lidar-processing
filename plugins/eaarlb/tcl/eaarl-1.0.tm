@@ -14,6 +14,7 @@ package require eaarl::pixelwf
 package require eaarl::processing
 package require eaarl::raster
 package require eaarl::rawwf
+package require eaarl::sasr
 package require eaarl::sbconf
 package require eaarl::settings
 package require eaarl::sync
