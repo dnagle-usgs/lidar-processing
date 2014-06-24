@@ -106,6 +106,11 @@ func sasr_display(args) {
   if(!is_void(pmode)) cmd += " -pmode "+pmode;
   tkcmd, cmd;
 
+  if(is_void(tans)) {
+    msg = "Unable to locate flightline\nDid you load the flight data?";
+    goto ERR;
+  }
+
   // Extract near and current points
   work = sasr_extract(data, raster, neardist, channel);
 
