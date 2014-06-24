@@ -151,7 +151,10 @@ proc ::l1pro::main::panel_plot w {
     ttk::spinbox $f.skip -width 5 \
             -from 1 -to 10000 -increment 1 \
             -textvariable ::skip
+    ttk::frame $f.triagfma
+    ttk::checkbutton $f.triag -text "Tri " -variable ::l1pro_triag
     ttk::checkbutton $f.fma -text "Auto clear" -variable ::l1pro_fma
+    pack $f.triag $f.fma -in $f.triagfma -side left
     ttk::button $f.plot -text "Plot" -command ::display_data
     ttk::button $f.lims -text "Limits" -command [list exp_send "limits;\r"]
 
@@ -163,11 +166,11 @@ proc ::l1pro::main::panel_plot w {
     grid columnconfigure $f.btns 0 -weight 1
     grid rowconfigure $f.btns {0 2 4} -weight 1 -uniform 1
 
-    grid $f.varbtn  $f.varsel -        $f.winlbl  $f.win $f.winlock \
+    grid $f.varbtn  $f.varsel -        $f.winlbl   $f.win $f.winlock \
             $f.sep $f.btns -padx 1 -pady 1
-    grid $f.modelbl $f.mode   -        $f.skiplbl $f.skip -         \
+    grid $f.modelbl $f.mode   -        $f.skiplbl  $f.skip -         \
             ^      ^       -padx 1 -pady 1
-    grid $f.marklbl $f.mtype  $f.msize $f.fma     -       -         \
+    grid $f.marklbl $f.mtype  $f.msize $f.triagfma -       -         \
             ^      ^       -padx 1 -pady 1
 
     grid configure $f.varbtn $f.varsel $f.mode $f.mtype $f.msize $f.win \
@@ -198,6 +201,10 @@ proc ::l1pro::main::panel_plot w {
     tooltip $f.lims \
             "Reset the viewing area for the plot so that all data can be seen
             in the plot, optimally."
+
+    tooltip $f.triag \
+            "If enabled, then the data will be triangulated instead of plotted
+            as points."
 
     return $w
 }
