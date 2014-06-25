@@ -86,7 +86,12 @@ proc ::eaarl::settings::ops_conf::gui_spinbox {w key from to inc} {
 
 proc ::eaarl::settings::ops_conf::gui {} {
     set w $v::top
-    destroy $w
+
+    if {[winfo exists $w]} {
+        ::misc::raise_win $w
+        return
+    }
+
     toplevel $w
     array unset v::ops_conf *
 
