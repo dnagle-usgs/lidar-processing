@@ -640,8 +640,8 @@ func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma
       swap, Z, X;
 
     if(triag) {
-      v = triangulate(X, Y);
-      plot_triag_mesh, [X,Y,Z], v, cmin=cmin, cmax=cmax, dofma=0, edges=triagedges;
+      plot_tri_data, [X,Y,Z], cmin=cmin, cmax=cmax, dofma=0, edges=triagedges,
+        maxside=50, maxarea=200;
     } else {
       plcm, unref(Z), unref(Y), unref(X), msize=msize, marker=marker,
         cmin=cmin, cmax=cmax;
