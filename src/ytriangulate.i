@@ -1,5 +1,16 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+func plot_tri_data(data, mode=, maxside=, maxarea=, minangle=, edges=, win=, cmin=, cmax=, dofma=, showcbar=) {
+/* DOCUMENT plot_tri_data, data, mode=, maxside=, maxarea=, minangle=, cmin=, cmax=
+  Wrapper around triangulate_data + plot_triag_mesh. See those functions for
+  details on the options accepted.
+*/
+  v = triangulate_data(data, mode=mode, maxside=maxside, maxarea=maxarea,
+    minangle=minangle, verbose=0);
+  plot_triag_mesh, data, v, mode=mode, edges=edges, win=win, cmin=cmin,
+    cmax=cmax, dofma=dofma, showcbar=showcbar;
+}
+
 func triangulate_data(data, mode=, verbose=, maxside=, maxarea=, minangle=) {
 /* DOCUMENT v = triangulate_data(data, mode=, verbose=, maxside=, maxarea=,
   minangle=)
