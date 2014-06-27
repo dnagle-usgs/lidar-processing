@@ -72,7 +72,6 @@ func plot_triag_mesh(data, v, mode=, edges=, win=, cmin=, cmax=, dofma=, showcba
 
   SEE ALSO: triangulate
 */
-// original amar nayegandhi 01/09/04
   default, win, window();
   default, edges, 0;
   default, dofma, 1;
@@ -86,16 +85,25 @@ func plot_triag_mesh(data, v, mode=, edges=, win=, cmin=, cmax=, dofma=, showcba
   splitary, v, 3, v1, v2, v3;
   data = v = [];
 
-  // Juggle the coordinates into a format the plfp likes
-  xx = transpose(x([v1,v2,v3]))(*);
-  yy = transpose(y([v1,v2,v3]))(*);
-
   zz = z([v1,v2,v3]);
   default, cmin, min(zz);
   default, cmax, max(zz);
 
   // For each triangle, we use the average of its vertex elevations
   zz = zz(,sum)/3.;
+
+  default, cmin, zz(min);
+  default, cmax, zz(max);
+  w = where(cmin <= zz & zz <= cmax);
+  if(!numberof(w)) return;
+  v1 = v1(w);
+  v2 = v2(w);
+  v3 = v3(w);
+  zz = zz(w);
+
+  // Juggle the coordinates into a format the plfp likes
+  xx = transpose(x([v1,v2,v3]))(*);
+  yy = transpose(y([v1,v2,v3]))(*);
 
   n = array(short(3), numberof(zz));
 
