@@ -198,6 +198,8 @@ local GEO;
     double soe;         seconds of the epoch
     char channel;       channel used if forced; 0 if auto chosen
     long ptime;         processing time identifier
+    float bback1;       backscatter value 1
+    float bback2;       backscatter value 2
   }
 
   SEE ALSO: GEOALL, R, VEG__
@@ -214,6 +216,7 @@ struct GEO {
   double soe;
   char channel;
   long ptime;
+  float bback1, bback2;
 }
 
 local R;
