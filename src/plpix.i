@@ -1,7 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-func plpix(data, mode=, cmin=, cmax=, win=) {
-/* DOCUMENT plpix, data, mode=, cmin=, cmax=, win=
+func plpix(data, mode=, cmin=, cmax=, win=, square=) {
+/* DOCUMENT plpix, data, mode=, cmin=, cmax=, win=, square=
 
   This pixel-plots the given data. The algorithm looks at the current limits
   and viewport to calculate the spatial dimensions of the current view as well
@@ -22,9 +22,12 @@ func plpix(data, mode=, cmin=, cmax=, win=) {
   unlike plcm plots.
 */
   default, win, max(0, current_window());
+  default, square, 1;
+
   wbkp = current_window();
   window, win;
   pltitle, "working...";
+  limits, square=square;
   pause, 0;
 
   // Determine the dimensions in pixels of the viewport.
