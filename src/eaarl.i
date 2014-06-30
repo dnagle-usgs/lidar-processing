@@ -132,6 +132,7 @@ require, "nad832navd88.i";
 require, "obj_show.i";
 require, "parse.i";
 require, "pip.i";
+require, "plpix.i";
 require, "plugins.i";
 require, "polyfit_smooth.i";
 require, "polyplot.i";

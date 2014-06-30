@@ -127,6 +127,9 @@ proc menu_tools mb {
             -command [list ::sf::controller %AUTO%]
     $mb add cascade {*}[menulabel "Launch statistics by..."] \
             -menu [menu_tools_statistics $mb.stat]
+    $mb add separator
+    $mb add cascade {*}[menulabel "E&xperimental"] \
+            -menu [menu_tools_experimental $mb.experimental]
 
     return $mb
 }
@@ -149,6 +152,12 @@ proc menu_tools_statistics mb {
     return $mb
 }
 
+proc menu_tools_experimental mb {
+    menu $mb
+    $mb add command {*}[menulabel "&Pixel Plotting"] \
+            -command {::l1pro::plpix::plot $::win_no}
+    return $mb
+}
 
 proc menu_window mb {
     menu $mb
