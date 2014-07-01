@@ -87,7 +87,7 @@ namespace eval l1pro::transect {
             ${p}rcf - - x \
             ${p}pip - - \
             -padx 2 -pady 2
-        grid ${p}seph -columnspan 31 \
+        grid ${p}seph -columnspan 32 \
                 -padx 2 -pady 0 -sticky ew
 
         gui_add_row
@@ -187,10 +187,13 @@ namespace eval l1pro::transect {
         tooltip $f.add_row \
                 "Adds a new Transect row. Rows will be numbered with increasing
                 integers. If you delete a row, that row's number will not be
-                re-added unless you close the GUI and open it afresh."
+                re-added unless you close the GUI and open it afresh.
+
+                The new row will be initialized using the current plotting
+                variable with predefined settings."
     }
 
-    proc init_settings {row} {
+    proc init_settings {row {ref -1}} {
         variable v::settings
 
         set settings($row,var) $::pro_var
@@ -227,6 +230,13 @@ namespace eval l1pro::transect {
                 set settings($row,mode) fs
             }
         }
+
+        if {$ref > -1} {
+            foreach {key val} [array get settings $ref,*] {
+                set field [lindex [split $key ,] 1]
+                set settings($row,$field) $val
+            }
+        }
     }
 
     proc get_settings {row} {
@@ -241,12 +251,12 @@ namespace eval l1pro::transect {
         return $result
     }
 
-    proc gui_add_row {} {
+    proc gui_add_row {{ref -1}} {
         set f $v::top.f.rows
         set row [incr v::maxrow]
         set p $f.row${row}_
 
-        init_settings $row
+        init_settings $row $ref
 
         set var ::l1pro::transect::v::settings
 
@@ -327,6 +337,8 @@ namespace eval l1pro::transect {
                 -command [list l1pro::transect::do_examine $row]
         ttk::button ${p}delete -text "X" -width 0 \
                 -command [list l1pro::transect::gui_del_row $row]
+        ttk::button ${p}add -text "+" -width 0 \
+                -command [list l1pro::transect::gui_add_row $row]
 
         ::mixin::statevar ${p}recall \
                 -statemap {0 disabled 1 !disabled} \
@@ -375,10 +387,10 @@ namespace eval l1pro::transect {
                 ${p}sep7 \
                 ${p}piplock ${p}pipvar ${p}pipremove \
                 ${p}sep8 \
-                ${p}plotline ${p}examine ${p}delete \
+                ${p}plotline ${p}examine ${p}delete ${p}add \
                 ${p}sep9 \
                 -padx 2 -pady 2
-        grid ${p}seph -columnspan 31 -padx 2 -pady 0 -sticky ew
+        grid ${p}seph -columnspan 32 -padx 2 -pady 0 -sticky ew
 
         grid ${p}var -sticky ew
 
@@ -604,6 +616,13 @@ namespace eval l1pro::transect {
                 numbers. So if you add a \"Transect 2\" row, then delete it,
                 then add a new row, the new row will be \"Transect 3\" even
                 though there is no longer a \"Transect 2\"."
+        tooltip ${p}add \
+                "Adds a new Transect row. Rows will be numbered with increasing
+                integers. If you delete a row, that row's number will not be
+                re-added unless you close the GUI and open it afresh.
+
+                The new row will be initialized with this row's current
+                settings."
     }
 
     proc gui_del_row {row} {
