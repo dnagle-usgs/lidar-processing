@@ -438,6 +438,9 @@ searchstr=) {
       mission configuation is already defined.
     elev= The initial elevation to use. It defaults to 0.0. This normally
       shouldn't need to be changed.
+    mode= The data mode to use for the data. Default is mode="be"
+    searchstr= Searchstring to use for locating the data. Default is
+      searchstr="*.pbd"
 
   Advanced options (these shouldn't need to be changed):
     camera= Specifies the camera to use. Defaults to camera_specs.
@@ -458,6 +461,7 @@ searchstr=) {
   default, buffer, 200.;
   default, update, 0;
   default, mode, "be";
+  default, searchstr, "*.pbd";
 
   cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1, cir_soe_offset=cir_soe_offset);
   jgw_files = file_rootname(cirdata.files) + ".jgw";
