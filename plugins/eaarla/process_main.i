@@ -596,7 +596,7 @@ exactsel=, splitchan=, opts=) {
   }
 
   if(is_void(q))
-    q = pnav_sel_rgn(region=region, mode=pick);
+    q = pnav_sel_rgn(region=region, mode=pick, verbose=0);
   idx = pnav_rgn_to_idx(q);
 
   if(is_void(idx)) {
