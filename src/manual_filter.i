@@ -775,7 +775,7 @@ func batch_snell_be_to_bathy(srcdir, outdir=, searchstr=) {
 }
 
 func strip_flightline_edges(data, startpulse=, endpulse=, idx=) {
-/* DOCUMENT strip_flightline(data, startpulse=, endpulse=, idx=)
+/* DOCUMENT strip_flightline_edges(data, startpulse=, endpulse=, idx=)
   Remove the edges of the flightlines based on pulse number. The data without
   the edges will be returned.
 
