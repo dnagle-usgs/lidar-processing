@@ -308,7 +308,11 @@ func region_to_shp(region, utm=, ll=) {
     - A scalar string that does not match an existing file and does not contain
       a / is parsed as a tile name (such as "e234_n5234_15").
     - A two-element string array is interpreted as a group,name pair for
-      polyplot(get,) (to reference a poly defined in the plotting tool).
+      polyplot(get,) (to reference a poly defined in the plotting tool). For
+      example, if you imported "MyRegion.xyz" and it contains polys named
+      "aoi1" and "aoi2", you could use ["MyRegion.xyz","aoi1"] to use the aoi1
+      poly or you could use ["MyRegion.xyz",""] to use all polys from the
+      MyRegion.xyz group.
     - A four-element numerical vector is interpreted as an array of [xmin,
       xmax, ymin, ymax].
     - A five-element numerical vector is interpreted as the output of limits()
