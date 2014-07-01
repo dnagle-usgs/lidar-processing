@@ -919,6 +919,10 @@ wm withdraw .
 wm protocol . WM_DELETE_WINDOW [list wm withdraw .]
 launch_gui
 
+# Normalize away symlinks
+set _ytk(initialdir) [file normalize $_ytk(initialdir)]
+catch {set _ytk(initialdir) [file readlink $_ytk(initialdir)]}
+
 ybkg funcset initialdir \"$_ytk(initialdir)\"
 ybkg funcset _ytk 1
 ybkg funcset _pid [pid]
