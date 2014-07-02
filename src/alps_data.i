@@ -85,15 +85,18 @@ func datahasmode(data, mode=, xyzpassthrough=) {
   has = 1;
 
   // x and y
-  if(anyof(["ba","ch","de","fint","fs"] == mode)) {
-    has = has && has_member(data, "east");
-    has = has && has_member(data, "north");
-  } else if(anyof(["be","lint"] == mode)) {
+  if(anyof(["be","lint"] == mode)) {
     has = has && has_member(data, "least");
     has = has && has_member(data, "lnorth");
   } else if("mir" == mode) {
     has = has && has_member(data, "meast");
     has = has && has_member(data, "mnorth");
+  } else if(
+    anyof(["ba","ch","de","fint","fs"] == mode) ||
+    has_member(data, mode)
+  ) {
+    has = has && has_member(data, "east");
+    has = has && has_member(data, "north");
   } else {
     // Unknown mode
     return 0;
@@ -295,6 +298,9 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
   } else if("mir" == mode) {
     x = data.meast;
     y = data.mnorth;
+  } else if(has_member(data, mode)) {
+    x = data.east;
+    y = data.north;
   } else {
     error, "Unknown mode.";
   }
@@ -324,6 +330,8 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
       z = data.lint;
   } else if("mir" == mode) {
     z = data.melevation;
+  } else if(has_member(data, mode)) {
+    z = get_member(data, mode);
   }
 
   if(!native) {
