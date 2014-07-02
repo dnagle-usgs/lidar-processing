@@ -26,6 +26,9 @@ func ba_struct_from_obj(pulses) {
   result.soe = pulses.soe;
   result.channel = pulses.lchannel;
 
+  if(pulses(*,"bback1")) result.bback1 = pulses.bback1;
+  if(pulses(*,"bback2")) result.bback2 = pulses.bback2;
+
   // Original uses floating point, struct uses integers. This can result in
   // depth values of 0, throw them out.
   w = where(result.depth < 0);
@@ -59,7 +62,8 @@ func process_ba(start, stop, ext_bad_att=, channel=, opts=) {
         raster, soe, tx, rx
       from process_fs: ftx, channel, frx, fint, fchannel, fbias,
         fs_slant_range, mx, my, mz, fx, fy, fz
-      added by process_ba: ltx, lrx, lint, lbias, lchannel, lx, ly, lz
+      added by process_ba: ltx, lrx, lint, bback1, bback2, lbias, lchannel, lx,
+        ly, lz
 */
   restore_if_exists, opts, start, stop, ext_bad_att, channel;
 
@@ -88,7 +92,8 @@ func process_ba(start, stop, ext_bad_att=, channel=, opts=) {
   // Determine tx offsets; adds ltx
   ba_tx, pulses;
 
-  // Determine rx offsets; adds lrx, lint, lbias, lchannel; updates fint
+  // Determine rx offsets; adds lrx, lint, bback1, bback2, lbias, lchannel;
+  // updates fint
   ba_rx, pulses;
 
   // Throw away lchannel == 0
@@ -158,6 +163,8 @@ func eaarl_ba_rx_channel(pulses) {
   fields are added to pulses:
     lrx - Location in waveform of bottom
     lint - Intensity at bottom
+    bback1 - Backscatter 1
+    bback2 - Backscatter 2
     lbias - The channel range bias (ops_conf.chn%d_range_bias)
     lchannel - Channel used for bottom
   Additionally, this field is overwritten:
@@ -173,7 +180,7 @@ func eaarl_ba_rx_channel(pulses) {
 
   npulses = numberof(pulses.tx);
 
-  lrx = fint = lint = lbias = array(float, npulses);
+  lrx = fint = lint = bback1 = bback2 = lbias = array(float, npulses);
   lchannel = pulses.channel;
 
   for(i = 1; i <= npulses; i++) {
@@ -188,10 +195,12 @@ func eaarl_ba_rx_channel(pulses) {
     tmp = ba_rx_wf(*pulses.rx(lchannel(i),i), conf);
     fint(i) = tmp.fint;
     lint(i) = tmp.lint;
+    bback1(i) = tmp.bback1;
+    bback2(i) = tmp.bback2;
     lrx(i) = tmp.lrx;
   }
 
-  save, pulses, lrx, fint, lint, lbias, lchannel;
+  save, pulses, lrx, fint, lint, bback1, bback2, lbias, lchannel;
 }
 
 func eaarl_ba_rx_eaarla(pulses) {
@@ -384,12 +393,14 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
       lrx - location of bottom in waveform
       fint - intensity at surface
       lint - intensity at bottom
+      bback1 - backscatter value 1
+      bback2 - backscatter value 2
       candidate_lrx - candidate location of bottom in waveform
 */
   conf = obj_copy(conf);
   sample_interval = 1.0;
 
-  result = save(lrx=0, fint=0, lint=0, candidate_lrx=0);
+  result = save(lrx=0, fint=0, lint=0, bback1=0, bback2=0, candidate_lrx=0);
 
   if(is_void(rx)) {
     msg = "no waveform";
@@ -485,7 +496,41 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
 
   // output
   save, result, lrx=bottom_peak;
+
+  eaarl_ba_bback, wf, result;
+
   return result;
+}
+
+func eaarl_ba_bback(wf, result) {
+/* DOCUMENT eaarl_ba_bback, wf, result
+  RESULT should be an oxy group with the field lrx indicating the position of
+  the bottom in the waveform WF. Two new fields, bback1 and bback2, will be
+  added with the backscatter values over the two intervals 25-35 and 35-45
+  (with a 5ns backoff from the bottom).
+*/
+  // start/stop ranges for each backscatter value
+  bb1_start = 25;
+  bb1_stop = 35;
+  bb2_start = 35;
+  bb2_stop = 45;
+
+  // How far away we must be from the bottom
+  backoff = 5;
+
+  bback1 = bback2 = 0;
+
+  stop = min(bb1_stop, result.lrx - backoff);
+  if(stop >= bb1_start) {
+    bback1 = max(0, wf(bb1_start:stop)(avg));
+  }
+
+  stop = min(bb2_stop, result.lrx - backoff);
+  if(stop >= bb2_start) {
+    bback2 = max(0, wf(bb2_start:stop)(avg));
+  }
+
+  save, result, bback1, bback2;
 }
 
 func eaarl_ba_fs_smooth(pulses, surface_window=, pulse_window=,
