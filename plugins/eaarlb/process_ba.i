@@ -322,6 +322,8 @@ func eaarl_ba_plot(raster, pulse, channel=, win=, xfma=) {
 
   write, format="   lrx: %.2f\n   fint: %.2f\n   lint: %.2f\n",
     double(result.lrx), double(result.fint), double(result.lint);
+  write, format="   bback1: %.2f\n   bback2: %.2f\n",
+    double(result.bback1), double(result.bback2);
   if(!is_void(msg)) write, format="   %s\n", msg;
 }
 
