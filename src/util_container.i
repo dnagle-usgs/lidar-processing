@@ -14,6 +14,32 @@
     - Yorick binary files
 */
 
+func set_member(data, member, val) {
+/* DOCUMENT set_member, data, member, val
+  Attempts to set MEMBER to VAL in DATA. This is a wrapper around several
+  different approaches to setting a member in a container. Returns 1 if the
+  assignment succeeded, or 0 if it did not.
+*/
+  if(is_hash(data)) {
+    h_set, data, member, val;
+    return 1;
+  }
+  if(is_obj(data)) {
+    save, data, noop(member), val;
+    return 1;
+  }
+  // Structs and file streams. Rather than trying to analyze whether the field
+  // and val are conformable, just test for an exception.
+  if(catch(0x08)) {
+    return 0;
+  }
+  if(has_member(data, member))
+    get_member(data, member) = val;
+  else
+    save, data, noop(member), val;
+  return 1;
+}
+
 func has_member(val, member, deref=) {
 /* DOCUMENT has_member(val, member, deref=)
   Tests to see if the given value contains a member with the given name.
