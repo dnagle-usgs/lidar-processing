@@ -19,7 +19,7 @@ func logger_logdir(dir, void) {
   // If running within a normal ALPS session, alpsrc.log_dir should be defined.
   // If not running in a normal ALPS session, attempt to retrieve the log_dir
   // from the current environment. Otherwise, use the default "/tmp/alps.log/".
-  if(is_func(is_hash) && is_hash(alpsrc) && is_string(alpsrc.log_dir)) {
+  if(is_obj(alpsrc) && is_string(alpsrc.log_dir)) {
     dir = alpsrc.log_dir;
   } else {
     dir = get_env("ALPS_LOG_DIR");
@@ -291,7 +291,7 @@ local logger;
 // Initialize logger. Use alpsrc setting if available; otherwise start at
 // "debug".
 if(is_void(logger)) {
-  if(is_func(is_hash) && is_hash(alpsrc) && is_string(alpsrc.log_level))
+  if(is_obj(alpsrc) && is_string(alpsrc.log_level))
     logger_level, alpsrc.log_level;
   else
     logger_level, "debug";

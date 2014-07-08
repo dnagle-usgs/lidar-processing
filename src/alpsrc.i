@@ -2,7 +2,6 @@
 require, "dir.i";
 require, "json_decode.i";
 require, "util_container.i";
-require, "yeti.i";
 
 local alpsrc;
 /* DOCUMENT alpsrc
@@ -95,65 +94,64 @@ func alpsrc_load(void) {
   SEE ALSO: alpsrc
 */
   extern alpsrc;
-  // load default
-  alpsrc = h_clone(__alpsrc_defaults);
+  alpsrc = save();
+  __alpsrc_set_defaults, alpsrc;
   __alpsrc_load_and_merge, alpsrc, "/etc/alpsrc";
   __alpsrc_load_and_merge, alpsrc, "~/.alpsrc";
   __alpsrc_load_and_merge, alpsrc, "./.alpsrc";
   __alpsrc_post, alpsrc;
 }
 
-func __alpsrc_load_and_merge(&hash, fn) {
+func __alpsrc_load_and_merge(&obj, fn) {
   if(file_exists(fn)) {
-    hash = h_merge(hash, json_decode(rdfile(open(fn, "r"))));
+    obj = obj_merge(obj, json_decode(rdfile(open(fn, "r")), objects=""));
   }
 }
 
-func __alpsrc_post(&hash) {
-/* DOCUMENT __alpsrc_post, hash;
+func __alpsrc_post(&obj) {
+/* DOCUMENT __alpsrc_post, obj;
   Performs some post-load operations on the alpsrc settings.
 */
-  if(hash.cores_local == -1) {
-    h_set, hash, cores_local = atoi(popen_rdfile("grep ^processor /proc/cpuinfo | wc -l"))(1);
+  if(obj.cores_local == -1) {
+    save, obj, cores_local = atoi(popen_rdfile("grep ^processor /proc/cpuinfo | wc -l"))(1);
   }
 }
 
-func __alpsrc_set_defaults(&hash) {
-/* DOCUMENT __alpsrc_set_defaults, hash;
-  Sets the initial defaults for __alpsrc_defaults.
+func __alpsrc_set_defaults(&obj) {
+/* DOCUMENT __alpsrc_set_defaults, obj;
+  Provides sane defaults for alpsrc settings.
 */
   // IMPORTANT: When this changes, also change tcl/alpsrc-1.0.tm
-  default, hash, h_new();
-  h_set, hash, batcher_dir=file_join(get_cwd(), "..", "batcher");
+  if(is_void(obj)) obj = save();
+  save, obj, batcher_dir=file_join(get_cwd(), "..", "batcher");
   // If the src directory is .../eaarl/lidar-processing/src
   // Then the share directory is .../eaarl/share
   sharedir = file_join(get_cwd(), "..", "..", "share");
-  h_set, hash, geoid_data_root=file_join(sharedir, "NAVD88");
-  h_set, hash, maps_dir=file_join(sharedir, "maps");
-  h_set, hash, gdal_bin=file_join(get_cwd(), "..", "..", "gdal", "bin");
-  h_set, hash, cctools_bin=file_join(get_cwd(), "..", "..", "cctools", "bin");
-  h_set, hash, makeflow_opts="";
-  h_set, hash, makeflow_enable=1;
-  h_set, hash, makeflow_type="local";
-  h_set, hash, makeflow_project="alps";
-  h_set, hash, memory_autorefresh=5;
-  h_set, hash, log_dir="/tmp/alps.log/";
-  h_set, hash, log_level="debug";
-  h_set, hash, log_keep=30;
-  h_set, hash, cores_local=-1;
-  h_set, hash, cores_remote=0;
+  save, obj, geoid_data_root=file_join(sharedir, "NAVD88");
+  save, obj, maps_dir=file_join(sharedir, "maps");
+  save, obj, gdal_bin=file_join(get_cwd(), "..", "..", "gdal", "bin");
+  save, obj, cctools_bin=file_join(get_cwd(), "..", "..", "cctools", "bin");
+  save, obj, makeflow_opts="";
+  save, obj, makeflow_enable=1;
+  save, obj, makeflow_type="local";
+  save, obj, makeflow_project="alps";
+  save, obj, memory_autorefresh=5;
+  save, obj, log_dir="/tmp/alps.log/";
+  save, obj, log_level="debug";
+  save, obj, log_keep=30;
+  save, obj, cores_local=-1;
+  save, obj, cores_remote=0;
 }
 
-__alpsrc_set_defaults, __alpsrc_defaults;
 alpsrc_load;
 
 if(_ytk)
   tkcmd, "package require alpsrc\n::alpsrc::link";
 
 // Purge old log files if everything is in order to allow it.
-if(is_hash(alpsrc) && is_numerical(alpsrc.log_keep) && is_func(logger_purge))
+if(is_obj(alpsrc) && is_numerical(alpsrc.log_keep) && is_func(logger_purge))
   logger_purge, alpsrc.log_keep;
-if(is_hash(alpsrc) && is_string(alpsrc.log_level) && is_func(logger_level)) {
+if(is_obj(alpsrc) && is_string(alpsrc.log_level) && is_func(logger_level)) {
   logger_level, alpsrc.log_level;
   if(_ytk)
     tkcmd, "::logger::level {"+alpsrc.log_level+"}";
