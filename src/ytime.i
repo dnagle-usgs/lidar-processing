@@ -682,23 +682,71 @@ func get_date(text) {
   If a string does not contain a parseable date, then the nil string
   (string(0)) will be returned instead.
 */
-  require, "yeti_regex.i";
-  // The year may be in the range 1970 to 2099.
-  yreg = "19[789][0-9]|20[0-9][0-9]";
-  // The month may be in the range 01 to 12.
-  mreg = "0[1-9]|1[0-2]";
-  // The day may be in the range 01 to 31.
-  dreg = "0[1-9]|[12][0-9]|3[01]";
-
-  full_reg = swrite(format="^(%s)(-?)(%s)\\2(%s)($|[^0-9])", yreg, mreg, dreg);
-
-  m_full = m_year = m_dash = m_month = m_day = [];
-  w = where(regmatch(full_reg, text, m_full, m_year, m_dash, m_month, m_day));
-
-  result = array(string(0), dimsof(text));
-  if(numberof(w)) {
-    result(w) = swrite(format="%s-%s-%s", m_year(w), m_month(w), m_day(w));
+  count = numberof(text);
+  if(is_scalar(text)) {
+    date = array(string, 1);
+  } else {
+    date = array(string, dimsof(text));
   }
+  for(i = 1; i <= count; i++) {
+    tmp = strchar(text(i));
+    if(numberof(tmp) < 9) continue;
 
-  return result;
+    if(tmp(5) == '-' && tmp(8) == '-') {
+      if(numberof(tmp) < 11) continue;
+      if(tmp(11) >= '0' && tmp(11) <= '9') continue;
+      ch = tmp(1:10);
+    } else {
+      if(tmp(9) >= '0' && tmp(9) <= '9') continue;
+      ch = array('-', 10);
+      ch([1,2,3,4,6,7,9,10]) = tmp(1:8);
+    }
+
+    if(ch(1) == '1') {
+      // 1970 - 1999
+      if(ch(2) != '9') continue;
+      if(ch(3) < '7') continue;
+    } else if(ch(1) == '2') {
+      // 2000 - 2099
+      if(ch(2) != '0') continue;
+      if(ch(3) < '0') continue;
+    } else {
+      continue;
+    }
+    if(ch(3) > '9') continue;
+    if(ch(4) < '0') continue;
+    if(ch(4) > '9') continue;
+
+    if(ch(6) == '0') {
+      // 01 - 09
+      if(ch(7) < '1') continue;
+      if(ch(7) > '9') continue;
+    } else if(ch(6) == '1') {
+      // 10 - 12
+      if(ch(7) < '0') continue;
+      if(ch(7) > '2') continue;
+    } else {
+      continue;
+    }
+
+    if(ch(9) == '0') {
+      // 01 - 09
+      if(ch(10) < '1') continue;
+      if(ch(10) > '9') continue;
+    } else if(ch(9) == '1' || ch(9) == '2') {
+      // 10 - 29
+      if(ch(10) < '0') continue;
+      if(ch(10) > '9') continue;
+    } else if(ch(9) == '3') {
+      // 30 - 31
+      if(ch(10) < '0') continue;
+      if(ch(10) > '1') continue;
+    } else {
+      continue;
+    }
+
+    date(i) = strchar(ch);
+  }
+  if(is_scalar(text)) return date(1);
+  return date;
 }
