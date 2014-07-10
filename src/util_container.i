@@ -226,15 +226,38 @@ func sanitize_vname(&vname) {
     > sanitize_vname("Hello, world!")
     "Hello_world_"
 */
-// Original David Nagle 2010-03-13
-  ovname = (vname);
-  if(regmatch("^[0-9]", ovname))
-    ovname = "v" + ovname;
-  ovname = regsub("[^A-Za-z0-9_]+", ovname, "_", all=1);
-  if(am_subroutine())
-    vname = ovname;
-  else
-    return ovname;
+  in = strlen(vname);
+  iv = strchar(vname)(:-1);
+  valid = (iv >= 'A' & iv <= 'Z') |
+      (iv >= 'a' & iv <= 'z') |
+      (iv >= '0' & iv <= '9') |
+      iv == '_';
+
+  ov = array(char, in+2);
+
+  i = 1;
+  o = 1;
+  if(iv(i) >= '0' && iv(i) <= '9') {
+    ov(o) = 'v';
+    o++;
+  }
+
+  while(i <= in) {
+    if(valid(i)) {
+      ov(o) = iv(i);
+      i++;
+      o++;
+    } else {
+      ov(o) = '_';
+      o++;
+      i++;
+      while(i <= in && !valid(i)) i++;
+    }
+  }
+
+  if(!am_subroutine())
+    return strchar(ov(:o));
+  vname = strchar(ov(:o));
 }
 
 func pbd_save(file, vname, data, empty=) {
