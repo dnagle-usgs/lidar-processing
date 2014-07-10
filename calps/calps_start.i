@@ -13,3 +13,4 @@ autoload, "calps.i", profiler_init, profiler_lastinit;
 autoload, "calps.i", profiler_reset, profiler_ticks;
 autoload, "calps.i", interp_angles;
 autoload, "calps.i", level_short_dips;
+autoload, "calps.i", gist_gpbox;

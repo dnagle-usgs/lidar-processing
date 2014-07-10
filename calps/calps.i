@@ -474,6 +474,23 @@ extern file_size;
   readable. Accepts both scalar and array input.
 */
 
+// *** Defined in gpbox.c ***
+
+extern gist_gpbox;
+/* DOCUMENT viewport = gist_gpbox(landscape)
+  -or- gist_gpbox, width, height
+
+  If called as a function, this will return the values currently in use for the
+  internal gist page size viewport. Called without a parameter or with a
+  false-value parameter, it will return the portrait viewport. Called with a
+  true value as the parameter, it will return the landscape viewport.
+
+  If called as a subroutine with two arguments, this will update the internal
+  gist page sizes to use those values as its width and height. Both portrait
+  and landscape will be updated, inverting width/height as necessary to
+  maintain the portrait and landscape orientations.
+*/
+
 __calps_backup = save(
   calps_compatibility,
   _ytriangulate, triangulate,
@@ -492,5 +509,7 @@ __calps_backup = save(
   wf_centroid, cent,
   eaarl_fs_rx_cent_eaarlb,
   sortedness, sortedness_obj,
-  timsort, timsort_obj
+  timsort, timsort_obj,
+  file_exists, file_readable, file_size,
+  gist_gpbox
 );
