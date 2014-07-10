@@ -99,31 +99,10 @@ func strsplit(str, sep) {
     return result;
   }
 
-  slen = strlen(str);
-
-  stops = array(long, slen);
-  off = 0;
-  do {
-    loc = strfind(sep, str, off);
-    if(off < slen)
-      stops(off+1) = loc(1);
-    off = loc(2);
-  } while(off > -1);
-
-  w = where(stops);
-  nstops = numberof(w);
-  if(!nstops) return [str];
-
-  null_start = stops(1) == 0;
-  null_stop = stops(w(0)) < numberof(stops);
-
-  count = nstops + null_start + null_stop;
-  result = array("", count);
-
-  for(i = 1 + null_start, j = 1; j <= nstops; i++, j++) {
-    result(i) = strpart(str, w(j):stops(w(j)));
-  }
-  return result;
+  i = strfind(sep, str, n=strlen(str));
+  i = i(1:min(where(i<0))-1);
+  if(numberof(i) <= 1) return [str];
+  return strpart(str, grow([0],i));
 }
 
 func strjoin2(lst, sep, stripnil=) {
