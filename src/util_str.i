@@ -112,6 +112,7 @@ func strsplit(str, sep) {
 
   w = where(stops);
   nstops = numberof(w);
+  if(!nstops) return [str];
 
   null_start = stops(1) == 0;
   null_stop = stops(w(0)) < numberof(stops);
