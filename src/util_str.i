@@ -72,56 +72,57 @@ func strsplit(str, sep) {
   [["a","1"],["b","2"],["c","3"],[(nil), "4"]]
 
   > strsplit("anythingSPLITcanSPLITseparate", "SPLIT")
-  ["anything", "can", "separate"]
+  ["anything","can","separate"]
 
   In a one-dimensional array: If res is the result, then res(1,) contains the
   substrings for the first element, and res(,1) contains the first field of
   all elements.
 */
-// Original David Nagle
-  str = (str);
-  match = [];
-  parts = array(string, dimsof(str), 1);
-  sep = regcomp(sep);
-  res = regmatch(sep, str, match, indices=1);
-  while(anyof(res)) {
-    new = array(string, dimsof(str));
-    w = where(match(1,) > 1 & res);
-    if(numberof(w)) {
-      idx = array(0, 2, numberof(w));
-      idx(2,) = match(1,w) - 1;
-      new(w) = strpart(str(w), idx);
-      idx = array(0, 2, numberof(w));
-      idx(1,) = match(2,w) - 1;
-      idx(2,) = strlen(str(w));
-      str(w) = strpart(str(w), idx);
+  if(!is_scalar(str)) {
+    if(!is_vector(str)) error, "STR must be scalar or vector";
+
+    nstr = numberof(str);
+    work = array(pointer, nstr);
+    lens = array(long, nstr);
+    for(i = 1; i <= nstr; i++) {
+      tmp = strsplit(str(i), sep);
+      lens(i) = numberof(tmp);
+      work(i) = &tmp;
     }
-    w = where(match(1,) <= 1 & res);
-    if(numberof(w)) {
-      new(w) = "";
-      idx = array(0, 2, numberof(w));
-      idx(1,) = match(2,w) - 1;
-      idx(2,) = strlen(str(w));
-      str(w) = strpart(str(w), idx);
+
+    max_len = lens(max);
+    result = array(string, nstr, max_len);
+    for(i = 1; i <= nstr; i++) {
+      result(i,:lens(i)) = *work(i);
     }
-    w = where(strlen(str) > 0 & !res);
-    if(numberof(w)) {
-      new(w) = str(w);
-      str(w) = string(0);
-    }
-    grow, parts, new;
-    res = regmatch(sep, str, match, indices=1);
+
+    return result;
   }
-  w = where(strlen(str) > 0);
-  if(numberof(w)) {
-    new = array(string, dimsof(str));
-    new(w) = str(w);
-    grow, parts, new;
+
+  slen = strlen(str);
+
+  stops = array(long, slen);
+  off = 0;
+  do {
+    loc = strfind(sep, str, off);
+    if(off < slen)
+      stops(off+1) = loc(1);
+    off = loc(2);
+  } while(off > -1);
+
+  w = where(stops);
+  nstops = numberof(w);
+
+  null_start = stops(1) == 0;
+  null_stop = stops(w(0)) < numberof(stops);
+
+  count = nstops + null_start + null_stop;
+  result = array("", count);
+
+  for(i = 1 + null_start, j = 1; j <= nstops; i++, j++) {
+    result(i) = strpart(str, w(j):stops(w(j)));
   }
-  if(dimsof(parts)(1) > 1)
-    return parts(,2:);
-  else
-    return parts(2:);
+  return result;
 }
 
 func strjoin2(lst, sep, stripnil=) {
