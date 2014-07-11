@@ -1130,8 +1130,6 @@ columns=, types=, preset=, latlon=) {
       vname = extract_tile(fn_tail, dtlength="short", qqprefix=1);
       if(!vname) vname = file_rootname(fn_tail);
       vname = vprefix + vname + vsuffix;
-      if(regmatch("^[0-9]", vname)) vname = "v" + vname;
-
       pbd_save, out_path + out_tail, vname, data;
     }
   }
