@@ -49,6 +49,8 @@ snit::widget ::yorick::window::embedded {
     option -dpi -default 75 -configuremethod SetStyleDpi
     option -owner -default "" -configuremethod SetOwner
     option -resizecmd ""
+    option -width  -default 450  -configuremethod SetWidthOrHeight
+    option -height -default 450  -configuremethod SetWidthOrHeight
 
     # plot is the frame where the Yorick window will get embedded
     component plot
@@ -146,26 +148,46 @@ snit::widget ::yorick::window::embedded {
             error "Unknown DPI setting"
         }
         set options($option) $value
-        if {$options(-style) eq "landscape11x85.gs"} {
-            if {$options(-dpi) == 75} {
-                lassign {825 661} width height
-            } else {
-                lassign {1100 873} width height
-            }
+
+
+        if { [ string compare -length 5 "/tmp/" $options(-style)] == 0 } {
+            ::misc::idle [ mymethod DoResize ]
         } else {
-            if {$options(-dpi) == 75} {
-                lassign {450 473} width height
+            if {$options(-style) eq "landscape11x85.gs"} {
+                if {$options(-dpi) == 75} {
+                    lassign {825 661} width height
+                } else {
+                    lassign {1100 873} width height
+                }
             } else {
-                lassign {600 623} width height
+                if {$options(-dpi) == 75} {
+                    lassign {450 473} width height
+                } else {
+                    lassign {600 623} width height
+                }
             }
-        }
-        $plot configure -width $width -height $height
-        $self UpdateToolbar
-        if {$options(-resizecmd) ne ""} {
-            {*}$options(-resizecmd) $width $height
+            $plot configure -width $width -height $height
+            $self UpdateToolbar
+            if {$options(-resizecmd) ne ""} {
+                {*}$options(-resizecmd) $width $height
+            }
         }
     }
 
+    method SetWidthOrHeight { option value } {
+        if { $value ne $options($option)} {
+            set options($option) $value
+            set need_resize 1
+            ::misc::idle [ mymethod DoResize ]
+        }
+    }
+
+    method DoResize {} {
+#       if { ! $need_resize } return
+        $plot configure -width $options(-width) -height $options(-height)
+        $self UpdateToolbar
+        set need_resize 0
+    }
     method SetOwner {option value} {
         set options($option) $value
         $self UpdateToolbar

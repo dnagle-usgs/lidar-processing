@@ -11,7 +11,7 @@ if(is_void(_ytk_window_parents))
 */
 
 func ytk_window(win, display=, dpi=, wait=, private=, hcp=, dump=, legends=,
-style=, width=, height=, rgb=, parent=, xpos=, ypos=, keeptk=) {
+style=, width=, height=, rgb=, parent=, xpos=, ypos=, keeptk=,mkwin=) {
 /* DOCUMENT ytk_window, win, display=, dpi=, wait=, private=, hcp=, dump=,
    legends=, style=, width=, height=, rgb=, parent=, xpos=, ypos=,
    keeptk=
@@ -40,19 +40,43 @@ style=, width=, height=, rgb=, parent=, xpos=, ypos=, keeptk=) {
   if(win < 0) win = 0;
 
   if(is_void(dpi) && !window_exists(win)) dpi = 75;
-  
+
   parent = _ytk_window_parents(win+1);
   xpos = ypos = (parent > 0) ? -2 : 0;
 
-  width = height = [];
-  if(style == "landscape11x85.gs") {
-    width = (dpi == 100) ? 1100 : 825;
-    height = (dpi == 100) ? 850 : 638;
+  if ( !mkwin ) {
+    width = height = [];
+
+    if(style == "landscape11x85.gs") {
+      width  = (dpi == 100) ? 1100 : 825;
+      height = (dpi == 100) ?  850 : 638;
+    }
+  }
+
+  /*
+  if ( mkwin ) {
+    wg = window_geometry(win);
+    if ( ! is_void( wg ) ) {
+      width  = int( wg(5) );
+      height = int( wg(6) );
+
+      if ( debug && width && height) {
+        write, format="Window Geometry: %4d x %4d\n", width, height;
+      }
+    }
+  }
+  */
+
+  if ( debug && width && height) {
+    width;
+    height;
+    write, format="WINdow Geometry: %4d x %4d\n", width, height;
   }
 
   if(display == "") {
     if(!keeptk) {
       tkcmd, swrite(format=".yorwin%d withdraw", win);
+      width = height = [];
     }
     // When a window is killed, it reverts to the default style and DPI
     tkcmd, swrite(format=".yorwin%d configure -style {%s} -dpi %d",
@@ -70,37 +94,24 @@ style=, width=, height=, rgb=, parent=, xpos=, ypos=, keeptk=) {
   }
 
   cmd = "result = yor_window(win";
-  if(!is_void(display))
-    cmd += ", display=display";
-  if(!is_void(dpi))
-    cmd += ", dpi=dpi";
-  if(!is_void(wait))
-    cmd += ", wait=wait";
-  if(!is_void(private))
-    cmd += ", private=private";
-  if(!is_void(hcp))
-    cmd += ", hcp=hcp";
-  if(!is_void(dump))
-    cmd += ", dump=dump";
-  if(!is_void(legends))
-    cmd += ", legends=legends";
-  if(!is_void(style))
-    cmd += ", style=style";
-  if(!is_void(width))
-    cmd += ", width=width";
-  if(!is_void(height))
-    cmd += ", height=height";
-  if(!is_void(rgb))
-    cmd += ", rgb=rgb";
-  if(!is_void(parent))
-    cmd += ", parent=parent";
-  if(!is_void(xpos))
-    cmd += ", xpos=xpos";
-  if(!is_void(ypos))
-    cmd += ", ypos=ypos";
+  if(!is_void( display )) cmd += ", display=display";
+  if(!is_void( dpi     )) cmd += ", dpi=dpi";
+  if(!is_void( wait    )) cmd += ", wait=wait";
+  if(!is_void( private )) cmd += ", private=private";
+  if(!is_void( hcp     )) cmd += ", hcp=hcp";
+  if(!is_void( dump    )) cmd += ", dump=dump";
+  if(!is_void( legends )) cmd += ", legends=legends";
+  if(!is_void( style   )) cmd += ", style=style";
+  if(!is_void( width   )) cmd += ", width=width";
+  if(!is_void( height  )) cmd += ", height=height";
+  if(!is_void( rgb     )) cmd += ", rgb=rgb";
+  if(!is_void( parent  )) cmd += ", parent=parent";
+  if(!is_void( xpos    )) cmd += ", xpos=xpos";
+  if(!is_void( ypos    )) cmd += ", ypos=ypos";
   cmd += ")\n";
   result = [];
   include, [cmd], 1;
+  // write, format="CMD: %s\n", cmd;
 
   if(width || height)
     yor_window, win, width=0, height=0;
