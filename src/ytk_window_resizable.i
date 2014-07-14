@@ -101,10 +101,8 @@ func mkwin( win, width=, height=, xoff=, yoff=, dpi=, box= ) {
 
   local wdata;
 
-  if( window_exists(win)) {
-    window, win;     // XYZZY - looks like save_plot only saves the current window, rwm
+  if( window_exists(win))
     wdata = save_plot(win);
-  }
 
   gs = write_gs(width=width, height=height, xoff=xoff, yoff=yoff, box=box);
   if ( debug ) gist_gpbox(1);
