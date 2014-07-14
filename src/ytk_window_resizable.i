@@ -1,5 +1,13 @@
 // width and height is in window pixels;
 func write_gs ( width=, height=, xoff=, yoff=, box= ) {
+/* DOCUMENT write_gs ( width=, height=, xoff=, yoff=, box= )
+   Createa a .gs file in /tmp/gist/USER with the name
+   WIDTHxHEIGHT.gs.
+
+   This is invoked by mkwin() and does not need to be called directly.
+
+  SEE ALSO: mkwin, reset_gist
+*/
 
   landscape=( width>height );
 
@@ -79,6 +87,21 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
 }
 
 func mkwin( win, width=, height=, xoff=, yoff=, dpi=, box= ) {
+/* DOCUMENT mkwin( win, width=, height=, xoff=, yoff=, dpi=, box=
+
+   Make a plot window of arbitrary size.  If the window already exists,
+   it will be recreated at the specified size.
+
+   box=[0|1]  : draw a box around the inside of the x/y axis ticks.
+   xoff=      : modify the offset from the x axis.
+   yoff=      : pecify the offset from the y axis.
+     The initial offset values for both x/y is .06.
+
+   To use the standard window resizing tools after using this function,
+   you may need to call reset_gist.
+
+  SEE ALSO: write_gs, reset_gist
+*/
 
   default, dpi,     75;
   default, killme,   1;
@@ -109,5 +132,12 @@ func mkwin( win, width=, height=, xoff=, yoff=, dpi=, box= ) {
 }
 
 func reset_gist {
+/* DOCUMENT reset_gist
+  Resets the gist_gpbox values to their original default values.
+  The gist_gpbox values may be changed from their original
+  values by using mkwin.
+
+  SEE ALSO: write_gs, mkwin
+*/
   gist_gpbox, 0.798584, 1.033461;
 }
