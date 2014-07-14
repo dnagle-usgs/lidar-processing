@@ -38,7 +38,7 @@ func save_plot(fstrm,wsrc,pal=)
 
   autoclose=0;
   if(!am_subroutine()) {
-    wrsc=fstrm;
+    wsrc=fstrm;
     fstrm=save();
   } else if(is_string(fstrm)) {
     fstrm=createb(fstrm);
