@@ -20,14 +20,6 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
 
   gist_gpbox, xmx, ymx;
 
-//if ( landscape ) {
-//  n = set_gist_gpbox(1, 0, ymx, 0, xmx);
-//  n = set_gist_gpbox(2, 0, xmx, 0, ymx);
-//} else {
-//  n = set_gist_gpbox(1, 0, xmx, 0, ymx);
-//  n = set_gist_gpbox(2, 0, xmx, 0, ymx);
-//}
-
   user = get_user();
   path=swrite(format="/tmp/gist/%s", user);
   if ( ! file_isdir(path) ) mkdir, path;
