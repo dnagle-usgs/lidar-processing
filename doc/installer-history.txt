@@ -2,6 +2,16 @@ This file documents the changes made to the ALPS installer package. These
 installer packages are typically available on lidar.net under
 /mnt/alps/install/.
 
+2014-07-14
+    - Updated installer to tip 48467b9400a3
+    - Upgraded cctools to 4.2.0
+    - Upgraded rlwrap to 0.41
+    - Python changes:
+        - Upgraded Python to 2.7.8
+        - Upgraded mercurial to 3.0.2
+    - Yorick changes:
+        - Upgraded Yorick to 39de730
+
 2014-04-11
     - Updated installer to tip 08b029dc9ece
     - Rolled back Tcl tkimg to SVN revision as of 2013-01-24 due to tkimg bug.
