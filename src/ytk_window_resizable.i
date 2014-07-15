@@ -22,7 +22,7 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
 
   user = get_user();
   path=swrite(format="/tmp/gist/%s", user);
-  if ( ! file_isdir(path) ) mkdir, path;
+  if ( ! file_isdir(path) ) mkdirp, path;
 
   sfname=swrite(format="%s/%04dx%04d.gs", path, width, height);
 
@@ -78,6 +78,29 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
   return  sfname;
 }
 
+func mkwin_wh( width, height, win=, fix=, box=) {
+  if ( !win )
+    win=current_window();
+  if ( fix ) { 
+    mkwin, win, width=mywidth, height=myheight-23, box=box;
+    return;
+  }
+
+  mywidth = max(width,  100);
+  mywidth = min(width, 1646);
+
+  myheight = max(height,  100);
+  myheight = min(height, 1646);
+
+  if ( debug_resize )
+    write, format="mkwin_wh : %3d : %04d x %04d\n", win, mywidth, myheight;
+}
+
+func fixwin ( box= ) {
+  mkwin_wh, 0, 0, fix=1, box=box;
+  // mkwin(myw, width=mywidth, height=myheight-23);
+}
+
 func mkwin( win, width=, height=, xoff=, yoff=, dpi=, box= ) {
 /* DOCUMENT mkwin( win, width=, height=, xoff=, yoff=, dpi=, box=
 
@@ -95,9 +118,10 @@ func mkwin( win, width=, height=, xoff=, yoff=, dpi=, box= ) {
   SEE ALSO: write_gs, reset_gist
 */
 
-  default, dpi,     75;
-  default, killme,   1;
-  default, reset_me, 1;
+  default, dpi,      75;
+  default, killme,    1;  // 2014-07-14: these settings are to allow easy
+  default, reset_gs,  1;  // toggling of functions if issues are discovered.
+  default, remove_gs, 1;  // XYZZY
 
   local wdata;
 
@@ -105,7 +129,7 @@ func mkwin( win, width=, height=, xoff=, yoff=, dpi=, box= ) {
     wdata = save_plot(win);
 
   gs = write_gs(width=width, height=height, xoff=xoff, yoff=yoff, box=box);
-  if ( debug ) gist_gpbox(1);
+  if ( debug  ) gist_gpbox(1);
   if ( killme ) winkill, win;
 
 //ytk_window, win, dpi=dpi, width=width, height=height, keeptk=1, style=gs, mkwin=1;
@@ -118,7 +142,8 @@ func mkwin( win, width=, height=, xoff=, yoff=, dpi=, box= ) {
   if(!is_void(wdata))
     load_plot, wdata, win, style=0, systems=systems;
 
-  if ( reset_me )  reset_gist;
+  if ( reset_gs ) reset_gist;
+  if ( remove_gs) remove, gs; // 2014-07-14: if this file isn't needed, change to use a standard tmpfile.
 }
 
 func reset_gist {
