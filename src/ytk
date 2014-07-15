@@ -611,16 +611,10 @@ proc start_yorick {}  {
     global _ytk interact_out str Y_SITE
     upvar spawn_id spawn_id
     set hwin 0
-    expect ">"
+    expect "> "
     set ::state 0
     interact {
         -o
-        # Yorick errors cancel pending after events. This makes sure that the
-        # tksync, background event gets rescheduled.
-        -re {ERROR} {
-            exp_send_user $interact_out(0,string)
-            ybkg tksync_background
-        }
         # This should never conflict with the command line because the command
         # line always has the pattern "\n> " at the start. DOCUMENT statements
         # never start with >.
@@ -665,6 +659,12 @@ proc start_yorick {}  {
             } else {
                 exp_send_user $interact_out(0,string)
             }
+        }
+        # Monitor for normal and debug prompts, which mean we should trigger a
+        # sync check
+        -re {\n(dbug|)> } {
+            exp_send_user $interact_out(0,string)
+            ybkg tksync check
         }
         # Help outputs almost instantly, so abort on any delays.
         timeout 1 {}

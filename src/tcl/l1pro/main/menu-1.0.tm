@@ -345,8 +345,6 @@ proc menu_debug mb {
     $mb add command {*}[menulabel "&Show log file path"] \
             -command ::logger::dlg_logfile
     $mb add separator
-    $mb add command {*}[menulabel "&Restart background sync"] \
-            -command [list exp_send "tksync_background\r"]
     $mb add command {*}[menulabel "&Nudge Yorick in background"] \
             -command ybkg_nudge
     $mb add separator

@@ -40,31 +40,13 @@ local tksync;
       call during a long-running process if you know you just updated a
       variable used in the GUI.
 
-    tksync, background
-      Schedules a background process. When Yorick is idle, this will
-      periodically call tksync,check. This background process is
-      automatically kicked off at startup. To cancel it, run:
-        after, -, tksync, background
-      To start it back up, just run the command normally again:
-        tksync, background
-
-    BUG WORKAROUND:
-      tksync,background is currently replaced by tksync_background. Cancel
-      using:
-        after, -, tksync_background
-
-  By default, tksync,background schedules itself every 0.25 seconds. If you
-  want to change that interval, you can update the interval member. For
-  example, this makes it schedule every 1.5 seconds:
-
-    save, tksync, interval=1.5;
+  Tcl will issue a tksync,check in the background every time it sees that a
+  normal prompt ("> ") or debug prompt ("dbug> ").
 */
 
-// tksync_background intentionally omitted from scratch
 scratch = save(scratch, tmp, tksync_add, tksync_remove, tksync_check,
   tksync_idleadd, tksync_idlerem);
-tmp = save(cache, pending, interval, add, idleadd, idlerem, remove, check,
-  background);
+tmp = save(cache, pending, add, idleadd, idlerem, remove, check);
 
 if(is_obj(tksync) && is_obj(tksync.cache)) {
   cache = tksync.cache;
@@ -75,11 +57,6 @@ if(is_obj(tksync) && is_obj(tksync.pending)) {
   pending = tksync.pending;
 } else {
   pending = save(yvar=[], tkvar=[], action=[]);
-}
-if(is_obj(tksync) && is_numerical(tksync.interval)) {
-  interval = tksync.interval;
-} else {
-  interval = 0.25;
 }
 
 func tksync_idleadd(yvar, tkvar) {
@@ -194,24 +171,5 @@ func tksync_check(void) {
 }
 check = tksync_check;
 
-// Bug workaround:
-// The "after" function is currently partly broken for oxy-type scheduling. A
-// cancelation of the form "after, 0, obj, method;" does not actually work. So
-// we're temporarily using tksync_background instead of tksync,background to
-// work around that deficiency.
-
-func tksync_background(void) {
-  // Cancel any scheduled background requests (to avoid having several going
-  // at once)
-  after, -, tksync_background;
-  // Check for updated variables
-  tksync, check;
-  // Schedule a new background request
-  after, tksync.interval, tksync_background;
-}
-background = tksync_background;
-
 tksync = restore(tmp);
 restore, scratch;
-
-tksync_background;
