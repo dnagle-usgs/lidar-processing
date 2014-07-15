@@ -186,8 +186,19 @@ snit::widget ::yorick::window::embedded {
 #       if { ! $need_resize } return
         $plot configure -width $options(-width) -height $options(-height)
         $self UpdateToolbar
+        wm resizable $win 1 1
+        bind $self <Configure> {
+# We are limiting the window size to 100 to avoid getting resize events for
+# the various subwindows.  There should be a better way.
+            if { %w > 100 && %h > 100 } {
+#               puts "Changed WxH: to %w x %h"
+                ybkg mkwin_wh %w %h
+            }
+        }
+
         set need_resize 0
     }
+
     method SetOwner {option value} {
         set options($option) $value
         $self UpdateToolbar
