@@ -661,10 +661,10 @@ proc start_yorick {}  {
             }
         }
         # Monitor for normal and debug prompts, which mean we should trigger a
-        # sync check
+        # sync check (ybkg does this automatically, so just send noop).
         -re {\n(dbug|)> } {
             exp_send_user $interact_out(0,string)
-            ybkg tksync check
+            ybkg noop
         }
         # Help outputs almost instantly, so abort on any delays.
         timeout 1 {}

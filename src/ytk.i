@@ -110,6 +110,7 @@ func tky_bg_handler {
     f = self(pop,);
     safe_run_funcdef, funcdef(f);
     after, 0, self, handler;
+    tksync, check;
   }
 }
 handler = tky_bg_handler;
