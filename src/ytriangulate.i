@@ -83,7 +83,7 @@ func plot_triag_mesh(data, v, mode=, edges=, win=, cmin=, cmax=, dofma=, showcba
 
   SEE ALSO: triangulate
 */
-  default, win, window();
+  default, win, max(0, current_window());
   default, edges, 0;
   default, dofma, 1;
   default, showcbar, 0;
