@@ -175,11 +175,11 @@ snit::widget ::yorick::window::embedded {
     method SetWidthOrHeight { option value } {
         if { $value ne $options($option) } {
             set options($option) $value
-            set need_resize 1
             wm geometry $win {}
-            $plot configure -width $options(-width) -height $options(-height)
-            $self UpdateToolbar
         }
+# The next line must be done everytime or the window gets resized.
+        $plot configure -width $options(-width) -height $options(-height)
+        $self UpdateToolbar
     }
 
 # Invoke mkwin to resize the yorick plot to fit the current tk window.
