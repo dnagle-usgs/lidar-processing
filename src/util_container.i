@@ -727,8 +727,13 @@ func splitary(args) {
     error, "Input array does not contain required dimension.";
   if(dims(0) != num)
     ary = transpose(ary, indgen(dims(1):w(1):-1));
-  for(i = 1; i <= num; i++)
-    args, i + offset, ary(..,i);
+  for(i = 1; i <= num; i++) {
+    // Due to a Yorick bug, this line causes a steady memory leak:
+    //args, i + offset, ary(..,i);
+    // However, using an intermediary temp variable avoids the leak:
+    temp = ary(..,i);
+    args, i + offset, temp;
+  }
   return ary;
 }
 wrap_args, splitary;
