@@ -78,65 +78,80 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
   return  sfname;
 }
 
-func mkwin_wh( width, height, win=, fix=, box=) {
-  if ( !win )
-    win=current_window();
-  if ( fix ) { 
-    mkwin, win, width=mywidth, height=myheight-23, box=box;
-    return;
-  }
-
-  mywidth = max(width,  100);
-  mywidth = min(width, 1646);
-
-  myheight = max(height,  100);
-  myheight = min(height, 1646);
-
-  if ( debug_resize )
-    write, format="mkwin_wh : %3d : %04d x %04d\n", win, mywidth, myheight;
-}
-
-func fixwin ( box= ) {
-  mkwin_wh, 0, 0, fix=1, box=box;
-  // mkwin(myw, width=mywidth, height=myheight-23);
-}
-
-func mkwin( win, width=, height=, xoff=, yoff=, dpi=, box= ) {
+func mkwin( win, width, height, xoff=, yoff=, dpi=, box=, tk= ) {
 /* DOCUMENT mkwin( win, width=, height=, xoff=, yoff=, dpi=, box=
 
    Make a plot window of arbitrary size.  If the window already exists,
    it will be recreated at the specified size.
 
    box=[0|1]  : draw a box around the inside of the x/y axis ticks.
-   xoff=      : modify the offset from the x axis.
-   yoff=      : pecify the offset from the y axis.
-     The initial offset values for both x/y is .06.
 
-   To use the standard window resizing tools after using this function,
-   you may need to call reset_gist.
+   xoff=      : modify the offset from the x axis.
+
+   yoff=      : modify the offset from the y axis.
+                The initial offset values for both x/y is .06.
+
+   tk=        : Added when called by tk to adjust the window size
+                for the toolbar
+
+   Set the variable "BOX=1" to add a box around the plot when
+   invoked from the GUI.
+
+   Other Variables to enable/disable [0/1] test functionality:
+
+   dpi        : default=75.  why would you want anything else?
+
+   killme     : winkill the window before resizing. default=1
+
+   reset_gs   : call reset_gists after resizing plot.  this allows
+                the original GUI options to still work. default=1
+
+   remove_gs  : Remove the freshly created gs file.  default=1
+                if issues are discovered when panning/zooming,
+                set this to 0.
+
+   safe_resize: Don't allow window sizes to exceed 1646 pixels.
+                this appears to be some magic value where if this
+                value is exceeded, the right y-axis tick marks
+                don't appear.  default=1
 
   SEE ALSO: write_gs, reset_gist
 */
 
-  default, dpi,      75;
-  default, killme,    1;  // 2014-07-14: these settings are to allow easy
-  default, reset_gs,  1;  // toggling of functions if issues are discovered.
-  default, remove_gs, 1;  // XYZZY
+  default, dpi,        75;
+  default, killme,      1;  // 2014-07-14: these settings are to allow easy
+  default, reset_gs,    1;  // toggling of functions if issues are discovered.
+  default, remove_gs,   1;  // XYZZY
+  default, safe_resize, 1;  // don't allow unreasonable window sizes
+  default, box,       BOX;
 
   local wdata;
 
   if( window_exists(win))
     wdata = save_plot(win);
 
-  gs = write_gs(width=width, height=height, xoff=xoff, yoff=yoff, box=box);
+  if ( tk ) height -= 23;
+
+  if ( safe_resize ) {
+    mywidth = max(width,  100);   // don't want to be too small
+    mywidth = min(width, 1646);   // yorick quits plotting the right side beyond this
+
+    myheight = max(height,  100);
+    myheight = min(height, 1646);
+  }
+  if ( debug ) write, format="Window: %d  %04x%04x\n", win, mywidth, myheight;
+
+  gs = write_gs(width=mywidth, height=myheight, xoff=xoff, yoff=yoff, box=box);
+
   if ( debug  ) gist_gpbox(1);
   if ( killme ) winkill, win;
 
-//ytk_window, win, dpi=dpi, width=width, height=height, keeptk=1, style=gs, mkwin=1;
-  ytk_window, win,          width=width, height=height, keeptk=1, style=gs, mkwin=1;
+//ytk_window, win, dpi=dpi, width=mywidth, height=myheight, keeptk=1, style=gs, mkwin=1;
+  ytk_window, win,          width=mywidth, height=myheight, keeptk=1, style=gs, mkwin=1;
 
-  tkcmd, swrite(format=".yorwin%d configure -width  %d", win, width );
-  tkcmd, swrite(format=".yorwin%d configure -height %d", win, height+23 );
+  tkcmd, swrite(format=".yorwin%d configure -width  %d -height %d", win, mywidth, myheight+23 );
+//tkcmd, swrite(format=".yorwin%d configure -width  %d", win, width );
+//tkcmd, swrite(format=".yorwin%d configure -height %d", win, height+23 );
 
   systems = (sys0 ? [0,1] : [1]);
   if(!is_void(wdata))
