@@ -70,8 +70,6 @@ snit::widget ::yorick::window::embedded {
         # it comes time to use the window.
         wm withdraw $win
 
-        wm resizable $win 0 0
-
         set owner ""
         foreach f {plot bottom left right} {
             set $f $win.$f
