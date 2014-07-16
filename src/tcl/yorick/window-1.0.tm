@@ -134,6 +134,8 @@ snit::widget ::yorick::window::embedded {
         grid $left $plot   $right -sticky news
         grid ^     $bottom ^      -sticky news
 
+        grid columnconfigure $win 1 -weight 1
+        grid    rowconfigure $win 0 -weight 1
         $self UpdateToolbar
     }
 
