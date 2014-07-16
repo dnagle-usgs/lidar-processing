@@ -186,16 +186,12 @@ snit::widget ::yorick::window::embedded {
     method SendResize { option } {
         set w [winfo width $plot]
         set h [winfo height $plot]
-# We are limiting the window size to 100 to avoid getting resize events for
-# the various subwindows.  There should be a better way.
-        if { $w > 100 && $h > 100 } {
-#               puts "Changed $options(-window) WxH: to %w x %h"
-            set cmd "mkwin, $options(-window), $w, $h, tk=1"
-            if { $option eq "labels" } {
-                append cmd ", xoff=.12, yoff=.12"
-            }
-            exp_send "$cmd;\r"
+#       puts "Changed $options(-window) WxH: to %w x %h"
+        set cmd "mkwin, $options(-window), $w, $h, tk=1"
+        if { $option eq "labels" } {
+            append cmd ", xoff=.12, yoff=.12"
         }
+        exp_send "$cmd;\r"
     }
 
     method SetOwner {option value} {
