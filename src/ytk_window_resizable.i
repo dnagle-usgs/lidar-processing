@@ -132,26 +132,24 @@ func mkwin( win, width, height, xoff=, yoff=, dpi=, box=, tk= ) {
 
   if ( tk ) height -= 23;
 
-  mywidth = width;
-  myheight= height;
   if ( safe_resize ) {
-    mywidth = max(mywidth,  100);   // don't want to be too small
-    mywidth = min(mywidth, 1646);   // yorick quits plotting the right side beyond this
+    width = max(width,  100);   // don't want to be too small
+    width = min(width, 1646);   // yorick quits plotting the right side beyond this
 
-    myheight = max(myheight,  100);
-    myheight = min(myheight, 1646);
+    height = max(height,  100);
+    height = min(height, 1646);
   }
-  if ( debug ) write, format="Window: %d  %04x%04x\n", win, mywidth, myheight;
+  if ( debug ) write, format="Window: %d  %04x%04x\n", win, width, height;
 
-  gs = write_gs(width=mywidth, height=myheight, xoff=xoff, yoff=yoff, box=box);
+  gs = write_gs(width=width, height=height, xoff=xoff, yoff=yoff, box=box);
 
   if ( debug  ) gist_gpbox(1);
   if ( killme ) winkill, win;
 
-//ytk_window, win, dpi=dpi, width=mywidth, height=myheight, keeptk=1, style=gs, mkwin=1;
-  ytk_window, win,          width=mywidth, height=myheight, keeptk=1, style=gs, mkwin=1;
+//ytk_window, win, dpi=dpi, width=width, height=height, keeptk=1, style=gs, mkwin=1;
+  ytk_window, win,          width=width, height=height, keeptk=1, style=gs, mkwin=1;
 
-  tkcmd, swrite(format=".yorwin%d configure -width  %d -height %d", win, mywidth, myheight+23 );
+  tkcmd, swrite(format=".yorwin%d configure -width  %d -height %d", win, width, height+23 );
 //tkcmd, swrite(format=".yorwin%d configure -width  %d", win, width );
 //tkcmd, swrite(format=".yorwin%d configure -height %d", win, height+23 );
 
