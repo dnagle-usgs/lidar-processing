@@ -54,9 +54,9 @@ proc menu_file mb {
     $mb add command {*}[menulabel "Load ALPS data &directory..."] \
             -command ::l1pro::dirload
     $mb add separator
-    $mb add command {*}[menulabel "&Import ASPRS LAS..."] \
-            -command ::l1pro::file::load_las
-    $mb add cascade {*}[menulabel "&ASCII"] \
+    $mb add cascade {*}[menulabel "LAS"] \
+            -menu [menu_file_las $mb.las]
+    $mb add cascade {*}[menulabel "ASCII"] \
             -menu [menu_file_ascii $mb.ascii]
     $mb add cascade {*}[menulabel "&PNAV"] \
             -menu [menu_file_pnav $mb.pnav]
@@ -67,6 +67,15 @@ proc menu_file mb {
             -command [list wm withdraw [get_top $mb]]
     $mb add command {*}[menulabel "&Quit ALPS"] \
             -command exit
+    return $mb
+}
+
+proc menu_file_las mb {
+    menu $mb
+    $mb add command {*}[menulabel "&Import ASPRS LAS..."] \
+            -command ::l1pro::file::load_las
+    $mb add command {*}[menulabel "E&xport ASPRS LAS..."] \
+            -command ::l1pro::file::export_las
     return $mb
 }
 
