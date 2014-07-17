@@ -287,6 +287,14 @@ snit::widget ::yorick::window::embedded {
                 $mb add command -label $p \
                         -command [mymethod palette $p]
             }
+            $mb add separator
+            $mb add command -label "No Grid"  -command [mymethod showgrid 0 000 000 000]
+            $mb add command -label "Lt Grey"  -command [mymethod showgrid 1 200 200 200]
+            $mb add command -label "Red"      -command [mymethod showgrid 1 255 000 000]
+            $mb add command -label "Green"    -command [mymethod showgrid 1 000 255 000]
+            $mb add command -label "Blue"     -command [mymethod showgrid 1 000 000 255]
+            $mb add command -label "Black"    -command [mymethod showgrid 1 000 000 000]
+
             ::misc::tooltip $f.palette \
                     "Change the palette. This opens a menu that gives you
                     options for changing the palette."
@@ -376,6 +384,16 @@ snit::widget ::yorick::window::embedded {
                 change_window_style, \"$style\""
         if {$dpi == 100} {
             append cmd ", dpi=100"
+        }
+        exp_send "$cmd;\r"
+    }
+
+    method showgrid { on red green blue } {
+        set cmd "window, $options(-window);"
+        if { $on } {
+            append cmd "gridxy, 1, 1, color=\[$red, $green, $blue\]"
+        } else {
+            append cmd "gridxy, 0"
         }
         exp_send "$cmd;\r"
     }
