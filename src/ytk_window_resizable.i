@@ -45,53 +45,53 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
   NL="\n";
 
   f = open(sfname, "w");
-  n = write(f, format="landscape=%d%s%s", landscape, NL, NL);
-  n = write(f, format="default = {%s", NL);
-  n = write(f, format="  legend=0,%s", NL);
-  n = write(f, format="  viewport={ %lf, %lf, %lf, %lf },%s",xoff, xmx-xoff, yoff, ymx-yoff, NL );
+  write, f, format="landscape=%d%s%s", landscape, NL, NL;
+  write, f, format="default = {%s", NL;
+  write, f, format="  legend=0,%s", NL;
+  write, f, format="  viewport={ %lf, %lf, %lf, %lf },%s",xoff, xmx-xoff, yoff, ymx-yoff, NL ;
 
-  n = write(f, format="  ticks= {%s", NL);
+  write, f, format="  ticks= {%s", NL;
 
-  n = write(f, format="    horiz= {%s", NL);
-  n = write(f, format="      nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,%s", NL);
-  n = write(f, format="      nDigits= 12,  gridLevel= 1,  flags= 0x%03x,%s", grid_flags, NL); // 0x06b to have inward pointing ticks.
-  n = write(f, format="      tickOff= 0.0007,  labelOff= 0.0182,%s", NL);
-  n = write(f, format="      tickLen= { 0.01, 0.0091, 0.0052, 0.0026, 0.0013 },%s", NL);
-  n = write(f, format="      tickStyle= { color= -2,  type= 1,  width= 1.0 },%s", NL);
-  n = write(f, format="      gridStyle= { color= -2,  type= 3,  width= 1.0 },%s", NL);
-  n = write(f, format="      textStyle= { color= -2,  font= 0x08,  height= 0.015,%s", NL);
-  n = write(f, format="        orient= 0,  alignH= 0,  alignV= 0,  opaque= 0 },%s", NL);
-  n = write(f, format="        xOver= 0.395,  yOver= 0.03 },%s", NL);
+  write, f, format="    horiz= {%s", NL;
+  write, f, format="      nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,%s", NL;
+  write, f, format="      nDigits= 12,  gridLevel= 1,  flags= 0x%03x,%s", grid_flags, NL; // 0x06b to have inward pointing ticks.
+  write, f, format="      tickOff= 0.0007,  labelOff= 0.0182,%s", NL;
+  write, f, format="      tickLen= { 0.01, 0.0091, 0.0052, 0.0026, 0.0013 },%s", NL;
+  write, f, format="      tickStyle= { color= -2,  type= 1,  width= 1.0 },%s", NL;
+  write, f, format="      gridStyle= { color= -2,  type= 3,  width= 1.0 },%s", NL;
+  write, f, format="      textStyle= { color= -2,  font= 0x08,  height= 0.015,%s", NL;
+  write, f, format="        orient= 0,  alignH= 0,  alignV= 0,  opaque= 0 },%s", NL;
+  write, f, format="        xOver= 0.395,  yOver= 0.03 },%s", NL;
 
-  n = write(f, format="    vert= {%s", NL);
-  n = write(f, format="      nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,%s", NL);
-  n = write(f, format="      nDigits= 12,  gridLevel= 1,  flags= 0x%03x,%s", grid_flags, NL); // 0x06b to have inward pointing ticks.
-  n = write(f, format="      tickOff= 0.0007,  labelOff= 0.0182,%s", NL);
-  n = write(f, format="      tickLen= { 0.0123, 0.0091, 0.0052, 0.0026, 0.0013 },%s", NL);
-  n = write(f, format="      tickStyle= { color= -2,  type= 1,  width= 1.0 },%s", NL);
-  n = write(f, format="      gridStyle= { color= -2,  type= 3,  width= 1.0 },%s", NL);
-  n = write(f, format="      textStyle= { color= -2,  font= 0x08,  height= 0.015,%s", NL);
-  n = write(f, format="        orient= 0,  alignH= 0,  alignV= 0,  opaque= 0 },%s", NL);
-  n = write(f, format="        xOver= 0.001,  yOver= 0.03 },%s", NL);
+  write, f, format="    vert= {%s", NL;
+  write, f, format="      nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,%s", NL;
+  write, f, format="      nDigits= 12,  gridLevel= 1,  flags= 0x%03x,%s", grid_flags, NL; // 0x06b to have inward pointing ticks.
+  write, f, format="      tickOff= 0.0007,  labelOff= 0.0182,%s", NL;
+  write, f, format="      tickLen= { 0.0123, 0.0091, 0.0052, 0.0026, 0.0013 },%s", NL;
+  write, f, format="      tickStyle= { color= -2,  type= 1,  width= 1.0 },%s", NL;
+  write, f, format="      gridStyle= { color= -2,  type= 3,  width= 1.0 },%s", NL;
+  write, f, format="      textStyle= { color= -2,  font= 0x08,  height= 0.015,%s", NL;
+  write, f, format="        orient= 0,  alignH= 0,  alignV= 0,  opaque= 0 },%s", NL;
+  write, f, format="        xOver= 0.001,  yOver= 0.03 },%s", NL;
 
-  n = write(f, format="    frame= %d,%s", box, NL);
-  n = write(f, format="    frameStyle= { color= -2,  type= 1,  width= 1.0 }}}%s", NL);
+  write, f, format="    frame= %d,%s", box, NL;
+  write, f, format="    frameStyle= { color= -2,  type= 1,  width= 1.0 }}}%s", NL;
 
-  n = write(f, format="%ssystem= { legend= \"System 0\" }%s", NL, NL);
+  write, f, format="%ssystem= { legend= \"System 0\" }%s", NL, NL;
 
-  n = write(f, format="%slegends= {%s", NL, NL);
-  n = write(f, format="  x= 0.04698,  y= 0.360,  dx= 0.3758,  dy= 0.0,%s", NL);
-  n = write(f, format="  textStyle= { color= -2,  font= 0x00,  height= 0.0156,%s", NL);
-  n = write(f, format="    orient= 0,  alignH= 1,  alignV= 1,  opaque= 0 },%s", NL);
-  n = write(f, format="  nchars= 36,  nlines= 20,  nwrap= 2 }%s", NL);
+  write, f, format="%slegends= {%s", NL, NL;
+  write, f, format="  x= 0.04698,  y= 0.360,  dx= 0.3758,  dy= 0.0,%s", NL;
+  write, f, format="  textStyle= { color= -2,  font= 0x00,  height= 0.0156,%s", NL;
+  write, f, format="    orient= 0,  alignH= 1,  alignV= 1,  opaque= 0 },%s", NL;
+  write, f, format="  nchars= 36,  nlines= 20,  nwrap= 2 }%s", NL;
 
-  n = write(f, format="%sclegends= {%s", NL, NL);
-  n = write(f, format="  x= 0.6182,  y= 0.8643,  dx= 0.0,  dy= 0.0,%s", NL);
-  n = write(f, format="  textStyle= { color= -2,  font= 0x00,  height= 0.0156,%s", NL);
-  n = write(f, format="    orient= 0,  alignH= 1,  alignV= 1,  opaque= 0 },%s", NL);
-  n = write(f, format="  nchars= 14,  nlines= 28,  nwrap= 1 }%s", NL);
+  write, f, format="%sclegends= {%s", NL, NL;
+  write, f, format="  x= 0.6182,  y= 0.8643,  dx= 0.0,  dy= 0.0,%s", NL;
+  write, f, format="  textStyle= { color= -2,  font= 0x00,  height= 0.0156,%s", NL;
+  write, f, format="    orient= 0,  alignH= 1,  alignV= 1,  opaque= 0 },%s", NL;
+  write, f, format="  nchars= 14,  nlines= 28,  nwrap= 1 }%s", NL;
 
-  close,f;
+  close, f;
 
   return  sfname;
 }
