@@ -36,7 +36,7 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
 
   n = write(f, format="%s", "    horiz= {\n");
   n = write(f, format="%s", "      nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,\n");
-  n = write(f, format="%s", "      nDigits= 12,  gridLevel= 1,  flags= 0x033,\n");
+  n = write(f, format="%s", "      nDigits= 12,  gridLevel= 1,  flags= 0x033,\n"); // 0x06b to have inward pointing ticks.
   n = write(f, format="%s", "      tickOff= 0.0007,  labelOff= 0.0182,\n");
   n = write(f, format="%s", "      tickLen= { 0.01, 0.0091, 0.0052, 0.0026, 0.0013 },\n");
   n = write(f, format="%s", "      tickStyle= { color= -2,  type= 1,  width= 1.0 },\n");
@@ -47,7 +47,7 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
 
   n = write(f, format="%s", "    vert= {\n");
   n = write(f, format="%s", "      nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,\n");
-  n = write(f, format="%s", "      nDigits= 12,  gridLevel= 1,  flags= 0x033,\n");
+  n = write(f, format="%s", "      nDigits= 12,  gridLevel= 1,  flags= 0x033,\n"); // 0x6b to have inward pointing ticks.
   n = write(f, format="%s", "      tickOff= 0.0007,  labelOff= 0.0182,\n");
   n = write(f, format="%s", "      tickLen= { 0.0123, 0.0091, 0.0052, 0.0026, 0.0013 },\n");
   n = write(f, format="%s", "      tickStyle= { color= -2,  type= 1,  width= 1.0 },\n");
