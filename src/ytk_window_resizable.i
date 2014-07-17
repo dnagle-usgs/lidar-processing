@@ -11,9 +11,22 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
 
   landscape=( width>height );
 
+/*Ticks flags (add together the ones you want):
+#   0x001  Draw ticks on bottom or left edge of viewport
+#   0x002  Draw ticks on top or right edge of viewport
+#   0x004  Draw ticks centered on origin in middle of viewport
+#   0x008  Ticks project inward into viewport
+#   0x010  Ticks project outward away from viewport (0x18 for both)
+#   0x020  Draw tick label numbers on bottom or left edge of viewport
+#   0x040  Draw tick label numbers on top or right edge of viewport
+#   0x080  Draw all grid lines down to gridLevel
+#   0x100  Draw single grid line at origin
+*/
+
   default, xoff, .06;
   default, yoff, .06;
   default, box, 0;
+  default, grid_flags, 0x033;
 
   xmx  = width  * .00125;
   ymx  = height * .00125;
@@ -26,52 +39,57 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
 
   sfname=swrite(format="%s/%04dx%04d.gs", path, width, height);
 
+  // This is a work-around to Yorick's broken write where format must specify at least
+  // one % field.  To be consistent across all the lines, chose that to be the newline.
+  local NL;
+  NL="\n";
+
   f = open(sfname, "w");
-  n = write(f, format="landscape=%d\n\n", landscape);
-  n = write(f, format="%s", "default = {\n");
-  n = write(f, format="%s", "  legend=0,\n");
-  n = write(f, format="  viewport={ %lf, %lf, %lf, %lf},\n",xoff, xmx-xoff, yoff, ymx-yoff );
+  n = write(f, format="landscape=%d%s%s", landscape, NL, NL);
+  n = write(f, format="default = {%s", NL);
+  n = write(f, format="  legend=0,%s", NL);
+  n = write(f, format="  viewport={ %lf, %lf, %lf, %lf },%s",xoff, xmx-xoff, yoff, ymx-yoff, NL );
 
-  n = write(f, format="%s", "  ticks= {\n");
+  n = write(f, format="  ticks= {%s", NL);
 
-  n = write(f, format="%s", "    horiz= {\n");
-  n = write(f, format="%s", "      nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,\n");
-  n = write(f, format="%s", "      nDigits= 12,  gridLevel= 1,  flags= 0x033,\n"); // 0x06b to have inward pointing ticks.
-  n = write(f, format="%s", "      tickOff= 0.0007,  labelOff= 0.0182,\n");
-  n = write(f, format="%s", "      tickLen= { 0.01, 0.0091, 0.0052, 0.0026, 0.0013 },\n");
-  n = write(f, format="%s", "      tickStyle= { color= -2,  type= 1,  width= 1.0 },\n");
-  n = write(f, format="%s", "      gridStyle= { color= -2,  type= 3,  width= 1.0 },\n");
-  n = write(f, format="%s", "      textStyle= { color= -2,  font= 0x08,  height= 0.015,\n");
-  n = write(f, format="%s", "        orient= 0,  alignH= 0,  alignV= 0,  opaque= 0 },\n");
-  n = write(f, format="%s", "      xOver= 0.395,  yOver= 0.03 },\n");
+  n = write(f, format="    horiz= {%s", NL);
+  n = write(f, format="      nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,%s", NL);
+  n = write(f, format="      nDigits= 12,  gridLevel= 1,  flags= 0x%03x,%s", grid_flags, NL); // 0x06b to have inward pointing ticks.
+  n = write(f, format="      tickOff= 0.0007,  labelOff= 0.0182,%s", NL);
+  n = write(f, format="      tickLen= { 0.01, 0.0091, 0.0052, 0.0026, 0.0013 },%s", NL);
+  n = write(f, format="      tickStyle= { color= -2,  type= 1,  width= 1.0 },%s", NL);
+  n = write(f, format="      gridStyle= { color= -2,  type= 3,  width= 1.0 },%s", NL);
+  n = write(f, format="      textStyle= { color= -2,  font= 0x08,  height= 0.015,%s", NL);
+  n = write(f, format="        orient= 0,  alignH= 0,  alignV= 0,  opaque= 0 },%s", NL);
+  n = write(f, format="        xOver= 0.395,  yOver= 0.03 },%s", NL);
 
-  n = write(f, format="%s", "    vert= {\n");
-  n = write(f, format="%s", "      nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,\n");
-  n = write(f, format="%s", "      nDigits= 12,  gridLevel= 1,  flags= 0x033,\n"); // 0x6b to have inward pointing ticks.
-  n = write(f, format="%s", "      tickOff= 0.0007,  labelOff= 0.0182,\n");
-  n = write(f, format="%s", "      tickLen= { 0.0123, 0.0091, 0.0052, 0.0026, 0.0013 },\n");
-  n = write(f, format="%s", "      tickStyle= { color= -2,  type= 1,  width= 1.0 },\n");
-  n = write(f, format="%s", "      gridStyle= { color= -2,  type= 3,  width= 1.0 },\n");
-  n = write(f, format="%s", "      textStyle= { color= -2,  font= 0x08,  height= 0.015,\n");
-  n = write(f, format="%s", "        orient= 0,  alignH= 0,  alignV= 0,  opaque= 0 },\n");
-  n = write(f, format="%s", "      xOver= 0.001,  yOver= 0.03 },\n");
+  n = write(f, format="    vert= {%s", NL);
+  n = write(f, format="      nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,%s", NL);
+  n = write(f, format="      nDigits= 12,  gridLevel= 1,  flags= 0x%03x,%s", grid_flags, NL); // 0x06b to have inward pointing ticks.
+  n = write(f, format="      tickOff= 0.0007,  labelOff= 0.0182,%s", NL);
+  n = write(f, format="      tickLen= { 0.0123, 0.0091, 0.0052, 0.0026, 0.0013 },%s", NL);
+  n = write(f, format="      tickStyle= { color= -2,  type= 1,  width= 1.0 },%s", NL);
+  n = write(f, format="      gridStyle= { color= -2,  type= 3,  width= 1.0 },%s", NL);
+  n = write(f, format="      textStyle= { color= -2,  font= 0x08,  height= 0.015,%s", NL);
+  n = write(f, format="        orient= 0,  alignH= 0,  alignV= 0,  opaque= 0 },%s", NL);
+  n = write(f, format="        xOver= 0.001,  yOver= 0.03 },%s", NL);
 
-  n = write(f, format="%s %d\n", "    frame= ", box);
-  n = write(f, format="%s", "    frameStyle= { color= -2,  type= 1,  width= 1.0 }}}\n");
+  n = write(f, format="    frame= %d,%s", box, NL);
+  n = write(f, format="    frameStyle= { color= -2,  type= 1,  width= 1.0 }}}%s", NL);
 
-  n = write(f, format="%s", "\nsystem= { legend= \"System 0\" }\n");
+  n = write(f, format="%ssystem= { legend= \"System 0\" }%s", NL, NL);
 
-  n = write(f, format="%s", "\nlegends= {\n");
-  n = write(f, format="%s", "  x= 0.04698,  y= 0.360,  dx= 0.3758,  dy= 0.0,\n");
-  n = write(f, format="%s", "  textStyle= { color= -2,  font= 0x00,  height= 0.0156,\n");
-  n = write(f, format="%s", "    orient= 0,  alignH= 1,  alignV= 1,  opaque= 0 },\n");
-  n = write(f, format="%s", "  nchars= 36,  nlines= 20,  nwrap= 2 }\n");
+  n = write(f, format="%slegends= {%s", NL, NL);
+  n = write(f, format="  x= 0.04698,  y= 0.360,  dx= 0.3758,  dy= 0.0,%s", NL);
+  n = write(f, format="  textStyle= { color= -2,  font= 0x00,  height= 0.0156,%s", NL);
+  n = write(f, format="    orient= 0,  alignH= 1,  alignV= 1,  opaque= 0 },%s", NL);
+  n = write(f, format="  nchars= 36,  nlines= 20,  nwrap= 2 }%s", NL);
 
-  n = write(f, format="%s", "\nclegends= {\n");
-  n = write(f, format="%s", "  x= 0.6182,  y= 0.8643,  dx= 0.0,  dy= 0.0,\n");
-  n = write(f, format="%s", "  textStyle= { color= -2,  font= 0x00,  height= 0.0156,\n");
-  n = write(f, format="%s", "    orient= 0,  alignH= 1,  alignV= 1,  opaque= 0 },\n");
-  n = write(f, format="%s", "  nchars= 14,  nlines= 28,  nwrap= 1 }\n");
+  n = write(f, format="%sclegends= {%s", NL, NL);
+  n = write(f, format="  x= 0.6182,  y= 0.8643,  dx= 0.0,  dy= 0.0,%s", NL);
+  n = write(f, format="  textStyle= { color= -2,  font= 0x00,  height= 0.0156,%s", NL);
+  n = write(f, format="    orient= 0,  alignH= 1,  alignV= 1,  opaque= 0 },%s", NL);
+  n = write(f, format="  nchars= 14,  nlines= 28,  nwrap= 1 }%s", NL);
 
   close,f;
 
