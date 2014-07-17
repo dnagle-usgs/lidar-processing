@@ -132,12 +132,14 @@ func mkwin( win, width, height, xoff=, yoff=, dpi=, box=, tk= ) {
 
   if ( tk ) height -= 23;
 
+  mywidth = width;
+  myheight= height;
   if ( safe_resize ) {
-    mywidth = max(width,  100);   // don't want to be too small
-    mywidth = min(width, 1646);   // yorick quits plotting the right side beyond this
+    mywidth = max(mywidth,  100);   // don't want to be too small
+    mywidth = min(mywidth, 1646);   // yorick quits plotting the right side beyond this
 
-    myheight = max(height,  100);
-    myheight = min(height, 1646);
+    myheight = max(myheight,  100);
+    myheight = min(myheight, 1646);
   }
   if ( debug ) write, format="Window: %d  %04x%04x\n", win, mywidth, myheight;
 
