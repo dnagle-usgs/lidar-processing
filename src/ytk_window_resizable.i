@@ -19,6 +19,9 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
      0x080  Draw all grid lines down to gridLevel
      0x100  Draw single grid line at origin
 
+   nMajor and nMinor can be set to control the tick spacing.
+   default values are 4.0 and 40.0
+
   SEE ALSO: mkwin, reset_gist
 */
 
@@ -28,6 +31,11 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
   default, yoff, .06;
   default, box, 0;
   default, ticks, 0x033;
+  default, nMajor,  4.0;
+  default, nMinor, 40.0;
+
+  if ( !is_real( nMajor )) nMajor = double(nMajor);
+  if ( !is_real( nMinor )) nMinor = double(nMinor);
 
   /* The Yorick documentation claims .0013 is the correct value to convert to NDC
      units, but that value the causes x/yoff values to need to be scaled up as the
@@ -58,7 +66,7 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
   write, f, format="  ticks= {%s", NL;
 
   write, f, format="    horiz= {%s", NL;
-  write, f, format="      nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,%s", NL;
+  write, f, format="      nMajor= %lf,  nMinor= %lf,  logAdjMajor= 1.2,  logAdjMinor= 1.2,%s", nMajor, nMinor, NL;
   write, f, format="      nDigits= 12,  gridLevel= 1,  flags= 0x%03x,%s", ticks, NL; // 0x06b to have inward pointing ticks.
   write, f, format="      tickOff= 0.0007,  labelOff= 0.0182,%s", NL;
   write, f, format="      tickLen= { 0.01, 0.0091, 0.0052, 0.0026, 0.0013 },%s", NL;
@@ -69,7 +77,7 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
   write, f, format="        xOver= 0.395,  yOver= 0.03 },%s", NL;
 
   write, f, format="    vert= {%s", NL;
-  write, f, format="      nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,%s", NL;
+  write, f, format="      nMajor= %lf,  nMinor= %lf,  logAdjMajor= 1.2,  logAdjMinor= 1.2,%s", nMajor, nMinor, NL;
   write, f, format="      nDigits= 12,  gridLevel= 1,  flags= 0x%03x,%s", ticks, NL; // 0x06b to have inward pointing ticks.
   write, f, format="      tickOff= 0.0007,  labelOff= 0.0182,%s", NL;
   write, f, format="      tickLen= { 0.0123, 0.0091, 0.0052, 0.0026, 0.0013 },%s", NL;
@@ -182,7 +190,7 @@ func mkwin( win, width, height, xoff=, yoff=, dpi=, box=, tk= ) {
     load_plot, wdata, win, style=0, systems=systems;
 
   if ( reset_gs    ) reset_gist;
-  if ( !keep_gsfle ) remove, gs; // 2014-07-14: if this file isn't needed, change to use a standard tmpfile.
+  if ( !keep_gsfile ) remove, gs; // 2014-07-14: if this file isn't needed, change to use a standard tmpfile.
 }
 
 func reset_gist {
