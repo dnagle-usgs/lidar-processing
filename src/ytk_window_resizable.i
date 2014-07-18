@@ -129,9 +129,10 @@ func mkwin( win, width, height, xoff=, yoff=, dpi=, box=, tk= ) {
    reset_gs   : call reset_gists after resizing plot.  this allows
                 the original GUI options to still work. default=1
 
-   remove_gs  : Remove the freshly created gs file.  default=1
-                if issues are discovered when panning/zooming,
-                set this to 0.
+   keep_gsfile: Keep the freshly created gs file.  It will be
+                stored in /tmp/gist/USERNAME/WIDTHxHEIGHT.gs
+                Enable this if issues with zooming/panning are
+                discovered.  default=0.
 
    safe_resize: Don't allow window sizes to exceed 1646 pixels.
                 this appears to be some magic value where if this
@@ -144,7 +145,7 @@ func mkwin( win, width, height, xoff=, yoff=, dpi=, box=, tk= ) {
   default, dpi,        75;
   default, killme,      1;  // 2014-07-14: these settings are to allow easy
   default, reset_gs,    1;  // toggling of functions if issues are discovered.
-  default, remove_gs,   1;  // XYZZY
+  default, keep_gsfile, 0;  // XYZZY
   default, safe_resize, 1;  // don't allow unreasonable window sizes
   default, box,       BOX;
 
@@ -180,8 +181,8 @@ func mkwin( win, width, height, xoff=, yoff=, dpi=, box=, tk= ) {
   if(!is_void(wdata))
     load_plot, wdata, win, style=0, systems=systems;
 
-  if ( reset_gs ) reset_gist;
-  if ( remove_gs) remove, gs; // 2014-07-14: if this file isn't needed, change to use a standard tmpfile.
+  if ( reset_gs    ) reset_gist;
+  if ( !keep_gsfle ) remove, gs; // 2014-07-14: if this file isn't needed, change to use a standard tmpfile.
 }
 
 func reset_gist {
