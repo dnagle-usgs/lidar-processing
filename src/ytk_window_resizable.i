@@ -29,6 +29,10 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
   default, box, 0;
   default, ticks, 0x033;
 
+  /* The Yorick documentation claims .0013 is the correct value to convert to NDC
+     units, but that value the causes x/yoff values to need to be scaled up as the
+     window size increases.  This does not happen if .00125 is used. -mitchell 2014-07-18
+  */
   xmx  = width  * .00125;
   ymx  = height * .00125;
 
