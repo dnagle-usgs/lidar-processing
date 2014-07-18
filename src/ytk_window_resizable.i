@@ -6,27 +6,28 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
 
    This is invoked by mkwin() and does not need to be called directly.
 
+   You can modify the tick marks by setting "ticks" as described:
+
+   Ticks flags (add together the ones you want):
+     0x001  Draw ticks on bottom or left edge of viewport
+     0x002  Draw ticks on top or right edge of viewport
+     0x004  Draw ticks centered on origin in middle of viewport
+     0x008  Ticks project inward into viewport
+     0x010  Ticks project outward away from viewport (0x18 for both)
+     0x020  Draw tick label numbers on bottom or left edge of viewport
+     0x040  Draw tick label numbers on top or right edge of viewport
+     0x080  Draw all grid lines down to gridLevel
+     0x100  Draw single grid line at origin
+
   SEE ALSO: mkwin, reset_gist
 */
 
   landscape=( width>height );
 
-/*Ticks flags (add together the ones you want):
-#   0x001  Draw ticks on bottom or left edge of viewport
-#   0x002  Draw ticks on top or right edge of viewport
-#   0x004  Draw ticks centered on origin in middle of viewport
-#   0x008  Ticks project inward into viewport
-#   0x010  Ticks project outward away from viewport (0x18 for both)
-#   0x020  Draw tick label numbers on bottom or left edge of viewport
-#   0x040  Draw tick label numbers on top or right edge of viewport
-#   0x080  Draw all grid lines down to gridLevel
-#   0x100  Draw single grid line at origin
-*/
-
   default, xoff, .06;
   default, yoff, .06;
   default, box, 0;
-  default, grid_flags, 0x033;
+  default, ticks, 0x033;
 
   xmx  = width  * .00125;
   ymx  = height * .00125;
@@ -54,7 +55,7 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
 
   write, f, format="    horiz= {%s", NL;
   write, f, format="      nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,%s", NL;
-  write, f, format="      nDigits= 12,  gridLevel= 1,  flags= 0x%03x,%s", grid_flags, NL; // 0x06b to have inward pointing ticks.
+  write, f, format="      nDigits= 12,  gridLevel= 1,  flags= 0x%03x,%s", ticks, NL; // 0x06b to have inward pointing ticks.
   write, f, format="      tickOff= 0.0007,  labelOff= 0.0182,%s", NL;
   write, f, format="      tickLen= { 0.01, 0.0091, 0.0052, 0.0026, 0.0013 },%s", NL;
   write, f, format="      tickStyle= { color= -2,  type= 1,  width= 1.0 },%s", NL;
@@ -65,7 +66,7 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
 
   write, f, format="    vert= {%s", NL;
   write, f, format="      nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,%s", NL;
-  write, f, format="      nDigits= 12,  gridLevel= 1,  flags= 0x%03x,%s", grid_flags, NL; // 0x06b to have inward pointing ticks.
+  write, f, format="      nDigits= 12,  gridLevel= 1,  flags= 0x%03x,%s", ticks, NL; // 0x06b to have inward pointing ticks.
   write, f, format="      tickOff= 0.0007,  labelOff= 0.0182,%s", NL;
   write, f, format="      tickLen= { 0.0123, 0.0091, 0.0052, 0.0026, 0.0013 },%s", NL;
   write, f, format="      tickStyle= { color= -2,  type= 1,  width= 1.0 },%s", NL;
