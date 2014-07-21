@@ -190,7 +190,7 @@ snit::widget ::yorick::window::embedded {
 #       puts "Changed $options(-window) WxH: to %w x %h"
         set cmd "mkwin, $options(-window), $w, $h, tk=1"
         if { $option eq "labels" } {
-            append cmd ", xoff=.12, yoff=.12"
+            append cmd ", xoff=.08, yoff=.08"
         }
         exp_send "$cmd;\r"
     }
