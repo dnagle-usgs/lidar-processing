@@ -382,14 +382,34 @@ snit::type ::eaarl::vegconf::embed {
         ::mixin::revertable $f.spnThresh \
                 -command [list $f.spnThresh apply] \
                 -valuetype number
+        ttk::label $f.lblMaxSample -text "Max Samples:"
+        ttk::spinbox $f.spnMaxSample \
+                -from 0 -to 1000 -increment 1 \
+                -width 4
+        ::mixin::revertable $f.spnMaxSample \
+                -command [list $f.spnMaxSample apply] \
+                -valuetype number
         ttk::checkbutton $f.chkNoise \
                 -text "Noise Adj"
 
-        pack $f.lblThresh $f.spnThresh $f.chkNoise -side left
+        if {$win_width > 600} {
+            grid $f.lblThresh $f.spnThresh
+            grid $f.lblMaxSample $f.spnMaxSample
+            grid $f.chkNoise -
+            grid configure $f.lblThresh $f.lblMaxSample -sticky e
+            grid configure $f.spnThresh $f.spnMaxSample -sticky ew
+            grid configure $f.chkNoise -sticky w
+            grid columnconfigure $f 1 -weight 1
+        } else {
+            pack $f.lblThresh $f.spnThresh \
+                    $f.lblMaxSample $f.spnMaxSample \
+                    $f.chkNoise -side left
+        }
 
         lappend controls $f.spnThresh $f.chkNoise
         dict set wantsetting $f.spnThresh thresh
         dict set wantsetting $f.chkNoise noiseadj
+        dict set wantsetting $f.spnMaxSample max_samples
     }
 
     method ProfileAdd {} {

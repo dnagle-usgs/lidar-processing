@@ -373,6 +373,16 @@ func eaarl_be_rx_wf(rx, conf, &msg, plot=) {
   wf -= wf(1);
 
   wflen = numberof(wf);
+  if(plot) {
+    // Plot original waveform prior to truncation, etc.
+    xaxis = indgen(wflen);
+    plg, wf, xaxis, color="black", type="dot";
+  }
+
+  if(conf.max_samples > 0 && wflen > conf.max_samples) {
+    wflen = conf.max_samples;
+    wf = wf(:wflen);
+  }
 
   // dd -> wfd1
   // First derivative of waveform
