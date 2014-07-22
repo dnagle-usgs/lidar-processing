@@ -448,8 +448,8 @@ func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
 
   if ( kill ) {
     winkill, swin+(woff*nwin); ++swin;    // Plot track in UTM
-    winkill, swin+(woff*nwin); ++swin;    // Plot delta UTM lat / lon
     winkill, swin+(woff*nwin); ++swin;    // UTM differences
+    winkill, swin+(woff*nwin); ++swin;    // Trajectory Horizontal Difference differences
     winkill, swin+(woff*nwin); ++swin;    // hist_data_plot
     return;
   }
@@ -483,7 +483,7 @@ func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
 
   t1 = u2(1,) - u1(1,);
   t2 = u2(2,) - u1(2,);
-  window, swin+(woff*nwin); ++swin;    // Plot delta UTM lat / lon
+  window, swin+(woff*nwin); ++swin;    // UTM differences
   if(xfma) fma;
   legend, add, "red",  "EAST";       // XYZZY - which is which??
   legend, add, "blue", "NORTH";
@@ -497,8 +497,9 @@ func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
   grow, ttitle, "UTM differences";
   ttitle = strjoin( ttitle, "\n");
   pltitle, ttitle;
+  xytitles, "Hours of day", "Meters", [-0.005, -0.01];
 
-  window, swin+(woff*nwin); ++swin;       // UTM differences
+  window, swin+(woff*nwin); ++swin;       // Trajectory Horizontal Difference
   if(xfma) fma;
   legend, add, "red", "latlon range";
   plmk, llr, pn1.sod/3600.0, color="red";
