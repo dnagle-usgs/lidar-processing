@@ -379,7 +379,6 @@ func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
   w2 = set_intersection(pn2.sod, pn1.sod, idx=1);
   pn1=pn1(w1);
   pn2=pn2(w2);
-  // allof(pn1.sod == pn2.sod);
 
   pn1.alt = pn1.alt - pn2.alt;
 
@@ -446,8 +445,6 @@ func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
 
   p1 = pn1;
   p2 = pn2;
-  // info, pn1; info, pn2;
-  // allof(pn1.sod == pn2.sod);
 
   if ( kill ) {
     winkill, swin+(woff*nwin); ++swin;    // Plot track in UTM
@@ -457,11 +454,9 @@ func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
     return;
   }
 
+  // Compute distance using lat/lon
   llr = lldist(pn1.lat, pn1.lon, pn2.lat, pn2.lon);
   llr *= 1852.0;
-
-// llsr = slldist(pn1.lat, pn1.lon, pn2.lat, pn2.lon);
-// llsr *= 1852.0;
 
 // now do it again using utm
   u1 = ll2utm(pn1.lat, pn1.lon);
@@ -469,17 +464,12 @@ func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
 
   window, swin+(woff*nwin); ++swin;    // Plot track in UTM
   if(xfma) fma;
-  // plmk, u1(1,), u1(2,), color="blue";
-  // plmk, u2(1,), u2(2,), color="red" ;
-
 
   // plot the intersection of each pnav
   if ( 1 ) {
     legend, reset;
     legend, add, "red",  "pnav1";
     legend, add, "blue", "pnav2";
-//  plmk, pn1.lat, pn1.lon, color="red";
-//  plmk, pn2.lat, pn2.lon, color="blue";
 
     // plot in UTM instead of lat/lon
     plmk, u1(1,), u1(2,), color="red";
@@ -489,7 +479,6 @@ func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
     grow, ttitle, "Intersection Map";
   }
 
-  
   // plot delta lat and delta lon
   if ( 0 ) {
     legend, reset;
@@ -506,9 +495,6 @@ func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
 
   legend, show;
 
-  // ur = pow((u2(1,)-u1(1,)),2.0) + pow((u2(2,)-u1(2,)),2.0);
-  // info, u1; info, u2;
-  // u2(1,7000:7005); u1(1,7000:7005);
   t1 = u2(1,) - u1(1,);
   t2 = u2(2,) - u1(2,);
   window, swin+(woff*nwin); ++swin;    // Plot delta UTM lat / lon
@@ -531,7 +517,6 @@ func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
   if(xfma) fma;
   legend, add, "red", "latlon range";
   plmk, llr, pn1.sod/3600.0, color="red";
-  // plmk, llsr, pn1.sod/3600.0, color="cyan";
   legend, add, "blue", "utm range";
   plmk, ur,  pn1.sod/3600.0, color="blue";
   legend, show;
@@ -639,10 +624,6 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, woff=, title=, kill
     legend, add, "red",  "pnav1";
     legend, add, "blue", "pnav2";
     legend, add, "green","Base";
-    // plot lat/lon
-//  plmk, pn1.lat, pn1.lon, color="red";
-//  plmk, pn2.lat, pn2.lon, color="blue";
-//  plmk, lat, lon, msize=.5, color="green", width=5;
 
     if ( 0 ) {
       // plot in UTM in km setting 0,0 to min points;
@@ -665,23 +646,13 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, woff=, title=, kill
 
   legend, show;
 
-
-  // Plot delta position from base in meters
-  // window, swin+(woff*nwin); ++swin; fma;
-  // xytitles, "Seconds of day", "Meters", [-0.005, -0.01];
-  // pltitle, "delta lat and lon from Base";
-  //
-  // plmk, ((pn1.lat - lat) * 111120), pn1.sod/3600.0, color="green";
-  // plmk, ((pn1.lon - lon) * 111120), pn1.sod/3600.0, color="cyan";
-
   window, swin+(woff*nwin); ++swin;  // Delta altitude vs time
   if(xfma) fma;
 
   legend, reset;
   legend, add, "blue", "Pdop";
   legend, add, "red",  "altitude";
-  // plsys,1; plmk, pn1.pdop, pn1.sod/3600.0, color="blue";
-  // plsys,2; plmk, pn1.alt, pn1.sod/3600.0, color="black", msize=.1;
+
   plmk, pn1.alt, pn1.sod/3600.0, color="black", msize=.1;
   plg,  pn1.alt, pn1.sod/3600.0, color="red";
   legend, show;
@@ -701,11 +672,7 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, woff=, title=, kill
   legend, add, "red", "Range";
   legend, show;
 
-  // plg, pn1.alt, lbr, color="red";
-  // plsys,1; plmk, pn1.pdop, lbr, color="blue";
-  // plsys,2; plmk, pn1.alt, lbr, color="red";
   plmk, pn1.alt, lbr, color="red";
-  // plmk, llsr, pn1.sod/3600.0, color="cyan";
   xytitles, "Range from Base(km)", "Meters", [0.505, -0.01];
   range, -.05, .05;
 
