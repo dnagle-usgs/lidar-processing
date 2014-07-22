@@ -329,6 +329,7 @@ func iex2pnav(iex) {
   return(pn);
 }
 
+
 func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
 /* DOCUMENT pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=, kill=)
    Given two trajectories produced for the same flight,
@@ -371,7 +372,6 @@ func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
     return;
   }
 
-
   window, swin+(woff*nwin);   // Plot track in UTM
   if(xfma) fma;
 
@@ -385,7 +385,6 @@ func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
   p1 = pn1;
   p2 = pn2;
 
-
   legend, reset;
   legend, add, "red", "delta Altitude";
   legend, show;
@@ -398,6 +397,7 @@ func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
 
   return pn1;
 }
+
 
 func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
 /* DOCUMENT pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=)
@@ -421,7 +421,7 @@ func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
    Plot 2 is the same as plot 1, but computed using UTM values.
    Plot 3 is the delta range vs seconds-of-day.
    Plot 4 shows a histogram of the delta values.
- */
+*/
   extern u1, u2, ur, p1, p2;
   default, title, " ";
   default, swin, 30;
@@ -458,7 +458,7 @@ func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
   llr = lldist(pn1.lat, pn1.lon, pn2.lat, pn2.lon);
   llr *= 1852.0;
 
-// now do it again using utm
+  // now do it again using utm
   u1 = ll2utm(pn1.lat, pn1.lon);
   u2 = ll2utm(pn2.lat, pn2.lon);
 
@@ -497,7 +497,6 @@ func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
   grow, ttitle, "UTM differences";
   ttitle = strjoin( ttitle, "\n");
   pltitle, ttitle;
-
 
   window, swin+(woff*nwin); ++swin;       // UTM differences
   if(xfma) fma;
@@ -573,8 +572,6 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, woff=, title=, kill
   pn1=pn1(w1);
   pn2=pn2(w2);
 
-  // allof(pn1.sod == pn2.sod);
-
   p1 = pn1;
   p2 = pn2;
 
@@ -605,28 +602,20 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, woff=, title=, kill
   u0 = ll2utm(lat, lon);
 
   // plot the intersection of each pnav
-  if ( 1 ) {
-    legend, reset;
-    legend, add, "red",  "pnav1";
-    legend, add, "blue", "pnav2";
-    legend, add, "green","Base";
+  legend, reset;
+  legend, add, "red",  "pnav1";
+  legend, add, "blue", "pnav2";
+  legend, add, "green","Base";
 
-    if ( 0 ) {
-      // plot in UTM in km setting 0,0 to min points;
-      m1 = min( u0(1,), u1(1,min), u2(1,min));
-      m2 = min( u0(2,), u1(2,min), u2(2,min));
-    } else {
-      // plot in UTM in km setting 0,0 to the base station
-      m1 = u0(1,);
-      m2 = u0(2,);
-    }
-    plmk, (u1(1,)-m1)/1000., (u1(2,)-m2)/1000., color="red";
-    plmk, (u2(1,)-m1)/1000., (u2(2,)-m2)/1000., color="blue";
-    plmk, (u0(1,)-m1)/1000., (u0(2,)-m2)/1000., msize=.5, color="green", width=5;
+  // plot in UTM in km setting 0,0 to the base station
+  m1 = u0(1,);
+  m2 = u0(2,);
+  plmk, (u1(1,)-m1)/1000., (u1(2,)-m2)/1000., color="red";
+  plmk, (u2(1,)-m1)/1000., (u2(2,)-m2)/1000., color="blue";
+  plmk, (u0(1,)-m1)/1000., (u0(2,)-m2)/1000., msize=.5, color="green", width=5;
 
-    ttitle = title;
-    grow, ttitle, "Intersection Map";
-  }
+  ttitle = title;
+  grow, ttitle, "Intersection Map";
   ttitle = strjoin( ttitle, "\n");
   pltitle, ttitle;
 
