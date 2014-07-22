@@ -466,30 +466,16 @@ func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
   if(xfma) fma;
 
   // plot the intersection of each pnav
-  if ( 1 ) {
-    legend, reset;
-    legend, add, "red",  "pnav1";
-    legend, add, "blue", "pnav2";
+  legend, reset;
+  legend, add, "red",  "pnav1";
+  legend, add, "blue", "pnav2";
 
-    // plot in UTM instead of lat/lon
-    plmk, u1(1,), u1(2,), color="red";
-    plmk, u2(1,), u2(2,), color="blue" ;
+  // plot in UTM instead of lat/lon
+  plmk, u1(1,), u1(2,), color="red";
+  plmk, u2(1,), u2(2,), color="blue" ;
 
-    ttitle = title;
-    grow, ttitle, "Intersection Map";
-  }
-
-  // plot delta lat and delta lon
-  if ( 0 ) {
-    legend, reset;
-    legend, add, "red", "lat";
-    legend, add, "blue","lon";
-    plmk, ((pn1.lat - pn2.lat) * 111120), pn1.sod/3600.0, color="red";
-    plmk, ((pn1.lon - pn2.lon) * 111120), pn1.sod/3600.0, color="blue";
-
-    ttitle = title;
-    grow, ttitle, "Delta Lat / Delta Lon";
-  }
+  ttitle = title;
+  grow, ttitle, "Intersection Map";
   ttitle = strjoin( ttitle, "\n");
   pltitle, ttitle;
 
