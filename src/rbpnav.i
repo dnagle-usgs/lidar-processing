@@ -335,6 +335,8 @@ func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
    compute the altitude difference for each identical point
    in time.
 
+  Use: var=load_pnav()   to manually load a pnav file.
+
    xfma=[0|1]
    swin=N : specify the starting window number for each plot.
             This function only produces one plot window, but this keeps
@@ -403,6 +405,8 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=, kill=) {
    Given two trajectories produced for the same flight,
    compute the lat/lon positional difference for each identical point
    in time.
+
+  Use: var=load_pnav()   to manually load a pnav file.
 
    xfma=[0|1]
    swin=N : specify the starting window number for each plot.
@@ -556,6 +560,8 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, iwin=, woff=, title
    for the base station, compute the lat/lon positional difference for each
    identical point in time and then plots that value relative to the range
    from the base station.
+
+  Use: var=load_pnav()   to manually load a pnav file.
 
    xfma=[0|1]
    swin=N : specify the starting window number for each plot.
