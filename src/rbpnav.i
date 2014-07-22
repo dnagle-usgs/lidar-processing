@@ -487,7 +487,7 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=, kill=) {
     plmk(u2(1,), u2(2,), color="blue" );
 
     ttitle = title;
-    grow, ttile, "Intersection Map";
+    grow, ttitle, "Intersection Map";
   }
 
   
@@ -660,7 +660,7 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, iwin=, woff=, title
     plmk( (u0(1,)-m1)/1000., (u0(2,)-m2)/1000., msize=.5, color="green", width=5)
 
     ttitle = title;
-    grow, ttile, "Intersection Map";
+    grow, ttitle, "Intersection Map";
   }
   ttitle = strjoin( ttitle, "\n");
   pltitle, ttitle;
