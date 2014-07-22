@@ -384,6 +384,10 @@ func eaarl_be_rx_wf(rx, conf, &msg, plot=) {
     wf = wf(:wflen);
   }
 
+  if(conf.smoothwf > 0) {
+    wf = moving_average(wf, bin=(conf.smoothwf*2+1), taper=1);
+  }
+
   // dd -> wfd1
   // First derivative of waveform
   wfd1 = wf(dif);

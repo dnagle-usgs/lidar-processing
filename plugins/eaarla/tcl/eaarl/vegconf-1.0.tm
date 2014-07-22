@@ -389,27 +389,39 @@ snit::type ::eaarl::vegconf::embed {
         ::mixin::revertable $f.spnMaxSample \
                 -command [list $f.spnMaxSample apply] \
                 -valuetype number
+        ttk::label $f.lblSmooth -text "Smooth:"
+        ttk::spinbox $f.spnSmooth \
+                -from 0 -to 1000 -increment 1 \
+                -width 4
+        ::mixin::revertable $f.spnSmooth \
+                -command [list $f.spnSmooth apply] \
+                -valuetype number
         ttk::checkbutton $f.chkNoise \
                 -text "Noise Adj"
 
         if {$win_width > 600} {
             grid $f.lblThresh $f.spnThresh
             grid $f.lblMaxSample $f.spnMaxSample
+            grid $f.lblSmooth $f.spnSmooth
             grid $f.chkNoise -
-            grid configure $f.lblThresh $f.lblMaxSample -sticky e
-            grid configure $f.spnThresh $f.spnMaxSample -sticky ew
+            grid configure $f.lblThresh $f.lblMaxSample $f.lblSmooth -sticky e
+            grid configure $f.spnThresh $f.spnMaxSample $f.spnSmooth -sticky ew
             grid configure $f.chkNoise -sticky w
             grid columnconfigure $f 1 -weight 1
         } else {
-            pack $f.lblThresh $f.spnThresh \
-                    $f.lblMaxSample $f.spnMaxSample \
-                    $f.chkNoise -side left
+            foreach item {Thresh MaxSample Smooth} {
+                lower [ttk::frame $f.fra$item]
+                pack $f.lbl$item $f.spn$item -in $f.fra$item -side left
+                wrappack $f.fra$item
+            }
+            wrappack $f.chkNoise
         }
 
         lappend controls $f.spnThresh $f.chkNoise
         dict set wantsetting $f.spnThresh thresh
         dict set wantsetting $f.chkNoise noiseadj
         dict set wantsetting $f.spnMaxSample max_samples
+        dict set wantsetting $f.spnSmooth smoothwf
     }
 
     method ProfileAdd {} {
