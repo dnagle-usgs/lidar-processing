@@ -110,7 +110,7 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
 }
 
 func mkwin( win, width, height, xoff=, yoff=, dpi=, box=, tk= ) {
-/* DOCUMENT mkwin( win, width=, height=, xoff=, yoff=, dpi=, box=
+/* DOCUMENT mkwin( win, width=, height=, xoff=, yoff=, dpi=, box=, tk=
 
    Make a plot window of arbitrary size.  If the window already exists,
    it will be recreated at the specified size.
@@ -153,7 +153,7 @@ func mkwin( win, width, height, xoff=, yoff=, dpi=, box=, tk= ) {
   default, dpi,        75;
   default, killme,      1;  // 2014-07-14: these settings are to allow easy
   default, reset_gs,    1;  // toggling of functions if issues are discovered.
-  default, keep_gsfile, 0;  // XYZZY
+  default, keep_gsfile, 0;
   default, safe_resize, 1;  // don't allow unreasonable window sizes
   default, box,       BOX;
 
@@ -182,8 +182,6 @@ func mkwin( win, width, height, xoff=, yoff=, dpi=, box=, tk= ) {
   ytk_window, win,          width=width, height=height, keeptk=1, style=gs, mkwin=1;
 
   tkcmd, swrite(format=".yorwin%d configure -width  %d -height %d", win, width, height+23 );
-//tkcmd, swrite(format=".yorwin%d configure -width  %d", win, width );
-//tkcmd, swrite(format=".yorwin%d configure -height %d", win, height+23 );
 
   systems = (sys0 ? [0,1] : [1]);
   if(!is_void(wdata))
