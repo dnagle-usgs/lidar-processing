@@ -352,7 +352,7 @@ func pnav_diff_alt(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
   default, swin, 20;
   default, iwin, 4;
   default, woff, 0;
-  default, title, "";
+  default, title, " ";
 
   if ( kill ) {
     winkill, swin+woff;   // Plot track in UTM
@@ -424,7 +424,7 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=, kill=) {
    Plot 4 shows a histogram of the delta values.
  */
   extern u1, u2, ur, p1, p2;
-  default, title, "";
+  default, title, " ";
 
   if ( ! structeq(structof(pn1), PNAV)) {
     write, "first argument is not a PNAV";
@@ -573,7 +573,7 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, iwin=, woff=, title
                 run and exit.
 */
   extern u1, u2, ur, p1, p2;
-  default, title, "";
+  default, title, " ";
 
   if ( ! structeq(structof(pn1), PNAV)) {
     write, "first argument is not a PNAV";
