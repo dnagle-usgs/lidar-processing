@@ -470,8 +470,8 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=, kill=) {
 
   window, swin+woff; swin += iwin;    // Plot track in UTM
   if(xfma) fma;
-  // plmk(u1(1,), u1(2,), color="blue");
-  // plmk(u2(1,), u2(2,), color="red" );
+  // plmk, u1(1,), u1(2,), color="blue";
+  // plmk, u2(1,), u2(2,), color="red" ;
 
 
   // plot the intersection of each pnav
@@ -479,12 +479,12 @@ func pnav_diff_latlon(pn1, pn2, plot=, xfma=, swin=, woff=, title=, kill=) {
     legend, reset;
     legend, add, "red",  "pnav1";
     legend, add, "blue", "pnav2";
-//  plmk(pn1.lat, pn1.lon, color="red");
-//  plmk(pn2.lat, pn2.lon, color="blue");
+//  plmk, pn1.lat, pn1.lon, color="red";
+//  plmk, pn2.lat, pn2.lon, color="blue";
 
     // plot in UTM instead of lat/lon
-    plmk(u1(1,), u1(2,), color="red");
-    plmk(u2(1,), u2(2,), color="blue" );
+    plmk, u1(1,), u1(2,), color="red";
+    plmk, u2(1,), u2(2,), color="blue" ;
 
     ttitle = title;
     grow, ttitle, "Intersection Map";
@@ -642,9 +642,9 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, iwin=, woff=, title
     legend, add, "blue", "pnav2";
     legend, add, "green","Base";
     // plot lat/lon
-//  plmk(pn1.lat, pn1.lon, color="red");
-//  plmk(pn2.lat, pn2.lon, color="blue");
-//  plmk(lat, lon, msize=.5, color="green", width=5)
+//  plmk, pn1.lat, pn1.lon, color="red";
+//  plmk, pn2.lat, pn2.lon, color="blue";
+//  plmk, lat, lon, msize=.5, color="green", width=5;
 
     if ( 0 ) {
       // plot in UTM in km setting 0,0 to min points;
@@ -655,9 +655,9 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, iwin=, woff=, title
       m1 = u0(1,);
       m2 = u0(2,);
     }
-    plmk( (u1(1,)-m1)/1000., (u1(2,)-m2)/1000., color="red");
-    plmk( (u2(1,)-m1)/1000., (u2(2,)-m2)/1000., color="blue" );
-    plmk( (u0(1,)-m1)/1000., (u0(2,)-m2)/1000., msize=.5, color="green", width=5)
+    plmk, (u1(1,)-m1)/1000., (u1(2,)-m2)/1000., color="red";
+    plmk, (u2(1,)-m1)/1000., (u2(2,)-m2)/1000., color="blue";
+    plmk, (u0(1,)-m1)/1000., (u0(2,)-m2)/1000., msize=.5, color="green", width=5;
 
     ttitle = title;
     grow, ttitle, "Intersection Map";
@@ -673,10 +673,10 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, iwin=, woff=, title
   // xytitles, "Seconds of day", "Meters", [-0.005, -0.01];
   // pltitle, "delta lat and lon from Base";
   //
-  // plmk( ((pn1.lat - lat) * 111120), pn1.sod/3600.0, color="green");
-  // plmk( ((pn1.lon - lon) * 111120), pn1.sod/3600.0, color="cyan");
+  // plmk, ((pn1.lat - lat) * 111120), pn1.sod/3600.0, color="green";
+  // plmk, ((pn1.lon - lon) * 111120), pn1.sod/3600.0, color="cyan";
 
-  window, swin+woff, style="work2.gs"; swin += iwin;   // Delta altitude vs time
+  window, swin+woff;                   swin += iwin;   // Delta altitude vs time
   if(xfma) fma;
 
   legend, reset;
@@ -695,7 +695,7 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, iwin=, woff=, title
   ttitle = strjoin( ttitle, "\n");
   pltitle, ttitle;
 
-  window, swin+woff, style="work2.gs"; swin += iwin;  // Altitude vs Time
+  window, swin+woff;                   swin += iwin;  // Altitude vs Time
   if(xfma) fma;
 
   // Plot delta altitude vs range from base lat/lon
