@@ -375,21 +375,21 @@ snit::type ::eaarl::vegconf::embed {
     }
 
     method Gui_settings_all {f} {
-        ttk::label $f.lblThresh -text "Thresh:"
+        ttk::label $f.lblThresh -text "Thresh: "
         ttk::spinbox $f.spnThresh \
                 -from -10 -to -0.1 -increment 0.1 \
                 -width 4
         ::mixin::revertable $f.spnThresh \
                 -command [list $f.spnThresh apply] \
                 -valuetype number
-        ttk::label $f.lblMaxSample -text "Max Samples:"
+        ttk::label $f.lblMaxSample -text "Max Samples: "
         ttk::spinbox $f.spnMaxSample \
                 -from 0 -to 1000 -increment 1 \
                 -width 4
         ::mixin::revertable $f.spnMaxSample \
                 -command [list $f.spnMaxSample apply] \
                 -valuetype number
-        ttk::label $f.lblSmooth -text "Smooth:"
+        ttk::label $f.lblSmooth -text "Smooth: "
         ttk::spinbox $f.spnSmooth \
                 -from 0 -to 1000 -increment 1 \
                 -width 4
@@ -404,17 +404,18 @@ snit::type ::eaarl::vegconf::embed {
             grid $f.lblMaxSample $f.spnMaxSample
             grid $f.lblSmooth $f.spnSmooth
             grid $f.chkNoise -
-            grid configure $f.lblThresh $f.lblMaxSample $f.lblSmooth -sticky e
-            grid configure $f.spnThresh $f.spnMaxSample $f.spnSmooth -sticky ew
-            grid configure $f.chkNoise -sticky w
+            grid configure $f.lblThresh $f.lblMaxSample $f.lblSmooth \
+                    $f.chkNoise -sticky w
+            grid configure $f.spnThresh $f.spnMaxSample $f.spnSmooth \
+                    -sticky ew
             grid columnconfigure $f 1 -weight 1
         } else {
             foreach item {Thresh MaxSample Smooth} {
                 lower [ttk::frame $f.fra$item]
                 pack $f.lbl$item $f.spn$item -in $f.fra$item -side left
-                wrappack $f.fra$item
+                wrappack $f.fra$item -padx 2 -pady 1
             }
-            wrappack $f.chkNoise
+            wrappack $f.chkNoise -padx 2 -pady 1
         }
 
         lappend controls $f.spnThresh $f.chkNoise
