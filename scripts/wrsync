@@ -19,25 +19,30 @@ undef $getopt;       # quiet the warning message
 sub showusage {
   print <<EOF;
 
-$0 [-[no]help] [-[no]tar] [-xyz] -[no]z] -[R]
+$0 [-[no]help] [-[no]tar] [-ash] [-cpt] [-xyz] -[no]z] -[R]
 
 -z    : use compression
 -noz  : do NOT use compression
+-n    : show the rsync command to use, but don't issue it.
+-norsync: pass -n to rsync
+
 
 -tar  : rsync only .tar files, do NOT use compresssion unless -z
 -notar: rsync everything but .tar files, use compression unless -noz
 
--xyz  : rsync only .xyz files
+-cpt  : rsync .cpt files.
+-ash  : rsync .ash files.
+-xyz  : rsync .xyz files.
 
 -alps : rsync only the alps and soxmap directories.
-
--n    : show the rsync command to use, but don't issue it.
-
--norsync: pass -n to rsync
 
 The trajectories subdirectory is not synced.
 
 [-nohelp]: better than nothing
+
+NOTE: [cpt|ash|xyz] options are stackable, but
+can not be used with [tar|alps] due to include/
+exclude patterns.
 
 EOF
 
@@ -59,8 +64,9 @@ $options = <<END;
   'mystr=s'    => \\( \$mystr    = "foo"),  # example string
   'verbose!'   => \\( \$verbose  = -1   ),  # example bool with negate option
   'tar!'       => \\( \$tar      = -1   ),  # tar / notar option
-  'ash!'       => \\( \$ash      = -1   ),  # ash / noash option
-  'xyz!'       => \\( \$xyz      = -1   ),  # xyz files
+  'ash!'       => \\( \$ash      =  0   ),  # ash files
+  'cpt!'       => \\( \$cpt      =  0   ),  # cpt files
+  'xyz!'       => \\( \$xyz      =  0   ),  # xyz files
   'alps!'      => \\( \$alps     = -1   ),  # alps files
   'z!'         => \\( \$z        = -1   ),  # use -z in rsync
   'R!'         => \\( \$R        = -1   ),  # use -R in rsync
@@ -82,6 +88,7 @@ eval $options;
 printf("verbose  = %2d\n", $verbose) if ( $verbose >=  0 );
 printf("tar      = %2d\n", $tar    ) if ( $verbose >-  0 );
 printf("ash      = %2d\n", $ash    ) if ( $verbose >-  0 );
+printf("cpt      = %2d\n", $cpt    ) if ( $verbose >-  0 );
 printf("xyz      = %2d\n", $xyz    ) if ( $verbose >-  0 );
 printf("alps     = %2d\n", $alps   ) if ( $verbose >-  0 );
 printf("z        = %2d\n", $z      ) if ( $verbose >-  0 );
@@ -95,29 +102,39 @@ printf("noperms  = %2d\n", $noperms) if ( $verbose >-  0 );
 
 $z = 1 if ( $z == -1 && $tar == 0 );
 
+my $incall   = "--include='*/' ";
+my $excall   = "--exclude='*' ";
 my $notraj   = "--exclude='**/trajectories/**' ";
+
 my $notarstr = "--include='*/' --exclude='*.tar' $notraj --include='*' ";
 my   $tarstr = "--include='*/' --include='*.tar' $notraj --exclude='*' ";
-my   $ashstr = "--include='*/' --include='*.ash' $notraj --exclude='*' ";
-my   $xyzstr = "--include='*/' --include='*.xyz' $notraj --exclude='*' ";
+
+my   $ashstr = "--include='*.ash*' ";
+my   $cptstr = "--include='*-cpt.bin*' ";
+my   $xyzstr = "--include='*.xyz' ";
+
 my   $alpstr = "--include='**/alps/**' --include='**/soxmap/**' --exclude='20*/' ";
 my   $zstr   = "-z ";
 my   $Rstr   = "-R ";
 my   $nors   = "-n ";
 my   $permstr= "--no-perms --modify-window=1 --no-owner ";
 
-my $opt = "";
-   $opt = $notarstr if ( $tar ==  0 );
-   $opt =   $tarstr if ( $tar ==  1 );
-   $opt =   $ashstr if ( $ash ==  1 );
-   $opt =   $xyzstr if ( $xyz ==  1 );
-   $opt =   $alpstr if ( $alps==  1 );
-   $opt .=  $zstr   if ( $z   ==  1 );  # append these options if selected
-   $opt .=  $Rstr   if ( $R   ==  1 );
-   $opt =   $notraj if ( $opt eq "" );
-   $opt .=  $nors   if ( $norsync == 1 );
-   $opt .=  $permstr if ( $noperm == 1 );
+my $opt  = "";
+   $opt  = $notarstr if ( $tar ==  0 );
+   $opt  =   $tarstr if ( $tar ==  1 );
 
+   $opt  = $incall   if ( $ash|$cpt|$xyz);
+   $opt .= $ashstr   if ( $ash ==  1 );
+   $opt .= $cptstr   if ( $cpt ==  1 );
+   $opt .= $xyzstr   if ( $xyz ==  1 );
+   $opt .= $excall   if ( $ash|$cpt|$xyz);
+
+   $opt  =   $alpstr if ( $alps==  1 );
+   $opt .=   $zstr   if ( $z   ==  1 );  # append these options if selected
+   $opt .=   $Rstr   if ( $R   ==  1 );
+   $opt  =   $notraj if ( $opt eq "" );
+   $opt .=   $nors   if ( $norsync == 1 );
+   $opt .=  $permstr if ( $noperm == 1 );
 
 $cmd = "rsync --timeout 20 -PHavmh $opt";
 for ( $i=0; $i<=$#ARGV; ++$i) {
