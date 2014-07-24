@@ -34,8 +34,8 @@ func write_gs ( width=, height=, xoff=, yoff=, box= ) {
   default, nMajor,  4.0;
   default, nMinor, 40.0;
 
-  if ( !is_real( nMajor )) nMajor = double(nMajor);
-  if ( !is_real( nMinor )) nMinor = double(nMinor);
+  nMajor = double(nMajor);
+  nMinor = double(nMinor);
 
   /* The Yorick documentation claims .0013 is the correct value to convert to NDC
      units, but that value the causes x/yoff values to need to be scaled up as the
