@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # a wrapper for rsync.
-# sets the most commonly used options (-Pav) and also the timeout value to
+# sets the most commonly used options (-PHavmh) and also the timeout value to
 # 5 seconds.  The wrapper checks the return value.  If the return value
 # indicates the transfer timed out or never started, then the rsync is
 # re-issued.
@@ -19,7 +19,7 @@ undef $getopt;       # quiet the warning message
 sub showusage {
   print <<EOF;
 
-$0 [-[no]help] [-[no]tar] [-ash] [-cpt] [-xyz] -[no]z] -[R]
+$0 [-[no]help] [-[no]tar] [-ash] [-cpt] [-tld] [-xyz] -[no]z] -[R]
 
 -z    : use compression
 -noz  : do NOT use compression
@@ -30,8 +30,9 @@ $0 [-[no]help] [-[no]tar] [-ash] [-cpt] [-xyz] -[no]z] -[R]
 -tar  : rsync only .tar files, do NOT use compresssion unless -z
 -notar: rsync everything but .tar files, use compression unless -noz
 
--cpt  : rsync .cpt files.
 -ash  : rsync .ash files.
+-cpt  : rsync .cpt files.
+-tld  : rsync .tld files.
 -xyz  : rsync .xyz files.
 
 -alps : rsync only the alps and soxmap directories.
@@ -63,11 +64,12 @@ $options = <<END;
   'myfloat=f'  => \\( \$myfloat  = 1.5  ),  # example floaat
   'mystr=s'    => \\( \$mystr    = "foo"),  # example string
   'verbose!'   => \\( \$verbose  = -1   ),  # example bool with negate option
-  'tar!'       => \\( \$tar      = -1   ),  # tar / notar option
-  'ash!'       => \\( \$ash      =  0   ),  # ash files
-  'cpt!'       => \\( \$cpt      =  0   ),  # cpt files
-  'xyz!'       => \\( \$xyz      =  0   ),  # xyz files
   'alps!'      => \\( \$alps     = -1   ),  # alps files
+  'ash!'       => \\( \$ash      = -1   ),  # ash files
+  'cpt!'       => \\( \$cpt      = -1   ),  # cpt files
+  'tar!'       => \\( \$tar      = -1   ),  # tar / notar option
+  'tld!'       => \\( \$tld      = -1   ),  # tld files, to be used as -notld
+  'xyz!'       => \\( \$xyz      = -1   ),  # xyz files
   'z!'         => \\( \$z        = -1   ),  # use -z in rsync
   'R!'         => \\( \$R        = -1   ),  # use -R in rsync
   'n!'         => \\( \$n        = -1   ),  # don't run, only show command to use'
@@ -80,17 +82,13 @@ END
 eval $options;
 &showusage() if ($getopt == 0); # result is 1 if no errors
 
-# printf("myint    = %d\n", $myint  ) if ( $myint  );
-# printf("myfloat  = %f\n", $myfloat) if ( $myfloat);
-# printf("magic    = %f\n", $magic  ) if ( $magic  );
-# printf("mystr    = %s\n", $mystr  ) if ( $mystr  );
-# printf("verbose  = not set\n"     ) if ( $verbose == -1 );
 printf("verbose  = %2d\n", $verbose) if ( $verbose >=  0 );
-printf("tar      = %2d\n", $tar    ) if ( $verbose >-  0 );
+printf("alps     = %2d\n", $alps   ) if ( $verbose >-  0 );
 printf("ash      = %2d\n", $ash    ) if ( $verbose >-  0 );
 printf("cpt      = %2d\n", $cpt    ) if ( $verbose >-  0 );
+printf("tar      = %2d\n", $tar    ) if ( $verbose >-  0 );
+printf("tld      = %2d\n", $tld    ) if ( $verbose >-  0 );
 printf("xyz      = %2d\n", $xyz    ) if ( $verbose >-  0 );
-printf("alps     = %2d\n", $alps   ) if ( $verbose >-  0 );
 printf("z        = %2d\n", $z      ) if ( $verbose >-  0 );
 printf("R        = %2d\n", $R      ) if ( $verbose >-  0 );
 printf("n        = %2d\n", $n      ) if ( $verbose >-  0 );
@@ -102,32 +100,49 @@ printf("noperms  = %2d\n", $noperms) if ( $verbose >-  0 );
 
 $z = 1 if ( $z == -1 && $tar == 0 );
 
-my $incall   = "--include='*/' ";
-my $excall   = "--exclude='*' ";
-my $notraj   = "--exclude='**/trajectories/**' ";
+my $incall  = "--include='*/' ";
+my $excall  = "--exclude='*' ";
+my $notraj  = "--exclude='**/trajectories/**' ";
 
-my $notarstr = "--include='*/' --exclude='*.tar' $notraj --include='*' ";
-my   $tarstr = "--include='*/' --include='*.tar' $notraj --exclude='*' ";
+my $ashstr  = "'*.ash*' ";
+my $cptstr  = "'*-cpt.bin*' ";
+my $tarstr  = "'*.tar'";
+my $tldstr  = "'*.tld*'";
+my $xyzstr  = "'*.xyz' ";
 
-my   $ashstr = "--include='*.ash*' ";
-my   $cptstr = "--include='*-cpt.bin*' ";
-my   $xyzstr = "--include='*.xyz' ";
+my $alpstr  = "--include='**/alps/**' --include='**/soxmap/**' --exclude='20*/' ";
+my $zstr    = "-z ";
+my $Rstr    = "-R ";
+my $nors    = "-n ";
+my $permstr = "--no-perms --modify-window=1 --no-owner ";
 
-my   $alpstr = "--include='**/alps/**' --include='**/soxmap/**' --exclude='20*/' ";
-my   $zstr   = "-z ";
-my   $Rstr   = "-R ";
-my   $nors   = "-n ";
-my   $permstr= "--no-perms --modify-window=1 --no-owner ";
+my $f_exc = 0;
+   $f_exc = 1 if ( $ash == 0 || $cpt == 0 || $tar == 0 || $xyz == 0 || $tld == 0 );
 
-my $opt  = "";
-   $opt  = $notarstr if ( $tar ==  0 );
-   $opt  =   $tarstr if ( $tar ==  1 );
+my $f_inc = 0;
+   $f_inc = 1 if ( $ash == 1 || $cpt == 1 || $tar == 1 || $xyz == 1 || $tld == 1 );
 
-   $opt  = $incall   if ( $ash|$cpt|$xyz);
-   $opt .= $ashstr   if ( $ash ==  1 );
-   $opt .= $cptstr   if ( $cpt ==  1 );
-   $opt .= $xyzstr   if ( $xyz ==  1 );
-   $opt .= $excall   if ( $ash|$cpt|$xyz);
+   if ( $f_inc && $f_exc ) {
+     printf("You can only select include or exclude options, not both\n");
+     exit(0);
+   }
+
+my $opt   = "";
+   $opt  = $incall   if ( $f_inc );
+
+   $opt .= "--include=$ashstr "                if ( $ash == 1 );
+   $opt .= "--include=$cptstr "                if ( $cpt == 1 );
+   $opt .= "--include=$tarstr "                if ( $tar == 1 );
+   $opt .= "--include=$tldstr "                if ( $tld == 1 );
+   $opt .= "--include=$xyzstr "                if ( $xyz == 1 );
+   $opt .= "$notraj $excall "                  if ( $f_inc    );
+
+   $opt .= "--exclude=$ashstr "                if ( $ash == 0 );
+   $opt .= "--exclude=$cptstr "                if ( $cpt == 0 );
+   $opt .= "--exclude=$tarstr "                if ( $tar == 0 );
+   $opt .= "--exclude=$tldstr "                if ( $tld == 0 );
+   $opt .= "--exclude=$xyzstr "                if ( $xyz == 0 );
+   $opt .= "$notraj --include='*' "            if ( $f_exc    );
 
    $opt  =   $alpstr if ( $alps==  1 );
    $opt .=   $zstr   if ( $z   ==  1 );  # append these options if selected
@@ -136,7 +151,7 @@ my $opt  = "";
    $opt .=   $nors   if ( $norsync == 1 );
    $opt .=  $permstr if ( $noperm == 1 );
 
-$cmd = "rsync --timeout 20 -PHavmh $opt";
+my $cmd = "rsync --timeout 20 -PHavmh $opt";
 for ( $i=0; $i<=$#ARGV; ++$i) {
   if ( $ARGV[$i] =~ '`' ) {
     # printf("hit: %s\n", $ARGV[$i] );
