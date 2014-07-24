@@ -417,9 +417,11 @@ func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
                 run and exit.
 
    4 plots are generated.
-   Plot 1 shows the differences between lat and lon individually.
-   Plot 2 is the same as plot 1, but computed using UTM values.
-   Plot 3 is the delta range vs seconds-of-day.
+   Plot 1 shows both trajectories overlayed.
+   Plot 2 shows the differences between UTM east and north,
+          individually, vs hours-of-day.
+   Plot 3 shows delta range between both trajectories vs
+          hours-of-day.
    Plot 4 shows a histogram of the delta values.
 */
   extern u1, u2, ur, p1, p2;
