@@ -461,8 +461,8 @@ func pnav_diff_latlon(pn1, pn2, xfma=, swin=, woff=, title=, kill=) {
   llr *= 1852.0;
 
   // now do it again using utm
-  u1 = ll2utm(pn1.lat, pn1.lon);
-  u2 = ll2utm(pn2.lat, pn2.lon);
+  u1 = ll2utm(pn1.lat, pn1.lon, force_zone=curzone);
+  u2 = ll2utm(pn2.lat, pn2.lon, force_zone=curzone);
 
   window, swin+(woff*nwin); ++swin;    // Plot track in UTM
   if(xfma) fma;
@@ -606,9 +606,9 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, woff=, title=, kill
   if(xfma) fma;
 
 // now do it again using utm
-  u1 = ll2utm(pn1.lat, pn1.lon);
-  u2 = ll2utm(pn2.lat, pn2.lon);
-  u0 = ll2utm(lat, lon);
+  u1 = ll2utm(pn1.lat, pn1.lon, force_zone=curzone);
+  u2 = ll2utm(pn2.lat, pn2.lon, force_zone=curzone);
+  u0 = ll2utm(lat, lon, force_zone=curzone);
 
   // plot the intersection of each pnav
   legend, reset;
