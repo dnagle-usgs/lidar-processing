@@ -364,7 +364,7 @@ fudge=, mode=, native=, verbose=) {
 
 scratch = save(scratch, extract_corr_or_uniq_data);
 func extract_corr_or_uniq_data(which, data, ref, soefudge=, mode=, enablez=, idx=,
-keep=) {
+keep=, enableptime=) {
   default, soefudge, 0.001;
   _keep = array(char(!which), numberof(data));
 
@@ -385,6 +385,10 @@ keep=) {
 
   if(has_member(data, "channel") && has_member(ref, "channel")) {
     grow, fields, "channel";
+  }
+
+  if((enableptime) && (has_member(data, "ptime") && has_member(ref, "ptime"))) {
+    grow, fields, "ptime";
   }
 
   grow, fields, "soe";
@@ -513,6 +517,10 @@ extract_corresponding_data = closure(extract_corr_or_uniq_data, 1);
       when enablez=1.
     enablez= When enablez=1, elevation values are used to help determine
       correspondence.
+    enableptime= Enables the use of ptime values, if there is a ptime 
+      field on the data.
+    enableptime=0 Ignore ptime values (default)
+    enableptime=1 Include ptime in uniqness check
     idx= If idx=1, an index list into data is returned instead.
     keep= If keep=1, a "keep" list is returned: an array of bools indicating
       which values in data correspond.
@@ -523,7 +531,7 @@ extract_corresponding_data = closure(extract_corr_or_uniq_data, 1);
 local extract_unique_data;
 extract_unique_data = closure(extract_corr_or_uniq_data, 0);
 /* DOCUMENT extracted = extract_unique_data(data, ref, soefudge=, mode=,
-   enablez=, idx=, keep=)
+   enablez=, idx=, keep=, enableptime=)
   Extracts data that doesn't exist in ref. This is the opposite of
   extract_corresponding_data: it will extract every point that
   extract_corresponding wouldn't.
