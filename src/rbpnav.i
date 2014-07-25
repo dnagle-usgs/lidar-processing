@@ -628,7 +628,6 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, woff=, title=, kill
   if(xfma) fma;
 
   legend, reset;
-  legend, add, "blue", "Pdop";
   legend, add, "red",  "altitude";
 
   plmk, pn1.alt, pn1.sod/3600.0, color="black", msize=.1;
@@ -646,7 +645,6 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, woff=, title=, kill
   if(xfma) fma;
 
   // Plot delta altitude vs range from base lat/lon
-  legend, add, "blue", "Pdop";
   legend, add, "red", "Range";
   legend, show;
 
