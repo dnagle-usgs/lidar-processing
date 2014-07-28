@@ -554,6 +554,106 @@ func invdist_interp(x, y, z, xp, yp, mrad, minpts, wp, nodata=) {
   return zp;
 }
 
+func data_cell_grid(data, method=, mode=, xmin=, xmax=, ymin=, ymax=, cell=,
+nodata=) {
+/* DOCUMENT data_cell_grid(data, method=, mode=, xmin=, xmax=, ymin=, ymax=,
+   cell=, nodata=)
+
+  Grids an array of EAARL data using cell_grid. See cell_grid for details.
+*/
+  local x, y, z;
+  data2xyz, data, x, y, z, mode=mode;
+  return cell_grid(x, y, z, method=method, xmin=xmin, xmax=xmax, ymin=ymin,
+    ymax=ymax, nodata=nodata, cell=cell);
+}
+
+func cell_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
+/* DOCUMENT grid = radius_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=,
+  cell=, nodata=)
+
+  Creates a grid for the data x,y,z using a cell-based algorithm.
+
+  Parameters:
+    x: Array of known x values
+    y: Array of known y values
+    z: Array of known z values
+  Options:
+    method= Method of interpolation to use. Three possible values:
+      "last"      Use last value found in cell (per ordering of x,y,z).
+      "average"   Use average of values in cell.
+      "median"    Use median of values in cell. (default)
+    xmin= Minimum x value for grid.
+    xmax= Maximum x value for grid. (May be adjusted based on xmin and cell.)
+    ymin= Minimum y value for grid
+    ymax= Maximum y value for grid. (May be adjusted based on ymin and cell.)
+    cell= Cell size for grid.
+    nodata= Nodata value to use.
+*/
+  default, nodata, -32767.;
+  default, cell, 1.;
+  cell = double(cell);
+  default, method, "median";
+
+  grid_fix_params, x, y, cell, xmin, xmax, ymin, ymax, xcount, ycount;
+
+  // Restrict data to bounds (cell-based algorithm only uses data in each cell)
+  w = data_box(x, y, xmin, xmax, ymin, ymax);
+  x = x(w);
+  y = y(w);
+  z = z(w);
+
+  // Grid storage
+  zgrid = array(double(nodata), xcount, ycount);
+
+  // Grid position for each point
+  xc = min(xcount, (x-xmin)/cell + 1);
+  yc = min(ycount, (y-ymin)/cell + 1);
+
+  // Index into zgrid for z points
+  zi = (long(yc) - 1) * xcount + long(xc);
+
+  // last method is simple: just assign them all in, and the last one wins per
+  // how Yorick interprets the syntax
+  if(method == "last") {
+    zgrid(zi) = z;
+    goto FINISH;
+  }
+
+  // Sort by grid cell so that things are clustered together.
+  srt = sort(zi);
+  x = x(srt);
+  y = y(srt);
+  z = z(srt);
+  xc = xc(srt);
+  yc = yc(srt);
+  zi = zi(srt);
+
+  // Start/stop indexes for each run of ZI
+  bounds = grow(0, where(zi(dif)), numberof(zi));
+  nb = numberof(bounds);
+
+  if(method == "average") {
+    for(i = 1; i < nb; i++) {
+      zgrid(zi(bounds(i+1))) = z(bounds(i)+1:bounds(i+1))(avg);
+    }
+  } else if(method == "median") {
+    for(i = 1; i < nb; i++) {
+      zgrid(zi(bounds(i+1))) = median(z(bounds(i)+1:bounds(i+1)));
+    }
+  } else {
+    error, "invalid method";
+  }
+
+FINISH:
+  // Check to see if we can safely convert to floats. If the float version
+  // agrees with the double version to within 0.5mm, then switch to floats.
+  fzgrid = float(zgrid);
+  if(abs(fzgrid-zgrid)(*)(max) < 0.0005)
+    eq_nocopy, zgrid, fzgrid;
+
+  return ZGRID(xmin=xmin, ymin=ymin, cell=cell, nodata=nodata, zgrid=&zgrid);
+}
+
 func batch_write_arc_grid(dir, searchstr=, outdir=) {
 /* DOCUMENT batch_write_arc_grid, searchstr=, outdir=
   Batch creates ARC ASCII grid files.
