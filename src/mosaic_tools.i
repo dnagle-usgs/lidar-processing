@@ -471,6 +471,7 @@ searchstr=) {
     exists = file_exists(jgw_files) & file_exists(prj_files);
     if(allof(exists)) {
       write, "All jgw files have already been creating, nothing to do.";
+      return;
     } else if(anyof(exists)) {
       write, format=" %d images already have jgw files, skipping them.\n",
         numberof(where(exists));
