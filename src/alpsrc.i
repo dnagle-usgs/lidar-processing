@@ -97,7 +97,7 @@ func alpsrc_load(void) {
   alpsrc = save();
   __alpsrc_set_defaults, alpsrc;
   __alpsrc_load_and_merge, alpsrc, "/etc/alpsrc";
-  __alpsrc_load_and_merge, alpsrc, "~/.alpsrc";
+  __alpsrc_load_and_merge, alpsrc, get_home() + ".alpsrc";
   __alpsrc_load_and_merge, alpsrc, "./.alpsrc";
   __alpsrc_post, alpsrc;
 }
