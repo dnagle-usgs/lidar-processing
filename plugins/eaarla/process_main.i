@@ -779,6 +779,8 @@ func hook_prep_job_eaarl_process(env) {
       save, wrapped, bathconf_data=serialize(wrapped.bathconf_data);
     if(wrapped(*,"ops_conf"))
       save, wrapped, ops_conf=serialize(wrapped.ops_conf);
+    if(wrapped(*,"vegconf_data"))
+      save, wrapped, vegconf_data=serialize(wrapped.vegconf_data);
 
     // Temporary hack for veg
     define_veg_conf;
@@ -810,7 +812,7 @@ func hook_run_job_eaarl_process(env) {
 
   wrapped = pbd2obj(env.conf.flightfn);
 
-  // Temporary hack for veg
+  // Temporary hack for old-style veg
   extern veg_conf;
   if(wrapped(*,"veg_conf"))
     veg_conf = wrapped.veg_conf;
@@ -819,6 +821,8 @@ func hook_run_job_eaarl_process(env) {
     save, wrapped, bathconf_data=deserialize(wrapped.bathconf_data);
   if(wrapped(*,"ops_conf"))
     save, wrapped, ops_conf=deserialize(wrapped.ops_conf);
+  if(wrapped(*,"vegconf_data"))
+    save, wrapped, vegconf_data=deserialize(wrapped.vegconf_data);
   mission, unwrap, wrapped;
 
   return env;
