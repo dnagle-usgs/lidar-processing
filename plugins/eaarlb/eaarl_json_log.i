@@ -5,6 +5,28 @@ func json_log_load(fn) {
   Loads a json log file, which is a text file where each row is a JSON record.
   Returns an oxy group that corresponds.
 */
+  extern data_path;
+
+  if(is_void(fn)) {
+    if(batch())
+      error, "fn= not specified";
+
+    if(is_void(data_path) || data_path == "") {
+      data_path = rdline(prompt="Enter data path:");
+    }
+    path = data_path;
+
+    if(_ytk) {
+      path = data_path;
+      ifn = get_openfn(initialdir=path, filetype="*.json");
+      path = file_dirname(file_dirname(ifn));
+    } else {
+      write, format="data_path=%s\n", path;
+      ifn = select_file(path, pattern="\\*.json$");
+    }
+    fn = ifn;
+  }
+
   f = open(fn, "r");
 
   result = save();
