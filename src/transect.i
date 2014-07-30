@@ -261,7 +261,7 @@ showpts=) {
       selected points (if showpts=1).
         iwin=5      Window 5, default
     owin= "Output" window, where the transect points are plotted (if plot=1).
-        owin=2      Window 2, default
+        owin=15     Window 15, default
     width= Width of the transect line. This is the total width, with the
       transect line running down the middle. (So points are used if they are
       within width/2 of the transect line.)
@@ -298,7 +298,7 @@ showpts=) {
         showpts=1   Show
 */
   default, iwin, 5;
-  default, owin, 2;
+  default, owin, 15;
   default, width, 3.0;
   default, connect, 0;
   default, xfma, 0;
@@ -381,7 +381,7 @@ func expix_transect(vname, line, recall=, win=, mode=, radius=) {
   data mode for VNAME. RADIUS is the radius about the point clicked to search
   within.
 */
-  if(is_void(win)) win = window();
+  default, win, 15;
   data = var_expr_get(vname);
 
   if(is_void(line) && !is_void(recall))
@@ -452,13 +452,13 @@ func transect_pip_remove(data, ply=, recall=, win=, width=, mode=) {
     recall= Required. Must be an integer representing which line from the
       transect history that was used for the current plot.
     win= The window where the transect is plotted.
-        win=2       Default (matches transect function's owin=)
+        win=15      Default (matches transect function's owin=)
     width= The width of the transect.
         width=3.0   3 meter width
     mode= Data mode to use for points.
         mode="fs    Default
 */
-  default, win, 2;
+  default, win, 15;
   default, width, 3.0;
   default, mode, "fs";
 

@@ -7,31 +7,31 @@ namespace eval eaarl::sync {
         rast {
             ns      raster
             label   Raster
-            win     11
+            win     20
             opts    {-raster -pulse -channel -highlight}
         }
         rawwf {
             ns      rawwf
             label   "Raw WF"
-            win     9
+            win     21
             opts    {-raster -pulse}
         }
         tx {
             ns      transmit
             label   Transmit
-            win     16
+            win     22
             opts    {-raster -pulse}
         }
         bath {
             ns      bathconf
             label   Bath
-            win     8
+            win     25
             opts    {-raster -pulse -channel}
         }
         veg {
             ns      vegconf
             label   Veg
-            win     20
+            win     24
             opts    {-raster -pulse -channel}
         }
     }

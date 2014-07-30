@@ -65,7 +65,7 @@ proc ::eaarl::sbconf::config {window args} {
 }
 
 snit::type ::eaarl::sbconf::embed {
-    option -window -readonly 1 -default 4 -configuremethod SetOpt
+    option -window -readonly 1 -default 26 -configuremethod SetOpt
     option -raster -default 1 -configuremethod SetOpt
     option -channel -default 1 -configuremethod SetOpt
     option -pulse -default 60 -configuremethod SetOpt
@@ -116,7 +116,7 @@ snit::type ::eaarl::sbconf::embed {
         if {[dict exist $args -window]} {
             set win [dict get $args -window]
         } else {
-            set win 4
+            set win 26
         }
         set window [::yorick::window::path $win]
         $window clear_gui

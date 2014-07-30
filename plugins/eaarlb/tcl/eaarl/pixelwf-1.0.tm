@@ -31,7 +31,7 @@ if {![namespace exists ::eaarl::pixelwf]} {
             namespace eval sync {
                 variable sf 0
                 variable sasr 0
-                variable sasrwin 23
+                variable sasrwin 30
             }
             # Backup all the variables we just created...
             variable defaults {}

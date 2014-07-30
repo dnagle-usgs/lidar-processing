@@ -53,8 +53,8 @@ func sasr_display(args) {
       for display. This is an integer number of rasters.
         neardist=2    Default; includes two rasters before and two rasters
           after the specified raster.
-    win= Specifies the window to plot in. By default, this will use the current
-      window.
+    win= Specifies the window to plot in.
+        win=30        Default
     dmode= Specifies the mode to use for displaying the data. This corresponds
       to the mode= option used in many other point cloud / xyz oriented
       functions. Possible settings include:
@@ -97,7 +97,7 @@ func sasr_display(args) {
     error, "invalid options: "+print(invalid)(sum);
   }
 
-  default, win, max(0, current_window());
+  default, win, 30;
   default, dmode, "fs";
 
   cmd = swrite(format="::eaarl::sasr::config %d -raster %d -dmode %s",

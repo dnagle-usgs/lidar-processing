@@ -45,7 +45,7 @@ proc ::eaarl::sasr::config {window args} {
 }
 
 snit::type ::eaarl::sasr::embed {
-    option -window -readonly 1 -default 17 -configuremethod SetOpt
+    option -window -readonly 1 -default 30 -configuremethod SetOpt
     option -raster -default 1 -configuremethod SetOpt
     option -variable -default "" -configuremethod SetOpt
     option -dmode -default "fs"
@@ -68,7 +68,7 @@ snit::type ::eaarl::sasr::embed {
         if {[dict exist $args -window]} {
             set win [dict get $args -window]
         } else {
-            set win 17
+            set win 30
         }
         set window [::yorick::window::path $win]
         $window clear_gui

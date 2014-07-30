@@ -129,7 +129,7 @@ if {![namespace exists ::l1pro::tools::histelev]} {
             variable auto_binsize 1
             variable binsize 0.30
             variable normalize 1
-            variable win 7
+            variable win 3
             variable dofma 1
             variable logy 0
 
@@ -218,7 +218,7 @@ proc ::l1pro::tools::histelev::plot {} {
 }
 
 proc ::l1pro::tools::histelev::krnl_profile {} {
-    set cmd "krnl_plot_profile, \"$v::kernel\", win=$v::win"
+    set cmd "krnl_plot_profile, \"$v::kernel\""
     exp_send "$cmd\r"
 }
 
@@ -935,7 +935,7 @@ if {![namespace exists ::l1pro::tools::copy_limits]} {
         namespace eval v {
             variable top .l1wid.copylimits
             variable src 5
-            variable dst 6
+            variable dst 4
         }
     }
 }

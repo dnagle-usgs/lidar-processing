@@ -150,7 +150,6 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
     ytitle= Allows you to override the y-axis title. Default describes the y
       axis (based on normalize)
 */
-// Original David Nagle 2009-01-26
   local z, ticks, type, color, size, display, sample, density, hist, refs;
   default, normalize, 1;
   default, dofma, 1;
@@ -165,8 +164,7 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
   default, meanline, "hide";
   default, ci95lines, "hide";
   default, kdeline, "hide";
-  default, win, current_window();
-  if(win < 0) win = 0;
+  default, win, max(0, current_window());
 
   if(is_numerical(data) && dimsof(data)(1) == 1)
     z = unref(data);
@@ -215,11 +213,11 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
       hist /= double(numberof(z));
   }
 
-  //rwm: clamp all zero values to 1 because it looks ugly on a log scale
-  //rwm: by changing hist here, it also fixes it for the bar graph
-  if (logy) {
-    myhist = where(hist == 0 );
-    hist(myhist)=1;
+  // Clamp all zero values to 1 because it looks ugly on a log scale.
+  // By changing hist here, it also fixes it for the bar graph.
+  if(logy) {
+    myhist = where(hist == 0);
+    hist(myhist) = 1;
   }
 
   parse_plopts, histbar, type, color, size;
@@ -273,7 +271,7 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
   // Set axes
   logxy, 0, logy;
 
-  // (Don't reset limits if user has changed them manually.)
+  // Don't reset limits if user has changed them manually.
   if(long(limits()(5)) & 1) {
     if(!is_void(win))
       window, win;
@@ -455,7 +453,7 @@ func krnl_plot_profile(K, dist=, dofma=, win=, color=) {
   local kernel;
   default, dist, 2;
   default, dofma, 1;
-  default, win, 12;
+  default, win, 30;
   default, color, "blue";
   if(is_string(K)) {
     kernel = K;

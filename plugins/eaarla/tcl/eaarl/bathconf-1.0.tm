@@ -66,7 +66,7 @@ proc ::eaarl::bathconf::config {window args} {
 }
 
 snit::type ::eaarl::bathconf::embed {
-    option -window -readonly 1 -default 8 -configuremethod SetOpt
+    option -window -readonly 1 -default 25 -configuremethod SetOpt
     option -raster -default 1 -configuremethod SetOpt
     option -channel -default 1 -configuremethod SetOpt
     option -pulse -default 60 -configuremethod SetOpt
@@ -110,7 +110,7 @@ snit::type ::eaarl::bathconf::embed {
         if {[dict exist $args -window]} {
             set win [dict get $args -window]
         } else {
-            set win 8
+            set win 25
         }
         set window [::yorick::window::path $win]
         $window clear_gui

@@ -184,11 +184,11 @@ func eaarl_sb_plot(raster, pulse, channel=, win=, xfma=) {
     pulse - Pulse number to use.
   Options:
     channel= Channel to force use of. Default is 1.
-    win= Window to plot in. Defaults to 4.
+    win= Window to plot in. Defaults to 26.
     xfma= Whether to clear plot first. Defaults to 1.
 */
   default, channel, 1;
-  default, win, 4;
+  default, win, 26;
   default, xfma, 1;
 
   local conf;

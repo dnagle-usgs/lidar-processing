@@ -160,7 +160,8 @@ bathyoffset=, bathyverbose=, bg=) {
         units="meters"
         units="ns"        Default
         units="feet"
-    win= Window to plot in. (Defaults to current window.)
+    win= Window to plot in.
+        win=20            Default
     cmin= Constrain colobar to the given minimum value.
         cmin=0            Default
     cmax= Constrain colobar to the given maximum value.
@@ -206,7 +207,7 @@ bathyoffset=, bathyverbose=, bg=) {
   extern data_path, soe_day_start;
   default, channel, 1;
   default, units, "ns";
-  default, win, 11;
+  default, win, 20;
   default, geo, 0;
   default, rcfw, 50.;
   default, tx, 0;
@@ -552,8 +553,7 @@ amp_bias=, units=) {
     pix: Pulse number.
 
   Options:
-    win= If specified, this window will be used instead of the current window
-      for the plot.
+    win= Window to use. Defaults to 21.
     nofma= Set to 1 to disable automatic fma.
     cb= Channel bitmask indicating which channels should be displayed. 1 is
       channel 1, 2 is channel 2, 4 is channel 3, 8 is channel 4. Defaults to 0
@@ -578,7 +578,7 @@ amp_bias=, units=) {
   default, range_bias, 0;
   default, amp_bias, 0;
   default, units, _depth_display_units;
-  default, win, 9;
+  default, win, 21;
   default, tx, 0;
 
   rast = decode_raster(rn=rn);
@@ -895,11 +895,11 @@ func show_wf_transmit(rast, pix, win=, xfma=) {
     pix - The pixel to plot. This is an index into RAST, in the range 1 to
       120.
   Options:
-    win= The window to plot in. Default is the current window.
+    win= The window to plot in. Default is 22.
     xfma= By default, an fma is issued (xfma=1). Use xfma=0 to prevent that.
 */
   extern data_path;
-  default, win, current_window();
+  default, win, 22;
   default, xfma, 1;
 
   raster = [];
@@ -955,7 +955,7 @@ func transmit_char(rr, p=, win=, plot=, autofma=) {
   Original Amar Nayegandhi 01/21/04
 */
   default, p, [];
-  default, win, (current_window() >= 0 ? current_window() : 0);
+  default, win, max(0, current_window());
   default, plot, 0;
   default, autofma, 0;
 

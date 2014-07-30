@@ -16,7 +16,7 @@ namespace eval eaarl::jsonlog {
         option -marker_type -default hide
         option -marker_color -default blue
         option -marker_size -default 0.1
-        option -window -default 17
+        option -window -default 30
         option -xfma -default 1
 
         typevariable colors [list black white red green blue cyan magenta \

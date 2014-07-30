@@ -171,7 +171,7 @@ highelv_thresh=, forcechannel=, skip=, verbose=, msg=) {
   return rtrs;
 }
 
-func irg_replot(temp_time_offset=, range_offset=) {
+func irg_replot(temp_time_offset=, range_offset=, win=) {
 /* DOCUMENT irg_replot, temp_time_offset=, range_offset=
   Used by eaarl::tscheck for plotting/replotting the laser range values and GPS
   altitudes.
@@ -179,12 +179,13 @@ func irg_replot(temp_time_offset=, range_offset=) {
   extern irg_t, rtrs, soe_day_start, gga, data_path;
   default, range_offset, 0;
   default, temp_time_offset, eaarl_time_offset;
+  default, win, 20;
   if(is_scalar(temp_time_offset)) {
     irg_t = (rtrs.soe - soe_day_start) + temp_time_offset;
   } else {
     irg_t = (rtrs.soe - soe_day_start) + temp_time_offset(rtrs.raster);
   }
-  window, 7;
+  window, win;
   fma;
   plg, gga.alt, gga.sod, marks=0;
   plmk, rtrs.irange(60,) * NS2MAIR + range_offset, irg_t(60,), msize=.05,

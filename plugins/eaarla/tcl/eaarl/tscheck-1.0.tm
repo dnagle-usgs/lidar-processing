@@ -9,15 +9,14 @@ namespace eval eaarl::tscheck {
 
     proc launch {} {
         if {[info commands $v::gui] ne ""} {
-            ::misc::raise_win .yorwin7
-            ::misc::raise_win [::yorick::window::path 7]
+            ::misc::raise_win [::yorick::window::path [$v::gui cget -window]]
         } else {
             set gui [gui %AUTO%]
         }
     }
 
     snit::type gui {
-        option -window -readonly 1 -default 7
+        option -window -readonly 1 -default 20
         component window
 
         typevariable first 1000
@@ -114,7 +113,7 @@ namespace eval eaarl::tscheck {
 
         method replot {} {
             exp_send "irg_replot, temp_time_offset=[$self secs],\
-                    range_offset=$range;\r"
+                    range_offset=$range, win=$options(-window);\r"
         }
 
         method lims {} {

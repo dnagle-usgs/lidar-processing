@@ -316,7 +316,7 @@ metrics=) {
 */
   local type, color, size;
 
-  default, win, current_window();
+  default, win, 21;
   default, dofma, 1;
   default, title, string(0);
   default, xtitle, "Ground Truth Data (m)";

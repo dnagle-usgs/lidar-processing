@@ -65,11 +65,11 @@ namespace eval ::eaarl::main::menu {
                 -menu [menu_data_settings_ops $mb.ops]
         $mb add separator
         $mb add command {*}[menulabel "&Bathymetry Settings..."] \
-                -command [list ::eaarl::bathconf::plot 8]
+                -command [list ::eaarl::bathconf::plot 25]
         $mb add command {*}[menulabel "&Veg Settings..."] \
-                -command [list ::eaarl::vegconf::plot 16]
+                -command [list ::eaarl::vegconf::plot 24]
         $mb add command {*}[menulabel "S&hallow Bathy Settings..."] \
-                -command [list ::eaarl::sbconf::plot 18]
+                -command [list ::eaarl::sbconf::plot 26]
         return $mb
     }
 

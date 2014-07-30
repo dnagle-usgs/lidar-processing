@@ -76,7 +76,7 @@ if {![namespace exists ::plot]} {
          variable imageSkip 1
          variable mapListBox
          variable planListBox
-         variable limits_copy_to 6
+         variable limits_copy_to 4
          variable limits_copy_from 5
          variable poly_data {Local {}}
          variable poly_tree {}

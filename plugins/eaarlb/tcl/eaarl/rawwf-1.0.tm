@@ -45,7 +45,7 @@ proc ::eaarl::rawwf::config {window args} {
 }
 
 snit::type ::eaarl::rawwf::embed {
-    option -window -readonly 1 -default 9 -configuremethod SetOpt
+    option -window -readonly 1 -default 21 -configuremethod SetOpt
     option -raster -default 1 -configuremethod SetOpt
     option -pulse -default 60 -configuremethod SetOpt
     option -channels -default {1 2 3} \
@@ -74,7 +74,7 @@ snit::type ::eaarl::rawwf::embed {
         if {[dict exist $args -window]} {
             set win [dict get $args -window]
         } else {
-            set win 9
+            set win 21
         }
         set window [::yorick::window::path $win]
         $window clear_gui

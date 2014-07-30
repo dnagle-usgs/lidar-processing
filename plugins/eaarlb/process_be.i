@@ -274,11 +274,11 @@ func eaarl_be_plot(raster, pulse, channel=, win=, xfma=) {
     pulse - Pulse number to use.
   Options:
     channel= Channel to force use of. Default is 0, which means to auto-select.
-    win= Window to plot in. Defaults to 4.
+    win= Window to plot in. Defaults to 24.
     xfma= Whether to clear plot first. Defaults to 1.
 */
   default, channel, 0;
-  default, win, 4;
+  default, win, 24;
   default, xfma, 1;
 
   local conf;

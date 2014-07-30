@@ -50,7 +50,7 @@ proc ::eaarl::raster::config {window args} {
 }
 
 snit::type ::eaarl::raster::embed {
-    option -window -readonly 1 -default 11 -configuremethod SetOpt
+    option -window -readonly 1 -default 20 -configuremethod SetOpt
     option -raster -default 1 -configuremethod SetOpt
     option -channel -default 1 -configuremethod SetOpt
     option -pulse -default 60 -configuremethod SetOpt
@@ -90,7 +90,7 @@ snit::type ::eaarl::raster::embed {
         if {[dict exist $args -window]} {
             set win [dict get $args -window]
         } else {
-            set win 11
+            set win 20
         }
         set window [::yorick::window::path $win]
         $window clear_gui

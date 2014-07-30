@@ -201,7 +201,7 @@ namespace eval l1pro::transect {
         set settings($row,recall) 0
         set settings($row,width) 1.0
         set settings($row,iwin) 5
-        set settings($row,owin) 2
+        set settings($row,owin) 15
         set settings($row,marker) 1
         set settings($row,msize) 0.1
         set settings($row,scolor) "black"
@@ -741,8 +741,8 @@ namespace eval l1pro::transect {
                     $userecall              ", recall=$recall" \
                     {$segment ne ""}        ", segment=$segment" \
                     {$width != 3}           ", width=$width" \
-                    {$iwin != 5}            ", iwin=$iwin" \
-                    {$owin != 2}            ", owin=$owin" \
+                    1                       ", iwin=$iwin" \
+                    1                       ", owin=$owin" \
                     $xfma                   ", xfma=1" \
                     {$marker != 1}          ", marker=$marker" \
                     {$msize != 0.1}         ", msize=$msize" \
@@ -783,9 +783,8 @@ namespace eval l1pro::transect {
                 append_varlist $pipvar
             }
             append cmd " = transect_pip_remove($var, mode=\"$mode\",\
-                    recall=$recall"
+                    recall=$recall, win=$owin"
             appendif cmd \
-                    {$owin != 2}        ", win=$owin" \
                     {$width != 3}       ", width=$width" \
                     1                   ")"
             exp_send "$cmd;\r"
