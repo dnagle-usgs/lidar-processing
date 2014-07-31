@@ -120,7 +120,7 @@ dst_geoid=, verbose=) {
             write, format="%s", "\n";
           north(i) = cnorth;
           east(i) = ceast;
-          height(i) = &(long(unref(cheight) * 100 + 0.5));
+          height(i) = &(long(cheight * 100 + 0.5));
         }
       } else {
         height /= 100.;
@@ -132,11 +132,11 @@ dst_geoid=, verbose=) {
           north(w) = east(w) = height(w) = 0;
         if(verbose)
           write, format="%s", "\n";
-        height = long(unref(height) * 100 + 0.5);
+        height = long(height * 100 + 0.5);
       }
 
-      get_member(data_out, cur.n) = long(unref(north) * 100 + 0.5);
-      get_member(data_out, cur.e) = long(unref(east) * 100 + 0.5);
+      get_member(data_out, cur.n) = long(north * 100 + 0.5);
+      get_member(data_out, cur.e) = long(east * 100 + 0.5);
       get_member(data_out, cur.z) = height;
     }
   }
@@ -295,9 +295,10 @@ func datum_convert_pnav(pnav=, infile=, export=, outfile=, src_datum=, src_geoid
   datum_convert_geo, lon, lat, alt, src_datum=src_datum, src_geoid=src_geoid,
     dst_datum=dst_datum, dst_geoid=dst_geoid, verbose=verbose;
 
-  pnav.lon = unref(lon);
-  pnav.lat = unref(lat);
-  pnav.alt = unref(alt);
+  pnav.lon = lon;
+  pnav.lat = lat;
+  pnav.alt = alt;
+  lon = lat = alt = [];
 
   if(numberof(w)) {
     pnav.lon(w) = 0;
@@ -361,9 +362,9 @@ func datum_convert_guess_geoid(w84, n88, zone=, geoids=) {
   if(numberof(w84) != numberof(n88)) {
     write, "The number of points in the two data sources do not match. Restricting to\n common points.";
 
-    w84 = extract_corresponding_data(unref(w84), n88);
+    w84 = extract_corresponding_data(w84, n88);
     if(numberof(w84))
-      n88 = extract_corresponding_data(unref(n88), w84);
+      n88 = extract_corresponding_data(n88, w84);
     else
       n88 = [];
 
@@ -399,8 +400,9 @@ func datum_convert_guess_geoid(w84, n88, zone=, geoids=) {
   write, "\n Bug checking...";
   n83 = datum_convert_data(w84, zone=zone, src_datum="w84", dst_datum="n83",
     verbose=0);
-  d = abs(unref(n83).elevation - n88.elevation);
-  w = where(unref(d) > 10);
+  d = abs(n83.elevation - n88.elevation);
+  w = where(d > 10);
+  n83 = d = [];
   if(numberof(w) > 0 && numberof(w) == numberof(w84)-1) {
     write, "This data exhibits the old ALPS bug that failed to convert one data point.\n Removing outlier point.\n";
     w84 = w84(w);
@@ -563,7 +565,8 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
     fn_outs += "_g" + dst_geoid;
   fn_outs += part2s;
   fn_outdir = is_void(outdir) ? file_dirname(files) : outdir;
-  fn_outs = file_join(unref(fn_outdir), fn_outs);
+  fn_outs = file_join(fn_outdir, fn_outs);
+  fn_outdir = [];
 
   // Check to see which files already exist
   if(update)

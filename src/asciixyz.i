@@ -1009,7 +1009,7 @@ Rewrote David Nagle 2010-03-11
 
     if(buffer >= 0) {
       npre = numberof(data);
-      data = restrict_data_extent(unref(data), file_tail(fn), buffer=buffer,
+      data = restrict_data_extent(data, file_tail(fn), buffer=buffer,
         mode=mode);
       if(numberof(data)) {
         write, format="Applied buffer, reduced points from %d to %d\n",
@@ -1028,7 +1028,7 @@ Rewrote David Nagle 2010-03-11
     }
 
     write, format="%d/%d: %s\n", i, numberof(files), file_tail(fn);
-    write_ascii_xyz, unref(data), fn, mode=mode,
+    write_ascii_xyz, data, fn, mode=mode,
       intensity_mode=intensity_mode, ESRI=ESRI, header=header,
       footer=footer, delimit=delimit, indx=indx, intensity=intensity, rn=rn,
       soe=soe, zclip=zclip, latlon=latlon, split=split, zone=fzone,

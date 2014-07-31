@@ -140,7 +140,8 @@ func helmert_transformation(&X, &Y, &Z, transform) {
 
   Xp = reform(XYZ(1,) + p.tx, dims);
   Yp = reform(XYZ(2,) + p.ty, dims);
-  Zp = reform(unref(XYZ)(3,) + p.tz, dims);
+  Zp = reform(XYZ(3,) + p.tz, dims);
+  XYZ = [];
 
   if(am_subroutine()) {
     eq_nocopy, X, Xp;
@@ -169,16 +170,17 @@ func geographic2cartesian(lon, lat, height, ellip, &X, &Y, &Z) {
   lat *= DEG2RAD;
 
   coslat = cos(lat);
-  sinlat = sin(unref(lat));
+  sinlat = sin(lat);
   coslon = cos(lon);
-  sinlon = sin(unref(lon));
+  sinlon = sin(lon);
+  lat = lon = [];
 
   v = a / sqrt(1 - e2 * sinlat^2);
   v_height = v + height;
 
-  X = v_height * coslat * unref(coslon);
-  Y = unref(v_height) * unref(coslat) * unref(sinlon);
-  Z = (unref(v) * (1 - e2) + unref(height)) * unref(sinlat);
+  X = v_height * coslat * coslon;
+  Y = v_height * coslat * sinlon;
+  Z = (v * (1 - e2) + height) * sinlat;
 
   if(!am_subroutine())
     return [X, Y, Z];
@@ -201,15 +203,17 @@ func cartesian2geographic(X, Y, Z, ellip, &lon, &lat, &height) {
 
   p2 = X*X + Y*Y;
   r = sqrt(p2 + Z*Z);
-  p = sqrt(unref(p2));
+  p = sqrt(p2);
   mu = atan(Z * ((1 - f) + e2 * a / r), p);
+  p2 = [];
 
-  lon = atan(unref(Y), unref(X));
+  lon = atan(Y, X);
+  X = Y = [];
   lat = atan(Z * (1 - f) + e2 * a * sin(mu)^3,
     (1 - f) * (p - e2 * a * cos(mu)^3));
 
   sinlat = sin(lat);
-  height = p * cos(lat) + unref(Z) * sinlat - a * sqrt(1 - e2 * sinlat^2);
+  height = p * cos(lat) + Z * sinlat - a * sqrt(1 - e2 * sinlat^2);
 
   lon *= RAD2DEG;
   lat *= RAD2DEG;

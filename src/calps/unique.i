@@ -61,7 +61,7 @@ func nocalps_unique(A) {
   }
 
   // Eliminate any dimensionality
-  A = unref(A)(*);
+  A = A(*);
   // Index list
   idx = indgen(numberof(A));
 

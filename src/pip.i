@@ -104,10 +104,10 @@ func testPoly(pl, ptx, pty) {
 */
   local plx, ply;
   if(is_void(pl) || is_void(ptx) || is_void(pty)) return [];
-  splitary, unref(pl), plx, ply;
+  splitary, pl, plx, ply;
   w = data_box(ptx, pty, plx(min), plx(max), ply(min), ply(max));
   if(numberof(w)) {
-    idx = _testPoly(unref(plx), unref(ply), unref(ptx)(w), unref(pty)(w));
+    idx = _testPoly(plx, ply, ptx(w), pty(w));
     return w(idx);
   } else {
     return [];
@@ -145,10 +145,12 @@ func _testPoly(plx, ply, ptx, pty) {
 
     // Calculate dot product and cross product
     dp = dx1 * dx2 + dy1 * dy2;
-    cp = unref(dx1) * unref(dy2) - unref(dy1) * unref(dx2);
+    cp = dx1 * dy2 - dy1 * dx2;
+    dx1 = dx2 = dy1 = dy2 = [];
 
     // Theta is inverse tangent (keep a running sum)
-    theta += atan(unref(cp), unref(dp));
+    theta += atan(cp, dp);
+    cp = dp = [];
   }
 
   return where(abs(theta) >= pi);
@@ -319,5 +321,5 @@ func ptsInBox(box, x, y)
   xh = box(1, max); // x-upper bound of box
   yl = box(2, min); // y-lower bound of box
   yh = box(2, max); // x-upper bound of box
-  return data_box(unref(x), unref(y), xl, xh, yl, yh);
+  return data_box(x, y, xl, xh, yl, yh);
 }

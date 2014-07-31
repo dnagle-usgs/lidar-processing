@@ -156,7 +156,7 @@ func strwrap(str, space=, newline=, paragraph=, width=) {
     this_paragraph = string(0);
     this_line = string(0);
     lines = strsplit(paragraphs(i), newline);
-    lines = strtrim(unref(lines));
+    lines = strtrim(lines);
     for(j = 1; j <= numberof(lines); j++) {
       words = strsplit(lines(j), space);
       for(k = 1; k <= numberof(words); k++) {

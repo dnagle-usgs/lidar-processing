@@ -254,7 +254,8 @@ func load_edb(fn=, update=, verbose=, override_offset=) {
     data_ends = q(0);
     tmp = soe2time(edb(data_begins).seconds);
     year = tmp(1);
-    day = unref(tmp)(2);
+    day = tmp(2);
+    tmp = [];
     soe_day_start = time2soe([year, day, 0, 0, 0, 0]);
   }
 

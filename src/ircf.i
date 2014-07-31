@@ -40,7 +40,7 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
 
   //crop region to within user-specified elevation limits
   if(!is_void(prefilter_min) || !is_void(prefilter_max))
-    eaarl = filter_bounded_elv(unref(eaarl), lbound=prefilter_min,
+    eaarl = filter_bounded_elv(eaarl, lbound=prefilter_min,
       ubound=prefilter_max, mode=mode);
 
   return ircf_eaarl_pts(eaarl, buf=buf, w=w, mode=mode,

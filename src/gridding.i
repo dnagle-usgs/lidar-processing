@@ -125,13 +125,14 @@ powerwt=) {
     }
 
     if(method == "triangle")
-      grid = data_triangle_grid(unref(data), mode=mode, xmin=xmin, xmax=xmax,
+      grid = data_triangle_grid(data, mode=mode, xmin=xmin, xmax=xmax,
         ymin=ymin, ymax=ymax, cell=cell, nodata=nodata, maxside=maxside,
         maxarea=maxarea, minangle=minangle);
     else
-      grid = data_radius_grid(unref(data), method, mode=mode, xmin=xmin,
+      grid = data_radius_grid(data, method, mode=mode, xmin=xmin,
         xmax=xmax, ymin=ymin, ymax=ymax, cell=cell, nodata=nodata,
         maxradius=maxradius, minpoints=minpoints, wtpower=wtpower);
+    data = [];
 
     pbd_save, outfiles(i), vname, grid;
 
@@ -352,7 +353,7 @@ func triangle_interp(x, y, z, v, xp, yp, nodata=) {
   yp += zp;
 
   local v1, v2, v3;
-  splitary, unref(v), 3, v1, v2, v3;
+  splitary, v, 3, v1, v2, v3;
 
   nodata = double(nodata);
   _ytriangle_interp, x, y, z, v1, v2, v3, numberof(v1), xp, yp, zp,
@@ -584,7 +585,8 @@ func batch_write_arc_grid(dir, searchstr=, outdir=) {
     ofn = file_rootname(files(i))+".asc";
     if(!is_void(outdir))
       ofn = file_join(outdir, file_tail(ofn));
-    write_arc_grid, unref(data), ofn;
+    write_arc_grid, data, ofn;
+    data = [];
     timer_remaining, t0, i, numberof(files), tp, interval=15;
   }
   timer_finished, t0;

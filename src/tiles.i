@@ -841,7 +841,8 @@ verify_tiles=) {
       }
       e = n = [];
       data2xyz, data, e, n, mode=mode;
-      idx = extract_for_tile(unref(e), unref(n), filezone, tiles(i), buffer=0);
+      idx = extract_for_tile(e, n, filezone, tiles(i), buffer=0);
+      e = n = [];
       if(numberof(idx))
         data = data(idx);
       else
@@ -858,11 +859,12 @@ verify_tiles=) {
     if(filezone < 0) {
       filezone = data.zone;
     }
-    save_data_to_tiles, unref(data), unref(filezone), dstdir, scheme=scheme,
+    save_data_to_tiles, data, filezone, dstdir, scheme=scheme,
       suffix=suffix, buffer=buffer, flat=flat, uniq=uniq,
       verbose=passverbose, split_zones=split_zones, split_days=split_days,
       day_shift=day_shift, dtlength=dtlength, dtprefix=dtprefix,
       qqprefix=qqprefix, restrict_tiles=restrict_tiles;
+    data = filezone = [];
 
     if(verbose)
       timer_remaining, t1, sizes(i), sizes(0), tp, interval=10;
@@ -970,7 +972,8 @@ remove_buffers=, dtlength=, dtprefix=, qqprefix=, mode=, verbose=) {
         filezone = data.zone;
       }
       data2xyz, data, e, n, mode=mode;
-      idx = extract_for_tile(unref(e), unref(n), filezone, file_tiles(i), buffer=0);
+      idx = extract_for_tile(e, n, filezone, file_tiles(i), buffer=0);
+      e = n = [];
       if(numberof(idx))
         data = data(idx);
       else
@@ -997,7 +1000,7 @@ remove_buffers=, dtlength=, dtprefix=, qqprefix=, mode=, verbose=) {
       timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
   }
 
-  return set_remove_duplicates(merge_pointers(unref(tile_lists)));
+  return set_remove_duplicates(merge_pointers(tile_lists));
 }
 
 func tile_extent_shapefile(fn, dir, searchstr=, files=, usedirnames=, restrict=) {

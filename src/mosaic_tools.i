@@ -390,7 +390,7 @@ func cirdata_hull(cirdata, elev=, camera=, buffer=) {
     jgw_data = gen_jgw(cirdata.tans(i), elev, camera=camera);
     grow, poly_all, jgw_poly(jgw_data);
   }
-  bounds = convex_hull(unref(poly_all));
+  bounds = convex_hull(poly_all);
   bounds = buffer_hull(bounds, buffer, pts=16);
 
   return bounds;
@@ -475,7 +475,7 @@ searchstr=) {
     } else if(anyof(exists)) {
       write, format=" %d images already have jgw files, skipping them.\n",
         numberof(where(exists));
-      keep = where(!unref(exists));
+      keep = where(!exists);
       jgw_files = jgw_files(keep);
       prj_files = prj_files(keep);
       cirdata = filter_cirdata_by_index(cirdata, keep);
@@ -597,14 +597,16 @@ func jgw_remove_missing(dir, dryrun=, to_file=) {
     f = [];
   jpg_files = find(dir, searchstr="*.jpg");
   jgw_files = file_rootname(jpg_files) + ".jgw";
-  has_jgw = file_exists(unref(jgw_files));
+  has_jgw = file_exists(jgw_files);
+  jgw_files = [];
   w = where(! has_jgw);
   if(numberof(w)) {
     if(dryrun)
       write, f, "List of files that would be removed:";
     else
       write, f, "Removing files:";
-    bad_jpgs = unref(jpg_files)(w);
+    bad_jpgs = jpg_files(w);
+    jpg_files = [];
     for(i = 1; i <= numberof(bad_jpgs); i++) {
       write, f, format=" - %s\n", bad_jpgs(i);
       if(!dryrun)

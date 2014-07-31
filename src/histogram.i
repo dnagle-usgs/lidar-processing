@@ -34,9 +34,10 @@ func hist_data(data, &refs, &hist, mode=, binsize=) {
   local z;
   default, binsize, 0.30;
   if(is_numerical(data) && dimsof(data)(1) == 1)
-    z = unref(data);
+    z = data;
   else
-    data2xyz, unref(data), , , z, mode=mode;
+    data2xyz, data, , , z, mode=mode;
+  data = [];
 
   zmin = z(min) - binsize;
   Z = long((z-zmin)/binsize) + 1;
@@ -167,9 +168,10 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
   default, win, max(0, current_window());
 
   if(is_numerical(data) && dimsof(data)(1) == 1)
-    z = unref(data);
+    z = data;
   else
-    data2xyz, unref(data), , , z, mode=mode;
+    data2xyz, data, , , z, mode=mode;
+  data = [];
 
   // Collapse into vector. (Needed for EAARL raster format data.)
   z = z(*);
@@ -327,9 +329,10 @@ func kde_data(data, &sample, &density, mode=, kdesample=, h=, K=) {
   default, K, "gaussian";
 
   if(is_numerical(data) && dimsof(data)(1) == 1)
-    z = unref(data);
+    z = data;
   else
-    data2xyz, unref(data), , , z, mode=mode;
+    data2xyz, data, , , z, mode=mode;
+  data = [];
 
   if(is_string(K)) {
     if(symbol_exists("krnl_"+K))
@@ -523,8 +526,8 @@ func krnl_density_est(data, sample, h=, K=) {
   // The kernel function is supposed to receive the difference dividing by the
   // bandwidth. For efficiency, that division is factored out and done ahead
   // of time.
-  data = unref(data)/h;
-  sample = unref(sample)/h;
+  data = data/h;
+  sample = sample/h;
 
   for(i = 1; i <= count; i++)
     density(i) = K(data - sample(i))(sum);

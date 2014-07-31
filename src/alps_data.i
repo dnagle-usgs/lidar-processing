@@ -209,7 +209,7 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
 
   // Special case to allow XYZ pass through
   if(is_numerical(data))
-    return splitary(unref(data), 3, x, y, z);
+    return splitary(data, 3, x, y, z);
 
   // Special case for gridded data
   if(structeq(structof(data), ZGRID)) {
@@ -217,9 +217,10 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
       ptrs = array(pointer, numberof(data));
       for(i = 1; i <= numberof(data); i++)
         ptrs(i) = &transpose(data2xyz(data(i)));
-      merged = merge_pointers(unref(ptrs));
+      merged = merge_pointers(ptrs);
+      ptrs = [];
       merged = reform(merged, [2, 3, numberof(merged)/3]);
-      return splitary(unref(merged), 3, x, y, z);
+      return splitary(merged, 3, x, y, z);
     } else {
       z = *(data.zgrid);
       x = y = array(double, dimsof(z));
@@ -335,10 +336,10 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
   }
 
   if(!native) {
-    x = unref(x) * 0.01;
-    y = unref(y) * 0.01;
+    x *= 0.01;
+    y *= 0.01;
     if(anyof(["ba","be","ch","de","fs","mir"] == mode))
-      z = unref(z) * 0.01;
+      z *= 0.01;
   }
 
   // Only want to do this if it's not a subroutine, to avoid the memory
@@ -424,12 +425,15 @@ func xyz2data(_x, &_y, _z, &data, mode=, native=) {
 
   // Extract arguments
   if(is_void(_z)) {
-    splitary, unref(_x), 3, x, y, z;
+    splitary, _x, 3, x, y, z;
+    _x = [];
     working = (_y);
   } else {
-    x = unref(_x);
+    x = _x;
+    _x = [];
     y = (_y);
-    z = unref(_z);
+    z = _z;
+    _z = [];
     working = (data);
   }
 
@@ -506,10 +510,10 @@ func xyz2data(_x, &_y, _z, &data, mode=, native=) {
   }
 
   if(!native) {
-    x = long(unref(x) * 100);
-    y = long(unref(y) * 100);
+    x = long(x * 100);
+    y = long(y * 100);
     if(anyof(["ba","be","ch","de","fs","mir"] == mode))
-      z = long(unref(z) * 100);
+      z = long(z * 100);
   }
 
   // Most data modes use east/north for x/y. Only bare earth and be intensity
@@ -633,12 +637,14 @@ func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma
   if(structeq(structof(data), ZGRID) && noneof(axes == ["xzy", "yxz"])) {
     display_grid, data, cmin=cmin, cmax=cmax;
   } else {
-    data2xyz, unref(data), x, y, z, mode=mode;
+    data2xyz, data, x, y, z, mode=mode;
+    data = [];
 
     // Extract points of interest (apply w and skip)
-    X = unref(x)(::skip);
-    Y = unref(y)(::skip);
-    Z = unref(z)(::skip);
+    X = x(::skip);
+    Y = y(::skip);
+    Z = z(::skip);
+    x = y = z = [];
 
     // xyz -> xzy
     if(anyof(axes == ["xzy", "yzx"]))
@@ -651,8 +657,7 @@ func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma
       plot_tri_data, [X,Y,Z], cmin=cmin, cmax=cmax, dofma=0, edges=triagedges,
         maxside=50, maxarea=200;
     } else {
-      plcm, unref(Z), unref(Y), unref(X), msize=msize, marker=marker,
-        cmin=cmin, cmax=cmax;
+      plcm, Z, Y, X, msize=msize, marker=marker, cmin=cmin, cmax=cmax;
     }
   }
 
@@ -1249,17 +1254,18 @@ func sortdata(data, mode=, method=, desc=) {
     idx = sort(data.soe);
   } else if(method == "x") {
     data2xyz, data, tmp, mode=mode;
-    idx = sort(unref(tmp));
+    idx = sort(tmp);
   } else if(method == "y") {
     data2xyz, data, , tmp, mode=mode;
-    idx = sort(unref(tmp));
+    idx = sort(tmp);
   } else if(method == "z") {
     data2xyz, data, , , tmp, mode=mode;
-    idx = sort(unref(tmp));
+    idx = sort(tmp);
   } else if(method == "random") {
     data2xyz, data, tmp;
-    idx = sort(random(numberof(unref(tmp))));
+    idx = sort(random(numberof(tmp)));
   }
+  tmp = [];
   if(is_void(idx))
     error, "Invalid method.";
 

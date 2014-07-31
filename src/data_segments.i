@@ -352,7 +352,8 @@ func rcf_by_fltline(data, mode=, rcfmode=, buf=, w=, n=, timediff=) {
 
   The timediff= option is as documented in split_by_line.
 */
-  ptrs = split_by_line(unref(data), timediff=timediff);
+  ptrs = split_by_line(data, timediff=timediff);
+  data = [];
   for(i = 1; i <= numberof(ptrs); i++)
     ptrs(i) = &rcf_filter_eaarl(*ptrs(i), buf=buf, w=w, n=n, mode=mode,
       rcfmode=rcfmode);
@@ -736,7 +737,8 @@ func tk_dsw_get_data(data, type, var, sod_field) {
 // tk_dsw_get_data(data, "pnav", "pnav");
   extern tans, pnav;
 
-  segment_ptrs = split_by_line(unref(data));
+  segment_ptrs = split_by_line(data);
+  data = [];
 
   loaded = mission.data.loaded;
 

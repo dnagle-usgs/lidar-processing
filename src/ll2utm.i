@@ -72,10 +72,12 @@ func ll2utm(lat, lon, &north, &east, &zone, force_zone=, ellipsoid=) {
       error, "Invalid call to ll2utm";
     if(anyof(dimsof(lat)(2:3) == 3)) {
       tmp = lat;
-      splitary, unref(tmp), 3, lon, lat, z;
+      splitary, tmp, 3, lon, lat, z;
+      tmp = [];
     } else if(anyof(dimsof(lat)(2:3) == 2)) {
       tmp = lat;
-      splitary, unref(tmp), 2, lon, lat;
+      splitary, tmp, 2, lon, lat;
+      tmp = [];
     } else {
       error, "Invalid call to ll2utm";
     }

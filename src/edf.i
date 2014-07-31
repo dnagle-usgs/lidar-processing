@@ -328,7 +328,8 @@ func edf_export_cast(&data, type=, words=) {
   if(s == "ATM2") {
     fint = data.fint;
     struct_cast, data, FS;
-    data.intensity = unref(fint);
+    data.intensity = fint;
+    fint = [];
     s = "FS";
   }
 
@@ -496,7 +497,8 @@ func batch_pbd2edf(dirname, files=, searchstr=, outdir=, update=, type=, words=)
   if(is_void(files))
     files = find(dirname, searchstr=searchstr);
 
-  pbds = unref(files);
+  pbds = files;
+  files = [];
   edfs = file_rootname(pbds) + ".edf";
   if(!is_void(outdir))
     edfs = file_join(outdir, file_tail(edfs));
@@ -559,7 +561,8 @@ func batch_edf2pbd(dirname, files=, searchstr=, outdir=, update=) {
   if(is_void(files))
     files = find(dirname, searchstr=searchstr);
 
-  edfs = unref(files);
+  edfs = files;
+  files = [];
   pbds = file_rootname(edfs) + ".pbd";
   if(!is_void(outdir))
     pbds = file_join(outdir, file_tail(pbds));

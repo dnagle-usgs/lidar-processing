@@ -276,12 +276,12 @@ func utm2qq_names(east, north, zone, qqprefix=) {
   utm2ll, north, east, zone, lon, lat;
   lon = long(lon/.0625) + 3000;
   lat = long(lat/.0625) + 3000;
-  code = long(unref(lat) * 10000 + unref(lon));
-  code = set_remove_duplicates(unref(code));
+  code = long(lat * 10000 + lon);
+  code = set_remove_duplicates(code);
   lat = code / 10000;
-  lon = unref(code) % 10000;
-  lat = (unref(lat) - 3000) * .0625;
-  lon = (unref(lon) - 3000) * .0625;
+  lon = code % 10000;
+  lat = (lat - 3000) * .0625;
+  lon = (lon - 3000) * .0625;
   return calc24qq(lat, lon, qqprefix=qqprefix);
 }
 
@@ -306,9 +306,10 @@ func extract_for_qq(east, north, zone, qq, buffer=) {
   comp_lat = bound(ll(,2), bbox(1), bbox(3));
 
   // comp_utm(1,) is north, (2,) is east
-  comp_utm = fll2utm(unref(comp_lat), unref(comp_lon), force_zone=zone);
+  comp_utm = fll2utm(comp_lat, comp_lon, force_zone=zone);
+  comp_lat = comp_lon = [];
 
-  dist = ppdist([unref(east), unref(north)], [comp_utm(2,), comp_utm(1,)], tp=1);
+  dist = ppdist([east, north], [comp_utm(2,), comp_utm(1,)], tp=1);
   // Adding 1mm to buffer to accommodate floating point error
   return where(dist <= buffer + 0.001);
 }
@@ -342,7 +343,8 @@ func calculate_qq_extents(qqdir, mode=, searchstr=, remove_buffers=) {
     data = pbd_load(files(i));
     if(!numberof(data))
       continue;
-    data2xyz, unref(data), e, n, mode=mode;
+    data2xyz, data, e, n, mode=mode;
+    data = [];
 
     // Restrict data to tile boundaries if remove_buffers = 1
     if(remove_buffers) {

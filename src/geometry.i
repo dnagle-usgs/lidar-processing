@@ -427,9 +427,9 @@ func ppdist(p1, p2, tp=) {
 // Original David Nagle 2008-11-18
   default, tp, 0;
   if(tp) {
-    return transpose(ppdist(transpose(unref(p1)), transpose(unref(p2))));
+    return transpose(ppdist(transpose(p1), transpose(p2)));
   } else {
-    return sqrt(((unref(p1) - unref(p2)) ^ 2)(sum,));
+    return sqrt(((p1 - p2) ^ 2)(sum,));
   }
 }
 
@@ -710,13 +710,14 @@ func convex_hull(x, y) {
     Ux(Ui) = x(i);
     Uy(Ui) = y(i);
   }
-  Lx = unref(Lx)(:Li-1);
-  Ly = unref(Ly)(:Li-1);
-  Ux = unref(Ux)(:Ui)(::-1);
-  Uy = unref(Uy)(:Ui)(::-1);
-  LUx = grow(unref(Lx),unref(Ux));
-  LUy = grow(unref(Ly),unref(Uy));
-  LU = transpose([unref(LUx), unref(LUy)]);
+  Lx = Lx(:Li-1);
+  Ly = Ly(:Li-1);
+  Ux = Ux(:Ui)(::-1);
+  Uy = Uy(:Ui)(::-1);
+  LUx = grow(Lx,Ux);
+  LUy = grow(Ly,Uy);
+  Lx = Ly = Ux = Uy = [];
+  LU = transpose([LUx, LUy]);
   return LU;
 }
 
@@ -738,16 +739,16 @@ func cross_product_sign(x1, y1, x2, y2, x3, y3) {
       error, "Input not conformable.";
     // Adding result to everything belong forces them all to double and
     // broadcasts them to the result size if necessary.
-    _ycross_product_sign, result+unref(x1), result+unref(y1),
-      result+unref(x2), result+unref(y2), result+unref(x3),
-      result+unref(y3), result, numberof(result);
+    _ycross_product_sign, result+x1, result+y1,
+      result+x2, result+y2, result+x3,
+      result+y3, result, numberof(result);
     return result;
   }
-  x2x1 = unref(x2) - x1;
-  y3y1 = unref(y3) - y1;
-  y2y1 = unref(y2) - unref(y1);
-  x3x1 = unref(x3) - unref(x1);
-  return unref(x2x1)*unref(y3y1)-unref(y2y1)*unref(x3x1);
+  x2x1 = x2 - x1;
+  y3y1 = y3 - y1;
+  y2y1 = y2 - y1;
+  x3x1 = x3 - x1;
+  return x2x1 * y3y1 - y2y1 * x3x1;
 }
 
 func in_triangle(x1, y1, x2, y2, x3, y3, xp, yp) {
@@ -768,9 +769,9 @@ func in_triangle(x1, y1, x2, y2, x3, y3, xp, yp) {
       error, "Input not conformable.";
     // Adding result to everything broadcasts them to the result size if
     // necessary.
-    _yin_triangle, result+unref(x1), result+unref(y1), result+unref(x2),
-      result+unref(y2), result+unref(x3), result+unref(y3),
-      result+unref(xp), result+unref(yp), result, numberof(result);
+    _yin_triangle, result+x1, result+y1, result+x2,
+      result+y2, result+x3, result+y3,
+      result+xp, result+yp, result, numberof(result);
     return result;
   }
   AB = cross_product_sign(x1, y1, x2, y2, xp, yp);
@@ -787,14 +788,10 @@ func triangle_areas(x1, y1, x2, y2, x3, y3) {
 */
 // Original David B. Nagle 2009-03-10
   yd1 = y2 - y3;
-  yd2 = unref(y3) - y1;
-  yd3 = unref(y1) - unref(y2);
-  area = 0.5 * (
-    unref(x1) * unref(yd1) +
-    unref(x2) * unref(yd2) +
-    unref(x3) * unref(yd3)
-  );
-  return area;
+  yd2 = y3 - y1;
+  yd3 = y1 - y2;
+  y1 = y2 = y3 = [];
+  return 0.5 * (x1 * yd1 + x2 * yd2 + x3 * yd3);
 }
 
 func buffer_hull(ply, buffer, pts=) {

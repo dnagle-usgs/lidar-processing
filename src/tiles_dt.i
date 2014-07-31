@@ -212,12 +212,14 @@ local utm2dtcell_names, utm2dtquad_names, utm2dt_names, utm2it_names;
 */
 
 func __utm2dt_corners(&east, &north, &zone, factor) {
-  e = long(floor(unref(east)/factor));
-  n = long(ceil(unref(north)/factor));
+  e = long(floor(east/factor));
+  n = long(ceil(north/factor));
+  east = north = [];
   zmin = zone(*)(min);
   zone -= zmin;
-  code = long(unref(zone)) * 40000 * 4000 + unref(e) * 40000 + unref(n);
-  code = set_remove_duplicates(unref(code));
+  code = long(zone) * 40000 * 4000 + e * 40000 + n;
+  e = n = [];
+  code = set_remove_duplicates(code);
   north = (code % 40000) * factor - (factor/2);
   code /= 40000;
   east = (code % 4000) * factor + (factor/2);

@@ -195,7 +195,7 @@ func set_union(A, B) {
   The elements of set_union(a,b) and set_union(b,a) will be the same, but the
   arrays may not be ordered the same.
 */
-  return set_remove_duplicates(grow(unref(A), unref(B)));
+  return set_remove_duplicates(grow(A, B));
 }
 
 func set_remove_duplicates(A, idx=) {

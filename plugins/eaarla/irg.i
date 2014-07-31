@@ -116,7 +116,8 @@ highelv_thresh=, forcechannel=, skip=, verbose=, msg=) {
 
   // Initialize output
   rtrs = array(RTRS, 120, count);
-  rtrs.raster = unref(rasters)(-,);
+  rtrs.raster = rasters(-,);
+  rasters = [];
 
   // Determine if ytk popup status dialogs are used.
   use_ytk = _ytk && count >= 10;

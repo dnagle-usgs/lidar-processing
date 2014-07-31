@@ -57,7 +57,7 @@ func select_region_tile(data, win=, plot=, mode=) {
   window_select, wbkp;
 
   data2xyz, data, x, y, mode=mode;
-  idx = data_box(unref(x), unref(y), etile, etile+f, ntile-f, ntile);
+  idx = data_box(x, y, etile, etile+f, ntile-f, ntile);
 
   return data(idx);
 }

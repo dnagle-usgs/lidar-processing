@@ -317,7 +317,7 @@ verbose=) {
   }
 
   if(!is_void(buffer)) {
-    data = restrict_data_extent(unref(data), file_tail(fn_pbd), buffer=buffer,
+    data = restrict_data_extent(data, file_tail(fn_pbd), buffer=buffer,
       mode=mode);
     if(is_void(data)) {
       write, format=" Buffer of %.2fm eliminated all data for %s.\n",
@@ -333,7 +333,7 @@ verbose=) {
       cs, mode, numberof(data);
   }
 
-  las_export_data, fn_las, unref(data), v_maj=v_maj, v_min=v_min, cs=cs,
+  las_export_data, fn_las, data, v_maj=v_maj, v_min=v_min, cs=cs,
     cs_out=cs_out, mode=mode, pdrf=pdrf, encode_rn=encode_rn,
     include_scan_angle_rank=include_scan_angle_rank,
     classification=classification, header=header;
@@ -703,7 +703,8 @@ shorten_fn=, update=, files=, date=, geo=, zone=) {
   if(is_void(files))
     files_las = find(dir_las, searchstr=searchstr);
   else
-    files_las = unref(files);
+    files_las = files;
+  files = [];
   if(is_void(files_las))
     error, "No files found.";
   files_pbd = file_rootname(files_las);
@@ -805,7 +806,7 @@ date=, geo=, zone=) {
   close, las;
   fnc = [];
 
-  pbd_save, fn_pbd, vname, unref(data);
+  pbd_save, fn_pbd, vname, data;
 }
 
 func las_to_alps(las, fakemirror=, rgbrn=, date=, geo=, zone=) {
@@ -1419,7 +1420,7 @@ func las_header(las) {
 
   valid = data.signature_valid ? "valid" : "invalid";
   result += swrite(format="%-19s : %s (%s)\n",
-    "File signature", data.file_signature, unref(valid));
+    "File signature", data.file_signature, valid);
 
   if(has_member(data, "file_source_id"))
     result += swrite(format="%-19s : %d\n",

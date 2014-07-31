@@ -272,7 +272,7 @@ $[description]\
       scale=0.8, color="bf00ffff",
       href="http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png"
     ),
-    kml_BalloonStyle(text=unref(balloon)),
+    kml_BalloonStyle(text=balloon),
     id="pmk"));
 
   // --- Generate overlays ---
@@ -383,17 +383,17 @@ On filesystem at:<br />\
 
   trees = kml_Folder(
     kml_Style(kml_ListStyle(listItemType="radioFolder")),
-    strchar(merge_pointers([unref(fltlinetree), unref(itiletree)])),
+    strchar(merge_pointers([fltlinetree, itiletree])),
     name="Images", visibility=1, Open=1
   );
 
   placemarks = kml_Folder(
     kml_Style(kml_ListStyle(listItemType="radioFolder")),
-    strchar(merge_pointers([unref(pmkflts), unref(pmktiles)])),
+    strchar(merge_pointers([pmkflts, pmktiles])),
     name="Placemarks", visibility=0, Open=0
   );
 
-  kml_save, kml, strchar(merge_pointers(unref(styles))),
+  kml_save, kml, strchar(merge_pointers(styles)),
     kml_Style(kml_ListStyle(listItemType="check")),
     trees, placemarks, name=name, visibility=1, Open=1;
 

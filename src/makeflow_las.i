@@ -401,7 +401,8 @@ norun=) {
   if(is_void(files))
     files_las = find(dir_las, searchstr=searchstr);
   else
-    files_las = unref(files);
+    files_las = files;
+  files = [];
   if(is_void(files_las))
     error, "No files found.";
   files_pbd = file_rootname(files_las);

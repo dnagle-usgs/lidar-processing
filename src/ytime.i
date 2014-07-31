@@ -88,7 +88,7 @@ func soe2time(soe) {
   yd = soe2yd(soe);
   sod = soe2sod(soe);
   hms = sod2hms(sod);
-  return grow(unref(yd), sod(..,-), unref(hms));
+  return grow(yd, sod(..,-), hms);
 }
 
 func soe2yd(soe) {
@@ -167,16 +167,17 @@ func sod2hms(sod, noary=, decimal=, str=) {
   default, str, 0;
 
   if(str)
-    return swrite(format="%06d", sod2hms(unref(sod), noary=1));
+    return swrite(format="%06d", sod2hms(sod, noary=1));
 
   hours = int(sod/3600);
   minutes = int((sod - hours*3600)/60);
-  seconds = unref(sod) % 60;
+  seconds = sod % 60;
+  sod = [];
 
   if(decimal)
-    seconds = double(unref(seconds));
+    seconds = double(seconds);
   else
-    seconds = long(unref(seconds));
+    seconds = long(seconds);
 
   if(noary)
     return hours * 10000 + minutes * 100 + seconds;
@@ -293,8 +294,7 @@ func ymd2date(year, month, day) {
     ymd = [];
   }
 
-  return swrite(format="%04d-%02d-%02d",
-    unref(year), unref(month), unref(day));
+  return swrite(format="%04d-%02d-%02d", year, month, day);
 }
 
 func soe2date(soe) {
@@ -302,7 +302,7 @@ func soe2date(soe) {
   Given a seconds-of-the-epoch value, returns the date as "YYYY-MM-DD". Output
   will have same dimensions as input.
 */
-  return ymd2date(soe2ymd(unref(soe)));
+  return ymd2date(soe2ymd(soe));
 }
 
 func date2soe(date, sod) {
@@ -318,7 +318,7 @@ func date2soe(date, sod) {
 */
 // Original David B. Nagle 2009-05-18
   require, "util_str.i";
-  date = get_date(unref(date));
+  date = get_date(date);
   y = atoi(strpart(date, 1:4));
   m = atoi(strpart(date, 6:7));
   d = atoi(strpart(date, 9:10));
@@ -340,8 +340,9 @@ func ymd2soe(y, m, d, sod) {
 */
 // Original David Nagle 2008-11-07
   default, sod, 0;
-  doy = ymd2doy(y, unref(m), unref(d));
-  return time2soe([unref(y), unref(doy), 0, 0, 0, 0]) + unref(sod);
+  doy = ymd2doy(y, m, d);
+  m = d = [];
+  return time2soe([y, doy, 0, 0, 0, 0]) + sod;
 }
 
 func ymd2doy(year, month, day) {
@@ -442,18 +443,19 @@ func gps_epoch_to_utc_epoch(soe) {
   extern _gps2utc_epoch_offset;
   soe += _gps2utc_epoch_offset;
   sod = soe2sod(soe);
-  ymd = soe2date(unref(soe));
-  sod = gps2utc(ymd, unref(sod));
-  return date2soe(unref(ymd), unref(sod));
+  ymd = soe2date(soe);
+  soe = [];
+  sod = gps2utc(ymd, sod);
+  return date2soe(ymd, sod);
 }
 
 func utc_epoch_to_gps_epoch(soe) {
   extern _gps2utc_epoch_offset;
   sod = soe2sod(soe);
-  ymd = soe2date(unref(soe));
-  sod = utc2gps(ymd, unref(sod));
-  soe = date2soe(unref(ymd), unref(sod));
-  return unref(soe) - _gps2utc_epoch_offset;
+  ymd = soe2date(soe);
+  sod = utc2gps(ymd, sod);
+  soe = date2soe(ymd, sod);
+  return soe - _gps2utc_epoch_offset;
 }
 
 func soe2gpssow(soe, &week) {

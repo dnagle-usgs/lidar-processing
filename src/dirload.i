@@ -450,7 +450,7 @@ func __dlfilter_data_poly(&data, filter, state) {
 */
   if(!numberof(data)) return;
   data2xyz, data, x, y, mode=filter.mode;
-  idx = testPoly(filter.poly, unref(x), unref(y));
+  idx = testPoly(filter.poly, x, y);
   if(numberof(idx))
     data = data(idx);
   else

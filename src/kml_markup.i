@@ -364,9 +364,9 @@ func kml_element(args) {
     items = items(1);
     fmt = "<%s%s>%s</%s>";
   } else {
-    items = strjoin(unref(items), "\n");
+    items = strjoin(items, "\n");
     if(strlen(items) < 1000)
-      items = strindent(unref(items), "  ");
+      items = strindent(items, "  ");
     fmt = "<%s%s>\n%s\n</%s>";
   }
 

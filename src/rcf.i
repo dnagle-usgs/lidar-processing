@@ -494,15 +494,16 @@ progress=) {
   keep = [];
 
   if(rcfmode == "grcf")
-    keep = gridded_rcf(unref(x), unref(y), unref(z), w, buf, n, progress=progress);
+    keep = gridded_rcf(x, y, z, w, buf, n, progress=progress);
   else if(rcfmode == "rcf")
-    keep = old_gridded_rcf(unref(x), unref(y), unref(z), w, buf, n);
+    keep = old_gridded_rcf(x, y, z, w, buf, n);
   else if(rcfmode == "dgrcf")
-    keep = dual_gridded_rcf(unref(x), unref(y), unref(z), w, buf, n, factor, progress=progress);
+    keep = dual_gridded_rcf(x, y, z, w, buf, n, factor, progress=progress);
   else if(rcfmode == "mgrcf")
-    keep = multi_gridded_rcf(unref(x), unref(y), unref(z), w, buf, n, factor, progress=progress);
+    keep = multi_gridded_rcf(x, y, z, w, buf, n, factor, progress=progress);
   else
     error, "Please specify a valid rcfmode=.";
+  x = y = z = [];
 
   if(idx)
     return keep;
@@ -588,11 +589,11 @@ factor=, prefilter_min=, prefilter_max=, verbose=) {
 
   // Apply prefiltering, if relevant
   if(!is_void(prefilter_min) || !is_void(prefilter_max))
-    data = filter_bounded_elv(unref(data), lbound=prefilter_min,
+    data = filter_bounded_elv(data, lbound=prefilter_min,
         ubound=prefilter_max, mode=mode);
 
   // Apply rcf filter
-  data = rcf_filter_eaarl(unref(data), buf=buf, w=w, n=n, mode=mode,
+  data = rcf_filter_eaarl(data, buf=buf, w=w, n=n, mode=mode,
       rcfmode=rcfmode, factor=factor);
 
   if(is_void(data)) {

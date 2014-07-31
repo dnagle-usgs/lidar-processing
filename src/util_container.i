@@ -193,7 +193,7 @@ func pbd_append(file, vname, data, uniq=) {
 // Original David Nagle 2008-07-16
   default, uniq, 1;
   if(file_exists(file))
-    data = grow(pbd_load(file), unref(data));
+    data = grow(pbd_load(file), data);
   if(uniq)
     data = uniq_data(data);
   pbd_save, file, vname, data;
@@ -764,7 +764,7 @@ func tp_grow(&ary, .., tp=, tpinv=) {
     if(!is_void(next))
       grow, res, transpose(next, tp);
   }
-  res = transpose(unref(res), tpinv);
+  res = transpose(res, tpinv);
   if(am_subroutine())
     eq_nocopy, ary, res;
   return res;
