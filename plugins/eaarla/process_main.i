@@ -486,7 +486,7 @@ exactsel=, splitchan=, opts=) {
         onlyplot=0    Process normally, default
         onlyplot=1    Don't process, just plot the tile lines
     win= Specifies which window to use.
-        win=6         Default, window 6
+        win=4         Default, window 4
 
   Options for makeflow:
     makeflow_fn= The filename to use when writing out the makeflow. If not
@@ -516,7 +516,7 @@ exactsel=, splitchan=, opts=) {
 
   default, mode, "f";
   default, buffer, 200.;
-  default, win, 6;
+  default, win, 4;
   default, plot, 1;
   now = getsoe();
 
