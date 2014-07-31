@@ -96,8 +96,6 @@ Input:
 
  selectmode= : Set to 1 to select an rcf region using a rubberband box.
           All data tiles within the selected region will be rcf'd.
-
-Original amar nayegandhi. Started 12/06/02.
 */
 
   t0 = t1 = tp = array(double, 3);
@@ -593,7 +591,6 @@ verbose=) {
 
     There is no selectmode= option.
 */
-// Original David Nagle 2009-12-28
   default, searchstr, "*.pbd";
   default, verbose, 2;
   default, update, 0;
@@ -1084,7 +1081,6 @@ verbose=, update=, uniq=) {
       output filename = 29085h4b_merged.pbd
       output vname = qq29085h4b_merged
 */
-// Original David Nagle 2009-12-24
   default, searchstr, "*.pbd";
   default, file_suffix, "_merged.pbd";
   default, vname_suffix, "_merged";
@@ -1175,7 +1171,6 @@ ignore_none_found=) {
       ignore_none_found=1 will force it to generate seamless files even if
       only one kind is present.
 */
-// Original David Nagle 2009-06-16
   default, veg_ss, "*n88*mf_str.pbd";
   default, bathy_ss, "*n88*_b_*mf.pbd";
   default, file_suffix, "n88_merged_seamless.pbd";

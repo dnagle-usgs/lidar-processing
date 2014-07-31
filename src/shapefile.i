@@ -24,7 +24,6 @@ func read_ascii_shapefile(filename, &meta) {
   The blank lines between segments may be omitted if the segments are
   separated by attribute information.
 */
-// Original David Nagle 2008-10-06
   f = open(filename, "r");
   shp = array(pointer, 8);
   shp_idx = 0;
@@ -266,7 +265,6 @@ func shape_stats(shp) {
 
   See read_ascii_shapefile for details on the format of shp.
 */
-// Original David Nagle 2008-10-06
   write, format="Number of polys: %d\n", numberof(shp);
   points = 0;
   for(i = 1; i <= numberof(shp); i++) {
@@ -284,7 +282,6 @@ func print_shape(shp, idx) {
 
   See read_ascii_shapefile for details on the format of shp.
 */
-// Original David Nagle 2008-10-06
   if(idx) {
     write, format="%.2f, %.2f\n", (*shp(idx))(1,), (*shp(idx))(2,);
   } else {

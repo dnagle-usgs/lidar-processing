@@ -93,18 +93,6 @@ verbose=) {
         chunk=1000     Write 1000 lines at a time (default)
         chunk=10       Write 10 lines at a time
 */
-/*
-  amar nayegandhi 04/25/02
-  modified 12/30/02 amar nayegandhi to :
-  write out x,y,z (first surface elevation) data for type=1
-  to split at 1 million points and write to another file
-  modified 01/30/03 to optionally split at 1 million points
-  modified 10/06/03 to add rn and soe and correct the output format for
-  different delimiters.
-  modified 10/09/03 to add latlon conversion capability
-  Refactored and modified 2008-11-18 by David Nagle
-  Rewritten 2010-03-11 by David Nagle
-*/
   extern curzone;
   local data_intensity, data_rn, data_soe;
 
@@ -742,7 +730,6 @@ soe=, indx=, columns=, mapping=, types=, preset=, latlon=) {
     Note that we used an empty string to ignore the column with the return
     number, since the FS structure does not have a field for this.
 */
-// Original: David Nagle 2009-08-24
   if(!is_void(preset)) {
     if(h_has(__ascii_xyz_settings, preset)) {
       settings = __ascii_xyz_settings(preset);
@@ -936,11 +923,6 @@ intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=, copymeta=) {
       curzone.
     chunk=
 */
-/*
-amar nayegandhi 10/06/03.
-Refactored and modified by David Nagle 2008-11-04
-Rewrote David Nagle 2010-03-11
-*/
   extern curzone;
   default, outdir, [];
   default, searchstr, "*.pbd";
@@ -1093,8 +1075,6 @@ columns=, types=, preset=, latlon=) {
     columns=
     types=
 */
-// Original David Nagle 2009-08-24
-
   default, outdir, string(0);
   default, ss, "*.xyz";
   default, update, 0;

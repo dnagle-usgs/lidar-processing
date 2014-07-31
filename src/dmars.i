@@ -7,8 +7,6 @@ require, "util_container.i";
 extern dmars_i
 /* DOCUMENT dmars_i
 
-  Original: W. Wright
-
   The DMARS (Digital Miniature Attitude Reference System) is a set of three
   spinning mass "dynamically tuned" gyros and a set of three high accuracy
   precision accelerometers. There is one gyro and one accelerometer for each
@@ -543,7 +541,6 @@ func iex_ascii2pbd(fn) {
 
   This is called via the iex_ascii2pbd command line script.
 */
-// Original: W. Wright 12/27/2003
   // Calculate file size
   size = sizeof(open(fn, "rb"));
 

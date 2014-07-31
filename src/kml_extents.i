@@ -27,8 +27,6 @@ func batch_kml_extents(datadir, outdir, searchstr=, name=, desc=,
     linecolor= The color of the line, in AABBGGRR format
       (alpha-blue-green-red). Defaults to random color.
     linewidth= The width of the line. Default=1.
-
-  Original Christine Kranenburg 2011-12-13
 */
 
   default, searchstr, "*_tile_extents.xyz";
@@ -95,8 +93,6 @@ func kml_extents(filename, dest, name=, description=, visibility=,
     linecolor= The color of the line, in AABBGGRR format
       (alpha-blue-green-red).  Default is ffff0000.
     linewidth= The width of the line. Default is 1.
-
-  Original Christine Kranenburg 2011-11-30
 */
 
   default, visibility, "1";

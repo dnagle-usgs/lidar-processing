@@ -424,7 +424,6 @@ func ppdist(p1, p2, tp=) {
     > ppdist(0, [[3,3,5],[4,4,12],[0,12,84]], tp=1)
     [5,13,85]
 */
-// Original David Nagle 2008-11-18
   default, tp, 0;
   if(tp) {
     return transpose(ppdist(transpose(p1), transpose(p2)));
@@ -516,8 +515,6 @@ func transform_delta_rotation(reference_point, delta, rotation) {
 
   All arrays should be for a single point.
 */
-// Original David Nagle 2008-12-30
-
   // Given:
   //    A reference point whose real-world coordinates we know
   //       Defined as reference_point (array of [x,y,z])
@@ -546,8 +543,6 @@ func tbr_to_matrix(r, p, h) {
 
   SEE ALSO: matrix_to_tbr
 */
-// Original David Nagle 2008-12-30
-
   if(is_void(p)) {
     tbr = r;
   } else {
@@ -584,8 +579,6 @@ func matrix_to_tbr(R) {
 
   SEE ALSO: tbr_to_matrix
 */
-// Original David Nagle 2008-12-30
-
   // R(2,3) is sin(x)
   X = asin(R(2,3));
 
@@ -609,7 +602,6 @@ func poly_bbox(x, y) {
 
   Given a polygon, this returns its bounding box: [xmin, xmax, ymin, ymax].
 */
-// Original David B. Nagle 2009-04-16
   if(is_void(y)) {
     y = x(2,);
     x = x(1,);
@@ -641,7 +633,6 @@ func poly_area(x1, y1) {
       will thus be less than the area covered by the polygon in its plane
       (and can even be zero, as in the example given).
 */
-// Original David B. Nagle 2009-03-10
 // Using math and explanation as found from Wikipedia:
 // http://en.wikipedia.org/w/index.php?title=Polygon&oldid=271086171
   if(is_void(y1)) {
@@ -663,7 +654,6 @@ func convex_hull(x, y) {
   hull(1,) == x's
   hull(2,) == y's
 */
-// Original David B. Nagle 2009-03-10
 // Adapted from algorithm found on Wikipedia:
 // http://en.wikipedia.org/w/index.php?title=Graham_scan&oldid=274508758
   if(is_void(y)) {
@@ -730,7 +720,6 @@ func cross_product_sign(x1, y1, x2, y2, x3, y3) {
   handed > 0 -- "left turn"
   handed == 0 -- collinear
 */
-// Original David B. Nagle 2009-03-10
 // Using math from Wikipedia:
 // http://en.wikipedia.org/w/index.php?title=Graham_scan&oldid=274508758
   if(is_func(_ycross_product_sign)) {
@@ -762,7 +751,6 @@ func in_triangle(x1, y1, x2, y2, x3, y3, xp, yp) {
   This is effectively a specialized version of testPoly/testPoly2 for
   triangles.
 */
-// Original David Nagle 2010-02-10
   if(is_func(_yin_triangle)) {
     result = array(short(0), dimsof(x1,y1,x2,y2,x3,y3,xp,yp));
     if(is_void(result))
@@ -786,7 +774,6 @@ func triangle_areas(x1, y1, x2, y2, x3, y3) {
   may be array or scalar, but all values must be conformable with one
   another.
 */
-// Original David B. Nagle 2009-03-10
   yd1 = y2 - y3;
   yd2 = y3 - y1;
   yd3 = y1 - y2;
@@ -815,7 +802,6 @@ func buffer_hull(ply, buffer, pts=) {
     buffered hull, but will also result in a hull with more data points. Very
     low values (under 4) may result in unsatisfactory results.
 */
-// Original David B. Nagle 2009-03-13
   default, pts, 8;
   mixed_points = ply;
   angles = span(0, 2*pi, pts+1)(:-1);
@@ -847,7 +833,6 @@ func angular_range(ang, rad=) {
   > angular_range([175,180,185])
   [175,185,10]
 */
-// Original David B. Nagle 2009-03-16
   default, rad, 0;
 
   ang = set_remove_duplicates(ang);

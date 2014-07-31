@@ -193,7 +193,6 @@ func testPoly2(pl, ptx, pty, includevertices=) {
   Returns: Array of indexes into the points specifying which are within the
   polygon.
 */
-// Original David B. Nagle 2009-03-12
 // Algorithm is adapted from this page:
 // http://dawsdesign.com/drupal/google_maps_point_in_polygon
 // Also using info on the ray casting algorithm found on wikipedia:

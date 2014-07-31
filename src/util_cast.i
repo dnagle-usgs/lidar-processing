@@ -41,7 +41,6 @@ func iter_list(f, data) {
       // do something with item
     }
 */
-// Original David B. Nagle 2010-12-15
   if(is_range(data))
     data = indgen(data);
   result = save(data);
@@ -111,7 +110,6 @@ func iter_dict(f, data) {
       // then do something with key/item
     }
 */
-// Original David B. Nagle 2010-12-15
   result = save(data);
   if(is_obj(data) && data(*) && nallof(data(*,)))
     error, "one or more members of object lacks key name";
@@ -169,7 +167,6 @@ func pbd2hash(pbd) {
 
   SEE ALSO: hash2obj hash2pbd obj2hash obj2pbd pbd2obj pointers2group h_new
 */
-// Original David Nagle 2010-01-28
   if(is_string(pbd))
     pbd = openb(pbd);
 
@@ -189,7 +186,6 @@ func hash2pbd(hash, pbd) {
 
   SEE ALSO: hash2obj obj2hash obj2pbd pbd2hash pbd2obj pointers2group h_new
 */
-// Original David Nagle 2010-01-28
   if(is_string(pbd))
     pbd = createb(pbd);
 
@@ -209,7 +205,6 @@ func obj2hash(obj) {
   SEE ALSO: hash2obj hash2pbd obj2pbd pbd2hash pbd2obj pointers2group oxy
     h_new
 */
-// Original David Nagle 2010-07-26
   count = obj(*);
   hash = h_new();
   for(i = 1; i <= count; i++)
@@ -224,7 +219,6 @@ func hash2obj(hash) {
   SEE ALSO: hash2pbd obj2hash obj2pbd pbd2hash pbd2obj pointers2group oxy
     h_new
 */
-// Original David Nagle 2010-07-26
   keys = h_keys(hash);
   count = numberof(keys);
   obj = save();

@@ -1,6 +1,5 @@
 func energy_HOME(veg, rn, p=, bin=, plot=, thresh=, pse=) {
 /*DOCUMENT energy_bin(rn,p,bin=).
-  amar nayegandhi 02/24/04
   This function finds the height of median energy for each waveform 
 */
 
@@ -67,8 +66,6 @@ return home;
    
   
 func find_be_from_grid(veg_all, img, ll, ur) {
-   //amar nayegandhi 04/08/04
-
    veg_all = test_and_clean(veg_all);
    nox = float(numberof(img(,1)));
    cell = int((ur(1)-ll(1))/nox +0.5);
@@ -249,7 +246,6 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
 	     //aiarr(,k) = [ai.irange(p), ai.fs_rtn_centroid(p), numberof(*rr.rx(p,1))];
 	     aiarr(,k) = [eaarl(indx(k)).elevation/100., ai.fs_rtn_centroid(p), numberof(*rr.rx(p,1))];
          }
-	 //if (j==11 && i==19) amar();
 	 idx = where(erarr != 0);
 	 if (!is_array(idx)) continue;
 	 emin = min(erarr(idx));
@@ -319,7 +315,6 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
             
      
 func make_single_lfpw(eaarl,bin=,normalize=, plot=, correct_chp=, min_elv=, max_elv=){
-   // amar nayegandhi 04/23/04 
    if (!bin) bin = 50;
    if (is_void(min_elv)) min_elv = -300;
    if (is_void(max_elv)) max_elv = 50000;
@@ -416,7 +411,6 @@ func make_single_lfpw(eaarl,bin=,normalize=, plot=, correct_chp=, min_elv=, max_
 }
 
 func plot_slfw(outveg, cmets=, ipath=, outwin=, indx=, dofma=, color=, interactive=, show=, inwin=, title=, noxytitles=,  normalize=, searchstr=) {
-//amar nayegandhi 04/14/04
 // plot synthesized large footprint waveform
 // returns the waveforms selected
 // normalize = 1 by default
@@ -606,7 +600,6 @@ func lfp_home(lfpveg) {
 /* DOCUMENT lfp_home(lfpveg)
   This function finds the height of median energy for the large footprint 
 waveform.
- amar nayegandhi 04/16/04.
 */
 
   dims = dimsof(lfpveg);
@@ -633,14 +626,12 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, max_elv=,
 normalize=, plot_discards=, verbose=) {
 /* DOCUMENT lfp_metrics(lfpveg, thresh=)
   This function calculates the composite large footprint metrics.
-  amar nayegandhi 04/19/04.
-  updated 04/2011 by christine k. to include the following:
+
+  Notes:
 	- all ch < 0.15 is set to 0
-	- home is now median of canopy portion of waveform only
+	- home is median of canopy portion of waveform only
 	- if ch < home AND ch < 3 then home=ch/2
-	- modified how lgr is determined, which changes crr/grr
-	- modified fill routine so it includes 0-values, only replaces a 
-	no-data pixel if it has 4 or more neighbors and to improve performance
+
   INPUT:
       lfpveg: large-footprint waveform array
       thresh= amplitude threshold to consider significan return
@@ -951,7 +942,6 @@ func plot_wv(lfpelv, lfprx, mets, i ,j) {
   	
 
 func plot_metrics(vmets, lfpveg, vmetsidx=, cmin=, cmax=, msize=, marker= ,win=, dofma=, xbias=, ybias=) {
-  // amar nayegandhi 04/20/04
  if (is_void(vmetsidx)) vmetsidx = 1;
  if (is_void(win)) win = 4;
  if (is_void(msize)) msize = 2.0;
@@ -977,8 +967,6 @@ func plot_metrics(vmets, lfpveg, vmetsidx=, cmin=, cmax=, msize=, marker= ,win=,
 
 
 func plot_classes(vmets, lfpveg, vmetsidx=, nclasses=, classint=, win=) {
-// amar nayegandhi 04/19/04
-
  if (is_void(vmetsidx)) vmetsidx = 1;
  if (is_void(win)) win = 4;
  
@@ -1005,7 +993,6 @@ func plot_classes(vmets, lfpveg, vmetsidx=, nclasses=, classint=, win=) {
 }
 
 func plot_veg_classes(mets, lfp, idx=, win=, dofma=, msize=, smooth=, write_imagefile=,opath=) {
-// amar nayegandhi 051104
 /*
  based on NPS Vegetation mapping program: Final Draft
  http://biology.usgs.gov/npsveg/classifcation/sect5.html
@@ -1140,9 +1127,6 @@ return
 func merge_veg_lfpw(outveg1, outveg2) {
  // this function merges 2 veg class outveg arrays usually within
  // the same data tile
- // amar nayegandhi 10/06/04. 
-
-
  while (outveg1(1,1).east == 0) {
    if (outveg1(0,1).east == 0) {
       outveg1 = outveg1(,2:);
@@ -1247,8 +1231,6 @@ func merge_veg_lfpw(outveg1, outveg2) {
 
 
 func plot_fcht_histograms(fcht, binsize=, scale=, win=, color=, width=, dofma=, noxytitles=) {
- // amar nayegandhi 04/26/04
- 
  if (!binsize) binsize = 2;
  if (is_void(win)) win = window();
  if (is_void(color)) color = "blue";
@@ -1351,7 +1333,6 @@ func correct_1_chp(rarr,erarr) {
 
 func make_begrid_from_bexyz(bexyz, binsize=, intdist=, lfpveg=) {
 /* DOCUMENT make_begrid_from_bexyz(bexyz, binsize=)
-  amar nayegandhi 02/16/05.
   This function makes a Bare Earth grid using the processed/filtered bare earth 
   data (bexyz) at a grid resolution of binsize.  
   intdist = interpolation distance to average missing values (default=2)
@@ -1572,7 +1553,6 @@ func clean_lfpw (lfpw, beimg=, thresh=, min_elv=, max_elv=) {
 func compare_mets(outveg1, mets1, outveg2, mets2, idx=, outwin=, inwin=, mselect=, interactive=) {
 /* DOCUMENT compare_mets(outveg1, mets1, outveg2, mets2, idx=, win=)
    This function compares the vegetation metrics from 2 diff surveys.
-	amar nayegandhi 03/25/05.
    INPUT:
 	outveg1 = lfpw array for mission 1
 	mets1 = vegetation metrics for mission 1
@@ -1703,7 +1683,6 @@ func compare_mets(outveg1, mets1, outveg2, mets2, idx=, outwin=, inwin=, mselect
     exidx2 = 0;
     exidx1 = maxeast;
   }
-  amar();
   mets1 = mets1(sxidx1:exidx1,syidx1:eyidx1); 
   mets2 = mets2(sxidx2:exidx2,syidx2:eyidx2); 
 
@@ -1724,10 +1703,6 @@ func plot_compared_metrics(outmets, mets1, mets2, nelems1=, nelems2=, nelems_min
 	nelems_min = minimum number of pulses in each waveform required for the metric to be used in comparison
 	idx = index of the metric to be used (1 = CH, 2=BE, 3=GRR, 4=CRR, 5=HOME)
 	lmts = [min,max] limits to be used in the comparison.  see below for defaults.
-
-
-  // amar nayegandhi 08/25/05
-
 */
   
   if (is_void(idx)) idx = 1;
@@ -1852,7 +1827,6 @@ func plot_compared_metrics(outmets, mets1, mets2, nelems1=, nelems2=, nelems_min
 func compare_waveform_divergence(outveg1, outveg2, outwin=, inwin=, mselect=, min_npix=) {
 /* DOCUMENT compare_waveform_divergence(outveg1, outveg2, inwin=)
    This function compares the composite vegetation waveformsfrom 2 diff surveys. using the Jenson Shannon divergence.
-	amar nayegandhi 08/29/05.
    INPUT:
 	outveg1 = lfpw array for mission 1
 	outveg2 = lfpw array for mission 2
@@ -1993,7 +1967,6 @@ func compare_waveform_divergence(outveg1, outveg2, outwin=, inwin=, mselect=, mi
 
 
 func metrics_ascii_output(outveg, mets, ofname) {
-  // amar nayegandhi
   // 20070308
   // this function writes out a comma delimited metrics file in the following format:
   // X,Y,FR,BE,CRR,HOME,N ... where N is the number of individual laser pulses in each waveform
@@ -2019,9 +1992,6 @@ func metrics_ascii_output(outveg, mets, ofname) {
 
 
 func phase2_jela_gnd_control_anal(data, ipath=) {
-
-//amar 1/25/2008
-
 if (is_void(ipath)) ipath = "/data/1/EAARL/Processed_Data/JELA_06_new/veg_analysis/";
 arr = read_ascii(ipath+"Phase2_truncated.txt");
 
@@ -2046,9 +2016,6 @@ close, wf;
 
 
 func phase1_jela_gnd_control_anal(data, ipath=) {
-
-//amar 3/20/2008
-
 if (is_void(ipath)) ipath = "/data/1/EAARL/Processed_Data/JELA_06_new/veg_analysis/Phase1/";
 arr = read_ascii(ipath+"Phase1_truncated.txt");
 

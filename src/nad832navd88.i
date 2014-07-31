@@ -1,13 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-/*
-   amar nayegandhi, original nad832navd88.i
-   charlene sullivan, modified form of nad832navd88.i for use of GEOID 96 model
-   The following code has been adapted from the GEOID 99 model available at
-   http://www.ngs.noaa.gov/GEOID/GEOID99/
-   The original DISCLAIMER applies to this as well.
-   David Nagle, updated to reflect more recent algorithms used by NGS in
-   GEOID09 model.
-*/
 
 func geoid_load(fn) {
 /* DOCUMENT g = geoid_load(fn)
@@ -42,7 +33,6 @@ func geoid_load(fn) {
     g.itype - always equal to one (indicates that data are four-byte floats)
     g.data - array of elevation offsets
 */
-// Original David Nagle 2009-12-10
   f = is_string(fn) ? geoid_open(fn) : fn;
 
   dls = [f.dla, f.dlo];
@@ -101,7 +91,6 @@ func geoid_open(fn) {
   For NGS binary files from GEOID96 (*.geo), the ncols value will be one value
   lower than it should be.
 */
-// Original David Nagle 2009-12-10
   ext = strlower(file_extension(fn));
 
   if(ext == ".pbd")
@@ -147,7 +136,6 @@ func __geoid_geo_addvars(f) {
   information. This is why the offset and dimensions are calculated as they
   are.
 */
-// Original David Nagle 2009-12-10
   add_variable, f, 64, "ncols", int;
   add_variable, f, 68, "nrows", int;
   add_variable, f, 72, "itype", int;
@@ -184,9 +172,6 @@ func geoid_data_to_pbd(gfname=, pbdfname=, initialdir=, geoid_version=) {
     http://www.ngs.noaa.gov/GEOID/GEOID03/download.html
   The data from the file will also be returned at the end.
 */
-// original amar nayegandhi 07/10/03
-// modified 01/12/06 -- amar nayegandhi to add GEOID03
-// modified 09/25/06 -- charlene sullivan to add GEOID96
   default, initialdir, "/dload/geoid99_data/";
   if(is_void(gfname))
     gfname = get_openfn(initialdir=initialdir, filetype="*.asc",
@@ -373,10 +358,6 @@ func nad832navd88offset(lon, lat, gdata_dir=, geoid=, verbose=, interpolator=) {
     suffice for each point. *.pbd takes precedence over *.bin, which takes
     precedence over *.geo.
 */
-// Amar Nayegandhi 07/10/03, original nad832navd88
-// Charlene Sullivan 09/21/06, modified for use of GEOID96 model
-// David Nagle 11/21/07, modified to provide offset to facilate 2-way
-//    conversions
   extern alpsrc;
   default, geoid, "03";
   default, gdata_dir, file_join(alpsrc.geoid_data_root, "GEOID"+geoid);

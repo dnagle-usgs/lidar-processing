@@ -52,8 +52,6 @@ func plcm(z, y, x, cmin=, cmax=, marker=, msize=) {
   is a functoin of three variables, such as latitude, longitude, and
   elevation.
 */
-// Original C. W. Wright 1999-11-07
-// Rewritten D. Munro 1999-11-27
   extern _plmk_markers;
   default, cmin, z(min);
   default, cmax, z(max);

@@ -13,8 +13,6 @@ __ZONE_STRUCTS = h_new(
     east - The name of the easting for this.
     north - The name of the northing for this.
     factor - What we multiple north/east by to get meters. Normally, 0.01.
-
-  Original David Nagle 2008-07-31
 */
   "surface", h_new(
     match="  long east;",
@@ -52,8 +50,6 @@ func rezone_data_utm(&idata, src_zone, dest_zone, keys=) {
 
   If keys= is provided, then it will only change the struct elements dictated
   by the array of keys given. They must be keys into __ZONE_STRUCTS.
-
-  Original David Nagle 2008-07-17
 */
   extern __ZONE_STRUCTS;
   default, keys, h_keys(__ZONE_STRUCTS);
@@ -94,8 +90,6 @@ func rezone_utm(&north, &east, src_zone, dest_zone) {
   The original data arrays will be left untouched.
 
   If used as a subroutine, it will modify north and east in place.
-
-  Original David Nagle 2008-07-17
 */
   u = transpose([north, east, src_zone]);
   if(numberof(src_zone) == 1 && numberof(dest_zone) == 1 && src_zone(1) == dest_zone(1))
@@ -140,7 +134,6 @@ func batch_fix_zones(dir, searchstr=, ignore_zeros=) {
   If ignore_zeroes= is set to 1, then any points with an easting of zero will
   be ignored.
 */
-// Original David Nagle 2008-07-31
   extern __ZONE_STRUCTS;
   keys = h_keys(__ZONE_STRUCTS);
   default, searchstr, "*.pbd";

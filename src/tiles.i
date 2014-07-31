@@ -33,7 +33,6 @@ func extract_tile(text, dtlength=, dtprefix=, qqprefix=) {
   name, the data tile name takes precedence. Tiles without parseable names
   will yield the nil string.
 */
-// Original David Nagle 2009-12-09
   default, dtlength, "short";
   default, qqprefix, 0;
   qq = extract_qq(text, qqprefix=qqprefix);
@@ -360,7 +359,6 @@ func restrict_data_extent(data, tile, buffer=, exact=, mode=) {
       "be": Bare earth (default)
       "ba": Bathy
 */
-// Original David Nagle 2009-11-23
   local e, n, idx;
   default, buffer, 0;
   default, mode, "be";
@@ -415,7 +413,6 @@ func partition_type_summary(north, east, zone, buffer=, schemes=) {
   Displays a summary of what the results would be for each of the
   partitioning schemes.
 */
-// Original David B. Nagle 2009-04-07
   default, schemes, ["it", "qq", "dt"];
   for(i = 1; i <= numberof(schemes); i++) {
     tiles = partition_by_tile(east, north, zone, schemes(i), buffer=buffer);
@@ -527,7 +524,6 @@ dtlength=, dtprefix=, qqprefix=, restrict_tiles=) {
 
   SEE ALSO: batch_tile
 */
-// Original David Nagle 2009-07-06
   local n, e;
   default, scheme, "itdt";
   default, mode, "fs";
@@ -1044,7 +1040,6 @@ func tile_extent_shapefile(fn, dir, searchstr=, files=, usedirnames=, restrict=)
     - If a searchstr= yields several files for the same tile, that tile will
       only occur once in the output.
 */
-// Original 2011-06-17 David Nagle
   default, searchstr, "*.pbd";
   default, usedirnames, 0;
 

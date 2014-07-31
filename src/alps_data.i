@@ -9,7 +9,6 @@ func datamode2name(mode, which=) {
     which="z"      Name for z-axis
     which="zunits" Name for z-axis with units (usually meters)
 */
-// Original David Nagle 2009-01-25
   default, which, "data";
   names = h_new(
     data=h_new(
@@ -62,7 +61,6 @@ func datahasmode(data, mode=, xyzpassthrough=) {
         xyzpassthrough=1  Numerical arrays return 1 if they are valid for
                     passing through data2xyz
 */
-// Original David Nagle 2010-02-03
   default, mode, "fs";
   default, xyzpassthrough, 0;
 
@@ -202,7 +200,6 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
     tranditional structures, except that "native=" has no effect since the data
     is natively in floating point format.
 */
-// Original David Nagle 2009-01-25
   default, mode, "fs";
   default, native, 0;
   x = y = z = [];
@@ -418,7 +415,6 @@ func xyz2data(_x, &_y, _z, &data, mode=, native=) {
       .depth = z - .elevation
 
 */
-// Original David Nagle 2009-01-26
   local x, y, z, working;
   default, mode, "fs";
   default, native, 0;
@@ -619,7 +615,6 @@ func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma
     title= A title to add to the plot, using pltitle. If omitted, no title is
       added.
 */
-// Original David Nagle 2009-01-25
   local x, y, z, X, Y, Z;
   default, mode, "fs";
   default, dofma, 0;
@@ -766,7 +761,6 @@ func struct_cast(&data, dest, verbose=, special=) {
 
   By default, this function is silent. Use verbose=1 to make it chatty.
 */
-// Original David Nagle 2010-02-05
   local x, y, z, raster, pulse;
 
   default, verbose, 0;
@@ -1245,7 +1239,6 @@ func sortdata(data, mode=, method=, desc=) {
         desc=0      Sort ascending order (default)
         desc=1      Sort descending order
 */
-// Original David Nagle 2010-04-23
   default, method, "y";
   default, desc, 0;
   local tmp, idx;

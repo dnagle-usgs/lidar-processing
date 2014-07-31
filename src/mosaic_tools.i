@@ -173,7 +173,6 @@ func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=, search
       any other time issues that may arise.
         offset=1.12       Default offset is 1.12 seconds (per cir_to_soe)
 */
-// Original David B. Nagle 2009-03-15
   default, downsample, 0;
   default, searchstr, "*.jpg";
   default, uniq, 1;
@@ -454,7 +453,6 @@ searchstr=) {
       any other time issues that may arise.
         offset=1.12       Default offset is 1.12 seconds (per cir_to_soe)
 */
-// Original David B. Nagle 2009-03-19
   default, elev, 0;
   default, max_adjustments, 10;
   default, min_improvement, 0.001;
@@ -588,7 +586,6 @@ func jgw_remove_missing(dir, dryrun=, to_file=) {
   does NOT imply dryrun=1; if you omit dryrun=1, it will still do the
   deletions.)
 */
-// Original David B. Nagle 2009-04-07
   default, dryrun, 0;
   default, to_file, string(0);
   if(to_file)
@@ -645,7 +642,6 @@ func jgw_compare(jgw1, jgw2, camera=) {
   The camera= option can be used to specify a set of camera specs. It defaults
   to camera_specs. It must be an instance of structure CAMERA_SPECS.
 */
-// Original David B. Nagle 2009-03-19
   extern camera_specs;
   default, camera, camera_specs;
   x1 = x2 = [0., 0, camera.sensor_width, camera.sensor_width, 0,
@@ -670,7 +666,6 @@ func write_jgw(jgw_file, jgw_data) {
   The precision of the output is only suitable for writing UTM JGW files at
   present.
 */
-// Original David B. Nagle 2009-03-19
   f = open(jgw_file, "w");
   write, f, format="%.6f\n", jgw_data(1:4);
   write, f, format="%.3f\n", jgw_data(5:6);
@@ -715,7 +710,6 @@ func filter_cirdata_by_pbd_data(cirdata, pbd_dir, searchstr=, mode=) {
 
   This will return a new cirdata Yeti hash.
 */
-// Original David B. Nagle 2009-04-13
   idx = extract_against_pbd_data(cirdata.tans.easting, cirdata.tans.northing,
     pbd_dir, searchstr=searchstr, mode=mode);
   return filter_cirdata_by_index(cirdata, idx);
@@ -959,7 +953,6 @@ subdir=, jgw=) {
   If buffer is not set to 0, then it's very likely that some images will get
   copied into more than one directory.
 */
-// Original David B. Nagle 2009-04-02
   default, split_fltlines, 1;
   default, subdir, string(0);
 
@@ -1086,7 +1079,6 @@ func cir_tile_type_summary(cirdata, buffer=) {
   Once a tiling scheme is chosen, use partition_by_tile to do the actual
   partitioning.
 */
-// Original David B. Nagle 2009-04-13
   schemes = ["it", "qq", "dt"];
   for(i = 1; i <= numberof(schemes); i++) {
     tiles = partition_by_tile(cirdata.tans.easting, cirdata.tans.northing,
@@ -1340,7 +1332,6 @@ func png_make_zips(src_dir, dst_dir, searchstr=) {
 
   searchstr= Defaults to "*.png".
 */
-// Original David Nagle 2009-06-18
   default, searchstr, "*.png";
   files = find(src_dir, searchstr=searchstr);
   timer_init, tstamp;

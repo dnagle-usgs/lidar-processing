@@ -65,8 +65,6 @@ func rcf(jury, w, mode=) {
       Analysis and Automated Cartography". Communications of the ACM 25:
       381-395. http://dx.doi.org/10.1145/358669.358692
 */
-// Original: C. W. Wright 6/15/2002 wright@lidar.wff.nasa.gov
-// Rewritten in linear time David Nagle 2009-12-21
   default, mode, 0;
   jsrt = jury(sort(jury));
   jurysize = numberof(jury);
@@ -163,7 +161,6 @@ func moving_rcf(yy, fw, n) {
   within the filter. This is used in transect.i.
 
   SEE ALSO: rcf, transect, mtransect
-  Original:  W. Wright 9/30/2003
 */
   np = numberof(yy);
   edt = array(0, np);

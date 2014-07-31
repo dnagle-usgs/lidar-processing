@@ -38,7 +38,6 @@ func atoc(str) {
     [0x61,0x62,0x63]
   Caveat: Every string element must be exactly one character in length.
 */
-// Original David B. Nagle 2009-04-17
   if(anyof(strlen(str) != 1))
     error, "Input string elements must be exactly one character in length.";
   c = array(char, dimsof(str));
@@ -144,7 +143,6 @@ func strwrap(str, space=, newline=, paragraph=, width=) {
       paragraphs.
     width= Defaults 72. Specifies the maximum width for the wrapped text.
 */
-// Original David B. Nagle 2009-04-03
   default, space, " ";
   default, newline, "\n";
   default, paragraph, "\n\n";
@@ -191,7 +189,6 @@ func longest_common_suffix(S) {
   Returns the longest string that is a common suffix to all strings in S. If
   there is no common suffix, then string(0) is returned.
 */
-// Original David Nagle 2009-12-28
   nS = numberof(S);
   if(nS == 0)
     return string(0);

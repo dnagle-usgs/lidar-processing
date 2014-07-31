@@ -159,7 +159,6 @@ func z_compress(data, level) {
   Returns the compressed data.
   SEE ALSO: z_flush z_deflate z_inflate z_decompress
 */
-// Original David B. Nagle 2010-07-23
   return z_flush(z_deflate(level), data);
 }
 
@@ -170,7 +169,6 @@ func z_decompress(data, type) {
   it should be the data type to decompress as (by default, char).
   SEE ALSO: z_flush z_deflate z_inflate z_compress
 */
-// Original David B. Nagle 2010-07-23
   default, type, char;
   buffer = z_inflate();
   flag = z_inflate(buffer, data);

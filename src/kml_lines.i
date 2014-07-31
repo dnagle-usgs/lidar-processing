@@ -27,8 +27,6 @@ func kml_write_line(dest, lat, lon, elv, name=, description=, visibility=,
       be an array of values that partitions the coordinates into separate
       lines. All points one line might have the value 1 and all points in
       another might have the value 2, for instance.
-
-  Original David Nagle 2008-03-26
 */
 
   default, name, file_tail(dest);
@@ -74,8 +72,6 @@ func ll_to_kml(lat, lon, elv, output, name=, description=, linecolor=,
     segment_threshold= The distance threshold to use to segment a line.
     linecolor= The color of the line, in AABBGGRR format
       (alpha-blue-green-red).
-
-  Original David Nagle 2008-03-26
 */
   kml_downsample, lat, lon, elv, threshold=sample_thresh;
   seg = kml_segment(lat, lon, threshold=segment_thresh);
@@ -91,8 +87,6 @@ func kml_downsample(&lat, &lon, &elv, threshold=) {
   until all point pairs are at least threshold distance apart.
 
   Lat, lon, and elv are updated in place. Nothing is returned.
-
-  Original David Nagle 2008-03-26
 */
   default, threshold, 5.;
   utm = fll2utm(lat, lon);
@@ -111,8 +105,6 @@ func kml_segment(lat, lon, threshold=) {
   Returns an array that can be used by kml_write_line to segment the points
   in lat/lon. The points will be segmented wherever the distance is greater
   than the threshold distance, in meters (default is 1000m).
-
-  Original David Nagle 2008-03-26
 */
   default, threshold, 1000;
   seg = array(0, numberof(lat));

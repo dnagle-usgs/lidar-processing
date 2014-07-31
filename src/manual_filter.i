@@ -12,8 +12,6 @@ func select_region_tile(data, win=, plot=, mode=) {
   plot= specifies whether to draw the selected tile's boundary (default plot=1)
   mode= specifies the data mode to use when selecting the data (default mode="fs")
 */
-// Original amar nayegandhi 11/21/03.
-// Overhauled David Nagle 2010-02-05
   local etile, ntile, x, y;
   default, win, 5;
   default, plot, 1;

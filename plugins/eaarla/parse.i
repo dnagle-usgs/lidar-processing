@@ -25,7 +25,6 @@ func cir_to_soe(filename, offset=) {
   This can handle array input, and can even handle an array of strings where
   each of the three formats are represented.
 */
-// Original David B. Nagle 2009-02-23
   dmreg = "0[0-9]|1[01]";             // (date) month reg exp 00-11
   ddreg = "0[1-9]|[12][0-9]|3[01]";   // (date) day reg exp 01-31
   dyreg = "[890123][0-9]";            // (date) year reg exp 80-39

@@ -246,7 +246,6 @@ func dt2uz(dtcodes) {
 /* DOCUMENT dt2uz(dtcodes)
   Returns the UTM zone(s) for the given dtcode(s).
 */
-// Original David Nagle 2009-07-06
   local zone;
   dt2utm_km, dtcodes, , , zone;
   return zone;
@@ -336,7 +335,6 @@ func dt2utm(dtcodes, &east, &north, &zone, bbox=, centroid=) {
   If called as a subroutine, it sets the northwest coordinates of the given
   output variables.
 */
-//  Original David Nagle 2008-07-21
   local e, n, z;
   dt2utm_km, dtcodes, e, n, z;
   e *= 1000;
@@ -369,7 +367,6 @@ func it2utm(itcodes, bbox=, centroid=) {
 
   If centroid=1, then it returns the tile's central point.
 */
-//  Original David Nagle 2008-07-21
   u = dt2utm(itcodes);
 
   if(is_void(u))

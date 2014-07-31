@@ -10,10 +10,7 @@ func remove_bathy_from_veg(veg, bathy, buf=) {
     buf = optional keyword to set the buffer around each bathy point. (default = 3m).
   OUTPUT:
     veg_new: data array of type VEG__ with points around bathy points removed.
-
-    Original: amar nayegandhi September 2008.
-
-  */
+*/
 
   // sort and get unique items
   bathy1 = bathy(unique(bathy.rn));

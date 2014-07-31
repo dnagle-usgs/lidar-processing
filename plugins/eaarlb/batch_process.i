@@ -709,9 +709,6 @@ The following are pass thru variables needed for batch_rcf
 Ex: curzone=18
    batch_process,typ=2,save_dir="/data/3/2004/bombay-hook/output/",
             mdate="20040209",zone=18,pick=1
-
-amar nayegandhi started (10/04/02) Lance Mosher
-Added server/client support (2009-01) Richard Mitchell
 */
   default, now, 0;
   default, cleanup, !now;

@@ -147,7 +147,6 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=, only_if_mf=, 
 
 func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, fill=, min_elv=, max_elv=, outwin=, onlyplot=, dofma=, use_be=, be_path=, be_ss=, smooth_be=, cl_lfpw=, onlyupdate=, plot_discards=, verbose=) {
 /* DOCUMENT batch_veg_metrics(ipath, opath, searchstr=, plot=, plotclasses=)
-   amar nayegandhi 10/01/04
    ipath = input path
    opath = output path (optional). Defaults to ipath
    fname = name of output file if converting only 1 file (optional). 
@@ -408,7 +407,6 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
 
 func batch_merge_veg_energy(ipath, opath=, searchstr=) {
   // this function merges the *energy.pbd files for data tiles in a batch mode
-  // amar nayegandhi 10/07/04
 
   if (is_void(searchstr)) searchstr = "*energy.pbd";
 
@@ -500,11 +498,6 @@ func write_pbd_to_gdf(ipath=, opath=, fname=, searchstr=, remove_buffer=) {
 	fname= file name if you want to convert only one file.
 	searchstr = set to search for specific file(s) in ipath.
         remove_buffer = set to 1 to remove the buffer around each tile.  The resulting gdf tile will contain only the data within the 2k by 2k tile.  All excess data will be removed. Defaults to 1.
-      OUTPUT:
-	
-        amar nayegandhi 03/30/05.
-        modified amar nayegandhi 07/21/2007 to remove buffer data around each tile.
-	modified christine k. 11/12/2010 to fix block that removes buffer
 */
  
    extern curzone
@@ -627,8 +620,6 @@ func write_pbd_to_gdf(ipath=, opath=, fname=, searchstr=, remove_buffer=) {
 func batch_metrics_ascii_output(ipath, opath=, ofname=, energy_ss=, mets_ss=, remove_buffer =) {
 /* DOCUMENT
    batch_metrics_ascii_output(ipath, opath=, ofname=, energy_ss=, mets_ss=, outveg=, mets=, remove_buffer =)
-   amar nayegandhi 20070308
-   modified amarn 20070726.
    this function writes out a comma delimited metrics file in the following format:
    X,Y,FR,BE,CRR,HOME,N ... where N is the number of individual laser pulses in each waveform
    INPUT:

@@ -1,5 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-// Original by Amar Nayegandhi
 
 func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origdata=, retindx=, silent=, noplot=, nosort=) {
 /* DOCUMENT sel_data_rgn(data, type=, mode=, win=, exclude=, rgn=)
@@ -38,13 +37,6 @@ INPUT:
   nosort=  :  Set to 1 if you don't want to sort the input data. Default=0.
 
   silent=    : works in silent mode.  no output to screen.
-  amar nayegandhi 11/26/02.
-
-  Modified by Jeremy Bracone 5/9/05
-   when using mode 4 and sending points through rgn,
-   you can either send points selected by the:
-    mouse(1,1) method (this is is a rectangle),
-    get_poly() method (for a polygon).
 */
 
   if (is_void(nosort)) nosort = 0;
@@ -294,8 +286,6 @@ INPUT:
 OUTPUT:
   if retindx = 0; data array for region selected is returned
   if retindx = 1; indices of data array returned.
-
-amar nayegandhi 06/26/03.
 */
   extern utm;
   if (!win) win = 5;
@@ -523,8 +513,6 @@ INPUT:
   search_str=  :  Define search string for file names to select
   pidx=        :  Array of a previously clicked polygon
             Set to lpidx if this function is previously used
-
-original: amar nayegandhi September 2005
 */
   extern lpidx; // this takes the values of the polygon selected by user.
   w = current_window();

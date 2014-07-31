@@ -951,8 +951,6 @@ func transmit_char(rr, p=, win=, plot=, autofma=) {
     plot= By default, no plot is made (and win= and autofma= are ignored).
       Set plot=1 to plot the transmit waveform.
     autofma= Set to 1 to issue an automatic fma.
-
-  Original Amar Nayegandhi 01/21/04
 */
   default, p, [];
   default, win, max(0, current_window());
@@ -983,8 +981,6 @@ func sfsod_to_rn(sfsod) {
 /* DOCUMENT sf_sod_to_rn(sfsod)
   This function finds the rn values for the correspoding sod from sf and
   returns the rn value to the drast GUI via ytk_rast.
-
-  Original Amar Nayegandhi 04/06/04
 */
   extern edb, soe_day_start;
   rnarr = where((edb.seconds - soe_day_start) == sfsod);

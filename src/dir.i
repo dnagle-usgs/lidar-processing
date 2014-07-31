@@ -202,7 +202,6 @@ func file_pathtype(path) {
   Absolute paths are defined as those that begin with / or ~. All other paths
   are relative.
 */
-// Original David Nagle 2009-02-06
   result = array("relative", dimsof(path));
   w = where(strpart(path, 1:1) == "/");
   if(numberof(w))
@@ -245,7 +244,7 @@ func file_relative(base, dest) {
   Works with scalars and arrays. If base and dest are both arrays, they must
   have the same dimensions.
 */
-// Original David Nagle 2009-02-06, adapted from fileutil::relative in Tcllib
+// adapted from fileutil::relative in Tcllib
   bdims = dimsof(base);
   ddims = dimsof(dest);
   result = [];
@@ -512,7 +511,6 @@ func file_isdir(filename) {
 
   Return 1 if it is, or 0 if it is not.
 */
-// Original David Nagle 2009-01-21
   if(dimsof(filename)(1)) {
     result = array(0, dimsof(filename));
     for(i = 1; i <= numberof(filename); i++) {
@@ -531,7 +529,6 @@ func file_isfile(filename) {
 
   Return 1 if it is, or 0 if it is not.
 */
-// Original David Nagle 2009-01-21
   f_exists = file_exists(filename);
   f_isdir = file_isdir(filename);
   return f_exists & ! f_isdir;

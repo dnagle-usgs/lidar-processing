@@ -153,7 +153,6 @@ func auto_cbar(data, method, mode=, factor=) {
         factor=5       use 5m window
       When method="all", factor is ignored.
 */
-// Original David Nagle 2010-04-23
   local z, cmin, cmax, cdelta;
   data2xyz, data, , , z, mode=mode;
 

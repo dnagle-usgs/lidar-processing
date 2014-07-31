@@ -53,7 +53,6 @@ func require_keywords(args) {
 
   SEE ALSO: default
 */
-// Original David Nagle 2010-07-29
   arg_count = args(0);
   for(i = 1; i <= arg_count; i++)
     if(is_string(args(-,i)) && is_void(args(i)))
@@ -83,7 +82,6 @@ func bound(val, bmin, bmax) {
   If val < bmin, then returns bmin
   if bmax < val, then returns bmax
 */
-// Original David Nagle 2008-11-18
   return min(bmax, max(bmin, val));
 }
 

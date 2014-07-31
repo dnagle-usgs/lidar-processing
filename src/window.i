@@ -105,8 +105,6 @@ func change_window_size(win, winsize, dofma) {
     dofma: clear plot (fma).  must be set to 1 to change window size.
   OUTPUT:
     wset: 1 if window size has been changed, 0 otherwise.
-
-    Original: Amar Nayegandhi 12/12/2005.
 */
   if(winsize == 1)
     change_window_style, "work", win=win, dpi=75, dofma=dofma;
@@ -151,7 +149,6 @@ func window2image(file, win=) {
       similar. If you have multiple Yoricks running and this one's windows
       are named "Yorick 0 <2>" or similar, this will grab the wrong window.
 */
-  // Original David Nagle 2009-01-28
   default, win, max(current_window(), 0);
   dir = mktempdir();
   xwdfile = file_join(dir, "temp.xwd");

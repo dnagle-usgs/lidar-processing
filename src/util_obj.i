@@ -147,7 +147,6 @@ func keyrequire(args) {
 
   SEE ALSO: keydefault default save
 */
-// Original David Nagle 2010-09-13
   if(!args(0))
     error, "invalid call to keyrequire";
   obj = args(1);
@@ -201,7 +200,6 @@ func obj_merge(obj, ..) {
     obj(merge, ...)
     obj, merge, ...
 */
-// Original David Nagle 2010-08-03
   if(!obj)
     obj = use();
   if(!am_subroutine())
@@ -483,7 +481,6 @@ func obj_index(this, idx, which=, ref=, size=, bymethod=, ignoremissing=) {
     `- g (long) 42
     >
 */
-// Original David Nagle 2010-08-09
   if(!this)
     this = use();
   result = am_subroutine() ? this : obj_copy(this);
@@ -624,7 +621,6 @@ func obj_copy(this, dst, recurse=) {
     obj(copy, ...)
     obj, copy, ...
 */
-// Original David Nagle 2010-07-30
   if(!this)
     this = use();
   if(!am_subroutine())
@@ -657,7 +653,6 @@ func obj_copy_methods(this, dst) {
     obj(copy_methods, ...)
     obj, copy_methods, ...
 */
-// Original David Nagle 2010-07-30
   if(!this)
     this = use();
   if(!am_subroutine())
@@ -688,7 +683,6 @@ func obj_copy_data(this, dst) {
     obj(copy_data, ...)
     obj, copy_data, ...
 */
-// Original David Nagle 2010-07-30
   if(!this)
     this = use();
   if(!am_subroutine())

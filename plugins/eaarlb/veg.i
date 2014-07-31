@@ -419,7 +419,6 @@ Returns:
 
 func test_veg(veg_all,  fname=, pse=, graph=) {
   // this function can be used to process for vegetation for only those pulses that are in data array veg_all or  those that are in file fname.
-  // amar nayegandhi 11/27/02.
 
   if (fname)
     veg_all = edf_import(fname);
@@ -677,7 +676,6 @@ func clean_cveg_all(vegall, rcf_width=) {
   This function cleans the multi-peak veg data.
   Input: vegall:  data array (with structure CVEG_ALL)
   Output: cleaned data array (with structure CVEG_ALL)
-  Original Author: amar nayegandhi 02/12/03.
 */
   new_vegall = vegall;
 

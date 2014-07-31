@@ -81,8 +81,6 @@ func soe2time(soe) {
     clock scan "6/17/2001 12:00" -gmt 1
     returns 992779200
 
-  Original: W. Wright wright@lidar.wff.nasa.gov 7/19/2001
-
   SEE ALSO: soe2sod soe2time hms2sod sod2hms time2soe
 */
   yd = soe2yd(soe);
@@ -205,8 +203,6 @@ func time2soe( a ) {
   ignores a(4:6).
 
   SEE ALSO: soe2sod soe2time hms2sod sod2hms time2soe
-
-  Original: W. Wright wright@lidar.wff.nasa.gov
 */
   extern _ys;
   // SOE values only fit in doubles and longs
@@ -316,7 +312,6 @@ func date2soe(date, sod) {
   the offset to add to a set of sod values to convert them all to soe values
   when they all share the same date.
 */
-// Original David B. Nagle 2009-05-18
   require, "util_str.i";
   date = get_date(date);
   y = atoi(strpart(date, 1:4));
@@ -338,7 +333,6 @@ func ymd2soe(y, m, d, sod) {
   The values y, m, and d should all be scalar integers. If provided, sod can
   be either a scalar or an array.
 */
-// Original David Nagle 2008-11-07
   default, sod, 0;
   doy = ymd2doy(y, m, d);
   m = d = [];
@@ -466,7 +460,6 @@ func soe2gpssow(soe, &week) {
   seconds-of-the-week corresponding to it. If the optional second argument is
   given, then the GPS week number will be stored in the variable specified.
 */
-// Original David Nagle 209-11-16
   // GPS weeks start on 1980-01-06 and are modulo 1024
   // ymd2soe(1980, 1, 6) => 315964800
   // seconds in a week => 60 * 60 * 24 * 7 => 604800
@@ -537,7 +530,6 @@ func soe2iso8601(soe) {
 
   SEE ALSO: soe2sod soe2time soe2ymd
 */
-// Original David Nagle 2009-01-07
   ymd = int(soe2ymd(soe));
   time = int(soe2time(soe));
   return swrite(format="%04d-%02d-%02d %02d:%02d:%02d",
@@ -576,7 +568,6 @@ func seconds2prettytime(seconds, maxparts=) {
     > seconds2prettytime(86401, maxparts=2)
     "1 days"
 */
-// Original David Nagle 2009-12-29
   require, "yeti_regex.i";
   dims = dimsof(seconds);
   if(!is_void(maxparts) && !is_scalar(seconds))

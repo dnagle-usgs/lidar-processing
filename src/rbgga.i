@@ -468,7 +468,6 @@ func plot_no_raster_fltlines(pnav, edb) {
 /* Document no_raster_flightline (gga, edb)
     This function overplots the flight lines having no rasters with a different color.
 */
-  // amar nayegandhi 08/05/02
   extern soe_day_start;
 
   w = current_window();
@@ -517,7 +516,6 @@ func plot_no_tans_fltlines (tans, pnav) {
 /* Document no_raster_flightline (pnav, edb)
     This function overplots the flight lines having no rasters with a different color.
 */
-  // amar nayegandhi 08/05/02
   extern soe_day_start;
 
   w = current_window();
@@ -622,7 +620,6 @@ width=, win=) {
 
    SEE ALSO: mission_conf
 */
-// Original David B. Nagle 2009-03-12
   default, width, 1;
   default, msize, 0.1;
   default, marker, 0;

@@ -149,8 +149,6 @@ func locate_triag_surface(x, y, z, v, win=, m=, plot=, idx=) {
     plot= Use plot=1 to draw the triangle that is found.
     idx= Return the indices into xyz for the triangle found.
 */
-// original amar nayegandhi 01/09/04.
-// revised David Nagle 2010-02-12
   local v1, v2, v3;
   if(is_void(z)) {
     splitary, y, 3, v1, v2, v3;

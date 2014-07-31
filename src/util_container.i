@@ -21,7 +21,6 @@ func has_member(val, member, deref=) {
 
   If deref=1, then pointers will be derefenced as necessary.
 */
-// Original David Nagle 2009-08-14
   if(deref && is_pointer(val)) val = *val;
   if(is_hash(val)) return h_has(val, member);
   if(is_stream(val)) return anyof(*(get_vars(val)(1)) == member);
@@ -40,7 +39,6 @@ func has_members(val, deref=) {
 
   If deref=1, then pointers will be dereferenced as necessary.
 */
-// Original David Nagle 2009-08-14
   if(deref && is_pointer(val)) val = *val;
   return is_stream(val) || is_hash(val) || is_obj(val) ||
     (typeof(val) == "struct_instance");
@@ -83,7 +81,6 @@ func h_merge(..) {
   the latter object's value will overwrite the earlier object's value in the
   resulting hash.
 */
-// Original David Nagle 2008-09-10
   obj = h_new();
   while(more_args()) {
     src = next_arg();
@@ -164,7 +161,6 @@ func assign(args) {
   Any number of variables may be given. If there are more variables than there
   are values in ARY, then the remaining variables are set to [].
 */
-// Original David Nagle 2008-12-29
   ary = args(1);
   size = numberof(ary);
   for(i = 1; i < args(0); i++)
@@ -190,7 +186,6 @@ func pbd_append(file, vname, data, uniq=) {
 
   SEE ALSO: pbd_save pbd_load
 */
-// Original David Nagle 2008-07-16
   default, uniq, 1;
   if(file_exists(file))
     data = grow(pbd_load(file), data);
@@ -322,7 +317,6 @@ func pbd_load(file, &err, &vname) {
 
   SEE ALSO: pbd_append pbd_save
 */
-// Original David Nagle 2009-12-21
   err = string(0);
   vname = string(0);
 
@@ -435,7 +429,6 @@ func structeq(a, b) {
   > structeq(structof(test), GEOALL)
   1
 */
-// Original David Nagle 2009-10-01
   if(a == b) return 1;
   return print(a)(sum) == print(b)(sum);
 }
@@ -453,7 +446,6 @@ func structeqany(a, ..) {
   > structeqany(structof(foo), VEG, VEG_, VEG__)
   1
 */
-// Original David Nagle 2009-10-01
   while(more_args()) {
     if(structeq(a, next_arg()))
       return 1;
@@ -467,7 +459,6 @@ func map_pointers(__map__f, __map__input) {
   element-wise unary operation on each pointer's value. Returns an array of
   pointers.
 */
-// Original David Nagle 2010-07-26
   // Funny local names used to reduce likelihood of clashes, in case called
   // function requires extern use
   __map__output = array(pointer, dimsof(__map__input));
@@ -708,7 +699,6 @@ func splitary(args) {
     > ary = array(short, 100, 3)
     > splitary, ary, 3, , , z
 */
-// Original David Nagle 2010-03-08
   if(args(0) == 1)
     return;
   if(args(0,2) == 1 && is_integer(args(2))) {

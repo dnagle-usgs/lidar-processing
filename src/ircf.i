@@ -5,8 +5,6 @@ func rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interact
  this function splits data sets into manageable portions and calls ircf_eaarl_pts that
 uses the random consensus filter (rcf) and triangulation method to filter data.
 
- amar nayegandhi April 2004.
-
   INPUT:
   eaarl : data array to be filtered.
   buf = buffer size in CENTIMETERS within which the rcf block minimum filter will be implemented (default is 500cm).
@@ -52,8 +50,6 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
 func ircf_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=, plottriagpal=, autoreducetw=) {
 /* DOCUMENT ircf_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=)
  this function uses the random consensus filter (rcf) and triangulation method to filter data.
-
- amar nayegandhi Jan/Feb 2004.
 
   INPUT:
   eaarl : data array to be filtered.

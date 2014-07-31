@@ -18,7 +18,6 @@ func read_image(filename) {
 
   SEE ALSO: jpeg_read jpeg_write
 */
-// Orig: Amar Nayegandhi 12/08/2005.
   extern imgdir;
   if(is_void(filename))
     error, "No image file provided.";

@@ -63,7 +63,6 @@ func parse_datum(text) {
     result(..,3) - prefix
     result(..,4) - suffix
 */
-// Original David Nagle 2009-12-24
   scalar = is_scalar(text);
 
   part1 = part2 = part3 = datum = geoid = [];
@@ -96,7 +95,6 @@ func parse_rn(rn, &raster, &pulse) {
   -or- parse_rn, rn, raster, pulse
   Simple wrapper that returns [rasterno, pulseno] for the given rn.
 */
-// Original David Nagle 2009-07-21
   if(am_subroutine()) {
     raster = rn&0xffffff;
     pulse = rn >> 24;

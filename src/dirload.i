@@ -324,7 +324,6 @@ func dircopydiff(src, ref, dest, searchstr=, files=, verbose=) {
   Note: Files are copied in append mode, to allow building up over several
   passes. Duplicate points are eliminated.
 */
-// Original David Nagle 2010-04-28
   default, searchstr, "*.pbd";
   default, verbose, 1;
 

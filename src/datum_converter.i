@@ -1,6 +1,4 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-// original amar nayegandhi 07/15/03
-// modified charlene sullivan 09/25/06
 
 func datum_convert_data(&data_in, zone=, src_datum=, src_geoid=, dst_datum=,
 dst_geoid=, verbose=) {

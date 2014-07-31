@@ -54,7 +54,6 @@ func mouse_click_is(query, click) {
       11. This allows the button and modifiers to be comprised in a single
       value.
 */
-// Original David Nagle 2009-08-06
   // Coerce click into single-value format; easier to test in that format.
   if(numberof(click) == 11) {
     click = click(10) + 10 * click(11);

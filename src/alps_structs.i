@@ -355,10 +355,8 @@ local GEOALL;
     char channel(120);         channel used if forced; 0 if auto chosen
   }
 
-  Several changes have been made to this structure over time:
-    2009-03-21: depth changed from short to int (RWM)
-    2005-01-28: slant range modified by a factor of 10 to increase accuracy
-      of range vector (AN)
+  Note: On 2005-01-28, slant range was modified by a factor of 10 to increase
+  accuracy of range vector.
 
   SEE ALSO: GEO, R, VEG_ALL_
 */

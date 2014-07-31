@@ -19,7 +19,6 @@ func extract_qq(text, qqprefix=) {
 
   If qqprefix=1, then the name will be prefixed by "qq".
 */
-//  Original David Nagle 2008-07-17
   regmatch, "(^|_|qq)([0-9][0-9][0-1][0-9][0-9][a-h][1-8][a-d])(\.|_|$)", text, , , qq;
   if(qqprefix) {
     w = where(qq);
@@ -42,7 +41,6 @@ func qq2uz(qq) {
   it is possible that the UTM coordinates may have been forcibly projected
   in an alternate UTM zone. So proceed with caution.
 */
-// Original David Nagle 2008-07-15
   center = qq2utm(qq, centroid=1);
   return long(center(..,3));
 }
@@ -295,7 +293,6 @@ func extract_for_qq(east, north, zone, qq, buffer=) {
   The buffer= option specifies a buffer (in meters) to extend the quarter
   quad's boundaries by. By default, it is 100 meters.
 */
-  // Original David Nagle 2008-07-17
   default, buffer, 100;
   bbox = qq2ll(qq, bbox=1);
 
@@ -385,7 +382,6 @@ func draw_qq_grid(win, pts=) {
 
   SEE ALSO: draw_grid
 */
-// Original David Nagle 2008-07-18
   if(is_void(win)) return;
   extern curzone;
   if(!curzone) {
@@ -435,7 +431,6 @@ func draw_qq(qq, win, pts=) {
   If given, pts= specifies how many points to drop along each side of the
   quarter quad between corners. Default is pts=3. Minimum is pts=1.
 */
-// Original David Nagle 2008-07-18
   if(is_void(win)) return;
   default, pts, 3;
   if(pts < 1) pts = 1;
@@ -453,7 +448,6 @@ func draw_q(qq, win, pts=) {
   If given, pts= specifies how many points to drop along each side of the
   quarter quad between corners. Default is pts=3. Minimum is pts=1.
 */
-// Original David Nagle 2008-07-18
   if(is_void(win)) return;
   default, pts, 3;
   if(pts < 1) pts = 1;
@@ -477,7 +471,6 @@ func draw_ll_box(bbox, win, pts=, color=) {
 
   If given color= specifies the color to draw with. Default is black.
 */
-// Original David Nagle 2008-07-18
   if(is_void(win)) return;
   default, pts, 3;
   if(pts < 1) pts = 1;

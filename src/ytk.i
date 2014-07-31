@@ -195,7 +195,6 @@ func tksetval(tkvar, yval) {
 
   SEE ALSO: tksetvar
 */
-// Original David Nagle 2009-08-13
   tkcmd, swrite(format="tky_set %s {%s}", tkvar, print(yval)(sum));
 }
 
@@ -207,7 +206,6 @@ func tksetvar(tkvar, yvar) {
 
   SEE ALSO: tksetval
 */
-// Original David Nagle 2009-09-14
   tksetval, tkvar, var_expr_get(yvar);
 }
 
@@ -220,7 +218,6 @@ func tksetsym(tkvar, ysym) {
   This can handle dotted symbols, such as foo.bar.baz. They will be
   dereferenced using var_expr_get.
 */
-// Original David Nagle 2009-08-13
   tksetval, tkvar, var_expr_get(ysym);
 }
 
@@ -232,7 +229,6 @@ func tksetfunc(tkvar, yfunc, ..) {
   the Yorick function when it is called. Currently, a maximum of 4 arguments
   may be passed. (Options are not supported.)
 */
-// Original David Nagle 2010-02-16
   args = [];
   while(more_args())
     grow, args, &next_arg();
@@ -258,7 +254,6 @@ func var_expr_tkupdate(expr, tkval) {
   string, it stays a string; if expr is a double, tkval is cast to a double;
   etc. Tkval is expected to be provided as a string.
 */
-// Original David Nagle 2009-08-14
   val = var_expr_get(expr);
   if(anyof(typeof(val) == ["long","int","short","double","float"])) {
     newval = double(0);
@@ -304,7 +299,6 @@ func var_expr_get(expr) {
 
   SEE ALSO: var_expr_set
 */
-// Original David Nagle 2009-08-14
   parts = strtok(expr, ".");
   val = symbol_exists(parts(1)) ? symbol_def(parts(1)) : [];
   while(parts(2)) {
@@ -339,7 +333,6 @@ func var_expr_set(expr, val) {
   container is needed, it will be created as a Yeti hash if its parent is a
   Yeti hash; otherwise, it will be created as an oxy group object.
 */
-// Original David Nagle 2009-08-14
   parts = strtok(expr, ".");
 
   // If there's a period, then we must dereference

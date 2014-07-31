@@ -295,7 +295,6 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=, forcechannel=, verbose=) {
   ext_bad_att is a value in meters. Points within that distance from the mirror
   are eliminated. Set to 0 to disable this filtering.
 */
-// Original amar nayegandhi 09/18/02
   extern ops_conf, tans, pnav;
   default, verbose, 1;
 
