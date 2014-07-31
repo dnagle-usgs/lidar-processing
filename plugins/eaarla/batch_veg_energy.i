@@ -297,9 +297,8 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
 	      }
 	   }
            if (numberof(be_file) > 1) {
-              print, "There are more than one bare earth files for this tile.  Please check code.  Cannot continue."
               be_file;
-              amar();
+              error, "There are more than one bare earth files for this tile.  Please check code.  Cannot continue."
            }
            if (numberof(be_file) == 0) {
               print, "No Bare Earth file available for this tile.  No metrics created for this tile." 

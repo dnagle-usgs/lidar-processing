@@ -1399,8 +1399,7 @@ func make_begrid_from_bexyz(bexyz, binsize=, intdist=, lfpveg=) {
   img = array(float, ngridx, ngridy); img(*) = -1000; // initialize with missing value
   imgcount = array(int, ngridx,ngridy); // counter 
   if ((dimsof(lfpveg)(2) != dimsof(img)(2)) || (dimsof(lfpveg)(3) != dimsof(img)(3))) {
-    write, "dimensions not the same ... halt!"
-    amar();
+    error, "dimensions not the same ... halt!"
   }
 
  // now use delaunay triangulation to find the vertices
