@@ -10,7 +10,7 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=) {
   Options:
     win= The window where GGA/PNAV is plotted. The user will be prompted to
       click in this window.
-        win=6   Default
+        win=4   Default
     color= After dragging out the box or drawing the polygon, the bounding box
       for that region will be drawn in this color.
         color="cyan"  Default
@@ -34,7 +34,7 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=) {
     pnav: The array of PNAV data.
 */
   extern utm, curzone, pnav;
-  default, win, 6;
+  default, win, 4;
   default, color, "cyan";
   default, mode, "box";
   default, verbose, 1;
@@ -106,7 +106,7 @@ func mark_time_pos(sod, win=, msize=, marker=, color=) {
     curzone= If set and if utm=1, then UTM conversion is forced to this zone.
 */
   extern pnav, utm, curzone;
-  default, win, window();
+  default, win, 4;
   default, marker, 5;
   default, color, "blue";
   default, msize, 0.6;
@@ -404,7 +404,7 @@ func show_pnav_track(pn, x=, y=, color=, skip=, msize=, marker=, lines=, width=,
 */
   extern curzone, utm;
 
-  default, win, 6;
+  default, win, 4;
   default, width, 5.;
   default, msize, 0.1;
   default, marker, 1;
@@ -472,7 +472,7 @@ func plot_no_raster_fltlines(pnav, edb) {
   extern soe_day_start;
 
   w = current_window();
-  window, 6;
+  window, 4;
 
   sod_edb = edb.seconds - soe_day_start;
 
@@ -521,7 +521,7 @@ func plot_no_tans_fltlines (tans, pnav) {
   extern soe_day_start;
 
   w = current_window();
-  window, 6;
+  window, 4;
   default, width, 5.;
 
   // find where the diff in tans is greater than 0.5 second
