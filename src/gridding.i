@@ -241,7 +241,7 @@ powerwt=) {
   else if(strpart(method, 1:7) == "radius_")
     return data_radius_grid(data, strpart(method, 8:), mode=mode, xmin=xmin,
       xmax=xmax, ymin=ymin, ymax=ymax, cell=cell, nodata=nodata,
-      maxradius=maxradius, minpoints=minpoints, wtpower=wtpower);
+      maxradius=maxradius, minpoints=minpoints, wtpower=wtpower, verbose=0);
   else if(strpart(method, 1:5) == "cell_")
     return data_cell_grid(data, method=strpart(method, 6:), mode=mode,
       xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, cell=cell, nodata=nodata);
@@ -462,9 +462,9 @@ func triangle_interp(x, y, z, v, xp, yp, nodata=) {
 }
 
 func data_radius_grid(data, method, mode=, xmin=, xmax=, ymin=, ymax=, nodata=,
-cell=, maxradius=, minpoints=, wtpower=) {
+cell=, maxradius=, minpoints=, wtpower=, verbose=) {
 /* DOCUMENT data_radius_grid(data, method, mode=, xmin=, xmax=, ymin=, ymax=,
-  nodata=, cell=, maxradius=, minpoints=, wtpower=)
+  nodata=, cell=, maxradius=, minpoints=, wtpower=, verbose=)
 
   Grids an array of EAARL data using radius_grid. See radius_grid for details.
 */
@@ -472,11 +472,11 @@ cell=, maxradius=, minpoints=, wtpower=) {
   data2xyz, data, x, y, z, mode=mode;
   return radius_grid(x, y, z, method, xmin=xmin, xmax=xmax, ymin=ymin,
     ymax=ymax, nodata=nodata, cell=cell, maxradius=maxradius,
-    minpoints=minpoints, wtpower=wtpower);
+    minpoints=minpoints, wtpower=wtpower, verbose=verbose);
 }
 
 func radius_grid(x, y, z, method, xmin=, xmax=, ymin=, ymax=, cell=, nodata=,
-maxradius=, minpoints=, wtpower=) {
+maxradius=, minpoints=, wtpower=, verbose=) {
 /* DOCUMENT grid = radius_grid(x, y, z, method, xmin=, xmax=, ymin=, ymax=,
   cell=, nodata=, maxradius=, minpoints=, wtpower=)
 
@@ -500,6 +500,7 @@ maxradius=, minpoints=, wtpower=) {
     maxradius= Search radius to use.
     minpoints= Minimum points that must be found to perform interpolation.
     wtpower= Weighting power ("invdist" only).
+    verbose= Specifies how chatty to be, default is verbose=1.
 */
   default, nodata, -32767.;
   default, cell, 1.;
@@ -508,6 +509,7 @@ maxradius=, minpoints=, wtpower=) {
   default, minpoints, 1;
   default, wtpower, 2;
   default, method, "invdist";
+  default, verbose, 1;
 
   grid_fix_params, x, y, cell, xmin, xmax, ymin, ymax, xcount, ycount;
 
@@ -523,11 +525,13 @@ maxradius=, minpoints=, wtpower=) {
   t0 = array(double, 3);
   timer, t0;
   step = 50;
-  write, format="Need to grid for %d rows...\n", dimsof(zgrid)(2);
+  if(verbose)
+    write, format="Need to grid for %d rows...\n", dimsof(zgrid)(2);
   xi = indgen(numberof(x));
   for(i = 1; i <= dimsof(zgrid)(2); i += step) {
     ii = min(i+step-1, dimsof(zgrid)(2));
-    write, format="Gridding for %d:%d\n", i,ii;
+    if(verbose)
+      write, format="Gridding for %d:%d\n", i,ii;
 
     w = where(xgrid(i,1) - maxradius <= x(xi));
     if(!numberof(w)) {
@@ -568,9 +572,11 @@ maxradius=, minpoints=, wtpower=) {
       else
         error, "Unknown method";
     }
-    timer_remaining, t0, ii, dimsof(zgrid)(3);
+    if(verbose)
+      timer_remaining, t0, ii, dimsof(zgrid)(3);
   }
-  timer_finished, t0;
+  if(verbose)
+    timer_finished, t0;
 
   // Check to see if we can safely convert to floats. If the float version
   // agrees with the double version to within 0.5mm, then switch to floats.
