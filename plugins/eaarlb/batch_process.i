@@ -31,34 +31,6 @@ func package_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
   rename, ppath, jpath;
 }
 
-func package_rcf (ofn) {
-  ofn_tail = file_tail(ofn(1));
-  path = swrite(format="/tmp/batch/jobs/job-%s.cmd", ofn_tail);
-  rcf_only = 1;
-  b_rcf    = 1;
-
-  default, update, 0;
-  default, onlyupdate, update;
-  default, write_merge, 0;
-
-  update = onlyupdate;  // this ensures that both are the same if either are set.
-
-  /*
-  write, format="path        = %s\n", path;
-  write, format="OFN         = %s\n", ofn(1);
-  write, format="buf         = %d\n", buf;
-  write, format="w           = %d\n", w;
-  write, format="no_rcf      = %d\n", no_rcf;
-  write, format="mode        = %d\n", mode;
-  write, format="merge       = %d\n", merge;
-  write, format="rcfmode     = %d\n", rcfmode;
-  write, format="onlyupdate  = %d\n", onlyupdate;
-  write, format="write_merge = %d\n", write_merge;
-  */
-
-  save_vars, path, tile=2;
-}
-
 func save_vars (filename, tile=) {
   tempfn = file_join(file_dirname(filename), "."+file_tail(filename));
   f = createb(tempfn);
@@ -77,19 +49,7 @@ func save_vars (filename, tile=) {
     save, f, pbd;
     save, f, update;
     save, f, eaarl_time_offset;
-  }
-  if ( tile == 2 ) {      // stuff for batch_rcf only;
-    save, f, rcf_only;   // flag value for uber_process_tile
-    save, f, ofn;
-    save, f, buf, w, no_rcf;
-    save, f, mode;
-    save, f, merge, clean;
-    save, f, rcfmode;
-    save, f, update;     // process_tile changes this back to onlyupdate
-    save, f, write_merge;
-
   } else {
-
     save, f, edb_filename, pnav_filename, ins_filename;
     // save, f, tans, pnav, edb;    // save filenames instead
     save, f, edb_files;
@@ -99,10 +59,6 @@ func save_vars (filename, tile=) {
   }
   save, f, initialdir;
 
-  // XYZZY - we need to save the batch_rcf parameters too!!
-  if ( b_rcf == 1 ) {
-    save,  f, b_rcf, buf, w, no_rcf, mode, merge, clean, rcfmode, write_merge;
-  }
   bathconf_serialized = serialize(bathconf.data);
   ops_conf_serialized = serialize(ops_conf);
   save, f, ext_bad_att, bathconf_serialized, ops_conf_serialized;
@@ -125,7 +81,6 @@ func get_tld_names(q) {
 func unpackage_tile (fn=,host= ) {
   extern gga, pnav, tans, ops_conf;
   default, host, "localhost";
-  default, rcf_only, 0;
   write, format="Unpackage_tile: %s %s\n", fn, host;
   f = openb(fn);
   restore, f;
@@ -144,17 +99,14 @@ func unpackage_tile (fn=,host= ) {
       do_rsync_get, host, ins_filename;
   }
 
-  // We don't need these if only doing rcf
-  if(rcf_only != 1) {
-    // this gets wiped out by load_iexpbd, save now to restore later
-    oc = ops_conf;
+  // this gets wiped out by load_iexpbd, save now to restore later
+  oc = ops_conf;
 
-    load_edb,  fn=edb_filename, verbose=0, override_offset = eaarl_time_offset;
-    pnav = rbpnav( fn=pnav_filename, verbose=0);
-    load_iexpbd,  ins_filename, verbose=0;
+  load_edb,  fn=edb_filename, verbose=0, override_offset = eaarl_time_offset;
+  pnav = rbpnav( fn=pnav_filename, verbose=0);
+  load_iexpbd,  ins_filename, verbose=0;
 
-    ops_conf = oc;
-  }
+  ops_conf = oc;
 
   if(!strmatch(host, "localhost")) {
     // Also need to get whichever TLD files are needed
@@ -173,42 +125,21 @@ func unpackage_tile (fn=,host= ) {
 
 func call_process_tile( junk=, host= ) {
   // write, format="t_e%6.0f_n%7.0f_%s\n", min_e, max_n, zone_s;
-  uber_process_tile,q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, host=host, rcf_only=rcf_only, ext_bad_att=ext_bad_att, forcechannel=forcechannel;
+  uber_process_tile,q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, host=host, ext_bad_att=ext_bad_att, forcechannel=forcechannel;
 }
 
 
-func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf_only=, ext_bad_att=, forcechannel= ) {
+func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, ext_bad_att=, forcechannel= ) {
   extern ofn;
-  default, rcf_only, 0;
 
   // Make sure the output directory exits
   mkdirp, save_dir;
 
-  if (is_array(r) || rcf_only == 1 ) {
+  if (is_array(r)) {
 
-    if ( rcf_only == 0 ) {
-      // process_tile will return 0 if the tile needs to be updated
-      update = process_tile (q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, update=update, host=host, ext_bad_att=ext_bad_att, forcechannel=forcechannel );
-    }
+    process_tile, q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, update=update, host=host, ext_bad_att=ext_bad_att, forcechannel=forcechannel;
 
-      mypath = ofn(1);
-    if ( b_rcf ) {
-      write, format="RCF path: %s\n", mypath;
-      if ( ! strmatch(host, "localhost") ) {
-        // Here we do need to make sure that we have all of the files
-        // so they can be processed together.
-        // XYZZY - This will result in errors from rsync when the
-        // files don't exist on the server (probably most of the time)
-        write, format="RCF: rsyncing %s:%s\n", host, mypath;
-        do_rsync_get, host, mypath, update=1;
-        write, "rsync complete";
-      }
-
-      tile_id = swrite(format="t_e%6.0f_n%7.0f_%s_rcf",
-        min_e, max_n, zone_s);
-
-      batch_rcf, mypath, buf=buf, w=w, no_rcf=no_rcf, mode=typ+1, merge=merge, rcfmode=rcfmode, onlyupdate=update, write_merge=write_merge, tile_id=tile_id;
-    }
+    mypath = ofn(1);
 
     if ( ! strmatch(host, "localhost") ) {
       write, format="FINISH: rsyncing %s to %s\n", mypath, host;
@@ -314,7 +245,6 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
           // continue; // RWM
           return update;
         }
-        update=0;  // if the tile was updated, force rcf to process.
       }
       write, format="Generating tile: %s\n", new_file;
 
@@ -530,7 +460,6 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update=, 
 
   if(logger(debug))
     logger, debug, log_id+"Leaving process_tile";
-  return update;
 }
 
 // show progress of jobs completed.
@@ -571,14 +500,14 @@ func check_space(path, wmark) {
 func batch_process {};
 func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
 onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
-only_veg=, update=, avg_surf=, now=, b_rcf=, buf=, w=, no_rcf=,
-mode=, merge=, rcfmode=, write_merge=, ext_bad_att=, forcechannel=, shapefile=,
+only_veg=, update=, avg_surf=, now=,
+ext_bad_att=, forcechannel=, shapefile=,
 shp_buffer=, verbose=, cleanup=)
 {
 /* DOCUMENT mbatch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=,
   n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=,
-  only_bathy=, only_veg=, update=, avg_surf=, now=, b_rcf=, buf=,
-  w=, no_rcf=, mode=, merge=, rcfmode=, write_merge=, ext_bad_att=,
+  only_bathy=, only_veg=, update=, avg_surf=, now=,
+  ext_bad_att=,
   forcechannel=, shapefile=, shp_buffer=, verbose=, cleanup=
 
   batch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
@@ -633,7 +562,6 @@ Input:
   update=      : Set to 1 to process for only those files where the
             output does not exist.  Useful when the program halts,
             and you want to resume processing.
-            Set to 2 to only process for rcf.
 
   avg_surf=    : Set to 1 to use the average of the water surface
             reflections when processing for bathymetry (typ=1).
@@ -695,17 +623,6 @@ are REQUIRED:
   schem=     : Set to 1 if the data is in the southern hemisphere.
           Required to properly define the utm zone letter.
 
-  b_rcf=     : 1 - invokes batch_rcf after normal batch processing
-
-The following are pass thru variables needed for batch_rcf
-  buf=         :
-  w=           :
-  no_rcf=      :
-  mode=        :
-  merge=       :
-  rcfmode=     :
-  write_merge= :
-
 Ex: curzone=18
    batch_process,typ=2,save_dir="/data/3/2004/bombay-hook/output/",
             mdate="20040209",zone=18,pick=1
@@ -724,9 +641,8 @@ Ex: curzone=18
         dat_tag=dat_tag, cmdfile=cmdfile, n=n, onlyplot=onlyplot, mdate=mdate,
         pbd=pbd, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ,
         only_bathy=only_bathy, only_veg=only_veg, update=update,
-        avg_surf=avg_surf, now=now, b_rcf=b_rcf, buf=buf,
-        w=w, no_rcf=no_rcf, mode=mode, merge=merge, rcfmode=rcfmode,
-        write_merge=write_merge, ext_bad_att=ext_bad_att,
+        avg_surf=avg_surf, now=now,
+        ext_bad_att=ext_bad_att,
         forcechannel=forcechannel(i), shapefile=shapefile,
         shp_buffer=shp_buffer, cleanup=curcleanup;
     }
@@ -768,8 +684,6 @@ Ex: curzone=18
   default, dat_tag, "w84";
   default, update,      0;
   default, avg_surf,    1;
-  default, write_merge, 0;
-  default, b_rcf,       0;
 
   if (!cmdfile && !auto) auto     = 1;
   if (cmdfile) {
@@ -1055,9 +969,8 @@ shapefile=, shp_buffer=) {
 }
 
 
-// This is called after mbatch_process() mbatch_process_dir() generates
-// all of the tiles and then monitors the status of the work completed,
-// coloring completed tiles green.
+// This is called after mbatch_process() generates all of the tiles and then
+// monitors the status of the work completed, coloring completed tiles green.
 // This can also be called manually if ALPS gets restarted.
 func batch_cleanup(verbose=) {
   default, verbose, 1;
@@ -1084,83 +997,4 @@ func batch_cleanup(verbose=) {
     }
   } while(count);
   if(verbose) write, "No batch jobs available.";
-}
-
-// process an output directory instead of a flightline.
-// this will mostly be used for batch_rcf.
-
-func mbatch_process_dir( dirname, buf=, w=, no_rcf=, mode=, merge=, rcfmode=,
-update=, onlyupdate=, write_merge=, searchstr=, selectmode=, win= ) {
-/* DOCUMENT
-func mbatch_process_dir( dirname, buf=, w=, no_rcf=, mode=, merge=,
-                 rcfmode=, update=, onlyupdate=, write_merge=,
-                 searchstr=, selectmode=, win= )
-
-Uses the multi batch processing routines to process the files in a
-sub-directory instead of using a bounding box in a map window.
-Currently (2009-02) this is only useful for doing a batch_rcf(),
-but could be expanded to other functions in the future.
-
-All current options are from batch_rcf.
-*/
-
-  if ( !readedf  && !readpbd ) readpbd  = 1;
-  if ( !writeedf && !writepbd) writepbd = 1;
-
-  if ( !is_void(selectmode) ) {
-    fn_all = select_datatiles(dirname, search_str=searchstr, mode=selectmode+1, win=win );
-  } else {
-write, format="Searching: %s\n", dirname;
-    s = array(string, 10000);
-    if ( is_array( searchstr ) ) {
-      ss = searchstr;
-    } else {
-      if (readedf) {
-        if (datum) {
-          ss = ["*"+datum+"*.bin", "*"+datum+"*.edf"];
-        } else {
-          ss = ["*.bin", "*.edf"];
-        }
-      }
-      if (readpbd) {
-        if (datum) {
-          ss = ["*"+datum+"*.pbd"];
-        } else {
-          ss = ["*.pbd"];
-        }
-      }
-    }
-write,format="For      : %s\n", ss;
-    scmd = swrite(format = "find %s -name '%s'", dirname, ss);
-    fp = 1; lp = 0;
-    for ( i=1; i<=numberof(scmd); i++) {
-      write,format="scmd(%d) = %s\n", i, scmd(i);
-      f = popen(scmd(i), 0);
-      n = read(f, format="%s", s);
-      close, f;
-      lp += n;
-      if ( n ) fn_all = s(fp:lp);
-      fp = fp + n;
-    }
-
-  }
-  write, format="Found: %3d\n", numberof(fn_all);
-
-  // XYZZY: we have a list of files, now we just want the dirnames they are in.
-  dn_all = file_dirname(fn_all);
-  dn_all = dn_all(unique(dn_all));
-  n      = numberof(dn_all);
-  write, format="Dirs : %3d\n", n;
-
-  // loop to generate batch jobs
-  for ( i=1; i<=n; ++i ) {
-    // make sure we have space
-    check_space, "/tmp/batch/jobs", 25000;
-    package_rcf, dn_all(i);
-    show_progress, color="green";
-  }
-
-  // loop to wait until all jobs are done.
-  batch_cleanup;
-  write,"Batch RCF Process Complete.";
 }
