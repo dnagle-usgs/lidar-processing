@@ -828,6 +828,7 @@ makeflow_fn=, norun=) {
   default, meta, 1;
   default, mode, "fs";
   default, rcfmode, "grcf";
+  if(rcfmode == "mgrcf") default, factor, 2;
 
   t0 = array(double, 3);
   timer, t0;
@@ -874,8 +875,11 @@ makeflow_fn=, norun=) {
     // _fs, _be, _ba
     file_out += "_" + mode;
     // _b700_w50_n3
-    if(meta)
+    if(meta) {
       file_out += swrite(format="_b%d_w%d_n%d", buf, w, n);
+      if(rcfmode == "mgrcf")
+        file_out += swrite(format="_f%d", factor);
+    }
     // _grcf, _ircf, _rcf
     file_out += "_" + rcfmode;
     // _mf
