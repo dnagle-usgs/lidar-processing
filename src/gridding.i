@@ -9,8 +9,6 @@ powerwt=) {
 
   Batch grids data.
 
-  NOTE: This function requires C-ALPS for method="triangle".
-
   Parameter:
     dir: A directory in which to find PBD files to grid.
 
@@ -24,6 +22,9 @@ powerwt=) {
         method="triangle"         Use triangulation (default)
         method="radius_invdist"   Use radius-based inverse distance weighting
         method="radius_average"   Use radius-based moving average
+        method="cell_last"        Use last value in cell (per current ordering)
+        method="cell_average"     Use average of values in cell
+        method="cell_median"      Use median of values in cell
     mode= The data mode to use for the input data. By default, this is
       determined from the file name if possible; if not possible, the file
       is skipped.
@@ -241,6 +242,9 @@ powerwt=) {
     return data_radius_grid(data, strpart(method, 8:), mode=mode, xmin=xmin,
       xmax=xmax, ymin=ymin, ymax=ymax, cell=cell, nodata=nodata,
       maxradius=maxradius, minpoints=minpoints, wtpower=wtpower);
+  else if(strpart(method, 1:5) == "cell_")
+    return data_cell_grid(data, method=strpart(method, 6:), mode=mode,
+      xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, cell=cell, nodata=nodata);
   else
     error, "Unknown method";
 }
