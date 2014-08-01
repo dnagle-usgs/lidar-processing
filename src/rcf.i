@@ -729,3 +729,194 @@ func rcf_grid(z, w, buf, n, nodata=, mask=, action=) {
 
   return result;
 }
+
+func batch_rcf(dir, searchstr=, merge=, files=, outdir=, update=, mode=,
+prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, factor=, meta=,
+makeflow_fn=, norun=) {
+/* DOCUMENT batch_rcf, dir, searchstr=, merge=, files=, outdir=, update=,
+   mode=, prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, factor=,
+   meta=, makeflow_fn=, norun=
+
+  This iterates over each file in a set of files and applies an RCF filter to
+  its data.
+
+  If called as a subroutine, the jobs will be run with Makeflow. If called as a
+  function, the configuration that would have been passed to Makeflow is
+  returned instead.
+
+  Parameters:
+    dir: The directory containing the files you wish to filter.
+
+  Options:
+    searchstr= The search string to use to locate the files you with to
+      filter. Examples:
+        searchstr="*.pbd"    (default)
+        searchstr="*_v.pbd"
+        searchstr="*n88*_v.pbd"
+
+    merge= This is a special-case convenience setting that includes a call to
+      batch_automerge_tiles. It can only be run if your search string ends
+      with _v.pbd or _b.pbd. After running the merge, the search string will
+      get updated to replace _v.pbd with _v_merged.pbd and _b.pbd with
+      _b_merged.pbd. (So "*_v.pbd" becomes "*_v_merged.pbd", whereas
+      "*w84*_v.pbd" becomes "*w84*_v_merged.pbd".) It is an error to use
+      this setting with a search string that does not fit these
+      requirements. Note that you CAN NOT "skip" the writing of merged files
+      if you want to filter merged data. Settings:
+        merge=0     Do not perform an automerge. (default)
+        merge=1     Merge tiles together before filtering.
+
+    files= Manually provides a list of files to filter. This will result in
+      searchstr= being ignored and is not compatible with merge=1.
+
+    outdir= Specify an output directory. By default output files are created
+      alongside input files, but outdir= allows you to dump them all in a
+      different folder instead.
+
+    update= Specifies that this is an update run and that existing files
+      should be skipped. Settings:
+        update=0    Overwrite output files if they exist.
+        update=1    Skip output files if they exist.
+
+    mode= Specifies which data mode to use for the data. Can be any setting
+      valid for data2xyz.
+        mode="fs"   First surface (default)
+        mode="be"   Bare earth
+        mode="ba"   Bathymetry (submerged topo)
+
+    prefilter_min= Specifies a minimum value for the elevation values, in
+      meters. Points below this value are discarded prior to filtering.
+
+    prefilter_max= Specifies a maximum value for the elevation values, in
+      meters. Points above this value are discarded prior to filtering.
+
+    rcfmode= Specifies which rcf filter function to use. Possible settings:
+        rcfmode="grcf"    Use gridded_rcf (default)
+        rcfmode="rcf"     Use old_gridded_rcf (deprecated)
+
+    buf= Defines the size of the x/y neighborhood the filter uses, in
+      centimeters. Default is 700cm.
+
+    w= Defines the size of the vertical (z) window the filter uses, in
+      centimeters. Default is 200cm.
+
+    n= Defines the minimum number of points that are required in a window in
+      order to count as successful. Default is 3.
+
+    factor= Passed through to underlying rcf alg depending on which rcfmode is
+      used.
+
+    meta= Specifies whether the filter parameters should be included in the
+      output filename. Settings:
+        meta=0   Do not include the filter parameters in the file name.
+        meta=1   Include the filter parameters in the file name. (default)
+
+    makeflow_fn= The filename to use when writing out the makeflow. Ignored if
+      called as a function. If not provided, a temporary file will be used then
+      discarded.
+
+    norun= Don't actually run makeflow; just create the makeflow file.
+        norun=0   Runs makeflow, default
+        norun=1   Doesn't run makeflow
+*/
+  default, searchstr, "*.pbd";
+  default, update, 0;
+  default, merge, 0;
+  default, buf, 700;
+  default, w, 200;
+  default, n, 3;
+  default, meta, 1;
+  default, mode, "fs";
+  default, rcfmode, "grcf";
+
+  t0 = array(double, 3);
+  timer, t0;
+
+  conf = save();
+
+  if(merge) {
+    if(!is_void(files))
+      error, "You cannot use merge=1 if you are specifying files=."
+    // We can ONLY merge if our searchstr ends with *_v.pbd or *_b.pbd.
+    // If it does... then merge, and update our search string.
+    if(strlen(searchstr) < 7)
+      error, "Incompatible setting for searchstr= with merge=1. See \
+        documentation.";
+    sstail = strpart(searchstr, -6:);
+    if(sstail == "*_v.pbd") {
+      conf = mf_automerge_tiles(dir, searchstr=searchstr, update=update);
+    } else if(sstail == "*_b.pbd") {
+      conf = mf_automerge_tiles(dir, searchstr=searchstr, update=update);
+    } else {
+      error, "Invalid setting for searchstr= with merge=1. See \
+        documentation."
+    }
+
+    files = array(string, conf(*));
+    for(i = 1; i <= conf(*); i++)
+      files(i) = conf(noop(i)).output;
+  }
+
+  if(is_void(files))
+    files = find(dir, searchstr=searchstr);
+  count = numberof(files);
+
+  if(!count) {
+    return;
+  }
+
+  // Variable name -- same as input, but add _rcf (or _grcf, etc.)
+  // File name -- same as input, but lop off extension and add rcf settings
+  vname = [];
+  for(i = 1; i <= count; i++) {
+    file_in = files(i);
+    file_out = file_rootname(file_in);
+    // _fs, _be, _ba
+    file_out += "_" + mode;
+    // _b700_w50_n3
+    if(meta)
+      file_out += swrite(format="_b%d_w%d_n%d", buf, w, n);
+    // _grcf, _ircf, _rcf
+    file_out += "_" + rcfmode;
+    // _mf
+    // .pbd
+    file_out += ".pbd";
+
+    if(outdir)
+      file_out = file_join(outdir, file_tail(file_out));
+
+    if(file_exists(file_out)) {
+      if(update) {
+        continue;
+      } else {
+        remove, file_out;
+      }
+    }
+
+    options=save(
+      string(0), [],
+      "file-in", file_in,
+      "file-out", file_out,
+      mode, rcfmode, factor,
+      buf=swrite(format="%d", buf),
+      w=swrite(format="%d", w),
+      n=swrite(format="%d", n),
+      "prefilter-min", prefilter_min,
+      "prefilter-max", prefilter_max
+    );
+
+    save, conf, string(0), save(
+      input=file_in,
+      output=file_out,
+      command="job_rcf_eaarl",
+      options=options
+    );
+  }
+
+  if(!am_subroutine())
+    return conf;
+
+  makeflow_run, conf, makeflow_fn, interval=15, norun=norun;
+
+  timer_finished, t0;
+}
