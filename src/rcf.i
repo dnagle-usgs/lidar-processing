@@ -730,10 +730,10 @@ func rcf_grid(z, w, buf, n, nodata=, mask=, action=) {
   return result;
 }
 
-func batch_rcf(dir, searchstr=, merge=, files=, outdir=, update=, mode=,
+func batch_rcf(dir, searchstr=, automerge=, files=, outdir=, update=, mode=,
 prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, factor=, meta=,
 makeflow_fn=, norun=) {
-/* DOCUMENT batch_rcf, dir, searchstr=, merge=, files=, outdir=, update=,
+/* DOCUMENT batch_rcf, dir, searchstr=, automerge=, files=, outdir=, update=,
    mode=, prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, factor=,
    meta=, makeflow_fn=, norun=
 
@@ -754,20 +754,20 @@ makeflow_fn=, norun=) {
         searchstr="*_v.pbd"
         searchstr="*n88*_v.pbd"
 
-    merge= This is a special-case convenience setting that includes a call to
-      batch_automerge_tiles. It can only be run if your search string ends
+    automerge= This is a special-case convenience setting that includes a call
+      to batch_automerge_tiles. It can only be run if your search string ends
       with _v.pbd or _b.pbd. After running the merge, the search string will
       get updated to replace _v.pbd with _v_merged.pbd and _b.pbd with
       _b_merged.pbd. (So "*_v.pbd" becomes "*_v_merged.pbd", whereas
-      "*w84*_v.pbd" becomes "*w84*_v_merged.pbd".) It is an error to use
-      this setting with a search string that does not fit these
-      requirements. Note that you CAN NOT "skip" the writing of merged files
-      if you want to filter merged data. Settings:
-        merge=0     Do not perform an automerge. (default)
-        merge=1     Merge tiles together before filtering.
+      "*w84*_v.pbd" becomes "*w84*_v_merged.pbd".) It is an error to use this
+      setting with a search string that does not fit these requirements. Note
+      that you CAN NOT "skip" the writing of merged files if you want to filter
+      merged data. Settings:
+        automerge=0     Do not perform an automerge. (default)
+        automerge=1     Merge tiles together before filtering.
 
     files= Manually provides a list of files to filter. This will result in
-      searchstr= being ignored and is not compatible with merge=1.
+      searchstr= being ignored and is not compatible with automerge=1.
 
     outdir= Specify an output directory. By default output files are created
       alongside input files, but outdir= allows you to dump them all in a
@@ -821,7 +821,7 @@ makeflow_fn=, norun=) {
 */
   default, searchstr, "*.pbd";
   default, update, 0;
-  default, merge, 0;
+  default, automerge, 0;
   default, buf, 700;
   default, w, 200;
   default, n, 3;
@@ -834,13 +834,13 @@ makeflow_fn=, norun=) {
 
   conf = save();
 
-  if(merge) {
+  if(automerge) {
     if(!is_void(files))
-      error, "You cannot use merge=1 if you are specifying files=."
+      error, "You cannot use automerge=1 if you are specifying files=."
     // We can ONLY merge if our searchstr ends with *_v.pbd or *_b.pbd.
     // If it does... then merge, and update our search string.
     if(strlen(searchstr) < 7)
-      error, "Incompatible setting for searchstr= with merge=1. See \
+      error, "Incompatible setting for searchstr= with automerge=1. See \
         documentation.";
     sstail = strpart(searchstr, -6:);
     if(sstail == "*_v.pbd") {
@@ -848,7 +848,7 @@ makeflow_fn=, norun=) {
     } else if(sstail == "*_b.pbd") {
       conf = mf_automerge_tiles(dir, searchstr=searchstr, update=update);
     } else {
-      error, "Invalid setting for searchstr= with merge=1. See \
+      error, "Invalid setting for searchstr= with automerge=1. See \
         documentation."
     }
 
