@@ -21,9 +21,9 @@ powerwt=) {
     searchstr= Search string used to find the files to grid.
         searchstr="*qc.pbd"  (default)
     method= Gridding method to use.
-        method="triangle"    Use triangulation (default)
-        method="invdist"     Use inverse distance weighting
-        method="average"     Use moving average
+        method="triangle"         Use triangulation (default)
+        method="radius_invdist"   Use radius-based inverse distance weighting
+        method="radius_average"   Use radius-based moving average
     mode= The data mode to use for the input data. By default, this is
       determined from the file name if possible; if not possible, the file
       is skipped.
@@ -56,11 +56,11 @@ powerwt=) {
         minangle=5     5 degrees
         minangle=0     Do not filter triangles by angle (default)
 
-  Options used for method="average":
+  Options used for method="radius_average":
     maxradius= Maximum search radius to use around each point.
     minpoints= Minimum number of points that must be found to interpolate.
 
-  Options used for method="invdist":
+  Options used for method="radius_invdist":
     maxradius= Maximum search radius to use around each point.
     minpoints= Minimum number of points that must be found to interpolate.
     powerwt= Weighting power.
@@ -237,10 +237,12 @@ powerwt=) {
     return data_triangle_grid(data, mode=mode, xmin=xmin, xmax=xmax,
       ymin=ymin, ymax=ymax, cell=cell, nodata=nodata, maxside=maxside,
       maxarea=maxarea, minangle=minangle);
-  else
-    return data_radius_grid(data, method, mode=mode, xmin=xmin,
+  else if(strpart(method, 1:7) == "radius_")
+    return data_radius_grid(data, strpart(method, 8:), mode=mode, xmin=xmin,
       xmax=xmax, ymin=ymin, ymax=ymax, cell=cell, nodata=nodata,
       maxradius=maxradius, minpoints=minpoints, wtpower=wtpower);
+  else
+    error, "Unknown method";
 }
 
 func data_triangle_grid(data, mode=, xmin=, xmax=, ymin=, ymax=, cell=,
