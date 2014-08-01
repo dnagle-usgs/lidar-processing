@@ -431,6 +431,34 @@ func region_to_string(region) {
   return result;
 }
 
+func region_to_bbox(region, geo=) {
+/* DOCUMENT bbox = region_to_bbox(region, geo=)
+  Returns the bounding box for the specified region.
+
+  Options:
+    geo= By default, UTM coordinates are assumed. Use geo=1 to force lat/lon
+      coordinates.
+*/
+  default, geo, 0;
+
+  shp = region_to_shp(region, utm=!geo, ll=geo);
+
+  xmin = ymin =  1e+100;
+  xmax = ymax = -1e+100;
+
+  for(i = 1; i <= numberof(shp); i++) {
+    x = (*shp(i))(1,);
+    y = (*shp(i))(2,);
+
+    xmin = min(xmin, x(min));
+    xmax = max(xmax, x(max));
+    ymin = min(ymin, y(min));
+    ymax = max(ymax, y(max));
+  }
+
+  return [xmin, xmax, ymin, ymax];
+}
+
 func region_limits(region, win=, geo=, expand=, square=) {
 /* DOCUMENT region_limits, region, win=, geo=, expand=, square=
   Resets the window's limits to the specified region. REGION should be any
@@ -451,42 +479,30 @@ func region_limits(region, win=, geo=, expand=, square=) {
   default, expand, 0;
   default, square, 1;
 
-  shp = region_to_shp(region, utm=!geo, ll=geo);
-
-  minx = miny =  1e+100;
-  maxx = maxy = -1e+100;
-
-  for(i = 1; i <= numberof(shp); i++) {
-    x = (*shp(i))(1,);
-    y = (*shp(i))(2,);
-
-    minx = min(minx, x(min));
-    maxx = max(maxx, x(max));
-    miny = min(miny, y(min));
-    maxy = max(maxy, y(max));
-  }
+  local xmin, xmax, ymin, ymax;
+  assign, region_to_bbox(region, geo=geo), xmin, xmax, ymin, ymax;
 
   if(expand > 0) {
     // Cut expand in half so that it can be applied on each side.
     expand /= 2;
 
-    xdif = (maxx - minx) * expand;
-    ydif = (maxy - miny) * expand;
-    minx -= xdif;
-    maxx += xdif;
-    miny -= ydif;
-    maxy += ydif;
+    xdif = (xmax - xmin) * expand;
+    ydif = (ymax - ymin) * expand;
+    xmin -= xdif;
+    xmax += xdif;
+    ymin -= ydif;
+    ymax += ydif;
   } else if(expand < 0) {
     write, "WARNING: region_limits: expand= is less than 0; ignoring"
   }
 
   if(square) {
-    win_square, [minx, maxx, miny, maxy], win=win;
+    win_square, [xmin, xmax, ymin, ymax], win=win;
   } else {
     default, win, current_window();
     wbkp = current_window();
     window, win;
-    limits, minx, maxx, miny, maxy, square=0;
+    limits, xmin, xmax, ymin, ymax, square=0;
     window_select, wbkp;
   }
 }
