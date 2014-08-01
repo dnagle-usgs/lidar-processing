@@ -64,8 +64,10 @@ powerwt=) {
     maxradius= Maximum search radius to use around each point.
     minpoints= Minimum number of points that must be found to interpolate.
     powerwt= Weighting power.
+
+  SEE ALSO: pbd_grid, data_grid, data_triangle_grid, data_radius_grid
 */
-  local err, vname, curmode, xmin, xmax, ymin, ymax;
+  local curmode;
 
   default, searchstr, "*qc.pbd";
   default, buffer, 0;
@@ -92,17 +94,6 @@ powerwt=) {
     write, format="\n%s\n", array("-", 72)(sum);
     write, format="Gridding %d of %d: %s\n", i, numberof(files), tail;
 
-    data = pbd_load(files(i), err, vname);
-    if(is_void(data)) {
-      if(strlen(err))
-        write, format="Skipping %s: %s\n", tail, err;
-      else
-        write, format="Skipping %s: contained no data\n", tail;
-      continue;
-    }
-
-    vname += "_grid";
-
     // Determine mode
     if(is_void(mode)) {
       if(!regmatch("(^|_)(fs|be|ba)(_|\.)", tail, , , curmode)) {
@@ -113,33 +104,12 @@ powerwt=) {
       curmode = mode;
     }
 
-    // Determine bbox -> xmin,xmax,xcount, etc.
-    if(buffer < 0) {
-      xmin = xmax = ymin = ymax = [];
-    } else {
-      bbox = tile2bbox(tail);
-      xmin = bbox([2,4])(min) - buffer;
-      xmax = bbox([2,4])(max) + buffer;
-      ymin = bbox([1,3])(min) - buffer;
-      ymax = bbox([1,3])(max) + buffer;
-    }
+    arcfile = toarc ? file_rootname(outfiles(i)) + ".asc" : [];
 
-    if(method == "triangle")
-      grid = data_triangle_grid(data, mode=mode, xmin=xmin, xmax=xmax,
-        ymin=ymin, ymax=ymax, cell=cell, nodata=nodata, maxside=maxside,
-        maxarea=maxarea, minangle=minangle);
-    else
-      grid = data_radius_grid(data, method, mode=mode, xmin=xmin,
-        xmax=xmax, ymin=ymin, ymax=ymax, cell=cell, nodata=nodata,
-        maxradius=maxradius, minpoints=minpoints, wtpower=wtpower);
-    data = [];
-
-    pbd_save, outfiles(i), vname, grid;
-
-    if(toarc)
-      write_arc_grid, grid, file_rootname(outfiles(i))+".asc";
-
-    grid = [];
+    pbd_grid, files(i), outfile=outfiles(i), method=method, mode=curmode,
+      toarc=toarc, arcfile=arcfile, buffer=buffer, cell=cell, nodata=nodata,
+      maxside=maxside, maxarea=maxarea, minangle=minangle, maxradius=maxradius,
+      minpoints=minpoints, powerwt=powerwt;
 
     write, format="\nFinished %d of %d files, overall progress:\n", i, numberof(files);
     timer_remaining, t0, i, numberof(files);
@@ -148,6 +118,129 @@ powerwt=) {
 
   write, format="\n\nFinished gridding %d files.\n", numberof(files);
   timer_finished, t0;
+}
+
+func pbd_grid(infile, outfile=, method=, mode=, toarc=, arcfile=, buffer=,
+cell=, nodata=, maxside=, maxarea=, minangle=, maxradius=, minpoints=,
+powerwt=) {
+/* DOCUMENT pbd_grid, infile, outfile=, method=, mode=, toarc=, arcfile=,
+   buffer=, cell=, nodata=, maxside=, maxarea=, minangle=, maxradius=,
+   minpoints=, powerwt=
+
+  Grids data for a PBD file.
+
+  Parameter:
+    infile: PBD file to grid.
+
+  Options:
+    outfile= PBD file to output to. Default is to replace the .pbd extension of
+      INFILE with _grid.pbd.
+    arcfile= ASC file to output to for ARC ASCII. Default is to replace .pbd
+      extension of OUTFILE with .asc.
+
+  See batch_grid for details on these options:
+    method=
+    mode=
+    toarc=
+    cell=
+    nodata=
+    maxside=
+    maxarea=
+    minangle=
+    maxradius=
+    minpoints=
+    powerwt=
+
+  SEE ALSO: batch_grid, data_grid, data_triangle_grid, data_radius_grid
+*/
+  local err, vname;
+
+  default, outfile, file_rootname(infile) + "_grid.pbd";
+  default, mode, "fs";
+  default, buffer, 0;
+  default, cell, 1.;
+  default, toarc, 0;
+  default, arcfile, file_rootname(outfile) + ".asc";
+  default, method, "triangle";
+
+  data = pbd_load(infile, err, vname);
+  if(is_void(data)) {
+    if(strlen(err))
+      error, "unable to load pbd: "+err;
+    else
+      error, "pbd empty";
+  }
+
+  vname += "_grid";
+
+  if(buffer < 0) {
+    xmin = xmax = ymin = ymax = [];
+  } else {
+    bbox = tile2bbox(file_tail(infile));
+    xmin = bbox([2,4])(min) - buffer;
+    xmax = bbox([2,4])(max) + buffer;
+    ymin = bbox([1,3])(min) - buffer;
+    ymax = bbox([1,3])(max) + buffer;
+  }
+
+  grid = data_grid(data, method=method, mode=mode, xmin=xmin, xmax=xmax,
+    ymin=ymin, ymax=ymax, cell=cell, nodata=nodata, maxside=maxside,
+    maxarea=maxarea, minangle=minangle, maxradius=maxradius,
+    minpoints=minpoints, powerwt=powerwt);
+  data = [];
+
+  pbd_save, outfile, vname, grid;
+
+  if(toarc)
+    write_arc_grid, grid, arcfile;
+}
+
+func data_grid(data, method=, mode=, region=, xmin=, xmax=, ymin=, ymax=,
+cell=, nodata=, maxside=, maxarea=, minangle=, maxradius=, minpoints=,
+powerwt=) {
+/* DOCUMENT gridded = data_grid(data, method=, mode=, xmin=, xmax=, ymin=,
+   ymax=, cell=, nodata=, maxside=, maxarea=, minangle=, maxradius=,
+   minpoints=, powerwt=)
+
+  Grids data.
+
+  Parameter:
+    data: Data to grid.
+
+  Options:
+    xmin=, xmax=, ymin=, ymax= If provided, the gridded data will be restricted
+      to these bounds. Otherwise, the full extent of the data will be used.
+    region= If provided, this will be used to determine the bounds. If the
+      region specified is not square, then the bounding box of the region will
+      be used. (This overwrites xmin, xmax, ymin, ymax if they are also
+      provided.)
+
+  See batch_grid for details on these options:
+    method=
+    mode=
+    cell=
+    nodata=
+    maxside=
+    maxarea=
+    minangle=
+    maxradius=
+    minpoints=
+    powerwt=
+
+  SEE ALSO: batch_grid, pbd_grid, data_triangle_grid, data_radius_grid
+*/
+  if(!is_void(region)) {
+    assign, region_to_bbox(region, geo=geo), xmin, xmax, ymin, ymax;
+  }
+
+  if(method == "triangle")
+    return data_triangle_grid(data, mode=mode, xmin=xmin, xmax=xmax,
+      ymin=ymin, ymax=ymax, cell=cell, nodata=nodata, maxside=maxside,
+      maxarea=maxarea, minangle=minangle);
+  else
+    return data_radius_grid(data, method, mode=mode, xmin=xmin,
+      xmax=xmax, ymin=ymin, ymax=ymax, cell=cell, nodata=nodata,
+      maxradius=maxradius, minpoints=minpoints, wtpower=wtpower);
 }
 
 func data_triangle_grid(data, mode=, xmin=, xmax=, ymin=, ymax=, cell=,
