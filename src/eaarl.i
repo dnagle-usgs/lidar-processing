@@ -6,6 +6,26 @@
 if(is_func(calps_compatibility))
   require, "calps.i";
 
+// Added 2014-08-01
+// This notice should be kept for at least 6 months (until 2015-02-01)
+if(!is_func(gist_gpbox)) {
+  write, "";
+  write, "Your ALPS installation is out of date and cannot run the current code."
+  write, "You have two options:"
+  write, "  Option 1: You can downgrade your ALPS repository code. To do this,";
+  write, "            go to the lidar-processing directory and run this";
+  write, "            command:";
+  write, "                hg update -r 76d8da69c8e3";
+  write, "            After that ALPS should start normally. Do not update ALPS";
+  write, "            again until you have upgraded your ALPS prerequisites."
+  write, "  Option 2: Upgrade your ALPS prerequisites. You will need to obtain";
+  write, "            a copy of the ALPS installer and install it to bring your";
+  write, "            ALPS dependencies (such as Yorick) up to date.";
+  write, "Option 2 is preferred, since Option 1 locks you in to an older";
+  write, "version of ALPS.";
+  quit;
+}
+
 if(is_void(src_path))
   src_path = pwd();
 
