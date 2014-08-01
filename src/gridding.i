@@ -2,10 +2,10 @@
 
 func batch_grid(dir, outdir=, searchstr=, method=, mode=, toarc=, buffer=,
 cell=, nodata=, maxside=, maxarea=, minangle=, maxradius=, minpoints=,
-powerwt=) {
+powerwt=, update=) {
 /* DOCUMENT batch_grid, dir, outdir=, searchstr=, method=, mode=, toarc=,
   buffer=, cell=, nodata=, maxside=, maxarea=, minangle=, maxradius=,
-  minpoints=, powerwt=;
+  minpoints=, powerwt=, update=;
 
   Batch grids data.
 
@@ -32,6 +32,9 @@ powerwt=) {
       batch_write_arc_grid later.
         toarc=0     Do not create ARC ASCII files. (default)
         toarc=1     Create ARC ASCII files.
+    update= By default, existing files are deleted and recreated. Use update=1
+      to skip existing files. Note that this only looks at the pbd file; it
+      won't create missing arc files for existing pbd files if you use toarc=1.
 
   General gridding options:
     buffer= By default each input file will be clipped to the bounds of the
@@ -75,6 +78,7 @@ powerwt=) {
   default, cell, 1.;
   default, toarc, 0;
   default, method, "triangle";
+  default, update, 0;
 
   files = find(dir, searchstr=searchstr);
 
@@ -86,6 +90,16 @@ powerwt=) {
   outfiles = file_rootname(files) + "_grid.pbd";
   if(!is_void(outdir))
     outfiles = file_join(outdir, file_tail(outfiles));
+
+  if(update) {
+    w = where(!file_exists(outfiles));
+    if(!numberof(w)) {
+      write, "All files already generated";
+      return;
+    }
+    files = files(w);
+    outfiles = outfiles(w);
+  }
 
   options = save(string(0), [], method, toarc, buffer, cell, nodata, maxside,
     maxarea, minangle, maxradius, minpoints, powerwt);
