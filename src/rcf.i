@@ -352,32 +352,6 @@ func gridded_rcf(x, y, z, w, buf, n, progress=, progress_step=, progress_count=)
   return where(keep);
 }
 
-func dual_gridded_rcf(x, y, z, w, buf, n, factor, progress=) {
-/* DOCUMENT idx = dual_gridded_rcf(x, y, z, w, buf, n, factor, progress=)
-  Returns an index into the x/y/z data for those points that survive the filter
-  with the given parameters.
-
-  This is a wrapper around gridded_rcf. It runs it twice. The first time it
-  runs it normally. The second time it runs it by shifting the grid based on
-  factor, which should be a decimal value between 0 and 1 representing how much
-  to shift the grid. A factor of 0.5 will shift the grid 50%. Points that pass
-  either run are kept.
-*/
-  if(progress)
-    status, start, msg="Running RCF filter...";
-  keep = array(char(0), dimsof(x));
-  idx = gridded_rcf(x, y, z, w, buf, n, progress=progress,
-    progress_step=1, progress_count=2);
-  keep(idx) = 1;
-  shift = buf * factor;
-  idx = gridded_rcf(x+shift, y+shift, z, w, buf, n, progress=progress,
-    progress_step=2, progress_count=2);
-  keep(idx) = 1;
-  if(progress)
-    status, finished;
-  return where(keep);
-}
-
 func multi_gridded_rcf(x, y, z, w, buf, n, factor, progress=) {
 /* DOCUMENT idx = multi_gridded_rcf(x, y, z, w, buf, n, factor, progress=)
   Returns an index into the x/y/z data for those points that survive the filter
@@ -447,7 +421,6 @@ progress=) {
     rcfmode= Specifies which rcf filter function to use. Possible settings:
         rcfmode="grcf"    Use gridded_rcf (default)
         rcfmode="rcf"     Use old_gridded_rcf (deprecated)
-        rcfmode="dgrcf"   Use dual_gridded_rcf (experimental)
         rcfmode="mgrcf"   Use multi_gridded_rcf (experimental)
 
     buf= Defines the size of the x/y neighborhood the filter uses, in
@@ -460,9 +433,8 @@ progress=) {
       order to count as successful. Default is 3.
 
     factor= The meaning of this parameter varies depending on rcfmode=.
-      For grcf and rcf, it is ignored. For dgrcf and mgrcf, it is passed
-      through as factor. Default varies by rcfmode.
-        factor=0.5    Default for rcfmode="dgrcf"
+      For grcf and rcf, it is ignored. For mgrcf, it is passed through as
+      factor. Default varies by rcfmode.
         factor=2      Default for rcfmode="mgrcf"
 
     idx= Specifies that the index into the data should be returned instead of
@@ -480,7 +452,6 @@ progress=) {
   default, rcfmode, "grcf";
   default, idx, 0;
 
-  if(rcfmode == "dgrcf") default, factor, 0.5;
   if(rcfmode == "mgrcf") default, factor, 2;
 
   data2xyz, eaarl, x, y, z, mode=mode;
@@ -494,8 +465,6 @@ progress=) {
     keep = gridded_rcf(x, y, z, w, buf, n, progress=progress);
   else if(rcfmode == "rcf")
     keep = old_gridded_rcf(x, y, z, w, buf, n);
-  else if(rcfmode == "dgrcf")
-    keep = dual_gridded_rcf(x, y, z, w, buf, n, factor, progress=progress);
   else if(rcfmode == "mgrcf")
     keep = multi_gridded_rcf(x, y, z, w, buf, n, factor, progress=progress);
   else
