@@ -258,6 +258,30 @@ func job_las2pbd(conf) {
     date=conf.date, geo=geo, zone=zone;
 }
 
+func job_pbd_grid(conf) {
+/* DOCUMENT job_pbd_grid, conf
+  This is a wrapper around pbd_grid.
+*/
+  require, "eaarl.i";
+
+  toarc = pass_void(atoi, conf.toarc);
+  buffer = pass_void(atod, conf.buffer);
+  cell = pass_void(atod, conf.cell);
+  nodata = pass_void(atod, conf.nodata);
+  maxside = pass_void(atod, conf.maxside);
+  maxarea = pass_void(atod, conf.maxarea);
+  minangle = pass_void(atod, conf.minangle);
+  maxradius = pass_void(atod, conf.maxradius);
+  minpoints = pass_void(atoi, conf.minpoints);
+  powerwt = pass_void(atod, conf.powerwt);
+
+  pbd_grid, conf.infile, outfile=conf.outfile, method=conf.method,
+    mode=conf.mode, toarc=toarc, arcfile=conf.arcfile, buffer=buffer,
+    cell=cell, nodata=nodata, maxside=maxside, maxarea=maxarea,
+    minangle=minangle, maxradius=maxradius, minpoints=minpoints,
+    powerwt=powerwt;
+}
+
 func job_retile_scan(conf) {
 /* DOUMENT job_retile_scan, conf
   This is a wrapper around _batch_retile_scan. Each accepted command-line

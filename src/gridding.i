@@ -87,13 +87,14 @@ powerwt=) {
   if(!is_void(outdir))
     outfiles = file_join(outdir, file_tail(outfiles));
 
-  t0 = array(double, 3);
-  timer, t0;
+  options = save(string(0), [], method, toarc, buffer, cell, nodata, maxside,
+    maxarea, minangle, maxradius, minpoints, powerwt);
 
+  conf = save();
+
+  arcfile = [];
   for(i = 1; i <= numberof(files); i++) {
     tail = file_tail(files(i));
-    write, format="\n%s\n", array("-", 72)(sum);
-    write, format="Gridding %d of %d: %s\n", i, numberof(files), tail;
 
     // Determine mode
     if(is_void(mode)) {
@@ -105,20 +106,23 @@ powerwt=) {
       curmode = mode;
     }
 
-    arcfile = toarc ? file_rootname(outfiles(i)) + ".asc" : [];
+    if(toarc) {
+      arcfile = file_rootname(outfiles(i)) + ".asc";
+      remove, arcfile;
+    }
 
-    pbd_grid, files(i), outfile=outfiles(i), method=method, mode=curmode,
-      toarc=toarc, arcfile=arcfile, buffer=buffer, cell=cell, nodata=nodata,
-      maxside=maxside, maxarea=maxarea, minangle=minangle, maxradius=maxradius,
-      minpoints=minpoints, powerwt=powerwt;
-
-    write, format="\nFinished %d of %d files, overall progress:\n", i, numberof(files);
-    timer_remaining, t0, i, numberof(files);
-    write, "";
+    remove, outfiles(i);
+    save, conf, string(0), save(
+      input=files(i),
+      output=grow(outfiles(i), arcfile),
+      command="job_pbd_grid",
+      options=obj_merge(options, save(
+        infile=files(i), outfile=outfiles(i), arcfile, mode=curmode
+      ))
+    );
   }
 
-  write, format="\n\nFinished gridding %d files.\n", numberof(files);
-  timer_finished, t0;
+  makeflow_run, conf;
 }
 
 func pbd_grid(infile, outfile=, method=, mode=, toarc=, arcfile=, buffer=,
