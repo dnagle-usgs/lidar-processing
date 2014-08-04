@@ -145,6 +145,9 @@ proc menu_tools mb {
 
 proc menu_tools_segments mb {
     menu $mb
+    $mb add command {*}[menulabel &Custom...] \
+            -command ::l1pro::segments::launcher::launch
+    $mb add separator
     foreach how [::misc::combinations {flight line channel digitizer}] {
         $mb add command {*}[menulabel [join $how ", "]] \
                 -command [list segment_data_launcher $how]

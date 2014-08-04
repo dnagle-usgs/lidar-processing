@@ -18,6 +18,7 @@ package require l1pro::groundtruth
 package require l1pro::main
 package require l1pro::memory
 package require l1pro::plpix
+package require l1pro::segments
 package require l1pro::status
 package require l1pro::tools
 package require l1pro::transect
