@@ -10,8 +10,8 @@ func split_data(data, how, varname=, timediff=, daythresh=, pulsecount=) {
   Parameters:
     data: An array of ALPS data (in an ALPS structure).
     how: A string or array of strings containing one or more of "flight",
-      "line", "channel", and "digitizer". This specifies what to use as a basis
-      for splitting up the data.
+      "line", "channel", "digitizer", and "ptime". This specifies what to use
+      as a basis for splitting up the data.
   Options:
     varname= The name of the variable. This will be incorporated into the oxy
       group object's key names.
@@ -43,6 +43,8 @@ func split_data(data, how, varname=, timediff=, daythresh=, pulsecount=) {
       segs = subsplit_by_channel(segs);
     else if(how(i) == "digitizer")
       segs = subsplit_by_digitizer(segs);
+    else if(how(i) == "ptime")
+      segs = subsplit_by_ptime(segs);
     else
       error, "unknown split method: "+how(i);
   }
@@ -282,6 +284,32 @@ func split_by_digitizer(data) {
   return ptr;
 }
 
+func split_by_ptime(data) {
+  if(!has_member(data, "ptime"))
+    return [&data];
+
+  tmp = set_remove_duplicates(data.ptime);
+  ptimes = [];
+
+  // Organize so that sorted batch ptimes are first, followed by sorted
+  // interactive ptimes, followed by unknown
+  w = where(tmp > 0);
+  if(numberof(w))
+    grow, ptimes, tmp(w)(sort(tmp(w)));
+  w = where(tmp < 0);
+  if(numberof(w))
+    grow, ptimes, tmp(w)(sort(abs(tmp(w))));
+  if(anyof(tmp == 0)) grow, ptimes, 0;
+
+  num = numberof(ptimes);
+  ptr = array(pointer, num);
+  for(i = 1; i <= num; i++) {
+    w = where(data.ptime == ptimes(i));
+    ptr(i) = &data(w);
+  }
+  return ptr;
+}
+
 func subsplit_fmt(prefix, num, varname) {
   fmt = swrite(format="%s%%0%dd", prefix, int_digits(num));
   if(strlen(varname))
@@ -322,8 +350,8 @@ func subsplit_by_channel(segs) {
     fmt = subsplit_fmt("chan", num, segs(*,i));
     for(j = 1; j <= num; j++) {
       data = *ptr(j);
-      chan = has_member(*ptr(j), "channel") ? (*ptr(j)).channel(1) : 0;
-      save, result, swrite(format=fmt, chan), *ptr(j);
+      chan = has_member(data, "channel") ? data.channel(1) : 0;
+      save, result, swrite(format=fmt, chan), data;
     }
   }
   return result;
@@ -337,6 +365,31 @@ func subsplit_by_digitizer(segs) {
     fmt = subsplit_fmt("d", num, segs(*,i));
     for(j = 1; j <= num; j++)
       save, result, swrite(format=fmt, j), *ptr(j);
+  }
+  return result;
+}
+
+func subsplit_by_ptime(segs) {
+  result = save();
+  for(i = 1; i <= segs(*); i++) {
+    ptr = split_by_ptime(segs(noop(i)));
+    num = numberof(ptr);
+
+    pre = "";
+    if(strlen(segs(*,i)))
+      pre = segs(*,i) + "_";
+
+    for(j = 1; j <= num; j++) {
+      data = *ptr(j);
+      ptime = has_member(data, "ptime") ? data.ptime(1) : 0;
+      if(ptime > 0) {
+        save, result, pre+swrite(format="pb%d", ptime), data;
+      } else if(ptime < 0) {
+        save, result, pre+swrite(format="pi%d", abs(ptime)), data;
+      } else {
+        save, result, pre+"punknown", data;
+      }
+    }
   }
   return result;
 }
