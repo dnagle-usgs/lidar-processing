@@ -19,6 +19,7 @@ snit::widget ::l1pro::segments::launcher::gui {
     variable line 0
     variable channel 0
     variable digitizer 0
+    variable ptime 0
 
     constructor args {
         $self configure {*}$args
@@ -43,7 +44,7 @@ snit::widget ::l1pro::segments::launcher::gui {
         grid $f.lblVar $f.cboVar -sticky ew -padx 2 -pady 2
         grid $f.lblVar -sticky w
 
-        foreach type {flight line channel digitizer} {
+        foreach type {flight ptime line channel digitizer} {
             ttk::checkbutton $f.chk$type \
                 -variable [myvar $type] \
                 -text $type
@@ -57,7 +58,7 @@ snit::widget ::l1pro::segments::launcher::gui {
 
     method launch {} {
         set how [list]
-        foreach type {flight line channel digitizer} {
+        foreach type {flight ptime line channel digitizer} {
             if {[set $type]} {
                 lappend how $type
             }
