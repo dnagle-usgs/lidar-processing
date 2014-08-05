@@ -141,7 +141,7 @@ func split_by_flight(data, timediff=, daythresh=, pulsecount=, spr=) {
   // Convert daythresh from minutes to seconds
   daythresh *= 60;
 
-  lines = split_by_line(data, timediff=timediff);
+  lines = split_by_ptime(data);
 
   // Solve linear equations -----------------------------------------------
   // Derive the parameters for the linear equation:
