@@ -580,7 +580,7 @@ proc ::l1pro::groundtruth::scatter::panel w {
     ttk::labelframe $f -text Plots
     ::mixin::frame::scrollable $f.f -xfill 1 -yfill 1 \
             -yscrollcommand [list $f.vs set]
-    ttk::scrollbar $f.vs -command [list $f.f yview]
+    ::mixin::scrollbar::autohide $f.vs -command [list $f.f yview]
 
     grid $f.f $f.vs -sticky news -padx 0 -pady 0
     grid rowconfigure $f 0 -weight 1
@@ -600,7 +600,7 @@ proc ::l1pro::groundtruth::scatter::panel w {
     ttk::labelframe $f -text Metrics
     ::mixin::frame::scrollable $f.f -xfill 1 -yfill 1 \
             -yscrollcommand [list $f.vs set]
-    ttk::scrollbar $f.vs -command [list $f.f yview]
+    ::mixin::scrollbar::autohide $f.vs -command [list $f.f yview]
 
     grid $f.f $f.vs -sticky news -padx 0 -pady 0
     grid rowconfigure $f 0 -weight 1
@@ -774,7 +774,7 @@ proc ::l1pro::groundtruth::hist::panel w {
     ttk::labelframe $f -text Plots
     ::mixin::frame::scrollable $f.f -xfill 1 -yfill 1\
             -yscrollcommand [list $f.vs set]
-    ttk::scrollbar $f.vs -command [list $f.f yview]
+    ::mixin::scrollbar::autohide $f.vs -command [list $f.f yview]
 
     grid $f.f $f.vs -sticky news -padx 0 -pady 0
     grid rowconfigure $f 0 -weight 1
@@ -1169,7 +1169,7 @@ proc ::l1pro::groundtruth::report::panel w {
     ttk::labelframe $f -text Metrics
     ::mixin::frame::scrollable $f.f -xfill 1 -yfill 1 \
             -yscrollcommand [list $f.vs set]
-    ttk::scrollbar $f.vs -command [list $f.f yview]
+    ::mixin::scrollbar::autohide $f.vs -command [list $f.f yview]
 
     grid $f.f $f.vs -sticky news -padx 0 -pady 0
     grid rowconfigure $f 0 -weight 1
