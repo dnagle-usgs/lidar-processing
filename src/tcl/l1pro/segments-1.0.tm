@@ -249,13 +249,22 @@ snit::widget ::l1pro::segments::main::gui {
         $self init_opt_var -fmavariable 0
 
         set f1 $win.fraVariables
-        iwidgets::scrolledframe $f1 \
-            -vscrollmode dynamic \
-            -hscrollmode dynamic \
-            -relief groove
+        ttk::frame $f1
 
-        set f [$f1 childsite]
-        $f configure -padx 4
+        ::mixin::frame::scrollable $f1.f -yfill 1 -xfill 1 \
+                -xscrollcommand [list $f1.hs set] \
+                -yscrollcommand [list $f1.vs set]
+                #-relief groove
+        ::mixin::scrollbar::autohide $f1.vs -command [list $f1.f yview] \
+                -orient vertical
+        ::mixin::scrollbar::autohide $f1.hs -command [list $f1.f xview] \
+                -orient horizontal
+        grid $f1.f $f1.vs -sticky news
+        grid $f1.hs x -sticky news
+        grid columnconfigure $f1 0 -weight 1
+        grid rowconfigure $f1 0 -weight 1
+
+        set f [$f1.f interior]
 
         set mb $f.btnHeadingSelect.mb
         # \u2713 is Unicode for a checkmark
@@ -429,10 +438,7 @@ snit::widget ::l1pro::segments::main::gui {
 
         grid rowconfigure $win 0 -weight 1
 
-        after idle [list after 0 [mymethod refresh_times]]
-        after idle [list after 0 [mymethod size_optimally]]
-        after idle [list after 250 [mymethod size_optimally]]
-        after idle [list after 1000 [mymethod size_optimally]]
+        bind $win <Configure> [mymethod startup_init]
     }
 
     method SetTitle {option value} {
@@ -447,79 +453,58 @@ snit::widget ::l1pro::segments::main::gui {
         }
     }
 
-    method size_optimally {} {
-        set f $win.fraVariables
-
-        $f configure \
-            -vscrollmode none \
-            -hscrollmode none
-
-        wm geometry $win ""
-
-        set hw [winfo width $win]
-        set fsw [winfo width $f]
-        set frw [winfo reqwidth [$f childsite]]
-        set padw [expr {[[$f childsite] cget -padx] * 2}]
-        set nw [expr {$hw + ($frw - $fsw) + $padw + 4}]
-
-        set hh [winfo height $win]
-        set fsh [winfo height $f]
-        set frh [winfo reqheight [$f childsite]]
-        set padh [expr {[[$f childsite] cget -pady] * 2}]
-        set nh [expr {$hh + ($frh - $fsh) + $padh + 4}]
-
-        set sw [winfo screenwidth $win]
-        set sh [winfo screenheight $win]
-
-        set too_w 0
-        if {$nw > $sw - 100} {
-            set nw [expr {$sw - 100}]
-            set too_w 1
-        }
-
-        set too_h 0
-        if {$nh > $sh - 100} {
-            set nh [expr {$sh - 100}]
-            set too_h 1
-        }
-
-        if {$too_w && ! $too_h} {
-            incr nh [expr {8 + [$f cget -sbwidth]}]
-        }
-
-        if {$too_h && ! $too_w} {
-            incr nw [expr {8 + [$f cget -sbwidth]}]
-        }
-
-        $f configure \
-            -vscrollmode dynamic \
-            -hscrollmode dynamic
-
-        set ow [expr {($sw - $nw)/2}]
-        set oh [expr {($sh - $nh)/2}]
-
-        wm geometry $win "${nw}x${nh}+$ow+$oh"
-
-        $f configure \
-            -vscrollmode none \
-            -hscrollmode none
-        update idletasks
-        set xv [$f xview]
-        set yv [$f yview]
-        $f configure \
-            -vscrollmode dynamic \
-            -hscrollmode dynamic
-        update idletasks
-        {*}[[$f component canvas] cget -xscrollcommand] {*}$xv
-        {*}[[$f component canvas] cget -yscrollcommand] {*}$yv
-        {*}[[$f component canvas] cget -xscrollcommand] {*}[$f xview]
-        {*}[[$f component canvas] cget -yscrollcommand] {*}[$f yview]
+    method startup_init {} {
+        bind $win <Configure> {}
+        $self refresh_times [mymethod size_optimally]
     }
 
-    method refresh_times {} {
-        for {set i 1} {$i <= $_count} {incr i} {
-            after [expr {$i * 20}] [list \
-                ybkg tk_sdw_send_times \"[mymethod set_time]\" $i $_segment($i,var)]
+    method size_optimally {{recurse 1}} {
+        lassign [split [wm geometry $win] x+] ow oh
+
+        set f $win.fraVariables.f
+        set fi [$f interior]
+        $f configure \
+                -width [winfo width $fi] \
+                -height [winfo height $fi]
+
+        wm geometry $win ""
+        update idletasks
+        lassign [split [wm geometry $win] x+] w h x y
+
+        set sh [winfo screenheight $win]
+        set maxh [expr {min($sh - 100, int($sh * 0.8))}]
+        if {$h > $maxh} {set h $maxh}
+
+        $f configure -height [winfo height $f]
+
+        wm geometry $win ""
+        update idletasks
+        lassign [split [wm geometry $win] x+] w
+
+        set sw [winfo screenwidth $win]
+        set maxw [expr {min($sw - 100, int($sw * 0.8))}]
+        set w [expr {min($w + 10, $maxw)}]
+
+        wm geometry $win ${w}x${h}+${x}+${y}
+
+        if {$recurse && ($w != $ow || $h != $oh)} {
+            ::misc::idle [mymethod size_optimally 0]
+        }
+    }
+
+    method refresh_times {{callback {}}} {
+        ybkg tk_sdw_send_times \"[mymethod set_time_dispatch $callback]\" \
+                1 $_segment(1,var)
+    }
+
+    method set_time_dispatch {callback idx start end} {
+        ::misc::idle [mymethod set_time $idx $start $end]
+        if {$idx < $_count} {
+            incr idx
+            ybkg tk_sdw_send_times \"[mymethod set_time_dispatch $callback]\" \
+                    $idx $_segment($idx,var)
+        } else {
+            ::misc::idle $callback
         }
     }
 
