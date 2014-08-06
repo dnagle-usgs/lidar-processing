@@ -419,16 +419,16 @@ func tk_sdw_launch_split(varname, how) {
   vars = strjoin(segs(*,), " ");
   how = strjoin(how, ", ");
   title = "Segments for "+varname+" by "+how;
-  tkcmd, swrite(format="launch_segmenteddatawindow {%s} -title {%s}",
+  tkcmd, swrite(format="::l1pro::segments::main::launch_segs {%s} -title {%s}",
     vars, title);
 }
 
-func tk_sdw_send_times(obj, idx, data) {
+func tk_sdw_send_times(cmd, idx, data) {
   mintime = soe2iso8601(data.soe(min));
   maxtime = soe2iso8601(data.soe(max));
 
-  cmd = swrite(format="%s set_time %d {%s} {%s}",
-    obj, idx, mintime, maxtime);
+  cmd = swrite(format="%s %d {%s} {%s}",
+    cmd, idx, mintime, maxtime);
 
   tkcmd, cmd;
 }

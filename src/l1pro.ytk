@@ -276,4 +276,4 @@ if {![winfo exists .l1wid]} {
 }
 
 package require plot
-source [file join $src_path data_segments.ytk]
+source [file join $src_path data_stats.ytk]

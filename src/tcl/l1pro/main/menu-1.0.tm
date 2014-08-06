@@ -160,7 +160,7 @@ proc menu_tools_segments mb {
         {channel digitizer}
     } {
         $mb add command {*}[menulabel [join $how ", "]] \
-                -command [list segment_data_launcher $how]
+                -command [list ::l1pro::segments::main::launch_split $how]
     }
     return $mb
 }
