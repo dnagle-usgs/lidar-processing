@@ -135,7 +135,7 @@ snit::widget ::l1pro::segments::launcher::gui {
             return
         }
 
-        ::l1pro::segments::main::launch $wanted $options(-vname)
+        ::l1pro::segments::main::launch_split $wanted $options(-vname)
         destroy $win
     }
 }
