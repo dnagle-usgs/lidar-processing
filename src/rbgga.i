@@ -194,11 +194,16 @@ func tans_check_times(sods, verbose=) {
   sod_start = sods(1,);
   sod_stop = sods(2,);
 
-  count = numberof(sod_start);
   keep = array(0, numberof(tans));
-  for(i = 1; i <= count; i++) {
-    keep |= (sod_start(i) <= tans.somd & tans.somd <= sod_stop(i));
-  }
+  idx = digitize(sods, tans.somd);
+  idx_start = idx(1,);
+  idx_stop = min(idx(2,)+1, numberof(tans));
+  w = where(sod_stop > tans.somd(idx_stop));
+  if(numberof(w)) idx_stop(w) = max(1, idx_stop(w)-1);
+
+  count = numberof(sod_start);
+  for(i = 1; i <= count; i++)
+    keep(idx_start(i):idx_stop(i)) = 1;
 
   q = where(keep);
   if(!numberof(q)) return;
