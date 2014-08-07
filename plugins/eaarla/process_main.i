@@ -763,7 +763,30 @@ func hook_prep_job_eaarl_process(env) {
   for(i = 1; i <= conf(*); i++) {
     item = conf(noop(i));
     if(item.command != "job_eaarl_process") continue;
-    needed = 1;
+
+    if(!needed) {
+      needed = 1;
+
+      wrapped = mission(wrap, cache_what="everything");
+      if(wrapped(*,"bathconf_data"))
+        save, wrapped, bathconf_data=serialize(wrapped.bathconf_data);
+      if(wrapped(*,"ops_conf"))
+        save, wrapped, ops_conf=serialize(wrapped.ops_conf);
+      if(wrapped(*,"vegconf_data"))
+        save, wrapped, vegconf_data=serialize(wrapped.vegconf_data);
+
+      // Temporary hack for veg
+      define_veg_conf;
+      save, wrapped, veg_conf;
+
+      // Saved separately
+      obj_delete, wrapped, "tans", "iex_nav";
+
+      mkdirp, path;
+      corefn = file_join(path, "core.flight");
+      obj2pbd, wrapped, corefn;
+      wrapped = [];
+    }
 
     keep = array(0, dimsof(tans));
     for(j = 1; j <= numberof(item.options.rnstart); j++) {
@@ -775,27 +798,16 @@ func hook_prep_job_eaarl_process(env) {
 
     }
     w = where(keep);
-    wrapped = mission(wrap, cache_what="everything");
-    save, wrapped, tans=tans(w), iex_nav=iex_nav(w);
-    if(wrapped(*,"bathconf_data"))
-      save, wrapped, bathconf_data=serialize(wrapped.bathconf_data);
-    if(wrapped(*,"ops_conf"))
-      save, wrapped, ops_conf=serialize(wrapped.ops_conf);
-    if(wrapped(*,"vegconf_data"))
-      save, wrapped, vegconf_data=serialize(wrapped.vegconf_data);
-
-    // Temporary hack for veg
-    define_veg_conf;
-    save, wrapped, veg_conf;
+    wrapped = save(tans=tans(w), iex_nav=iex_nav(w));
 
     flight = extract_tile(file_tail(item.options.pbdfn(1)));
     if(!flight) flight = strjoin(file_tail(file_rootname(
       item.options.pbdfn(*))),"_");
-    flightfn = file_join(path, flight+".flight");
-    mkdirp, path;
-    obj2pbd, wrapped, flightfn;
+    insfn = file_join(path, flight+".flight");
+    obj2pbd, wrapped, insfn;
     wrapped = [];
 
+    flightfn = [corefn, insfn];
     save, item, input=grow(item.input, flightfn);
     save, item.options, flightfn;
   }
@@ -812,7 +824,9 @@ func hook_run_job_eaarl_process(env) {
   if(env.job_func != "job_eaarl_process" || !env.conf(*,"flightfn"))
     return env;
 
-  wrapped = pbd2obj(env.conf.flightfn);
+  wrapped = save();
+  for(i = 1; i <= numberof(env.conf.flightfn); i++)
+    obj_merge, wrapped, pbd2obj(env.conf.flightfn(i));
 
   // Temporary hack for old-style veg
   extern veg_conf;
