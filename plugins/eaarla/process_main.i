@@ -694,6 +694,7 @@ exactsel=, splitchan=, opts=) {
   local offset_start, offset_stop, tldfn;
   count = dimsof(outfiles)(2);
   conf = save();
+  write, "Building jobs...";
   for(i = 1; i <= count; i++) {
     if(update) {
       skip = 1;
@@ -744,6 +745,7 @@ exactsel=, splitchan=, opts=) {
   hook_add, "makeflow_run", "hook_prep_job_eaarl_process";
   hook_add, "job_run", "hook_run_job_eaarl_process";
 
+  write, "Preparing makeflow...";
   makeflow_run, conf, makeflow_fn, interval=15, norun=norun;
 
   timer_finished, t0;
