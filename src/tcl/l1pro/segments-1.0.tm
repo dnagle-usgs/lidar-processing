@@ -252,15 +252,10 @@ snit::widget ::l1pro::segments::main::gui {
         ttk::frame $f1
 
         ::mixin::frame::scrollable $f1.f -yfill 1 -xfill 1 \
-                -xscrollcommand [list $f1.hs set] \
                 -yscrollcommand [list $f1.vs set]
-                #-relief groove
         ::mixin::scrollbar::autohide $f1.vs -command [list $f1.f yview] \
                 -orient vertical
-        ::mixin::scrollbar::autohide $f1.hs -command [list $f1.f xview] \
-                -orient horizontal
         grid $f1.f $f1.vs -sticky news
-        grid $f1.hs x -sticky news
         grid columnconfigure $f1 0 -weight 1
         grid rowconfigure $f1 0 -weight 1
 
