@@ -90,15 +90,6 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
     return am_subroutine() ? [] : [x, y, z];
   }
 
-  // Special case for pcobj
-  if(is_obj(data) && data(*,"class")) {
-    class = where(["be","ba","fs"] == mode);
-    if(!numberof(class))
-      return [];
-    class = ["bare_earth", "submerged_topo", "first_surface"](class)(1);
-    return splitary(data(xyz, class), 3, x, y, z);
-  }
-
   // Special handling for POINTCLOUD_2PT
   if(structeq(structof(data), POINTCLOUD_2PT)) {
     if(anyof(["ba","be","ch","de","lint"] == mode)) {
