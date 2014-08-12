@@ -499,7 +499,7 @@ namespace eval ::l1pro::groundtruth::scatter {
 if {![namespace exists ::l1pro::groundtruth::scatter::v]} {
     namespace eval ::l1pro::groundtruth::scatter::v {
         variable data best
-        variable win 21
+        variable win 41
         variable dofma 1
         variable title ""
         variable xtitle "Ground Truth Data (m)"
@@ -687,7 +687,7 @@ namespace eval ::l1pro::groundtruth::hist {
 if {![namespace exists ::l1pro::groundtruth::hist::v]} {
     namespace eval ::l1pro::groundtruth::hist::v {
         variable data best
-        variable win 20
+        variable win 40
         variable dofma 1
         variable logy 0
         variable title ""
