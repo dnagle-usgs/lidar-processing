@@ -65,6 +65,7 @@ require, "yeti_yhdf.i";
 if(_ytk) {
   require, "ytk.i";
   require, "ytk_window.i";
+  require, "ytk_window_resizable.i";
 } else {
   require, "noytk.i";
 }

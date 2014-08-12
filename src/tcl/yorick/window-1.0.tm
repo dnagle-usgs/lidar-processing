@@ -64,7 +64,6 @@ snit::widget ::yorick::window::embedded {
     component right
 
     variable show_toolbar 1
-    variable allow_resize 0
 
     constructor {args} {
         # Window starts out withdrawn by default. Yorick can deiconify it when
@@ -195,12 +194,6 @@ snit::widget ::yorick::window::embedded {
         exp_send "$cmd;\r"
     }
 
-    method EnableResize {} {
-        set allow_resize 1
-        exp_send "#include \"ytk_window_resizable.i\"\r"
-        $self UpdateToolbar
-    }
-
     method SetOwner {option value} {
         set options($option) $value
         $self UpdateToolbar
@@ -235,14 +228,13 @@ snit::widget ::yorick::window::embedded {
                     -style Toolbutton \
                     -menu $mb
             menu $mb
-            if {$allow_resize} {
-                $mb add command \
-                        -label "Resize Window nolabels" \
-                        -command [mymethod SendResize nolabels]
-                $mb add command \
-                        -label "Resize Window with labels" \
-                        -command [mymethod SendResize labels ]
-            }
+            $mb add command \
+                    -label "Resize Window nolabels" \
+                    -command [mymethod SendResize nolabels]
+            $mb add command \
+                    -label "Resize Window with labels" \
+                    -command [mymethod SendResize labels ]
+            $mb add separator
             $mb add command \
                     -label "75 DPI / 450x450" \
                     -command [mymethod resize work 75]
@@ -267,11 +259,6 @@ snit::widget ::yorick::window::embedded {
                 }
             }
 
-            if {!$allow_resize}  {
-                $mb add command \
-                        -label "Enable Resizing" \
-                        -command [mymethod EnableResize]
-            }
             ::misc::tooltip $f.resize \
                     "Change the window size. This opens a menu that gives you
                     options for resizing the window."
