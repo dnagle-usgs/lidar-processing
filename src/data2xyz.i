@@ -90,39 +90,13 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
     return am_subroutine() ? [] : [x, y, z];
   }
 
-  // Special handling for POINTCLOUD_2PT
-  if(structeq(structof(data), POINTCLOUD_2PT)) {
-    if(anyof(["ba","be","ch","de","lint"] == mode)) {
-      x = data.lx;
-      y = data.ly;
-    } else if(anyof(["fint","fs"] == mode)) {
-      x = data.fx;
-      y = data.fy;
-    } else if(mode == "mir") {
-      x = data.mx;
-      y = data.my;
-    } else {
-      error, "Unknown mode.";
-    }
-
-    if(anyof(["ba","be"] == mode)) {
-      z = data.lz;
-    } else if(mode == "ch") {
-      z = data.fz - data.lz;
-    } else if(mode == "de") {
-      z = data.lz - data.fz;
-    } else if(mode == "fint") {
-      z = data.fint;
-    } else if(mode == "fs") {
-      z = data.fz;
-    } else if(mode == "lint") {
-      z = data.lint;
-    } else if(mode == "mir") {
-      z = data.mz;
-    }
-
-    if(am_subroutine()) return;
-    return [x, y, z];
+  // Special handling for POINTCLOUD_2PT and other newer-style structures
+  if(
+    structeq(structof(data), POINTCLOUD_2PT)
+    || has_member(data, "x") || has_member(data, "fx")
+  ) {
+    data2xyz_dynamic, data, x, y, z, mode=mode;
+    return am_subroutine() ? [] : [x, y, z];
   }
 
   // Most data modes use east/north for x/y. Only bare earth and be intensity
@@ -216,5 +190,110 @@ func data2xyz_zgrid(data, &x, &y, &z) {
   x = x(w);
   y = y(w);
   z = z(w);
+  return am_subroutine() ? [] : [x,y,z];
+}
+
+func data2xyz_dynamic_xy(data, &x, &y, mode=) {
+  if(anyof(["ba","be","ch","de","lint"] == mode)) {
+    which = "last";
+  } else if(anyof(["fint","fs"] == mode)) {
+    which = "first";
+  } else if(mode == "mir") {
+    which = "mirror";
+  } else {
+    which = "default";
+  }
+
+  x = y = [];
+  if(which == "last") {
+    if(has_member(data, "lx") && has_member(data, "ly")) {
+      x = data.lx;
+      y = data.ly;
+      return;
+    }
+  }
+  if(which == "first") {
+    if(has_member(data, "fx") && has_member(data, "fy")) {
+      x = data.fx;
+      y = data.fy;
+      return;
+    }
+  }
+  if(which == "mirror") {
+    if(has_member(data, "mx") && has_member(data, "my")) {
+      x = data.mx;
+      y = data.my;
+      return;
+    }
+  }
+  if(has_member(data, "x") && has_member(data, "y")) {
+    x = data.x;
+    y = data.y;
+    return;
+  }
+  if(has_member(data, "fx") && has_member(data, "fy")) {
+    x = data.fx;
+    y = data.fy;
+    return;
+  }
+}
+
+func data2xyz_dynamic_z_field(data, mode) {
+  if(anyof(mode == ["ba","be"])) {
+    if(has_member(data, "lz")) return "lz";
+    if(has_member(data, "z")) return "z";
+  }
+  if(mode == "fs") {
+    if(has_member(data, "fz")) return "fz";
+    if(has_member(data, "z")) return "z";
+  }
+  if(mode == "mir" && has_member(data, "mz"))
+    return "mz";
+  if(mode == "de" && has_member(data, "depth"))
+    return "depth";
+  if(mode == "fint") {
+    if(has_member(data, "intensity")) return "intensity";
+    if(has_member(data, "first_peak")) return "first_peak";
+  }
+  if(mode == "lint" && has_member(data, "bottom_peak"))
+    return "bottom_peak";
+  if(has_member(data, mode))
+    return mode;
+}
+
+func data2xyz_dynamic_z(data, &z, mode=) {
+  z = [];
+
+  field = data2xyz_dynamic_z_field(data, mode);
+  if(field) {
+    z = get_member(data, field);
+    return;
+  }
+
+  if(mode == "ba") {
+    field1 = data2xyz_dynamic_z_field(data, "fs");
+    field2 = data2xyz_dynamic_z_field(data, "depth");
+    if(field1 && field2) {
+      z = get_member(data, field1) + get_member(data, field2);
+      return;
+    }
+  }
+
+  if(mode == "ch") {
+    field1 = data2xyz_dynamic_z_field(data, "fs");
+    field2 = data2xyz_dynamic_z_field(data, "be");
+    return get_member(data, field1) - get_member(data, field2);
+  }
+
+  if(mode == "de" || mode == "depth") {
+    field1 = data2xyz_dynamic_z_field(data, "fs");
+    field2 = data2xyz_dynamic_z_field(data, "ba");
+    return get_member(data, field2) - get_member(data, field1);
+  }
+}
+
+func data2xyz_dynamic(data, &x, &y, &z, mode=) {
+  data2xyz_dynamic_xy, data, x, y, mode=mode;
+  data2xyz_dynamic_z, data, z, mode=mode;
   return am_subroutine() ? [] : [x,y,z];
 }
