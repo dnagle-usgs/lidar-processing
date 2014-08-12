@@ -86,31 +86,8 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
 
   // Special case for gridded data
   if(structeq(structof(data), ZGRID)) {
-    if(numberof(data) > 1) {
-      ptrs = array(pointer, numberof(data));
-      for(i = 1; i <= numberof(data); i++)
-        ptrs(i) = &transpose(data2xyz(data(i)));
-      merged = merge_pointers(ptrs);
-      merged = reform(merged, [2, 3, numberof(merged)/3]);
-      return splitary(merged, 3, x, y, z);
-    } else {
-      z = *(data.zgrid);
-      x = y = array(double, dimsof(z));
-      xmax = data.xmin + dimsof(x)(2) * data.cell;
-      ymax = data.ymin + dimsof(y)(3) * data.cell;
-      hc = 0.5 * data.cell;
-      x(,) = span(data.xmin+hc, xmax-hc, dimsof(x)(2))(,-);
-      y(,) = span(data.ymin+hc, ymax-hc, dimsof(y)(3))(-,);
-      w = where(z != data.nodata);
-      if(numberof(w)) {
-        x = x(w);
-        y = y(w);
-        z = z(w);
-      } else {
-        x = y = z = [];
-      }
-      return am_subroutine() ? [] : [x, y, z];
-    }
+    data2xyz_zgrid, data, x, y, z;
+    return am_subroutine() ? [] : [x, y, z];
   }
 
   // Special case for pcobj
@@ -218,4 +195,35 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
   // overhead of creating an unnecessary array.
   if(!am_subroutine())
     return [x, y, z];
+}
+
+func data2xyz_zgrid(data, &x, &y, &z) {
+  if(numberof(data) > 1) {
+    ptrs = array(pointer, numberof(data));
+    for(i = 1; i <= numberof(data); i++)
+      ptrs(i) = &transpose(data2xyz_zgrid(data(i)));
+    merged = merge_pointers(ptrs);
+    merged = reform(merged, [2, 3, numberof(merged)/3]);
+    splitary, merged, 3, x, y, z;
+    return am_subroutine() ? [] : [x,y,z];
+  }
+
+  z = *(data.zgrid);
+  x = y = array(double, dimsof(z));
+  xmax = data.xmin + dimsof(x)(2) * data.cell;
+  ymax = data.ymin + dimsof(y)(3) * data.cell;
+  hc = 0.5 * data.cell;
+  x(,) = span(data.xmin+hc, xmax-hc, dimsof(x)(2))(,-);
+  y(,) = span(data.ymin+hc, ymax-hc, dimsof(y)(3))(-,);
+  w = where(z != data.nodata);
+
+  if(!numberof(w)) {
+    x = y = z = [];
+    return;
+  }
+
+  x = x(w);
+  y = y(w);
+  z = z(w);
+  return am_subroutine() ? [] : [x,y,z];
 }
