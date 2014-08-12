@@ -108,6 +108,7 @@ require, "class_deque.i";
 require, "colorbar.i";
 require, "cs.i";
 require, "cs_geotiff.i";
+require, "data2xyz.i";
 require, "data_rgn_selector.i";
 require, "data_segments.i";
 require, "datum_converter.i";
