@@ -226,9 +226,7 @@ xy=) {
         npts = numberof(xp);
         new_pts = array(strct, npts);
 
-        if(mode != "fs")
-          new_pts = xyz2data(xp, yp, zp, new_pts, mode=mode);
-        new_pts = xyz2data(xp, yp, zp, new_pts, mode="fs");
+        new_pts = xyz2data(xp, yp, zp, new_pts, mode=mode);
 
         new_pts.rn = new_pts.soe = indgen(count+1:count+npts);
         count += npts;
