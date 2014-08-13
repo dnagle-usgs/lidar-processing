@@ -1,5 +1,109 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+local alps_data_modes;
+/* DOCUMENT alps_data_modes
+  Many functions through ALPS take a mode= option that controls how a data
+  variable is interpreted as x,y,z values. This documention explains the values
+  the option can take and how it interplays with various kinds of data.
+
+  == Overview ==
+
+  There are four different kinds of data that can potentially be handled:
+    - a multi-dimensional numerical array with a dimension of size 3
+    - gridded data in the ZGRID structure
+    - data in dynamic ALPS structures/objects that contain x,y,z (or fx,fy,fz)
+      style fields; these are detected based on the presence of an "x" or "fx"
+      field
+    - data in legacy ALPS structures such as FS, VEG__, etc. that contain east,
+      north, elevation style fields; these are detected based on the present of
+      an "east" field
+
+  For numerical arrays and gridded data, the mode is ignored. These two kinds
+  of data do not have the complexity to support multiple data modes. However,
+  functions are engineered to let them pass through where possible to allow the
+  functions to be used against the wide possible range of inputs. However, not
+  all functions that accept mode= options may accept these two kinds of data.
+  In general, functions that just look at the data as-is will be fine, wheres
+  functions that take action on the data (such as indexing into it or modifying
+  it) may fail. Functions that want access to supplementary fields such as
+  soe or raster may also fail.
+
+  But most of the time, data will be in either a legacy ALPS structure or a
+  dynamic ALPS structure or object. In these cases, the mode actually means
+  something and is interpreted based on the fields present as described below.
+
+  A few functions include a native= option. This option only applies to the
+  legacy ALPS structures and is explained in that section below.
+
+  == Dynamic Structs and Objects ==
+
+  The default behavior for dynamic structs and oxy groups/objects is to return
+  the field whose name matches mode for z. For x and y, fields "x" and "y" are
+  returned if present; otherwise, "fx" and "fy" are returned in present.
+  However, there are a bunch of special cases.
+
+  The following modes use "lx" and "ly" if possible:
+    "ba" (bathy)
+    "be" (bare earth)
+    "ch" (canopy height)
+    "de" (water depth)
+    "lint" (last return intensity)
+
+  The following modes use "fx" and "fy" if possible:
+    "fs" (first surface)
+    "fint" (first return intensity)
+
+  The following mode uses "mx" and "my" if possible:
+    "mir" (mirror)
+
+  For all of the above, if the prefered fields are not present, it will fall
+  back to using "x" and "y" if present; then will fall back to "fx" and "fy" if
+  present.
+
+  The following modes use the values specified for z, if possible:
+    "ba" (bathy) uses "lz" or "z"
+    "be" (bare earth) uses "lz" or "z"
+    "fs" (first surface) uses "fx" or "z"
+    "mir" (mirror) uses "mz"
+    "de" (depth) uses "depth"
+
+  There are also a few modes that will attempt to use a derived value for z, if
+  other attempts to derive the z value fail:
+    "ba" (bathy) uses mode "fs" + mode "depth"
+    "ch" (canopy height) uses mode "fs" - mode "be"
+    "de" and "depth" (depth) use mode "ba" - mode "fs"
+
+  == Legacy Structs ==
+
+  The default behavior for legacy structs is to return "east" for x, "north"
+  for y, and then the field whose name matches mode for z. However, there are a
+  bunch of special cases.
+
+  The following modes use "least" for x and "lnorth" for y, if possible:
+    "be" (bare earth)
+    "lint" (last return intensity)
+
+  The following mode uses "meast" for x and "mnorth" for y, if possible:
+    "mir" (mirror)
+
+  The following modes use the values specified for z, if possible:
+    "fs" (first surface) uses "elevation"
+    "be" (bare earth) uses "lelv"
+    "de" (water depth) uses "depth"
+    "fint" (first return intensity) uses "intensity", "fint", or "first_peak"
+    "lint" (last return intensity) uses "lint" or "bottom_peak"
+    "mir" (mirror) uses "melevation"
+
+  There are also a few modes that will attempt to use a derived value for z, if
+  other attempts to derive the z value fail:
+    "ba" (bathy) uses mode "fs" + mode "depth"
+    "ch" (canopy height) uses mode "fs" - mode "be"
+
+  If native=0, then the x and y fields will be returned as integer centimeters
+  instead of being converted to double meters. The same will be done for the z
+  value for these modes: "ba", "be", "ch", "de", "fs", "mir".
+*/
+
 func data2xyz(data, &x, &y, &z, mode=, native=) {
 /* DOCUMENT data2xyz, data, x, y, z, mode=, native=
   result = data2xyz(data, mode=, native=)
@@ -12,69 +116,7 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
   result(..,2) and result(..,3) on the off chance that the input data is
   multidimensional.
 
-  Any values stored in data as centimeters will normally be returned in
-  meters. If you would like them returned in their native form (as
-  centimeters) use native=1.
-
-  Valid values for mode, and their corresponding meanings:
-
-    mode="ba" (Bathymetry)
-      x = .east
-      y = .north
-      z = .elevation + .depth
-
-    mode="be" (Bare earth)
-      x = .least
-      y = .lnorth
-      z = .lelv
-
-    mode="ch" (Canopy height)
-      x = .east
-      y = .north
-      z = .elevation - .lelv
-
-    mode="de" (Water depth)
-      x = .east
-      y = .north
-      z = .depth
-
-    mode="fint" (First return intensity)
-      x = .east
-      y = .north
-      z = .intensity OR .fint OR .first_peak (whichever is available)
-
-    mode="fs" (First return)
-      x = .east
-      y = .north
-      z = .elevation
-
-    mode="lint" (Last return intensity)
-      x = .least OR .east
-      y = .lnorth OR .north
-      z = .lint OR .bottom_peak (whichever is available)
-
-    mode="mir" (Mirror)
-      x = .meast
-      y = .mnorth
-      z = .melevation
-
-  This function can also handle a number of special cases for input:
-
-  - Multi-dimensional numerical arrays. The data must be an array with two or
-    more dimensions, and either the first, second, or last dimension must have
-    a size of three. The first of those dimensions with size three will be used
-    to break the array up into x, y, z components.
-
-  - Gridded data in ZGRID structure. This data will be converted into a
-    multi-dimensional numerical array and then handled as described above.
-
-  - Objects of the pcobj class. Only "be", "ba", and "fs" modes are supported.
-    The points returned will be those corresponding to the "bare_earth",
-    "submerged_topo", and "first_surface" classes respectively.
-
-  - Data in the POINTCLOUD_2PT structure. This data is handled similarly to the
-    tranditional structures, except that "native=" has no effect since the data
-    is natively in floating point format.
+  Please see alps_data_modes for information on the mode= and native= options.
 */
   default, mode, "fs";
   default, native, 0;
