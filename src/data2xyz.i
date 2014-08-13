@@ -286,7 +286,7 @@ func data2xyz_legacy_xy(data, &x, &y, mode=, native=) {
     x = get_member(data, xfield);
     y = get_member(data, yfield);
 
-    if(native) {
+    if(!native) {
       x *= 0.01;
       y *= 0.01;
     }
