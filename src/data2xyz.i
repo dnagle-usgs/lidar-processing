@@ -247,7 +247,7 @@ func data2xyz_legacy_xy_fields(data, &xfield, &yfield, mode=) {
   xfield = yfield = [];
 
   if(
-    anyof(["ba","be","ch","de","fint","fs"] == mode) ||
+    anyof(["ba","ch","de","fint","fs"] == mode) ||
     ("lint"==mode && !has_member(data,"least"))
   ) {
     if(has_member(data, "east") && has_member(data, "north")) {
