@@ -196,12 +196,6 @@ func data2xyz_dynamic_z_field(data, mode) {
     return "mz";
   if(mode == "de" && has_member(data, "depth"))
     return "depth";
-  if(mode == "fint") {
-    if(has_member(data, "intensity")) return "intensity";
-    if(has_member(data, "first_peak")) return "first_peak";
-  }
-  if(mode == "lint" && has_member(data, "bottom_peak"))
-    return "bottom_peak";
   if(has_member(data, mode))
     return mode;
 }
