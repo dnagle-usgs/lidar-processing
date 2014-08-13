@@ -99,67 +99,12 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
     return am_subroutine() ? [] : [x, y, z];
   }
 
-  // Most data modes use east/north for x/y. Only bare earth and be intensity
-  // use least/lnorth.
-  if(
-    anyof(["ba","ch","de","fint","fs"] == mode) ||
-    ("lint"==mode && !has_member(data,"least"))
-  ) {
-    x = data.east;
-    y = data.north;
-  } else if(anyof(["be","lint"] == mode)) {
-    x = data.least;
-    y = data.lnorth;
-  } else if("mir" == mode) {
-    x = data.meast;
-    y = data.mnorth;
-  } else if(has_member(data, mode)) {
-    x = data.east;
-    y = data.north;
-  } else {
-    error, "Unknown mode.";
+  if(has_member(data, "east")) {
+    data2xyz_legacy, data, x, y, z, mode=mode, native=native;
+    return am_subroutine() ? [] : [x, y, z];
   }
 
-  // Each mode works differently for z.
-  if("ba" == mode) {
-    z = data.elevation + data.depth;
-  } else if("be" == mode) {
-    z = data.lelv;
-  } else if("ch" == mode) {
-    z = data.elevation - data.lelv;
-  } else if("de" == mode) {
-    z = data.depth;
-  } else if("fint" == mode) {
-    if(has_member(data, "intensity"))
-      z = data.intensity;
-    else if(has_member(data, "fint"))
-      z = data.fint;
-    else
-      z = data.first_peak;
-  } else if("fs" == mode) {
-    z = data.elevation;
-  } else if("lint" == mode) {
-    if(has_member(data, "bottom_peak"))
-      z = data.bottom_peak;
-    else
-      z = data.lint;
-  } else if("mir" == mode) {
-    z = data.melevation;
-  } else if(has_member(data, mode)) {
-    z = get_member(data, mode);
-  }
-
-  if(!native) {
-    x = x * 0.01;
-    y = y * 0.01;
-    if(anyof(["ba","be","ch","de","fs","mir"] == mode))
-      z = z * 0.01;
-  }
-
-  // Only want to do this if it's not a subroutine, to avoid the memory
-  // overhead of creating an unnecessary array.
-  if(!am_subroutine())
-    return [x, y, z];
+  error, "don't know how to handle data";
 }
 
 func data2xyz_zgrid(data, &x, &y, &z) {
@@ -296,4 +241,67 @@ func data2xyz_dynamic(data, &x, &y, &z, mode=) {
   data2xyz_dynamic_xy, data, x, y, mode=mode;
   data2xyz_dynamic_z, data, z, mode=mode;
   return am_subroutine() ? [] : [x,y,z];
+}
+
+func data2xyz_legacy(data, &x, &y, &z, mode=, native=) {
+  // Most data modes use east/north for x/y. Only bare earth and be intensity
+  // use least/lnorth.
+  if(
+    anyof(["ba","ch","de","fint","fs"] == mode) ||
+    ("lint"==mode && !has_member(data,"least"))
+  ) {
+    x = data.east;
+    y = data.north;
+  } else if(anyof(["be","lint"] == mode)) {
+    x = data.least;
+    y = data.lnorth;
+  } else if("mir" == mode) {
+    x = data.meast;
+    y = data.mnorth;
+  } else if(has_member(data, mode)) {
+    x = data.east;
+    y = data.north;
+  } else {
+    error, "Unknown mode.";
+  }
+
+  // Each mode works differently for z.
+  if("ba" == mode) {
+    z = data.elevation + data.depth;
+  } else if("be" == mode) {
+    z = data.lelv;
+  } else if("ch" == mode) {
+    z = data.elevation - data.lelv;
+  } else if("de" == mode) {
+    z = data.depth;
+  } else if("fint" == mode) {
+    if(has_member(data, "intensity"))
+      z = data.intensity;
+    else if(has_member(data, "fint"))
+      z = data.fint;
+    else
+      z = data.first_peak;
+  } else if("fs" == mode) {
+    z = data.elevation;
+  } else if("lint" == mode) {
+    if(has_member(data, "bottom_peak"))
+      z = data.bottom_peak;
+    else
+      z = data.lint;
+  } else if("mir" == mode) {
+    z = data.melevation;
+  } else if(has_member(data, mode)) {
+    z = get_member(data, mode);
+  }
+
+  if(!native) {
+    x = x * 0.01;
+    y = y * 0.01;
+    if(anyof(["ba","be","ch","de","fs","mir"] == mode))
+      z = z * 0.01;
+  }
+
+  // Only want to do this if it's not a subroutine, to avoid the memory
+  // overhead of creating an unnecessary array.
+  return am_subroutine() ? [] : [x, y, z];
 }
