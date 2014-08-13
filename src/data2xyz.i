@@ -240,6 +240,7 @@ func data2xyz_dynamic_z(data, &z, mode=) {
 func data2xyz_dynamic(data, &x, &y, &z, mode=) {
   data2xyz_dynamic_xy, data, x, y, mode=mode;
   data2xyz_dynamic_z, data, z, mode=mode;
+  if(is_void(x) || is_void(z)) error, "invalid mode";
   return am_subroutine() ? [] : [x,y,z];
 }
 
@@ -349,5 +350,6 @@ func data2xyz_legacy_z(data, &z, mode=, native=) {
 func data2xyz_legacy(data, &x, &y, &z, mode=, native=) {
   data2xyz_legacy_xy, data, x, y, mode=mode, native=native;
   data2xyz_legacy_z, data, z, mode=mode, native=native;
+  if(is_void(x) || is_void(z)) error, "invalid mode";
   return am_subroutine() ? [] : [x,y,z];
 }
