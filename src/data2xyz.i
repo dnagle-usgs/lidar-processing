@@ -293,46 +293,61 @@ func data2xyz_legacy_xy(data, &x, &y, mode=, native=) {
   }
 }
 
+func data2xyz_legacy_z_field(data, mode) {
+  if(mode == "fs" && has_member(data, "elevation"))
+    return "elevation";
+  if(mode == "be" && has_member(data, "lelv"))
+    return "lelv";
+  if(mode == "de" && has_member(data, "depth"))
+    return "depth";
+  if(mode == "fint") {
+    if(has_member(data, "intensity"))
+      return "intensity";
+    if(has_member(data, "first_peak"))
+      return "first_peak";
+  }
+  if(mode == "lint" && has_member(data, "bottom_peak"))
+    return "bottom_peak";
+  if(mode == "mir" && has_member(data, "melevation"))
+    return "melevation";
+  if(has_member(data, mode))
+    return mode;
+}
+
+func data2xyz_legacy_z(data, &z, mode=, native=) {
+  z = [];
+
+  field = data2xyz_legacy_z_field(data, mode);
+  if(field) {
+    z = get_member(data, field);
+    if(!native && anyof(["ba","be","ch","de","fs","mir"] == mode))
+      z *= 0.01;
+    return;
+  }
+
+  if(mode == "ba") {
+    field1 = data2xyz_legacy_z_field(data, "fs");
+    field2 = data2xyz_legacy_z_field(data, "depth");
+    if(field1 && field2) {
+      z = get_member(data, field1) + get_member(data, field2);
+      if(!native) z *= 0.01;
+      return;
+    }
+  }
+
+  if(mode == "ch") {
+    field1 = data2xyz_legacy_z_field(data, "fs");
+    field2 = data2xyz_legacy_z_field(data, "be");
+    if(field1 && field2) {
+      z = get_member(data, field1) - get_member(data, field2);
+      if(!native) z *= 0.01;
+      return;
+    }
+  }
+}
+
 func data2xyz_legacy(data, &x, &y, &z, mode=, native=) {
   data2xyz_legacy_xy, data, x, y, mode=mode, native=native;
-
-  // Each mode works differently for z.
-  if("ba" == mode) {
-    z = data.elevation + data.depth;
-  } else if("be" == mode) {
-    z = data.lelv;
-  } else if("ch" == mode) {
-    z = data.elevation - data.lelv;
-  } else if("de" == mode) {
-    z = data.depth;
-  } else if("fint" == mode) {
-    if(has_member(data, "intensity"))
-      z = data.intensity;
-    else if(has_member(data, "fint"))
-      z = data.fint;
-    else
-      z = data.first_peak;
-  } else if("fs" == mode) {
-    z = data.elevation;
-  } else if("lint" == mode) {
-    if(has_member(data, "bottom_peak"))
-      z = data.bottom_peak;
-    else
-      z = data.lint;
-  } else if("mir" == mode) {
-    z = data.melevation;
-  } else if(has_member(data, mode)) {
-    z = get_member(data, mode);
-  }
-
-  if(!native) {
-    x = x * 0.01;
-    y = y * 0.01;
-    if(anyof(["ba","be","ch","de","fs","mir"] == mode))
-      z = z * 0.01;
-  }
-
-  // Only want to do this if it's not a subroutine, to avoid the memory
-  // overhead of creating an unnecessary array.
-  return am_subroutine() ? [] : [x, y, z];
+  data2xyz_legacy_z, data, z, mode=mode, native=native;
+  return am_subroutine() ? [] : [x,y,z];
 }
