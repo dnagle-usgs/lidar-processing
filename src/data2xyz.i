@@ -243,27 +243,58 @@ func data2xyz_dynamic(data, &x, &y, &z, mode=) {
   return am_subroutine() ? [] : [x,y,z];
 }
 
-func data2xyz_legacy(data, &x, &y, &z, mode=, native=) {
-  // Most data modes use east/north for x/y. Only bare earth and be intensity
-  // use least/lnorth.
+func data2xyz_legacy_xy_fields(data, &xfield, &yfield, mode=) {
+  xfield = yfield = [];
+
   if(
-    anyof(["ba","ch","de","fint","fs"] == mode) ||
+    anyof(["ba","be","ch","de","fint","fs"] == mode) ||
     ("lint"==mode && !has_member(data,"least"))
   ) {
-    x = data.east;
-    y = data.north;
-  } else if(anyof(["be","lint"] == mode)) {
-    x = data.least;
-    y = data.lnorth;
-  } else if("mir" == mode) {
-    x = data.meast;
-    y = data.mnorth;
-  } else if(has_member(data, mode)) {
-    x = data.east;
-    y = data.north;
-  } else {
-    error, "Unknown mode.";
+    if(has_member(data, "east") && has_member(data, "north")) {
+      xfield = "east";
+      yfield = "north";
+      return;
+    }
   }
+  if(anyof(["lint","be"] == mode)) {
+    if(has_member(data, "least") && has_member(data, "lnorth")) {
+      xfield = "least";
+      yfield = "lnorth";
+      return;
+    }
+  }
+  if(mode == "mir") {
+    if(has_member(data, "meast") && has_member(data, "mnorth")) {
+      xfield = "meast";
+      yfield = "mnorth";
+      return;
+    }
+  }
+  if(has_member(data, mode)) {
+    if(has_member(data, "east") && has_member(data, "north")) {
+      xfield = "east";
+      yfield = "north";
+      return;
+    }
+  }
+}
+
+func data2xyz_legacy_xy(data, &x, &y, mode=, native=) {
+  x = y = xfield = yfield = [];
+  data2xyz_legacy_xy_fields, data, xfield, yfield, mode=mode;
+  if(xfield && yfield) {
+    x = get_member(data, xfield);
+    y = get_member(data, yfield);
+
+    if(native) {
+      x *= 0.01;
+      y *= 0.01;
+    }
+  }
+}
+
+func data2xyz_legacy(data, &x, &y, &z, mode=, native=) {
+  data2xyz_legacy_xy, data, x, y, mode=mode, native=native;
 
   // Each mode works differently for z.
   if("ba" == mode) {
