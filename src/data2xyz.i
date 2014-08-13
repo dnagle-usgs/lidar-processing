@@ -138,48 +138,48 @@ func data2xyz_zgrid(data, &x, &y, &z) {
   return am_subroutine() ? [] : [x,y,z];
 }
 
-func data2xyz_dynamic_xy(data, &x, &y, mode=) {
-  if(anyof(["ba","be","ch","de","lint"] == mode)) {
-    which = "last";
-  } else if(anyof(["fint","fs"] == mode)) {
-    which = "first";
-  } else if(mode == "mir") {
-    which = "mirror";
-  } else {
-    which = "default";
-  }
+func data2xyz_dynamic_xy_fields(data, &xfield, &yfield, mode=) {
+  xfield = yfield = [];
 
-  x = y = [];
-  if(which == "last") {
+  if(anyof(["ba","be","ch","de","lint"] == mode)) {
     if(has_member(data, "lx") && has_member(data, "ly")) {
-      x = data.lx;
-      y = data.ly;
+      xfield = "lx";
+      yfield = "ly";
       return;
     }
   }
-  if(which == "first") {
+  if(anyof(["fint","fs"] == mode)) {
     if(has_member(data, "fx") && has_member(data, "fy")) {
-      x = data.fx;
-      y = data.fy;
+      xfield = "fx";
+      yfield = "fy";
       return;
     }
   }
-  if(which == "mirror") {
+  if(mode == "mir") {
     if(has_member(data, "mx") && has_member(data, "my")) {
-      x = data.mx;
-      y = data.my;
+      xfield = "mx";
+      yfield = "my";
       return;
     }
   }
   if(has_member(data, "x") && has_member(data, "y")) {
-    x = data.x;
-    y = data.y;
+    xfield = "x";
+    yfield = "y";
     return;
   }
   if(has_member(data, "fx") && has_member(data, "fy")) {
-    x = data.fx;
-    y = data.fy;
+    xfield = "fx";
+    yfield = "fy";
     return;
+  }
+}
+
+func data2xyz_dynamic_xy(data, &x, &y, mode=) {
+  x = y = xfield = yfield = [];
+  data2xyz_dynamic_xy_fields, data, xfield, yfield, mode=mode;
+  if(xfield && yfield) {
+    x = get_member(data, xfield);
+    y = get_member(data, yfield);
   }
 }
 
