@@ -149,6 +149,112 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
   error, "don't know how to handle data";
 }
 
+func xyz2data(_1, &_2, _3, &_4, mode=, native=) {
+/* DOCUMENT xyz2data
+  Creates or updates a data array with the specified x, y, z coordinates as
+  specified by mode. This is largely an inverse operation to data2xyz.
+
+  You can call this in a two-parameter or four parameter fashion. To update a
+  data variable in place:
+    xyz2data, x, y, z, data, mode=
+    xyz2data, xyz, data, mode=
+  Or alternately, to return a new data variable:
+    result = xyz2data(x, y, z, data, mode=);
+    result = xyz2data(xyz, data, mode=);
+
+  If you use xyz, it should be a multidimensional array that can be split into
+  x, y, and z components.
+
+  Unlike data2xyz, xyz2data cannot work with data when it is a numerical array
+  or gridded data. If data is a dynamic new-style struct or object and mode=
+  does not correspond to any existing z-value fields, then the z value will be
+  added with the name specified by mode (provided that x and y fields were
+  found).
+
+  If you are calling xyz2data as a function, you can alternately provide a
+  struct instance for data. An array of that struct type will be created to
+  hold the output data. (This cannot be done with subroutine calls, since it
+  would clobber the struct.)
+
+  If you are using a legacy-style struct, you can also specify native=0 if the
+  values you are providing are in cm instead of m.
+
+  Please see alps_data_modes for information on the mode= and native= options.
+*/
+  default, mode, "fs";
+  default, native, 0;
+
+  x = y = z = data = [];
+  if(is_void(_3)) {
+    splitary, _1, 3, x, y, z;
+    data = noop(_2);
+  } else {
+    x = _1;
+    y = _2;
+    z = _3;
+    data = noop(_4);
+  }
+
+  // Safegurading so that structs are not accidentally clobbered
+  if(am_subroutine() && is_struct(data))
+    error, "when using xyz2data as a subroutine, data cannot be a struct reference";
+
+  if(is_void(data))
+    error, "no destination provided";
+
+  if(is_obj(data)) data = obj_copy(data, recurse=1);
+  if(is_hash(data)) data = h_copy(data, 1);
+  if(is_struct(data)) data = array(data, dimsof(x));
+
+  to_struct = 0;
+  if(
+    typeof(data) == "struct_instance" &&
+    anyof(nameof(structof(data)) == ["DYN_PC","DYN_PC_DUAL"])
+  ) {
+    to_struct = 1;
+    data = struct2obj(data);
+  }
+
+  if(is_numerical(data))
+    error, "xyz2data cannot handle numerical data";
+
+  if(structeq(structof(data), ZGRID))
+    error, "xyz2data cannot handle gridded data";
+
+  // Special handling for POINTCLOUD_2PT and other newer-style structures
+  if(
+    structeq(structof(data), POINTCLOUD_2PT)
+    || has_member(data, "x") || has_member(data, "fx")
+  ) {
+    xyz2data_dynamic, x, y, z, data, mode=mode;
+    goto FINISH;
+  }
+
+  if(has_member(data, "east")) {
+    xyz2data_legacy, x, y, z, data, mode=mode, native=native;
+    goto FINISH;
+  }
+
+  error, "unable to handle data";
+
+  FINISH:
+  if(to_struct) {
+    if(data(*,"fx")) {
+      data = obj2struct(data, name="DYN_PC_DUAL", ary=1);
+    } else if(data(*,"x")) {
+      data = obj2struct(data, name="DYN_PC", ary=1);
+    } else {
+      error, "unable to handle data";
+    }
+  }
+
+  if(!am_subroutine()) return data;
+  if(is_void(_3))
+    eq_nocopy, _2, data;
+  else
+    eq_nocopy, _4, data;
+}
+
 func data2xyz_zgrid(data, &x, &y, &z) {
   if(numberof(data) > 1) {
     ptrs = array(pointer, numberof(data));
@@ -286,6 +392,76 @@ func data2xyz_dynamic(data, &x, &y, &z, mode=) {
   return am_subroutine() ? [] : [x,y,z];
 }
 
+func xyz2data_dynamic(x, y, z, &data, mode=) {
+  xfield = yfield = zfield = [];
+
+  data2xyz_dynamic_xy_fields, data, xfield, yfield, mode=mode;
+  if(!xfield || !yfield)
+    error, "unable to map mode to data";
+
+  zfield = data2xyz_dynamic_z_field(data, mode);
+  if(zfield) {
+    set_member, data, xfield, x;
+    set_member, data, yfield, y;
+    set_member, data, zfield, z;
+    return;
+  }
+
+  if(mode == "ba") {
+    field1 = data2xyz_dynamic_z_field(data, "fs");
+    field2 = data2xyz_dynamic_z_field(data, "depth");
+    if(field1 && field2) {
+      set_member, data, xfield, x;
+      set_member, data, yfield, y;
+      set_member, data, field2, z - get_member(data, field1);
+      return;
+    }
+  }
+
+  if(mode == "ch") {
+    field1 = data2xyz_legacy_z_field(data, "fs");
+    field2 = data2xyz_legacy_z_field(data, "be");
+    if(field1 && field2) {
+      set_member, data, xfield, x;
+      set_member, data, yfield, y;
+      if(anyof(get_member(data, field1)))
+        set_member, data, field2, get_member(data, field1) - z;
+      else
+        set_member, data, field1, get_member(data, field2) + z;
+      return;
+    }
+  }
+
+  if(mode == "de" || mode == "depth") {
+    field1 = data2xyz_dynamic_z_field(data, "fs");
+    field2 = data2xyz_dynamic_z_field(data, "ba");
+    if(field1 && field2) {
+      set_member, data, xfield, x;
+      set_member, data, yfield, y;
+      set_member, data, field2, get_member(data, field1) + z;
+      return;
+    }
+  }
+
+  // If it's an object, we can add a new field
+  if(is_obj(data)) {
+    set_member, data, xfield, x;
+    set_member, data, yfield, y;
+    save, data, noop(mode), z;
+    return;
+  }
+
+  // If it's a hash, we can add a new field
+  if(is_hash(data)) {
+    set_member, data, xfield, x;
+    set_member, data, yfield, y;
+    h_set, data, mode, z;
+    return;
+  }
+
+  error, "unable to map mode to data";
+}
+
 func data2xyz_legacy_xy_fields(data, &xfield, &yfield, mode=) {
   xfield = yfield = [];
 
@@ -394,4 +570,54 @@ func data2xyz_legacy(data, &x, &y, &z, mode=, native=) {
   data2xyz_legacy_z, data, z, mode=mode, native=native;
   if(is_void(x) || is_void(z)) error, "invalid mode";
   return am_subroutine() ? [] : [x,y,z];
+}
+
+func xyz2data_legacy(x, y, z, &data, mode=, native=) {
+  xfield = yfield = zfield = [];
+
+  if(!native) {
+    x = long(x * 100);
+    y = long(y * 100);
+    if(anyof(["ba","be","ch","de","fs","mir"] == mode))
+      z = long(z * 100);
+  }
+
+  data2xyz_legacy_xy_fields, data, xfield, yfield, mode=mode;
+  if(!xfield || !yfield)
+    error, "unable to map mode to data";
+
+  zfield = data2xyz_legacy_z_field(data, mode);
+  if(zfield) {
+    set_member, data, xfield, x;
+    set_member, data, yfield, y;
+    set_member, data, zfield, z;
+    return;
+  }
+
+  if(mode == "ba") {
+    field1 = data2xyz_legacy_z_field(data, "fs");
+    field2 = data2xyz_legacy_z_field(data, "depth");
+    if(field1 && field2) {
+      set_member, data, xfield, x;
+      set_member, data, yfield, y;
+      set_member, data, field2, z - get_member(data, field1);
+      return;
+    }
+  }
+
+  if(mode == "ch") {
+    field1 = data2xyz_legacy_z_field(data, "fs");
+    field2 = data2xyz_legacy_z_field(data, "be");
+    if(field1 && field2) {
+      set_member, data, xfield, x;
+      set_member, data, yfield, y;
+      if(anyof(get_member(data, field1)))
+        set_member, data, field2, get_member(data, field1) - z;
+      else
+        set_member, data, field1, get_member(data, field2) + z;
+      return;
+    }
+  }
+
+  error, "unable to map mode to data";
 }
