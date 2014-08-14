@@ -263,13 +263,19 @@ func data2xyz_dynamic_z(data, &z, mode=) {
   if(mode == "ch") {
     field1 = data2xyz_dynamic_z_field(data, "fs");
     field2 = data2xyz_dynamic_z_field(data, "be");
-    return get_member(data, field1) - get_member(data, field2);
+    if(field1 && field2) {
+      z = get_member(data, field1) - get_member(data, field2);
+      return;
+    }
   }
 
   if(mode == "de" || mode == "depth") {
     field1 = data2xyz_dynamic_z_field(data, "fs");
     field2 = data2xyz_dynamic_z_field(data, "ba");
-    return get_member(data, field2) - get_member(data, field1);
+    if(field1 && field2) {
+      z = get_member(data, field2) - get_member(data, field1);
+      return;
+    }
   }
 }
 
