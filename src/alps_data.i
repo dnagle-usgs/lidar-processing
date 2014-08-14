@@ -261,19 +261,6 @@ func struct_cast(&data, dest, verbose=, special=) {
   Certain pairs of structures have specialized functionality. You can disable
   this functionality by specifying special=0. Here are the conversions with
   special functionality:
-    GEOALL, VEG_ALL, VEG_ALL_, R, ZGRID -> POINTCLOUD_2PT
-      These are handled as a two-step process. Specifically:
-        GEOALL -> GEO -> POINTCLOUD_2PT
-        VEG_ALL -> VEG_ -> POINTCLOUD_2PT
-        VEG_ALL_ -> VEG__ -> POINTCLOUD_2PT
-        R -> FS -> POINTCLOUD_2PT
-        ZGRID -> FS -> POINTCLOUD_2PT
-    POINTCLOUD_2PT -> GEOALL, VEG_ALL, VEG_ALL_, R
-      These are handled as a two-step process. Specifically:
-        POINTCLOUD_2PT -> GEO -> GEOALL
-        POINTCLOUD_2PT -> VEG_ -> VEG_ALL
-        POINTCLOUD_2PT -> VEG__ -> VEG_ALL_
-        POINTCLOUD_2PT -> FS -> R
     LFP_VEG -> FS, VEG__, VEG_, VEG, GEO
       LFP_VEG uses pointers for .elevation; this dereferences them and stores
       to .elevation creating multiple points (which means that
@@ -340,29 +327,6 @@ func struct_cast(&data, dest, verbose=, special=) {
   if(special) {
     src = structof(data);
     dst = dest;
-
-    if(structeqany(src, GEOALL, VEG_ALL, VEG_ALL_, R) && structeq(dst, POINTCLOUD_2PT)) {
-      struct_cast, data, verbose=verbose;
-      src = structof(data);
-    }
-
-    if(structeq(src, ZGRID) && structeq(dst, POINTCLOUD_2PT)) {
-      struct_cast, data, FS, verbose=verbose;
-      src = structof(data);
-    }
-
-    if(structeq(src, POINTCLOUD_2PT)) {
-      if(structeq(dst, GEOALL)) {
-        struct_cast, data, GEO, verbose=verbose;
-      } else if(structeq(dst, VEG_ALL)) {
-        struct_cast, data, VEG_, verbose=verbose;
-      } else if(structeq(dst, VEG_ALL_)) {
-        struct_cast, data, VEG__, verbose=verbose;
-      } else if(structeq(dst, R)) {
-        struct_cast, data, FS, verbose=verbose;
-      }
-      src = structof(data);
-    }
 
     // LFP_VEG requires special treatment since once of its members is a pointer
     if(structeq(src, LFP_VEG) && structeqany(dst, FS, VEG__, VEG_, VEG, GEO)) {
@@ -478,83 +442,6 @@ func struct_cast(&data, dest, verbose=, special=) {
         result.least = result.east;
         result.lnorth = result.north;
         result.lelv = result.elevation;
-      }
-    }
-
-    if(structeq(src, POINTCLOUD_2PT)) {
-      if(has_member(result, "meast"))
-        result.meast = data.mx * 100;
-      if(has_member(result, "mnorth"))
-        result.mnorth = data.my * 100;
-      if(has_member(result, "melevation"))
-        result.melevation = data.mz * 100;
-      if(has_member(result, "east"))
-        result.east = data.fx * 100;
-      if(has_member(result, "north"))
-        result.north = data.fy * 100;
-      if(has_member(result, "elevation"))
-        result.elevation = data.fz * 100;
-      if(has_member(result, "least"))
-        result.least = data.lx * 100;
-      if(has_member(result, "lnorth"))
-        result.lnorth = data.ly * 100;
-      if(has_member(result, "lelv"))
-        result.lelv = data.lz * 100;
-      if(has_member(result, "intensity"))
-        result.intensity = data.fint;
-        // This only applied to EAARL-A
-        //result.intensity = data.fint + 300 * (data.channel-1);
-      if(has_member(result, "first_peak"))
-        result.first_peak = data.fint;
-      if(has_member(result, "bottom_peak"))
-        result.bottom_peak = data.lint;
-
-      if(structeq(dst, GEO)) {
-        result.east = data.lx * 100;
-        result.north = data.ly * 100;
-        result.depth = (data.lz - data.fz) * 100;
-      }
-    }
-
-    if(structeq(dst, POINTCLOUD_2PT)) {
-      if(has_member(data, "meast"))
-        result.mx = data.meast * 0.01;
-      if(has_member(data, "mnorth"))
-        result.my = data.mnorth * 0.01;
-      if(has_member(data, "melevation"))
-        result.mz = data.melevation * 0.01;
-      if(has_member(data, "east"))
-        result.fx = data.east * 0.01;
-      if(has_member(data, "north"))
-        result.fy = data.north * 0.01;
-      if(has_member(data, "elevation"))
-        result.fz = data.elevation * 0.01;
-      if(has_member(data, "least"))
-        result.lx = data.least * 0.01;
-      if(has_member(data, "lnorth"))
-        result.ly = data.lnorth * 0.01;
-      if(has_member(data, "lelv"))
-        result.lz = data.lelv * 0.01;
-      if(has_member(data, "intensity"))
-        result.fint = data.intensity;
-      if(has_member(data, "first_peak"))
-        result.fint = data.first_peak;
-      if(has_member(data, "bottom_peak"))
-        result.lint = data.bottom_peak;
-      if(has_member(data, "rn"))
-        result.pulse = parse_rn(data.rn)(,2);
-
-      if(structeq(src, FS)) {
-        result.lx = result.fx;
-        result.ly = result.fy;
-        result.lz = result.fz;
-        result.nx = 1;
-      }
-      if(structeq(src, GEO)) {
-        result.lx = result.fx;
-        result.ly = result.fy;
-        result.lz = (data.elevation + data.depth) * 0.01;
-        result.nx = 2;
       }
     }
   }

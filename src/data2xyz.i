@@ -132,11 +132,8 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
     return am_subroutine() ? [] : [x, y, z];
   }
 
-  // Special handling for POINTCLOUD_2PT and other newer-style structures
-  if(
-    structeq(structof(data), POINTCLOUD_2PT)
-    || has_member(data, "x") || has_member(data, "fx")
-  ) {
+  // Special handling for newer-style dynamic structures
+  if(has_member(data, "x") || has_member(data, "fx")) {
     data2xyz_dynamic, data, x, y, z, mode=mode;
     return am_subroutine() ? [] : [x, y, z];
   }
@@ -221,11 +218,8 @@ func xyz2data(_1, &_2, _3, &_4, mode=, native=) {
   if(structeq(structof(data), ZGRID))
     error, "xyz2data cannot handle gridded data";
 
-  // Special handling for POINTCLOUD_2PT and other newer-style structures
-  if(
-    structeq(structof(data), POINTCLOUD_2PT)
-    || has_member(data, "x") || has_member(data, "fx")
-  ) {
+  // Special handling for newer-style dynamic structures
+  if(has_member(data, "x") || has_member(data, "fx")) {
     xyz2data_dynamic, x, y, z, data, mode=mode;
     goto FINISH;
   }
