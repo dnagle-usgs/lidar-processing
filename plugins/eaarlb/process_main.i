@@ -5,6 +5,13 @@ local eaarl_processing_modes;
   This variable defines the routines needed to process EAARL data. New EAARL
   processing modes will get a new entry in this oxy object. This allows the
   processing functions to be generalized and extensible.
+
+  At present, these are the built-in processing modes in ALPS:
+
+    "f" - first surface processing
+    "b" - bathymetric processing
+    "v" - topo under veg processing
+    "sb" - shallow bathymetric processing
 */
 if(is_void(eaarl_processing_modes)) eaarl_processing_modes = save();
 save, eaarl_processing_modes,
@@ -42,11 +49,9 @@ func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, ptime=, opts=) {
       STOP is ignored.
 
   Options:
-    mode= Processing mode.
+    mode= Processing mode. See eaarl_processing_modes for full list of
+      available modes.
         mode="f"    Process for first surface (default)
-        mode="b"    Process for bathymetry (submerged topography)
-        mode="v"    Process for vegetation (bare earth)
-        mode="sb"   Process for shallow bathymetry
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
     channel= Specifies which channel or channels to process. Required. This can
@@ -98,11 +103,9 @@ opts=) {
     draw a box to select the region.
 
   Options for processing:
-    mode= Processing mode.
+    mode= Processing mode. See eaarl_processing_modes for full list of
+      available modes.
         mode="f"    Process for first surface (default)
-        mode="b"    Process for bathymetry (submerged topography)
-        mode="v"    Process for vegetation (bare earth)
-        mode="sb"   Process for shallow bathymetry
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
     channel= Specifies which channel or channels to process. Required. This can
@@ -204,7 +207,8 @@ ext_bad_att=, ptime=, opts=) {
     rnstart: Raster number of first raster in selected data.
 
   Options:
-    mode= Processing mode.
+    mode= Processing mode. See eaarl_processing_modes for full list of
+      available modes.
         mode="f"    Process for first surface (default)
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
@@ -281,7 +285,8 @@ makeflow_fn=, norun=, retconf=, opts=) {
     draw a box to select the region.
 
   Options for processing:
-    mode= Processing mode.
+    mode= Processing mode. See eaarl_processing_modes for full list of
+      available modes.
         mode="f"    Process for first surface (default)
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
@@ -437,7 +442,8 @@ exactsel=, splitchan=, opts=) {
       to be processed, even if it would result in a partial tile.
 
   Options for processing:
-    mode= Processing mode.
+    mode= Processing mode. See eaarl_processing_modes for full list of
+      available modes.
         mode="f"    Process for first surface (default)
     channel= Specifies which channel or channels to process. Required. This can
       be an integer or array of integers for the channels to process.
