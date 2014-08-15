@@ -852,10 +852,10 @@ func copy_metadata_files(dir, outdir) {
   }
 }
 
-func batch_write_xyz(dirname, outdir=, files=, searchstr=, buffer=, update=,
+func batch_write_xyz(dir, outdir=, files=, searchstr=, buffer=, update=,
 extension=, mode=, intensity_mode=, ESRI=, header=, footer=, delimit=, indx=,
 intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=, copymeta=) {
-/* DOCUMENT batch_write_xyz, dirname, outdir=, files=, searchstr=, buffer=,
+/* DOCUMENT batch_write_xyz, dir, outdir=, files=, searchstr=, buffer=,
   update=, extension=, mode=, intensity_mode=, ESRI=, header=, footer=,
   delimit=, indx=, intensity=, rn=, soe=, zclip=, latlon=, split=, zone=,
   chunk=, copymeta=
@@ -864,14 +864,14 @@ intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=, copymeta=) {
   write_ascii_xyz.
 
   Parameter:
-    dirname: The input directory where the source files reside.
+    dir: The input directory where the source files reside.
 
   Options specific to batch mode:
     outdir= Specifies the output directory. If omitted, files will be created
       alongside the source files.
         outdir=[]                  Output alongside source files (default)
         outdir="/data/0/example/"  Output in /data/0/example/
-    files= Specifies an array of files to convert. When provided, dirname and
+    files= Specifies an array of files to convert. When provided, dir and
       searchstr will be ignored.
     searchstr= A file pattern to use to locate the files to convert.
         searchstr="*.pbd"             All pbd files (default)
@@ -934,7 +934,7 @@ intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=, copymeta=) {
   default, copymeta, 1;
 
   if(is_void(files))
-    files = find(dirname, searchstr=searchstr);
+    files = find(dir, searchstr=searchstr);
 
   if(is_void(files)) {
     write, "No files found, aborting.";
@@ -1021,16 +1021,16 @@ intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=, copymeta=) {
 
   if(!is_void(outdir) && copymeta) {
     write, "Copying metadata files...";
-    copy_metadata_files, dirname, outdir;
+    copy_metadata_files, dir, outdir;
   }
 
   timer_finished, t0;
 }
 
-func batch_convert_ascii2pbd(dirname, pstruc, outdir=, ss=, update=, vprefix=,
+func batch_convert_ascii2pbd(dir, pstruc, outdir=, ss=, update=, vprefix=,
 vsuffix=, delimit=, ESRI=, header=, intensity=, rn=, soe=, indx=, mapping=,
 columns=, types=, preset=, latlon=) {
-/* DOCUMENT batch_convert_ascii2pbd, dirname, pstruc, outdir=, ss=, update=,
+/* DOCUMENT batch_convert_ascii2pbd, dir, pstruc, outdir=, ss=, update=,
   vprefix=, vsuffix=, delimit=, ESRI=, header=, intensity=, rn=, soe=, indx=,
   mapping=, columns=, types=, preset=
 
@@ -1044,7 +1044,7 @@ columns=, types=, preset=, latlon=) {
 
   Required parameters:
 
-    dirname: The directory to search in for the ascii xyz files.
+    dir: The directory to search in for the ascii xyz files.
     pstruc: The structure to convert the data into.
 
   Options:
@@ -1081,7 +1081,7 @@ columns=, types=, preset=, latlon=) {
   default, vprefix, string(0);
   default, vsuffix, string(0);
 
-  fn_all = find(dirname, searchstr=ss);
+  fn_all = find(dir, searchstr=ss);
 
   if(!numberof(fn_all)) {
     write, "No files found.";
