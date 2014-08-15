@@ -2,10 +2,10 @@
 
 func write_ascii_xyz(data, fn, mode=, intensity_mode=, ESRI=, header=, footer=,
 delimit=, indx=, intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=,
-verbose=) {
+verbose=, gz=) {
 /* DOCUMENT write_ascii_xyz, data, fn, mode=, intensity_mode=, ESRI=, header=,
   footer=, delimit=, indx=, intensity=, rn=, soe=, zclip=, latlon=, split=,
-  zone=, chunk=, verbose=
+  zone=, chunk=, verbose=, gz=
 
   Writes an ASCII file using the given data.
 
@@ -92,6 +92,10 @@ verbose=) {
       it).
         chunk=1000     Write 1000 lines at a time (default)
         chunk=10       Write 10 lines at a time
+    gz= Enables gzip compression. (Be sure to give your filename the .gz
+      suffix.)
+        gz=0        Do not gzip compress (default)
+        gz=1        Apply gzip compression
 */
   extern curzone;
   local data_intensity, data_rn, data_soe;
@@ -110,6 +114,7 @@ verbose=) {
   default, split, 0;
   default, chunk, 1000;
   default, verbose, 1;
+  default, gz, 0;
 
   if(latlon && is_void(zone)) {
     default, zone, curzone;
@@ -230,7 +235,11 @@ verbose=) {
         write, format="Writing %s...\n", file_tail(fn);
     }
 
-    f = open(fn, "w");
+    if(gz) {
+      f = popen(swrite(format="gzip - > '%s'", fn), 1);
+    } else {
+      f = open(fn, "w");
+    }
     if(header)
       write, f, format="%s\n", header;
 
@@ -854,11 +863,12 @@ func copy_metadata_files(dir, outdir) {
 
 func batch_write_xyz(dir, outdir=, files=, searchstr=, buffer=, update=,
 extension=, mode=, intensity_mode=, ESRI=, header=, footer=, delimit=, indx=,
-intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=, copymeta=) {
+intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=, copymeta=, gz=)
+{
 /* DOCUMENT batch_write_xyz, dir, outdir=, files=, searchstr=, buffer=,
   update=, extension=, mode=, intensity_mode=, ESRI=, header=, footer=,
   delimit=, indx=, intensity=, rn=, soe=, zclip=, latlon=, split=, zone=,
-  chunk=, copymeta=
+  chunk=, copymeta=, gz=
 
   Batch creates xyz files for specified files. This is a batch wrapper around
   write_ascii_xyz.
@@ -901,6 +911,10 @@ intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=, copymeta=) {
       output directory. If no outdir is provided, this is ignored.
         copymeta=1    Copy metadata files (default)
         copymeta=0    Don't copy
+    gz= Specifies whether output files should be gzip compressed. If enabled,
+      the extension will also have .gz appended if not already present.
+        gz=0        Do not compress (default)
+        gz=1        Apply gzip compression and add .gz extension
 
   Options that are passed to write_ascii_xyz (see its documentation for full
   usage information):
@@ -932,6 +946,14 @@ intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=, copymeta=) {
   default, latlon, 0;
   default, extension, (ESRI ? ".txt" : ".xyz");
   default, copymeta, 1;
+  default, gz, 0;
+
+  if(
+    gz &&
+    (strlen(extension) < 3 || strcase(0, strpart(extension, -2:)) != ".gz")
+  ) {
+    extension += ".gz";
+  }
 
   if(is_void(files))
     files = find(dir, searchstr=searchstr);
@@ -1014,7 +1036,7 @@ intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=, copymeta=) {
       intensity_mode=intensity_mode, ESRI=ESRI, header=header,
       footer=footer, delimit=delimit, indx=indx, intensity=intensity, rn=rn,
       soe=soe, zclip=zclip, latlon=latlon, split=split, zone=fzone,
-      chunk=chunk, verbose=0;
+      chunk=chunk, gz=gz, verbose=0;
 
     timer_remaining, t0, sizes(i), sizes(0);
   }
