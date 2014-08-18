@@ -68,6 +68,7 @@ namespace eval ::alpsrc {
         dict set conf log_keep 30
         dict set conf cores_local -1
         dict set conf cores_remote 0
+        dict set conf mission_conf_dirs ""
         return $conf
     }
 

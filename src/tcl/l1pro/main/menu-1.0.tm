@@ -42,6 +42,8 @@ proc build mb {
 
 proc menu_file mb {
     menu $mb
+    $mb add command {*}[menulabel "&Browse mission configurations..."] \
+            -command ::mission::browse::gui::launch
     $mb add command {*}[menulabel "Load &mission configuration..."] \
             -command ::l1pro::main::menu::load_and_launch_missconf
     $mb add separator

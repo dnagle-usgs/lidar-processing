@@ -73,6 +73,14 @@ local alpsrc;
       This setting specifies how many remote cores may be used. It is only used
       if makeflow_type != "local".
 
+    mission_conf_dirs = initialdir
+      Specifies a default list of directories to be searched for mission
+      configuration files when using the Mission Conf Browser. Multiple paths
+      can be provided by separating them with commas. Be sure to only list
+      EAARL raw directories. If you include EAARL processed, scan times will be
+      atrocious. If not specified, this is initialized to match Ytk's
+      initialdir.
+
   SEE ALSO: alpsrc_load
 */
 
@@ -141,6 +149,7 @@ func __alpsrc_set_defaults(&obj) {
   save, obj, log_keep=30;
   save, obj, cores_local=-1;
   save, obj, cores_remote=0;
+  save, obj, mission_conf_dirs=initialdir;
 }
 
 alpsrc_load;

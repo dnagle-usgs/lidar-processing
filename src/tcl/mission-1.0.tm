@@ -7,7 +7,9 @@ package require fileutil
 package require handler
 package require hook
 
-if {![namespace exists ::mission]} {
+package require mission::browse
+
+if {[info vars ::mission::plugins] eq ""} {
     namespace eval ::mission {
         # List of plugins used by this conf. Updated during "mission, tksync".
         # This is primarily read-only.
@@ -1391,6 +1393,8 @@ namespace eval ::mission {
             $mb add command {*}[menulabel "&New configuration"] \
                     -command ::mission::new_conf
             $mb add separator
+            $mb add command {*}[menulabel "&Browse configurations..."] \
+                    -command ::mission::browse::gui::launch
             $mb add command {*}[menulabel "&Load configuration..."] \
                     -command ::mission::load_conf
             $mb add command {*}[menulabel "&Save configuration..."] \
