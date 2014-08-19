@@ -4,6 +4,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+// This is from play/unix/playu.h, which is not available as an include at
+// compile time.
+extern char *u_pathname(const char *pathname);
+
 static void file_check(int nArgs, int amode)
 {
   if(nArgs != 1) y_error("requires exactly one parameter");
@@ -15,7 +19,8 @@ static void file_check(int nArgs, int amode)
     // handle scalar
 
     ystring_t fn = ygets_q(0);
-    ypush_int(access(fn, amode) == 0);
+    const char *path = u_pathname(fn);
+    ypush_int(access(path, amode) == 0);
 
     return;
   }
@@ -26,10 +31,12 @@ static void file_check(int nArgs, int amode)
   long count;
   ystring_t *fns = ygeta_q(0, &count, dims);
   int *result = ypush_i(dims);
+  const char *path;
 
   long i;
   for(i = 0; i < count; i++) {
-    result[i] = (access(fns[i], amode) == 0);
+    path = u_pathname(fns[i]);
+    result[i] = (access(path, amode) == 0);
   }
 }
 
