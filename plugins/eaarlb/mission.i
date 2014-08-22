@@ -627,7 +627,7 @@ func eaarl_mission_flights_validate_fields(env) {
     ),
     "sbconf file", save(
       "help", "The sbconf file contains parameters used to process for shallow bathy. This file is only required if you will be processing for shallow bathy and the defaults are not acceptable. The sbconf file will have the extension .sbconf. The file is found in the alps configuration subdirectory.",
-      required=1
+      required=0
     ),
     "mpconf file", save(
       "help", "The mpconf file contains parameters used to process for multi-peak. This file is only required if you will be processing multi-peak and the defaults are not acceptable. The mpconf file will have the extension .mpconf. The file is found in the alps configuration subdirectory.",
