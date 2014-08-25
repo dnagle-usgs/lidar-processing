@@ -18,6 +18,7 @@ namespace eval ::mission::eaarl {
         "bathconf file"
         "vegconf file"
         "sbconf file"
+        "mpconf file"
         "rgb dir"
         "nir dir"
     }
@@ -52,6 +53,10 @@ namespace eval ::mission::eaarl {
         }
         "sbconf file" {
             {{Shallow bathy settings files} {.sbconf}}
+            {{All files} *}
+        }
+        "mpconf file" {
+            {{Multi-peak settings files} {.mpconf}}
             {{All files} *}
         }
     }

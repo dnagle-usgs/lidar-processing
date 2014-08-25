@@ -10,6 +10,7 @@ package require eaarl::chanconf
 package require eaarl::drast
 package require eaarl::jsonlog
 package require eaarl::load
+package require eaarl::mpconf
 package require eaarl::pixelwf
 package require eaarl::processing
 package require eaarl::raster
@@ -31,6 +32,7 @@ namespace eval ::eaarl {
       "Submerged Topo"     b
       "Topo Under Veg"     v
       "Shallow Bathy"      sb
+      "Multi-Peak"         mp
       "OLD: First Return Topo"  old_fs
       "OLD: Submerged Topo"     old_bathy
       "OLD: Topo Under Veg"     old_veg
@@ -60,7 +62,7 @@ namespace eval ::eaarl {
       variable usechannel_4
 
       set mapping {
-         f fs v veg b depth sb shallow
+         f fs v veg b depth sb shallow mp mp
          old_fs fs old_bathy depth old_veg veg old_cveg cveg
       }
 

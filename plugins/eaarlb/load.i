@@ -9,8 +9,9 @@ base = file_dirname(current_include())+"/";
 include, base + "eaarl_constants.i";
 include, base + "class_chanconfobj.i";
 include, base + "class_bathconfobj.i";
-include, base + "class_vegconfobj.i";
+include, base + "class_mpconfobj.i";
 include, base + "class_sbconfobj.i";
+include, base + "class_vegconfobj.i";
 
 include, base + "autoselect.i";
 include, base + "batch_process.i";
@@ -35,6 +36,7 @@ include, base + "pixelwf.i";
 include, base + "process_ba.i";
 include, base + "process_be.i";
 include, base + "process_fs.i";
+include, base + "process_mp.i";
 include, base + "process_sb.i";
 include, base + "process_main.i";
 include, base + "sasr.i";

@@ -289,6 +289,12 @@ func eaarl_mission_load(env) {
     } else {
       write, "         (using defaults)";
     }
+
+    if(test_key(env.flight, "mpconf file")) {
+      mpconf, read, mission(get, env.flight, "mpconf file");
+    } else {
+      write, "         (using defaults)";
+    }
   }
 
   // edb -- defines a few variables (such as soe_day_start) that are needed by
@@ -376,6 +382,9 @@ func eaarl_mission_unload(env) {
   extern sbconf;
   sbconf, clear;
 
+  extern mpconf;
+  mpconf, clear;
+
   return env;
 }
 
@@ -397,13 +406,15 @@ func eaarl_mission_wrap(env) {
   extern bathconf;
   extern vegconf;
   extern sbconf;
+  extern mpconf;
 
   save, env.wrapped,
     cache_what,
     ops_conf, ops_conf_filename,
     bathconf_data=bathconf.data,
     vegconf_data=vegconf.data,
-    sbconf_data=sbconf.data;
+    sbconf_data=sbconf.data,
+    mpconf_data=mpconf.data;
 
   if(cache_what == "everything") {
     save, env.wrapped,
@@ -432,11 +443,12 @@ func eaarl_mission_unwrap(env) {
   extern bathconf;
   extern vegconf;
   extern sbconf;
+  extern mpconf;
 
   cache_what = env.data.cache_what;
   bathconf_data = env.data.bathconf_data;
   vegconf_data = env.data.vegconf_data;
-  sbconf_data = env.data.sbconf_data;
+  mpconf_data = env.data.mpconf_data;
 
   idx = env.data(*,[
     "data_path",
@@ -463,6 +475,11 @@ func eaarl_mission_unwrap(env) {
   else
     sbconf, groups, sbconf_data, copy=0;
 
+  if(is_void(mpconf_data))
+    mpconf, clear;
+  else
+    mpconf, groups, mpconf_data, copy=0;
+
   save, env, cache_what;
 
   return env;
@@ -488,6 +505,8 @@ func hook_eaarl_mission_jobs_env_wrap(env) {
     save, wrapped, vegconf_data=serialize(wrapped.vegconf_data);
   if(wrapped(*,"sbconf_data"))
     save, wrapped, sbconf_data=serialize(wrapped.sbconf_data);
+  if(wrapped(*,"mpconf_data"))
+    save, wrapped, mpconf_data=serialize(wrapped.mpconf_data);
   if(wrapped(*,"ops_conf"))
     save, wrapped, ops_conf=serialize(wrapped.ops_conf);
   mission_fn = file_rootname(env.fn) + ".flight";
@@ -504,6 +523,8 @@ func hook_eaarl_mission_jobs_env_unwrap(env) {
     save, wrapped, vegconf_data=deserialize(wrapped.vegconf_data);
   if(wrapped(*,"sbconf_data"))
     save, wrapped, sbconf_data=deserialize(wrapped.sbconf_data);
+  if(wrapped(*,"mpconf_data"))
+    save, wrapped, mpconf_data=deserialize(wrapped.mpconf_data);
   if(wrapped(*,"ops_conf"))
     save, wrapped, ops_conf=deserialize(wrapped.ops_conf);
   mission, unwrap, wrapped;
@@ -538,6 +559,7 @@ func eaarl_mission_flights_auto_keys(env) {
     "bathconf file",
     "vegconf file",
     "sbconf file",
+    "mpconf file",
     "rgb dir",
     "nir dir"
   ];
@@ -567,6 +589,8 @@ func eaarl_mission_details_autolist(env) {
     env, result=autoselect_vegconf(path, options=1);
   else if(key == "sbconf file")
     env, result=autoselect_sbconf(path, options=1);
+  else if(key == "mpconf file")
+    env, result=autoselect_mpconf(path, options=1);
   else if(key == "rgb dir")
     env, result=autoselect_rgb_dir(path, options=1);
   else if(key == "nir dir")
@@ -603,6 +627,10 @@ func eaarl_mission_flights_validate_fields(env) {
     ),
     "sbconf file", save(
       "help", "The sbconf file contains parameters used to process for shallow bathy. This file is only required if you will be processing for shallow bathy and the defaults are not acceptable. The sbconf file will have the extension .sbconf. The file is found in the alps configuration subdirectory.",
+      required=1
+    ),
+    "mpconf file", save(
+      "help", "The mpconf file contains parameters used to process for multi-peak. This file is only required if you will be processing multi-peak and the defaults are not acceptable. The mpconf file will have the extension .mpconf. The file is found in the alps configuration subdirectory.",
       required=1
     ),
     "rgb dir", save(

@@ -66,7 +66,7 @@ proc ::eaarl::main::gui {} {
             -variable ::eaarl::interactive_batch
     ::mixin::statevar $f.interactive_batch \
             -statedefault disabled \
-            -statemap {f normal b normal v normal} \
+            -statemap {f normal b normal v normal sb normal mp normal} \
             -statevariable ::eaarl::processing_mode
     ::misc::tooltip $f.interactive_batch \
             "Batch mode is only available for new test processing modes."
