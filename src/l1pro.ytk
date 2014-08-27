@@ -19,6 +19,17 @@ package require wrappack
 ybkg require \"l1pro.i\"
 
 if {![info exists l1pro_data]} {
+  set alps_data_modes {fs be ba de ch fint lint}
+  set alps_data_modes_tooltip \
+      "The core ALPS data modes are:
+      - fs (First Return Topography)
+      - be (Bare Earth Topography)
+      - ba (Submerged Topography)
+      - de (Water Depth)
+      - ch (Canopy Height)
+      - fint (Intensity for first return)
+      - lint (Intensity for last return/bottom)"
+
   set l1pro_data(mode_mapping) [lrange {
     "First Return Topography"  fs
     "Submerged Topography"     ba

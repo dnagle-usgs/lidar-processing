@@ -129,9 +129,10 @@ proc ::l1pro::main::panel_plot w {
     ::mixin::padlock $f.winlock \
             -variable ::constant_win_no
     ttk::label $f.modelbl -text "Mode:"
-    ::mixin::combobox::mapping $f.mode -state readonly -width 4 \
-            -altvariable ::plot_settings(display_mode) \
-            -mapping $::l1pro_data(mode_mapping)
+    ::mixin::combobox $f.mode -width 4 \
+            -listvariable ::alps_data_modes \
+            -textvariable ::plot_settings(display_mode)
+    ::misc::tooltip $f.modelbl $f.mode -wrap single $::alps_data_modes_tooltip
     ttk::label $f.marklbl -text "Marker:"
     ttk::spinbox $f.msize -width 5 \
             -from 0.1 -to 10.0 -increment 0.1 \
