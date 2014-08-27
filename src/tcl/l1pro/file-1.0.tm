@@ -334,11 +334,12 @@ snit::widget ::l1pro::file::gui::export_las {
                 -listvariable ::varlist
 
         ttk::label $f.lblMode -text "Data mode: "
-        ::mixin::combobox::mapping $f.cboMode \
+        ::mixin::combobox $f.cboMode \
                 -width 0 \
-                -altvariable [myvar mode] \
-                -state readonly \
-                -mapping $::l1pro_data(mode_mapping)
+                -textvariable [myvar mode] \
+                -listvariable ::alps_data_modes
+        ::misc::tooltip $f.lblMode $f.cboMode -wrap single \
+                $::alps_data_modes_tooltip
 
         grid $f.lblVname $f.cboVname -sticky ew -padx 1 -pady 1
         grid $f.lblMode $f.cboMode -sticky ew -padx 1 -pady 1
