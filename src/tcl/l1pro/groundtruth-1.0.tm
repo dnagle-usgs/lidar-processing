@@ -342,9 +342,10 @@ proc ::l1pro::groundtruth::extract::panel w {
         ::mixin::combobox $f.var -width 0 -state readonly \
                 -textvariable ${ns}::v::${data}_var \
                 -listvariable ::varlist
-        ::mixin::combobox::mapping $f.mode -width 0 -state readonly \
-                -altvariable ${ns}::v::${data}_mode \
-                -mapping $::l1pro_data(mode_mapping)
+        ::mixin::combobox $f.mode -width 0 \
+                -textvariable ${ns}::v::${data}_mode \
+                -listvariable ::alps_data_modes
+        ::misc::tooltip $f.mode -wrap single $::alps_data_modes_tooltip
         ttk::spinbox $f.max -width 0 \
                 -from -10000 -to 10000 -increment 0.1 \
                 -textvariable ${ns}::v::${data}_zmax_val
