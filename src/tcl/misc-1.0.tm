@@ -154,6 +154,23 @@ proc ::misc::tooltip {args} {
     set paths [lrange $args 0 [expr {$i-1}]]
     set args [lrange $args $i end]
 
+    tooltip::resolve_message args message
+
+    foreach path $paths {
+        ::tooltip::tooltip $path {*}$args $message
+    }
+}
+
+namespace eval ::misc::tooltip {}
+
+# - argsVar should be a dict variable that may contain a -wrap argument per
+#   misc::tooltip. If it exists, it will be removed.
+# - msgVar should be a string variable that contains the tooltip message. It
+#   will have its whitespace resolved per the -wrap setting.
+proc ::misc::tooltip::resolve_message {argsVar msgVar} {
+    upvar 1 $argsVar args
+    upvar 1 $msgVar message
+
     if {[dict exists $args -wrap]} {
         set wrap [dict get $args -wrap]
         set args [dict remove $args -wrap]
@@ -161,22 +178,19 @@ proc ::misc::tooltip {args} {
         set wrap double
     }
 
-    if {$wrap ne "none"} {
-        switch -- $wrap {
-            single  {set sep \n}
-            double  {set sep \n\n}
-            default {error "Unknown -wrap"}
-        }
-        set newmsg [list]
-        foreach line [textutil::split::splitx $message $sep] {
-            lappend newmsg [::textutil::adjust::adjust $line]
-        }
-        set message [join $newmsg $sep]
-    }
+    if {$wrap eq "none"} {return}
 
-    foreach path $paths {
-        ::tooltip::tooltip $path {*}$args $message
+    switch -- $wrap {
+        single  {set sep \n}
+        double  {set sep \n\n}
+        default {error "Unknown -wrap"}
     }
+    set newmsg [list]
+    foreach line [::textutil::split::splitx $message $sep] {
+        lappend newmsg [::textutil::adjust::adjust $line]
+    }
+    set message [join $newmsg $sep]
+    return
 }
 
 namespace eval ::misc::soe {
