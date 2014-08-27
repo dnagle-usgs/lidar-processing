@@ -868,10 +868,11 @@ snit::widgetadaptor ::mixin::treeview::tooltips {
         }]]
         set update [list apply [list args {
             upvar 1 args opts message msg
+            ::misc::tooltip::resolve_message opts msg
             if {$msg eq ""} {
                 uplevel 1 [list dict unset tips {*}$args]
             } else {
-                uplevel 1 [list dict set tips {*}$args [list {*}$opts $msg]]
+                uplevel 1 [list dict set tips {*}$args $msg]
             }
         }]]
 
@@ -892,7 +893,8 @@ snit::widgetadaptor ::mixin::treeview::tooltips {
             set column [{*}$pop column]
             {*}$update column $column
         } else {
-            dict set tips default [list {*}$args $message]
+            ::misc::tooltip::resolve_message args message
+            dict set tips default $message
         }
         # This makes sure the user doesn't get the tips dict as a return value
         return
@@ -905,7 +907,7 @@ snit::widgetadaptor ::mixin::treeview::tooltips {
         # anything. Otherwise, update the tooltip.
         if {$tip eq $last} {return}
         ::tooltip::hide
-        ::misc::tooltip $win {*}$tip
+        ::tooltip::tooltip $win $tip
         set last $tip
 
         # Borrow the logic from tooltip::menuMotion for how to properly hide
@@ -915,9 +917,6 @@ snit::widgetadaptor ::mixin::treeview::tooltips {
         set G(LAST) -1
         after cancel $G(AFTERID)
         catch {wm withdraw $G(TOPLEVEL)}
-        # misc::tooltip does some tweaking, retrieve the version stored by
-        # tooltip::tooltip
-        set tip [::tooltip::tooltip $win]
         if {$tip eq ""} {return}
         set G(AFTERID) [after $G(DELAY) \
                 [list ::tooltip::show $win $tip cursor]]
