@@ -55,10 +55,10 @@ proc ::l1pro::tools::rcf::gui args {
     ttk::label $f.lbloutput -text "Output variable: "
     ttk::label $f.lblmode -text "Data mode: "
 
-    ::mixin::combobox::mapping $f.mode \
-            -state readonly \
-            -altvariable ${ns}::v::mode \
-            -mapping $::l1pro_data(mode_mapping)
+    ::mixin::combobox $f.mode \
+            -textvariable ${ns}::v::mode \
+            -listvariable ::alps_data_modes
+    ::misc::tooltip $f.mode -wrap single $::alps_data_modes_tooltip
 
     ::mixin::combobox $f.input \
             -state readonly \
