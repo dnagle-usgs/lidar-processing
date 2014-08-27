@@ -117,10 +117,11 @@ snit::widget ::l1pro::file::gui::export_ascii {
                 -listvariable ::varlist
 
         ttk::label $win.lblType -text "Data mode: "
-        ::mixin::combobox::mapping $win.cboType \
-                -altvariable [myvar mode] \
-                -state readonly \
-                -mapping $::l1pro_data(mode_mapping)
+        ::mixin::combobox $win.cboType \
+                -textvariable [myvar mode] \
+                -listvariable ::alps_data_modes
+        ::misc::tooltip $win.lblType $win.cboType -wrap single \
+                $::alps_data_modes_tooltip
 
         ttk::checkbutton $win.chkIndx -text "Index number" \
                 -variable [myvar indx]
