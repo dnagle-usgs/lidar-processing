@@ -9,6 +9,7 @@ package require mixin::frame
 package require mixin::labelframe
 package require mixin::text
 package require mixin::treeview
+package require mixin::scrollbar
 
 # ::mixin::statevar <widget> ?<options>?
 #   Adds options to a widget that allow its state to be manipulated by a
@@ -265,39 +266,5 @@ snit::widgetadaptor ::mixin::padlock {
                         !selected ::imglib::padlock::open]
 
         $self configurelist $args
-    }
-}
-
-namespace eval ::mixin::scrollbar {}
-
-snit::widgetadaptor ::mixin::scrollbar::autohide {
-    component sb
-    component null
-
-    delegate method * to sb
-    delegate option * to sb
-
-    constructor args {
-        if {[winfo exists $win]} {
-            installhull $win
-        } else {
-            installhull using ttk::frame
-        }
-
-        install sb using ttk::scrollbar $win.sb
-        install null using ttk::frame $win.null
-
-        $self configure {*}$args
-    }
-
-    method set {first last} {
-        $sb set $first $last
-        if {$first == 0 && $last == 1} {
-            pack forget $sb
-            pack $null
-        } else {
-            pack forget $null
-            pack $sb -fill both -expand 1
-        }
     }
 }
