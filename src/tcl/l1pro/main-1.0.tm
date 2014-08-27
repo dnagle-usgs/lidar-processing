@@ -218,7 +218,7 @@ proc ::l1pro::main::panel_tools w {
     menu $f.acmenu.rms
     menu $f.acmenu.pct
     menu $f.acmenu.rcf
-    $f.acmenu add command -label "Set to elevation bounds" \
+    $f.acmenu add command -label "Set to range bounds" \
             -command [list ::l1pro::tools::auto_cbar all]
     $f.acmenu add cascade -label "Set by standard deviations..." \
             -menu $f.acmenu.rms
@@ -240,13 +240,13 @@ proc ::l1pro::main::panel_tools w {
             -command [list ::l1pro::tools::auto_cbar percentage 0.99]
     $f.acmenu add cascade -label "Set using delta RCF..." \
             -menu $f.acmenu.rcf
-    $f.acmenu.rcf add command -label "5 meter window" \
+    $f.acmenu.rcf add command -label "5 unit window" \
             -command [list ::l1pro::tools::auto_cbar rcf 5]
-    $f.acmenu.rcf add command -label "10 meter window" \
+    $f.acmenu.rcf add command -label "10 unit window" \
             -command [list ::l1pro::tools::auto_cbar rcf 10]
-    $f.acmenu.rcf add command -label "20 meter window" \
+    $f.acmenu.rcf add command -label "20 unit window" \
             -command [list ::l1pro::tools::auto_cbar rcf 20]
-    $f.acmenu.rcf add command -label "30 meter window" \
+    $f.acmenu.rcf add command -label "30 unit window" \
             -command [list ::l1pro::tools::auto_cbar rcf 30]
     $f.acmenu.rcf add command -label "Use current CDelta value" \
             -command ::l1pro::tools::auto_cbar_cdelta
