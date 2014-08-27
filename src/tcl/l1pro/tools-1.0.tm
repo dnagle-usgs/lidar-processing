@@ -181,10 +181,7 @@ proc ::l1pro::tools::histelev::plot {} {
 
     set cmd "hist_data_plot, $::pro_var"
 
-    set mode_names [dict merge [lreverse $::l1pro_data(mode_mapping)] \
-            [list fs "First surface" be "Bare earth" ba Bathymetry]]
-    set title [dict get $mode_names $::plot_settings(display_mode)]
-    set title "$title $::pro_var"
+    set title "$::plot_settings(display_mode) - $::pro_var"
 
     appendif cmd \
             1                   ", mode=\"$::plot_settings(display_mode)\"" \
