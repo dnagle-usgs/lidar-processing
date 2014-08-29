@@ -66,6 +66,9 @@ local alps_data_modes;
     "fs" (first surface) uses "fx" or "z"
     "mir" (mirror) uses "mz"
     "de" (depth) uses "depth"
+    "fint" (first return intensity) uses "fintensity" or "intensity"
+    "lint" (last return intensity) uses "lintensity" or "intensity"
+    "int" (intensity) uses "intensity"
 
   There are also a few modes that will attempt to use a derived value for z, if
   other attempts to derive the z value fail:
@@ -338,6 +341,16 @@ func data2xyz_dynamic_z_field(data, mode) {
     return "mz";
   if(mode == "de" && has_member(data, "depth"))
     return "depth";
+  if(mode == "fint") {
+    if(has_member(data, "fintensity")) return "fintensity";
+    if(has_member(data, "intensity")) return "intensity";
+  }
+  if(mode == "lint") {
+    if(has_member(data, "lintensity")) return "lintensity";
+    if(has_member(data, "intensity")) return "intensity";
+  }
+  if(mode == "int" && has_member(data, "intensity"))
+    return "intensity";
   if(has_member(data, mode))
     return mode;
 }
