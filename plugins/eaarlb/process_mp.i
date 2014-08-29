@@ -4,11 +4,22 @@ if(is_void(mpconf)) mpconf = mpconfobj();
 
 func mp_obj2dyn(pulses) {
   data = obj_copy(pulses);
-  obj_delete, data, tx, rx, fx, fy, fz;
-  save, data, x=data.lx, y=data.ly, z=data.lz;
+  obj_delete, data, ftx, frx, fx, fy, fz, fint, fbias, fchannel, fs_slant_range;
+  save, data, x=data.lx, y=data.ly, z=data.lz, int=data.lint, tx=data.ltx,
+    rx=float(data.lrx), bias=data.lbias, channel=char(data.lchannel);
   save, data, ptime=array(0, numberof(data.x));
-  obj_delete, data, lx, ly, lz;
-  return obj2struct(data, name="DYN_PC", ary=1);
+  obj_delete, data, lx, ly, lz, lint, ltx, lrx, lbias, lchannel;
+
+  fields = ["raster","pulse","channel","ptime","soe",
+    "mx","my","mz",
+    "x","y","z",
+    "tx","rx","bias","int","ret_num","num_rets"];
+
+  // Put the sorted fields first; then append any additional (via merge)
+  result = data(data(*,fields));
+  obj_merge, result, data;
+
+  return obj2struct(result, name="DYN_PC", ary=1);
 }
 
 func process_mp(start, stop, ext_bad_att=, channel=, opts=) {
@@ -80,7 +91,7 @@ func process_mp(start, stop, ext_bad_att=, channel=, opts=) {
   ret_num = array(pointer, n);
   for(i = 1; i <= n; i++)
     if(pulses.num_rets(i))
-      ret_num(i) = &indgen(pulses.num_rets(i));
+      ret_num(i) = &char(indgen(pulses.num_rets(i)));
   pulses = obj_index(pulses, idx);
   save, pulses, lrx=merge_pointers(lrx);
   save, pulses, lint=merge_pointers(lint);
