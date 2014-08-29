@@ -579,7 +579,8 @@ func polyplot_warn(msg) {
 /* DOCUMENT polyplot, warn, "<msg>"
   Internal function. Used to give the user a warning via Tcl/Tk.
 */
-  tkcmd, swrite(format="::plot::warnmsg {%s}", msg);
+  if(!_ytk) write, format="%s\n", msg;
+  else tkcmd, swrite(format="::plot::warnmsg {%s}", msg);
 }
 polyplot, warn=polyplot_warn;
 
@@ -588,7 +589,8 @@ func polyplot_err(msg) {
 /* DOCUMENT polyplot, err, "<msg>"
   Internal function. Used to give the user an error via Tcl/Tk.
 */
-  tkcmd, swrite(format="::plot::errmsg {%s}", msg);
+  if(!_ytk) write, format="%s\n", msg;
+  else tkcmd, swrite(format="::plot::errmsg {%s}", msg);
 }
 polyplot, err=polyplot_err;
 
