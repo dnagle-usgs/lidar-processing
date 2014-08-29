@@ -6,6 +6,7 @@ func mp_obj2dyn(pulses) {
   data = obj_copy(pulses);
   obj_delete, data, tx, rx, fx, fy, fz;
   save, data, x=data.lx, y=data.ly, z=data.lz;
+  save, data, ptime=array(0, numberof(data.x));
   obj_delete, data, lx, ly, lz;
   return obj2struct(data, name="DYN_PC", ary=1);
 }
