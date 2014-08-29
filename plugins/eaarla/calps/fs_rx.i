@@ -6,7 +6,7 @@ func nocalps_eaarl_fs_rx_cent_eaarlb(pulses) {
   centroid from the specified channel. The following fields are added to
   pulses:
     frx - Location in waveform of first return
-    fint - Peak intensity value of first return
+    fintensity - Peak intensity value of first return
     fchannel - Channel used (=channel except for chan 4, which uses 2)
     fbias - The channel range bias (ops_conf.chn%d_range_bias)
 */
@@ -15,7 +15,7 @@ func nocalps_eaarl_fs_rx_cent_eaarlb(pulses) {
   npulses = numberof(pulses.tx);
   // 10000 is the "bad data" value that cent will return, match that
   frx = array(float(10000), npulses);
-  fint = array(float, npulses);
+  fintensity = array(float, npulses);
   fchannel = pulses.channel;
 
   w = where(fchannel == 4);
@@ -40,14 +40,14 @@ func nocalps_eaarl_fs_rx_cent_eaarlb(pulses) {
     rx_cent = cent(wf);
     if(numberof(rx_cent)) {
       frx(i) = rx_cent(1);
-      fint(i) = rx_cent(3);
+      fintensity(i) = rx_cent(3);
 
       nsat = numberof(where(wf(1:np) <= 1));
-      fint(i) += (20 * nsat);
+      fintensity(i) += (20 * nsat);
     }
   }
 
-  save, pulses, frx, fint, fchannel, fbias;
+  save, pulses, frx, fintensity, fchannel, fbias;
 }
 if(!is_func(eaarl_fs_rx_cent_eaarlb))
   eaarl_fs_rx_cent_eaarlb = nocalps_eaarl_fs_rx_cent_eaarlb;

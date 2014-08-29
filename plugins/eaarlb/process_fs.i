@@ -128,6 +128,11 @@ func process_fs(start, stop, ext_bad_att=, channel=, opts=) {
   // Determine rx offsets; adds frx, fintensity, fchannel
   fs_rx, pulses;
 
+  // 2014-08-29 Compatibility: calps versions still uses fint instead of
+  // fintensity
+  if(pulses(*,"fint") && !pulses(*,"fintensity"))
+    save, pulses, fintensity=obj_pop(pulses, "fint");
+
   // Throw away bogus returns
   // 10000 is the bogus return value
   w = where(pulses.frx != 10000);
