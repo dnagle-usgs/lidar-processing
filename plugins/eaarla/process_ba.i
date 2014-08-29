@@ -20,8 +20,8 @@ func ba_struct_from_obj(pulses) {
   result.mnorth = long(pulses.my * 100);
   result.meast = long(pulses.mx * 100);
   result.melevation = long(pulses.mz * 100);
-  result.bottom_peak = pulses.lint;
-  result.first_peak = pulses.fint;
+  result.bottom_peak = pulses.lintensity;
+  result.first_peak = pulses.fintensity;
   result.depth = long((pulses.lz-pulses.fz) * 100);
   result.soe = pulses.soe;
   result.channel = pulses.lchannel;
@@ -57,9 +57,9 @@ func process_ba(start, stop, ext_bad_att=, channel=, opts=) {
     An oxy group object containing these fields:
       from eaarl_decode_fast: digitizer, dropout, pulse, irange, scan_angle,
         raster, soe, tx, rx
-      from process_fs: ftx, channel, frx, fint, fchannel, fbias,
+      from process_fs: ftx, channel, frx, fintensity, fchannel, fbias,
         fs_slant_range, mx, my, mz, fx, fy, fz
-      added by process_ba: ltx, lrx, lint, lbias, lchannel, lx, ly, lz
+      added by process_ba: ltx, lrx, lintensity, lbias, lchannel, lx, ly, lz
 */
   restore_if_exists, opts, start, stop, ext_bad_att, channel;
 
@@ -88,7 +88,8 @@ func process_ba(start, stop, ext_bad_att=, channel=, opts=) {
   // Determine tx offsets; adds ltx
   ba_tx, pulses;
 
-  // Determine rx offsets; adds lrx, lint, lbias, lchannel; updates fint
+  // Determine rx offsets; adds lrx, lintensity, lbias, lchannel; updates
+  // fintensity
   ba_rx, pulses;
 
   // Throw away lchannel == 0
@@ -157,11 +158,11 @@ func eaarl_ba_rx_channel(pulses) {
   uses the same channel that was used for the first return. The following
   fields are added to pulses:
     lrx - Location in waveform of bottom
-    lint - Intensity at bottom
+    lintensity - Intensity at bottom
     lbias - The channel range bias (ops_conf.chn%d_range_bias)
     lchannel - Channel used for bottom
   Additionally, this field is overwritten:
-    fint - Intensity at location deemed as surface by bathy algorithm
+    fintensity - Intensity at location deemed as surface by bathy algorithm
 */
   local conf;
   extern ops_conf;
@@ -173,7 +174,7 @@ func eaarl_ba_rx_channel(pulses) {
 
   npulses = numberof(pulses.tx);
 
-  lrx = fint = lint = lbias = array(float, npulses);
+  lrx = fintensity = lintensity = lbias = array(float, npulses);
   lchannel = pulses.channel;
 
   for(i = 1; i <= npulses; i++) {
@@ -184,12 +185,12 @@ func eaarl_ba_rx_channel(pulses) {
     lbias(i) = biases(lchannel(i));
 
     tmp = ba_rx_wf(*pulses.rx(lchannel(i),i), conf);
-    fint(i) = tmp.fint;
-    lint(i) = tmp.lint;
+    fintensity(i) = tmp.fintensity;
+    lintensity(i) = tmp.lintensity;
     lrx(i) = tmp.lrx;
   }
 
-  save, pulses, lrx, fint, lint, lbias, lchannel;
+  save, pulses, lrx, fintensity, lintensity, lbias, lchannel;
 }
 
 func eaarl_ba_rx_eaarla(pulses) {
@@ -198,11 +199,11 @@ func eaarl_ba_rx_eaarla(pulses) {
   most sensitive channel that is not saturated will be used. The following
   fields are added to pulses:
     lrx - Location in waveform of bottom
-    lint - Intensity at bottom
+    lintensity - Intensity at bottom
     lbias - The channel range bias (ops_conf.chn%d_range_bias)
     lchannel - Channel used for bottom
   Additionally, this field is overwritten:
-    fint - Intensity at location deemed as surface by bathy algorithm
+    fintensity - Intensity at location deemed as surface by bathy algorithm
 */
   local conf;
   extern ops_conf;
@@ -218,7 +219,7 @@ func eaarl_ba_rx_eaarla(pulses) {
 
   npulses = numberof(pulses.tx);
 
-  lrx = fint = lint = lbias = array(float, npulses);
+  lrx = fintensity = lintensity = lbias = array(float, npulses);
   lchannel = array(char, npulses);
 
   for(i = 1; i <= npulses; i++) {
@@ -227,12 +228,12 @@ func eaarl_ba_rx_eaarla(pulses) {
     lbias(i) = biases(lchannel(i));
 
     tmp = ba_rx_wf(*pulses.rx(lchannel(i),i), conf);
-    fint(i) = tmp.fint;
-    lint(i) = tmp.lint;
+    fintensity(i) = tmp.fintensity;
+    lintensity(i) = tmp.lintensity;
     lrx(i) = tmp.lrx;
   }
 
-  save, pulses, lrx, fint, lint, lbias, lchannel;
+  save, pulses, lrx, fintensity, lintensity, lbias, lchannel;
 }
 
 func eaarl_ba_rx_eaarla_channel(rx, &conf) {
@@ -306,8 +307,8 @@ func eaarl_ba_plot(raster, pulse, channel=, win=, xfma=) {
 
   window_select, wbkp;
 
-  write, format="   lrx: %.2f\n   fint: %.2f\n   lint: %.2f\n",
-    double(result.lrx), double(result.fint), double(result.lint);
+  write, format="   lrx: %.2f\n   fintensity: %.2f\n   lintensity: %.2f\n",
+    double(result.lrx), double(result.fintensity), double(result.lintensity);
   if(!is_void(msg)) write, format="   %s\n", msg;
 }
 
@@ -374,14 +375,14 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
   Returns:
     An oxy group object with these members:
       lrx - location of bottom in waveform
-      fint - intensity at surface
-      lint - intensity at bottom
+      fintensity - intensity at surface
+      lintensity - intensity at bottom
       candidate_lrx - candidate location of bottom in waveform
 */
   conf = obj_copy(conf);
   sample_interval = 1.0;
 
-  result = save(lrx=0, fint=0, lint=0, candidate_lrx=0);
+  result = save(lrx=0, fintensity=0, lintensity=0, candidate_lrx=0);
 
   if(is_void(rx)) {
     msg = "no waveform";
@@ -418,7 +419,7 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
   local surface_sat_end, surface_intensity, escale;
   bathy_detect_surface, wf, maxint, conf, surface_sat_end, surface_intensity,
     escale;
-  save, result, fint=surface_intensity;
+  save, result, fintensity=surface_intensity;
 
   if(numsat > 14) {
     save, conf, thresh=conf.thresh * (numsat-13) * 0.65;
@@ -456,7 +457,7 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
   bathy_compensate_saturation, saturated, bottom_peak;
 
   bottom_intensity = wf_decay(bottom_peak);
-  save, result, candidate_lrx=bottom_peak, lint=wf(bottom_peak);
+  save, result, candidate_lrx=bottom_peak, lintensity=wf(bottom_peak);
 
   // validate bottom
   msg = [];
@@ -510,7 +511,7 @@ intensity_thresh=, sample_interval=) {
     cur = indgen(idx(i)+1:idx(i+1));
 
     w = where(
-      (pulses.fint(cur) > intensity_thresh) &
+      (pulses.fintensity(cur) > intensity_thresh) &
       (abs(60 - pulses.pulse(cur)) < pulse_window)
     );
 

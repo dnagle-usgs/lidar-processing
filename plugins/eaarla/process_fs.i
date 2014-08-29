@@ -16,7 +16,7 @@ func fs_struct_from_obj(pulses) {
   result.north = long(pulses.fy * 100);
   result.east = long(pulses.fx * 100);
   result.elevation = long(pulses.fz * 100);
-  result.intensity = pulses.fint;
+  result.intensity = pulses.fintensity;
   result.soe = pulses.soe;
   result.channel = pulses.channel;
   return result;
@@ -50,7 +50,8 @@ func process_fs(start, stop, ext_bad_att=, channel=, opts=) {
     An oxy group object containing these fields:
       from eaarl_decode_fast: digitizer, dropout, pulse, irange, scan_angle,
         raster, soe, tx, rx
-      added by process_fs: ftx, frx, fint, fchannel, mx, my, mz, fx, fy, fz
+      added by process_fs: ftx, frx, fintensity, fchannel, mx, my, mz, fx, fy,
+        fz
 */
   restore_if_exists, opts, start, stop, ext_bad_att, channel, opts;
 
@@ -124,7 +125,7 @@ func process_fs(start, stop, ext_bad_att=, channel=, opts=) {
   lasang = 45.0 - .4;
   cyaw = 0.;
 
-  // Determine rx offsets; adds frx, fint, fchannel
+  // Determine rx offsets; adds frx, fintensity, fchannel
   fs_rx, pulses;
 
   // Throw away bogus returns
@@ -193,7 +194,7 @@ func eaarl_fs_rx_cent_eaarla(pulses) {
   sensitive channel that is not saturated will be used. The following fields
   are added to pulses:
     frx - Location in waveform of first return
-    fint - Peak intensity value of first return
+    fintensity - Peak intensity value of first return
     fchannel - Channel used
     fbias - The channel range bias (ops_conf.chn%d_range_bias)
   Also, channel is replaced by fchannel.
@@ -203,7 +204,7 @@ func eaarl_fs_rx_cent_eaarla(pulses) {
   npulses = numberof(pulses.tx);
   // 10000 is the "bad data" value that cent will return, match that
   frx = array(float(10000), npulses);
-  fint = fbias = array(float, npulses);
+  fintensity = fbias = array(float, npulses);
   fchannel = array(char, npulses);
 
   // this is just to make the if() calls shorter & more readable
@@ -244,10 +245,10 @@ func eaarl_fs_rx_cent_eaarla(pulses) {
     }
 
     frx(i) = rx_cent(1);
-    fint(i) = rx_cent(3);
+    fintensity(i) = rx_cent(3);
   }
 
-  save, pulses, frx, fint, fchannel, fbias, channel=fchannel;
+  save, pulses, frx, fintensity, fchannel, fbias, channel=fchannel;
 }
 
 func eaarl_fs_trajectory(soe) {
