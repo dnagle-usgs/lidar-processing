@@ -1308,8 +1308,8 @@ proc ::plot::poly_add_callback {name next_name} {
 }
 
 proc ::plot::poly_select {item} {
-   ::misc::idle [list $g::poly_tree selection set [list $item]]
-   ::misc::idle [list $g::poly_tree see $item]
+   ::misc::idle [list catch [list $g::poly_tree selection set [list $item]]]
+   ::misc::idle [list catch [list $g::poly_tree see $item]]
 }
 
 proc ::plot::poly_remove {} {
