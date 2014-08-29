@@ -25,9 +25,9 @@ func process_sb(start, stop, ext_bad_att=, channel=, opts=) {
     An oxy group object containing these fields:
       from eaarl_decode_fast: digitizer, dropout, pulse, irange, scan_angle,
         raster, soe, tx, rx
-      from process_fs: ftx, channel, frx, fint, fchannel, fbias,
+      from process_fs: ftx, channel, frx, fintensity, fchannel, fbias,
         fs_slant_range, mx, my, mz, fx, fy, fz
-      added by process_sb: ltx, lrx, lint, lbias, lchannel, lx, ly, lz
+      added by process_sb: ltx, lrx, lintensity, lbias, lchannel, lx, ly, lz
 */
   restore_if_exists, opts, start, stop, ext_bad_att, channel;
 
@@ -52,7 +52,8 @@ func process_sb(start, stop, ext_bad_att=, channel=, opts=) {
   // Determine tx offsets; adds ltx
   sb_tx, pulses;
 
-  // Determine rx offsets; adds lrx, lint, lbias, lchannel; updates fint
+  // Determine rx offsets; adds lrx, lintensity, lbias, lchannel; updates
+  // fintensity
   sb_rx, pulses;
 
   // Throw away lchannel == 0
@@ -121,11 +122,11 @@ func eaarl_sb_rx_channel(pulses) {
   info. This uses the same channel that was used for the first return. The
   following fields are added to pulses:
     lrx - Location in waveform of bottom
-    lint - Intensity at bottom
+    lintensity - Intensity at bottom
     lbias - The channel range bias (ops_conf.chn%d_range_bias)
     lchannel - Channel used for bottom
   Additionally, this field is overwritten:
-    fint - Intensity at location deemed as surface by veg algorithm
+    fintensity - Intensity at location deemed as surface by veg algorithm
 */
   local conf;
   extern ops_conf;
@@ -137,7 +138,7 @@ func eaarl_sb_rx_channel(pulses) {
 
   npulses = numberof(pulses.tx);
 
-  lrx = fint = lint = lbias = array(float, npulses);
+  lrx = fintensity = lintensity = lbias = array(float, npulses);
   rets = array(char, npulses);
   lchannel = pulses.channel;
 
@@ -149,12 +150,12 @@ func eaarl_sb_rx_channel(pulses) {
     lbias(i) = biases(lchannel(i));
 
     tmp = sb_rx_wf(*pulses.rx(lchannel(i),i), conf);
-    lint(i) = tmp.lint;
+    lintensity(i) = tmp.lintensity;
     lrx(i) = tmp.lrx;
     rets(i) = tmp.rets;
   }
 
-  save, pulses, lrx, lint, lbias, lchannel, rets;
+  save, pulses, lrx, lintensity, lbias, lchannel, rets;
 }
 
 func eaarl_sb_plot(raster, pulse, channel=, win=, xfma=) {
@@ -175,7 +176,7 @@ func eaarl_sb_plot(raster, pulse, channel=, win=, xfma=) {
 
   Additionally, three values will be displayed to the console:
     - lrx, which is where the peak was found (sample number in wf)
-    - lint, which is the intensity at the peak
+    - lintensity, which is the intensity at the peak
     - rets, which is how many leading edges (and thus candidate returns) were
       detected; this number will match how many triangles are plotted
 
@@ -229,8 +230,8 @@ func eaarl_sb_plot(raster, pulse, channel=, win=, xfma=) {
 
   window_select, wbkp;
 
-  write, format="   lrx: %.2f\n   lint: %.2f\n   rets: %d\n",
-    double(result.lrx), double(result.lint), long(result.rets);
+  write, format="   lrx: %.2f\n   lintensity: %.2f\n   rets: %d\n",
+    double(result.lrx), double(result.lintensity), long(result.rets);
 
   if(!result.lrx) {
     write, format="   %s\n", "No return found.";
@@ -251,21 +252,21 @@ func eaarl_sb_rx_wf(rx, conf, &msg, plot=) {
   Returns:
     An oxy group object with these members:
       lrx - location of last surface in waveform
-      lint - intensity at last surface
+      lintensity - intensity at last surface
       rets - number of returns found
 
     rv:
       sa = scan angle
       mx1 = first pulse index         -> frx - dropped
-      mv1 = first pulse peak value    -> fint - dropped
+      mv1 = first pulse peak value    -> fintensity - dropped
       mx0 = last pulse index          -> lrx
-      mv0 = last pulse peak value     -> lint
+      mv0 = last pulse peak value     -> lintensity
       nx = number of returns          -> rets
 */
   conf = obj_copy(conf);
   sample_interval = 1.0;
 
-  result = save(lrx=0, lint=0, rets=0);
+  result = save(lrx=0, lintensity=0, rets=0);
 
   // Retrieve the waveform, figure out the max intensity value, and remove
   // bias
@@ -305,7 +306,7 @@ func eaarl_sb_rx_wf(rx, conf, &msg, plot=) {
   }
 
   if(!numberof(edges)) {
-    save, result, fint=wf(max), lint=wf(max);
+    save, result, fintensity=wf(max), lintensity=wf(max);
     return result;
   }
 
@@ -338,10 +339,10 @@ func eaarl_sb_rx_wf(rx, conf, &msg, plot=) {
 
   if(numberof(wneg)) {
     save, result, lrx = edges(0) + wneg(1);
-    save, result, lint = wf(result.lrx);
+    save, result, lintensity = wf(result.lrx);
 
     if(plot) {
-      plmk, result.lint, result.lrx, color="blue", marker=1, msize=.5,
+      plmk, result.lintensity, result.lrx, color="blue", marker=1, msize=.5,
         width=10;
     }
   }

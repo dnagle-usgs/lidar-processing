@@ -4,11 +4,13 @@ if(is_void(mpconf)) mpconf = mpconfobj();
 
 func mp_obj2dyn(pulses) {
   data = obj_copy(pulses);
-  obj_delete, data, ftx, frx, fx, fy, fz, fint, fbias, fchannel, fs_slant_range;
-  save, data, x=data.lx, y=data.ly, z=data.lz, int=data.lint, tx=data.ltx,
-    rx=float(data.lrx), bias=data.lbias, channel=char(data.lchannel);
+  obj_delete, data, ftx, frx, fx, fy, fz, fintensity, fbias, fchannel,
+    fs_slant_range;
+  save, data, x=data.lx, y=data.ly, z=data.lz, intensity=data.lintensity,
+    tx=data.ltx, rx=float(data.lrx), bias=data.lbias,
+    channel=char(data.lchannel);
   save, data, ptime=array(0, numberof(data.x));
-  obj_delete, data, lx, ly, lz, lint, ltx, lrx, lbias, lchannel;
+  obj_delete, data, lx, ly, lz, lintensity, ltx, lrx, lbias, lchannel;
 
   fields = ["raster","pulse","channel","ptime","soe",
     "mx","my","mz",
@@ -45,9 +47,9 @@ func process_mp(start, stop, ext_bad_att=, channel=, opts=) {
     An oxy group object containing these fields:
       from eaarl_decode_fast: digitizer, dropout, pulse, irange, scan_angle,
         raster, soe, tx, rx
-      from process_fs: ftx, channel, frx, fint, fchannel, fbias,
+      from process_fs: ftx, channel, frx, fintensity, fchannel, fbias,
         fs_slant_range, mx, my, mz, fx, fy, fz
-      added by process_mp: ltx, lrx, lint, lbias, lchannel, lx, ly, lz,
+      added by process_mp: ltx, lrx, lintensity, lbias, lchannel, lx, ly, lz,
         num_rets, ret_num
 */
   restore_if_exists, opts, start, stop, ext_bad_att, channel;
@@ -73,7 +75,7 @@ func process_mp(start, stop, ext_bad_att=, channel=, opts=) {
   // Determine tx offsets; adds ltx
   mp_tx, pulses;
 
-  // Determine rx offsets; adds lrx, lint, lbias, lchannel; updates fint
+  // Determine rx offsets; adds lrx, lintensity, lbias, lchannel; updates fintensity
   mp_rx, pulses;
 
   // Throw away lchannel == 0
@@ -81,12 +83,12 @@ func process_mp(start, stop, ext_bad_att=, channel=, opts=) {
   if(!numberof(w)) return;
   pulses = obj_index(pulses, w);
 
-  // Expand lrx and lint from pointer arrays into individual points. This also
+  // Expand lrx and lintensity from pointer arrays into individual points. This also
   // as a consequence gets rid of anything that had no returns. Also build up
   // the ret_num field.
   idx = histinv(pulses.num_rets);
   lrx = obj_pop(pulses, "lrx");
-  lint = obj_pop(pulses, "lint");
+  lintensity = obj_pop(pulses, "lintensity");
   n = numberof(lrx);
   ret_num = array(pointer, n);
   for(i = 1; i <= n; i++)
@@ -94,7 +96,7 @@ func process_mp(start, stop, ext_bad_att=, channel=, opts=) {
       ret_num(i) = &char(indgen(pulses.num_rets(i)));
   pulses = obj_index(pulses, idx);
   save, pulses, lrx=merge_pointers(lrx);
-  save, pulses, lint=merge_pointers(lint);
+  save, pulses, lintensity=merge_pointers(lintensity);
   save, pulses, ret_num=merge_pointers(ret_num);
 
   // Adjusted offset in sample counts to surface
@@ -145,7 +147,7 @@ func eaarl_mp_rx_channel(pulses) {
   uses the same channel that was used for the first return. The following
   fields are added to pulses:
     lrx - Pointer to array of peak locations
-    lint - Pointer to array of intensities at peaks
+    lintensity - Pointer to array of intensities at peaks
     lbias - The channel range bias (ops_conf.chn%d_range_bias)
     lchannel - Channel used
 */
@@ -159,7 +161,7 @@ func eaarl_mp_rx_channel(pulses) {
 
   npulses = numberof(pulses.tx);
 
-  lrx = lint = array(pointer, npulses);
+  lrx = lintensity = array(pointer, npulses);
   lbias = array(float, npulses);
   num_rets = array(char, npulses);
   lchannel = pulses.channel;
@@ -172,12 +174,12 @@ func eaarl_mp_rx_channel(pulses) {
     lbias(i) = biases(lchannel(i));
 
     tmp = mp_rx_wf(*pulses.rx(lchannel(i),i), conf);
-    lint(i) = &tmp.lint;
+    lintensity(i) = &tmp.lintensity;
     lrx(i) = &tmp.lrx;
     num_rets(i) = tmp.num_rets;
   }
 
-  save, pulses, lrx, lint, lbias, lchannel, num_rets;
+  save, pulses, lrx, lintensity, lbias, lchannel, num_rets;
 }
 
 func eaarl_mp_plot(raster, pulse, channel=, win=, xfma=) {
@@ -197,7 +199,7 @@ func eaarl_mp_plot(raster, pulse, channel=, win=, xfma=) {
 
   Additionally, three values will be displayed to the console:
     - lrx, which is where the peak was found (sample number in wf)
-    - lint, which is the intensity at the peak
+    - lintensity, which is the intensity at the peak
     - num_rets, which is how many leading edges (and thus candidate returns)
       were detected; this number will match how many triangles are plotted
 
@@ -252,9 +254,9 @@ func eaarl_mp_plot(raster, pulse, channel=, win=, xfma=) {
   window_select, wbkp;
 
   if(result.num_rets) {
-    write, format="  ret %d/%d => lrx: %d  lint: %.2f\n",
+    write, format="  ret %d/%d => lrx: %d  lintensity: %.2f\n",
       indgen(result.num_rets), array(result.num_rets, result.num_rets),
-      result.lrx, result.lint;
+      result.lrx, result.lintensity;
   } else {
     write, format="   %s\n", "No return found.";
   }
@@ -274,13 +276,13 @@ func eaarl_mp_rx_wf(rx, conf, &msg, plot=) {
   Returns:
     An oxy group object with these members:
       lrx - array of peak locations in waveform
-      lint - array of intensities at lrx locations
+      lintensity - array of intensities at lrx locations
       num_rets - number of peaks (returns) found
 */
   conf = obj_copy(conf);
   sample_interval = 1.0;
 
-  result = save(lrx=[], lint=[], num_rets=0);
+  result = save(lrx=[], lintensity=[], num_rets=0);
 
   // Retrieve the waveform, figure out the max intensity value, and remove
   // bias
@@ -339,7 +341,7 @@ func eaarl_mp_rx_wf(rx, conf, &msg, plot=) {
   }
 
   save, result, lrx=peaks;
-  save, result, lint=wf(peaks);
+  save, result, lintensity=wf(peaks);
 
   if(plot) {
     // Use an equilateral triangle as a marker, but moved up a smidge
@@ -349,7 +351,7 @@ func eaarl_mp_rx_wf(rx, conf, &msg, plot=) {
       width=1;
 
     // Mark peak locations
-    plmk, result.lint, result.lrx, color="blue", marker=1, msize=.5,
+    plmk, result.lintensity, result.lrx, color="blue", marker=1, msize=.5,
       width=10;
   }
 
