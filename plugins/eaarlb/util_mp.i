@@ -33,21 +33,23 @@ func eaarl_mp_extract_returns(data, low=, high=, idx=) {
   relevant data.
 */
   keep = array(1, numberof(data));
+  ret_num = short(data.ret_num);
+  num_rets = short(data.num_rets);
 
   if(!is_void(low)) {
     if(low > 0) {
-      w = where(data.ret_num < low);
+      w = where(ret_num < low);
     } else {
-      w = where(data.ret_num - data.num_rets < low);
+      w = where(ret_num - num_rets < low);
     }
     if(numberof(w)) keep(w) = 0;
   }
 
   if(!is_void(high)) {
     if(high > 0) {
-      w = where(data.ret_num > high);
+      w = where(ret_num > high);
     } else {
-      w = where(data.ret_num - data.num_rets > high);
+      w = where(ret_num - num_rets > high);
     }
     if(numberof(w)) keep(w) = 0;
   }
