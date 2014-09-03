@@ -266,9 +266,9 @@ namespace eval l1pro::transect {
                 -modifycmd [list l1pro::transect::gui_var_changed $row] \
                 -textvariable ${var}($row,var) \
                 -listvariable ::varlist
-        ::mixin::combobox ${p}mode -state readonly -width 2 \
+        ::mixin::combobox ${p}mode -width 2 \
                 -textvariable ${var}($row,mode) \
-                -values {fs be ba}
+                -listvariable ::alps_data_modes
         ttk::checkbutton ${p}userecall -text "" \
                 -variable ${var}($row,userecall) \
                 -style NoLabel.TCheckbutton
@@ -415,11 +415,7 @@ namespace eval l1pro::transect {
                 is the location of the blue marker."
         tooltip ${p}var \
                 "Data variable to run the transect on."
-        tooltip ${p}mode -wrap single \
-                "Data mode to use for data.
-                - fs = First Surface / First Return
-                - be = Bare Earth / Topo Under Veg
-                - ba = Bathymetry / Submerged Topo"
+        tooltip ${p}mode -wrap single $::alps_data_modes_tooltip
         tooltip ${p}userecall \
                 "If enabled, a previously selected transect line will be used.
 
