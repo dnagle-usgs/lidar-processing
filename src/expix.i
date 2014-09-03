@@ -87,26 +87,42 @@ func expix_show(nearest) {
   write, format="Location clicked: %.2f %.2f\n", spot(1), spot(2);
   write, format="   Nearest point: %.2f %.2f (%.2fm away)\n",
     nearest.xp, nearest.yp, nearest.distance;
-  write, format="    first return: %.2f\n", point.elevation/100.;
-  if(has_member(point, "lelv")) {
-    write, format="     last return: %.2f\n", point.lelv/100.;
-    write, format="    first - last: %.2f\n", (point.elevation-point.lelv)/100.;
-  } else if(has_member(point, "depth")) {
-    write, format="   bottom return: %.2f\n", (point.elevation+point.depth)/100.;
-    write, format="  first - bottom: %.2f\n", -1 * point.depth/100.;
+
+  fz = lz = [];
+  if(has_member(point, "z")) {
+    fz = point.z;
+  } else if(has_member(point, "fz")) {
+    fz = point.fz;
+    if(has_member(point, "lz")) lz = point.lz;
+  } else if(has_member(point, "elevation")) {
+    fz = point.elevation/100.;
+    if(has_member(point, "lelv"))
+      lz = point.lelv/100.;
+    else if(has_member(point, "depth"))
+      lz = (point.elevation + point.depth)/100.;
   }
+
+  if(!is_void(fz)) {
+    if(is_void(lz)) {
+      write, format="       elevation: %.2f\n", fz;
+    } else {
+      write, format="    first return: %6.2f\n", fz;
+      write, format="     last return: %6.2f\n", lz;
+      write, format="    first - last: %6.2f\n", fz - lz;
+    }
+  }
+
   write, format="%s", "\n";
   write, format="Timestamp: %s\n", soe2iso8601(point.soe);
   write, format="soe= %.4f ; sod= %.4f\n", point.soe, soe2sod(point.soe);
   write, format="Corresponds to %s(%d)\n", vname, nearest.index;
 
-  // Leaving units in cm because units don't matter, as long as they are
-  // consistent.
   // calculate distance along surface plane from mirror point
-  dist = sqrt(double(point.east-point.meast)^2 +
-    double(point.north-point.mnorth)^2);
+  f = data2xyz(point, mode="fs");
+  m = data2xyz(point, mode="mir");
+  dist = ((m - f)(:2)^2)(sum)^0.5;
   // calculate elevation difference
-  ht = abs(point.melevation - point.elevation);
+  ht = abs(m(3) - f(3));
   if(ht == 0) {
     write, format="%s\n", "Cannot calculate angle of incidence (0 height)";
   } else {
