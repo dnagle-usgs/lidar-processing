@@ -22,22 +22,22 @@ func expix_pixelwf_hook(env) {
   extern rn, pixelwfvars;
   if(pixelwfvars.selection.missionload)
     mission, load_soe_rn, point.soe, point.raster;
-  rp = parse_rn(point.rn);
   channel = has_member(point, "channel") ? short(point.channel) : 0;
-  h_set, pixelwfvars.selection, raster=rp(1), pulse=rp(2), channel=channel;
-  tksetval, "::eaarl::pixelwf::vars::selection::raster", rp(1);
-  tksetval, "::eaarl::pixelwf::vars::selection::pulse", rp(2);
+  h_set, pixelwfvars.selection, raster=point.raster, pulse=point.pulse,
+    channel=channel;
+  tksetval, "::eaarl::pixelwf::vars::selection::raster", point.raster;
+  tksetval, "::eaarl::pixelwf::vars::selection::pulse", point.pulse;
   tksetval, "::eaarl::pixelwf::vars::selection::channel", channel;
   h_set, pixelwfvars.selection, missionday=mission.data.loaded;
   tksetval, "::eaarl::pixelwf::vars::selection::missionday", mission.data.loaded;
-  rn = rp(1);
+  rn = point.raster;
 
   write, "";
   write, format="Mission day: %s\n", mission.data.loaded;
   if(has_member(point, "channel") && point.channel) {
     write, format="channel= %d ; ", point.channel;
   }
-  write, format="raster= %d ; pulse= %d\n", rp(1), rp(2);
+  write, format="raster= %d ; pulse= %d\n", point.raster, point.pulse;
 
   if(is_array(tans) && is_array(pnav)) {
     somd = point.soe - soe_day_start;
