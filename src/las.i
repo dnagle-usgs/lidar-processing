@@ -211,6 +211,20 @@ header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
     on a set of files that contains multiple files for the same tile (such as
     a be and fs version of the same tile).
 
+  About returns:
+
+    If you are exporting multipeak data, then the return counts and numbers
+    will be encoded in the LAS. However, LAS only permits up to 5 returns. If
+    your multipeak data has pulses with more than 5 returns, they will be
+    collapsed to just 5: returns 1, 2, and 3 will be left as is, the last
+    return will be changed to 5, and all returns from 4 to the 2nd to last
+    return will be set to 4. That allows you to identify first and last returns
+    while still keeping some information about the other returns.
+
+    If you are exporting any other kind of data, then the return counts and
+    numbers will be set to 1 for all points (even for bare earth and bathy)
+    since we do not have proper return count info in those cases.
+
   SEE ALSO: pbd2las batch_las2pbd las
 */
   default, searchstr, "*.pbd";
@@ -436,24 +450,33 @@ pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
   }
 
   // Bitfield for return, scan direction, and flightline edge
-  ret_num = 1;
-  num_ret = 1;
+  if(has_member(data, "ret_num") && has_member(data, "num_rets")) {
+    ret_num = data.ret_num;
+    num_rets = data.num_rets;
+  } else {
+    ret_num = 1;
+    num_rets = 1;
+  }
 
   // If our data has an .rn member and the values aren't all zero...
+  raster = pulse = [];
   if(has_member(data, "rn") && allof(data.rn)) {
-    scan_dir = data.rn % 2;
-    // If the rn is zero, then we dummy the pulse to 60 to approximate a central
-    // return, which ensures that f_edge stays 0.
-    pulse = array(60, dimsof(data));
-    w = where(data.rn);
-    if(numberof(w))
-      pulse(w) = data(w).rn>>24;
+    parse_rn, data.rn, raster, pulse;
+  } else if(
+    has_member(data, "raster") && has_member(data, "pulse") &&
+    allof(data.raster) && allof(data.pulse)
+  ) {
+    raster = data.raster;
+    pulse = data.pulse;
+  }
+  if(!is_void(raster)) {
+    scan_dir = raster % 2;
     f_edge = ((pulse == 0) | (pulse == 1) | (pulse == 119) | (pulse == 120));
   } else {
     scan_dir = 0;
     f_edge = 0;
   }
-  stream.points.bitfield = las_encode_return(ret_num, num_ret, scan_dir, f_edge);
+  stream.points.bitfield = las_encode_return(ret_num, num_rets, scan_dir, f_edge);
 
   // Classification bitfield
   stream.points.classification = las_encode_classification(classification);
@@ -471,7 +494,7 @@ pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
       theta(w) *= -1;
     stream.points.scan_angle_rank = char(theta);
   }
-  ret_num = num_ret = scan_dir = f_edge = [];
+  ret_num = num_rets = scan_dir = f_edge = [];
 
   // user data - unused
   // point source id - unused
@@ -495,10 +518,13 @@ pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
     }
   }
 
-  if(encode_rn && has_member(stream.points, "eaarl_rn") && has_member(data, "rn")) {
-    stream.points.eaarl_rn = data.rn;
+  if(encode_rn && has_member(stream.points, "eaarl_rn")) {
+    if(has_member(data, "rn")) {
+      stream.points.eaarl_rn = data.rn;
+    } else if(has_member(data, "raster") && has_member(data, "pulse")) {
+      stream.points.eaarl_rn = long(data.raster) | (long(data.pulse) << 24);
+    }
   }
-
   //--- Finalize header
   las_update_header, stream;
 
@@ -1000,16 +1026,34 @@ func las_global_encoding(header) {
     return las_decode_global_encoding(0);
 }
 
-func las_encode_return(ret_num, num_ret, s_dir, f_edge) {
-  return char((f_edge << 7) + (s_dir << 6) + (num_ret << 3) + ret_num);
+func las_encode_return(ret_num, num_rets, s_dir, f_edge) {
+  // Collapse to at most 5 returns
+  w1 = where(num_rets > 5);
+  if(numberof(w1)) {
+    w2 = where(ret_num(w1) > 4 & ret_num(w1) < num_rets(w1));
+    if(numberof(w2))
+      ret_num(w1(w2)) = 4;
+    w2 = where(ret_num(w1) == num_rets(w1));
+    if(numberof(w2))
+      ret_num(w1(w2)) = 5;
+    num_rets(w1) = 5;
+  }
+  w1 = w2 = [];
+
+  return \
+    (char(f_edge > 0) << 7) |
+    (char(s_dir > 0) << 6) |
+    (char(num_rets & 0x7) << 3) |
+    char(ret_num & 0x7);
 }
 
-func las_decode_return(bitfield, &ret_num, &num_ret, &s_dir, &f_edge) {
-  f_edge = bitfield >> 7;
-  s_dir = (bitfield & 0x40) >> 6;
-  num_ret = (bitfield & 0x38) >> 3;
-  ret_num = bitfield & 0x07;
-  return [ret_num, num_ret, s_dir, f_edge];
+func las_decode_return(bitfield, &ret_num, &num_rets, &s_dir, &f_edge) {
+  bitfield = char(bitfield);
+  f_edge = (bitfield >> 7) & 0x1;
+  s_dir = (bitfield >> 6) & 0x1;
+  num_rets = (bitfield >> 3) & 0x7;
+  ret_num = bitfield & 0x7;
+  return [ret_num, num_rets, s_dir, f_edge];
 }
 
 func las_encode_classification(classification, synthetic, keypoint, withheld) {
