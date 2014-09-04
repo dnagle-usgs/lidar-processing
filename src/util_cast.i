@@ -227,15 +227,16 @@ func hash2obj(hash) {
   return obj;
 }
 
-func obj2pbd(obj, pbd) {
+func obj2pbd(obj, pbd, prims=) {
 /* DOCUMENT obj2pbd, obj, pbd
   Converts a Yorick group object to a PBD file. Caveat: Only group members
   that are arrays and have non-nil key names will get saved.
 
   SEE ALSO: hash2obj hash2pbd obj2hash pbd2hash pbd2obj pointers2group oxy
 */
+  default, prims, i86_primitives;
   if(is_string(pbd))
-    pbd = createb(pbd);
+    pbd = createb(pbd, prims);
   for(i = 1; i <= obj(*); i++) {
     key = obj(*,i);
     val = obj(noop(i));
