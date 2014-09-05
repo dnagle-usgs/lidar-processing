@@ -247,6 +247,12 @@ func tans_check_times(sods, verbose=) {
   times found against tans.
 */
   default, verbose, 1;
+
+  sod_start = sods(1,);
+  w = where(sod_start <= tans.somd(0));
+  if(!numberof(w)) return;
+  sods = sods(,w);
+
   sod_start = sods(1,);
   sod_stop = sods(2,);
 
@@ -254,6 +260,7 @@ func tans_check_times(sods, verbose=) {
   idx = digitize(sods, tans.somd);
   idx_start = idx(1,);
   idx_stop = min(idx(2,)+1, numberof(tans));
+
   w = where(sod_stop > tans.somd(idx_stop));
   if(numberof(w)) idx_stop(w) = max(1, idx_stop(w)-1);
 
