@@ -491,3 +491,28 @@ func args2hash(args) {
 */
   return obj2hash(args2obj(args));
 }
+
+func int_downsize(A, schar=) {
+/* DOCUMENT int_downsize(A, schar=)
+  Given an integer (scalar or array), this will auto-cast the value to the
+  smallest x86 integer type that can hold it. If schar=1, then char is treated
+  as signed instead of unsigned.
+*/
+  default, schar, 0;
+  if(!is_integer(A)) return A;
+
+  a = A(*);
+  Amin = a(min);
+  Amax = a(max);
+  a = [];
+
+  if(!schar && Amin >= 0 && Amax <= 255)
+    return char(A);
+  if(schar && Amin >= -128 && Amax <= 127)
+    return char(A);
+  if(Amin >= -32768 && Amax <= 32767)
+    return short(A);
+  if(Amin >= -2147483648 && Amax <= 2147483647)
+    return int(A);
+  return A;
+}
