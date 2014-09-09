@@ -158,7 +158,7 @@ func variance(x) {
 /* DOCUMENT variance(x)
   Returns the variance of X.
 */
-  return ((x - x(avg))^2)(avg);
+  return x(rms)^2;
 }
 
 func covariance(x, y) {
