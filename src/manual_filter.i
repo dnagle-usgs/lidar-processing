@@ -178,10 +178,12 @@ func filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=) {
 
 func batch_extract_corresponding_data(src_searchstr, ref_searchstr, maindir,
 srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=, soefudge=,
-fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=) {
+fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=, file_append=)
+{
 /* DOCUMENT batch_extract_corresponding_data, src_searchstr, ref_searchstr,
   maindir, srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=,
-  soefudge=, fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=
+  soefudge=, fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=,
+  file_append=
 
   This copies data from source (src) to output (out). It uses a given
   reference data (ref) to determine which points get copied.
@@ -244,6 +246,8 @@ fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=) {
     remove_buffers= Passes through to underlying dirload. This will remove the
       buffer regions from each tile of the ref data prior to doing the
       correspondence checks.
+    file_append= By default, existing files will be overwritten. Specify
+      file_append=1 to append to them instead.
 
   Note on directory arguments/options:
     If you provide all three of srcdir=, refdir=, and outdir=, then you do
@@ -294,6 +298,7 @@ fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=) {
   default, method, "data";
   default, verbose, 1;
   default, remove_buffers, 0;
+  default, file_append, 0;
   if(strpart(fn_append, 1:1) != "_")
     fn_append = "_" + fn_append;
   if(strlen(vname_append) && strpart(vname_append, 1:1) != "_")
@@ -354,7 +359,10 @@ fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=) {
     outfile = file_rootname(outfile) + fn_append + ".pbd";
     vname += vname_append;
     mkdirp, file_dirname(outfile);
-    pbd_append, outfile, vname, data, uniq=1;
+    if(file_append)
+      pbd_append, outfile, vname, data, uniq=1;
+    else
+      pbd_save, outfile, vname, data;
     if(verbose >= 2)
       write, format="  -> %s\n", file_tail(outfile);
     data = [];
