@@ -205,7 +205,8 @@ func pbd_append(file, vname, data, uniq=) {
   By default, the option uniq= is set to 1 which will ensure that all merged
   data points are unique by eliminating duplicate data points with the same
   soe. If duplicate data should not be eliminated based on soe, then set
-  uniq=0.
+  uniq=0. You may also pass a string for uniq, which will be passed through to
+  uniq_data as optstr=.
 
   Note that if "file" already exists, then the struct of its data must match
   the struct of "data".
@@ -216,7 +217,7 @@ func pbd_append(file, vname, data, uniq=) {
   if(file_exists(file))
     data = grow(pbd_load(file), data);
   if(uniq)
-    data = uniq_data(data);
+    data = uniq_data(data, optstr=uniq);
   pbd_save, file, vname, data;
 }
 
