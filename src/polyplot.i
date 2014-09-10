@@ -350,6 +350,71 @@ func polyplot_plot(group, name, win=, highlight=) {
 }
 polyplot, plot=polyplot_plot;
 
+save, scratch, polyplot_exists;
+func polyplot_exists(group, name, empty=) {
+/* DOCUMENT bool = polyplot(exists,);
+  -or- bool = polyplot(exists, "<group>");
+  -or- bool = polyplot(exists, "<group>", "<name>");
+
+  -or- bool = polyplot(exists, ["", ""]);
+  -or- bool = polyplot(exists, ["<group>", ""]);
+  -or- bool = polyplot(exists, ["<group", "<name>"]);
+
+  Returns 1 if the specified poly or shapefile is defined and contains poly
+  data, or 0 otherwise. Alternately, you can specify empty=1 to only check if
+  the poly or shapefile is defined.
+
+  There are two ways you can call polyplot(exists,). The first way is to pass
+  it zero, one, or two scalar string arguments. The second way is to pass it a
+  two-element string array. These possibilities are shown in the example syntax
+  above; the first three examples provide the same output as the last three
+  examples.
+
+  The two-element string array is to make it easier to specific a poly through
+  a calling function. If both strings are zero-length, then it retrieves all
+  polys. If only the second string is zero-length, then a single group's polys
+  are retrieved. If neither string is zero-length, then a specific poly in a
+  specific group is retrieved.
+*/
+  if(numberof(group) == 2) {
+    if(strlen(group(2)))
+      return polyplot(exists, group(1), group(2), empty=empty);
+    if(strlen(group(1)))
+      return polyplot(exists, group(1), empty=empty);
+    return polyplot(exists, empty=empty);
+  }
+
+  default, empty, 0;
+  use, data;
+
+  if(is_void(group)) {
+    if(empty) return 1;
+    if(!data(*)) return 0;
+    for(i = 1; i <= data(*); i++) {
+      if(polyplot(exists, data(*,i))) return 1;
+    }
+    return 0;
+  }
+
+  if(is_void(name)) {
+    if(empty) return data(*,group) > 0;
+    if(!data(*,group)) return 0;
+    grp = data(noop(group));
+    if(!grp(*)) return 0;
+    for(i = 1; i <= grp(*); i++) {
+      if(polyplot(exists, group, grp(*,i))) return 1;
+    }
+    return 0;
+  }
+
+  if(!data(*,group)) return 0;
+  if(!data(noop(group), *, name)) return 0;
+  if(empty) return 1;
+  item = data(noop(group), noop(name));
+  return numberof(item.ply) > 0;
+}
+polyplot, exists=polyplot_exists;
+
 save, scratch, polyplot_get;
 func polyplot_get(group, name) {
 /* DOCUMENT shp = polyplot(get,);
