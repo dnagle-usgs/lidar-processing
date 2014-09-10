@@ -178,10 +178,10 @@ func filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=) {
 
 func batch_extract_corresponding_data(src_searchstr, ref_searchstr, maindir,
 srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=, soefudge=,
-fudge=, mode=, native=, verbose=, enableptime=) {
+fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=) {
 /* DOCUMENT batch_extract_corresponding_data, src_searchstr, ref_searchstr,
   maindir, srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=,
-  soefudge=, fudge=, mode=, native=, verbose=, enableptime=
+  soefudge=, fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=
 
   This copies data from source (src) to output (out). It uses a given
   reference data (ref) to determine which points get copied.
@@ -241,6 +241,9 @@ fudge=, mode=, native=, verbose=, enableptime=) {
       verbose=0   Silent.
       verbose=1   Progress (default)
       verbose=2   Debug, very chatty
+    remove_buffers= Passes through to underlying dirload. This will remove the
+      buffer regions from each tile of the ref data prior to doing the
+      correspondence checks.
 
   Note on directory arguments/options:
     If you provide all three of srcdir=, refdir=, and outdir=, then you do
@@ -290,6 +293,7 @@ fudge=, mode=, native=, verbose=, enableptime=) {
   default, vname_append, "ext";
   default, method, "data";
   default, verbose, 1;
+  default, remove_buffers, 0;
   if(strpart(fn_append, 1:1) != "_")
     fn_append = "_" + fn_append;
   if(strlen(vname_append) && strpart(vname_append, 1:1) != "_")
@@ -324,7 +328,7 @@ fudge=, mode=, native=, verbose=, enableptime=) {
     bbox = [x(min), y(min), x(max), y(max)] + [-10, -10, 10, 10];
     x = y = [];
     ref = dirload(refdir, searchstr=ref_searchstr, verbose=0,
-      filter=dlfilter_bbox(bbox, mode=mode));
+      filter=dlfilter_bbox(bbox, mode=mode), remove_buffers=remove_buffers);
 
     if(!numberof(ref)) {
       if(verbose >= 2)
@@ -336,8 +340,8 @@ fudge=, mode=, native=, verbose=, enableptime=) {
       data = extract_corresponding_xyz(data, ref, fudge=fudge, mode=mode,
         native=native);
     else
-      data = extract_corresponding_data(data, ref, soefudge=soefudge, 
-	enableptime=enableptime);
+      data = extract_corresponding_data(data, ref, soefudge=soefudge,
+        enableptime=enableptime);
     ref = [];
 
     if(!numberof(data)) {
