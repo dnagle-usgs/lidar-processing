@@ -79,6 +79,12 @@ func makeflow_run(conf, fn, norun=, interval=) {
     interval= Time interval passed to timer_remaining when using sans_makeflow.
       Ignored if Makeflow is available.
 
+  If called as a function, this will return the parsed result of
+  makeflow_parse_log at the end of the makeflow run. You can use this to see if
+  any jobs failed. See makeflow_parse_log for details. (If makeflow is disabled
+  and sans_makeflow is used, then [] is returned instead. In that case, any
+  failed jobs will cause an error anyway.)
+
   SEE ALSO: makeflow_conf
 */
   extern alpsrc;
@@ -169,6 +175,8 @@ func makeflow_run(conf, fn, norun=, interval=) {
   }
 
   write, format="%s", "Jobs completed.\n";
+
+  if(!am_subroutine()) return parsed;
 }
 
 func hook_makeflow_jobs_env(data, env) {
