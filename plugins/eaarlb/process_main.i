@@ -771,9 +771,10 @@ exactsel=, splitchan=, opts=) {
   hook_add, "job_run", "hook_run_job_eaarl_process";
 
   write, "Preparing makeflow...";
-  makeflow_run, conf, makeflow_fn, interval=15, norun=norun;
+  parsed = makeflow_run(conf, makeflow_fn, interval=15, norun=norun);
 
   timer_finished, t0;
+  return parsed;
 }
 
 func hook_prep_job_eaarl_process(env) {
