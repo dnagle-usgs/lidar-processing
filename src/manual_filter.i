@@ -178,12 +178,12 @@ func filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=) {
 
 func batch_extract_corresponding_data(src_searchstr, ref_searchstr, maindir,
 srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=, soefudge=,
-fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=, file_append=)
-{
+fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=, file_append=,
+uniq=) {
 /* DOCUMENT batch_extract_corresponding_data, src_searchstr, ref_searchstr,
   maindir, srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=,
   soefudge=, fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=,
-  file_append=
+  file_append=, uniq=
 
   This copies data from source (src) to output (out). It uses a given
   reference data (ref) to determine which points get copied.
@@ -248,6 +248,9 @@ fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=, file_append=)
       correspondence checks.
     file_append= By default, existing files will be overwritten. Specify
       file_append=1 to append to them instead.
+    uniq= Enable uniqueness checks. This is disabled by default. Use uniq= to
+      enable basic uniqueness check, or specify a string to be passed as
+      optstr= to uniq_data.
 
   Note on directory arguments/options:
     If you provide all three of srcdir=, refdir=, and outdir=, then you do
@@ -299,6 +302,7 @@ fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=, file_append=)
   default, verbose, 1;
   default, remove_buffers, 0;
   default, file_append, 0;
+  default, uniq, 0;
   if(strpart(fn_append, 1:1) != "_")
     fn_append = "_" + fn_append;
   if(strlen(vname_append) && strpart(vname_append, 1:1) != "_")
@@ -355,12 +359,15 @@ fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=, file_append=)
       continue;
     }
 
+    if(uniq)
+      data = uniq_data(data, mode=mode, optstr=uniq);
+
     outfile = file_join(outdir, file_relative(srcdir, files(i)));
     outfile = file_rootname(outfile) + fn_append + ".pbd";
     vname += vname_append;
     mkdirp, file_dirname(outfile);
     if(file_append)
-      pbd_append, outfile, vname, data, uniq=1;
+      pbd_append, outfile, vname, data, uniq=uniq, mode=mode;
     else
       pbd_save, outfile, vname, data;
     if(verbose >= 2)
