@@ -194,8 +194,8 @@ func assign(args) {
 }
 wrap_args, assign;
 
-func pbd_append(file, vname, data, uniq=) {
-/* DOCUMENT pbd_append, file, vname, data, uniq=
+func pbd_append(file, vname, data, uniq=, mode=) {
+/* DOCUMENT pbd_append, file, vname, data, uniq=, mode=
 
   This creates or appends "data" in the pbd "file" using the variable name
   "vname". If appending, it will merge "data" with whatever data is pointed to
@@ -206,7 +206,8 @@ func pbd_append(file, vname, data, uniq=) {
   data points are unique by eliminating duplicate data points with the same
   soe. If duplicate data should not be eliminated based on soe, then set
   uniq=0. You may also pass a string for uniq, which will be passed through to
-  uniq_data as optstr=.
+  uniq_data as optstr=. (You can also specify a mode to be passed through to
+  uniq_data if needed.)
 
   Note that if "file" already exists, then the struct of its data must match
   the struct of "data".
@@ -217,7 +218,7 @@ func pbd_append(file, vname, data, uniq=) {
   if(file_exists(file))
     data = grow(pbd_load(file), data);
   if(uniq)
-    data = uniq_data(data, optstr=uniq);
+    data = uniq_data(data, optstr=uniq, mode=mode);
   pbd_save, file, vname, data;
 }
 
