@@ -136,7 +136,7 @@ powerwt=, update=) {
     );
   }
 
-  makeflow_run, conf;
+  return makeflow_run(conf);
 }
 
 func pbd_grid(infile, outfile=, method=, mode=, toarc=, arcfile=, buffer=,
