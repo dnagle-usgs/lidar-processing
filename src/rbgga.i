@@ -88,7 +88,7 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=) {
   return gga_find_times(q);
 }
 
-func mark_time_pos(sod, win=, msize=, marker=, color=) {
+func mark_time_pos(sod, win=, msize=, marker=, color=, label=) {
 /* DOCUMENT mark_time_pos, sod, win=, msize=, marker=, color=
   Plots a mark for the PNAV location at the given timestamp SOD.
 
@@ -99,6 +99,7 @@ func mark_time_pos(sod, win=, msize=, marker=, color=) {
     msize= Marker size to use, defaults to 0.6.
     marker= Marker to use, defaults to 5 (diamond), see plmk for others.
     color= Color to use, defaults to blue.
+    label= Text string to plot next to the marker.
   Externs used:
     pnav= The array of navigation data used to look up the x,y location.
     utm= If utm=1, then the lat/lon coordinate from pnav is converted to UTM
@@ -123,6 +124,8 @@ func mark_time_pos(sod, win=, msize=, marker=, color=) {
   wbkp = current_window();
   window, win;
   plmk, y, x, marker=marker, color=color, msize=msize;
+  if ( label )
+    plt, label, x, y, tosys=1, color=color;
   window_select, wbkp;
 }
 
