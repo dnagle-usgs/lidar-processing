@@ -1,22 +1,6 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-scratch = save(scratch, tmp,
-  confobj_settings, confobj_set, confobj_get,
-  confobj_profile_select, confobj_profile_add, confobj_profile_del,
-    confobj_profile_rename,
-  confobj_groups, confobj_groups_migrate,
-  confobj_validate, confobj_write, confobj_read, confobj_clear,
-  confobj_json, confobj_dumpgroups, confobj_cleangroups, confobj_upgrade,
-  confobj_display
-);
-tmp = save(
-  settings, set, get,
-  profile_select, profile_add, profile_del, profile_rename,
-  groups, groups_migrate,
-  validate, write, read, clear,
-  json, dumpgroups, cleangroups, upgrade,
-  display
-);
+scratch = save(scratch);
 
 func confobj(base, data) {
 /* DOCUMENT conf = confobj()
@@ -151,12 +135,17 @@ func confobj(base, data) {
   return conf;
 }
 
+save, scratch, base;
+base = save();
+
+save, scratch, confobj_settings;
 func confobj_settings(void) {
   use, data;
   return data(1).active;
 }
-settings = confobj_settings;
+save, base, settings=confobj_settings;
 
+save, scratch, confobj_set;
 func confobj_set(group, key, val) {
   use, data;
   if(!data(*,group)) error, "invalid group";
@@ -164,16 +153,18 @@ func confobj_set(group, key, val) {
 
   use_method, validate, group;
 }
-set = confobj_set;
+save, base, set=confobj_set;
 
+save, scratch, confobj_get;
 func confobj_get(group, key) {
   use, data;
   if(!data(*,group)) error, "invalid group";
   active = data(noop(group)).active;
   return is_void(key) ? active : active(noop(key));
 }
-get = confobj_get;
+save, base, get=confobj_get;
 
+save, scratch, confobj_profile_select;
 func confobj_profile_select(group, profile) {
   use, data;
   if(!data(*,group)) error, "invalid group";
@@ -182,8 +173,9 @@ func confobj_profile_select(group, profile) {
   save, grp, active_name=profile;
   use_method, validate, group;
 }
-profile_select = confobj_profile_select;
+save, base, profile_select=confobj_profile_select;
 
+save, scratch, confobj_profile_add;
 func confobj_profile_add(group, profile) {
   use, data;
   if(!data(*,group)) error, "invalid group";
@@ -192,8 +184,9 @@ func confobj_profile_add(group, profile) {
   if(grp.profiles(*,profile)) return;
   save, grp.profiles, noop(profile), obj_copy(grp.active, recurse=1);
 }
-profile_add = confobj_profile_add;
+save, base, profile_add=confobj_profile_add;
 
+save, scratch, confobj_profile_del;
 func confobj_profile_del(group, profile) {
   use, data;
   if(!data(*,group)) error, "invalid group";
@@ -215,8 +208,9 @@ func confobj_profile_del(group, profile) {
 
   use_method, validate, group;
 }
-profile_del = confobj_profile_del;
+save, base, profile_del=confobj_profile_del;
 
+save, scratch, confobj_profile_rename;
 func confobj_profile_rename(group, oldname, newname) {
   use, data;
   if(!data(*,group)) error, "invalid group";
@@ -240,8 +234,9 @@ func confobj_profile_rename(group, oldname, newname) {
 
   use_method, validate, group;
 }
-profile_rename = confobj_profile_rename;
+save, base, profile_rename=confobj_profile_rename;
 
+save, scratch, confobj_groups;
 func confobj_groups(newgroups, copy=) {
 // Default implementation permits only one group
 // So, this simplifies to a rename
@@ -264,8 +259,9 @@ func confobj_groups(newgroups, copy=) {
     use_method, validate, data(*,i);
   }
 }
-groups = confobj_groups;
+save, base, groups=confobj_groups;
 
+save, scratch, confobj_groups_migrate;
 func confobj_groups_migrate(oldgroups, newgroups, oldmap, newmap) {
   // Make sure each new group has a profile entry; for now, it can be empty
   for(i = 1; i <= newgroups(*); i++) {
@@ -334,8 +330,9 @@ func confobj_groups_migrate(oldgroups, newgroups, oldmap, newmap) {
     save, cinfo(noop(newgrp)), names;
   }
 }
-groups_migrate = confobj_groups_migrate;
+save, base, groups_migrate=confobj_groups_migrate;
 
+save, scratch, confobj_validate;
 func confobj_validate(group) {
 // Perform basic validation to make sure the state is consistent.
 // This should probably be overridden and wrapped around.
@@ -361,30 +358,34 @@ func confobj_validate(group) {
 
   save, grp, active=grp.profiles(grp.active_name);
 }
-validate = confobj_validate;
+save, base, validate=confobj_validate;
 
+save, scratch, confobj_write;
 func confobj_write(fn) {
   f = open(fn, "w");
   write, f, format="%s\n", use_method(json,);
   close, f;
   if(logger(info)) logger, info, "Saved bathy settings to "+fn;
 }
-write = confobj_write;
+save, base, write=confobj_write;
 
+save, scratch, confobj_read;
 func confobj_read(fn) {
   f = open(fn, "r");
   use_method, json, rdfile(f);
   close, f;
   if(logger(info)) logger, info, "Loaded bathy settings from "+fn;
 }
-read = confobj_read;
+save, base, read=confobj_read;
 
+save, scratch, confobj_clear;
 func confobj_clear(void) {
   working = save(default=save());
   use_method, groups, working, copy=0;
 }
-clear = confobj_clear;
+save, base, clear=confobj_clear;
 
+save, scratch, confobj_json;
 func confobj_json(json, compact=) {
   use, data;
 
@@ -399,8 +400,9 @@ func confobj_json(json, compact=) {
     return json_encode(output, indent=(compact ? [] : 2));
   }
 }
-json = confobj_json;
+save, base, json=confobj_json;
 
+save, scratch, confobj_dumpgroups;
 func confobj_dumpgroups(compact=) {
   output = save();
   if(!compact)
@@ -416,8 +418,9 @@ func confobj_dumpgroups(compact=) {
   }
   return output;
 }
-dumpgroups = confobj_dumpgroups;
+save, base, dumpgroups=confobj_dumpgroups;
 
+save, scratch, confobj_cleangroups;
 func confobj_cleangroups(void) {
   use, data;
   groups = save();
@@ -428,8 +431,9 @@ func confobj_cleangroups(void) {
   }
   return groups;
 }
-cleangroups = confobj_cleangroups;
+save, base, cleangroups=confobj_cleangroups;
 
+save, scratch, confobj_upgrade;
 func confobj_upgrade(versions, working) {
   if(!working(*,"confver"))
     save, working, confver=1;
@@ -469,9 +473,10 @@ save, versions, confobj_upgrade_version1
 
 */
 
-upgrade = closure(confobj_upgrade, restore(versions));
+save, base, upgrade=closure(confobj_upgrade, versions);
 restore, scratch;
 
+save, scratch, confobj_display;
 func confobj_display(group, profile, fh=) {
   use, data;
   if(is_void(group)) {
@@ -490,7 +495,7 @@ func confobj_display(group, profile, fh=) {
   lines(1) = swrite(format="%s -> %s", group, profile);
   write, fh, format="%s\n", lines;
 }
-display = confobj_display;
+save, base, display=confobj_display;
 
-confobj = closure(confobj, restore(tmp));
+confobj = closure(confobj, base);
 restore, scratch;
