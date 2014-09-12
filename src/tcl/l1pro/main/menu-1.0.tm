@@ -329,12 +329,47 @@ proc menu_plugins mb {
 
 proc menu_settings mb {
     menu $mb -postcommand ::alpsrc::update
+    $mb add cascade {*}[menulabel "File dialogs..."] \
+            -menu [menu_settings_file $mb.file]
+    $mb add cascade {*}[menulabel "Directory dialogs..."] \
+            -menu [menu_settings_dir $mb.dir]
+    $mb add separator
     $mb add checkbutton {*}[menulabel "&Help goes in new window"] \
             -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
     $mb add checkbutton {*}[menulabel "Use &Makeflow"] \
             -variable ::alpsrc(makeflow_enable)
     $mb add cascade {*}[menulabel "Memory usage indicator..."] \
             -menu [menu_settings_memory $mb.mem]
+    return $mb
+}
+
+proc menu_settings_file mb {
+    menu $mb
+    $mb add radiobutton \
+            -label "Tk" \
+            -variable ::misc::fsdialog::interface(file) \
+            -value tk
+    $mb add radiobutton \
+            -label "fsdialog" \
+            -variable ::misc::fsdialog::interface(file) \
+            -value fs
+    return $mb
+}
+
+proc menu_settings_dir mb {
+    menu $mb
+    $mb add radiobutton \
+            -label "Tk" \
+            -variable ::misc::fsdialog::interface(dir) \
+            -value tk
+    $mb add radiobutton \
+            -label "fsdialog dir style" \
+            -variable ::misc::fsdialog::interface(dir) \
+            -value fsdir
+    $mb add radiobutton \
+            -label "fsdialog file style" \
+            -variable ::misc::fsdialog::interface(dir) \
+            -value fsfile
     return $mb
 }
 
