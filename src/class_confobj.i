@@ -31,6 +31,19 @@ func confobj(base, data) {
     val = conf(get, "<group>", "<key">)
       In the given GROUP's active profile, retrieve the VAL for KEY.
 
+    conf, profiles
+    conf, profiles, "<group>"
+      Show a list of each group and its profile names (or only the given GROUP,
+      if specified).
+
+    profs = conf(profiles,)
+      Returns an oxy group whose keys are group names and whose values are
+      string arrays containing the profile names for the corresponding groups.
+
+    profs = conf(profiles, "<group>")
+      Returns an array of strings containing the profile names for the given
+      GROUP.
+
     conf, profile_select, "<group>", "<profile>"
       For the given GROUP, make PROFILE the active profile.
 
@@ -163,6 +176,36 @@ func confobj_get(group, key) {
   return is_void(key) ? active : active(noop(key));
 }
 save, base, get=confobj_get;
+
+save, scratch, confobj_profiles;
+func confobj_profiles(group, fh=) {
+  use, data;
+
+  if(!am_subroutine()) {
+    if(!is_void(group)) {
+      if(!data(*,group)) error, "invalid group";
+      return data(noop(group)).profiles(*,);
+    }
+    result = save();
+    for(i = 1; i <= data(*); i++) {
+      save, result, data(*,i), data(noop(i)).profiles(*,);
+    }
+    return result;
+  }
+
+  if(is_void(group)) group = data(*,);
+
+  for(i = 1; i <= numberof(group); i++) {
+    if(!data(*,group(i))) error, "invalid group";
+    write, fh, format="%s:\n", group(i);
+    profs = data(group(i)).profiles(*,);
+    for(j = 1; j <= numberof(profs); j++) {
+      write, fh, format="    %s\n", profs(j);
+    }
+    if(i < numberof(group)) write, fh, format="%s", "\n";
+  }
+}
+save, base, profiles=confobj_profiles;
 
 save, scratch, confobj_profile_select;
 func confobj_profile_select(group, profile) {
