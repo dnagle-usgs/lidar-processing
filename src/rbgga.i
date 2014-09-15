@@ -88,6 +88,59 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=) {
   return gga_find_times(q);
 }
 
+func pnav_sel_tile(type, buffer=, win=, color=, verbose=, plot=, _batch=) {
+/* DOCUMENT q = pnav_sel_tile(type, buffer=, win=, color=, verbose=, plot=,
+   _batch=)
+
+  The user is prompted to click on the map. The tile for that location is
+  determined and the points of PNAV within that region are found and the time
+  bounds for those segments are returned.
+
+  This is a wrapper around pnav_sel_rgn. See pnav_sel_rgn for documentation on:
+  win=, color=, verbose=, plot=, _batch=
+
+  Parameter:
+    type: Specifies the kind of tile to use.
+        type="dt"   2km tile
+        type="it"   10km tile
+        type="qq"   Quarter-quad tile.
+
+  Option:
+    buffer= Buffer to apply around the tile, in meters. If omitted, no buffer
+      is added.
+*/
+  default, type, "dt";
+  default, buffer, 0;
+  default, win, 4;
+  default, verbose, 1;
+  default, plot, 1;
+
+  wbkp = current_window();
+  window, win;
+  m = mouse();
+  window_select, wbkp;
+
+  zone = [];
+  if(curzone) zone = curzone;
+
+  x = m(1);
+  y = m(2);
+  if(x < 360 && y < 360)
+    utm2ll, y, x, y, x, zone, force_zone=zone;
+
+  if(!zone) zone = 15;
+
+  tile = utm2tile_names(x, y, zone, type)(1);
+  if(verbose) write, format="Tile selected: %s\n", tile;
+
+  region = tile2bbox(tile)([4,2,1,3]);
+  if(buffer)
+    region += [-buffer,buffer,-buffer,buffer];
+
+  return pnav_sel_rgn(region=region, win=win, color=color, verbose=verbose,
+    plot=plot, _batch=_batch);
+}
+
 func mark_time_pos(sod, win=, msize=, marker=, color=, label=) {
 /* DOCUMENT mark_time_pos, sod, win=, msize=, marker=, color=
   Plots a mark for the PNAV location at the given timestamp SOD.
