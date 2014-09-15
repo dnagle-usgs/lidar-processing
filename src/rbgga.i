@@ -376,8 +376,8 @@ func print_sel_region(q) {
   }
 }
 
-func plot_sel_region(q, win=, lines=, color=) {
-/* DOCUMENT plot_sel_region, q, win=, lines=
+func plot_sel_region(q, win=, lines=, color=, number=, numbercolor=) {
+/* DOCUMENT plot_sel_region, q, win=, lines=, color=, number=, numbercolor=
   Plots the current processing selection.
 
   If lines= is provided, it's an array of index values that specify which
@@ -392,12 +392,16 @@ func plot_sel_region(q, win=, lines=, color=) {
   if(!is_matrix(q)) error, "Invalid q";
   default, lines, indgen(dimsof(q)(3));
   default, color, "red";
+  label = [];
+  default, number, 0;
+  if(number) default, numbercolor, "black";
   count = numberof(lines);
   for(i = 1; i <= count; i++) {
     j = lines(i);
     w = where(pnav.sod >= q(1,j) & pnav.sod <= q(2,j));
+    if(number) label = swrite(format="%d", j);
     show_pnav_track, pnav(w), width=5, color=color, skip=0, marker=0,
-      msize=0.1, win=win;
+      msize=0.1, win=win, label=label, labelcolor=numbercolor;
   }
 }
 
@@ -415,7 +419,7 @@ func show_track(fs, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=
     marker=marker, lines=lines, width=width, win=win;
 }
 
-func show_pnav_track(pn, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=) {
+func show_pnav_track(pn, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=, label=, labelcolor=) {
 /* DOCUMENT func show_pnav_track, pn, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=
 */
   extern curzone, utm;
@@ -469,14 +473,17 @@ func show_pnav_track(pn, x=, y=, color=, skip=, msize=, marker=, lines=, width=,
   if(skip == 0)
     skip = 1;
 
+  if(!is_array(x) || !is_array(y)) return;
+
   if(lines) {
-    if(is_array(x) && is_array(y))
-      plg, y(1:0:skip), x(1:0:skip), color=color, marks=0, width=width;
+    plg, y(1:0:skip), x(1:0:skip), color=color, marks=0, width=width;
   }
   if(marker) {
-    if(is_array(x) && is_array(y))
-      plmk, y(1:0:skip), x(1:0:skip), color=color, msize=msize, marker=marker,
-          width=width;
+    plmk, y(1:0:skip), x(1:0:skip), color=color, msize=msize, marker=marker,
+        width=width;
+  }
+  if(label) {
+    plt, label, x(1), y(1), tosys=1, color=labelcolor, justify="CH";
   }
 }
 
