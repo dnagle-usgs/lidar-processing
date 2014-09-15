@@ -34,6 +34,15 @@ proc ::eaarl::processing::define_region_tile {} {
             region=\"[ystr $tile]\");\r"
 }
 
+proc ::eaarl::processing::::define_click_tile {type buffer} {
+    set cmd "q = pnav_sel_tile(\"$type\", win=$::_map(window)"
+    if {$buffer} {
+        append cmd ", buffer=$buffer"
+    }
+    append cmd ")"
+    exp_send "$cmd;\r"
+}
+
 proc ::eaarl::processing::define_region_poly_callback {group poly} {
     exp_send "q = pnav_sel_rgn(win=$::_map(window),\
             region=\[\"[ystr $group]\", \"[ystr $poly]\"\]);\r"

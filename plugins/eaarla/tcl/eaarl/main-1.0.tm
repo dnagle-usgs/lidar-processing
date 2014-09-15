@@ -28,14 +28,29 @@ proc ::eaarl::main::gui {} {
             -command ${ns}::define_region_poly
     $m add command -label "Window limits" \
             -command ${ns}::define_region_limits
-    $m add command -label "Tile" \
-            -command ${ns}::define_region_tile
     $m add command -label "Rectangular coords" \
             -command ${ns}::define_region_rect
+    $m add cascade -label "Tile..." \
+            -menu [menu $m.tile]
     menu $m.polys -postcommand [list ::plot::poly_menu $m.polys \
             -groups 1 -callback ${ns}::define_region_poly_callback]
     $m add cascade -label "Plotting Tool poly..." -menu $m.polys
-    ttk::menubutton $f.region -text "Define Region" -menu $m \
+
+    set m $m.tile
+    $m add command -label "By name..." \
+            -command ${ns}::define_region_tile
+    $m add command -label "2km tile..." \
+            -command [list ${ns}::define_click_tile dt 0]
+    $m add command -label "2km tile w/ buffer..." \
+            -command [list ${ns}::define_click_tile dt 200]
+    $m add command -label "10km tile..." \
+            -command [list ${ns}::define_click_tile it 0]
+    $m add command -label "10km tile w/ buffer..." \
+            -command [list ${ns}::define_click_tile it 200]
+
+    ttk::menubutton $f.region \
+            -text "Define Region" \
+            -menu $f.regionmenu \
             -style Panel.TMenubutton
 
     ttk::button $f.plot -text "Plot Selection" \
