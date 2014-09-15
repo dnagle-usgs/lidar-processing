@@ -1,7 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
 func select_region_tile(data, win=, plot=, mode=) {
-/* DOCUMENT select_region(data, win=, plot=, mode=)
+/* DOCUMENT select_region_tile(data, win=, plot=, mode=)
   This function allows the user to select a region tile by dragging a box with
   the mouse. The smallest size tile (data, 2km; letter, 1km; or number, 250m)
   that contains that box will be selected, and the data within that region
