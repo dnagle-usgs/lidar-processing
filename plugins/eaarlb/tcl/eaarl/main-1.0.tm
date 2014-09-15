@@ -93,19 +93,22 @@ proc ::eaarl::main::gui {} {
     grid $f.winlbl -padx 2
     grid columnconfigure $f.f1 2 -weight 1
 
-    lower [ttk::frame $f.f2]
+    lower [ttk::frame $f.fch]
     grid $f.chan1 $f.chan2 $f.chan3 $f.chan4 \
-            -in $f.f2 -sticky w -padx 2
+            -in $f.fch -sticky w -padx 2
+
+    lower [ttk::frame $f.f2]
+    pack $f.interactive_batch -in $f.f2 -side left
+    pack $f.process -in $f.f2 -side right
 
     grid $f.f1 - -sticky ew -padx 2 -pady 2
     grid $f.plot - -padx 2 -pady 2
     grid $f.sep - -sticky ew -padx 2 -pady 2
-    grid $f.channels $f.f2 -sticky ew -padx 2 -pady 2
+    grid $f.channels $f.fch -sticky ew -padx 2 -pady 2
     grid $f.minhtlbl $f.minht -sticky ew -padx 2 -pady 2
     grid $f.modelbl $f.mode -sticky ew -padx 2 -pady 2
-    grid x $f.interactive_batch - -sticky w -padx 2 -pady 2
     grid $f.varlbl $f.var -sticky ew -padx 2 -pady 2
-    grid $f.process - -padx 2 -pady 2
+    grid $f.f2 - -sticky ew -padx 2 -pady 2
     grid $f.channels $f.modelbl $f.varlbl -sticky e
     grid columnconfigure $f 1 -weight 1
 }
