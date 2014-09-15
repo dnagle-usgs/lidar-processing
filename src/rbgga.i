@@ -348,7 +348,11 @@ func print_sel_region(q) {
   SEE ALSO: sel_rgn_lines plot_sel_region
 */
   local x, y;
-  if(dimsof(q)(1) != 2) error, "Invalid q";
+  if(is_void(q)) {
+    write, "No region selected.";
+    return;
+  }
+  if(!is_matrix(q)) error, "Invalid q";
   count = dimsof(q)(3);
   for(i = 1; i <= count; i++) {
     w = where(pnav.sod >= q(1,i) & pnav.sod <= q(2,i));
@@ -381,7 +385,11 @@ func plot_sel_region(q, win=, lines=, color=) {
 
   SEE ALSO: print_sel_region plot_sel_region
 */
-  if(dimsof(q)(1) != 2) error, "Invalid q";
+  if(is_void(q)) {
+    write, "No region selected.";
+    return;
+  }
+  if(!is_matrix(q)) error, "Invalid q";
   default, lines, indgen(dimsof(q)(3));
   default, color, "red";
   count = numberof(lines);
