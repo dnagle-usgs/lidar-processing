@@ -38,6 +38,11 @@ proc ::eaarl::main::gui {} {
     ttk::menubutton $f.region -text "Define Region" -menu $m \
             -style Panel.TMenubutton
 
+    ttk::button $f.plot -text "Plot Selection" \
+            -command ${ns}::plot_region
+
+    ttk::separator $f.sep -orient horizontal
+
     ttk::label $f.channels -text "Channel:"
     foreach chan {1 2 3 4} {
         ttk::checkbutton $f.chan$chan \
@@ -45,7 +50,7 @@ proc ::eaarl::main::gui {} {
                 -variable ::eaarl::usechannel_$chan
     }
 
-    ttk::label $f.minhtlbl -text "Minimum height:"
+    ttk::label $f.minhtlbl -text "Min height:"
     ttk::spinbox $f.minht -from 0 -to 1000 -increment 1 \
             -width 2 -textvariable ::eaarl::ext_bad_att
 
@@ -71,7 +76,7 @@ proc ::eaarl::main::gui {} {
     ::misc::tooltip $f.interactive_batch \
             "Batch mode is only available for new test processing modes."
 
-    ttk::label $f.winlbl -text "Window:"
+    ttk::label $f.winlbl -text "Win:"
     ttk::spinbox $f.win -from 0 -to 64 -increment 1 \
             -width 2 -textvariable ::_map(window)
 
@@ -92,13 +97,15 @@ proc ::eaarl::main::gui {} {
     grid $f.chan1 $f.chan2 $f.chan3 $f.chan4 \
             -in $f.f2 -sticky w -padx 2
 
-    grid $f.f1 - -sticky ew -padx 2 -pady 1
-    grid $f.channels $f.f2 -sticky ew -padx 2 -pady 1
-    grid $f.minhtlbl $f.minht -sticky ew -padx 2 -pady 1
-    grid $f.modelbl $f.mode -sticky ew -padx 2 -pady 1
-    grid x $f.interactive_batch - -sticky w -padx 2 -pady 1
-    grid $f.varlbl $f.var -sticky ew -padx 2 -pady 1
-    grid $f.process - -padx 2 -pady 1 -sticky ew
+    grid $f.f1 - -sticky ew -padx 2 -pady 2
+    grid $f.plot - -padx 2 -pady 2
+    grid $f.sep - -sticky ew -padx 2 -pady 2
+    grid $f.channels $f.f2 -sticky ew -padx 2 -pady 2
+    grid $f.minhtlbl $f.minht -sticky ew -padx 2 -pady 2
+    grid $f.modelbl $f.mode -sticky ew -padx 2 -pady 2
+    grid x $f.interactive_batch - -sticky w -padx 2 -pady 2
+    grid $f.varlbl $f.var -sticky ew -padx 2 -pady 2
+    grid $f.process - -padx 2 -pady 2
     grid $f.channels $f.modelbl $f.varlbl -sticky e
     grid columnconfigure $f 1 -weight 1
 }

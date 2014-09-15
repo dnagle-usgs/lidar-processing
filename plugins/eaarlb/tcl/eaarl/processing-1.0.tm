@@ -111,6 +111,10 @@ snit::widget ::eaarl::processing::define_region_rect::gui {
     }
 }
 
+proc ::eaarl::processing::plot_region {} {
+    exp_send "plot_sel_region, q, win=$::_map(window);\r"
+}
+
 proc ::eaarl::processing::process {} {
     if {[catch {yorick::util::check_vname ::eaarl::pro_var_next}]} {return}
     variable ::eaarl::processing_mode
