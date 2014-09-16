@@ -458,6 +458,16 @@ func plot_sel_region(q, win=, lines=, color=, number=, numbercolor=) {
   }
 }
 
+func gui_sel_region(q) {
+  // Used by eaarl plugins
+  if(is_void(q)) {
+    write, "No region selected.";
+    return;
+  }
+  if(!is_matrix(q)) error, "Invalid q";
+  tkcmd, swrite(format="::eaarl::processing::edit_region_callback %d", dimsof(q)(3));
+}
+
 func show_track(fs, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=) {
 /* DOCUMENT show_track, fs, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=
   fs can either be an FS or PNAV
