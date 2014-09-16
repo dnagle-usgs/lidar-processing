@@ -202,6 +202,8 @@ verbose=, gz=) {
   // Free some memory
   data = [];
 
+  mkdirp, file_dirname(fn);
+
   // Here we create three arrays:
   //    fns: output filenames
   //    start: starting index into x, y, z, etc.
