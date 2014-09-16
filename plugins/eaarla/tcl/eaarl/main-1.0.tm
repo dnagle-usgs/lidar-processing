@@ -58,6 +58,12 @@ proc ::eaarl::main::gui {} {
     ttk::button $f.plot -text "Plot" \
             -command ${ns}::plot_region
 
+    ::misc::tooltip $f.edit \
+            "Opens a GUI that allows you to remove flightlines from the current
+            selection."
+    ::misc::tooltip $f.plot \
+            "Plots the current selected time ranges in red on the trajectory."
+
     ttk::separator $f.sep -orient horizontal
 
     ttk::label $f.minhtlbl -text "Min height:"
