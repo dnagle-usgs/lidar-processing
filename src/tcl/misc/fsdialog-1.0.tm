@@ -43,10 +43,10 @@ proc ::misc::getOpenFile {args} {
 
 proc ::misc::getSaveFile {args} {
     if {$fsdialog::interface(file) eq "fs"} {
-        set cmd [list ttk::getOpenFile]
+        set cmd [list ttk::getSaveFile]
         set drop [list -message]
     } else {
-        set cmd [list tk_getOpenFile]
+        set cmd [list tk_getSaveFile]
         set drop [list -details -foldersfirst -hidden -reverse \
                 -sepfolders -sort]
     }
