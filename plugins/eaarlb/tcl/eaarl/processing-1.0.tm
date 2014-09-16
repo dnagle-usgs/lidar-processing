@@ -124,6 +124,140 @@ proc ::eaarl::processing::plot_region {} {
     exp_send "plot_sel_region, q, win=$::_map(window);\r"
 }
 
+proc ::eaarl::processing::edit_region {} {
+    exp_send "gui_sel_region, q;\r"
+}
+proc ::eaarl::processing::edit_region_callback {count} {
+    edit_region::gui .%AUTO% -linecount $count
+}
+
+namespace eval ::eaarl::processing::edit_region {}
+snit::widget ::eaarl::processing::edit_region::gui {
+    hulltype toplevel
+    delegate method * to hull
+    delegate option * to hull
+
+    variable lines -array {}
+    variable number 1
+
+    option -linecount 0
+
+    constructor {args} {
+        wm title $win "Edit Region Selection"
+        wm resizable $win 0 0
+
+        ttk::frame $win.f
+        pack $win.f -fill both -expand 1
+
+        ttk::frame $win.config
+        ttk::frame $win.lines
+        ttk::separator $win.sep -orient vertical
+
+        grid $win.config $win.sep $win.lines -padx 2 -pady 2 -in $win.f
+        grid $win.config -sticky n
+        grid $win.sep -sticky ns
+        grid $win.lines -sticky n
+        grid columnconfigure $win.f 2 -weight 1
+        grid rowconfigure $win.f 0 -weight 1
+
+        set f $win.config
+        ttk::button $f.btnPlot \
+                -text "Plot" \
+                -width 0 \
+                -command [mymethod plot]
+        ttk::button $f.btnPrint \
+                -text "Print" \
+                -width 0 \
+                -command [mymethod print]
+        ttk::button $f.btnApply \
+                -text "Apply" \
+                -width 0 \
+                -command [mymethod apply]
+
+        ttk::checkbutton $f.chkNumber -text "Number" \
+                -variable [myvar number]
+        ttk::label $f.lblWin -text "Win:"
+        ttk::spinbox $f.spnWin \
+                -from 0 -to 63 -increment 1 \
+                -width 2 -textvariable ::_map(window)
+
+        grid $f.lblWin $f.spnWin -sticky ew
+        grid $f.chkNumber - -sticky w
+        grid $f.btnPlot - -sticky ew
+        grid $f.btnApply - -sticky ew
+        grid columnconfigure $f 0 -weight 1
+
+        $self configure {*}$args
+
+        if {$options(-linecount) > 0} {
+            $self rebuild
+        }
+    }
+
+    method rebuild {} {
+        set f $win.lines
+
+        foreach child [winfo children $f] {
+            destroy $child
+        }
+
+        for {set i 1} {$i <= $options(-linecount)} {incr i} {
+            set lines($i) 1
+            ttk::checkbutton $f.line$i \
+                    -text "Line $i" \
+                    -variable [myvar lines]($i)
+            pack $f.line$i -side top -anchor w
+        }
+    }
+
+    method line_array {} {
+        set vals {}
+        for {set i 1} {$i <= $options(-linecount)} {incr i} {
+            if {$lines($i)} {
+                lappend vals $i
+            }
+        }
+        return \[[join $vals ,]\]
+    }
+
+    method sel_count {} {
+        set count 0
+        for {set i 1} {$i <= $options(-linecount)} {incr i} {
+            if {$lines($i)} {
+                incr count
+            }
+        }
+        return $count
+    }
+
+    method plot {} {
+        set cmd "plot_sel_region, q, win=$::_map(window), lines=[$self line_array]"
+        if {$number} {
+            append cmd ", number=1"
+        }
+        exp_send "$cmd;\r"
+    }
+
+    method print {} {
+        exp_send "print_sel_region, q;\r"
+    }
+
+    method apply {} {
+        set count [$self sel_count]
+        if {$count == 0} {
+            tk_messageBox \
+                    -type ok \
+                    -icon error \
+                    -message "You must select at least one line." \
+                    -parent $win
+            return
+        }
+        exp_send "q = sel_rgn_lines(q, lines=[$self line_array]);\r"
+        $self configure -linecount $count
+        $self rebuild
+    }
+}
+
 proc ::eaarl::processing::process {} {
     if {[catch {yorick::util::check_vname ::eaarl::pro_var_next}]} {return}
     variable ::eaarl::processing_mode

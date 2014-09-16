@@ -53,7 +53,9 @@ proc ::eaarl::main::gui {} {
             -menu $f.regionmenu \
             -style Panel.TMenubutton
 
-    ttk::button $f.plot -text "Plot Selection" \
+    ttk::button $f.edit -text "Edit" \
+            -command ${ns}::edit_region
+    ttk::button $f.plot -text "Plot" \
             -command ${ns}::plot_region
 
     ttk::separator $f.sep -orient horizontal
@@ -92,7 +94,7 @@ proc ::eaarl::main::gui {} {
             "Batch mode is only available for new test processing modes."
 
     ttk::label $f.winlbl -text "Win:"
-    ttk::spinbox $f.win -from 0 -to 64 -increment 1 \
+    ttk::spinbox $f.win -from 0 -to 63 -increment 1 \
             -width 2 -textvariable ::_map(window)
 
     ttk::label $f.varlbl -text "Use variable:"
@@ -116,8 +118,12 @@ proc ::eaarl::main::gui {} {
     pack $f.interactive_batch -in $f.f2 -side left
     pack $f.process -in $f.f2 -side right
 
+    lower [ttk::frame $f.f3]
+    pack $f.edit -side left -in $f.f3
+    pack $f.plot -side right -in $f.f3
+
     grid $f.f1 - -sticky ew -padx 2 -pady 2
-    grid $f.plot - -padx 2 -pady 2
+    grid $f.f3 - -sticky ew -padx 2 -pady 2
     grid $f.sep - -sticky ew -padx 2 -pady 2
     grid $f.channels $f.fch -sticky ew -padx 2 -pady 2
     grid $f.minhtlbl $f.minht -sticky ew -padx 2 -pady 2
