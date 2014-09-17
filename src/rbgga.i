@@ -468,25 +468,10 @@ func gui_sel_region(q) {
   tkcmd, swrite(format="::eaarl::processing::edit_region_callback %d", dimsof(q)(3));
 }
 
-func show_track(fs, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=) {
-/* DOCUMENT show_track, fs, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=
-  fs can either be an FS or PNAV
-
-  SEE ALSO: show_pnav_track
-*/
-  a = structof(fs);
-  if(structeq(a, FS)) pn = fs2pnav(fs);
-  if(structeq(a, PNAV)) pn = fs;
-
-  show_pnav_track, pn, x=x, y=y, color=color, skip=skip, msize=msize,
-    marker=marker, lines=lines, width=width, win=win;
-}
-
-func show_pnav_track(pn, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=, label=, labelcolor=) {
-/* DOCUMENT func show_pnav_track, pn, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=
+func show_track(_1, _2, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=, label=, labelcolor=, zone=, mode=) {
+/* DOCUMENT func show_pnav_track, pn, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=, label=, labelcolor=, zone=, mode=
 */
   extern curzone, utm;
-
   default, win, 4;
   default, width, 5.;
   default, msize, 0.1;
@@ -495,60 +480,61 @@ func show_pnav_track(pn, x=, y=, color=, skip=, msize=, marker=, lines=, width=,
   default, color, "red";
   default, lines, 1;
 
+  default, _1, x;
+  default, _2, y;
+
+  if(!is_void(_2)) {
+    x = _1;
+    y = _2;
+  } else if(has_member(_1, "lat")) {
+    x = _1.lon;
+    y = _1.lat;
+  } else if(!is_void(_1)) {
+    data2xyz, _1, x, y, mode=mode;
+  } else {
+    write, "No pnav/gga data available... aborting.";
+    exit;
+  }
+
+  if(skip > 1) {
+    x = x(1::skip);
+    y = y(1::skip);
+  }
+
+  // Handle utm <=> geo if needed and possible
+
+  if(utm && allof(x < 360) && allof(y < 360)) {
+    uzone = [];
+    if(curzone) default, zone, curzone;
+    ll2utm, y, x, y, x, uzone, force_zone=zone;
+    // Crosses UTM zones
+    if(is_void(zone) && anyof(uzone != uzone(1))) {
+      write, "crosses UTM zones, please define curzone or use zone=";
+      exit;
+    }
+  }
+  if(!utm && allof(x > 360) && allof(y > 360)) {
+    default, zone, curzone;
+    if(!zone) {
+      write, "please define curzone or use zone=";
+      exit;
+    }
+    utm2ll, y, x, zone, x, y;
+  }
+
+  wbkp = current_window();
   window, win;
 
-  if(is_void(x)) {
-    if(is_void(pn)) {
-      write, "No pnav/gga data available... aborting.";
-      return;
-    }
-    x = pn.lon;
-    y = pn.lat;
-  }
-
-  if(utm == 1) {
-    // convert latlon to utm
-    u = fll2utm(y, x);
-    // check to see if data crosses utm zones
-    if(numberof(pn) > 1)
-      zd = where(abs(u(3,)(dif)) > 0);
-    if(is_array(zd)) {
-      write, "Selected flightline crosses UTM Zones.";
-      if(curzone) {
-        write, format="Using currently selected zone number: %d\n",int(curzone);
-      } else {
-        curzone = 0;
-        ans = read(prompt="Enter UTM Zone Number: ", curzone);
-      }
-      zidx = where(u(3,) == curzone);
-      if(is_array(zidx)) {
-        x = u(2,zidx);
-        y = u(1,zidx);
-      } else {
-        x = y = [];
-      }
-    } else {
-      x = u(2,);
-      y = u(1,);
-    }
-  }
-  // when will this ever be true?  code above sets skip to 50 if is_void - rwm
-  if(skip == 0)
-    skip = 1;
-
-  if(!is_array(x) || !is_array(y)) return;
-
-  if(lines) {
-    plg, y(1:0:skip), x(1:0:skip), color=color, marks=0, width=width;
-  }
-  if(marker) {
-    plmk, y(1:0:skip), x(1:0:skip), color=color, msize=msize, marker=marker,
-        width=width;
-  }
-  if(label) {
+  if(lines)
+    plg, y, x, color=color, marks=0, width=width;
+  if(marker)
+    plmk, y, x, color=color, msize=msize, marker=marker, width=width;
+  if(label)
     plt, label, x(1), y(1), tosys=1, color=labelcolor, justify="CH";
-  }
+
+  window_select, wbkp;
 }
+show_pnav_track = show_track;
 
 func plot_no_raster_fltlines(pnav, edb) {
 /* Document no_raster_flightline (gga, edb)
