@@ -534,7 +534,6 @@ func show_track(_1, _2, x=, y=, color=, skip=, msize=, marker=, lines=, width=, 
 
   window_select, wbkp;
 }
-show_pnav_track = show_track;
 
 func plot_no_raster_fltlines(pnav, edb) {
 /* Document no_raster_flightline (gga, edb)
