@@ -96,21 +96,26 @@ func plot_triag_mesh(data, v, mode=, edges=, win=, cmin=, cmax=, dofma=, showcba
   splitary, v, 3, v1, v2, v3;
   data = v = [];
 
+  // If neither cmin nor cmax are provided, then all points are in range and we
+  // can skip the bounds check
+  skip_check = is_void(cmin) && is_void(cmax);
+
   zz = z([v1,v2,v3]);
   default, cmin, min(zz);
   default, cmax, max(zz);
 
+  // Only use triangles where all three vertices are within range
+  if(!skip_check) {
+    w = where(cmin <= zz(,min) & zz(,max) <= cmax);
+    if(!numberof(w)) return;
+    v1 = v1(w);
+    v2 = v2(w);
+    v3 = v3(w);
+    zz = zz(w,);
+  }
+
   // For each triangle, we use the average of its vertex elevations
   zz = zz(,sum)/3.;
-
-  default, cmin, zz(min);
-  default, cmax, zz(max);
-  w = where(cmin <= zz & zz <= cmax);
-  if(!numberof(w)) return;
-  v1 = v1(w);
-  v2 = v2(w);
-  v3 = v3(w);
-  zz = zz(w);
 
   // Juggle the coordinates into a format the plfp likes
   xx = transpose(x([v1,v2,v3]))(*);
