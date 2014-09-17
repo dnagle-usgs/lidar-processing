@@ -453,7 +453,7 @@ func plot_sel_region(q, win=, lines=, color=, number=, numbercolor=) {
     j = lines(i);
     w = where(pnav.sod >= q(1,j) & pnav.sod <= q(2,j));
     if(number) label = swrite(format="%d", j);
-    show_pnav_track, pnav(w), width=5, color=color, skip=0, marker=0,
+    show_track, pnav(w), width=5, color=color, skip=0, marker=0,
       msize=0.1, win=win, label=label, labelcolor=numbercolor;
   }
 }
@@ -469,7 +469,7 @@ func gui_sel_region(q) {
 }
 
 func show_track(_1, _2, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=, label=, labelcolor=, zone=, mode=) {
-/* DOCUMENT func show_pnav_track, pn, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=, label=, labelcolor=, zone=, mode=
+/* DOCUMENT show_track, pn, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=, label=, labelcolor=, zone=, mode=
 */
   extern curzone, utm;
   default, win, 4;
@@ -562,7 +562,7 @@ func plot_no_raster_fltlines(pnav, edb) {
       if(l_norast(i) >= f_norast(i)) {
         indx1 = where((pnav.sod >= f_norast(i)) & (pnav.sod <= l_norast(i)));
         if(is_array(indx1))
-          show_pnav_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
+          show_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
               skip=50, color="yellow";
       }
     }
@@ -570,7 +570,7 @@ func plot_no_raster_fltlines(pnav, edb) {
   // also plot over region before the system is initially started.
   indx1 = where(pnav.sod < sod_edb(1));
   if(is_array(indx1))
-    show_pnav_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
+    show_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
         skip=50, color="yellow";
 
   // also plot over region before first good raster
@@ -578,7 +578,7 @@ func plot_no_raster_fltlines(pnav, edb) {
   if(is_array(lindx))
     indx1 = where(pnav.sod <= sod_edb(lindx(0)+2));
   if(is_array(indx1))
-    show_pnav_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
+    show_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
         skip=50, color="yellow";
 
   window_select, w;
@@ -608,7 +608,7 @@ func plot_no_tans_fltlines (tans, pnav) {
         q = where(pnav.sod(indx1) <= l_notans(i));
         if(is_array(q)) {
           indx1 = indx1(q);
-          show_pnav_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=5,
+          show_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=5,
               color="magenta", skip=50, msize=0.2, width=width;
         }
       }
@@ -616,7 +616,7 @@ func plot_no_tans_fltlines (tans, pnav) {
   }
   // also plot over region before the tans system is initially started.
   indx1 = where(pnav.sod < tans.somd(1));
-  show_pnav_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=5,
+  show_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=5,
       color="magenta", skip=1, msize=0.2, width=width;
 
   window_select, w;
@@ -684,7 +684,7 @@ width=, win=) {
    Displays the pnav tracks for all mission days (as defined in the loaded
    mission configuration).
 
-   See show_pnav_track for an explanation of options; most are passed as-is to
+   See show_track for an explanation of options; most are passed as-is to
    it.
 
    One exception: if color is not specified, each day's trackline will get a
@@ -702,7 +702,7 @@ width=, win=) {
       gps = load_pnav(mission(get, days(i), "pnav file"));
       color_tracker--;
       cur_color = is_void(color) ? color_tracker : color;
-      show_pnav_track, gps, color=cur_color, skip=skip, msize=msize,
+      show_track, gps, color=cur_color, skip=skip, msize=msize,
         marker=marker, lines=lines, width=width, win=win;
     }
   }
