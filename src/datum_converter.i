@@ -279,7 +279,7 @@ func datum_convert_pnav(pnav=, infile=, export=, outfile=, src_datum=, src_geoid
   verbose *= 2;
 
   if(infile)
-    pnav = load_pnav(fn=infile);
+    pnav = load_pnav(infile);
 
   if(is_void(pnav))
     error, "No pnav data chosen.";

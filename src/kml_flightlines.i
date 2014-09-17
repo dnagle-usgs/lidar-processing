@@ -298,7 +298,7 @@ webdest=, keepkml=) {
   default, keepkml, (file_extension(output) == ".kml");
   if(!is_void(webdest))
     keepkml = 1;
-  pnav = typeof(input) == "string" ? load_pnav(fn=input, verbose=0) : input;
+  pnav = typeof(input) == "string" ? load_pnav(input, verbose=0) : input;
 
   if(file_extension(output) == ".kmz")
     output = file_rootname(output) + ".kml";

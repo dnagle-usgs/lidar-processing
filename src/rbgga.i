@@ -713,7 +713,7 @@ width=, win=) {
   color_tracker = -4;
   for(i = 1; i <= numberof(days); i++) {
     if(mission(has, days(i), "pnav file")) {
-      gps = load_pnav(fn=mission(get, days(i), "pnav file"));
+      gps = load_pnav(mission(get, days(i), "pnav file"));
       color_tracker--;
       cur_color = is_void(color) ? color_tracker : color;
       show_pnav_track, gps, color=cur_color, skip=skip, msize=msize,

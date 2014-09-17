@@ -867,7 +867,7 @@ proc ::plot::track_load {} {
       } -initialfile $ifile -initialdir $idir]
    if { $file != "" } {
       set g::pnav_file $file
-      exp_send "pnav=rbpnav(fn=\"$file\");\r"
+      exp_send "rbpnav, \"$file\";\r"
    }
 }
 
