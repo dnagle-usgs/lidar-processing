@@ -468,9 +468,10 @@ func gui_sel_region(q) {
   tkcmd, swrite(format="::eaarl::processing::edit_region_callback %d", dimsof(q)(3));
 }
 
-func show_track(_1, _2, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=, label=, labelcolor=, zone=, mode=) {
-/* DOCUMENT show_track, pn, x=, y=, color=, skip=, msize=, marker=, lines=, width=, win=, label=, labelcolor=, zone=, mode=
+func show_track(_1, _2, color=, skip=, msize=, marker=, lines=, width=, win=, label=, labelcolor=, zone=, mode=) {
+/* DOCUMENT show_track, pn, color=, skip=, msize=, marker=, lines=, width=, win=, label=, labelcolor=, zone=, mode=
 */
+  local x, y, uzone;
   extern curzone, utm;
   default, win, 4;
   default, width, 5.;
@@ -479,9 +480,6 @@ func show_track(_1, _2, x=, y=, color=, skip=, msize=, marker=, lines=, width=, 
   default, skip, 50;
   default, color, "red";
   default, lines, 1;
-
-  default, _1, x;
-  default, _2, y;
 
   if(!is_void(_2)) {
     x = _1;
@@ -495,6 +493,7 @@ func show_track(_1, _2, x=, y=, color=, skip=, msize=, marker=, lines=, width=, 
     write, "No pnav/gga data available... aborting.";
     exit;
   }
+  _1 = _2 = [];
 
   if(skip > 1) {
     x = x(1::skip);
@@ -504,7 +503,6 @@ func show_track(_1, _2, x=, y=, color=, skip=, msize=, marker=, lines=, width=, 
   // Handle utm <=> geo if needed and possible
 
   if(utm && allof(x < 360) && allof(y < 360)) {
-    uzone = [];
     if(curzone) default, zone, curzone;
     ll2utm, y, x, y, x, uzone, force_zone=zone;
     // Crosses UTM zones
@@ -561,24 +559,21 @@ func plot_no_raster_fltlines(pnav, edb) {
       if(l_norast(i) >= f_norast(i)) {
         indx1 = where((pnav.sod >= f_norast(i)) & (pnav.sod <= l_norast(i)));
         if(is_array(indx1))
-          show_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
-              skip=50, color="yellow";
+          show_track, pnav(indx1), marker=4, skip=50, color="yellow";
       }
     }
   }
   // also plot over region before the system is initially started.
   indx1 = where(pnav.sod < sod_edb(1));
   if(is_array(indx1))
-    show_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
-        skip=50, color="yellow";
+    show_track, pnav(indx1), marker=4, skip=50, color="yellow";
 
   // also plot over region before first good raster
   lindx = where(sod_edb < 0);
   if(is_array(lindx))
     indx1 = where(pnav.sod <= sod_edb(lindx(0)+2));
   if(is_array(indx1))
-    show_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
-        skip=50, color="yellow";
+    show_track, pnav(indx1), marker=4, skip=50, color="yellow";
 
   window_select, w;
 }
@@ -607,15 +602,15 @@ func plot_no_tans_fltlines (tans, pnav) {
         q = where(pnav.sod(indx1) <= l_notans(i));
         if(is_array(q)) {
           indx1 = indx1(q);
-          show_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=5,
-              color="magenta", skip=50, msize=0.2, width=width;
+          show_track, pnav(indx1), marker=5, color="magenta", skip=50,
+            msize=0.2, width=width;
         }
       }
     }
   }
   // also plot over region before the tans system is initially started.
   indx1 = where(pnav.sod < tans.somd(1));
-  show_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=5,
+  show_track, pnav(indx1), marker=5,
       color="magenta", skip=1, msize=0.2, width=width;
 
   window_select, w;
