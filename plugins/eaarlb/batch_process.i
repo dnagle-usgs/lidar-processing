@@ -103,7 +103,7 @@ func unpackage_tile (fn=,host= ) {
   oc = ops_conf;
 
   load_edb,  fn=edb_filename, verbose=0, override_offset = eaarl_time_offset;
-  pnav = rbpnav( fn=pnav_filename, verbose=0);
+  rbpnav, pnav_filename, verbose=0;
   load_iexpbd,  ins_filename, verbose=0;
 
   ops_conf = oc;

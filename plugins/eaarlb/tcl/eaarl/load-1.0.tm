@@ -45,7 +45,7 @@ namespace eval eaarl::load {
     proc pnav {{fn ""}} {
         if {$fn eq ""} {set fn [prompt pnav]}
         if {$fn eq ""} return
-        exp_send "pnav = rbpnav(fn=\"$fn\");\r"
+        exp_send "rbpnav, \"$fn\";\r"
     }
 
     proc ins {{fn ""}} {

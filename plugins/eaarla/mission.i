@@ -296,9 +296,9 @@ func eaarl_mission_load(env) {
       edb.seconds(idx) + edb.fseconds(idx)*1.6e-6;
   }
 
-  extern pnav, curzone;
+  extern pnav, gga, pnav_filename, curzone;
   if(test_key(env.flight, "pnav file")) {
-    pnav = rbpnav(fn=mission(get, env.flight, "pnav file"), verbose=0);
+    rbpnav, mission(get, env.flight, "pnav file"), verbose=0;
     if(!curzone && has_member(pnav, "lat") && has_member(pnav, "lon"))
       auto_curzone, pnav.lat, pnav.lon;
     if(has_member(pnav, "sod") && mission(has, env.flight, "date")) {
