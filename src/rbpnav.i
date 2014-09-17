@@ -265,26 +265,38 @@ func pnav2fs(pn, soe=) {
   return fs;
 }
 
-func fs2pnav(fs) {
-/* DOCUMENT fs2pnav(fs)
-  Converts data in FS format to PNAV format.
+func data2pnav(data, mode=, zone=) {
+/* DOCUMENT data2pnav(data, mode=, zone=)
+  Casts point data to PNAV struct.
+
+  Options:
+    mode= Lets you specify a custom mode.
+    zone= Lets you specify a custom zone. Uses curzone by default.
 */
-  extern curzone;
-  local x, y;
-  if(!curzone) {
-    write, "Please define curzone. Aborting.";
-    return;
+  default, zone, curzone;
+  if(!zone) {
+    write, "Please provide zone= or define curzone. Aborting.";
+    exit;
   }
-  pn = array(PNAV, dimsof(fs));
-  utm2ll, fs.north/100., fs.east/100., curzone, x, y;
+
+  local x, y, z;
+  data2xyz, data, x, y, z, mode=mode;
+  pn = array(PNAV, dimsof(data));
+  utm2ll, y, x, zone, x, y;
   pn.lon = x;
   pn.lat = y;
-  pn.alt = fs.elevation/100.;
-  minsod = pn.sod(min);
-  offset = minsod - (minsod % 86400);
-  pn.sod = fs.soe - offset;
+  pn.alt = z;
+
+  if(!has_member(data, "soe")) return pn;
+
+  tmp = soe2time(data.soe(min));
+  tmp(3:) = 0;
+  offset = time2soe(tmp);
+  pn.sod = data.soe - time2soe(tmp);
+  pn = pn(sort(pn.sod));
   return pn;
 }
+fs2pnav = data2pnav;
 
 func iex2pnav(iex) {
 /* DOCUMENT iex2pnav(iex)
