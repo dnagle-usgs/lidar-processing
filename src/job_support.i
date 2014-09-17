@@ -81,24 +81,23 @@ func _job_parse_options(args) {
 func __job_run(argv) {
 /* DOCUMENT __job_run, argv
   Runs the job specified in a command line. ARGV should be the result of
-  get_argv(). It must be an array of strings. ARGV(1) is the path to Yorick and
-  is disregarded. ARGV(2) is the job function to run. ARGV(3:) is optional
-  (though it wouldn't make sense to omit) and will be passed to the function
-  specified as they are (that is, as an array of strings).
+  process_argv(). It must be an array of strings. ARGV(1) is the job function
+  to run. ARGV(2:) is optional (though it wouldn't make sense to omit) and will
+  be passed to the function specified as they are (that is, as an array of
+  strings).
 
   So, __job_run(argv) is roughly equivalent to:
-    symbol_def(argv(2)), argv(3:)
+    symbol_def(argv(1)), argv(2:)
 */
-  // first argument is path to yorick, skip
-  // second argument is job function
+  // first argument is job function
   // remaining arguments pass to job function
-  if(numberof(argv) < 2)
+  if(numberof(argv) < 1)
     error, "must specify job function";
-  job_func = argv(2);
+  job_func = argv(1);
 
   conf = save();
-  if(numberof(argv) > 2)
-    conf = _job_parse_options(argv(3:));
+  if(numberof(argv) > 1)
+    conf = _job_parse_options(argv(2:));
   else
     conf = _job_parse_options([]);
 

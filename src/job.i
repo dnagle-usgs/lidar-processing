@@ -29,5 +29,5 @@ if(1 || batch()) {
   require, "rrequire.i";
   require, "calps_compat.i";
   require, "job_support.i";
-  __job_run, get_argv();
+  __job_run, process_argv();
 }
