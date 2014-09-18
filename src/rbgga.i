@@ -429,8 +429,9 @@ func print_sel_region(q) {
   }
 }
 
-func plot_sel_region(q, win=, lines=, color=, number=, numbercolor=) {
-/* DOCUMENT plot_sel_region, q, win=, lines=, color=, number=, numbercolor=
+func plot_sel_region(q, pn=, win=, lines=, color=, number=, numbercolor=) {
+/* DOCUMENT plot_sel_region, q, pn=, win=, lines=, color=, number=,
+   numbercolor=
   Plots the current processing selection.
 
   If lines= is provided, it's an array of index values that specify which
@@ -438,6 +439,8 @@ func plot_sel_region(q, win=, lines=, color=, number=, numbercolor=) {
 
   SEE ALSO: print_sel_region plot_sel_region
 */
+  extern pnav;
+  default, pn, pnav;
   if(is_void(q)) {
     write, "No region selected.";
     return;
@@ -451,9 +454,10 @@ func plot_sel_region(q, win=, lines=, color=, number=, numbercolor=) {
   count = numberof(lines);
   for(i = 1; i <= count; i++) {
     j = lines(i);
-    w = where(pnav.sod >= q(1,j) & pnav.sod <= q(2,j));
+    w = where(pn.sod >= q(1,j) & pn.sod <= q(2,j));
+    if(!numberof(w)) continue;
     if(number) label = swrite(format="%d", j);
-    show_track, pnav(w), width=5, color=color, skip=0, marker=0,
+    show_track, pn(w), width=5, color=color, skip=0, marker=0,
       msize=0.1, win=win, label=label, labelcolor=numbercolor;
   }
 }
