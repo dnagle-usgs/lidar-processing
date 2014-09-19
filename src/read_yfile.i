@@ -25,6 +25,8 @@ func restore_alps_data(fn, vname=, skip=) {
     default, vname, fvname;
   }
 
+  tkcmd, swrite(format="::l1pro::ptime::dirhunt {%s}", fn);
+
   if(skip > 1 && numberof(data))
     data = data(::skip);
 
