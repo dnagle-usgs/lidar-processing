@@ -84,6 +84,10 @@ func expix_show(nearest) {
   spot = nearest.spot;
   point = nearest.point;
 
+  ptime = 0;
+  if(has_member(point, "ptime")) ptime = point.ptime;
+  tkcmd, swrite(format="set ::l1pro::ptime::ptime %d", ptime);
+
   write, format="Location clicked: %.2f %.2f\n", spot(1), spot(2);
   write, format="   Nearest point: %.2f %.2f (%.2fm away)\n",
     nearest.xp, nearest.yp, nearest.distance;
@@ -115,6 +119,7 @@ func expix_show(nearest) {
   write, format="%s", "\n";
   write, format="Timestamp: %s\n", soe2iso8601(point.soe);
   write, format="soe= %.4f ; sod= %.4f\n", point.soe, soe2sod(point.soe);
+  write, format="ptime= %d\n", ptime;
   write, format="Corresponds to %s(%d)\n", vname, nearest.index;
 
   // calculate distance along surface plane from mirror point
