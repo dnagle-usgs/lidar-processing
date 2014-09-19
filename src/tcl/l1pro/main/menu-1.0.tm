@@ -123,6 +123,8 @@ proc menu_tools mb {
             -command ::l1pro::tools::histelev::gui
     $mb add command {*}[menulabel "Groundtruth Analysis"] \
             -command ::l1pro::groundtruth::gui
+    $mb add command {*}[menulabel "ptime/log viewer"] \
+            -command ::l1pro::ptime::gui
     $mb add separator
     $mb add command {*}[menulabel "Transect Tool"] \
             -command ::l1pro::transect::gui
