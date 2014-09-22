@@ -129,3 +129,27 @@ func int_digits(num) {
 */
   return long(log10(num))+1;
 }
+
+func fastmax(ary) {
+/* DOCUMENT val = fastmax(ary)
+  Returns the maximum value in an array.
+
+  If possible, this uses CALPS to provide a faster result than the native
+  max(ary) or ary(max).
+*/
+  if(is_func(minmax) == 1)
+    return max(ary);
+  return minmax(ary)(2);
+}
+
+func fastmin(ary) {
+/* DOCUMENT val = fastmin(ary)
+  Returns the minimum value in an array.
+
+  If possible, this uses CALPS to provide a faster result than the native
+  min(ary) or ary(min).
+*/
+  if(is_func(minmax) == 1)
+    return min(ary);
+  return minmax(ary)(1);
+}
