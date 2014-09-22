@@ -73,3 +73,9 @@ if(!is_func(file_readable))
   include, "calps/file_readable.i";
 if(!is_func(file_size))
   include, "calps/file_size.i";
+
+// Added 2014-09-22
+if(!is_func(minmax))
+  include, "calps/minmax.i";
+if(!is_func(mnxmxx))
+  include, "calps/mnxmxx.i";
