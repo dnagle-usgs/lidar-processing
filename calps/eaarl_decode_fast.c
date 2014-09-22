@@ -109,13 +109,13 @@ void Y_eaarl_decode_fast(int nArgs)
       ypush_global(idx);
       if(yarg_rank(0) == 0) {
         eaarl_time_offset = ygets_d(0);
+        yarg_drop(1);
       } else if(yarg_rank(0) == 1) {
         if(!rnstart) {
           y_error("if eaarl_time_offset is array, must provide rnstart");
         }
         eaarl_time_offsets = ygeta_d(0, 0, 0);
       }
-      yarg_drop(1);
     }
   }
 
