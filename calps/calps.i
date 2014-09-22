@@ -491,6 +491,36 @@ extern gist_gpbox;
   maintain the portrait and landscape orientations.
 */
 
+// *** Defined in array.c ***
+
+extern minmax;
+extern mnxmxx;
+/* DOCUMENT
+  vals = minmax(ary);
+  idxs = mnxmxx(ary);
+  minmax, ary, minval, maxval;
+  mnxmxx, ary, minidx, maxidx;
+
+  minmax returns the minimum and maximum values in the array. mnxmxx returns
+  the indices to those values. If called as a function, the min and max will be
+  returned as a two-item array [min, max]. If called as a subroutine, the
+  values are assigned to the given output parameters.
+
+  These functions are highly optimized to operate over an entire array. If you
+  want the min and/or max value over an entire array, this function will
+  outperform the min and max functions as well as the min and max array
+  operators. It will outperform them even if you only need one of the two
+  values. This is because the Yorick native functions have to accommodate for
+  more complexities, such as providing the min/max over only one subscript
+  rather than the whole array.
+
+  If you want just the min or just the max, you can do the following:
+    minval = fastmin(ary);
+    maxval = fastmax(ary);
+  These wrap around this function when it's avialable, or fall back to Yorick
+  when it's not.
+*/
+
 __calps_backup = save(
   calps_compatibility,
   _ytriangulate, triangulate,
@@ -511,5 +541,6 @@ __calps_backup = save(
   sortedness, sortedness_obj,
   timsort, timsort_obj,
   file_exists, file_readable, file_size,
-  gist_gpbox
+  gist_gpbox,
+  minmax, mnxmxx
 );
