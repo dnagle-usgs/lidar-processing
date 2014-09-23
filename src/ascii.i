@@ -6,7 +6,7 @@ func tky_ascii_rdcols_sample(opts, cmd) {
   the GUI.
 */
   opts = json_decode(opts);
-  data = pointers2group(rdcols(opts.fn, opts.ncols, width=opts.width,
+  data = pointers2obj(rdcols(opts.fn, opts.ncols, width=opts.width,
     delim=opts.delim, type=opts.type, missing=opts.missing,
     marker=opts.marker, comment=opts.comment, nskip=opts.nskip,
     nlines=opts.nlines));
@@ -71,7 +71,7 @@ func ascii_rdcols(opts) {
   } else if(opts.group == "pointers") {
     result = data;
   } else if(opts.group == "group") {
-    result = pointers2group(data);
+    result = pointers2obj(data);
   }
 
   return result;
