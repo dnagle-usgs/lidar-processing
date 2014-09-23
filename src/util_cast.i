@@ -159,6 +159,19 @@ func pointers2obj(pary) {
   return obj;
 }
 
+func obj2pointers(obj) {
+/* DOCUMENT pary = obj2pointers(obj)
+  Given an object OBJ, returns an array of pointers PARY that contains pointers
+  to the object's contents such that *pary(i) == obj(i). Note that only values
+  are maintained; key names are lost. Note also that all object members must be
+  suitable for conversion to a pointer.
+*/
+  ptr = array(pointer, obj(*));
+  for(i = 1; i <= obj(*); i++)
+    ptr(i) = &obj(noop(i));
+  return ptr;
+}
+
 func pbd2hash(pbd) {
 /* DOCUMENT hash = pbd2hash(pbd)
   Creates a Yeti hash whose contents match the pbd's contents. The pbd
