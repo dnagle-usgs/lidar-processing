@@ -37,7 +37,7 @@ proc ::misc::xwdall::gui {} {
     ttk::combobox $f.cboRaise \
         -textvariable ${ns}::raise \
         -state readonly \
-        -values {none normal force}
+        -values {none normal force topmost}
 
     ttk::button $f.btnCapture \
         -width 0 \
@@ -82,7 +82,10 @@ proc ::misc::xwdall::gui {} {
         If you set this setting to \"force\", then a more involved technique is
         used to forcibly raise the windows. However, this causes a redraw of
         the windows. That redraw adds a delay which means that the capture may
-        happen before the redraw is complete, resulting in an improper capture."
+        happen before the redraw is complete, resulting in an improper capture.
+
+        If you set this setting to \"topmost\", then the window will be hinted
+        to be the topmost window. This sometimes works when normal does not."
     ::misc::tooltip $f.btnCapture \
         "Perform the screen captures. (There will be no explicit confirmation
         that the screen captures have occured, though you may notice your
@@ -170,6 +173,7 @@ proc ::misc::xwdall::capture {args} {
     set token $opts(-token)
     set tmp $opts(-tmp)
 
+    set lower {{w} {}}
     switch -- $opts(-raise) {
         none {
             set raise {{w} {}}
@@ -179,6 +183,10 @@ proc ::misc::xwdall::capture {args} {
         }
         force {
             set raise {{w} {::misc::raise_win $w}}
+        }
+        topmost {
+            set raise {{w} {wm attributes $w -topmost 1}}
+            set lower {{w} {wm attributes $w -topmost 0}}
         }
         default {
             error "Unknown setting for -raise: $opts(-raise)"
@@ -204,6 +212,7 @@ proc ::misc::xwdall::capture {args} {
         after 5
         exec xwd -name $token -out $tmp
         wm title $w $title
+        apply $lower $w
 
         set fn [string range $w 1 end]
         if {$fn eq ""} {set fn $opts(-root)}
