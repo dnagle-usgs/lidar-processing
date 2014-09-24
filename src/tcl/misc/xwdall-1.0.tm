@@ -7,6 +7,7 @@ namespace eval ::misc::xwdall {
     variable outdir [file join $::env(HOME) alps-captures]
     variable time 1
     variable raise normal
+    variable delay 5
 }
 
 proc ::misc::xwdall::gui {} {
@@ -39,6 +40,11 @@ proc ::misc::xwdall::gui {} {
         -state readonly \
         -values {none normal force topmost}
 
+    ttk::label $f.lblDelay -text "Delay:"
+    ttk::spinbox $f.spnDelay \
+        -textvariable ${ns}::delay \
+        -from 0 -to 10000 -increment 5
+
     ttk::button $f.btnCapture \
         -width 0 \
         -text "Capture" \
@@ -48,12 +54,14 @@ proc ::misc::xwdall::gui {} {
         -sticky ew -padx 2 -pady 1
     grid $f.chkTime - - \
         -sticky w -padx 2 -pady 1
+    grid $f.lblDelay $f.spnDelay \
+        -sticky ew -padx 2 -pady 1
     grid $f.lblRaise $f.cboRaise $f.btnCapture \
         -sticky ew -padx 2 -pady 1
 
-    grid configure $f.lblOut $f.lblRaise -sticky e
+    grid configure $f.lblOut $f.lblDelay $f.lblRaise -sticky e
     grid columnconfigure $f 1 -weight 1
-    grid rowconfigure $f 3 -weight 1
+    grid rowconfigure $f 4 -weight 1
 
     wm resizable .xwdall 1 0
     wm title .xwdall "Capture All"
@@ -64,6 +72,9 @@ proc ::misc::xwdall::gui {} {
         "If enabled, each capture will have a timestamped subdirectory created
         for its images. This prevents the capture from clobbering previous
         captures."
+    ::misc::tooltip $f.lblDelay $f.spnDelay \
+        "A time in milliseconds to pause between screenshots. This helps give
+        the GUIs time to refresh properly if they have been raised."
     ::misc::tooltip $f.lblRaise $f.cboRaise \
         "Advanced setting: this should not normally need to be changed.
 
@@ -111,9 +122,11 @@ proc ::misc::xwdall::gui_browse {} {
 proc ::misc::xwdall::gui_capture {} {
     variable outdir
     variable time
+    variable delay
     variable raise
 
-    capture -outdir $outdir -time $time -raise $raise -exclude .xwdall
+    capture -outdir $outdir -time $time -delay $delay -raise $raise \
+        -exclude .xwdall
 
     raise .xwdall
 }
@@ -130,6 +143,9 @@ proc ::misc::xwdall::capture {args} {
 #       If set to 1, then a timestamp subdirectory will be created for the
 #       captures. This is enabled by default so that subsequent captures will
 #       not clobber previous ones.
+#   -delay <int>
+#   default: 5
+#       A time delay between screenshots, to give time for GUIs to refresh.
 #   -raise <none|normal|force>
 #    default: normal
 #       Specifies how windows should be raised. for "none", windows are not
@@ -161,6 +177,7 @@ proc ::misc::xwdall::capture {args} {
     array set opts {
         -outdir {}
         -time 1
+        -delay 5
         -raise normal
         -exclude {}
         -token "ALPS - CAPTURE THIS"
@@ -209,7 +226,7 @@ proc ::misc::xwdall::capture {args} {
         wm title $w $token
         apply $raise $w
         update
-        after 5
+        after $opts(-delay)
         exec xwd -name $token -out $tmp
         wm title $w $title
         apply $lower $w
