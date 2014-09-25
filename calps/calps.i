@@ -521,6 +521,20 @@ extern mnxmxx;
   when it's not.
 */
 
+// *** Defined in rle.c ***
+
+extern rle_encode;
+/* DOCUMENT rle_encode, A, &vals, &reps;
+  Encodes an array of integers using run-length encoding. To convert back to
+  original:
+    A = vals(histinv(reps));
+
+  The type of vals will be the same as the type of A.
+
+  The type of reps will be the smallest integer type that will accommodate its
+  largest value.
+*/
+
 __calps_backup = save(
   calps_compatibility,
   _ytriangulate, triangulate,
@@ -542,5 +556,6 @@ __calps_backup = save(
   timsort, timsort_obj,
   file_exists, file_readable, file_size,
   gist_gpbox,
-  minmax, mnxmxx
+  minmax, mnxmxx,
+  rle_encode
 );
