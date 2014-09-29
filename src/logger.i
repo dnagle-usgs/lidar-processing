@@ -195,14 +195,6 @@ func logger_term(void) {
   }
 }
 
-/*
-  Implementation note:
-
-  See the implementation note at the top of assert.i for an explanation for why
-  logger invocations are protected with if tests rather than redefining them to
-  noop.
-*/
-
 local logger;
 /* DOCUMENT logger
   Usage:
@@ -285,7 +277,7 @@ local logger;
   turned on when there is a specific need for it, as it may lead to excessively
   large log files.
 
-  SEE ALSO: logger_level assert
+  SEE ALSO: logger_level
 */
 
 // Initialize logger. Use alpsrc setting if available; otherwise start at
@@ -333,7 +325,6 @@ func logger_purge(days) {
   The log directory is determined as for open_logfh. If this directory does not
   exist, then this is a no-op.
 */
-  if(assert) assert, is_numerical(days), "days is non-numeric";
   logid = logger_id();
   if(logger(debug)) logger, debug, logid+"logger_purge, "+pr1(days)+";";
 
