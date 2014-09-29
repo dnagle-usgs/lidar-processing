@@ -86,7 +86,6 @@ median = quick_median;
 // These must come first, since some other functions make use of them at the
 // top level
 require, "logger.i";
-require, "assert.i";
 require, "handler.i";
 require, "hook.i";
 require, "int_t.i";
