@@ -15,6 +15,7 @@ func processed_obj2dyn_dual(pulses) {
       not defined anywhere and will not necessarily be the same across multiple
       calls
 */
+  if(!is_obj(pulses) || !numberof(pulses.fx)) return [];
   data = obj_copy(pulses);
 
   // Remove fields that should not go into a final result
