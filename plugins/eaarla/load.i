@@ -37,6 +37,7 @@ include, base + "process_fs.i";
 include, base + "process_main.i";
 include, base + "sf.i";
 include, base + "surface_topo.i";
+include, base + "util_process.i";
 include, base + "veg.i";
 include, base + "veg_energy.i";
 

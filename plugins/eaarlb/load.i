@@ -44,6 +44,7 @@ include, base + "sf.i";
 include, base + "surface_topo.i";
 include, base + "util_ba.i";
 include, base + "util_mp.i";
+include, base + "util_process.i";
 include, base + "veg.i";
 include, base + "veg_energy.i";
 
