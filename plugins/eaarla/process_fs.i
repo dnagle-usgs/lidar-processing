@@ -100,7 +100,7 @@ func process_fs(start, stop, ext_bad_att=, channel=, opts=) {
   numchans = numberof(channel);
   for(i = 1; i <= numchans; i++) {
     curpulses = (i == numchans) ? pulses : obj_copy(pulses);
-    save, curpulses, channel=array(channel(i), numberof(pulses.tx));
+    save, curpulses, channel=array(char(channel(i)), numberof(pulses.tx));
     result = is_void(result) ? curpulses : obj_grow(result, curpulses);
   }
   pulses = result;
