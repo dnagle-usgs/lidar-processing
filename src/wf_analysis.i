@@ -1,5 +1,40 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+func wf_skew(wf) {
+/* DOCUMENT wf_skew(wf)
+  Provides a skew metric for a given waveform.
+*/
+  indices = indgen(1:numberof(wf));
+  sum_wf = sum(wf);
+  n_bar = sum(indices*wf)/sum_wf;
+  // compute moments
+  m2 = sum(((indices - n_bar)^2)*wf)/sum_wf;
+  m3 = sum(((indices - n_bar)^3)*wf)/sum_wf;
+  if(m2 == 0) {
+    return (m3 < 0) ? -1e1000 : 1e1000;
+  }
+  return m3/(m2^1.5);
+}
+
+func wf_auc(wf) {
+/* DOCUMENT wf_auc(wf)
+  Returns an area-under-the-curve metric for a given waveform.
+*/
+  return wf(zcen)(sum);
+}
+
+func wf_stdev(wf) {
+/* DOCUMENT wf_stdev(wf)
+  Returns a standard deviation metric for a given waveform.
+*/
+  indices = indgen(1:numberof(wf));
+  sum_wf = sum(wf);
+  n_bar = sum(indices*wf)/sum_wf;
+  // compute 2nd moment
+  m2 = sum(((indices - n_bar)^2)*wf)/sum_wf;
+  return m2^0.5;
+}
+
 func wf_peak(wf, &position, &intensity) {
 /* DOCUMENT position = wf_peak(wf)
   -or- wf_peak, wf, position, intensity
