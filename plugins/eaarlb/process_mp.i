@@ -58,7 +58,11 @@ func process_mp(start, stop, ext_bad_att=, channel=, opts=) {
 
   sample_interval = 1.0;
   mp_tx = eaarl_mp_tx_copy;
-  mp_rx = eaarl_mp_rx_channel;
+  if(channel(1)) {
+    mp_rx = eaarl_mp_rx_channel;
+  } else {
+    mp_rx = eaarl_mp_rx_eaarla;
+  }
 
   // Allow core functions to mp overridden via hook
   restore, hook_invoke("process_mp_funcs", save(mp_tx, mp_rx));
@@ -182,6 +186,73 @@ func eaarl_mp_rx_channel(pulses) {
   save, pulses, lrx, lintensity, lbias, lchannel, num_rets;
 }
 
+func eaarl_mp_rx_eaarla(pulses) {
+/* DOCUMENT eaarl_mp_rx_eaarla, pulses
+  Updates the given pulses oxy group object with multi-peak return info. The
+  most sensitive channel that is not saturated will be used. The following
+  fields are added to pulses:
+    lrx - Pointer to array of peak locations
+    lintensity - Pointer to array of intensities at peaks
+    lbias - The channel range bias (ops_conf.chn%d_range_bias)
+    lchannel - Channel used
+*/
+  local conf;
+  extern ops_conf;
+
+  mp_rx_channel = eaarl_mp_rx_eaarla_channel;
+  mp_rx_wf = eaarl_mp_rx_wf;
+
+  // Allow functions to be overridden via hook
+  restore, hook_invoke("eaarl_mp_rx_funcs", save(mp_rx_channel, mp_rx_wf));
+
+  biases = [ops_conf.chn1_range_bias, ops_conf.chn2_range_bias,
+    ops_conf.chn3_range_bias];
+
+  npulses = numberof(pulses.tx);
+
+  lrx = lintensity = array(pointer, npulses);
+  lbias = array(float, npulses);
+  num_rets = array(char, npulses);
+  lchannel = array(char, npulses);
+
+  for(i = 1; i <= npulses; i++) {
+    lchannel(i) = mp_rx_channel(pulses.rx(,i), conf);
+    if(!lchannel(i)) continue;
+    if(!pulses.rx(lchannel(i),i)) continue;
+    lbias(i) = biases(lchannel(i));
+
+    tmp = mp_rx_wf(*pulses.rx(lchannel(i),i), conf);
+    lintensity(i) = &tmp.lintensity;
+    lrx(i) = &tmp.lrx;
+    num_rets(i) = tmp.num_rets;
+  }
+
+  save, pulses, lrx, lintensity, lbias, lchannel, num_rets;
+}
+
+func eaarl_mp_rx_eaarla_channel(rx, &conf) {
+/* DOCUMENT channel = eaarl_mp_rx_eaarla_channel(rx, &conf)
+  Determines which channel to use for multipeak. The channel number is
+  returned, and &conf is updated to the mp conf for that channel.
+*/
+  extern ops_conf;
+
+  for(i = 1; i <= 3; i++) {
+    conf = mpconf(settings, i);
+    wf = *rx(i);
+    if(!numberof(wf)) return 0;
+    // Channels 1 and 2 define saturation as < 5, whereas channel 3 defines
+    // saturation as == 0.
+    sat_thresh=(i == 3 ? 0 : 4)
+
+    np = min(numberof(wf), 12);
+    saturated = where(wf(1:np) <= sat_thresh);
+    numsat = numberof(saturated);
+    if(numsat <= ops_conf.max_sfc_sat) return i;
+  }
+  return 0;
+}
+
 func eaarl_mp_plot(raster, pulse, channel=, win=, xfma=) {
 /* DOCUMENT eaarl_mp_plot, raster, pulse, channel=, win=, xfma=
   Executes the multipeak algorithm for a single pulse and plots the result.
@@ -217,10 +288,11 @@ func eaarl_mp_plot(raster, pulse, channel=, win=, xfma=) {
 
   local conf;
 
+  mp_rx_channel = eaarl_mp_rx_eaarla_channel;
   mp_rx_wf = eaarl_mp_rx_wf;
 
   // Allow functions to be overridden via hook
-  restore, hook_invoke("eaarl_mp_rx_funcs", save(mp_rx_wf));
+  restore, hook_invoke("eaarl_mp_rx_funcs", save(mp_rx_channel, mp_rx_wf));
 
   wbkp = current_window();
   window, win;
@@ -238,7 +310,15 @@ func eaarl_mp_plot(raster, pulse, channel=, win=, xfma=) {
     return;
   }
   pulses = obj_index(pulses, w(1));
-  conf = mpconf(settings, channel);
+  if(channel) {
+    conf = mpconf(settings, channel);
+  } else {
+    channel = mp_rx_channel(pulses.rx, conf);
+
+    tkcmd, swrite(format=
+      "::eaarl::mpconf::config %d -channel %d -group {%s}",
+      win, channel, mpconf(settings_goup, channel));
+  }
 
   write, format=" multi-peak analysis for raster %d, pulse %d, channel %d\n",
     long(raster), long(pulse), long(channel);
