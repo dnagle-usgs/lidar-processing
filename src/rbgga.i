@@ -42,18 +42,20 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=) {
   default, _batch, 0;
 
   wbkp = current_window();
-  window, win;
 
   if(is_void(region)) {
+    window, win;
     if(mode == "pip") {
       region = get_poly();
     } else {
       region = mouse_bounds(ply=1);
     }
+    window_select, wbkp;
   }
   shp = region_to_shp(region);
 
   if(plot) {
+    window, win;
     tmp = region_to_shp(shp, utm=utm, ll=!utm);
     plot_shape, tmp, color=color;
     tmp = [];
