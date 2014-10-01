@@ -174,6 +174,7 @@ require, "statistics.i";
 require, "sox.i";
 require, "tiles.i";
 require, "transect.i";
+require, "unittest.i";
 require, "util_cast.i";
 require, "util_container.i";
 require, "util_coord.i";
