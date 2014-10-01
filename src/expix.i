@@ -123,16 +123,15 @@ func expix_show(nearest) {
   write, format="Corresponds to %s(%d)\n", vname, nearest.index;
 
   // calculate distance along surface plane from mirror point
-  f = data2xyz(point, mode="fs");
-  m = data2xyz(point, mode="mir");
-  dist = ((m - f)(:2)^2)(sum)^0.5;
-  // calculate elevation difference
-  ht = abs(m(3) - f(3));
-  if(ht == 0) {
+  local fx, fy, fz, mx, my, mz;
+  data2xyz, point, mode="fs", fx, fy, fz;
+  data2xyz, point, mode="mir", mx, my, mz;
+  aoi = angle_of_incidence(fx, fy, fz, mx, my, mz);
+  // 180 degrees means it couldn't calculate it
+  if(aoi > 179.9) {
     write, format="%s\n", "Cannot calculate angle of incidence (0 height)";
   } else {
     // calculate angle of incidence
-    aoi = atan(dist, ht) * RAD2DEG;
     write, format="Angle of incidence= %.4f degrees\n", aoi;
   }
 
