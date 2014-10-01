@@ -514,10 +514,7 @@ func int_downsize(A, schar=) {
   default, schar, 0;
   if(!is_integer(A)) return A;
 
-  a = A(*);
-  Amin = a(min);
-  Amax = a(max);
-  a = [];
+  minmax, A, Amin, Amax;
 
   if(!schar && Amin >= 0 && Amax <= 255)
     return char(A);
