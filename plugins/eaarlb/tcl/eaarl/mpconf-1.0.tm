@@ -64,7 +64,7 @@ proc ::eaarl::mpconf::config {window args} {
 }
 
 snit::type ::eaarl::mpconf::embed {
-    option -window -readonly 1 -default 24 -configuremethod SetOpt
+    option -window -readonly 1 -default 27 -configuremethod SetOpt
     option -raster -default 1 -configuremethod SetOpt
     option -channel -default 1 -configuremethod SetOpt
     option -pulse -default 60 -configuremethod SetOpt
