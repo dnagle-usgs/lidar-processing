@@ -882,6 +882,23 @@ func angular_range(ang, rad=) {
   return result;
 }
 
+func angle_of_incidence(x1, y1, z1, x2, y2, z2, rad=) {
+/* DOCUMENT angle_of_incidence(x1, y1, z1, x2, y2, z2, rad=)
+
+  Given a line passing through points (x1,y1,z1) and (x2,y2,z2), returns the
+  angle of incidence between that line and the horizontal plane.
+
+  By default, returns angle in degrees. Use rad=1 for radians.
+*/
+  default, rad, 0;
+  dist = sqrt((x1-x2)^2 + (y1-y2)^2);
+  ht = abs(z1-z2);
+  aoi = array(pi, dimsof(x1));
+  w = where(ht);
+  aoi(w) = atan(dist(w), ht(w));
+  return rad ? aoi : aoi * RAD2DEG;
+}
+
 func planar_params_from_pts(x1, y1, z1, x2, y2, z2, x3, y3, z3) {
 /* DOCUMENT planar_params_from_pts(x1, y1, z1, x2, y2, z2, x3, y3, z3)
   planar_params_from_pts(p1, p2, p3)
