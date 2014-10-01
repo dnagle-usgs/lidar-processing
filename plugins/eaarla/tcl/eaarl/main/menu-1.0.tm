@@ -68,6 +68,8 @@ namespace eval ::eaarl::main::menu {
                 -command [list ::eaarl::bathconf::plot 25]
         $mb add command {*}[menulabel "&Veg Settings..."] \
                 -command [list ::eaarl::vegconf::plot 24]
+        $mb add command {*}[menulabel "&Multi-Peak Settings..."] \
+                -command [list ::eaarl::mpconf::plot 27]
         return $mb
     }
 
