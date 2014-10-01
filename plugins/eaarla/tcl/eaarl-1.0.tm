@@ -10,6 +10,7 @@ package require eaarl::chanconf
 package require eaarl::drast
 package require eaarl::jsonlog
 package require eaarl::load
+package require eaarl::mpconf
 package require eaarl::pixelwf
 package require eaarl::processing
 package require eaarl::raster
@@ -28,6 +29,7 @@ namespace eval ::eaarl {
       "First Return Topo"  f
       "Submerged Topo"     b
       "Topo Under Veg"     v
+      "Multi-Peak"         mp
       "OLD: First Return Topo"  old_fs
       "OLD: Submerged Topo"     old_bathy
       "OLD: Topo Under Veg"     old_veg
@@ -47,7 +49,7 @@ namespace eval ::eaarl {
       variable pro_var_next
       variable processing_mode
       set mapping {
-         f fs_all v veg_all b depth_all
+         f fs_all v veg_all b depth_all mp mp_all
          old_fs fs_all old_bathy depth_all old_veg veg_all old_cveg cveg_all
       }
       if {$pro_var_next in [list fs_all depth_all veg_all cveg_all]} {

@@ -276,7 +276,7 @@ proc ::eaarl::processing::process {} {
 
     set cmd ""
     switch -- $processing_mode {
-        f - v - b {
+        f - v - b - mp {
             set cmd "$::pro_var = ${make_eaarl}(mode=\"$processing_mode\",\
                     q=q, ext_bad_att=$ext_bad_att)"
         }

@@ -143,6 +143,52 @@ func autoselect_vegconf(dir, options=) {
   return options ? results : results(1);
 }
 
+func autoselect_mpconf(dir, options=) {
+/* DOCUMENT mpconf_file = autoselect_mpconf(dir, options=)
+
+  This function attempts to determine the shallow bathy settings file to load
+  for a dataset. The dir parameter should be the path to the mission day
+  directory.
+
+  The function attempts to find an appropriate settings file by looking in
+  these locations:
+
+    1. dir/alps
+    2. dir
+    3. dir/../alps
+    4. dir/..
+
+  It looks for files matching the pattern *.mpconf.
+
+  If no file can be found, then the nil string is returned (string(0)).
+
+  If options=1, then an array of all possibilities that meet the criteria above
+  is returned instead. If no possiblities are found, then [string(0)] is
+  returned.
+*/
+  dir = file_join(dir);
+  dirs = [file_join(dir, "alps"), dir];
+  dir = file_dirname(dir);
+  grow, dirs, [file_join(dir, "alps"), dir];
+
+  globs = ["*.mpconf"];
+
+  results = [];
+  for(i = 1; i <= numberof(globs); i++) {
+    for(j = 1; j <= numberof(dirs); j++) {
+      files = lsfiles(dirs(j), glob=globs(i));
+      if(numberof(files)) {
+        files = files(sort(files));
+        grow, results, file_join(dirs(j), files);
+      }
+    }
+  }
+
+  if(is_void(results))
+    results = [string(0)];
+  return options ? results : results(1);
+}
+
 func autoselect_edb(dir, options=) {
 /* DOCUMENT edb_file = autoselect_edb(dir, options=)
 

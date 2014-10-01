@@ -11,6 +11,7 @@ local eaarl_processing_modes;
     "f" - first surface processing
     "b" - bathymetric processing
     "v" - topo under veg processing
+    "mp" - multipeak processing
 */
 if(is_void(eaarl_processing_modes)) eaarl_processing_modes = save();
 save, eaarl_processing_modes,
@@ -25,6 +26,10 @@ save, eaarl_processing_modes,
   v=save(
     process="process_be",
     cast="be_struct_from_obj"
+  ),
+  mp=save(
+    process="process_mp",
+    cast="mp_obj2dyn"
   );
 
 func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, ptime=, opts=) {

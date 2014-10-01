@@ -17,6 +17,7 @@ namespace eval ::mission::eaarl {
         "ops_conf file"
         "bathconf file"
         "vegconf file"
+        "mpconf file"
         "rgb dir"
         "rgb file"
         "cir dir"
@@ -48,6 +49,10 @@ namespace eval ::mission::eaarl {
         }
         "vegconf file" {
             {{Veg settings files} {.vegconf}}
+            {{All files} *}
+        }
+        "mpconf file" {
+            {{Multi-peak settings files} {.mpconf}}
             {{All files} *}
         }
         "rgb file" {
