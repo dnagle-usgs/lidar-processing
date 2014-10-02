@@ -21,6 +21,10 @@ local unittest;
   You will then get output showing how many tests and details on which tests
   failed.
 
+  Alternately, you can run a directory of tests with an optional search string:
+
+    ut_run_dir, "test", searchstr="*.i";
+
   There are two ways to invoke ut_ok, as shown above. The first is:
     ut_ok, expr, msg;
   In this case, expr should resolve into a true/false value and msg is a short
@@ -43,6 +47,19 @@ local unittest;
   At then end of the UT_TEST_CASES function, be sure to redefine the functions
   you created to [] so that they do not persist outside of your unittest file.
 */
+
+func ut_run_dir(dir, searchstr=) {
+  default, dir, "test";
+  default, searchstr, "*.i";
+  files = find(dir, searchstr=searchstr);
+  files = files(sort(files));
+  n = numberof(files);
+  for(i = 1; i <= n; i++) {
+    write, format="\n%s\n", array("_", 72)(sum);
+    write, format="\n%s\n", file_relative(dir, files(i));
+    ut_run, files(i);
+  }
+}
 
 func ut_run(fn) {
   extern ut_res, ut_msg;
