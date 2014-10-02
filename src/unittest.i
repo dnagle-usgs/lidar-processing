@@ -165,3 +165,35 @@ func ut_ok(expr, msg) {
   res = expr ? 1 : 0;
   ut_item, res, msg;
 }
+
+func ut_error(expr, msg) {
+/* DOCUMENT ut_error, fnc, "<msg>";
+  -or-  ut_error, "<expr>";
+
+  Unit test case that verifies that FNC or EXPR throw an error. This test
+  succeeds if the input throws an error. If it does not throw an error, then
+  the test fails.
+
+  FNC should be a function name. EXPR should be a string to evaluate.
+
+  For example, this is a successful test case:
+
+    ut_error, "tmp = 1/0.", "divide by zero";
+*/
+  if(catch(-1)) {
+    ut_item, 1, msg;
+    return;
+  }
+  if(is_string(expr)) {
+    default, msg, expr(1);
+    code = grow("func UT_ERROR_HELPER {", expr, "}");
+    include, code, 1;
+  } else {
+    UT_ERROR_HELPER = expr;
+  }
+  if(is_func(UT_ERROR_HELPER)) {
+    UT_ERROR_HELPER;
+  }
+  UT_ERROR_HELPER = [];
+  ut_item, 0, msg;
+}
