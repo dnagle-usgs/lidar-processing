@@ -49,6 +49,12 @@ local unittest;
 */
 
 func ut_run_dir(dir, searchstr=) {
+/* DOCUMENT ut_run_dir, dir, searchstr=
+  Runs a directory of unit tests. If searchstr is omitted, it defaults to
+  "*.i". If dir is omitted, it defaults to "test".
+
+  SEE ALSO: unittest
+*/
   default, dir, "test";
   default, searchstr, "*.i";
   files = find(dir, searchstr=searchstr);
@@ -62,6 +68,11 @@ func ut_run_dir(dir, searchstr=) {
 }
 
 func ut_run(fn) {
+/* DOCUMENT ut_run, fn
+  Evaluates a single unittest file.
+
+  SEE ALSO: unittest
+*/
   extern ut_res, ut_msg;
 
   ut_res = [];
@@ -104,6 +115,9 @@ func ut_run(fn) {
  * code. (Though a syntax error would still cause problems.)
 */
 func ut_run_helper(fn) {
+/* DOCUMENT ut_run_helper(fn)
+  Internal function for ut_run.
+*/
   if(catch(-1)) {
     return 0;
   }
@@ -118,6 +132,13 @@ func ut_run_helper(fn) {
 }
 
 func ut_item(res, msg) {
+/* DOCUMENT ut_item, res, msg;
+  Internal function for unittest framework. RES should be 0 or 1; 0 = failure,
+  1 = success. MSG should be a string. A symbol (! or .) will be printed and
+  the information will be appended to the test results.
+
+  SEE ALSO: unittest
+*/
   extern ut_res, ut_msg;
   default, msg, "unspecified";
   write, format="%s", ["!","."](res+1);
@@ -126,6 +147,16 @@ func ut_item(res, msg) {
 }
 
 func ut_ok(expr, msg) {
+/* DOCUMENT ut_ok, expr, "<msg>"
+  -or- ut_ok, "<expr>"
+
+  Unit test case that verifies that EXPR is true.
+
+  If EXPR is a string and MSG is omitted, then EXPR is used for MSG and it is
+  then evaluated like so to resolve it: "expr = ("+expr+")"
+
+  SEE ALSO: unittest
+*/
   if(is_string(expr) && is_void(msg)) {
     msg = expr;
     include, ["expr = ("+expr+");"], 1;
