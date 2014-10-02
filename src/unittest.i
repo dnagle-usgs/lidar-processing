@@ -55,13 +55,7 @@ func ut_run(fn) {
   write, format="%s", "\n\n";
 
   if(!res) {
-    write, format="%s\n", "Encountered unexpected error!";
-    if(numberof(ut_res))
-      write, format="Last test was:\n%d: %s\n", numberof(ut_res), ut_msg(0);
-    else
-      write, format="No tests were run.%s", "\n";
-
-    return;
+    write, format="%s\n\n", "Encountered unexpected error!";
   }
 
   if(!numberof(ut_res)) {
@@ -69,13 +63,18 @@ func ut_run(fn) {
     return;
   }
 
-  write, format="Passed %d of %d tests\n", ut_res(sum), numberof(ut_res);
+  write, format="Passed %d of %d tests.\n", ut_res(sum), numberof(ut_res);
   if(nallof(ut_res)) {
-    write, format="Failures:%s", "\n";
+    write, format="\nFailures:%s", "\n";
     w = where(!ut_res);
     for(i = 1; i <= numberof(w); i++) {
       write, format="  %d: %s\n", w(i), ut_msg(w(i));
     }
+  }
+
+  if(!res) {
+    write, format="\nLast test before error:\n  %d: %s\n",
+      numberof(ut_res), ut_msg(0);
   }
 }
 
