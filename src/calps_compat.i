@@ -75,7 +75,7 @@ if(!is_func(file_size))
   include, "calps/file_size.i";
 
 // Added 2014-09-22
-if(!is_func(minmax))
+if(is_func(minmax) != 2)
   include, "calps/minmax.i";
 if(!is_func(mnxmxx))
   include, "calps/mnxmxx.i";

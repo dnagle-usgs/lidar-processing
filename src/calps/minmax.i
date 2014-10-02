@@ -13,4 +13,4 @@ func nocalps_minmax(ary, &mn, &mx) {
   mx = max(ary);
   return [mn, mx];
 }
-if(!is_func(minmax)) minmax = nocalps_minmax;
+if(is_func(minmax) != 2) minmax = nocalps_minmax;
