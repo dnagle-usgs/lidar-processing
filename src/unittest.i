@@ -29,6 +29,19 @@ local unittest;
   In this case, the string "expr" should be an expression that resolves into a
   true/false value (as in the first case); however, it is also used as the
   descriptive text to identify the test case.
+
+  A typical unittest file should not contain any function definitions. If you
+  need function definitions, then you should wrap your main test body as a
+  function named UT_TEST_CASES:
+
+    func UT_TEST_CASES {
+      a = 1;
+      b = 3;
+      ut_ok, a + b == 4, "addition works";
+    }
+
+  At then end of the UT_TEST_CASES function, be sure to redefine the functions
+  you created to [] so that they do not persist outside of your unittest file.
 */
 
 func ut_run(fn) {
@@ -66,11 +79,25 @@ func ut_run(fn) {
   }
 }
 
+/* ut_run_helper has to be a bit convoluted to work around yorick deficiencies.
+ * Catch and include do not play well together. If the file is directly
+ * included, or even if it's read to a string array and then included, catch
+ * will fail to handle errors it raises. By reading it to a string array and
+ * then bracketing it off as a function, this allows catch to work properly
+ * because the source is only defining the function rather then executing the
+ * code. (Though a syntax error would still cause problems.)
+*/
 func ut_run_helper(fn) {
   if(catch(-1)) {
     return 0;
   }
-  include, fn, 1;
+  code = rdfile(fn);
+  if(noneof(strglob("*func UT_TEST_CASES*", code))) {
+    code = grow("func UT_TEST_CASES {", code, "}");
+  }
+  include, code, 1;
+  UT_TEST_CASES;
+  UT_TEST_CASES = [];
   return 1;
 }
 
