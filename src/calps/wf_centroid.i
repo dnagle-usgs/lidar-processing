@@ -13,7 +13,7 @@ func nocalps_wf_centroid(wf, &position, &intensity, lim=) {
     position: The floating-point position into WF where the centroid is
       located. Note that the centroid's location may actually be outside the
       bounds of WF, particularly if WF contains negative values. If WF is [],
-      then POSITION is set to 1e1000 (inf) to represet the invalid condition.
+      then POSITION is set to FLT_MAX to represet the invalid condition.
     intensity: The floating-point intensity value found at POSITION,
       interpolated. Points outside of range will receive the intensity of the
       first or last sample (whichever is closer).
@@ -30,8 +30,8 @@ func nocalps_wf_centroid(wf, &position, &intensity, lim=) {
   If wf=[], then will return inf.
 */
   // Values to return in case of an error situation
-  position = 1e1000;
-  intensity = 1e1000;
+  position = FLT_MAX;
+  intensity = FLT_MAX;
 
   if(!numberof(wf))
     return position;

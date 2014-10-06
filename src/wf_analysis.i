@@ -11,7 +11,7 @@ func wf_skew(wf) {
   m2 = sum(((indices - n_bar)^2)*wf)/sum_wf;
   m3 = sum(((indices - n_bar)^3)*wf)/sum_wf;
   if(m2 == 0) {
-    return (m3 < 0) ? -1e1000 : 1e1000;
+    return (m3 < 0) ? -FLT_MAX : FLT_MAX;
   }
   return m3/(m2^1.5);
 }
@@ -47,7 +47,7 @@ func wf_peak(wf, &position, &intensity) {
   Output parameters:
     position: The integer position into WF where the peak is located. If there
       are multiple indices with the same maximal intensity, the first is
-      returned. If WF is [], then POSITION is set to 1e1000 (inf) to represet
+      returned. If WF is [], then POSITION is set to FLT_MAX (inf) to represet
       the invalid condition.
     intensity: The intensity value found at POSITION. (If POSITION=inf, then
       so too is INTENSITY.)
@@ -56,8 +56,8 @@ func wf_peak(wf, &position, &intensity) {
     The same value as POSITION above.
 */
   // Values to return in case of an error situation
-  position = 1e1000;
-  intensity = 1e1000;
+  position = FLT_MAX;
+  intensity = FLT_MAX;
 
   if(!numberof(wf))
     return position;

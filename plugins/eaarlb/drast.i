@@ -293,13 +293,13 @@ bathyoffset=, bathyverbose=, bg=) {
     if(eoffset) z += eoffset;
   }
 
-  top = -1e1000;
+  top = -FLT_MAX;
 
   rast = decode_raster(rn=rn);
 
   if(bg) {
-    ymin = 1e1000;
-    ymax = -1e1000;
+    ymin = FLT_MAX;
+    ymax = -FLT_MAX;
     bgval = 255;
     for(pulse = 1; pulse <= 120; pulse++) {
       if(skip(pulse)) continue;

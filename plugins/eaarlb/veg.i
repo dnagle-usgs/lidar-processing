@@ -807,7 +807,7 @@ forcechannel=, header=) {
   tx_wf = [];
 
   // if out-of-range centroid, return
-  if ((ctx(1) == 0)  || (ctx(1) == 1e1000))
+  if ((ctx(1) == 0)  || (ctx(1) == FLT_MAX))
     return rv;
 
   if(!is_void(forcechannel)) {
@@ -884,8 +884,8 @@ forcechannel=, header=) {
   wf_centroid, wf, crx, mv1, lim=12;
   if (use_be_centroid || use_be_peak || !is_void(alg_mode)) {
     // set mx1 to range walk corrected fs range
-    mx1 = (crx == 1e1000) ? -10 : irange + crx - ctx(1) + range_bias;
-    mv1 = (mv1 == 1e1000) ? -10 : mv1 + (channel-1) * 300;
+    mx1 = (crx == FLT_MAX) ? -10 : irange + crx - ctx(1) + range_bias;
+    mv1 = (mv1 == FLT_MAX) ? -10 : mv1 + (channel-1) * 300;
   } else {
     // find surface peak now
     mx1 = wf(xr(1):xr(1)+5)(mxx) + xr(1) - 1;

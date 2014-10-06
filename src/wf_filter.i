@@ -30,7 +30,7 @@ func wf_filter_bias(wf, &bias, method=, lim=) {
   CHAR, you should cast it to SHORT prior to passing it to this function.
 */
   default, method, "first";
-  default, lim, 1e1000;
+  default, lim, FLT_MAX;
 
   if(method == "first") {
     return wf_filter_bias_first(wf, bias);
