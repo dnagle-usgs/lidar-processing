@@ -31,6 +31,10 @@ if(is_func(calps_compatibility)) {
     // in version 5, interp_angles gives wrong result when xp is scalar
     interp_angles = [];
   }
+  if(calps_compatibility() < 7) {
+    // in version 6, uses 1e1000 which breaks on some platforms
+    wf_centroid = [];
+  }
 }
 
 // Added 2013-03-11
