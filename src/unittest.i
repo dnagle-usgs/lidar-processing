@@ -46,6 +46,8 @@ local unittest;
 
   At then end of the UT_TEST_CASES function, be sure to redefine the functions
   you created to [] so that they do not persist outside of your unittest file.
+
+  SEE ALSO: ut_run, ut_run_dir, ut_section, ut_ok, ut_error
 */
 
 func ut_run_dir(dir, searchstr=) {
@@ -73,10 +75,12 @@ func ut_run(fn) {
 
   SEE ALSO: unittest
 */
-  extern ut_res, ut_msg;
+  extern ut_res, ut_msg, ut_sec, ut_current_section;
 
   ut_res = [];
   ut_msg = [];
+  ut_sec = [];
+  ut_current_section = string(0);
 
   write, "";
   res = ut_run_helper(fn);
@@ -94,9 +98,14 @@ func ut_run(fn) {
   write, format="Passed %d of %d tests.\n", ut_res(sum), numberof(ut_res);
   if(nallof(ut_res)) {
     write, format="\nFailures:%s", "\n";
+    sec = string(0);
     w = where(!ut_res);
     for(i = 1; i <= numberof(w); i++) {
-      write, format="  %d: %s\n", w(i), ut_msg(w(i));
+      if(ut_sec(w(i)) != sec) {
+        sec = ut_sec(w(i));
+        write, format="  %s:\n", sec;
+      }
+      write, format="    %d: %s\n", w(i), ut_msg(w(i));
     }
   }
 
@@ -139,11 +148,24 @@ func ut_item(res, msg) {
 
   SEE ALSO: unittest
 */
-  extern ut_res, ut_msg;
+  extern ut_res, ut_msg, ut_sec, ut_current_section;
   default, msg, "unspecified";
   write, format="%s", ["!","."](res+1);
   grow, ut_res, res;
   grow, ut_msg, msg;
+  grow, ut_sec, ut_current_section;
+}
+
+func ut_section(desc) {
+/* DOCUMENT ut_section, "<desc>";
+  Provides a section name for the following test cases. If there are any test
+  failures, this will be provided as a section label in the failure output to
+  help identify where in the test file the failed test case is.
+
+  SEE ALSO: unittest
+*/
+  extern ut_current_section;
+  ut_current_section = desc;
 }
 
 func ut_ok(expr, msg) {
@@ -179,6 +201,8 @@ func ut_error(expr, msg) {
   For example, this is a successful test case:
 
     ut_error, "tmp = 1/0.", "divide by zero";
+
+  SEE ALSO: unittest
 */
   if(catch(-1)) {
     ut_item, 1, msg;
