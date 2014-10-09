@@ -40,9 +40,13 @@ HELP
   exit 0;
 }
 
-my $root = `hg root`;
+my $root = `hg root 2> /dev/null`;
 chomp $root;
-chdir $root;
+if($root eq "") {
+  print "Not in subrepository structure, recursing into unrelated repos.\n\n";
+} else {
+  chdir $root;
+}
 
 my $start = cwd();
 my @lines = `find . -name .hg`;
