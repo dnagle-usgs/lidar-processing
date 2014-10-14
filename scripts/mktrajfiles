@@ -40,6 +40,7 @@ my $magic;
 my $myfloat;
 my $mystr;
 my $verbose;
+my $status = 1;
 
 our $logfn = undef;
 our $norun = 0;
@@ -178,6 +179,40 @@ sub logger {
   print $logfh $msg;
 }
 
+sub sys_try {
+  my $cmd = shift;
+  my $response;
+  my $fh;
+  unless(open($fh, "$cmd 2>&1 |")) {
+    print "Unable to run command:\n  $cmd\n";
+    print "Couldn't fork: $!";
+    $response = prompter("Do you want to continue?", "yN");
+    exit if($response eq "N");
+    return 0;
+  }
+
+  my $output = '';
+  while(<$fh>) {
+    $output .= $_;
+  }
+
+  unless(close($fh)) {
+    print "Problem encountered during command:\n  $cmd\n";
+    print "Perl says: $! $?\n";
+    $response = prompter("Would you like to see the output collected from the command?", "Yn");
+
+    if($response eq "Y") {
+      print "\n$output\n\n";
+    }
+
+    $response = prompter("Do you want to continue?", "yN");
+    exit if($response eq "N");
+    return 0;
+  }
+
+  return 1;
+}
+
 ############################################################
 # defaults are supplied in GetOptions itself
 # use: perldoc Getopt::Long           # to get the manpage #
@@ -260,9 +295,11 @@ while ( $file = <LS> ) {
 
   printf("%s\t%s\n", $YYYY_MM_DD, $file);
 
+  chdir($startdir);
   open(FIND1, "find .. -follow -type d -name $YYYYMMDD -or -type d -name $YYYY_MM_DD |") || die("Unable to run find1\n");
   while ( $dir = <FIND1> ) {
     chomp $dir;
+    chdir($startdir);
     openlog($dir);
     $tmp = $dir . "/trajectories";
     $dir = $tmp;
@@ -286,7 +323,9 @@ while ( $file = <LS> ) {
       chdir ( $zipdir );
       printf("\tunzip ../%s\n", $zipdir) if ( $verbose );
       # -j junks the directory structure inside the zip file.
-      system("unzip -j $startdir/" . $zipdir) if ( ! $norun );
+
+      $status = sys_try("unzip -j $startdir/" . $zipdir) unless($norun);
+      next unless($status);
 
       # Check to see if this was a gps trajectory
       open(FIND2, "find . -follow -name  \"\*cmb-pnav\" -or -name \"\*pnav.txt\"|")
@@ -296,7 +335,7 @@ while ( $file = <LS> ) {
         printf ("LOG: %s %s\n", $today, $txt );
         logger("$today $txt\n");
         printf("\tpnav2ybin $txt\n")  if ( $verbose );
-        system("pnav2ybin $txt") if ( ! $norun );
+        sys_try("pnav2ybin $txt") unless($norun);
       }
 
       # Check to see if this was an ins trajectory
@@ -307,14 +346,10 @@ while ( $file = <LS> ) {
         logger("$today $txt\n");
         $txt =~ s/\.\///;
         printf("\tiex_ascii2pbd $txt\n")  if ( $verbose );
-        system("iex_ascii2pbd `pwd`/$txt") if ( ! $norun );
+        sys_try("iex_ascii2pbd `pwd`/$txt") unless($norun);
       }
     }
-
-    chdir ($startdir);     # go back to our starting directory
-
   }
   close (FIND1);
-
 }
 close (LS);
