@@ -41,10 +41,18 @@ my $myfloat;
 my $mystr;
 my $verbose;
 
-my $today = `date +"%Y-%m-%d"`; chop $today;
-my $log = "../../alps/trajectories.log";
 our $logfn = undef;
 our $norun = 0;
+
+sub getnow {
+  my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+  $year += 1900;
+  $mon += 1;
+  my $date = sprintf("%04d-%02d-%02d", $year, $mon, $mday);
+  my $time = sprintf("%04d%02d%02d%02d%02d%02d", $year, $mon, $mday, $hour, $min, $sec);
+  return ($date, $time);
+}
+our($today, $time) = getnow;
 
 sub showusage {
   print <<EOF;
@@ -74,14 +82,100 @@ printf("\n%s\n", $options) if ( $help == 0 );
   exit(0);
 }
 
+# Prompt the user for a single-character response:
+#   prompter($prompt, $want);
+# $prompt should be a string that will be printed to tell the user what they
+# are responding to. $want should be a series of characters that are
+# permissible responses. If any of the characters are uppercase, then the first
+# uppercase character is the default response and will be used if they just hit
+# enter. The input is interpreted without case sensitivity and will be returned
+# as uppercase. Invalid input will cause the prompt to be re-issued.
+sub prompter {
+  my $prompt = shift;
+  my $want = shift;
+  while(1) {
+    print "$prompt [$want]: ";
+    chomp(my $input = <STDIN>);
+
+    if($input =~ /^[$want]$/i) {
+      return uc($input);
+    }
+
+    if($input eq "") {
+      return $1 if($want =~ /([A-Z])/);
+    } else {
+      print "Unrecognized response: $input\n";
+    }
+
+    print "Response must be a single character, one of: $want\n\n";
+  }
+}
+
+sub openlog {
+  my $refdir = shift;
+  my $response;
+
+  our($norun, $logfn, $logfh);
+
+  return if($norun);
+
+  $logfn = undef;
+  close($logfh) if(defined($logfh));
+  $logfh = undef;
+
+  my $logdir = File::Spec->catdir(getcwd, $refdir, "../alps");
+  $logdir = Cwd::abs_path($logdir);
+  my $main = File::Spec->catdir($logdir, "trajectories.log");
+  my $alt = File::Spec->catdir($logdir, "trajectories.$time.log");
+
+  unless(-d $logdir) {
+    unless(mkdir $logdir) {
+      print "Unable to create log directory:\n  $logdir\n";
+      $response = prompter("Continue without logging?", "yN");
+      exit if($response eq "N");
+      return;
+    }
+  }
+
+  # If the alternate log file exists, assume we want to use it
+  if(-e $alt && -w $alt) {
+    $logfn = $alt;
+
+    if(open($logfh, ">> $logfn")) {
+      return;
+    } else {
+      print "Unable to open log file:\n  $logfn\n";
+      $response = prompter("Continue without logging?", "yN");
+      exit if($response eq "N");
+      $logfh = $logfn = undef;
+      return;
+    }
+  }
+
+  # Attempt normal log file
+  $logfn = $main;
+  unless(open($logfh, ">> $logfn")) {
+    print "Unable to open log file:\n  $logfn\n";
+
+    $logfn = $alt;
+    if(open($logfh, ">> $logfn")) {
+      print "Falling back to alternate log file:\n  $logfn\n";
+      return;
+    }
+
+    print "Unable to open alternate log file:\n  $logfn\n";
+    $logfh = $logfn = undef;
+    $response = prompter("Continue without logging?", "yN");
+    exit if($response eq "N");
+    return;
+  }
+}
+
 sub logger {
   my $msg = shift;
-  our($logfn, $norun);
-  return if(!defined($logfn));
-  return if($norun);
-  open(my $fh, ">> $logfn") || return;
-  print $fh $msg;
-  close($fh);
+  our($logfh);
+  return unless(defined($logfh));
+  print $logfh $msg;
 }
 
 ############################################################
@@ -168,7 +262,8 @@ while ( $file = <LS> ) {
 
   open(FIND1, "find .. -follow -type d -name $YYYYMMDD -or -type d -name $YYYY_MM_DD |") || die("Unable to run find1\n");
   while ( $dir = <FIND1> ) {
-    chop $dir;
+    chomp $dir;
+    openlog($dir);
     $tmp = $dir . "/trajectories";
     $dir = $tmp;
 
@@ -186,7 +281,6 @@ while ( $file = <LS> ) {
     $zipdir =~ s/\.zip//;
 
     if ( ! -d $zipdir ) {
-      $logfn = File::Spec->catdir(getcwd, $log);
       printf("\tmaking %s/%s\n", $dir,$zipdir);
       mkdir ( $zipdir ) if ( ! $norun );
       chdir ( $zipdir );
