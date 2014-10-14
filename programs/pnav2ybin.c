@@ -36,7 +36,7 @@ char *changename( char *ostr, char *nstr, char *txt ) {
 }
 
 
-main( int argc, char *argv[] ) {    
+int main( int argc, char *argv[] ) {
  FILE *idf, *odf;
  float sod, s;
  int h, m, good=0, badcnt=0, line=0;
@@ -141,5 +141,5 @@ main( int argc, char *argv[] ) {
   fseek( odf, 0, SEEK_SET);
   fwrite( &good, sizeof(int), 1, odf);          // install count
   printf("\n%d total points, %d good points, %d bad points\n", line, good, badcnt);           
+  return 0;
 }
-
