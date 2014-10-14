@@ -28,6 +28,8 @@ my $Source = '$Source$';
 
 use warnings;
 use Getopt::Long;
+use Cwd;
+use File::Spec;
 
 my $help;         # quiet the warning message
 my $getopt;       # quiet the warning message
@@ -41,6 +43,8 @@ my $verbose;
 
 my $today = `date +"%Y-%m-%d"`; chop $today;
 my $log = "../../alps/trajectories.log";
+our $logfn = undef;
+our $norun = 0;
 
 sub showusage {
   print <<EOF;
@@ -68,6 +72,16 @@ EOF
 printf("\n%s\n", $options) if ( $help == 0 );
 
   exit(0);
+}
+
+sub logger {
+  my $msg = shift;
+  our($logfn, $norun);
+  return if(!defined($logfn));
+  return if($norun);
+  open(my $fh, ">> $logfn") || return;
+  print $fh $msg;
+  close($fh);
 }
 
 ############################################################
@@ -172,7 +186,7 @@ while ( $file = <LS> ) {
     $zipdir =~ s/\.zip//;
 
     if ( ! -d $zipdir ) {
-      open(LOG, ">> $log") || die("Unable to open >>$log<<") if ( ! $norun );
+      $logfn = File::Spec->catdir(getcwd, $log);
       printf("\tmaking %s/%s\n", $dir,$zipdir);
       mkdir ( $zipdir ) if ( ! $norun );
       chdir ( $zipdir );
@@ -186,7 +200,7 @@ while ( $file = <LS> ) {
       while ( $txt = <FIND2> ) {
         chop $txt;
         printf ("LOG: %s %s\n", $today, $txt );
-        printf LOG ("%s %s\n", $today, $txt ) if ( ! $norun );
+        logger("$today $txt\n");
         printf("\tpnav2ybin $txt\n")  if ( $verbose );
         system("pnav2ybin $txt") if ( ! $norun );
       }
@@ -196,12 +210,11 @@ while ( $file = <LS> ) {
         || die ("Unable to run find2\n");
       while ( $txt = <FIND2> ) {
         chop $txt;
-        printf LOG ("%s %s\n", $today, $txt ) if ( ! $norun );
+        logger("$today $txt\n");
         $txt =~ s/\.\///;
         printf("\tiex_ascii2pbd $txt\n")  if ( $verbose );
         system("iex_ascii2pbd `pwd`/$txt") if ( ! $norun );
       }
-      close( LOG ) if ( ! $norun );
     }
 
     chdir ($startdir);     # go back to our starting directory
