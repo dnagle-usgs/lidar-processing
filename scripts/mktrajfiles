@@ -307,7 +307,7 @@ while ( $file = <LS> ) {
     printf("\t%s\tdestination\n", $dir) if ( $where );
     if ( ! -d $dir ) {
       printf("\t%s\tdestination\n", $dir) if ( ! $where );  # don't show twice
-      printf("$dir does not exist, creating\n");
+      printf("\t$dir does not exist, creating\n");
       mkdir ( $dir ) if ( ! $norun );
     }
     chdir($dir );
@@ -332,7 +332,6 @@ while ( $file = <LS> ) {
         || die ("Unable to run find2\n");
       while ( $txt = <FIND2> ) {
         chop $txt;
-        printf ("LOG: %s %s\n", $today, $txt );
         logger("$today $txt\n");
         printf("\tpnav2ybin $txt\n")  if ( $verbose );
         sys_try("pnav2ybin $txt") unless($norun);
