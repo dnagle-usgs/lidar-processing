@@ -31,9 +31,12 @@ func calps_compatibility(nil) {
     Fixes interp_angles to cope with scalar xp. Previous version was returning
     invalid results when xp was scalar.
 
-  This version of calps_compatibility returns 6.
+  Version 7
+    Fixes wf_centroid to avoid 1e1000/INFINITY which is now invalid in Yorick.
+
+  This version of calps_compatibility returns 7.
 */
-  return 6;
+  return 7;
 }
 
 // *** defined in triangle_y.c ***

@@ -2,11 +2,8 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <float.h>
 #include "yapi.h"
-
-#ifndef INFINITY
-#define INFINITY HUGE_VAL
-#endif
 
 // Calculate the centroid of the given waveform. Returns Inf if unable to
 // calculate.
@@ -26,7 +23,7 @@ double wf_centroid(long *wf, long count)
     return weighted / power;
   }
 
-  return INFINITY;
+  return FLT_MAX;
 }
 
 // Returns values of wf interpolated at the given position.
@@ -57,7 +54,7 @@ void Y_wf_centroid(int nArgs)
   static long kglobs[WF_CENTROID_KEYCT+1];
 
   long *wf = NULL;
-  double position = INFINITY;
+  double position = FLT_MAX;
   long glob_pos = -1, glob_int = -1;
   long count = 0;
 
@@ -84,7 +81,7 @@ void Y_wf_centroid(int nArgs)
 
   if(yarg_nil(iarg_wf))
   {
-    ypush_double(INFINITY);
+    ypush_double(FLT_MAX);
     if(glob_pos != -1)
     {
       yput_global(glob_pos, 0);
@@ -114,7 +111,7 @@ void Y_wf_centroid(int nArgs)
   if(glob_int != -1)
   {
     ypush_double(finite(position)
-      ? interp_index(wf, count, position) : INFINITY);
+      ? interp_index(wf, count, position) : FLT_MAX);
     yput_global(glob_int, 0);
   }
 
