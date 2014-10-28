@@ -29,18 +29,6 @@ func rcf(jury, w, mode=) {
         98 is the minimum value in the consensus window; 10 points voted
         for that window.
 
-      mode=1
-        Returns an array consisting of two elements where the first is the
-        average value in the window and the second is the number of votes.
-
-        For example:
-
-          > rcf(jury, w, mode=1)
-          [100.1, 10]
-
-        100.1 is the average value in the window; 10 points voted for that
-        window.
-
       mode=2
         Returns an array consisting of two pointers where the first points
         to an index list into jury for the points in the window and the
@@ -80,7 +68,7 @@ func rcf(jury, w, mode=) {
       j++;
     // Calculate the number of votes in this window. If it's better than our
     // recorded best, make it our new best.
-    vote = j - i + 1;
+    vote = j - i;
     if(vote >= bestvote) {
       bestvote = vote;
       besti = i;
@@ -92,11 +80,11 @@ func rcf(jury, w, mode=) {
   upper = besti + bestvote - 1;
   if(mode == 0) {
     return [jsrt(lower), bestvote];
-  } else if(mode == 1) {
-    return [jsrt(lower:upper)(avg), bestvote];
   } else if(mode == 2) {
     idx = where(jury >= jsrt(lower) & jury <= jsrt(upper));
     return [&idx, &bestvote];
+  } else {
+    error, "invalid mode";
   }
 }
 
