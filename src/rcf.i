@@ -68,7 +68,7 @@ func rcf(jury, w, mode=) {
   default, mode, 0;
   jsrt = jury(sort(jury));
   jurysize = numberof(jury);
-  bestvote = besti = bestj = 0;
+  bestvote = besti = 0;
   // Iterate over each point in the jury treating it as the lower bound for
   // search window.
   for(i = 1, j = 1; j <= jurysize; i++) {
@@ -80,7 +80,7 @@ func rcf(jury, w, mode=) {
       j++;
     // Calculate the number of votes in this window. If it's better than our
     // recorded best, make it our new best.
-    vote = j - i;
+    vote = j - i + 1;
     if(vote >= bestvote) {
       bestvote = vote;
       besti = i;
