@@ -245,6 +245,117 @@ func old_gridded_rcf(x, y, z, w, buf, n) {
   return where(keep);
 }
 
+func query_gridded_rcf(data, width, buf, n, iwin=, owin=, mode=) {
+/* DOCUMENT query_gridded_rcf, data, width, buf, n, iwin=, owin=, mode=
+  Enters an interactive mode that lets you click on a point cloud plot to see
+  how the gridded RCF performs.
+
+  Parameters:
+    data: An array of point cloud data
+    width: The vertical window width, in cm.
+    buf: The horizontal buffer size, in cm.
+    n: The minimum number of winners.
+  Options:
+    iwin= The input window. Default: 5
+    owin= The output window. Default: 6
+    mode= Data/display mode. Default: "fs"
+*/
+  default, iwin, 5;
+  default, owin, 6;
+
+  wbkp = current_window();
+  local x, y, z;
+  data2xyz, data, x, y, z, mode=mode;
+
+  continue_interactive = 1;
+  while(continue_interactive) {
+    write, format="\nWindow %d: Left to select Y. Ctrl-Left to select X. Anything else aborts.\n", iwin;
+
+    window, iwin;
+    spot = mouse(1, 1, "");
+
+    if(mouse_click_is("ctrl+left", spot)) {
+      write, format="Selected x coordinate of: %.2f\n", spot(1);
+      plot_gridded_rcf, x, y, z, width, buf, n, mode=mode, xp=spot(1), win=owin;
+    } else if(mouse_click_is("left", spot)) {
+      write, format="Selected y coordinate of: %.2f\n", spot(2);
+      plot_gridded_rcf, x, y, z, width, buf, n, mode=mode, yp=spot(2), win=owin;
+    } else {
+      continue_interactive = 0;
+    }
+  }
+
+  window_select, wbkp;
+}
+
+func plot_gridded_rcf(x, y, z, width, buf, n, xp=, yp=, win=) {
+/* DOCUMENT plot_gridded_rcf, x, y, z, width, buf, n, xp=, yp=, win=
+  Helper function for query_gridded_rcf. This plots a single row or column from
+  the gridded RCF algorithm to show what passed and failed the filter.
+
+  Parameters:
+    x, y, z: The point cloud coordinates
+    width, buf, n: The gridded RCF parameters (in cm)
+  Options:
+    xp= The coordinate that selects which column to plot
+    yp= The coordinate that selects which row to plot.
+      NOTE: You must select either xp or yp, but not both.
+    win= The window to plot in. Default: 6
+*/
+  default, win, 6;
+  width /= 100.;
+  buf /= 100.;
+
+  if(is_void(yp) && !is_void(xp)) {
+    yp = xp;
+    xp = [];
+
+    tmp = x;
+    x = y;
+    y = tmp;
+    tmp = [];
+  }
+  if(is_void(yp) || !is_void(xp)) {
+    error, "must provide either yp= or xp=";
+  }
+  w = where(long(y/buf) == long(yp/buf));
+  if(is_void(w)) error, "no points match";
+  x = x(w);
+  z = z(w);
+
+  if(!is_void(win)) {
+    wbkp = current_window();
+    window, win;
+  }
+  fma;
+
+  xgrid = long(x/buf);
+  xgrid_uniq = set_remove_duplicates(xgrid);
+  nxg = numberof(xgrid_uniq);
+  for(i = 1; i <= nxg; i++) {
+    w = where(xgrid == xgrid_uniq(i));
+    zw = z(w);
+    xw = x(w);
+    plmk, zw, xw, msize=0.1, marker=1, color="black";
+
+    lbound = rcf(zw, width)(1);
+    ubound = lbound + width;
+
+    x0 = xgrid_uniq(i) * buf;
+    x1 = x0 + buf;
+
+    plg, [ubound, lbound, lbound, ubound, ubound], [x0, x0, x1, x1, x0],
+      color="black", type="dot";
+
+    w = where(lbound <= zw & zw < ubound);
+    if(numberof(w) > n) {
+      plmk, zw(w), xw(w), msize=0.2, marker=1, color="blue";
+    }
+  }
+
+  if(!is_void(win)) window_select, wbkp;
+}
+
 func gridded_rcf(x, y, z, w, buf, n, progress=, progress_step=, progress_count=) {
 /* DOCUMENT idx = gridded_rcf(x, y, z, w, buf, n, progress=)
   Returns an index into the x/y/z data for those points that survive the RCF
