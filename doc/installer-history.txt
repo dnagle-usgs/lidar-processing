@@ -2,6 +2,11 @@ This file documents the changes made to the ALPS installer package. These
 installer packages are typically available on lidar.net under
 /mnt/alps/install/.
 
+2014-10-31
+    - Updated installer to tip 5a7cd1f4c6e1
+    - Yorick changes:
+        - Upgraded Yorick to 118bcc2
+
 2014-07-14
     - Updated installer to tip 48467b9400a3
     - Upgraded cctools to 4.2.0
