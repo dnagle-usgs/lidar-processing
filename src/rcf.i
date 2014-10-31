@@ -276,10 +276,10 @@ func query_gridded_rcf(data, width, buf, n, iwin=, owin=, mode=) {
 
     if(mouse_click_is("ctrl+left", spot)) {
       write, format="Selected x coordinate of: %.2f\n", spot(1);
-      plot_gridded_rcf, x, y, z, width, buf, n, mode=mode, xp=spot(1), win=owin;
+      plot_gridded_rcf, x, y, z, width, buf, n, xp=spot(1), win=owin;
     } else if(mouse_click_is("left", spot)) {
       write, format="Selected y coordinate of: %.2f\n", spot(2);
-      plot_gridded_rcf, x, y, z, width, buf, n, mode=mode, yp=spot(2), win=owin;
+      plot_gridded_rcf, x, y, z, width, buf, n, yp=spot(2), win=owin;
     } else {
       continue_interactive = 0;
     }
