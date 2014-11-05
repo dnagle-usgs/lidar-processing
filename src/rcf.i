@@ -245,17 +245,17 @@ func old_gridded_rcf(x, y, z, w, buf, n) {
   return where(keep);
 }
 
-func query_gridded_rcf(data, width, buf, n, iwin=, owin=, mode=) {
-/* DOCUMENT query_gridded_rcf, data, width, buf, n, iwin=, owin=, mode=
+func query_gridded_rcf(data, buf=, w=, n=, iwin=, owin=, mode=) {
+/* DOCUMENT query_gridded_rcf, data, buf=, w=, n=, iwin=, owin=, mode=
   Enters an interactive mode that lets you click on a point cloud plot to see
   how the gridded RCF performs.
 
   Parameters:
     data: An array of point cloud data
-    width: The vertical window width, in cm.
-    buf: The horizontal buffer size, in cm.
-    n: The minimum number of winners.
   Options:
+    buf= The horizontal buffer size, in cm.
+    w= The vertical window width, in cm.
+    n= The minimum number of winners. Default: 3
     iwin= The input window. Default: 5
     owin= The output window. Default: 6
     mode= Data/display mode. Default: "fs"
@@ -276,10 +276,10 @@ func query_gridded_rcf(data, width, buf, n, iwin=, owin=, mode=) {
 
     if(mouse_click_is("ctrl+left", spot)) {
       write, format="Selected x coordinate of: %.2f\n", spot(1);
-      plot_gridded_rcf, x, y, z, width, buf, n, xp=spot(1), win=owin;
+      plot_gridded_rcf, x, y, z, buf, w, n, xp=spot(1), win=owin;
     } else if(mouse_click_is("left", spot)) {
       write, format="Selected y coordinate of: %.2f\n", spot(2);
-      plot_gridded_rcf, x, y, z, width, buf, n, yp=spot(2), win=owin;
+      plot_gridded_rcf, x, y, z, buf, w, n, yp=spot(2), win=owin;
     } else {
       continue_interactive = 0;
     }
@@ -288,14 +288,15 @@ func query_gridded_rcf(data, width, buf, n, iwin=, owin=, mode=) {
   window_select, wbkp;
 }
 
-func plot_gridded_rcf(x, y, z, width, buf, n, xp=, yp=, win=) {
-/* DOCUMENT plot_gridded_rcf, x, y, z, width, buf, n, xp=, yp=, win=
+func plot_gridded_rcf(x, y, z, buf, width, n, xp=, yp=, win=) {
+/* DOCUMENT plot_gridded_rcf, x, y, z, buf, width, n, xp=, yp=, win=
   Helper function for query_gridded_rcf. This plots a single row or column from
   the gridded RCF algorithm to show what passed and failed the filter.
 
   Parameters:
     x, y, z: The point cloud coordinates
     width, buf, n: The gridded RCF parameters (in cm)
+      n defaults to 3, the others have no defaults
   Options:
     xp= The coordinate that selects which column to plot
     yp= The coordinate that selects which row to plot.
@@ -303,6 +304,7 @@ func plot_gridded_rcf(x, y, z, width, buf, n, xp=, yp=, win=) {
     win= The window to plot in. Default: 6
 */
   default, win, 6;
+  default, n, 3;
   width /= 100.;
   buf /= 100.;
 
