@@ -4,7 +4,10 @@
 #include <string.h>
 #include <dirent.h>     // for MAXNAMLEN
 #include <unistd.h>     // for access();
- 
+#ifdef __FreeBSD__
+#include <ctype.h>      // toupper
+#endif
+
 /*
     pnav2ybin.c          
    

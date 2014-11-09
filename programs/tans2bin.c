@@ -51,7 +51,7 @@ char *changename( char *ostr, char *nstr, char *txt ) {
   return(nstr);
 }
 
-main( int argc, char *argv[] ) {
+int main( int argc, char *argv[] ) {
 FILE *idf, *odf;
  int rec, good, badcnt, bad, i, n;
  float fgt=-1.0, gap, maxgap;

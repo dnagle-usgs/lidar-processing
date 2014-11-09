@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <math.h>
 #include "eaarl.h"
 
 /************************************************************
@@ -24,6 +25,8 @@ Usage:
 
 FILE *fd;
 
+void type5();
+
 int run = 1;				// loops until run=0
 
 UI8 raster[ MAX_BYTES_PIXEL * NSEGS * 2 ];	// temp buffer for a raster
@@ -36,8 +39,7 @@ struct tl tl;				// holds a type/len
 struct raster_header rh;		// holds a raster header
 UI32	offset, pixel_offset;		// fseek offsets
 
-main(unsigned int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
  int i,j,k,n;
   if ( argc == 2 ) 
 	fd = fopen(argv[1], "r");
@@ -62,9 +64,9 @@ float centroid( I16 *a, UI16 len, int *minv )  ;
 
 // This function will process a type5 EAARL record and 
 // printout all the parts.
-type5() {
+void type5() {
  int i,j,k,n, ii, jj;
- static nrast = 0, pulse_number=0;
+ static int nrast = 0, pulse_number=0;
  struct pixel pixel, *pp;
  UI8 txdata[128], data [4] [4096];
  I16 itxd[128], txbias;
@@ -121,7 +123,7 @@ type5() {
 /////   if ( pixel.wf_offset < 5000 ) 
     printf("\n %6d %8d %15.6f %8d %8d %4d %6d %8.3f %3d %5.3f %3d %8.3f %3d %8.3f %3d %8.3f %3d %c%c", 
 		nrast,
-		pp,
+		pp->offset_time,
 		seconds + pixel.offset_time * 1.6e-6,
 		pulse_number,
 		pixel.offset_time,

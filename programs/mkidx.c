@@ -30,6 +30,7 @@ The index file consists of:
 
 ************************************************************/
 
+void type5();
 
 FILE *fd, *ofd;
 
@@ -50,8 +51,7 @@ static  struct {
    unsigned long offset;
   } stuff = {  0, 0 };
 
-main(unsigned int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
  int i,j,k,n;
   if ( argc == 3 ) {
        fd = fopen(argv[1], "r");
@@ -84,9 +84,9 @@ main(unsigned int argc, char *argv[])
 
 // This function will process a type5 EAARL record and 
 // printout all the parts.
-type5() {
+void type5() {
  int i,j,k,n, ii, jj;
- static nrast = 0;
+ static int nrast = 0;
  struct pixel pixel, *pp;
  UI8 blen;
  UI16 len;

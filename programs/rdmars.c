@@ -42,7 +42,7 @@ NTPSOE ntpsoe;
 unsigned int tcount, dcount, count;
 double start, stop, et;
 
-main( int argc, char *argv[]) {
+int main( int argc, char *argv[]) {
  unsigned char t;
  int last_time;
  unsigned long int offset;

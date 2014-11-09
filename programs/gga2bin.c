@@ -48,7 +48,7 @@ char *changename( char *ostr, char *nstr, char *txt ) {
   If string *t is at the beginning of string *s, then return 1
   else 0.
 *********************************************************************/
-is ( char *s, char *t ) {
+int is ( char *s, char *t ) {
   if ( strncmp(s,t,strlen(t)) == 0 )
 	return 1;
   else 
@@ -59,7 +59,7 @@ is ( char *s, char *t ) {
 /*********************************************************************
   Decode gpgga messages
 *********************************************************************/
-gpgga(char *str) {
+void gpgga(char *str) {
  int n;
  int h,m;
  int cksum, sum, i;
@@ -169,14 +169,14 @@ gpgga(char *str) {
 
 /*********************************************************************
 *********************************************************************/
-temperature(str) {
+void  temperature(char *str) {
   total_temp++;
 }
 
 
 /*********************************************************************
 *********************************************************************/
-main( int argc, char *argv[] ) {    
+int main( int argc, char *argv[] ) {    
  int nb;
  int h, m, n;
  char str[MAXSTR*2], scp[ MAXSTR+2 ];

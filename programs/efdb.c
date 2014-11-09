@@ -39,7 +39,7 @@ XXXX-> 	LL   	16 bit filename-1 byte length
 
 ************************************************************/
 
-typedef struct {
+typedef struct __attribute__ ((packed)) {
   unsigned seconds;
   unsigned fseconds;
   unsigned offset;
@@ -47,7 +47,7 @@ typedef struct {
   unsigned short file_number;
   unsigned char  pixels;
   unsigned char  digitizer;
-} EAARL_INDEX __attribute__ ((packed)) ;
+} EAARL_INDEX;
 
 EAARL_INDEX eaarl_index;
 
@@ -77,8 +77,7 @@ struct {
   short len;
 } nlst[ 1024 ] ;
 
-main(unsigned int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
  unsigned short si;
  int i,j,k,n;
  int findex = 1;

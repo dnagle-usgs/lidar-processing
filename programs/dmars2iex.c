@@ -18,6 +18,9 @@
 #include <time.h>
 #include <dirent.h>     // for changename(argv[1], nfname, ".imr");
 #include <stdlib.h>
+#ifdef __FreeBSD__
+#include <unistd.h>     // getopt
+#endif
 
 #define I8   char
 #define UI8  unsigned I8
@@ -66,8 +69,7 @@ typedef struct {
                                                                                                       
 
 
-
-typedef struct  {
+typedef struct __attribute__ ((packed)) {
   char   szHeader[8];
   char   bIsIntelOrMotorola;
   double dVersionNumber     __attribute__ ((packed));
@@ -84,18 +86,18 @@ typedef struct  {
 
 // For EAARL DMARS Use.
   UI32   nrecs              __attribute__ ((packed));		// number of records;
-} IEX_HEADER __attribute__ ((packed));
+} IEX_HEADER;
 
-typedef struct {
+typedef struct __attribute__ ((packed)) {
   double   sow;
   long gx,gy,gz;
   long ax,ay,az; 
-} IEX_RECORD __attribute__ ((packed));
+} IEX_RECORD;
 
 
 IEX_HEADER hdr;
 
-configure_header_defaults() {
+void configure_header_defaults() {
   strcpy(hdr.szHeader, "$IMURAW");
   hdr.bIsIntelOrMotorola  =     0;
   hdr.dVersionNumber      =   2.0;
@@ -128,7 +130,7 @@ char *changename( char *ostr, char *nstr, char *txt ) {
 }
 
 
-week_rollover_warning() {
+void week_rollover_warning() {
   fprintf(stderr,"\
 \n********************************************************************\
 \n*****  Week Rollover occured!!!  The output will be truncated    ***\
@@ -145,7 +147,7 @@ week_rollover_warning() {
  return &i;
 }
 
-display_header() {
+void display_header() {
 #define MAXSTR 256
  char s[MAXSTR];
  double start_secs, end_secs, day_start_sow;
@@ -234,7 +236,7 @@ display_header() {
 */
 
 
-time_rec(FILE *f, int pass) {
+int time_rec(FILE *f, int pass) {
   struct timeval tv;
   struct tm *tm;
   int rv=1;
@@ -271,7 +273,7 @@ time_rec(FILE *f, int pass) {
   return rv;
 }
 
-dmars_rec( FILE *f, FILE *odf, int pass) {
+void dmars_rec( FILE *f, FILE *odf, int pass) {
  static int cnt = 0;
   UI8 xor, lxor;
   DMARS_DATA dmars;
@@ -325,7 +327,7 @@ if ( cnt++ == 0 )
   }
 }
 
-pass1( FILE *f ) {
+void pass1( FILE *f ) {
   I32 type;
   int rv=1;
   current_rec = 0;
@@ -349,7 +351,7 @@ pass1( FILE *f ) {
 }
 
 
-pass2( FILE *f, FILE *odf ) {
+void pass2( FILE *f, FILE *odf ) {
   I32 type;
   int rv=1;
   current_rec = 0;
@@ -360,14 +362,14 @@ pass2( FILE *f, FILE *odf ) {
       case 0x7e: dmars_rec(f,odf,2); break;
     }
     if ( rv == 0 ) {
-      week_rollover_warning;
+      week_rollover_warning();
       break;
     }
   } 
 
 }
 
-process_options( int argc, char *argv[] ) {
+void process_options( int argc, char *argv[] ) {
  extern char *optarg;
  extern int optind, opterr, optopt;
  char nfname[MAXNAMLEN];
@@ -433,7 +435,7 @@ process_options( int argc, char *argv[] ) {
 
 
 
-main( int argc, char *argv[] ) {
+int main( int argc, char *argv[] ) {
   UI32 idx;
   struct tm *tm;
   idf = stdin;
@@ -449,7 +451,7 @@ main( int argc, char *argv[] ) {
   idx = time_recs - toff;
   fprintf(stderr, "\
   Time Recs: %-5d          DMARS Recs: %-7d\n\
-sizeof(hdr): %-5d  sizeof(IEX_RECORD): %-7d\n", 
+sizeof(hdr): %-5lu  sizeof(IEX_RECORD): %-7lu\n", 
           time_recs, 
           dmars_recs,
           sizeof(hdr),

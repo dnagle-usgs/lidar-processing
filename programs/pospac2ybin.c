@@ -90,12 +90,12 @@ unsigned int cnt=0,
 char start[20];
 char notes[2048]={"No comments"};
 
-usage ( int rv ) {
+void usage ( int rv ) {
      printf("\n\nUsage:\npospac2ybin inputfile outputfile\n\n");
      exit(rv);
 }
 
-main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
 	unsigned int ft;
 	char str[256];
    if ( argc < 3 ) {

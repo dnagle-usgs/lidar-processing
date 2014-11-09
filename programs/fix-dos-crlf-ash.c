@@ -29,7 +29,7 @@ Usage:
 #include <stdio.h>
 unsigned char c,d,e;
 unsigned int repairs = 0;
-main() {
+int main() {
 
   while ( !feof(stdin) ) {		// do the following until end-of-file
     c = getchar() & 0xff ;		// get a single char

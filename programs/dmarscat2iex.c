@@ -26,6 +26,10 @@
 #include <sys/stat.h>
 #include <assert.h>
 #include <string.h>
+#ifdef __FreeBSD__
+#include <unistd.h>  // getopt
+#endif
+#include <math.h>
 #include "dmars.h"
 
 #define I8   char
@@ -59,7 +63,7 @@ NTPSOE ntpsoe = { 0x7d };
    checksumed.
 *******************************************************/
 
-typedef struct  {
+typedef struct __attribute__ ((packed))  {
   char   szHeader[8];
   char   bIsIntelOrMotorola;
   double dVersionNumber     __attribute__ ((packed));
@@ -76,13 +80,13 @@ typedef struct  {
 
 // For EAARL DMARS Use.
   UI32   nrecs              __attribute__ ((packed));           // number of records;
-} IEX_HEADER __attribute__ ((packed));
+} IEX_HEADER;
 
-typedef struct {
+typedef struct __attribute__ ((packed)) {
   double   sow;
   long gx,gy,gz;
   long ax,ay,az;
-} IEX_RECORD __attribute__ ((packed));
+} IEX_RECORD;
 
 IEX_RECORD iex;
 IEX_HEADER hdr;
@@ -91,7 +95,7 @@ IEX_HEADER hdr;
  double bsow, esow;
 
 
-configure_header_defaults() {
+void configure_header_defaults() {
   strcpy(hdr.szHeader, "$IMURAW");
   hdr.bIsIntelOrMotorola  =     0;
   hdr.dVersionNumber      =   2.0;
@@ -109,7 +113,7 @@ configure_header_defaults() {
 }
 
 
-display_header() {
+void display_header() {
 #define MAXSTR 256
  char s[MAXSTR];
  fprintf(stderr,
@@ -192,7 +196,7 @@ STATS stats, *sp;
 /**********************************************
 //
 **********************************************/
-verify_fn( char *fn, char *str ) {
+void verify_fn( char *fn, char *str ) {
           strncpy (fn, str, MAXLEN);
           if ((odf = fopen (fn, "r")))
             {
@@ -205,7 +209,7 @@ verify_fn( char *fn, char *str ) {
 /**********************************************
 //
 **********************************************/
-select_device( char *devfn ) {
+void select_device( char *devfn ) {
   char str[ MAXLEN ];
   struct stat sbuf;
   int i;
@@ -223,7 +227,7 @@ select_device( char *devfn ) {
 /**********************************************
 //
 **********************************************/
-fail( char *s ) {
+void fail( char *s ) {
   puts(s);
   exit(1);
 }
@@ -232,7 +236,7 @@ fail( char *s ) {
 /**********************************************
 //
 **********************************************/
-print_packet( ) {
+void print_packet( ) {
      printf("\n %6d %6d %c %6.3f %2x %6d %6d %6d %6d %6d %6d %02x:%02x", 
 	raw.data.tspo, 
         sp->dtis,
@@ -254,12 +258,14 @@ print_packet( ) {
 /**********************************************
 //
 **********************************************/
+#ifdef NOT_USED
 update_minmax( MINMAX *p, I16 v ) {
   if ( v < p->min ) p->min = v;
   if ( v > p->max ) p->max = v;
 }
+#endif
 
-at_eof( FILE *dev) {
+int at_eof( FILE *dev) {
   if ( is_a_device ) 
      return 0;
 
@@ -277,7 +283,7 @@ char q[ IQSZ ];
   Code to Queue input data so we can revert
   to it should the checksum be in error.
 **********************************************/
-qfgetc( FILE *f ) {
+int qfgetc( FILE *f ) {
  int c;
   if ( ii == oi ) {
     c = fgetc( f );
@@ -297,7 +303,7 @@ qfgetc( FILE *f ) {
 /**********************************************
 //
 **********************************************/
-main( int argc, char *argv[] ) {
+int main( int argc, char *argv[] ) {
   UI8 c, *p;
   char xxx;
   int i ;

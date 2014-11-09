@@ -35,7 +35,7 @@ char *changename( char *ostr, char *nstr, char *txt ) {
 }
 
 
-main( int argc, char *argv[] ) {    
+int main( int argc, char *argv[] ) {
  FILE *idf, *odf;
  float sod;
  int good=0, badcnt=0, line=0;
