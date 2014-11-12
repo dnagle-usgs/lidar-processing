@@ -895,7 +895,8 @@ func angle_of_incidence(x1, y1, z1, x2, y2, z2, rad=) {
   ht = abs(z1-z2);
   aoi = array(pi, dimsof(x1));
   w = where(ht);
-  aoi(w) = atan(dist(w), ht(w));
+  if(numberof(w))
+    aoi(w) = atan(dist(w), ht(w));
   return rad ? aoi : aoi * RAD2DEG;
 }
 
