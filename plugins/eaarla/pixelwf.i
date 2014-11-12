@@ -19,6 +19,11 @@ func expix_pixelwf_hook(env) {
   nearest = env.nearest;
   point = nearest.point;
 
+  // In case we are querying non-EAARL data
+  if(!has_member(point, "soe")) return env;
+  if(!has_member(point, "raster")) return env;
+  if(!has_member(point, "pulse")) return env;
+
   extern rn, pixelwfvars;
   if(pixelwfvars.selection.missionload)
     mission, load_soe_rn, point.soe, point.raster;
