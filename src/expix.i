@@ -33,7 +33,7 @@ func expix_pointcloud(vname, radius=, win=, mode=) {
         if(d(min) <= radius) {
           distance = d(min);
           index = w(d(mnx));
-          point = data(index);
+          point = data(index,);
           xp = x(index);
           yp = y(index);
         }
@@ -117,10 +117,18 @@ func expix_show(nearest) {
   }
 
   write, format="%s", "\n";
-  write, format="Timestamp: %s\n", soe2iso8601(point.soe);
-  write, format="soe= %.4f ; sod= %.4f\n", point.soe, soe2sod(point.soe);
-  write, format="ptime= %d\n", ptime;
-  write, format="Corresponds to %s(%d)\n", vname, nearest.index;
+  if(has_member(point, "soe")) {
+    write, format="Timestamp: %s\n", soe2iso8601(point.soe);
+    write, format="soe= %.4f ; sod= %.4f\n", point.soe, soe2sod(point.soe);
+  }
+  if(has_member(point, "ptime")) {
+    write, format="ptime= %d\n", ptime;
+  }
+  if(is_numerical(point)) {
+    write, format="Corresponds to %s(%d,)\n", vname, nearest.index;
+  } else {
+    write, format="Corresponds to %s(%d)\n", vname, nearest.index;
+  }
 
   // calculate distance along surface plane from mirror point
   local fx, fy, fz, mx, my, mz;
