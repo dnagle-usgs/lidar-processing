@@ -69,6 +69,7 @@ func expix_pixelwf_hook(env) {
   }
 
   pixelwf_plot;
+  return env;
 }
 
 func pixelwf_plot(void) {
