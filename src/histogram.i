@@ -50,12 +50,13 @@ func hist_data(data, &refs, &hist, mode=, binsize=) {
 }
 
 func hist_data_plot(data, mode=, binsize=, normalize=, win=, dofma=,
-logy=, histline=, histbar=, tickmarks=, zeroline=, meanline=, ci95lines=,
-kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=, legend=) {
+logy=, histline=, histbar=, tickmarks=, zeroline=, meanline=, medianline=,
+ci95lines=, kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=,
+ytitle=, legend=) {
 /* DOCUMENT hd = hist_data_plot(data, mode=, binsize=, normalize=, win=,
   dofma=, logy=, histline=, histbar=, tickmarks=, zeroline=, meanline=,
-  ci95lines=, kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=,
-  ytitle=, legend=)
+  medianline=, ci95lines=, kdeline=, kernel=, bandwidth=, kdesample=, title=,
+  xtitle=, ytitle=, legend=)
 
   Creates a histogram for data's elevations, then plots it. Optionally, it can
   also include a kernel density estimation plot. (See kde_data.)
@@ -119,6 +120,8 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=, legend=) {
         zeroline="hide" (default)
     meanline= Plots a vertical line at the mean.
         meanline="hide" (default)
+    medianline= Plots a vertical line at the median.
+        medianline="hide" (default)
     ci95lines= Plots vertical lines about the 95% confidence interval.
         ci95lines="hide"
     kdeline= Line plotted for the kernel density estimate.
@@ -166,6 +169,7 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=, legend=) {
   default, tickmarks, "hide";
   default, zeroline, "hide";
   default, meanline, "hide";
+  default, medianline, "hide";
   default, ci95lines, "hide";
   default, kdeline, "hide";
   default, legend, 1;
@@ -248,6 +252,10 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=, legend=) {
   parse_plopts, meanline, type, color, size;
   if(type != "hide")
     plvline, z(avg), 0, ymax, type=type, color=color, width=size;
+
+  parse_plopts, medianline, type, color, size;
+  if(type != "hide")
+    plvline, median(z), 0, ymax, type=type, color=color, width=size;
 
   parse_plopts, ci95lines, type, color, size;
   if(type != "hide") {
