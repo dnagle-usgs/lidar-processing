@@ -212,7 +212,7 @@ ytitle=, legend=) {
       density *= double(numberof(z));
     x = span(sample(1), sample(0), numberof(sample) * 8 - 7);
     y = spline(density, sample, x);
-    plg, y, x, color=color, width=width, type=type;
+    plg, y, x, color=color, width=size, type=type;
     grow, display, swrite(format="bandwidth=%g", h);
   }
 
