@@ -51,11 +51,11 @@ func hist_data(data, &refs, &hist, mode=, binsize=) {
 
 func hist_data_plot(data, mode=, binsize=, normalize=, win=, dofma=,
 logy=, histline=, histbar=, tickmarks=, zeroline=, meanline=, ci95lines=,
-kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
+kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=, legend=) {
 /* DOCUMENT hd = hist_data_plot(data, mode=, binsize=, normalize=, win=,
   dofma=, logy=, histline=, histbar=, tickmarks=, zeroline=, meanline=,
   ci95lines=, kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=,
-  ytitle=)
+  ytitle=, legend=)
 
   Creates a histogram for data's elevations, then plots it. Optionally, it can
   also include a kernel density estimation plot. (See kde_data.)
@@ -99,6 +99,9 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
       logarithmic.
         logy=0   Normal linear scale (default)
         logy=1   Logarithmic scale
+    legend= Specify whether to include a legend with parameters.
+        legend=0    Disable
+        legend=1    Include (default)
 
   Specific plot options:
   These options each take a string as a value. The string should be formatted
@@ -165,6 +168,7 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
   default, meanline, "hide";
   default, ci95lines, "hide";
   default, kdeline, "hide";
+  default, legend, 1;
   default, win, max(0, current_window());
 
   if(is_numerical(data) && dimsof(data)(1) == 1)
@@ -251,7 +255,7 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
     plvline, CI, 0, ymax, type=type, color=color, width=size;
   }
 
-  if(!is_void(display)) {
+  if(legend && !is_void(display)) {
     vp = viewport();
     display = strjoin(display, "\n");
     plt, display, vp(1) + .01, vp(4) - .01, justify="LT", height=12;
