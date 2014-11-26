@@ -506,3 +506,45 @@ func region_limits(region, win=, geo=, expand=, square=) {
     window_select, wbkp;
   }
 }
+
+func data_in_shp(data, shp, mode=, idx=) {
+/* DOCUMENT data_in_shp(data, shp, mode=, idx=)
+  Returns the points in data that correspond to shp.
+
+  Parameters:
+    data: Input point cloud
+    shp: Shapefile array
+  Options:
+    mode= An EAARL data mode
+    idx= By default points are returned. Use idx=1 to return the indices
+      instead.
+*/
+  local x, y, z;
+  data2xyz, data, x, y, z, mode=mode;
+  keep = array(0, dimsof(x));
+  n = numberof(shp);
+  for(i = 1; i <= n; i++) {
+    w = testPoly(*shp(i), x, y);
+    if(numberof(w)) keep(w) = 1;
+  }
+  w = where(keep);
+  return idx ? w : data(w,..);
+}
+
+func data_in_region(data, region, mode=, idx=, geo=) {
+/* DOCUMENT data_in_region(data, region, mode=, idx=, geo=)
+  Returns the points in data that correspond to region.
+
+  Parameters:
+    data: Input point cloud
+    region: A region as per region_to_shp
+  Options:
+    mode= An EAARL data mode
+    idx= By default points are returend. Use idx=1 to return the indices
+      instead.
+    geo= By default, region is forced to UTM. Use geo=1 to force to geographic
+      coordinates instead.
+*/
+  shp = region_to_shp(region, utm=!geo, ll=geo);
+  return data_in_shp(data, shp, mode=mode, idx=idx);
+}
