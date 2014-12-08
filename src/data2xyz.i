@@ -286,7 +286,7 @@ func data2xyz_zgrid(data, &x, &y, &z) {
 func data2xyz_dynamic_xy_fields(data, &xfield, &yfield, mode=) {
   xfield = yfield = [];
 
-  if(anyof(["ba","be","ch","de","lint"] == mode)) {
+  if(anyof(["ba","be","ch","de","depth","lint"] == mode)) {
     if(has_member(data, "lx") && has_member(data, "ly")) {
       xfield = "lx";
       yfield = "ly";
@@ -472,20 +472,18 @@ func xyz2data_dynamic(x, y, z, &data, mode=) {
 func data2xyz_legacy_xy_fields(data, &xfield, &yfield, mode=) {
   xfield = yfield = [];
 
-  if(
-    anyof(["ba","ch","de","fint","fs"] == mode) ||
-    ("lint"==mode && !has_member(data,"least"))
-  ) {
-    if(has_member(data, "east") && has_member(data, "north")) {
-      xfield = "east";
-      yfield = "north";
-      return;
-    }
-  }
-  if(anyof(["lint","be"] == mode)) {
+  // ba and depth are for support of bathy in VEG__
+  if(anyof(["lint","be","ba","de","depth"] == mode)) {
     if(has_member(data, "least") && has_member(data, "lnorth")) {
       xfield = "least";
       yfield = "lnorth";
+      return;
+    }
+  }
+  if(anyof(["ba","ch","de","fint","fs","lint"] == mode)) {
+    if(has_member(data, "east") && has_member(data, "north")) {
+      xfield = "east";
+      yfield = "north";
       return;
     }
   }
@@ -524,7 +522,7 @@ func data2xyz_legacy_z_field(data, mode) {
     return "elevation";
   if(mode == "be" && has_member(data, "lelv"))
     return "lelv";
-  if(mode == "de" && has_member(data, "depth"))
+  if(anyof(mode == ["de","depth"]) && has_member(data, "depth"))
     return "depth";
   if(mode == "fint") {
     if(has_member(data, "intensity"))
@@ -546,7 +544,7 @@ func data2xyz_legacy_z(data, &z, mode=, native=) {
   field = data2xyz_legacy_z_field(data, mode);
   if(field) {
     z = get_member(data, field);
-    if(!native && anyof(["ba","be","ch","de","fs","mir"] == mode))
+    if(!native && anyof(["ba","be","ch","de","depth","fs","mir"] == mode))
       z *= 0.01;
     return;
   }
@@ -570,6 +568,17 @@ func data2xyz_legacy_z(data, &z, mode=, native=) {
       return;
     }
   }
+
+  // For VEG__ treated as bathy
+  if(mode == "de" || mode == "depth") {
+    field1 = data2xyz_legacy_z_field(data, "fs");
+    field2 = data2xyz_legacy_z_field(data, "be");
+    if(field1 && field2) {
+      z = get_member(data, field2) - get_member(data, field1);
+      if(!native) z *= 0.01;
+      return;
+    }
+  }
 }
 
 func data2xyz_legacy(data, &x, &y, &z, mode=, native=) {
@@ -585,7 +594,7 @@ func xyz2data_legacy(x, y, z, &data, mode=, native=) {
   if(!native) {
     x = long(x * 100);
     y = long(y * 100);
-    if(anyof(["ba","be","ch","de","fs","mir"] == mode))
+    if(anyof(["ba","be","ch","de","depth","fs","mir"] == mode))
       z = long(z * 100);
   }
 
@@ -622,6 +631,18 @@ func xyz2data_legacy(x, y, z, &data, mode=, native=) {
         set_member, data, field2, get_member(data, field1) - z;
       else
         set_member, data, field1, get_member(data, field2) + z;
+      return;
+    }
+  }
+
+  // For VEG__ treated as bathy
+  if(mode == "de" || mode == "depth") {
+    field1 = data2xyz_legacy_z_field(data, "fs");
+    field2 = data2xyz_legacy_z_field(data, "be");
+    if(field1 && field2) {
+      set_member, data, xfield, x;
+      set_member, data, yfield, y;
+      set_member, data, field2, get_member(data, field1) + z;
       return;
     }
   }
