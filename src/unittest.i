@@ -80,7 +80,6 @@ func ut_run(fn) {
   ut_res = [];
   ut_msg = [];
   ut_sec = [];
-  ut_current_section = string(0);
 
   write, "";
   res = ut_run_helper(fn);
