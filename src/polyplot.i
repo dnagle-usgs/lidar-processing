@@ -415,6 +415,20 @@ func polyplot_exists(group, name, empty=) {
 }
 polyplot, exists=polyplot_exists;
 
+save, scratch, polyplot_names;
+func polyplot_names(group) {
+/* DOCUMENT groups = polyplot(names,);
+  -or- names = polyplot(names, "<group>");
+
+  Retrieves a list of group names or a list of poly names for a group.
+*/
+  use, data;
+  if(is_void(group)) return data(*,);
+  if(!data(*,group)) return [];
+  return data(noop(group),*,);
+}
+polyplot, names=polyplot_names;
+
 save, scratch, polyplot_get;
 func polyplot_get(group, name) {
 /* DOCUMENT shp = polyplot(get,);
