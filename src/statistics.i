@@ -139,8 +139,8 @@ func sample_sd(x) {
 /* DOCUMENT sample_sd(x)
   Returns the sample standard deviation of X. This is a slightly different
   formula from the standard deviation. Standard deviation is the square root of
-  the averate value of the sums of the differences between the values X and the
-  mean X. For sample standard deviation, instead of taking an average (<value
+  the average value of the sums of the differences between the values X and the
+  mean X. For sample standard deviation, instead of taking an average (<value>
   divided by numberof(samples), the value is divided by one less than the
   number of samples (<value> divided by numberof(samples)-1).
 
