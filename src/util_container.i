@@ -283,13 +283,17 @@ func sanitize_vname(&vname) {
   vname = strchar(ov(:o));
 }
 
-func pbd_save(file, vname, data, empty=) {
+func pbd_save(file, vname, data, empty=, extra=) {
 /* DOCUMENT pbd_save, file, vname, data
   This creates the pbd "file" using variable name "vname" to store "data". If
   the file already exists, it will be overwritten.
 
   If you try to save an empty data/void variable, you'll get an error. If you
   set empty=1, a 0-byte empty file will be created instead.
+
+  If you wish to save additionable variables to the file, supply them in an
+  oxy group through extra=. (An empty data/void variable will either result in
+  an error or a 0-byte empty file, even if extra= is specified.)
 
   SEE ALSO: pbd_append pbd_load
 */
@@ -306,7 +310,13 @@ func pbd_save(file, vname, data, empty=) {
     }
   }
 
-  f = createb(file, i86_primitives);
+  if(is_obj(extra)) {
+    obj2pbd, extra, file;
+    f = updateb(file);
+  } else {
+    f = createb(file, i86_primitives);
+  }
+
   save, f, vname;
   add_variable, f, -1, vname, structof(data), dimsof(data);
   get_member(f, vname) = data;
