@@ -371,3 +371,16 @@ func job_shapefile_extract(conf) {
 
   shapefile_extract_pbd, opts=conf;
 }
+
+func job_depth_adjust(conf) {
+/* DOCUMENT job_depth_adjust, conf
+  This is a wrapper around pbd_depth_adjust.
+*/
+  require, "eaarl.i";
+  keyrequire, conf, ifn, m, b, ofn;
+
+  save, conf, m=atod(conf.m);
+  save, conf, b=atod(conf.b);
+
+  pbd_depth_adjust, opts=conf;
+}
