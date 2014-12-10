@@ -1,7 +1,26 @@
 
-func depth_adjust(&data, m, b) {
-/* DOCUMENT depth_adjust, data, m, b
-  -or- result = depth_adjust(data, m, b)
+func depth_adjust_load_params(conf, &m, &b) {
+/* DOCUMENT depth_adjust_load_params, conf, &m, &b;
+  Helper function for depth_adjust functions. This loads the m and b parameters
+  from the conf file, if it exists. (Or if it's an oxy group, restores them
+  from it.) However, if m or b are already defined, the existing values take
+  precedence. The values for m and b are also coerced to doubles.
+*/
+  if(is_string(conf)) {
+    conf = json_decode(rdfile(conf), objects="");
+  }
+  if(is_obj(conf)) {
+    if(!is_void(m)) save, conf, m;
+    if(!is_void(b)) save, conf, b;
+    restore, conf, m, b;
+  }
+  m = double(m);
+  b = double(b);
+}
+
+func depth_adjust(&data, m, b, conf=) {
+/* DOCUMENT depth_adjust, data, m, b, conf=
+  -or- result = depth_adjust(data, m, b, conf=)
 
   Applies a linear adjustment to the depth in the given data array. The depth
   will be adjusted as such:
@@ -10,9 +29,16 @@ func depth_adjust(&data, m, b) {
 
   where m and b are provided and z is the original depth in meters. Depth
   values are negative: 1 meter below the surface is -1.
+
+  If conf= is provided, it should be the path to a conf file containing the
+  parameters m and b stored in JSON format. If m or mb are provided in addition
+  to this, then the parameters provided directly take precedence over the ones
+  in the conf file.
 */
   local x, y, z;
   data2xyz, data, x, y, z, mode="depth";
+
+  depth_adjust_load_params, conf, m, b;
 
   z = m * z + b;
 
@@ -26,8 +52,8 @@ func depth_adjust(&data, m, b) {
   else return result;
 }
 
-func pbd_depth_adjust(ifn, m, b, ofn=, vname_suffix=, opts=) {
-/* DOCUMENT pbd_depth_adjust, ifn, m, b, ofn=, vname_suffix=, opts=
+func pbd_depth_adjust(ifn, m, b, ofn=, vname_suffix=, conf=, opts=) {
+/* DOCUMENT pbd_depth_adjust, ifn, m, b, ofn=, vname_suffix=, conf=, opts=
   Wrapper around depth_adjust that adjusts the data in a pbd and outputs it to
   a new file.
 
@@ -41,10 +67,12 @@ func pbd_depth_adjust(ifn, m, b, ofn=, vname_suffix=, opts=) {
     ofn= Output file to create. Default is ifn + "_da.pbd"
     vname_suffix= If specified, this is appended to the variable name for the
       output file. Otherwise, the variable name is kept as is.
+    conf= Path to a conf file containing the parameters m and b in JSON format.
+      See depth_adjust for details.
     opts= Oxy group that provides an alternative interface for providing
       function arguments/options.
 */
-  restore_if_exists, opts, ifn, m, b, ofn, vname_suffix;
+  restore_if_exists, opts, ifn, m, b, ofn, vname_suffix, conf;
   if(is_void(ofn)) ofn = file_rootname(ifn) + "_da.pbd";
   data = pbd_load(ifn, , vname);
   if(!is_void(vname_suffix)) {
@@ -52,15 +80,16 @@ func pbd_depth_adjust(ifn, m, b, ofn=, vname_suffix=, opts=) {
       vname_suffix = "_" + vname_suffix;
     vname += vname_suffix;
   }
+  depth_adjust_load_params, conf, m, b;
   depth_adjust, data, m, b;
   comment = swrite(format="depth_adjust: m=%.15g; b=%.15g", m, b);
   pbd_save, ofn, vname, data, extra=save(comment), empty=1;
 }
 
 func batch_depth_adjust(dir, m, b, outdir=, searchstr=, vname_suffix=,
-file_suffix=) {
+file_suffix=, conf=) {
 /* DOCUMENT batch_depth_adjust, dir, m, b, outdir=, searchstr=, vname_suffix=,
-   file_suffix=
+   file_suffix=, conf=
 
   Batch command for applying depth_adjust.
 
@@ -82,12 +111,13 @@ file_suffix=) {
       have "_" prepended and ".pbd" appended if they are not present.
         file_suffix="_da.pbd"     Default
         file_suffix="da"          Same outcome as default
+    conf= Path to a conf file containing the parameters m and b in JSON format.
+      See depth_adjust for details.
 */
   default, searchstr, "*.pbd";
   default, file_suffix, "_da.pbd";
 
-  m = double(m);
-  b = double(b);
+  depth_adjust_load_params, conf, m, b;
 
   // Locate input
   files = find(dir, searchstr=searchstr);
@@ -108,11 +138,11 @@ file_suffix=) {
 
   // Build makeflow conf
   options = save(string(0), [], m, b, vname_suffix);
-  conf = save();
+  mf = save();
   for(i = 1; i <= count; i++) {
     input = files(i);
     output = outfiles(i);
-    save, conf, string(0), save(
+    save, mf, string(0), save(
       command="job_depth_adjust",
       input, output,
       options = obj_merge(options, save(
@@ -145,6 +175,8 @@ file_suffix=) {
   if(!is_void(vname_suffix))
     write, f, format="vname_suffix: %s\n", vname_suffix;
   write, f, format="file_suffix: %s\n", file_suffix;
+  if(!is_void(conf))
+    write, f, format="conf: %s\n", conf;
 
   write, f, format="\nOutput files:%s", "\n";
   tails = file_tail(outfiles);
@@ -152,5 +184,5 @@ file_suffix=) {
   close, f;
 
   // Do work
-  makeflow_run, conf;
+  makeflow_run, mf;
 }
