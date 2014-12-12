@@ -18,9 +18,9 @@ func depth_adjust_load_params(conf, &m, &b) {
   b = double(b);
 }
 
-func depth_adjust(&data, m, b, conf=) {
-/* DOCUMENT depth_adjust, data, m, b, conf=
-  -or- result = depth_adjust(data, m, b, conf=)
+func depth_adjust(&data, m, b, conf=, verbose=) {
+/* DOCUMENT depth_adjust, data, m, b, conf=, verbose=
+  -or- result = depth_adjust(data, m, b, conf=, verbose=)
 
   Applies a linear adjustment to the depth in the given data array. The depth
   will be adjusted as such:
@@ -35,10 +35,14 @@ func depth_adjust(&data, m, b, conf=) {
   to this, then the parameters provided directly take precedence over the ones
   in the conf file.
 */
+  default, verbose, 1;
   local x, y, z;
   data2xyz, data, x, y, z, mode="depth";
 
   depth_adjust_load_params, conf, m, b;
+  if(verbose) {
+    write, format="depth_adjust: m=%.15g; b=%.15g\n", m, b;
+  }
 
   z = m * z + b;
 
@@ -81,7 +85,7 @@ func pbd_depth_adjust(ifn, m, b, ofn=, vname_suffix=, conf=, opts=) {
     vname += vname_suffix;
   }
   depth_adjust_load_params, conf, m, b;
-  depth_adjust, data, m, b;
+  depth_adjust, data, m, b, verbose=0;
   comment = swrite(format="depth_adjust: m=%.15g; b=%.15g", m, b);
   pbd_save, ofn, vname, data, extra=save(comment), empty=1;
 }
