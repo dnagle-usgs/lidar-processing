@@ -182,6 +182,8 @@ proc menu_tools_experimental mb {
     menu $mb
     $mb add command {*}[menulabel "&Pixel Plotting"] \
             -command {::l1pro::plpix::plot $::win_no}
+    $mb add command {*}[menulabel "&Depth Adjust"] \
+            -command ::l1pro::depth_adjust::gui
     return $mb
 }
 
