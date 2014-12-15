@@ -69,17 +69,20 @@ func pbd_depth_adjust(ifn, m, b, ofn=, vname_suffix=, conf=, opts=) {
     m, b: Parameters as for depth_adjust.
   Options:
     ofn= Output file to create. Default is ifn + "_da.pbd"
-    vname_suffix= If specified, this is appended to the variable name for the
-      output file. Otherwise, the variable name is kept as is.
+    vname_suffix= Specifies a suffix to append to the output variable name. It
+      will have "_" prepended if it is not present.
+        vname_suffix="_cal"       Default
+        vname_suffix=""           Special case: no suffix will be added
     conf= Path to a conf file containing the parameters m and b in JSON format.
       See depth_adjust for details.
     opts= Oxy group that provides an alternative interface for providing
       function arguments/options.
 */
   restore_if_exists, opts, ifn, m, b, ofn, vname_suffix, conf;
-  if(is_void(ofn)) ofn = file_rootname(ifn) + "_da.pbd";
+  default, vname_suffix, "_cal";
+  if(is_void(ofn)) ofn = file_rootname(ifn) + "_cal.pbd";
   data = pbd_load(ifn, , vname);
-  if(!is_void(vname_suffix)) {
+  if(strlen(vname_suffix)) {
     if(strpart(vname_suffix, 1:1) != "_")
       vname_suffix = "_" + vname_suffix;
     vname += vname_suffix;
@@ -109,17 +112,20 @@ file_suffix=, conf=) {
       alongside input files.
     searchstr= Search string of files to process.
         searchstr="*.pbd"     Default
-    vname_suffix= If specified, this is appended to the variable name for the
-      output file. Otherwise, the variable name is kept as is.
+    vname_suffix= Specifies a suffix to append to the output variable name. It
+      will have "_" prepended if it is not present.
+        vname_suffix="_cal"       Default
+        vname_suffix=""           Special case: no suffix will be added
     file_suffix= Specifies a suffix to append to the output file name. It will
       have "_" prepended and ".pbd" appended if they are not present.
-        file_suffix="_da.pbd"     Default
-        file_suffix="da"          Same outcome as default
+        file_suffix="_cal.pbd"    Default
+        file_suffix="cal"         Same outcome as default
     conf= Path to a conf file containing the parameters m and b in JSON format.
       See depth_adjust for details.
 */
   default, searchstr, "*.pbd";
-  default, file_suffix, "_da.pbd";
+  default, vname_suffix, "_cal"
+  default, file_suffix, "_cal.pbd";
 
   depth_adjust_load_params, conf, m, b;
 
@@ -176,8 +182,7 @@ file_suffix=, conf=) {
   if(!is_void(outdir))
     write, f, format="outdir: %s\n", outdir;
   write, f, format="searchstr: %s\n", searchstr;
-  if(!is_void(vname_suffix))
-    write, f, format="vname_suffix: %s\n", vname_suffix;
+  write, f, format="vname_suffix: %s\n", vname_suffix;
   write, f, format="file_suffix: %s\n", file_suffix;
   if(!is_void(conf))
     write, f, format="conf: %s\n", conf;
