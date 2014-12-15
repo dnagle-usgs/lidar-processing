@@ -22,7 +22,7 @@ namespace eval ::l1pro::depth_adjust {
         toplevel $w
 
         wm resizable $w 1 0
-        wm protocol $w ${ns}::cancel
+        wm protocol $w ${ns}::close
 
         set v::invar $::pro_var
 
@@ -56,14 +56,16 @@ namespace eval ::l1pro::depth_adjust {
                 -command ${ns}::browse
         ttk::button $f.btnApply -text "Apply" \
                 -command ${ns}::apply
-        ttk::button $f.btnCancel -text "Cancel" \
-                -command ${ns}::cancel
+        ttk::button $f.btnApplyClose -text "Apply & Close" \
+                -command ${ns}::apply_and_close
+        ttk::button $f.btnCancel -text "Close" \
+                -command ${ns}::close
 
         ::mixin::statevar $f.cboOutvar \
                 -statemap {0 disabled 1 normal} \
                 -statevariable ${ns}::v::custom_outvar
 
-        pack $f.btnApply $f.btnCancel \
+        pack $f.btnApply $f.btnApplyClose $f.btnCancel \
                 -in $f.f1 -side left -padx 2
 
         grid $f.lblConf $f.entConf $f.btnConfBrowse -padx 2 -pady 1
@@ -107,16 +109,23 @@ namespace eval ::l1pro::depth_adjust {
                     -icon error \
                     -type ok \
                     -message "You must select a valid conf file."
-            return
+            return 0
         }
 
         set cmd "$v::outvar = depth_adjust($v::invar, conf=\"$v::conf\")"
         exp_send "$cmd;\r"
+        append_varlist $v::outvar
 
-        destroy $v::top
+        return 1
     }
 
-    proc cancel {} {
+    proc apply_and_close {} {
+        if {[apply]} {
+            close
+        }
+    }
+
+    proc close {} {
         set ns [namespace current]
         trace remove variable ${ns}::v::invar write \
                 ${ns}::outvar_refresh
