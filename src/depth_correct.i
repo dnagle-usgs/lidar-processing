@@ -1,10 +1,10 @@
 
-func depth_adjust_load_params(conf, &m, &b) {
-/* DOCUMENT depth_adjust_load_params, conf, &m, &b;
-  Helper function for depth_adjust functions. This loads the m and b parameters
-  from the conf file, if it exists. (Or if it's an oxy group, restores them
-  from it.) However, if m or b are already defined, the existing values take
-  precedence. The values for m and b are also coerced to doubles.
+func depth_correct_load_params(conf, &m, &b) {
+/* DOCUMENT depth_correct_load_params, conf, &m, &b;
+  Helper function for depth_correct functions. This loads the m and b
+  parameters from the conf file, if it exists. (Or if it's an oxy group,
+  restores them from it.) However, if m or b are already defined, the existing
+  values take precedence. The values for m and b are also coerced to doubles.
 */
   if(is_string(conf)) {
     conf = json_decode(rdfile(conf), objects="");
@@ -18,12 +18,12 @@ func depth_adjust_load_params(conf, &m, &b) {
   b = double(b);
 }
 
-func depth_adjust(&data, m, b, conf=, verbose=) {
-/* DOCUMENT depth_adjust, data, m, b, conf=, verbose=
-  -or- result = depth_adjust(data, m, b, conf=, verbose=)
+func depth_correct(&data, m, b, conf=, verbose=) {
+/* DOCUMENT depth_correct, data, m, b, conf=, verbose=
+  -or- result = depth_correct(data, m, b, conf=, verbose=)
 
-  Applies a linear adjustment to the depth in the given data array. The depth
-  will be adjusted as such:
+  Applies a linear correction to the depth in the given data array. The depth
+  will be corrected as such:
 
     znew = m * z + b
 
@@ -39,9 +39,9 @@ func depth_adjust(&data, m, b, conf=, verbose=) {
   local x, y, z;
   data2xyz, data, x, y, z, mode="depth";
 
-  depth_adjust_load_params, conf, m, b;
+  depth_correct_load_params, conf, m, b;
   if(verbose) {
-    write, format="depth_adjust: m=%.15g; b=%.15g\n", m, b;
+    write, format="depth_correct: m=%.15g; b=%.15g\n", m, b;
   }
 
   z = m * z + b;
@@ -56,17 +56,17 @@ func depth_adjust(&data, m, b, conf=, verbose=) {
   else return result;
 }
 
-func pbd_depth_adjust(ifn, m, b, ofn=, vname_suffix=, conf=, opts=) {
-/* DOCUMENT pbd_depth_adjust, ifn, m, b, ofn=, vname_suffix=, conf=, opts=
-  Wrapper around depth_adjust that adjusts the data in a pbd and outputs it to
-  a new file.
+func pbd_depth_correct(ifn, m, b, ofn=, vname_suffix=, conf=, opts=) {
+/* DOCUMENT pbd_depth_correct, ifn, m, b, ofn=, vname_suffix=, conf=, opts=
+  Wrapper around depth_correct that corrects the data in a pbd and outputs it
+  to a new file.
 
-  In addition to containing the adjusted data, the output file will also have a
-  comment variable that describes the adjustment made.
+  In addition to containing the corrected data, the output file will also have
+  a comment variable that describes the correction made.
 
   Parameters:
     ifn: Input file to process.
-    m, b: Parameters as for depth_adjust.
+    m, b: Parameters as for depth_correct.
   Options:
     ofn= Output file to create. Default is ifn + "_da.pbd"
     vname_suffix= Specifies a suffix to append to the output variable name. It
@@ -74,7 +74,7 @@ func pbd_depth_adjust(ifn, m, b, ofn=, vname_suffix=, conf=, opts=) {
         vname_suffix="_cal"       Default
         vname_suffix=""           Special case: no suffix will be added
     conf= Path to a conf file containing the parameters m and b in JSON format.
-      See depth_adjust for details.
+      See depth_correct for details.
     opts= Oxy group that provides an alternative interface for providing
       function arguments/options.
 */
@@ -87,26 +87,26 @@ func pbd_depth_adjust(ifn, m, b, ofn=, vname_suffix=, conf=, opts=) {
       vname_suffix = "_" + vname_suffix;
     vname += vname_suffix;
   }
-  depth_adjust_load_params, conf, m, b;
-  depth_adjust, data, m, b, verbose=0;
-  comment = swrite(format="depth_adjust: m=%.15g; b=%.15g", m, b);
+  depth_correct_load_params, conf, m, b;
+  depth_correct, data, m, b, verbose=0;
+  comment = swrite(format="depth_correct: m=%.15g; b=%.15g", m, b);
   pbd_save, ofn, vname, data, extra=save(comment), empty=1;
 }
 
-func batch_depth_adjust(dir, m, b, outdir=, searchstr=, vname_suffix=,
+func batch_depth_correct(dir, m, b, outdir=, searchstr=, vname_suffix=,
 file_suffix=, conf=) {
-/* DOCUMENT batch_depth_adjust, dir, m, b, outdir=, searchstr=, vname_suffix=,
+/* DOCUMENT batch_depth_correct, dir, m, b, outdir=, searchstr=, vname_suffix=,
    file_suffix=, conf=
 
-  Batch command for applying depth_adjust.
+  Batch command for applying depth_correct.
 
-  In addition to applying depth_adjust, this will also create a log file. The
+  In addition to applying depth_correct, this will also create a log file. The
   log file will be located in <outdir>/logs (if outdir= is provided) or
-  <dir>/logs. The log file name will be YYYYMMDD_HHMMSS_depth_adjust.log.
+  <dir>/logs. The log file name will be YYYYMMDD_HHMMSS_depth_correct.log.
 
   Parameters:
     dir: Input directory to process.
-    m, b: Parameters as for depth_adjust.
+    m, b: Parameters as for depth_correct.
   Options:
     outdir= Directory to put output. If omitted, output files are placed
       alongside input files.
@@ -121,13 +121,13 @@ file_suffix=, conf=) {
         file_suffix="_cal.pbd"    Default
         file_suffix="cal"         Same outcome as default
     conf= Path to a conf file containing the parameters m and b in JSON format.
-      See depth_adjust for details.
+      See depth_correct for details.
 */
   default, searchstr, "*.pbd";
   default, vname_suffix, "_cal"
   default, file_suffix, "_cal.pbd";
 
-  depth_adjust_load_params, conf, m, b;
+  depth_correct_load_params, conf, m, b;
 
   // Locate input
   files = find(dir, searchstr=searchstr);
@@ -153,7 +153,7 @@ file_suffix=, conf=) {
     input = files(i);
     output = outfiles(i);
     save, mf, string(0), save(
-      command="job_depth_adjust",
+      command="job_depth_correct",
       input, output,
       options = obj_merge(options, save(
         ifn=input,
@@ -167,10 +167,10 @@ file_suffix=, conf=) {
   logdir = is_void(outdir) ? dir : outdir;
   logdir = file_join(logdir, "logs");
   ts = regsub(" ", regsub("-|:", soe2iso8601(now), "", all=1), "_");
-  logfn = file_join(logdir, ts+"_depth_adjust.log");
+  logfn = file_join(logdir, ts+"_depth_correct.log");
   mkdirp, logdir;
   f = open(logfn, "w");
-  write, f, format="Depth adjustment log file%s", "\n";
+  write, f, format="Depth correction log file%s", "\n";
   write, f, format="%s\n", soe2iso8601(now);
   write, f, format="Processed by %s on %s\n\n", get_user(), get_host();
 

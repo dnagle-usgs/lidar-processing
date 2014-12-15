@@ -111,7 +111,7 @@ require, "data2xyz.i";
 require, "data_rgn_selector.i";
 require, "data_segments.i";
 require, "datum_converter.i";
-require, "depth_adjust.i";
+require, "depth_correct.i";
 require, "dir.i";
 require, "dirload.i";
 require, "distributions.i";

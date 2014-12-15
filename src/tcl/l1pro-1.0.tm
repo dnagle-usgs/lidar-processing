@@ -10,7 +10,7 @@ namespace eval ::l1pro {
 
 package require l1pro::ascii
 package require l1pro::asciixyz
-package require l1pro::depth_adjust
+package require l1pro::depth_correct
 package require l1pro::dirload
 package require l1pro::expix
 package require l1pro::file

@@ -1,10 +1,10 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
-package provide l1pro::depth_adjust 1.0
+package provide l1pro::depth_correct 1.0
 
-if {![namespace exists ::l1pro::depth_adjust]} {
-    namespace eval ::l1pro::depth_adjust::v {
-        variable top .l1wid.depthadjust
+if {![namespace exists ::l1pro::depth_correct]} {
+    namespace eval ::l1pro::depth_correct::v {
+        variable top .l1wid.depthcorrect
 
         variable invar workdata
         variable outvar workdata
@@ -14,7 +14,7 @@ if {![namespace exists ::l1pro::depth_adjust]} {
     }
 }
 
-namespace eval ::l1pro::depth_adjust {
+namespace eval ::l1pro::depth_correct {
     proc gui {} {
         set ns [namespace current]
         set w $v::top
@@ -112,7 +112,7 @@ namespace eval ::l1pro::depth_adjust {
             return 0
         }
 
-        set cmd "$v::outvar = depth_adjust($v::invar, conf=\"$v::conf\")"
+        set cmd "$v::outvar = depth_correct($v::invar, conf=\"$v::conf\")"
         exp_send "$cmd;\r"
         append_varlist $v::outvar
 
