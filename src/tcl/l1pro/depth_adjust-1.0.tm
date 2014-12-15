@@ -125,7 +125,7 @@ namespace eval ::l1pro::depth_adjust {
 
     proc outvar_refresh {args} {
         if {!$v::custom_outvar} {
-            set v::outvar $v::invar
+            set v::outvar ${v::invar}_cal
         }
     }
 }
