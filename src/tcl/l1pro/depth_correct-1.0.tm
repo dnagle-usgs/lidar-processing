@@ -23,6 +23,7 @@ namespace eval ::l1pro::depth_correct {
 
         wm resizable $w 1 0
         wm protocol $w ${ns}::close
+        wm title $w "Depth Correct"
 
         set v::invar $::pro_var
 
@@ -89,7 +90,7 @@ namespace eval ::l1pro::depth_correct {
         set opts [list -parent $v::top \
                 -title "Select conf file" \
                 -filetypes {
-                    {{Conf files} {.conf}}
+                    {{Calibration conf files} {.calconf}}
                     {{All files} {*}}
                 }]
         if {$v::conf ne ""} {
