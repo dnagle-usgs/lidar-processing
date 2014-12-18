@@ -377,10 +377,9 @@ func job_depth_correct(conf) {
   This is a wrapper around pbd_depth_correct.
 */
   require, "eaarl.i";
-  keyrequire, conf, ifn, m, b, ofn;
+  keyrequire, conf, ifn, c, ofn;
 
-  save, conf, m=atod(conf.m);
-  save, conf, b=atod(conf.b);
+  save, conf, c=atod(conf.c);
 
   pbd_depth_correct, opts=conf;
 }

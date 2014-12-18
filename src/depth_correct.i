@@ -1,50 +1,54 @@
 
-func depth_correct_load_params(conf, &m, &b) {
-/* DOCUMENT depth_correct_load_params, conf, &m, &b;
-  Helper function for depth_correct functions. This loads the m and b
-  parameters from the conf file, if it exists. (Or if it's an oxy group,
-  restores them from it.) However, if m or b are already defined, the existing
-  values take precedence. The values for m and b are also coerced to doubles.
+func depth_correct_load_params(conf, &c) {
+/* DOCUMENT depth_correct_load_params, conf, &c;
+  Helper function for depth_correct functions. This loads the polynomial
+  parameters parameters from the conf file, if it exists. (Or if it's an oxy
+  group, restores them from it.) The conf file should define them in an value
+  named "c". Here's an example JSON file:
+
+    {"c":[0.002,0.985,0.0206]}
+ 
+  However, if c is not void, then it takes precedence over any values defined
+  in the file.
 */
   if(is_string(conf)) {
     conf = json_decode(rdfile(conf), objects="");
   }
   if(is_obj(conf)) {
-    if(!is_void(m)) save, conf, m;
-    if(!is_void(b)) save, conf, b;
-    restore, conf, m, b;
+    if(!is_void(c)) save, conf, c;
+    restore, conf, c;
   }
-  m = double(m);
-  b = double(b);
+  c = double(c);
 }
 
-func depth_correct(&data, m, b, conf=, verbose=) {
-/* DOCUMENT depth_correct, data, m, b, conf=, verbose=
-  -or- result = depth_correct(data, m, b, conf=, verbose=)
+func depth_correct(&data, c, conf=, verbose=) {
+/* DOCUMENT depth_correct, data, c, conf=, verbose=
+  -or- result = depth_correct(data, , conf=, verbose=)
 
-  Applies a linear correction to the depth in the given data array. The depth
-  will be corrected as such:
+  Applies a polynomial correction to the depth in the given data array. The
+  depth will be corrected as such:
 
-    znew = m * z + b
+    znew = poly1(z, c)
 
-  where m and b are provided and z is the original depth in meters. Depth
-  values are negative: 1 meter below the surface is -1.
+  where c are the polynomial parameters (as returned from poly1_fit) and z is
+  the original depth in meters. Depth values are negative: 1 meter below the
+  surface is -1.
 
   If conf= is provided, it should be the path to a conf file containing the
-  parameters m and b stored in JSON format. If m or mb are provided in addition
-  to this, then the parameters provided directly take precedence over the ones
-  in the conf file.
+  parameters m and b stored in JSON format. If c is provided in addition to
+  this, then the parameters provided directly take precedence over the ones in
+  the conf file.
 */
   default, verbose, 1;
   local x, y, z;
   data2xyz, data, x, y, z, mode="depth";
 
-  depth_correct_load_params, conf, m, b;
+  depth_correct_load_params, conf, c;
   if(verbose) {
-    write, format="depth_correct: m=%.15g; b=%.15g\n", m, b;
+    write, "depth_correct: "+strjoin(swrite(format="%.15g", c), ", ");
   }
 
-  z = m * z + b;
+  z = poly1(z, c);
 
   // avoid having depths go above the surface
   w = where(z > 0);
@@ -56,8 +60,8 @@ func depth_correct(&data, m, b, conf=, verbose=) {
   else return result;
 }
 
-func pbd_depth_correct(ifn, m, b, ofn=, vname_suffix=, conf=, opts=) {
-/* DOCUMENT pbd_depth_correct, ifn, m, b, ofn=, vname_suffix=, conf=, opts=
+func pbd_depth_correct(ifn, c, ofn=, vname_suffix=, conf=, opts=) {
+/* DOCUMENT pbd_depth_correct, ifn, c, ofn=, vname_suffix=, conf=, opts=
   Wrapper around depth_correct that corrects the data in a pbd and outputs it
   to a new file.
 
@@ -66,7 +70,7 @@ func pbd_depth_correct(ifn, m, b, ofn=, vname_suffix=, conf=, opts=) {
 
   Parameters:
     ifn: Input file to process.
-    m, b: Parameters as for depth_correct.
+    c: Polynomial parameters as for depth_correct.
   Options:
     ofn= Output file to create. Default is ifn + "_da.pbd"
     vname_suffix= Specifies a suffix to append to the output variable name. It
@@ -78,7 +82,7 @@ func pbd_depth_correct(ifn, m, b, ofn=, vname_suffix=, conf=, opts=) {
     opts= Oxy group that provides an alternative interface for providing
       function arguments/options.
 */
-  restore_if_exists, opts, ifn, m, b, ofn, vname_suffix, conf;
+  restore_if_exists, opts, ifn, c, ofn, vname_suffix, conf;
   default, vname_suffix, "_cal";
   if(is_void(ofn)) ofn = file_rootname(ifn) + "_cal.pbd";
   data = pbd_load(ifn, , vname);
@@ -87,15 +91,15 @@ func pbd_depth_correct(ifn, m, b, ofn=, vname_suffix=, conf=, opts=) {
       vname_suffix = "_" + vname_suffix;
     vname += vname_suffix;
   }
-  depth_correct_load_params, conf, m, b;
-  depth_correct, data, m, b, verbose=0;
-  comment = swrite(format="depth_correct: m=%.15g; b=%.15g", m, b);
+  depth_correct_load_params, conf, c;
+  depth_correct, data, c, verbose=0;
+  comment = "depth_correct: c=["+strjoin(swrite(format="%.15g",c),", ")+"]";
   pbd_save, ofn, vname, data, extra=save(comment), empty=1;
 }
 
-func batch_depth_correct(dir, m, b, outdir=, searchstr=, vname_suffix=,
+func batch_depth_correct(dir, c, outdir=, searchstr=, vname_suffix=,
 file_suffix=, conf=) {
-/* DOCUMENT batch_depth_correct, dir, m, b, outdir=, searchstr=, vname_suffix=,
+/* DOCUMENT batch_depth_correct, dir, c, outdir=, searchstr=, vname_suffix=,
    file_suffix=, conf=
 
   Batch command for applying depth_correct.
@@ -106,7 +110,7 @@ file_suffix=, conf=) {
 
   Parameters:
     dir: Input directory to process.
-    m, b: Parameters as for depth_correct.
+    c: Polynomial parameters as for depth_correct.
   Options:
     outdir= Directory to put output. If omitted, output files are placed
       alongside input files.
@@ -127,7 +131,7 @@ file_suffix=, conf=) {
   default, vname_suffix, "_cal"
   default, file_suffix, "_cal.pbd";
 
-  depth_correct_load_params, conf, m, b;
+  depth_correct_load_params, conf, c;
 
   // Locate input
   files = find(dir, searchstr=searchstr);
@@ -147,7 +151,7 @@ file_suffix=, conf=) {
     outfiles = file_join(outdir, file_tail(outfiles));
 
   // Build makeflow conf
-  options = save(string(0), [], m, b, vname_suffix);
+  options = save(string(0), [], c, vname_suffix);
   mf = save();
   for(i = 1; i <= count; i++) {
     input = files(i);
@@ -177,8 +181,8 @@ file_suffix=, conf=) {
   write, f, format="hg id: %s\n", _hgid;
 
   write, f, format="dir: %s\n", dir;
-  write, f, format="m: %.15g\n", m;
-  write, f, format="b: %.15g\n", b;
+  write, f, format="c: [%s]\n",
+    strjoin(swrite(format="%.15g", c), ", ");
   if(!is_void(outdir))
     write, f, format="outdir: %s\n", outdir;
   write, f, format="searchstr: %s\n", searchstr;
