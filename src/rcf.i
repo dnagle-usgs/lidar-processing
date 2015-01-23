@@ -245,8 +245,8 @@ func old_gridded_rcf(x, y, z, w, buf, n) {
   return where(keep);
 }
 
-func query_gridded_rcf(data, buf=, w=, n=, iwin=, owin=, mode=) {
-/* DOCUMENT query_gridded_rcf, data, buf=, w=, n=, iwin=, owin=, mode=
+func query_gridded_rcf(data, buf=, w=, n=, iwin=, owin=, mode=, xp=, yp=) {
+/* DOCUMENT query_gridded_rcf, data, buf=, w=, n=, iwin=, owin=, mode=, xp=, yp=
   Enters an interactive mode that lets you click on a point cloud plot to see
   how the gridded RCF performs.
 
@@ -259,14 +259,20 @@ func query_gridded_rcf(data, buf=, w=, n=, iwin=, owin=, mode=) {
     iwin= The input window. Default: 5
     owin= The output window. Default: 6
     mode= Data/display mode. Default: "fs"
+    xp= Instead of query, show just show as if you clicked for xp
+    yp= Instead of query, show just show as if you clicked for yp
 */
   default, iwin, 5;
   default, owin, 6;
 
-  wbkp = current_window();
   local x, y, z;
   data2xyz, data, x, y, z, mode=mode;
+  if(xp || yp) {
+    plot_gridded_rcf, x, y, z, buf, w, n, xp=xp, yp=yp, win=owin;
+    return;
+  }
 
+  wbkp = current_window();
   continue_interactive = 1;
   while(continue_interactive) {
     write, format="\nWindow %d: Left to select Y. Ctrl-Left to select X. Anything else aborts.\n", iwin;
