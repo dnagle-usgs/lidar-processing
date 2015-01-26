@@ -245,8 +245,10 @@ func old_gridded_rcf(x, y, z, w, buf, n) {
   return where(keep);
 }
 
-func query_gridded_rcf(data, buf=, w=, n=, iwin=, owin=, mode=, xp=, yp=) {
-/* DOCUMENT query_gridded_rcf, data, buf=, w=, n=, iwin=, owin=, mode=, xp=, yp=
+func query_gridded_rcf(data, buf=, w=, n=, iwin=, owin=, mode=, xp=, yp=,
+passpts=, failpts=, boxlines=) {
+/* DOCUMENT query_gridded_rcf, data, buf=, w=, n=, iwin=, owin=, mode=, xp=,
+   yp=, passpts=, failpts=, boxlines=
   Enters an interactive mode that lets you click on a point cloud plot to see
   how the gridded RCF performs.
 
@@ -261,6 +263,9 @@ func query_gridded_rcf(data, buf=, w=, n=, iwin=, owin=, mode=, xp=, yp=) {
     mode= Data/display mode. Default: "fs"
     xp= Instead of query, show just show as if you clicked for xp
     yp= Instead of query, show just show as if you clicked for yp
+    passpts= See plot_gridded_rcf
+    failpts= See plot_gridded_rcf
+    boxlines= See plot_gridded_rcf
 */
   default, iwin, 5;
   default, owin, 6;
@@ -268,7 +273,8 @@ func query_gridded_rcf(data, buf=, w=, n=, iwin=, owin=, mode=, xp=, yp=) {
   local x, y, z;
   data2xyz, data, x, y, z, mode=mode;
   if(xp || yp) {
-    plot_gridded_rcf, x, y, z, buf, w, n, xp=xp, yp=yp, win=owin;
+    plot_gridded_rcf, x, y, z, buf, w, n, xp=xp, yp=yp, win=owin,
+      passpts=passpts, failpts=failpts, boxlines=boxlines;
     return;
   }
 
@@ -280,14 +286,20 @@ func query_gridded_rcf(data, buf=, w=, n=, iwin=, owin=, mode=, xp=, yp=) {
     window, iwin;
     spot = mouse(1, 1, "");
 
+    xp = yp = [];
     if(mouse_click_is("ctrl+left", spot)) {
       write, format="Selected x coordinate of: %.2f\n", spot(1);
-      plot_gridded_rcf, x, y, z, buf, w, n, xp=spot(1), win=owin;
+      xp = spot(1);
     } else if(mouse_click_is("left", spot)) {
       write, format="Selected y coordinate of: %.2f\n", spot(2);
-      plot_gridded_rcf, x, y, z, buf, w, n, yp=spot(2), win=owin;
+      yp = spot(2);
     } else {
       continue_interactive = 0;
+    }
+
+    if(xp || yp) {
+      plot_gridded_rcf, x, y, z, buf, w, n, xp=xp, yp=yp, win=owin,
+        passpts=passpts, failpts=failpts, boxlines=boxlines;
     }
   }
 
