@@ -246,7 +246,7 @@ func old_gridded_rcf(x, y, z, w, buf, n) {
 }
 
 func query_gridded_rcf(data, buf=, w=, n=, iwin=, owin=, mode=, xp=, yp=,
-passpts=, failpts=, boxlines=) {
+passpts=, failpts=, boxlines=, relx=) {
 /* DOCUMENT query_gridded_rcf, data, buf=, w=, n=, iwin=, owin=, mode=, xp=,
    yp=, passpts=, failpts=, boxlines=
   Enters an interactive mode that lets you click on a point cloud plot to see
@@ -266,6 +266,7 @@ passpts=, failpts=, boxlines=) {
     passpts= See plot_gridded_rcf
     failpts= See plot_gridded_rcf
     boxlines= See plot_gridded_rcf
+    relx= See plot_gridded_rcf
 */
   default, iwin, 5;
   default, owin, 6;
@@ -274,7 +275,7 @@ passpts=, failpts=, boxlines=) {
   data2xyz, data, x, y, z, mode=mode;
   if(xp || yp) {
     plot_gridded_rcf, x, y, z, buf, w, n, xp=xp, yp=yp, win=owin,
-      passpts=passpts, failpts=failpts, boxlines=boxlines;
+      passpts=passpts, failpts=failpts, boxlines=boxlines, relx=relx;
     return;
   }
 
@@ -299,7 +300,7 @@ passpts=, failpts=, boxlines=) {
 
     if(xp || yp) {
       plot_gridded_rcf, x, y, z, buf, w, n, xp=xp, yp=yp, win=owin,
-        passpts=passpts, failpts=failpts, boxlines=boxlines;
+        passpts=passpts, failpts=failpts, boxlines=boxlines, relx=relx;
     }
   }
 
@@ -307,9 +308,9 @@ passpts=, failpts=, boxlines=) {
 }
 
 func plot_gridded_rcf(x, y, z, buf, width, n, xp=, yp=, win=, passpts=,
-failpts=, boxlines=) {
+failpts=, boxlines=, relx=) {
 /* DOCUMENT plot_gridded_rcf, x, y, z, buf, width, n, xp=, yp=, win=, passpts=,
-   failpts=, boxlines=
+   failpts=, boxlines=, relx=
   Helper function for query_gridded_rcf. This plots a single row or column from
   the gridded RCF algorithm to show what passed and failed the filter.
 
@@ -328,6 +329,8 @@ failpts=, boxlines=) {
         failpts="square black 0.1"  Default
     boxlines= Styling options for passing buffer box lines.
         boxlines="dot black 1"      Default
+    relx= If enabled, the x-axis in the plot will be relative meters instead of
+      actual meters.
 */
   default, passpts, "square blue 0.2";
   default, failpts, "square black 0.1";
@@ -337,6 +340,7 @@ failpts=, boxlines=) {
   parse_plopts, boxlines, btype, bcolor, bsize;
 
   default, win, 6;
+  default, relx, 0;
   default, n, 3;
   width /= 100.;
   buf /= 100.;
@@ -367,15 +371,16 @@ failpts=, boxlines=) {
   xgrid = long(x/buf);
   xgrid_uniq = set_remove_duplicates(xgrid);
   nxg = numberof(xgrid_uniq);
+  offset = relx ? xgrid_uniq(min) * buf : 0;
   for(i = 1; i <= nxg; i++) {
     w = where(xgrid == xgrid_uniq(i));
     zw = z(w);
-    xw = x(w);
+    xw = x(w) - offset;
 
     lbound = rcf(zw, width)(1);
     ubound = lbound + width;
 
-    x0 = xgrid_uniq(i) * buf;
+    x0 = xgrid_uniq(i) * buf - offset;
     x1 = x0 + buf;
 
     match = lbound <= zw & zw < ubound;
