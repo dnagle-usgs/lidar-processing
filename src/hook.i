@@ -110,6 +110,7 @@ func hook_query(hooks, hook_name, full=) {
 
   // Otherwise, return hooks for this hook name.
   result = hooks(noop(hook_name));
+  if(!numberof(result)) return [];
   if(full) return result;
   return result.func_name;
 }
