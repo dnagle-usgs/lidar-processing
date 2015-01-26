@@ -344,7 +344,6 @@ func plot_gridded_rcf(x, y, z, buf, width, n, xp=, yp=, win=) {
     w = where(xgrid == xgrid_uniq(i));
     zw = z(w);
     xw = x(w);
-    plmk, zw, xw, msize=0.1, marker=1, color="black";
 
     lbound = rcf(zw, width)(1);
     ubound = lbound + width;
@@ -352,13 +351,19 @@ func plot_gridded_rcf(x, y, z, buf, width, n, xp=, yp=, win=) {
     x0 = xgrid_uniq(i) * buf;
     x1 = x0 + buf;
 
-    plg, [ubound, lbound, lbound, ubound, ubound], [x0, x0, x1, x1, x0],
-      color="black", type="dot";
-
-    w = where(lbound <= zw & zw < ubound);
+    match = lbound <= zw & zw < ubound;
+    w = where(match);
     if(numberof(w) > n) {
       plmk, zw(w), xw(w), msize=0.2, marker=1, color="blue";
+      w = where(!match);
+      if(numberof(w))
+        plmk, zw(w), xw(w), msize=0.1, marker=1, color="black";
+    } else {
+      plmk, zw, xw, msize=0.1, marker=1, color="black";
     }
+
+    plg, [ubound, lbound, lbound, ubound, ubound], [x0, x0, x1, x1, x0],
+      color="black", type="dot";
   }
 
   if(!is_void(win)) window_select, wbkp;
