@@ -294,8 +294,10 @@ func query_gridded_rcf(data, buf=, w=, n=, iwin=, owin=, mode=, xp=, yp=) {
   window_select, wbkp;
 }
 
-func plot_gridded_rcf(x, y, z, buf, width, n, xp=, yp=, win=) {
-/* DOCUMENT plot_gridded_rcf, x, y, z, buf, width, n, xp=, yp=, win=
+func plot_gridded_rcf(x, y, z, buf, width, n, xp=, yp=, win=, passpts=,
+failpts=, boxlines=) {
+/* DOCUMENT plot_gridded_rcf, x, y, z, buf, width, n, xp=, yp=, win=, passpts=,
+   failpts=, boxlines=
   Helper function for query_gridded_rcf. This plots a single row or column from
   the gridded RCF algorithm to show what passed and failed the filter.
 
@@ -308,7 +310,20 @@ func plot_gridded_rcf(x, y, z, buf, width, n, xp=, yp=, win=) {
     yp= The coordinate that selects which row to plot.
       NOTE: You must select either xp or yp, but not both.
     win= The window to plot in. Default: 6
+    passpts= Styling options for points that pass.
+        passpts="square blue 0.2"   Default
+    failpts= Styling options for points that fail.
+        failpts="square black 0.1"  Default
+    boxlines= Styling options for passing buffer box lines.
+        boxlines="dot black 1"      Default
 */
+  default, passpts, "square blue 0.2";
+  default, failpts, "square black 0.1";
+  default, boxlines, "dot black 1";
+  parse_plopts, passpts, ptype, pcolor, psize;
+  parse_plopts, failpts, ftype, fcolor, fsize;
+  parse_plopts, boxlines, btype, bcolor, bsize;
+
   default, win, 6;
   default, n, 3;
   width /= 100.;
@@ -354,16 +369,16 @@ func plot_gridded_rcf(x, y, z, buf, width, n, xp=, yp=, win=) {
     match = lbound <= zw & zw < ubound;
     w = where(match);
     if(numberof(w) > n) {
-      plmk, zw(w), xw(w), msize=0.2, marker=1, color="blue";
+      plmk, zw(w), xw(w), msize=psize, marker=ptype, color=pcolor;
       w = where(!match);
       if(numberof(w))
-        plmk, zw(w), xw(w), msize=0.1, marker=1, color="black";
+        plmk, zw(w), xw(w), msize=fsize, marker=ftype, color=fcolor;
     } else {
-      plmk, zw, xw, msize=0.1, marker=1, color="black";
+      plmk, zw, xw, msize=fsize, marker=ftype, color=fcolor;
     }
 
     plg, [ubound, lbound, lbound, ubound, ubound], [x0, x0, x1, x1, x0],
-      color="black", type="dot";
+      color=bcolor, type=btype, width=bsize;
   }
 
   if(!is_void(win)) window_select, wbkp;
