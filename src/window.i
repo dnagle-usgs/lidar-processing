@@ -193,3 +193,12 @@ func win_square(lims, win=) {
 
   window_select, wbkp;
 }
+
+func winkillall(void) {
+/* DOCUMENT winkillall
+  Closes all Yorick windows.
+*/
+  wins = window_list();
+  for(i = 1; i <= numberof(wins); i++)
+    winkill, wins(i);
+}
