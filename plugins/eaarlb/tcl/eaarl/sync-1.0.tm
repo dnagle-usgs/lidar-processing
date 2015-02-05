@@ -44,6 +44,7 @@ namespace eval eaarl::sync {
             ns      mpconf
             label   Multi-Peak
             win     27
+            opts    {-raster -pulse -channel}
         }
     }
 }
