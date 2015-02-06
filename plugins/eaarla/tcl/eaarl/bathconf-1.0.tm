@@ -127,6 +127,11 @@ snit::type ::eaarl::bathconf::embed {
     }
 
     destructor {
+        set var ::eaarl::bathconf::settings
+        foreach name [array names $var *,decay] {
+            trace remove variable ${var}(${name}) \
+                    write [mymethod TraceDecay]
+        }
         $sync destroy
     }
 
