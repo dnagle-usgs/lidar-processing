@@ -72,6 +72,8 @@ namespace eval ::eaarl::main::menu {
                 -command [list ::eaarl::sbconf::plot 26]
         $mb add command {*}[menulabel "&Multi-Peak Settings..."] \
                 -command [list ::eaarl::mpconf::plot 27]
+        $mb add command {*}[menulabel "Curve &Fitting Settings..."] \
+                -command [list ::eaarl::cfconf::plot 28]
         return $mb
     }
 

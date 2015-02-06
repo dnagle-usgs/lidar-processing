@@ -19,6 +19,7 @@ namespace eval ::mission::eaarl {
         "vegconf file"
         "sbconf file"
         "mpconf file"
+        "cfconf file"
         "rgb dir"
         "nir dir"
     }
@@ -57,6 +58,10 @@ namespace eval ::mission::eaarl {
         }
         "mpconf file" {
             {{Multi-peak settings files} {.mpconf}}
+            {{All files} *}
+        }
+        "cfconf file" {
+            {{Curve Fitting settings files} {.cfconf}}
             {{All files} *}
         }
     }

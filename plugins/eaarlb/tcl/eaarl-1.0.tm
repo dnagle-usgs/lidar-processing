@@ -22,6 +22,7 @@ package require eaarl::sync
 package require eaarl::transmit
 package require eaarl::tscheck
 package require eaarl::vegconf
+package require eaarl::cfconf
 
 namespace eval ::eaarl {
    variable channel_count 4
@@ -33,6 +34,7 @@ namespace eval ::eaarl {
       "Topo Under Veg"     v
       "Shallow Bathy"      sb
       "Multi-Peak"         mp
+      "Curve Fitting (Development)"      cf
       "OLD: First Return Topo"  old_fs
       "OLD: Submerged Topo"     old_bathy
       "OLD: Topo Under Veg"     old_veg
@@ -62,7 +64,7 @@ namespace eval ::eaarl {
       variable usechannel_4
 
       set mapping {
-         f fs v veg b depth sb shallow mp mp
+         f fs v veg b depth sb shallow mp mp cf cf
          old_fs fs old_bathy depth old_veg veg old_cveg cveg
       }
 
@@ -75,7 +77,7 @@ namespace eval ::eaarl {
       if {$chan eq ""} {set chan "chn"}
 
       # Only change prefix if prefix is in known list
-      if {$prefix in [list fs veg depth shallow cveg]} {
+      if {$prefix in [list fs veg depth shallow cveg mp cf]} {
          set prefix [dict get $mapping $processing_mode]
       }
 

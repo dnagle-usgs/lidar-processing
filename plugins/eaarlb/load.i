@@ -12,6 +12,8 @@ include, base + "class_bathconfobj.i";
 include, base + "class_mpconfobj.i";
 include, base + "class_sbconfobj.i";
 include, base + "class_vegconfobj.i";
+write, format="%s\n", "Loading NEW Curve Fitting object";
+include, base + "class_cfconfobj.i";
 
 include, base + "autoselect.i";
 include, base + "batch_process.i";
@@ -38,6 +40,7 @@ include, base + "process_be.i";
 include, base + "process_fs.i";
 include, base + "process_mp.i";
 include, base + "process_sb.i";
+include, base + "process_cf.i";
 include, base + "process_main.i";
 include, base + "sasr.i";
 include, base + "sf.i";

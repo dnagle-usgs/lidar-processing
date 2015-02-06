@@ -13,6 +13,7 @@ local eaarl_processing_modes;
     "v" - topo under veg processing
     "sb" - shallow bathymetric processing
     "mp" - multipeak processing
+    "cf" - curve fitting processing
 */
 if(is_void(eaarl_processing_modes)) eaarl_processing_modes = save();
 save, eaarl_processing_modes,
@@ -35,6 +36,10 @@ save, eaarl_processing_modes,
   mp=save(
     process="process_mp",
     cast="mp_obj2dyn"
+  ),
+  cf=save(
+    process="process_cf",
+    cast="be_struct_from_obj"
   );
 
 func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, ptime=, opts=) {
@@ -802,6 +807,8 @@ func hook_prep_job_eaarl_process(env) {
         save, wrapped, vegconf_data=serialize(wrapped.vegconf_data);
       if(wrapped(*,"sbconf_data"))
         save, wrapped, sbconf_data=serialize(wrapped.sbconf_data);
+      if(wrapped(*,"cfconf_data"))
+        save, wrapped, cfconf_data=serialize(wrapped.cfconf_data);
 
       // Temporary hack for veg
       define_veg_conf;
@@ -869,6 +876,8 @@ func hook_run_job_eaarl_process(env) {
     save, wrapped, vegconf_data=deserialize(wrapped.vegconf_data);
   if(wrapped(*,"sbconf_data"))
     save, wrapped, sbconf_data=deserialize(wrapped.sbconf_data);
+  if(wrapped(*,"cfconf_data"))
+    save, wrapped, cfconf_data=deserialize(wrapped.cfconf_data);
   mission, unwrap, wrapped;
 
   return env;

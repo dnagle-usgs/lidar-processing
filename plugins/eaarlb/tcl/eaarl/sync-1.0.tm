@@ -46,6 +46,12 @@ namespace eval eaarl::sync {
             win     27
             opts    {-raster -pulse -channel}
         }
+        cf {
+            ns      cfconf
+            label   CF
+            win     28
+            opts    {-raster -pulse -channel}
+        }
     }
 }
 
