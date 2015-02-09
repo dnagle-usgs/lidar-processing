@@ -301,7 +301,7 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
   peaks  = where(peaks);
 */
 
-  foo = peak_finder( wf, conf.thresh);
+  foo = eaarl_cf_peak_finder( wf, conf.thresh);
   peaks = foo.peaks;
   edges = foo.edges;
 
@@ -401,7 +401,7 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
     if (plot) {
       // plot the entire computed curve
       plg, yfit, color="green", width=5;
-      foo = peak_finder( yfit, conf.thresh);
+      foo = eaarl_cf_peak_finder( yfit, conf.thresh);
       // show first return in a bold hollow triangle
       plmk, yfit(foo.peaks(1)), foo.peaks(1), marker=marker, msize=.01,
         color="green", width=5;
@@ -486,7 +486,7 @@ func eaarl_cf_lmfit_gauss(x, a, f=)
 }
 
 // XYZZY PEAK CODE HERE - from process_mp.i
-func peak_finder(wf, thresh) {
+func eaarl_cf_peak_finder(wf, thresh) {
   wf_pe = save(peaks, edges);    // Create new wf_pe object;
   nwf = numberof(wf);
   edges = peaks = array(0, nwf);
