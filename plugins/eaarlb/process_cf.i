@@ -326,7 +326,7 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
   cf_rms = wf(peaks)(rms) * conf.initsd;
 
   if ( plot )
-    write, format="Ave: %lf RMS: %lf\n", cf_avg, cf_rms;
+    write, format="Avg: %lf RMS: %lf\n", cf_avg, cf_rms;
 
   if ( ! cf_rms ) return result;
   wfstd = where(wf > cf_avg - (conf.initsd*cf_rms) & wf < cf_avg + (conf.initsd*cf_rms));
