@@ -342,15 +342,9 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
 
   if (catch(-1)) return result;
   // compute new peaks in by fitting a gauss curve to each peak.
-  if ( 1 ) {
-    r = lmfit(eaarl_cf_lmfit_gauss, xaxis, a, wf, 1.0, itmax=200, stdev=conf.initsd);
-    r;
-    a;
-  } else {
-    for (i=1; i < numberof(a); i+=3) {
-      r = lmfit(eaarl_cf_lmfit_gauss, xaxis, a(i:i+2), wf, 1.0, itmax=200, stdev=conf.initsd);
-    }
-  }
+  r = lmfit(eaarl_cf_lmfit_gauss, xaxis, a, wf, 1.0, itmax=200, stdev=conf.initsd);
+  r;
+  a;
   if ( r.niter == 200 ) return result;
   if ( plot ) write, format="%s\n", "lmfit computed";
 
