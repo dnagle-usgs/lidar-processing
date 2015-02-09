@@ -1,5 +1,30 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+func autoselect_globs(dir, globs, options=) {
+/* DOCUMENT autoselect_globs(dir, globs, options=)
+  Helper function for auto-selecting files based on globs.
+*/
+  dir = file_join(dir);
+  dirs = [file_join(dir, "alps"), dir];
+  dir = file_dirname(dir);
+  grow, dirs, [file_join(dir, "alps"), dir];
+
+  results = [];
+  for(i = 1; i <= numberof(globs); i++) {
+    for(j = 1; j <= numberof(dirs); j++) {
+      files = lsfiles(dirs(j), glob=globs(i));
+      if(numberof(files)) {
+        files = files(sort(files));
+        grow, results, file_join(dirs(j), files);
+      }
+    }
+  }
+
+  if(is_void(results))
+    results = [string(0)];
+  return options ? results : results(1);
+}
+
 func autoselect_ops_conf(dir, options=) {
 /* DOCUMENT ops_conf_file = autoselect_ops_conf(dir, options=)
 
@@ -75,27 +100,8 @@ func autoselect_bathconf(dir, options=) {
   is returned instead. If no possiblities are found, then [string(0)] is
   returned.
 */
-  dir = file_join(dir);
-  dirs = [file_join(dir, "alps"), dir];
-  dir = file_dirname(dir);
-  grow, dirs, [file_join(dir, "alps"), dir];
-
   globs = ["*.bathconf", "*-bctl.json", "*.bctl"];
-
-  results = [];
-  for(i = 1; i <= numberof(globs); i++) {
-    for(j = 1; j <= numberof(dirs); j++) {
-      files = lsfiles(dirs(j), glob=globs(i));
-      if(numberof(files)) {
-        files = files(sort(files));
-        grow, results, file_join(dirs(j), files);
-      }
-    }
-  }
-
-  if(is_void(results))
-    results = [string(0)];
-  return options ? results : results(1);
+  return autoselect_globs(dir, globs, options=options);
 }
 
 func autoselect_vegconf(dir, options=) {
@@ -120,27 +126,8 @@ func autoselect_vegconf(dir, options=) {
   is returned instead. If no possiblities are found, then [string(0)] is
   returned.
 */
-  dir = file_join(dir);
-  dirs = [file_join(dir, "alps"), dir];
-  dir = file_dirname(dir);
-  grow, dirs, [file_join(dir, "alps"), dir];
-
   globs = ["*.vegconf"];
-
-  results = [];
-  for(i = 1; i <= numberof(globs); i++) {
-    for(j = 1; j <= numberof(dirs); j++) {
-      files = lsfiles(dirs(j), glob=globs(i));
-      if(numberof(files)) {
-        files = files(sort(files));
-        grow, results, file_join(dirs(j), files);
-      }
-    }
-  }
-
-  if(is_void(results))
-    results = [string(0)];
-  return options ? results : results(1);
+  return autoselect_globs(dir, globs, options=options);
 }
 
 func autoselect_mpconf(dir, options=) {
@@ -166,27 +153,8 @@ func autoselect_mpconf(dir, options=) {
   is returned instead. If no possiblities are found, then [string(0)] is
   returned.
 */
-  dir = file_join(dir);
-  dirs = [file_join(dir, "alps"), dir];
-  dir = file_dirname(dir);
-  grow, dirs, [file_join(dir, "alps"), dir];
-
   globs = ["*.mpconf"];
-
-  results = [];
-  for(i = 1; i <= numberof(globs); i++) {
-    for(j = 1; j <= numberof(dirs); j++) {
-      files = lsfiles(dirs(j), glob=globs(i));
-      if(numberof(files)) {
-        files = files(sort(files));
-        grow, results, file_join(dirs(j), files);
-      }
-    }
-  }
-
-  if(is_void(results))
-    results = [string(0)];
-  return options ? results : results(1);
+  return autoselect_globs(dir, globs, options=options);
 }
 
 func autoselect_edb(dir, options=) {
