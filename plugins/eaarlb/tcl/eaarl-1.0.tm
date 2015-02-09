@@ -33,7 +33,7 @@ namespace eval ::eaarl {
       "Submerged Topo"     b
       "Topo Under Veg"     v
       "Shallow Bathy"      sb
-      "Multi-Peak"         mp
+      "DEV: Multi-Peak (Experimental)" mp
       "Curve Fitting (Development)"      cf
       "OLD: First Return Topo"  old_fs
       "OLD: Submerged Topo"     old_bathy
