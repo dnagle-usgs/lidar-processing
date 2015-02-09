@@ -38,7 +38,6 @@ if {![info exists l1pro_data]} {
     "Surface Amplitude"        fint
     "Bottom Amplitude"         lint
     "Canopy Height"            ch
-    "Curve Fitting"            be
   } 0 end]
 
   set outvar ""
