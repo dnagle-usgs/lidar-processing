@@ -329,7 +329,6 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
     write, format="Avg: %lf RMS: %lf\n", cf_avg, cf_rms;
 
   if ( ! cf_rms ) return result;
-  wfstd = where(wf > cf_avg - (conf.initsd*cf_rms) & wf < cf_avg + (conf.initsd*cf_rms));
 
   a = array(float, npeaks*3);
   a(1::3) = wf(peaks);     // 1: height of curve's peak
@@ -345,11 +344,14 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
   yfit = eaarl_cf_lmfit_gauss(xaxis, a);
 
   if(conf.initsd) {
-    if(plot)
+    if(plot) {
       // Show points falling within selected std deviation.
-      if ( numberof(wfstd) )
+      wfstd = where(wf > cf_avg - (conf.initsd*cf_rms)
+          & wf < cf_avg + (conf.initsd*cf_rms));
+      if(numberof(wfstd))
         plmk, wf(wfstd), wfstd, marker=marker, msize=.01,
           color="green", width=1;
+    }
 
     if(edges(0) + max_ret_len + 1 > wflen)
       max_ret_len = wflen - edges(0) - 1;
