@@ -278,29 +278,6 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
   if(conf.smoothwf > 0)
     wf = moving_average(wf, bin=(conf.smoothwf*2+1), taper=1);
 
-/* OLD Code
-  // XYZZY PEAK CODE HERE - from process_mp.i
-  nwf = numberof(wf);
-  edges = peaks = array(0, nwf);
-  i = 1;
-  while(++i <= nwf) {
-    // Find a leading edge that exceeds the threshold
-    if(wf(i) - wf(i-1) >= conf.thresh) {
-      edges(i) = 1;
-      // Advance to find the peak after this leading edge
-      while(i < nwf && wf(i) < wf(i+1)) i++;
-      j = i;
-      // Advance to find end of peak in case the peak consists of several
-      // pulses of the same intensity (common when saturated)
-      while(i < nwf && wf(j) == wf(i+1)) i++;
-      // Mark the peak at the center of the peak section
-      peaks((j+i)/2) = 1;
-    }
-  }
-  edges  = where(edges);
-  peaks  = where(peaks);
-*/
-
   foo = eaarl_cf_peak_finder( wf, conf.thresh);
   peaks = foo.peaks;
   edges = foo.edges;
@@ -313,7 +290,6 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
 
   save, result, lrx=peaks;
   save, result, lintensity=wf(peaks);
-  // XYZZY PEAK CODE end
 
   // First derivative of waveform
   wfd1 = wf(dif);
@@ -485,7 +461,6 @@ func eaarl_cf_lmfit_gauss(x, a, f=)
   return f;
 }
 
-// XYZZY PEAK CODE HERE - from process_mp.i
 func eaarl_cf_peak_finder(wf, thresh) {
   wf_pe = save(peaks, edges);    // Create new wf_pe object;
   nwf = numberof(wf);
