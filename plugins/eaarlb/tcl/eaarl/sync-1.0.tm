@@ -48,7 +48,7 @@ namespace eval eaarl::sync {
         }
         cf {
             ns      cfconf
-            label   CF
+            label   "Curve Fit"
             win     28
             opts    {-raster -pulse -channel}
         }
