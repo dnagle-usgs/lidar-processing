@@ -6,14 +6,16 @@ func cfconfobj(base, data) {
   -or- cfconf = cfconfobj("/path/to/file.cfconf")
 
   This returns a cfconf object. This is a specialized subclass built on
-  vegconfobj that adds curve fitting specific configuration elements to the framework.
+  chanconfobj that adds curve fitting specific configuration elements to the
+  framework.
 
-  Please see help, vegconfobj for information on the vegconfobj framework, as
+  Please see help, chanconfobj for information on the chanconfobj framework, as
   well as help, confobj for more information on the underlying confobj
   framework. Follows are details on how the base class has been specialized.
 
-  The primary difference from the base class is that  cfconfobj has specific
-  knowledge of XYZZY
+  The primary difference from the base class is that cfconfobj has specific
+  knowledge of which keys are expected and what format they should be in
+  (integer, double, etc.).
 
   Modified methods:
 
@@ -46,7 +48,7 @@ func cfconfobj(base, data) {
       This makes sure that only the selected decay type's settings get written
       out to file.
 
-  SEE ALSO: confobj, chanconfobj, vegconfobj
+  SEE ALSO: confobj, chanconfobj
 */
   obj = obj_copy(base);
   save, obj, data=save(null=save()), mapping=[];
