@@ -394,7 +394,8 @@ snit::type ::eaarl::cfconf::embed {
         ttk::label $f.lblCurve -text "Curve: "
         mixin::combobox $f.cboCurve \
                 -state readonly \
-                -width 12
+                -width 12 \
+                -values {gaussian}
         ::mixin::revertable $f.cboCurve
         bind $f.cboCurve <<ComboboxSelected>> +[list $f.cboCurve apply]
 
