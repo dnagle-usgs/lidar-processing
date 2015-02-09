@@ -229,7 +229,7 @@ func eaarl_cf_plot(raster, pulse, channel=, win=, xfma=) {
   write, format="   lrx: %.2f\n   lintensity: %.2f\n   rets: %d\n",
     double(result.lrx), double(result.lintensity), long(result.rets);
 
-  if(!result.num_rets) {    // XYZZY - was result.lrx
+  if(!result.lrx) {
     write, format="   %s\n", "No return found.";
   }
 }
