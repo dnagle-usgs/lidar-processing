@@ -260,6 +260,8 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
       mv0 = last pulse peak value     -> lintensity
       nx = number of returns          -> num_rets
 */
+  local peaks, edges;
+
   conf = obj_copy(conf);
 
   result = save(lrx=0, lintensity=0, num_rets=0);
@@ -278,9 +280,9 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
   if(conf.smoothwf > 0)
     wf = moving_average(wf, bin=(conf.smoothwf*2+1), taper=1);
 
-  foo = eaarl_cf_peak_finder( wf, conf.thresh);
-  peaks = foo.peaks;
-  edges = foo.edges;
+  tmp = eaarl_cf_peak_finder(wf, conf.thresh);
+  restore, tmp, peaks, edges;
+  tmp = [];
 
   npeaks = numberof(peaks);
   save, result, num_rets=npeaks;
