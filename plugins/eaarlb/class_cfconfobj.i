@@ -163,7 +163,6 @@ func cfconfobj_cleangroups(void) {
 
     for(j = 1; j <= grp.profiles(*); j++) {
       prof = grp.profiles(noop(j));
-//    idx = prof(*, ["thresh", "noiseadj", "max_samples", "smoothwf"]); BEGONE
       idx = prof(*, ["smoothwf", "thresh", "curve", "initsd"]);
       idx = idx(where(idx));
       if(numberof(idx))
