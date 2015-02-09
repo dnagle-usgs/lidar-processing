@@ -1009,7 +1009,7 @@ namespace eval ::l1pro::tools::varmanage {
         variable win .l1wid.varplot
         variable lb ""
         variable var_add ""
-        variable fixed_vars [list fs_all depth_all veg_all cveg_all mp_all cf_all ]
+        variable fixed_vars [list fs_all depth_all veg_all cveg_all]
     }
 
     proc gui {} {

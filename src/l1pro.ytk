@@ -53,7 +53,7 @@ if {![info exists l1pro_data]} {
 
   set data_file_path $data_path
 
-  set varlist {fs_all depth_all veg_all cveg_all mp_all cf_all workdata}
+  set varlist {fs_all depth_all veg_all cveg_all workdata}
 
   set cdelta 80
   set var_common [list \
@@ -78,11 +78,6 @@ if {![info exists l1pro_data]} {
   set var_settings(cveg_all) [linsert $var_common end \
     var cveg_all \
     display_mode fs]
-
-  set var_settings(cf_all) [linsert $var_common end \
-    var cf_all \
-    display_mode be]
-
 
   set var_settings(workdata) [linsert $var_common end \
     var workdata \

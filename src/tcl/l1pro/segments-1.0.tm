@@ -244,7 +244,7 @@ snit::widget ::l1pro::segments::main::gui {
         wm title $win $options(-title)
 
         $self init_opt_var -varlistvariable \
-            [list fs_all depth_all veg_all cveg_all mp_all cf_all workdata]
+            [list fs_all depth_all veg_all cveg_all workdata]
         $self init_opt_var -windowvariable 0
         $self init_opt_var -fmavariable 0
 
