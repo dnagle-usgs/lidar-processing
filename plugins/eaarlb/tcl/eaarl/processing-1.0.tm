@@ -291,7 +291,7 @@ proc ::eaarl::processing::process {} {
     set channels \[[join $channels ,]\]
     set cmd ""
     switch -- $processing_mode {
-        f - v - b - sb - mp - cf - {
+        f - v - b - sb - mp - cf {
             set cmd "$::pro_var = ${make_eaarl}(mode=\"$processing_mode\",\
                     q=q, ext_bad_att=$ext_bad_att, channel=$channels)"
         }
