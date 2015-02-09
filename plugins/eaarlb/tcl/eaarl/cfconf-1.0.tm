@@ -410,6 +410,7 @@ snit::type ::eaarl::cfconf::embed {
         if {$win_width > 600} {
             grid $f.lblSmooth $f.spnSmooth
             grid $f.lblThresh $f.spnThresh
+            grid $f.lblInitSD $f.spnInitSD
             grid $f.lblCurve $f.cboCurve
             grid configure $f.lblSmooth $f.lblThresh $f.lblCurve $f.lblInitSD \
                     -sticky w
