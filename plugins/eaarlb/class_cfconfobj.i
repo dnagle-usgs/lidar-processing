@@ -63,7 +63,6 @@ func cfconfobj(base, data) {
 }
 
 scratch = save(scratch, base);
-// base = obj_copy(vegconfobj.data, recurse=1);
 base = obj_copy(chanconfobj.data, recurse=1);
 
 save, scratch, cfconfobj_groups;
@@ -83,7 +82,7 @@ func cfconfobj_groups(newgroups, copy=) {
       swrite(format="::eaarl::cfconf::active_profile(%s)", group);
   }
 
-  use_method, vegconfobj_groups, newgroups, copy=copy;
+  use_method, chanconfobj_groups, newgroups, copy=copy;
 
   // Add syncs
   for(i = 1; i <= data(*); i++) {
@@ -91,12 +90,12 @@ func cfconfobj_groups(newgroups, copy=) {
       strjoin("{"+data(noop(i)).profiles(*,)+"}", " ");
   }
 }
-save, base, vegconfobj_groups=base.groups;
+save, base, chanconfobj_groups=base.groups;
 save, base, groups=cfconfobj_groups;
 
 save, scratch, cfconfobj_validate;
 func cfconfobj_validate(group) {
-  use_method, vegconfobj_validate, group;
+  use_method, chanconfobj_validate, group;
 
   // Only validate fields on active profile.
   use, data;
@@ -143,20 +142,20 @@ func cfconfobj_validate(group) {
     swrite(format="cfconf.data.%s.active_name", group),
     swrite(format="::eaarl::cfconf::active_profile(%s)", group);
 }
-save, base, vegconfobj_validate=base.validate;
+save, base, chanconfobj_validate=base.validate;
 save, base, validate=cfconfobj_validate;
 
 save, scratch, cfconfobj_read;
 func cfconfobj_read(fn) {
-  use_method, vegconfobj_read, fn;
+  use_method, chanconfobj_read, fn;
   if(logger(info)) logger, info, "Loaded cf settings from "+fn;
 }
-save, base, vegconfobj_read=base.read;
+save, base, chanconfobj_read=base.read;
 save, base, read=cfconfobj_read;
 
 save, scratch, cfconfobj_cleangroups;
 func cfconfobj_cleangroups(void) {
-  groups = use_method(vegconfobj_cleangroups,);
+  groups = use_method(chanconfobj_cleangroups,);
   for(i = 1; i <= groups(*); i++) {
     grp = groups(noop(i));
 
@@ -174,47 +173,47 @@ func cfconfobj_cleangroups(void) {
   }
   return groups;
 }
-save, base, vegconfobj_cleangroups=base.cleangroups;
+save, base, chanconfobj_cleangroups=base.cleangroups;
 save, base, cleangroups=cfconfobj_cleangroups;
 
 save, scratch, cfconfobj_dumpgroups;
 func cfconfobj_dumpgroups(compact=) {
-  output = use_method(vegconfobj_dumpgroups, compact=compact);
+  output = use_method(chanconfobj_dumpgroups, compact=compact);
   if(!compact)
     save, output, cfver=2;
   return output;
 }
-save, base, vegconfobj_dumpgroups=base.dumpgroups;
+save, base, chanconfobj_dumpgroups=base.dumpgroups;
 save, base, dumpgroups=cfconfobj_dumpgroups;
 
 save, scratch, cfconfobj_profile_add;
 func cfconfobj_profile_add(group, profile) {
   use, data;
-  use_method, vegconfobj_profile_add, group, profile;
+  use_method, chanconfobj_profile_add, group, profile;
   tksetval, swrite(format="::eaarl::cfconf::profiles(%s)", group),
     strjoin("{"+data(noop(group)).profiles(*,)+"}", " ");
 }
-save, base, vegconfobj_profile_add=base.profile_add;
+save, base, chanconfobj_profile_add=base.profile_add;
 save, base, profile_add=cfconfobj_profile_add;
 
 save, scratch, cfconfobj_profile_del;
 func cfconfobj_profile_del(group, profile) {
   use, data;
-  use_method, vegconfobj_profile_del, group, profile;
+  use_method, chanconfobj_profile_del, group, profile;
   tksetval, swrite(format="::eaarl::cfconf::profiles(%s)", group),
     strjoin("{"+data(noop(group)).profiles(*,)+"}", " ");
 }
-save, base, vegconfobj_profile_del=base.profile_del;
+save, base, chanconfobj_profile_del=base.profile_del;
 save, base, profile_del=cfconfobj_profile_del;
 
 save, scratch, cfconfobj_profile_rename;
 func cfconfobj_profile_rename(group, oldname, newname) {
   use, data;
-  use_method, vegconfobj_profile_rename, group, oldname, newname;
+  use_method, chanconfobj_profile_rename, group, oldname, newname;
   tksetval, swrite(format="::eaarl::cfconf::profiles(%s)", group),
     strjoin("{"+data(noop(group)).profiles(*,)+"}", " ");
 }
-save, base, vegconfobj_profile_rename=base.profile_rename;
+save, base, chanconfobj_profile_rename=base.profile_rename;
 save, base, profile_rename=cfconfobj_profile_rename;
 
 cfconfobj = closure(cfconfobj, base);
