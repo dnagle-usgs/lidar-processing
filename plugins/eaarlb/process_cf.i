@@ -137,8 +137,6 @@ func eaarl_cf_rx_channel(pulses) {
   rets = array(char, npulses);
   lchannel = pulses.channel;
 
-  write, format="%s\n", "PULSES"
-  write, format="Pulses: %d\n", npulses;
   for(i = 1; i <= npulses; i++) {
     if(!lchannel(i)) continue;
     if(!pulses.rx(lchannel(i),i)) continue;
