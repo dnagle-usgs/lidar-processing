@@ -294,9 +294,9 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
 
   if(plot) {
     xaxis = indgen(numberof(wf));
-    plg,  wfd1, xaxis(:-1)+.5, color="red";
-    plmk, wf,   xaxis,         color="black", msize=.2, marker=1;
-    plg,  wf,   xaxis,         color="black";
+    plg, wfd1, xaxis(:-1)+.5, color="red";
+    plmk, wf, xaxis, color="black", msize=.2, marker=1;
+    plg, wf, xaxis, color="black";
   }
 
   if(!numberof(edges)) {
@@ -338,7 +338,7 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
   if (catch(-1)) return result;
   // compute new peaks in by fitting a gauss curve to each peak.
   r = lmfit(eaarl_cf_lmfit_gauss, xaxis, a, wf, 1.0, itmax=200, stdev=conf.initsd, tol=0.001);
-  if ( r.niter == 200 ) return result;
+  if(r.niter == 200) return result;
 
   // fit a new curve to the adjusted peaks.
   yfit = eaarl_cf_lmfit_gauss(xaxis, a);
@@ -386,8 +386,8 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
 
   if(numberof(wneg)) {
     // CF results
-    save, result, lrx        = foo.peaks(0);
-    save, result, lintensity = yfit(foo.peaks(0));
+    save, result, lrx=foo.peaks(0);
+    save, result, lintensity=yfit(foo.peaks(0));
 
     if(plot) {
       plmk, result.lintensity, result.lrx, color="blue", marker=1, msize=.5,
@@ -402,15 +402,14 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
   return result;
 }
 
-func eaarl_cf_lmfit_gauss(x, a, f=)
+func eaarl_cf_lmfit_gauss(x, a, f=) {
 /* DOCUMENT eaarl_cf_lmfit_guass(x, a, f=)
   Wrapper function that gets everything in the right format for LM_fit
   function to perform optimization.
 */
-{
-  if (is_void(f)) f=0;
+  if(is_void(f)) f=0;
   for (i=1; i < numberof(a); i+=3)
-    f += gauss (x,a(i:i+2));
+    f += gauss(x,a(i:i+2));
   return f;
 }
 
@@ -433,8 +432,8 @@ func eaarl_cf_peak_finder(wf, thresh) {
       peaks((j+i)/2) = 1;
     }
   }
-  edges  = where(edges);
-  peaks  = where(peaks);
+  edges = where(edges);
+  peaks = where(peaks);
   save, wf_pe, peaks=peaks, edges=edges;
   return wf_pe;
 }
