@@ -145,14 +145,13 @@ func eaarl_cf_rx_channel(pulses) {
     lbias(i) = biases(lchannel(i));
 
     tmp = cf_rx_wf(*pulses.rx(lchannel(i),i), conf);
-    lintensity(i) = tmp.lintensity(0);   // XYZZY - use last value?
-    lrx(i) = tmp.lrx(0);
+    lintensity(i) = tmp.lintensity;
+    lrx(i) = tmp.lrx;
     rets(i) = tmp.num_rets;
   }
 
   save, pulses, lrx, lintensity, lbias, lchannel, rets;
 }
-
 
 func eaarl_cf_plot(raster, pulse, channel=, win=, xfma=) {
 /* DOCUMENT eaarl_cf_plot, raster, pulse, channel=, win=, xfma=
@@ -289,9 +288,6 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
 
   if(!npeaks)
     return result;
-
-  save, result, lrx=peaks;
-  save, result, lintensity=wf(peaks);
 
   // First derivative of waveform
   wfd1 = wf(dif);
