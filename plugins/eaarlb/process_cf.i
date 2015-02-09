@@ -378,34 +378,6 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
       // show last return as a solid triangle
       plmk, yfit(foo.peaks(0)), foo.peaks(0), marker=marker, msize=.01,
         color="green", width=10;
-
-/* The only thing this code really does is plot the individual peaks in
-   different colors instead the entire line in a single color;
-/* OLD Code
-      rr =    0;
-      gg =  255;
-      bb =    0;
-
-      gret = array(float, numberof(wf));
-      for (i=1; i < numberof(a); i+=3) {
-        gret = gauss (xaxis,a(i:i+2));
-        gmax = gret(max);
-        tgret = where(gret>1);
-        gpos = where(gret==gret(max));
-        write, format="gpos: %d\n", gpos;
-        gret(gpos(1):gpos(1)+2);
-        if ( numberof(gpos) == 1 ) {
-//        plg, gret, color=[rr, gg, bb], width=5;
-          plg, gret(tgret), tgret, color=[rr, gg, bb], width=5;  // peaks only
-          plmk, gmax, gpos, marker=marker, msize=.01,
-            color=[rr, gg, bb], width=1;
-        }
-//      rr -=  96/npeaks;
-        gg -= 128/npeaks;  // shades of green
-//      bb -=  96/npeaks;
-      }
-      // plg, yfit, color="magenta", width=5;
-*/
     }
   }
 
@@ -421,10 +393,6 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
   }
 
   if(numberof(wneg)) {
-    // BE results
-//  save, result, lrx = edges(0) + wneg(1);
-//  save, result, lintensity = wf(result.lrx);
-
     // CF results
     save, result, lrx        = foo.peaks(0);
     save, result, lintensity = yfit(foo.peaks(0));
@@ -441,7 +409,6 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
 
   return result;
 }
-
 
 func eaarl_cf_lmfit_gauss(x, a, f=)
 /* DOCUMENT eaarl_cf_lmfit_guass(x, a, f=)
