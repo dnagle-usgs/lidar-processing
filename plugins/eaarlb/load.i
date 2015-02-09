@@ -12,7 +12,6 @@ include, base + "class_bathconfobj.i";
 include, base + "class_mpconfobj.i";
 include, base + "class_sbconfobj.i";
 include, base + "class_vegconfobj.i";
-write, format="%s\n", "Loading NEW Curve Fitting object";
 include, base + "class_cfconfobj.i";
 
 include, base + "autoselect.i";
