@@ -360,15 +360,15 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
       plmk, wf(edges(0)+1), xaxis(edges(0)+1), marker=marker, msize=.01,
         color="red", width=1;
 
+    tmp = eaarl_cf_peak_finder( yfit, conf.thresh);
     if (plot) {
       // plot the entire computed curve
       plg, yfit, color="green", width=5;
-      foo = eaarl_cf_peak_finder( yfit, conf.thresh);
       // show first return in a bold hollow triangle
-      plmk, yfit(foo.peaks(1)), foo.peaks(1), marker=marker, msize=.01,
+      plmk, yfit(tmp.peaks(1)), tmp.peaks(1), marker=marker, msize=.01,
         color="green", width=5;
       // show last return as a solid triangle
-      plmk, yfit(foo.peaks(0)), foo.peaks(0), marker=marker, msize=.01,
+      plmk, yfit(tmp.peaks(0)), tmp.peaks(0), marker=marker, msize=.01,
         color="green", width=10;
     }
   }
@@ -386,15 +386,15 @@ func eaarl_cf_rx_wf(rx, conf, &msg, plot=) {
 
   if(numberof(wneg)) {
     // CF results
-    save, result, lrx=foo.peaks(0);
-    save, result, lintensity=yfit(foo.peaks(0));
+    save, result, lrx=tmp.peaks(0);
+    save, result, lintensity=yfit(tmp.peaks(0));
 
     if(plot) {
       plmk, result.lintensity, result.lrx, color="blue", marker=1, msize=.5,
         width=10;
 
       write, format="BE: %ld %lf\n", edges(0)+wneg(1),  wf(edges(0)+wneg(1));
-      write, format="CF: %ld %lf\n", foo.peaks(0), yfit(foo.peaks(0));
+      write, format="CF: %ld %lf\n", tmp.peaks(0), yfit(tmp.peaks(0));
 
     }
   }
