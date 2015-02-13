@@ -195,7 +195,18 @@ func tksetval(tkvar, yval) {
 
   SEE ALSO: tksetvar
 */
-  tkcmd, swrite(format="tky_set %s {%s}", tkvar, print(yval)(sum));
+  p = print(yval)(sum);
+  // If yval contains a string that is too long, it will receive a line
+  // continuation character. This corrupts the data when sent to Tcl.
+  // Increasing the line length fixes the issue.
+  // TODO: Find a solution that doens't reset print_format to 80, since that
+  // clobbers any user-set value. (That does not happen often though.)
+  if(strlen(p) > 79) {
+    print_format, strlen(p);
+    p = print(yval)(sum);
+    print_format, 80;
+  }
+  tkcmd, swrite(format="tky_set %s {%s}", tkvar, p);
 }
 
 func tksetvar(tkvar, yvar) {
