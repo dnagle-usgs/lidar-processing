@@ -162,14 +162,14 @@ proc rename_varlist {old new} {
   }
 }
 
-proc init_var_settings {var args} {
+proc init_var_settings {var {newmode ""}} {
   dict set ::var_settings($var) var $var
   set settings [array get ::plot_settings]
 
-  if { $var ne "" } {
+  if { $newmode ne "" } {
     set key "display_mode"
     if {![dict exists $::var_settings($var) $key]} {
-      set ::plot_settings(display_mode) $args
+      set ::plot_settings(display_mode) $newmode
     }
   }
 
