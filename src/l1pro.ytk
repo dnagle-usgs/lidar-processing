@@ -121,11 +121,11 @@ if {![info exists l1pro_data]} {
 # after they exist
 package require l1pro
 
-proc append_varlist {newvar} {
+proc append_varlist {newvar newmode} {
   global varlist
   if {[lsearch -exact $varlist $newvar] == -1} {
     lappend varlist $newvar
-    init_var_settings $newvar
+    init_var_settings $newvar $newmode
   }
 }
 
@@ -165,6 +165,14 @@ proc rename_varlist {old new} {
 proc init_var_settings {var args} {
   dict set ::var_settings($var) var $var
   set settings [array get ::plot_settings]
+
+  if { [info exists args] } {
+    set key "display_mode"
+    if {![dict exists $::var_settings($var) $key]} {
+      set ::plot_settings(display_mode) $args
+    }
+  }
+
   foreach {key val} [array get ::plot_settings] {
     if {![dict exists $::var_settings($var) $key]} {
       dict set ::var_settings($var) $key $val
