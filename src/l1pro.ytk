@@ -169,7 +169,7 @@ proc init_var_settings {var {newmode ""}} {
   if { $newmode ne "" } {
     set key "display_mode"
     if {![dict exists $::var_settings($var) $key]} {
-      set ::plot_settings(display_mode) $newmode
+      dict set ::var_settings($var) key $newmode
     }
   }
 
