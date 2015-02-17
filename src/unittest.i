@@ -80,6 +80,7 @@ func ut_run(fn) {
   ut_res = [];
   ut_msg = [];
   ut_sec = [];
+  ut_current_section = string(0);
 
   write, "";
   res = ut_run_helper(fn);
@@ -201,7 +202,7 @@ func ut_error(expr, msg) {
 
     ut_error, "tmp = 1/0.", "divide by zero";
 
-  SEE ALSO: unittest
+  SEE ALSO: unittest, ut_noerror
 */
   if(catch(-1)) {
     ut_item, 1, msg;
@@ -219,4 +220,42 @@ func ut_error(expr, msg) {
   }
   UT_ERROR_HELPER = [];
   ut_item, 0, msg;
+}
+
+func ut_noerror(expr, msg) {
+/* DOCUMENT ut_noerror, fnc, "<msg>";
+  -or-  ut_noerror, "<expr>";
+
+  Unit test case that verifies that FNC or EXPR does not throw an error. This
+  test succeeds if the input does not throw an error. If it does throw an
+  error, then the test fails.
+
+  FNC should be a function name. EXPR should be a string to evaluate.
+
+  For example, this is a failing test case:
+
+    ut_noerror, "tmp = 1/0.", "divide by zero";
+
+  And this is a passing test case:
+
+    ut_noerror, "tmp = 0", "assignment to zero";
+
+  SEE ALSO: unittest, ut_error
+*/
+  if(catch(-1)) {
+    ut_item, 0, msg;
+    return;
+  }
+  if(is_string(expr)) {
+    default, msg, expr(1);
+    code = grow("func UT_ERROR_HELPER {", expr, "}");
+    include, code, 1;
+  } else {
+    UT_ERROR_HELPER = expr;
+  }
+  if(is_func(UT_ERROR_HELPER)) {
+    UT_ERROR_HELPER;
+  }
+  UT_ERROR_HELPER = [];
+  ut_item, 1, msg;
 }
