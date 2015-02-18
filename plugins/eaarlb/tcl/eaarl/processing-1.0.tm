@@ -274,6 +274,7 @@ proc ::eaarl::processing::process {} {
         {cf} {be} \
     ]
 
+    append_varlist $pro_var_next $modelist($processing_mode)
     set ::pro_var $pro_var_next
 
     set make_eaarl "make_eaarl"
@@ -309,7 +310,6 @@ proc ::eaarl::processing::process {} {
     if {$cmd ne ""} {
         append cmd "; $::pro_var = sortdata($::pro_var, method=\"soe\")"
         exp_send "$cmd;\r"
-        append_varlist $::pro_var $modelist($processing_mode)
         return
     }
 
@@ -336,7 +336,6 @@ proc ::eaarl::processing::process {} {
         append cmd "; $::pro_var = sortdata($::pro_var, method=\"soe\")"
         exp_send "$cmd;\r"
     }
-    append_varlist $::pro_var $modelist($processing_mode)
 }
 
 proc ::eaarl::processing::process_channel {channel} {

@@ -267,6 +267,7 @@ proc ::eaarl::processing::process {} {
     variable ::eaarl::avg_surf
     variable ::eaarl::interactive_batch
 
+    append_varlist $pro_var_next
     set ::pro_var $pro_var_next
 
     set make_eaarl "make_eaarl"
@@ -313,5 +314,4 @@ proc ::eaarl::processing::process {} {
         }
         exp_send "$cmd;\r"
     }
-    append_varlist $::pro_var
 }
