@@ -92,8 +92,29 @@ proc ::yorick::destroy_fifos {args} {
 }
 
 proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
-    array set opts {-rlterm 0 -rlwrap 0 -log 0}
+    array set opts {-rlterm 0 -rlwrap 0 -log 0 -python 0}
     array set opts $args
+
+    if {$opts(-python)} {
+        if {$::_ytk(python_path) eq ""} {
+            set python [auto_execok python3]
+            if {$python eq ""} {
+                error "Unable to find python3"
+            }
+        } else {
+            set python $::_ytk(python_path)
+        }
+        set cmd [list ::spawn -noecho $python pyo.py $yor_tcl_fn $tcl_yor_fn]
+        set result [catch $cmd]
+        if {!$result} {
+            expect ">>> " {
+                exp_send "yo()\r"
+                return [list $spawn_id [array get spawn_out]]
+            }
+        } else {
+            return ""
+        }
+    }
 
     set spawner {cmd {
         set cmd [list spawn -noecho {*}$cmd]

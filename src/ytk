@@ -516,7 +516,7 @@ proc spawn_yorick {} {
     set rlterm [expr {$_ytk(use_rlterm) eq "Yes"}]
     set rlwrap [expr {$_ytk(use_rlwrap) eq "Yes"}]
     set result [::yorick::spawn $ytk_fifo_name $tky_fifo_name \
-            -rlwrap $rlwrap -rlterm $rlterm -log 1]
+            -rlwrap $rlwrap -rlterm $rlterm -log 1 -python $_ytk(use_python)]
 
     if {$result ne ""} {
         # Make this expect session the default
@@ -869,7 +869,7 @@ load_options
 set options {
     {A "disable ALPS startup (only load ytk)"}
     {p "enable Python mode"}
-    {P.arg "" "specify Python path (if omitted, will auto-detect)"}
+    {P.arg "" "specify Python path; implies -p (if omitted, will auto-detect)"}
     {D.arg "" "how to handle duplicate history entries (passed to rlwrap)"}
     {H.arg "" "set the history file name (passed to rlwrap)"}
     {s.arg "" "set the history file size (passed to rlwrap)"}
@@ -882,7 +882,7 @@ unset usage
 if {[dict get $params A]} {
     set _ytk(start_alps) 0
 }
-if {[dict get $params p]} {
+if {[dict get $params p] || [dict get $params P] ne ""} {
     set _ytk(use_python) 1
 }
 dict for {k y} {
