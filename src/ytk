@@ -332,14 +332,16 @@ proc restore_defaults {} {
 ##
     global _ytk
     array unset _ytk *
-    set _ytk(use_rlterm)                No
-    set _ytk(use_rlwrap)                Yes
+    set _ytk(use_rlterm) No
+    set _ytk(use_rlwrap) Yes
     set _ytk(separate_help_win) Yes
-    set _ytk(initialdir)                /data
-    set _ytk(start_alps)            1
-    set _ytk(rlwrap_nodupes)        1
-    set _ytk(rlwrap_histfile)       ""
-    set _ytk(rlwrap_histsize)       ""
+    set _ytk(initialdir) /data
+    set _ytk(start_alps) 1
+    set _ytk(rlwrap_nodupes) 1
+    set _ytk(rlwrap_histfile) ""
+    set _ytk(rlwrap_histsize) ""
+    set _ytk(use_python) 0
+    set _ytk(python_path) ""
 }
 
 proc load_options {} {
@@ -866,6 +868,8 @@ load_options
 
 set options {
     {A "disable ALPS startup (only load ytk)"}
+    {p "enable Python mode"}
+    {P.arg "" "specify Python path (if omitted, will auto-detect)"}
     {D.arg "" "how to handle duplicate history entries (passed to rlwrap)"}
     {H.arg "" "set the history file name (passed to rlwrap)"}
     {s.arg "" "set the history file size (passed to rlwrap)"}
@@ -878,10 +882,14 @@ unset usage
 if {[dict get $params A]} {
     set _ytk(start_alps) 0
 }
+if {[dict get $params p]} {
+    set _ytk(use_python) 1
+}
 dict for {k y} {
     D rlwrap_nodupes
     H rlwrap_histfile
     s rlwrap_histsize
+    P python_path
 } {
     if {[dict get $params $k] ne ""} {
         set _ytk($y) [dict get $params $k]
