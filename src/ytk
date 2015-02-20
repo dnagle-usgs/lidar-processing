@@ -44,11 +44,13 @@ proc app_root_dir {} {
 
 ::tcl::tm::path add [file join [app_root_dir] tcl]
 
-# Ensures that programs in .../eaarl/bin are detected and take precedence when
-# using auto_execok
+# Ensures that programs in .../alps/bin are detected and take precedence when
+# using auto_execok. This uses both the bin related to this instance of ytk as
+# well as the bin related to the tcl executable that is running it.
 set bindir [file join [file dirname [file dirname [app_root_dir]]] bin]
+set tclbin [file dirname [info nameofexecutable]]
 set pathsep [expr {$::tcl_platform(platform) eq "windows" ? ";" : ":"}]
-set env(PATH) $bindir$pathsep$env(PATH)
+set env(PATH) $bindir$pathsep$tclbin$pathsep$env(PATH)
 
 package require Tk
 package require style
