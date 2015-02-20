@@ -911,8 +911,7 @@ if {[spawn_yorick]} {
     ytk_exit 3
 }
 
-expect "Yorick * ready"
-set yorick_version [lindex [split $expect_out(0,string)] 1]
+set yorick_version [yget Y_VERSION]
 
 logger debug "Yorick executable: [auto_execok yorick]"
 logger debug "Yorick version: $yorick_version"
