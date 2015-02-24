@@ -372,6 +372,8 @@ func logger_quit(void) {
   Normally this terminates the program.
 */
   logger_term;
+  if(pyorick_state != "python")
+    tkcmd, "after 50 {after idle exit}";
   __logger_quit_real;
 }
 if(is_void(__logger_quit_real)) {
