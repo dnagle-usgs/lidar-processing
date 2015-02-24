@@ -112,7 +112,7 @@ proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
         set cmd [list ::spawn -noecho $python pyo.py $yorick $yor_tcl_fn $tcl_yor_fn]
         set result [catch $cmd]
         if {!$result} {
-            expect ">>> " {
+            expect "Python 3" {
                 exp_send "yo()\r"
                 return [list $spawn_id [array get spawn_out]]
             }
