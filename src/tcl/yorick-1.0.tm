@@ -95,6 +95,11 @@ proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
     array set opts {-rlterm 0 -rlwrap 0 -log 0 -python 0}
     array set opts $args
 
+    set yorick [auto_execok yorick]
+    if {$yorick eq ""} {
+        error "Unable to find Yorick"
+    }
+
     if {$opts(-python)} {
         if {$::_ytk(python_path) eq ""} {
             set python [auto_execok python3]
@@ -104,7 +109,7 @@ proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
         } else {
             set python $::_ytk(python_path)
         }
-        set cmd [list ::spawn -noecho $python pyo.py $yor_tcl_fn $tcl_yor_fn]
+        set cmd [list ::spawn -noecho $python pyo.py $yorick $yor_tcl_fn $tcl_yor_fn]
         set result [catch $cmd]
         if {!$result} {
             expect ">>> " {
@@ -130,13 +135,8 @@ proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
     set result ""
     set cmd ""
 
-    set yorick [auto_execok yorick]
     set rlterm [auto_execok rlterm]
     set rlwrap [auto_execok rlwrap]
-
-    if {$yorick eq ""} {
-        error "Unable to find Yorick"
-    }
 
     if {$opts(-log)} {
         set logfn ${::logger::fn}.tscp
