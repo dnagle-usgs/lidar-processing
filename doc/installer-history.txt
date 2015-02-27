@@ -2,6 +2,30 @@ This file documents the changes made to the ALPS installer package. These
 installer packages are typically available on lidar.net under
 /mnt/alps/install/.
 
+2015-02-27
+    - Updated installer to tip f034169457fc
+    - Upgraded cctools to 4.3.2
+    - Upgraded rlwrap to 0.42
+    - Yorick changes:
+        - Upgraded Yorick to db564edacd
+    - Python changes:
+        - Upgraded Python to 2.7.9
+        - Removed Twisted
+        - Removed zope.interface
+        - Changed installer to use pip to install remaining Python modules
+        - Upgraded to docutils 0.11
+        - Upgraded to mercurial 3.3
+        - Upgraded to paramiko 1.15.2
+        - Added ecdsa 0.13 (prerequisite for other modules)
+        - Added wsgiref 0.1.2 (prerequisite for other modules)
+    - Added Anaconda installation with Python3
+        - Using Miniconda3 3.8.3
+        * Note: Python 2 is required for Mercurial but Python 3 is required
+          for future development in ALPS. This is why two versions are
+          installed.  Anaconda makes it massively easier to install numpy and
+          other scientific packages than a source installation.
+    - Added git 2.3.1
+
 2014-10-31
     - Updated installer to tip 5a7cd1f4c6e1
     - Yorick changes:
