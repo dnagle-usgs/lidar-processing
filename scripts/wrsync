@@ -4,9 +4,12 @@
 # 5 seconds.  The wrapper checks the return value.  If the return value
 # indicates the transfer timed out or never started, then the rsync is
 # re-issued.
+# Added setting --chmod=D-t to filter the sticky bit set on directories.
 
 $TIMEOUT = 3072;  # should be 30 according to man, but actual use returned this
-$NOSTART = 7680;  # discovered through use.
+$NOSTART = 65280; # 2013-11-20 - eros, last set on 20080929
+$NOSTART = 7680;  # discovered through use,  2014-10-01 setting this again.
+
 
 
 ######################################################################
@@ -158,7 +161,7 @@ my $opt   = "";
    $opt .=   $nors   if ( $norsync == 1 );
    $opt .=  $permstr if ( $noperm == 1 );
 
-my $cmd = "rsync --timeout 20 -PHavmh $opt";
+my $cmd = "rsync --timeout 20 -PHavmh --chmod=D-t $opt";
 for ( $i=0; $i<=$#ARGV; ++$i) {
   if ( $ARGV[$i] =~ '`' ) {
     # printf("hit: %s\n", $ARGV[$i] );
