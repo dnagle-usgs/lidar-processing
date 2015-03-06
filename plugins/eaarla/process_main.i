@@ -394,9 +394,17 @@ makeflow_fn=, norun=, retconf=, opts=) {
   hook_add, "job_run", "hook_run_job_eaarl_process";
 
   makeflow_run, conf, makeflow_fn, interval=15, norun=norun;
-  if(norun) return;
+  if(norun) {
+    if(verbose)
+      write, "Aborting, norun=1";
+    return;
+  }
 
+  if(verbose)
+    write, "Collating data from temporary files...";
   data = dirload(files=pbdfn, verbose=0);
+  if(verbose)
+    write, "Cleaning up...";
   remove_recursive, tempdir;
 
   if(verbose) {
@@ -787,6 +795,10 @@ func hook_prep_job_eaarl_process(env) {
         save, wrapped, ops_conf=serialize(wrapped.ops_conf);
       if(wrapped(*,"vegconf_data"))
         save, wrapped, vegconf_data=serialize(wrapped.vegconf_data);
+      if(wrapped(*,"sbconf_data"))
+        save, wrapped, sbconf_data=serialize(wrapped.sbconf_data);
+      if(wrapped(*,"cfconf_data"))
+        save, wrapped, cfconf_data=serialize(wrapped.cfconf_data);
 
       // Temporary hack for veg
       define_veg_conf;
@@ -852,6 +864,10 @@ func hook_run_job_eaarl_process(env) {
     save, wrapped, ops_conf=deserialize(wrapped.ops_conf);
   if(wrapped(*,"vegconf_data"))
     save, wrapped, vegconf_data=deserialize(wrapped.vegconf_data);
+  if(wrapped(*,"sbconf_data"))
+    save, wrapped, sbconf_data=deserialize(wrapped.sbconf_data);
+  if(wrapped(*,"cfconf_data"))
+    save, wrapped, cfconf_data=deserialize(wrapped.cfconf_data);
   mission, unwrap, wrapped;
 
   return env;
