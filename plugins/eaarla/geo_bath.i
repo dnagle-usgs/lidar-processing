@@ -3,7 +3,7 @@
    For processing bathymetry data using the topographic georectification.
 */
 
-func make_fs_bath(d, rrr, avg_surf=, sample_interval=, verbose=) {
+func make_fs_bath(d, rrr, avg_surf=, sample_interval=, verbose=, forcechannel=) {
 /* DOCUMENT make_fs_bath (d, rrr, avg_surf=, sample_interval=, verbose=)
 
   This function makes a depth or bathymetric image using the georectification
@@ -307,7 +307,7 @@ func make_bathy(latutm=, q=, avg_surf=, ext_bad_att=, forcechannel=, verbose=) {
         write, "Using make_fs_bath for submerged topography...";
         pause, 1; // make sure Yorick shows output
       }
-      depth = make_fs_bath(depth, surface, avg_surf=avg_surf,
+      depth = make_fs_bath(depth, surface, avg_surf=avg_surf, forcechannel=forcechannel,
         verbose=max(0,verbose-1), sample_interval=sample_interval);
 
       // make depth correction using compute_depth
