@@ -1,6 +1,7 @@
 {
   "description": "EAARL-A processing",
   "yorick": {
+    "auto": "eaarla_auto.i",
     "load": "load.i"
   },
   "tcl": {
