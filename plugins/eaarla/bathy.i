@@ -219,7 +219,7 @@ win=, xfma=, verbose=, keeprejected=) {
 
   local surface_sat_end, surface_intensity, escale;
   bathy_detect_surface, wf, maxint, conf, surface_sat_end, surface_intensity,
-    escale;
+    escale, forcechannel=forcechannel;
   result.first_peak = surface_intensity;
 
   if(numsat > 14) {
@@ -335,7 +335,7 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, &conf, &wf,
 }
 
 func bathy_detect_surface(wf, maxint, conf, &surface, &surface_intensity,
-&escale) {
+&escale, forcechannel=) {
 /* DOCUMENT bathy_detect_surface(wf, maxint, conf, &surface,
    &surface_intensity, &escale)
   Part of bathy algorithm. Detects the surface. However, this is not a -true-
@@ -362,14 +362,15 @@ func bathy_detect_surface(wf, maxint, conf, &surface, &surface_intensity,
 
   // Else if no saturated first return is found...
   } else {
+    wantlen = 10;
     wfl = numberof(wf);
-    if(wfl > 18) {
-      wfl = 18;
-      surface = wf(1:min(10,wflen))(mxx);
+    if(wfl > wantlen + 8) {
+      surface = wf(1:wantlen)(mxx);
     } else {
-      surface = min(10,wflen);
+      surface = min(wantlen, wflen);
     }
-    wfl = min(10, wfl);
+    wfl = min(wantlen, wfl);
+
     escale = wf(1:wfl)(max) - 1;
   }
 
@@ -558,6 +559,7 @@ func bathy_validate_bottom(wf, bottom, conf, &msg, graph=) {
 }
 
 func plot_bath_ctl(channel, wf, thresh=, first=, last=, raster=, pulse=) {
+  extern bath_ctl;
   default, channel, 1;
   conf = bathconf(settings, channel);
   default, thresh, conf.thresh;
