@@ -233,6 +233,27 @@ func autoselect_edb(dir, options=) {
   return options ? results : results(1);
 }
 
+func autoselect_cir_dir(dir, options=) {
+/* DOCUMENT cir_dir = autoselect_cir_dir(dir, options=)
+  This function attempts to determine the EAARL cir directory to load for a
+  dataset. The dir parameter should be the path to the mission day directory.
+
+  If a subdirectory "cir" exists, it will be returned. Otherwise, string(0) is
+  returned.
+
+  If options=1, then an array of all possibilities that meet the criteria above
+  is returned instead. If no possiblities are found, then [string(0)] is
+  returned.
+*/
+  results = [];
+  cir_dir = file_join(dir, "cir");
+  if(file_isdir(cir_dir))
+    grow, results, cir_dir;
+  if(is_void(results))
+    results = [string(0)];
+  return options ? results : results(1);
+}
+
 func autoselect_nir_dir(dir, options=) {
 /* DOCUMENT nir_dir = autoselect_nir_dir(dir, options=)
   This function attempts to determine the EAARL nir directory to load for a
@@ -272,6 +293,34 @@ func autoselect_rgb_dir(dir, options=) {
     rgb_dir = file_join(dir, dirs(i));
     if(file_isdir(rgb_dir))
       grow, results, rgb_dir;
+  }
+  if(is_void(results))
+    results = [string(0)];
+  return options ? results : results(1);
+}
+
+func autoselect_rgb_tar(dir, options=) {
+/* DOCUMENT rgb_tar = autoselect_rgb_tar(dir, options=)
+  This function attempts to determine the EAARL rgb tar file to load for a
+  dataset. The dir parameter should be the path to the mission day directory.
+
+  Three patterns are checked, in this order: *-cam1.tar, cam1-*.tar, and
+  cam1.tar. The first pattern that matches any files will be used; if
+  multiple files match that pattern, then the files are sorted and the first
+  is returned. If no matches are found, string(0) is returned.
+
+  If options=1, then an array of all possibilities that meet the criteria above
+  is returned instead. If no possiblities are found, then [string(0)] is
+  returned.
+*/
+  globs = ["*-cam1.tar", "cam1-*.tar", "cam1.tar"];
+  results = [];
+  for(i = 1; i <= numberof(globs); i++) {
+    files = lsfiles(dir, glob=globs(i));
+    if(numberof(files)) {
+      files = files(sort(files));
+      grow, results, file_join(dir, files);
+    }
   }
   if(is_void(results))
     results = [string(0)];

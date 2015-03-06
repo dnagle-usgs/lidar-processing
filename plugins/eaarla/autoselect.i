@@ -130,6 +130,33 @@ func autoselect_vegconf(dir, options=) {
   return autoselect_globs(dir, globs, options=options);
 }
 
+func autoselect_sbconf(dir, options=) {
+/* DOCUMENT sbconf_file = autoselect_sbconf(dir, options=)
+
+  This function attempts to determine the shallow bathy settings file to load
+  for a dataset. The dir parameter should be the path to the mission day
+  directory.
+
+  The function attempts to find an appropriate settings file by looking in
+  these locations:
+
+    1. dir/alps
+    2. dir
+    3. dir/../alps
+    4. dir/..
+
+  It looks for files matching the pattern *.sbconf.
+
+  If no file can be found, then the nil string is returned (string(0)).
+
+  If options=1, then an array of all possibilities that meet the criteria above
+  is returned instead. If no possiblities are found, then [string(0)] is
+  returned.
+*/
+  globs = ["*.sbconf"];
+  return autoselect_globs(dir, globs, options=options);
+}
+
 func autoselect_mpconf(dir, options=) {
 /* DOCUMENT mpconf_file = autoselect_mpconf(dir, options=)
 
@@ -154,6 +181,33 @@ func autoselect_mpconf(dir, options=) {
   returned.
 */
   globs = ["*.mpconf"];
+  return autoselect_globs(dir, globs, options=options);
+}
+
+func autoselect_cfconf(dir, options=) {
+/* DOCUMENT cfconf_file = autoselect_cfconf(dir, options=)
+
+  This function attempts to determine the Curve Fitting settings file to load
+  for a dataset. The dir parameter should be the path to the mission day
+  directory.
+
+  The function attempts to find an appropriate settings file by looking in
+  these locations:
+
+    1. dir/alps
+    2. dir
+    3. dir/../alps
+    4. dir/..
+
+  It looks for files matching the pattern *.cfconf.
+
+  If no file can be found, then the nil string is returned (string(0)).
+
+  If options=1, then an array of all possibilities that meet the criteria above
+  is returned instead. If no possiblities are found, then [string(0)] is
+  returned.
+*/
+  globs = ["*.cfconf"];
   return autoselect_globs(dir, globs, options=options);
 }
 
@@ -195,6 +249,27 @@ func autoselect_cir_dir(dir, options=) {
   cir_dir = file_join(dir, "cir");
   if(file_isdir(cir_dir))
     grow, results, cir_dir;
+  if(is_void(results))
+    results = [string(0)];
+  return options ? results : results(1);
+}
+
+func autoselect_nir_dir(dir, options=) {
+/* DOCUMENT nir_dir = autoselect_nir_dir(dir, options=)
+  This function attempts to determine the EAARL nir directory to load for a
+  dataset. The dir parameter should be the path to the mission day directory.
+
+  If a subdirectory "nir" exists, it will be returned. Otherwise, string(0) is
+  returned.
+
+  If options=1, then an array of all possibilities that meet the criteria above
+  is returned instead. If no possiblities are found, then [string(0)] is
+  returned.
+*/
+  results = [];
+  nir_dir = file_join(dir, "nir");
+  if(file_isdir(nir_dir))
+    grow, results, nir_dir;
   if(is_void(results))
     results = [string(0)];
   return options ? results : results(1);
