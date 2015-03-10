@@ -107,8 +107,9 @@ func vegconfobj_validate(group) {
   defaults = save(
     thresh=4.0, noiseadj=0, max_samples=0, smoothwf=0
   );
-  if(numberof(channels) == 1 && channels(1) == 3)
-    save, defaults, max_samples=20;
+  restore, hook_invoke("vegconfobj_validate_defaults",
+    save(active, channels, defaults));
+
   key_default_and_cast, active, defaults;
   tksync, idleadd,
     swrite(format="vegconf.data.%s.active.%s", group, defaults(*,)),

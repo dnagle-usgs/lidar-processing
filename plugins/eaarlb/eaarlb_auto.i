@@ -8,6 +8,7 @@ func hook_plugins_load_eaarlb(env) {
 
   hook_add, "pcr_channel", "hook_eaarlb_pcr_channel";
   hook_add, "chanconfobj_clear", "hook_eaarlb_chanconfobj_clear";
+  hook_add, "vegconfobj_validate_defaults", "hook_eaarlb_vegconfobj_validate_defaults";
   hook_add, "bathy_detect_surface", "hook_eaarlb_bathy_detect_surface";
 
   return env;
@@ -25,6 +26,12 @@ func hook_eaarlb_chanconfobj_clear(env) {
     chn3=save(channels=3), 
     chn4=save(channels=4) 
   );
+  return env;
+}
+
+func hook_eaarlb_vegconfobj_validate_defaults(env) {
+  if(numberof(env.channels) == 1 && env.channels(1) == 3)
+    save, env.defaults, max_samples=20;
   return env;
 }
 

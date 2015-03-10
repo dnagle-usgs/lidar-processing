@@ -101,11 +101,15 @@ func vegconfobj_validate(group) {
   // Only validate fields on active profile.
   use, data;
   active = data(noop(group)).active;
+  channels = data(noop(group)).channels;
 
   // Values that all confs have
   defaults = save(
     thresh=4.0, noiseadj=0, max_samples=0, smoothwf=0
   );
+  restore, hook_invoke("vegconfobj_validate_defaults",
+    save(active, channels, defaults));
+
   key_default_and_cast, active, defaults;
   tksync, idleadd,
     swrite(format="vegconf.data.%s.active.%s", group, defaults(*,)),
