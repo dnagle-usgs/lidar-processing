@@ -342,6 +342,13 @@ func bathy_detect_surface(wf, maxint, conf, &surface, &surface_intensity,
   surface, since for saturated returns the sample of saturation is returned
   instead of a point in the middle of the saturated region.
 */
+  if(forcechannel == 4) {
+    wantlen = 17;
+  } else {
+    wantlen = 10;
+  }
+  restore, hook_invoke("bathy_detect_surface", save(forcechannel, wantlen));
+
   wflen = numberof(wf);
   saturated = where(wf == maxint);
   numsat = numberof(saturated);
@@ -362,12 +369,6 @@ func bathy_detect_surface(wf, maxint, conf, &surface, &surface_intensity,
 
   // Else if no saturated first return is found...
   } else {
-    if(forcechannel == 4) {
-      wantlen = 17;
-    } else {
-      wantlen = 10;
-    }
-
     wfl = numberof(wf);
     if(wfl > wantlen + 8) {
       surface = wf(1:wantlen)(mxx);
