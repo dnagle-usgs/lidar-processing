@@ -196,6 +196,7 @@ func plugins_load(name, force=) {
   }
   save, __plugins__,
     conflicts=grow(__plugins__.conflicts, data.conflicts);
+  hook_invoke, "plugins_load", save(name);
   for(i = 1; i <= numberof(data.requires); i++) {
     plugins_load, data.requires(i);
   }
@@ -206,7 +207,6 @@ func plugins_load(name, force=) {
     tkcmd, swrite(format="source {%s}", file_join(base, data.tcl.load)), async=0;
   save, __plugins__,
     loaded=grow(__plugins__.loaded, name);
-  hook_invoke, "plugins_load", save(name);
   if(_ytk)
     tkcmd, swrite(format="lappend ::plugins::loaded {%s}", name), async=0;
 }
