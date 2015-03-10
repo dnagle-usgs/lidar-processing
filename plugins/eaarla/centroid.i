@@ -42,6 +42,8 @@ func pcr(rast, pulse, forcechannel=) {
   // give up if there are not at least two points
   if(np < 2) return;
 
+  restore, hook_invoke("pcr_channel", save(forcechannel));
+
   // use no more than 12
   np = min(np,12);
 
