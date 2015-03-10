@@ -15,6 +15,7 @@ SAD2 = 720.0 / REV;
 local CHANNEL_COUNT;
 /* DOCUMENT CHANNEL_COUNT
   EAARL system constant. CHANNEL_COUNT specifies how many active channels there
-  are and is 3 for EAARL-A.
+  are. This varies based on which EAARL version is active. If 0, it means the
+  EAARL code isn't fully loaded.
 */
-CHANNEL_COUNT = 3;
+if(is_void(CHANNEL_COUNT)) CHANNEL_COUNT = 0;
