@@ -209,6 +209,7 @@ func plugins_load(name, force=) {
     loaded=grow(__plugins__.loaded, name);
   if(_ytk)
     tkcmd, swrite(format="lappend ::plugins::loaded {%s}", name), async=0;
+  hook_invoke, "plugins_load_post", save(name);
 }
 
 func plugins_autoload(void) {
