@@ -145,12 +145,8 @@ save, base, groups=chanconfobj_groups;
 
 save, scratch, chanconfobj_clear;
 func chanconfobj_clear(void) {
-  working = save(
-    chn1=save(channels=1), 
-    chn2=save(channels=2), 
-    chn3=save(channels=3), 
-    chn4=save(channels=4) 
-  );
+  working = save();
+  restore, hook_invoke("chanconfobj_clear", save(working));
   use_method, groups, working, copy=0;
 }
 save, base, confobj_clear=base.clear;
