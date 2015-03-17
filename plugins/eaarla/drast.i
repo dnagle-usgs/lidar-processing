@@ -58,7 +58,7 @@ func apply_depth_scale_f(data, scale, units=, autoshift=, offset=) {
   }
   return scale;
 }
-apply_depth_scale = closure(apply_depth_scale_f, save(units="meters", offset=5));
+apply_depth_scale = closure(apply_depth_scale_f, save(units="meters", offset=0));
 
 local wfa;  // decoded waveform array
 

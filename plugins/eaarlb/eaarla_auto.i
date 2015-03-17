@@ -1,4 +1,5 @@
 hook_add, "plugins_load", "hook_plugins_load_eaarla";
+hook_add, "plugins_load_post", "hook_plugins_load_eaarla_post";
 
 // All EAARL plugin hook functions should have the naming convention
 //    hook_eaarlX_<hook name>
@@ -19,6 +20,14 @@ func hook_plugins_load_eaarla(env) {
 
   for(i = 1; i <= numberof(hooks); i++)
     hook_add, strpart(hooks(i), 13:), hooks(i);
+
+  return env;
+}
+
+func hook_plugins_load_post_eaarla(env) {
+  if(env.name != "eaarla") return env;
+
+  apply_depth_scale, units="meters", offset=5;
 
   return env;
 }
