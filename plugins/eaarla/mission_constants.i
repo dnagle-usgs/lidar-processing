@@ -404,3 +404,22 @@ func eaarl_ops_conf_gui_init(nil) {
   fields = strjoin(fields, " ");
   tkcmd, swrite(format="::eaarl::settings::ops_conf::gui_init {%s}", fields);
 }
+
+func get_range_biases(conf) {
+/* DOCUMENT get_range_biases(conf)
+  Convenience function for retrieving the range biases from ops_conf as an
+  array. Returns an array:
+    [conf.chn1_range_bias, conf.chn2_range_bias, ...]
+*/
+  biases = [];
+  // Iterate over 1,2,3,4,5... until break is invoked
+  for(i = 1; 1; i++) {
+    key = swrite(format="chn%d_range_bias", i);
+    if(conf(*,key)) {
+      grow, biases, conf(noop(key));
+    } else {
+      break;
+    }
+  }
+  return biases;
+}
