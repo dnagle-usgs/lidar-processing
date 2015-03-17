@@ -1,5 +1,5 @@
 hook_add, "plugins_load", "hook_plugins_load_eaarla";
-hook_add, "plugins_load_post", "hook_plugins_load_eaarla_post";
+hook_add, "plugins_load_post", "hook_plugins_load_post_eaarla";
 
 // All EAARL plugin hook functions should have the naming convention
 //    hook_eaarlX_<hook name>
