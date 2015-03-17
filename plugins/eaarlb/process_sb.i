@@ -1,4 +1,4 @@
-// vim: set ts=2 sts=2 sw=2 ai sr et:
+a/ vim: set ts=2 sts=2 sw=2 ai sr et:
 
 if(is_void(sbconf)) sbconf = sbconfobj();
 
@@ -133,8 +133,7 @@ func eaarl_sb_rx_channel(pulses) {
 
   sb_rx_wf = eaarl_sb_rx_wf;
 
-  biases = [ops_conf.chn1_range_bias, ops_conf.chn2_range_bias,
-    ops_conf.chn3_range_bias, ops_conf.chn4_range_bias];
+  biases = get_range_biases(ops_conf);
 
   npulses = numberof(pulses.tx);
 

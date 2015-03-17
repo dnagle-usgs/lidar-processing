@@ -126,8 +126,7 @@ func eaarl_cf_rx_channel(pulses) {
 
   cf_rx_wf = eaarl_cf_rx_wf;
 
-  biases = [ops_conf.chn1_range_bias, ops_conf.chn2_range_bias,
-    ops_conf.chn3_range_bias];
+  biases = get_range_biases(ops_conf);
 
   npulses = numberof(pulses.tx);
 
