@@ -13,7 +13,6 @@ include, base + "class_mpconfobj.i";
 include, base + "class_vegconfobj.i";
 
 include, base + "autoselect.i";
-include, base + "batch_process.i";
 include, base + "batch_veg_energy.i";
 include, base + "bathy.i";
 include, base + "calps_compat.i";
