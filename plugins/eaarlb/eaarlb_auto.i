@@ -27,7 +27,7 @@ func hook_plugins_load_eaarlb(env) {
 func hook_plugins_load_post_eaarlb(env) {
   if(env.name != "eaarlb") return env;
 
-  apply_depth_scale, units="meters", offset=-9;
+  set_depth_scale, units="meters", offset=-9;
 
   extern camera_specs, camera_mounting_bias;
   camera_specs = ge2040c_specs;
