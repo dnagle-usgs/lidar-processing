@@ -29,6 +29,10 @@ func hook_plugins_load_post_eaarlb(env) {
 
   apply_depth_scale, units="meters", offset=-9;
 
+  extern camera_specs, camera_mounting_bias;
+  camera_specs = ge2040c_specs;
+  camera_mounting_bias = ge2040c_n7793q_dummy;
+
   return env;
 }
 

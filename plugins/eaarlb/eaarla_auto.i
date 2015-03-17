@@ -29,6 +29,10 @@ func hook_plugins_load_post_eaarla(env) {
 
   apply_depth_scale, units="meters", offset=5;
 
+  extern camera_specs, camera_mounting_bias;
+  camera_specs = ms4000_specs;
+  camera_mounting_bias = ms4000_cir_bias_n111x;
+
   return env;
 }
 

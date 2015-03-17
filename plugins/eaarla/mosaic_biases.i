@@ -118,6 +118,6 @@ ge2040c_specs.sensor_height = 2048;
 ge2040c_specs.pix_x = 7.4e-6; // 7.4 micron
 ge2040c_specs.pix_y = 7.4e-6; // 7.4 micron
 
-// Defaults for CIR imagery
-camera_specs = ms4000_specs;
-camera_mounting_bias = ms4000_cir_bias_n111x;
+// Null defaults; needs to be overrided by plugin
+camera_specs = CAMERA_SPECS();
+camera_mounting_bias = CAMERA_MOUNTING_BIAS();
