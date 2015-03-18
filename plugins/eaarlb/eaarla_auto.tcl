@@ -9,27 +9,23 @@ namespace eval ::plugins::eaarla {
     ::hook::add plugins_load [namespace current]::hook_plugins_load
     ::hook::add plugins_load_post [namespace current]::hook_plugins_load_post
 
-    variable pre_hooks {}
-    variable post_hooks {}
+    namespace import ::plugins::make_hook
+    namespace import ::plugins::define_hook_set
 
+    define_hook_set pre
     proc hook_plugins_load {name} {
         if {$name ne [namespace tail [namespace current]]} return
 
-        variable pre_hooks
-        dict for {hook proc} $pre_hooks {
-            ::hook::add $hook [namespace current]::$proc
-        }
+        plugins::apply_hooks pre
     }
 
+    define_hook_set post
     proc hook_plugins_load_post {name} {
         if {$name ne [namespace tail [namespace current]]} return
 
         set ::eaarl::channel_count 3
         set ::eaarl::channel_list {1 2 3}
 
-        variable post_hooks
-        dict for {hook proc} $post_hooks {
-            ::hook::add $hook [namespace current]::$proc
-        }
+        plugins::apply_hooks post
     }
 }
