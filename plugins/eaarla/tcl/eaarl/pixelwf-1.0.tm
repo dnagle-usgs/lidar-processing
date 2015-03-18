@@ -30,6 +30,8 @@ if {![namespace exists ::eaarl::pixelwf]} {
             }
             namespace eval sync {
                 variable sf 0
+                variable sasr 0
+                variable sasrwin 30
             }
             # Backup all the variables we just created...
             variable defaults {}
@@ -60,6 +62,7 @@ if {![namespace exists ::eaarl::pixelwf]} {
                 {0 4} {selection channel}
                 {-1000 1000 0.01} {geo_rast eoffset}
                 {0.01 100 0.5} {selection}
+                {0 63} {sync sasrwin}
             }
             # valid_values is a dict. It is used to restrict a variable's value to
             # a list of values.
@@ -71,7 +74,7 @@ if {![namespace exists ::eaarl::pixelwf]} {
             variable valid_values {
                 {0 1} {
                     selection {background extended missionload}
-                    sync {sf}
+                    sync {sf sasr}
                 }
             }
             # output_possibilities is a list specifying the options that can be
@@ -111,8 +114,19 @@ if {![namespace exists ::eaarl::pixelwf]} {
 namespace eval ::eaarl::pixelwf {
     proc sendyorick {var args} {
         variable manager
-        lappend args {*}[$manager getopts]
-        ::eaarl::sync::sendyorick $var {*}$args
+
+        set opts $args
+        lappend opts {*}[$manager getopts]
+        set cmd [::eaarl::sync::multicmd {*}$opts]
+
+        if {$vars::sync::sasr} {
+            append cmd [::eaarl::sasr::plotcmd $vars::sync::sasrwin \
+                    -raster $vars::selection::raster \
+                    -variable $::pro_var \
+                    -dmode $::plot_settings(display_mode)]
+        }
+
+        ybkg funcset $var \"[::base64::encode [zlib compress $cmd]]\"
     }
 }
 
@@ -204,6 +218,15 @@ namespace eval ::eaarl::pixelwf::gui {
         sync $childsite
         grid $childsite -sticky news
         grid columnconfigure $f 0 -weight 1
+
+        set f $w.lfr_special
+        ::mixin::labelframe::collapsible $f \
+                -text Special
+        add_panel $f
+        $f fastcollapse
+
+        set childsite [$f interior]
+        special $childsite
     }
 
     proc helper_update_days {} {
@@ -308,6 +331,33 @@ namespace eval ::eaarl::pixelwf::gui {
         }
         grid $f.chkSf -row $row -column $col -padx 2 -pady 1 -sticky w
 
+        grid columnconfigure $f {0 2} -weight 0 -uniform 2
+        grid columnconfigure $f {1 3} -weight 1 -uniform 1
+    }
+
+    proc special {f} {
+        set ns ::eaarl::pixelwf::vars::sync
+
+        ttk::checkbutton $f.chkSasr \
+                -text "SASR:" \
+                -variable ${ns}::sasr
+        ttk::spinbox $f.spnSasr \
+                -width 0 \
+                -textvariable ${ns}::sasrwin
+        ::mixin::statevar $f.spnSasr \
+                -statemap {0 disabled 1 normal} \
+                -statevariable ${ns}::sasr
+
+        tooltip $f.chkSasr $f.spnSasr \
+                "SASR: Scan Angle Shift Reprocessing
+
+                If enabled, then the SASR tool will be opened using the
+                specified window. This tool allows you to select a raster,
+                visually analyze it, and then possibly reprocess it with an
+                adjusted scan angle."
+
+        grid $f.chkSasr $f.spnSasr -padx 2 -pady 1 -sticky ew
+        grid configure $f.chkSasr -sticky w
         grid columnconfigure $f {0 2} -weight 0 -uniform 2
         grid columnconfigure $f {1 3} -weight 1 -uniform 1
     }
