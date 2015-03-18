@@ -61,3 +61,8 @@ func hook_eaarlb_bathy_detect_surface(env) {
   if(env.forcechannel == 4) save, env, wantlen=17;
   return env;
 }
+
+func hook_eaarlb_eaarl_ba_rx_wf(env) {
+  eaarl_ba_bback, env.wf, env.result;
+  return env;
+}

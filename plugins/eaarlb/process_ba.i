@@ -499,7 +499,7 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
   // output
   save, result, lrx=bottom_peak;
 
-  eaarl_ba_bback, wf, result;
+  restore, hook_invoke("eaarl_ba_rx_wf", save(wf, result));
 
   return result;
 }
