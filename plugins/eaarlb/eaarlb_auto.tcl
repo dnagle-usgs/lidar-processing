@@ -15,5 +15,8 @@ namespace eval ::plugins::eaarlb {
 
     proc hook_plugins_load_post {name} {
         if {$name ne [namespace tail [namespace current]]} return
+
+        set ::eaarl::channel_count 4
+        set ::eaarl::channel_list {1 2 3 4}
     }
 }

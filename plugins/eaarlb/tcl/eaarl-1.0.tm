@@ -25,8 +25,13 @@ package require eaarl::vegconf
 package require eaarl::cfconf
 
 namespace eval ::eaarl {
-   variable channel_count 4
-   variable channel_list {1 2 3 4}
+   # These must be provided by a plugin.
+   if {![info exists channel_count]} {
+      variable channel_count 0
+   }
+   if {![info exists channel_list]} {
+      variable channel_list {}
+   }
 
    variable process_mapping {
       "First Return Topo"  f
