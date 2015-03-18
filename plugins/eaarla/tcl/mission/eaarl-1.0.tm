@@ -8,44 +8,6 @@ namespace eval ::mission::eaarl {
     namespace import ::misc::menulabel
     namespace import ::misc::tooltip
 
-    set ::mission::detail_filetypes {
-        "edb file" {
-            {{EAARL Database Index files} {.idx}}
-            {{All files} *}
-        }
-        "pnav file" {
-            {{PNAV files} {.ybin}}
-            {{All files} *}
-        }
-        "ins file" {
-            {{pbd files} {.pbd .pdb}}
-            {{TANS files} {.ybin}}
-            {{All files} *}
-        }
-        "ops_conf file" {
-            {{Yorick files} {.i}}
-            {{All files} *}
-        }
-        "bathconf file" {
-            {{Bathy settings files} {.bathconf}}
-            {{JSON files} {.json}}
-            {{bctl files} {.bctl}}
-            {{All files} *}
-        }
-        "vegconf file" {
-            {{Veg settings files} {.vegconf}}
-            {{All files} *}
-        }
-        "mpconf file" {
-            {{Multi-peak settings files} {.mpconf}}
-            {{All files} *}
-        }
-        "rgb file" {
-            {{tar files} {.tar}}
-            {{All files} *}
-        }
-    }
-
     handler::set "mission_initialize_path_mission" \
             [namespace current]::initialize_path_mission
     proc initialize_path_mission {path} {

@@ -50,7 +50,51 @@ if {[info vars ::mission::plugins] eq ""} {
 
         # Dict of -filetypes options for each applicable detail type; used
         # during "Select File...".
-        variable detail_filetypes {}
+        variable detail_filetypes {
+            "edb file" {
+                {{EAARL Database Index files} {.idx}}
+                {{All files} *}
+            }
+            "pnav file" {
+                {{PNAV files} {.ybin}}
+                {{All files} *}
+            }
+            "ins file" {
+                {{pbd files} {.pbd .pdb}}
+                {{TANS files} {.ybin}}
+                {{All files} *}
+            }
+            "ops_conf file" {
+                {{Yorick files} {.i}}
+                {{All files} *}
+            }
+            "bathconf file" {
+                {{Bathy settings files} {.bathconf}}
+                {{JSON files} {.json}}
+                {{bctl files} {.bctl}}
+                {{All files} *}
+            }
+            "vegconf file" {
+                {{Veg settings files} {.vegconf}}
+                {{All files} *}
+            }
+            "sbconf file" {
+                {{Shallow bathy settings files} {.sbconf}}
+                {{All files} *}
+            }
+            "mpconf file" {
+                {{Multi-peak settings files} {.mpconf}}
+                {{All files} *}
+            }
+            "cfconf file" {
+                {{Curve Fitting settings files} {.cfconf}}
+                {{All files} *}
+            }
+            "rgb file" {
+                {{tar files} {.tar}}
+                {{All files} *}
+            }
+        }
 
         # -filetypes option for Mission Configuration files.
         set mission_filetypes {
