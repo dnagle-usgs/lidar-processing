@@ -8,21 +8,6 @@ namespace eval ::mission::eaarl {
     namespace import ::misc::menulabel
     namespace import ::misc::tooltip
 
-    set ::mission::detail_types {
-        "data_path dir"
-        "date"
-        "edb file"
-        "pnav file"
-        "ins file"
-        "ops_conf file"
-        "bathconf file"
-        "vegconf file"
-        "mpconf file"
-        "rgb dir"
-        "rgb file"
-        "cir dir"
-    }
-
     set ::mission::detail_filetypes {
         "edb file" {
             {{EAARL Database Index files} {.idx}}

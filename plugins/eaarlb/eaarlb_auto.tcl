@@ -26,6 +26,22 @@ namespace eval ::plugins::eaarlb {
         set ::eaarl::channel_count 4
         set ::eaarl::channel_list {1 2 3 4}
 
+        set ::mission::detail_types {
+            "data_path dir"
+            "date"
+            "edb file"
+            "pnav file"
+            "ins file"
+            "ops_conf file"
+            "bathconf file"
+            "vegconf file"
+            "sbconf file"
+            "mpconf file"
+            "cfconf file"
+            "rgb dir"
+            "nir dir"
+        }
+
         plugins::apply_hooks post
     }
 
