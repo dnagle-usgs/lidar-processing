@@ -120,10 +120,13 @@ proc ::eaarl::main::gui {} {
     grid $f.f1 - -sticky ew -padx 2 -pady 2
     grid $f.f3 - -sticky ew -padx 2 -pady 2
     grid $f.sep - -sticky ew -padx 2 -pady 2
+    grid [ttk::frame $f.fraExtra] -sticky ew
     grid $f.minhtlbl $f.minht -sticky ew -padx 2 -pady 2
     grid $f.modelbl $f.mode -sticky ew -padx 2 -pady 2
     grid $f.varlbl $f.var -sticky ew -padx 2 -pady 2
     grid $f.f2 - -sticky ew -padx 2 -pady 2
     grid $f.minhtlbl $f.modelbl $f.varlbl -sticky e
     grid columnconfigure $f 1 -weight 1
+
+    ::hook::invoke "eaarl::main::gui post" [list fraExtra $f.fraExtra]
 }
