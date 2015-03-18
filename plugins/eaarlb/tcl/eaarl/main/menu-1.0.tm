@@ -108,6 +108,7 @@ namespace eval ::eaarl::main::menu {
                 -label "Use channel 3"
         $mb add checkbutton -variable ::eaarl::usechannel_4 \
                 -label "Use channel 4"
+        ::hook::invoke "eaarl::main::menu::menu_settings" $mb
         return $mb
     }
 

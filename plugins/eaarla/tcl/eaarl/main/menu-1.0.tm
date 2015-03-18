@@ -99,6 +99,7 @@ namespace eval ::eaarl::main::menu {
                         (submerged only)"
         $mb add checkbutton -variable ::eaarl::autoclean_after_process \
                 -label "Automatically test and clean after processing"
+        ::hook::invoke "eaarl::main::menu::menu_settings" $mb
         return $mb
     }
 
