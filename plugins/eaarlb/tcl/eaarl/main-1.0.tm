@@ -66,13 +66,6 @@ proc ::eaarl::main::gui {} {
 
     ttk::separator $f.sep -orient horizontal
 
-    ttk::label $f.channels -text "Channel:"
-    foreach chan {1 2 3 4} {
-        ttk::checkbutton $f.chan$chan \
-                -text $chan \
-                -variable ::eaarl::usechannel_$chan
-    }
-
     ttk::label $f.minhtlbl -text "Min height:"
     ttk::spinbox $f.minht -from 0 -to 1000 -increment 1 \
             -width 2 -textvariable ::eaarl::ext_bad_att
@@ -116,10 +109,6 @@ proc ::eaarl::main::gui {} {
     grid $f.winlbl -padx 2
     grid columnconfigure $f.f1 2 -weight 1
 
-    lower [ttk::frame $f.fch]
-    grid $f.chan1 $f.chan2 $f.chan3 $f.chan4 \
-            -in $f.fch -sticky w -padx 2
-
     lower [ttk::frame $f.f2]
     pack $f.interactive_batch -in $f.f2 -side left
     pack $f.process -in $f.f2 -side right
@@ -131,14 +120,12 @@ proc ::eaarl::main::gui {} {
     grid $f.f1 - -sticky ew -padx 2 -pady 2
     grid $f.f3 - -sticky ew -padx 2 -pady 2
     grid $f.sep - -sticky ew -padx 2 -pady 2
-    grid [ttk::frame $f.fraExtra] -sticky ew
-    grid $f.channels $f.fch -sticky ew -padx 2 -pady 2
+
+    ::hook::invoke "eaarl::main::gui below separator" $f
     grid $f.minhtlbl $f.minht -sticky ew -padx 2 -pady 2
     grid $f.modelbl $f.mode -sticky ew -padx 2 -pady 2
     grid $f.varlbl $f.var -sticky ew -padx 2 -pady 2
     grid $f.f2 - -sticky ew -padx 2 -pady 2
-    grid $f.channels $f.minhtlbl $f.modelbl $f.varlbl -sticky e
+    grid $f.minhtlbl $f.modelbl $f.varlbl -sticky e
     grid columnconfigure $f 1 -weight 1
-
-    ::hook::invoke "eaarl::main::gui post" [list fraExtra $f.fraExtra]
 }

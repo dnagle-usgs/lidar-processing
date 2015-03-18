@@ -28,4 +28,18 @@ namespace eval ::plugins::eaarlb {
 
         plugins::apply_hooks post
     }
+
+    make_hook pre "eaarl::main::gui below separator" {f} {
+        ttk::label $f.channels -text "Channel:"
+        foreach chan {1 2 3 4} {
+            ttk::checkbutton $f.chan$chan \
+                    -text $chan \
+                    -variable ::eaarl::usechannel_$chan
+        }
+        lower [ttk::frame $f.fch]
+        grid $f.chan1 $f.chan2 $f.chan3 $f.chan4 \
+            -in $f.fch -sticky w -padx 2
+        grid $f.channels $f.fch -sticky ew -padx 2 -pady 2
+        grid $f.channels -sticky e
+    }
 }
