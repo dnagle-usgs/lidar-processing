@@ -5,6 +5,7 @@
     "load": "load.i"
   },
   "tcl": {
+    "auto": "eaarlb_auto.tcl",
     "load": "load.tcl"
   },
   "conflicts": [
