@@ -1,4 +1,4 @@
-a/ vim: set ts=2 sts=2 sw=2 ai sr et:
+// vim: set ts=2 sts=2 sw=2 ai sr et:
 
 if(is_void(sbconf)) sbconf = sbconfobj();
 
