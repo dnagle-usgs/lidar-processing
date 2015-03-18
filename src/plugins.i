@@ -197,6 +197,7 @@ func plugins_load(name, force=) {
   save, __plugins__,
     conflicts=grow(__plugins__.conflicts, data.conflicts);
   hook_invoke, "plugins_load", save(name);
+  tkcmd, swrite(format="::hook::invoke plugins_load %s", name), async=0;
   for(i = 1; i <= numberof(data.requires); i++) {
     plugins_load, data.requires(i);
   }
@@ -210,6 +211,7 @@ func plugins_load(name, force=) {
   if(_ytk)
     tkcmd, swrite(format="lappend ::plugins::loaded {%s}", name), async=0;
   hook_invoke, "plugins_load_post", save(name);
+  tkcmd, swrite(format="::hook::invoke plugins_load_post %s", name), async=0;
 }
 
 func plugins_autoload(void) {
