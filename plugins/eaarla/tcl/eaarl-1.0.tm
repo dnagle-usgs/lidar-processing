@@ -15,11 +15,14 @@ package require eaarl::pixelwf
 package require eaarl::processing
 package require eaarl::raster
 package require eaarl::rawwf
+package require eaarl::sasr
+package require eaarl::sbconf
 package require eaarl::settings
 package require eaarl::sync
 package require eaarl::transmit
 package require eaarl::tscheck
 package require eaarl::vegconf
+package require eaarl::cfconf
 
 namespace eval ::eaarl {
    variable channel_count 3
@@ -29,7 +32,9 @@ namespace eval ::eaarl {
       "First Return Topo"  f
       "Submerged Topo"     b
       "Topo Under Veg"     v
+      "Shallow Bathy"      sb
       "DEV: Multi-Peak (Experimental)" mp
+      "DEV: Curve Fitting (Experimental)" cf
       "OLD: First Return Topo"  old_fs
       "OLD: Submerged Topo"     old_bathy
       "OLD: Topo Under Veg"     old_veg

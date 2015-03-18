@@ -34,10 +34,22 @@ namespace eval eaarl::sync {
             win     24
             opts    {-raster -pulse -channel}
         }
+        shallow {
+            ns      sbconf
+            label   Shallow
+            win     26
+            opts    {-raster -pulse -channel}
+        }
         multipeak {
             ns      mpconf
             label   Multi-Peak
             win     27
+            opts    {-raster -pulse -channel}
+        }
+        cf {
+            ns      cfconf
+            label   "Curve Fit"
+            win     28
             opts    {-raster -pulse -channel}
         }
     }
