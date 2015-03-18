@@ -42,4 +42,16 @@ namespace eval ::plugins::eaarlb {
         grid $f.channels $f.fch -sticky ew -padx 2 -pady 2
         grid $f.channels -sticky e
     }
+
+    make_hook pre "eaarl::main::menu::menu_settings" {mb} {
+        $mb add separator
+        $mb add checkbutton -variable ::eaarl::usechannel_1 \
+                -label "Use channel 1"
+        $mb add checkbutton -variable ::eaarl::usechannel_2 \
+                -label "Use channel 2"
+        $mb add checkbutton -variable ::eaarl::usechannel_3 \
+                -label "Use channel 3"
+        $mb add checkbutton -variable ::eaarl::usechannel_4 \
+                -label "Use channel 4"
+    }
 }

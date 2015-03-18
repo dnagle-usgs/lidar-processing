@@ -99,15 +99,6 @@ namespace eval ::eaarl::main::menu {
                         (submerged only)"
         $mb add checkbutton -variable ::eaarl::autoclean_after_process \
                 -label "Automatically test and clean after processing"
-        $mb add separator
-        $mb add checkbutton -variable ::eaarl::usechannel_1 \
-                -label "Use channel 1"
-        $mb add checkbutton -variable ::eaarl::usechannel_2 \
-                -label "Use channel 2"
-        $mb add checkbutton -variable ::eaarl::usechannel_3 \
-                -label "Use channel 3"
-        $mb add checkbutton -variable ::eaarl::usechannel_4 \
-                -label "Use channel 4"
         ::hook::invoke "eaarl::main::menu::menu_settings" $mb
         return $mb
     }
