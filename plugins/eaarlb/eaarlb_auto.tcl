@@ -26,6 +26,7 @@ namespace eval ::plugins::eaarlb {
         set ::eaarl::channel_count 4
         set ::eaarl::channel_list {1 2 3 4}
 
+        set ::mission::imagery_types {rgb nir}
         set ::mission::detail_types {
             "data_path dir"
             "date"

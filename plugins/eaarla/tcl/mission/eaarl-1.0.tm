@@ -23,16 +23,19 @@ namespace eval ::mission::eaarl {
     hook::add "mission_menu_actions" \
             [namespace current]::menu_actions
     proc menu_actions {mb} {
+        variable ::mission::imagery_types
         $mb add separator
-        $mb add command {*}[menulabel "Launch RGB"] \
-                -command ::mission::eaarl::menu_load_rgb
-        $mb add command {*}[menulabel "Launch CIR"] \
-                -command ::mission::eaarl::menu_load_cir
+        foreach img $imagery_types {
+            set IMG [string toupper $img]
+            $mb add command {*}[menulabel "Launch $IMG"] \
+                    -command ::mission::eaarl::menu_load_$img
+        }
         $mb add separator
-        $mb add command {*}[menulabel "Dump RGB"] \
-                -command ::mission::eaarl::menu_dump_rgb
-        $mb add command {*}[menulabel "Dump CIR"] \
-                -command ::mission::eaarl::menu_dump_cir
+        foreach img $imagery_types {
+            set IMG [string toupper $img]
+            $mb add command {*}[menulabel "Dump $IMG"] \
+                    -command ::mission::eaarl::menu_dump_$img
+        }
         $mb add separator
         $mb add cascade {*}[menulabel "Generate KMZ"] \
                 -menu $mb.kmz
@@ -68,6 +71,7 @@ namespace eval ::mission::eaarl {
     handler::set "mission_refresh_load" \
             [namespace current]::refresh_load
     proc refresh_load {flights extra} {
+        variable ::mission::imagery_types
         set f $flights
         set row 0
         set has_rgb 0
@@ -79,14 +83,17 @@ namespace eval ::mission::eaarl {
                     [list exp_send "mission, load, \"[ystr $flight]\";\r"]
             ttk::button $f.reload$row -text "Reload" -width 0 -command \
                     [list exp_send "mission, reload, \"[ystr $flight]\";\r"]
-            ttk::button $f.rgb$row -text "RGB" -width 0 \
-                    -command [list ::mission::eaarl::load_rgb $flight]
-            ttk::button $f.cir$row -text "CIR" -width 0 \
-                    -command [list ::mission::eaarl::load_cir $flight]
-            grid $f.lbl$row $f.load$row $f.reload$row $f.rgb$row $f.cir$row \
+            set img_btns {}
+            foreach img $imagery_types {
+                set IMG [string toupper $img]
+                ttk::button $f.$img$row -text "$IMG" -width 0 \
+                        -command [list ::mission::eaarl::load_$img $flight]
+                lappend img_btns $f.$img$row
+            }
+            grid $f.lbl$row $f.load$row $f.reload$row {*}$img_btns \
                     -padx 2 -pady 2
             grid $f.lbl$row -sticky w
-            grid $f.load$row $f.reload$row $f.rgb$row $f.cir$row -sticky ew
+            grid $f.load$row $f.reload$row {*}$img_btns -sticky ew
 
             if {
                 [::mission::has $flight "rgb dir"] ||
@@ -114,15 +121,18 @@ namespace eval ::mission::eaarl {
         }
 
         set f [ttk::frame $extra.f1]
-        ttk::button $f.btnRGB -text "All RGB" -width 0 \
-                -command ::mission::eaarl::menu_load_rgb
-        ttk::button $f.btnCIR -text "All CIR" -width 0 \
-                -command ::mission::eaarl::menu_load_cir
-        grid x $f.btnRGB $f.btnCIR -padx 2 -pady 2
-        grid columnconfigure $f {0 4} -weight 1
-
-        if {!$has_rgb} {$f.btnRGB state disabled}
-        if {!$has_cir} {$f.btnCIR state disabled}
+        set img_btns {}
+        foreach img $imagery_types {
+            set IMG [string toupper $img]
+            ttk::button $f.btn$img -text "All $IMG" -width 0 \
+                    -command ::mission::eaarl::menu_load_$img
+            if {![set has_$img]} {
+                $f.btn$img state disabled
+            }
+            lappend img_btns $f.btn$img
+        }
+        grid x {*}$img_btns -padx 2 -pady 2
+        grid columnconfigure $f [list 0 [expr {2 + [llength $img_btns]}]] -weight 1
 
         set f [ttk::frame $extra.f2]
         ttk::button $f.btnPro -text "Processing GUI" -width 0 \
