@@ -26,6 +26,9 @@ func ba_struct_from_obj(pulses) {
   result.soe = pulses.soe;
   result.channel = pulses.lchannel;
 
+  if(pulses(*,"bback1")) result.bback1 = pulses.bback1;
+  if(pulses(*,"bback2")) result.bback2 = pulses.bback2;
+
   // Original uses floating point, struct uses integers. This can result in
   // depth values of 0, throw them out.
   w = where(result.depth < 0);
@@ -59,7 +62,8 @@ func process_ba(start, stop, ext_bad_att=, channel=, opts=) {
         raster, soe, tx, rx
       from process_fs: ftx, channel, frx, fintensity, fchannel, fbias,
         fs_slant_range, mx, my, mz, fx, fy, fz
-      added by process_ba: ltx, lrx, lintensity, lbias, lchannel, lx, ly, lz
+      added by process_ba: ltx, lrx, lintensity, bback1, bback2, lbias,
+        lchannel, lx, ly, lz
 */
   restore_if_exists, opts, start, stop, ext_bad_att, channel;
 
@@ -88,8 +92,8 @@ func process_ba(start, stop, ext_bad_att=, channel=, opts=) {
   // Determine tx offsets; adds ltx
   ba_tx, pulses;
 
-  // Determine rx offsets; adds lrx, lintensity, lbias, lchannel; updates
-  // fintensity
+  // Determine rx offsets; adds lrx, lintensity, bback1, bback2, lbias,
+  // lchannel; updates fintensity
   ba_rx, pulses;
 
   // Throw away lchannel == 0
@@ -159,6 +163,8 @@ func eaarl_ba_rx_channel(pulses) {
   fields are added to pulses:
     lrx - Location in waveform of bottom
     lintensity - Intensity at bottom
+    bback1 - Backscatter 1
+    bback2 - Backscatter 2
     lbias - The channel range bias (ops_conf.chn%d_range_bias)
     lchannel - Channel used for bottom
   Additionally, this field is overwritten:
@@ -173,7 +179,8 @@ func eaarl_ba_rx_channel(pulses) {
 
   npulses = numberof(pulses.tx);
 
-  lrx = fintensity = lintensity = lbias = array(float, npulses);
+  lrx = fintensity = lintensity = bback1 = bback2 = lbias =
+    array(float, npulses);
   lchannel = pulses.channel;
 
   for(i = 1; i <= npulses; i++) {
@@ -186,10 +193,12 @@ func eaarl_ba_rx_channel(pulses) {
     tmp = ba_rx_wf(*pulses.rx(lchannel(i),i), conf);
     fintensity(i) = tmp.fintensity;
     lintensity(i) = tmp.lintensity;
+    bback1(i) = tmp.bback1;
+    bback2(i) = tmp.bback2;
     lrx(i) = tmp.lrx;
   }
 
-  save, pulses, lrx, fintensity, lintensity, lbias, lchannel;
+  save, pulses, lrx, fintensity, lintensity, bback1, bback2, lbias, lchannel;
 }
 
 func eaarl_ba_rx_eaarla(pulses) {
@@ -307,6 +316,8 @@ func eaarl_ba_plot(raster, pulse, channel=, win=, xfma=) {
 
   write, format="   lrx: %.2f\n   fintensity: %.2f\n   lintensity: %.2f\n",
     double(result.lrx), double(result.fintensity), double(result.lintensity);
+  write, format="   bback1: %.2f\n   bback2: %.2f\n",
+    double(result.bback1), double(result.bback2);
   if(!is_void(msg)) write, format="   %s\n", msg;
 }
 
@@ -375,12 +386,15 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
       lrx - location of bottom in waveform
       fintensity - intensity at surface
       lintensity - intensity at bottom
+      bback1 - backscatter value 1
+      bback2 - backscatter value 2
       candidate_lrx - candidate location of bottom in waveform
 */
   conf = obj_copy(conf);
   sample_interval = 1.0;
 
-  result = save(lrx=0, fintensity=0, lintensity=0, candidate_lrx=0);
+  result = save(lrx=0, fintensity=0, lintensity=0, bback1=0, bback2=0,
+    candidate_lrx=0);
 
   if(is_void(rx)) {
     msg = "no waveform";
@@ -476,7 +490,41 @@ func eaarl_ba_rx_wf(rx, conf, &msg, plot=) {
 
   // output
   save, result, lrx=bottom_peak;
+
+  restore, hook_invoke("eaarl_ba_rx_wf", save(wf, result));
+
   return result;
+}
+
+func eaarl_ba_bback(wf, result) {
+/* DOCUMENT eaarl_ba_bback, wf, result
+  RESULT should be an oxy group with the field lrx indicating the position of
+  the bottom in the waveform WF. Two new fields, bback1 and bback2, will be
+  added with the backscatter values over the two intervals 25-35 and 35-45
+  (with a 5ns backoff from the bottom).
+*/
+  // start/stop ranges for each backscatter value
+  bb1_start = 25;
+  bb1_stop = 35;
+  bb2_start = 35;
+  bb2_stop = 45;
+
+  // How far away we must be from the bottom
+  backoff = 5;
+
+  bback1 = bback2 = 0;
+
+  stop = min(bb1_stop, result.lrx - backoff);
+  if(stop >= bb1_start) {
+    bback1 = max(0, wf(bb1_start:stop)(avg));
+  }
+
+  stop = min(bb2_stop, result.lrx - backoff);
+  if(stop >= bb2_start) {
+    bback2 = max(0, wf(bb2_start:stop)(avg));
+  }
+
+  save, result, bback1, bback2;
 }
 
 func eaarl_ba_fs_smooth(pulses, surface_window=, pulse_window=,
