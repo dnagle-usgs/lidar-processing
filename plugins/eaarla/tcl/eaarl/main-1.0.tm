@@ -87,7 +87,7 @@ proc ::eaarl::main::gui {} {
             -variable ::eaarl::interactive_batch
     ::mixin::statevar $f.interactive_batch \
             -statedefault disabled \
-            -statemap {f normal b normal v normal mp normal} \
+            -statemap {f normal b normal v normal sb normal mp normal cf normal } \
             -statevariable ::eaarl::processing_mode
     ::misc::tooltip $f.interactive_batch \
             "Batch mode is only available for new test processing modes."
@@ -120,13 +120,12 @@ proc ::eaarl::main::gui {} {
     grid $f.f1 - -sticky ew -padx 2 -pady 2
     grid $f.f3 - -sticky ew -padx 2 -pady 2
     grid $f.sep - -sticky ew -padx 2 -pady 2
-    grid [ttk::frame $f.fraExtra] -sticky ew
+
+    ::hook::invoke "eaarl::main::gui below separator" $f
     grid $f.minhtlbl $f.minht -sticky ew -padx 2 -pady 2
     grid $f.modelbl $f.mode -sticky ew -padx 2 -pady 2
     grid $f.varlbl $f.var -sticky ew -padx 2 -pady 2
     grid $f.f2 - -sticky ew -padx 2 -pady 2
     grid $f.minhtlbl $f.modelbl $f.varlbl -sticky e
     grid columnconfigure $f 1 -weight 1
-
-    ::hook::invoke "eaarl::main::gui post" [list fraExtra $f.fraExtra]
 }
