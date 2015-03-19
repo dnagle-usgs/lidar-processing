@@ -28,13 +28,13 @@ namespace eval ::mission::eaarl {
         foreach img $imagery_types {
             set IMG [string toupper $img]
             $mb add command {*}[menulabel "Launch $IMG"] \
-                    -command ::mission::eaarl::menu_load_$img
+                    -command [list ::mission::eaarl::menu_load $img]
         }
         $mb add separator
         foreach img $imagery_types {
             set IMG [string toupper $img]
             $mb add command {*}[menulabel "Dump $IMG"] \
-                    -command ::mission::eaarl::menu_dump_$img
+                    -command [list ::mission::eaarl::menu_dump $img]
         }
         $mb add separator
         $mb add cascade {*}[menulabel "Generate KMZ"] \
@@ -87,7 +87,7 @@ namespace eval ::mission::eaarl {
             foreach img $imagery_types {
                 set IMG [string toupper $img]
                 ttk::button $f.$img$row -text "$IMG" -width 0 \
-                        -command [list ::mission::eaarl::load_$img $flight]
+                        -command [list ::mission::eaarl::load_imagery $img $flight]
                 lappend img_btns $f.$img$row
             }
             grid $f.lbl$row $f.load$row $f.reload$row {*}$img_btns \
@@ -122,7 +122,7 @@ namespace eval ::mission::eaarl {
         foreach img $imagery_types {
             set IMG [string toupper $img]
             ttk::button $f.btn$img -text "All $IMG" -width 0 \
-                    -command ::mission::eaarl::menu_load_$img
+                    -command [list ::mission::eaarl::menu_load $img]
             if {![set has_$img]} {
                 $f.btn$img state disabled
             }
@@ -228,84 +228,31 @@ namespace eval ::mission::eaarl {
         return {}
     }
 
-    proc load_rgb {flight} {
-        set params [sf_load rgb [list $flight]]
+    proc load_imagery {type flight} {
+        set params [sf_load $type [list $flight]]
         if {[llength $params]} {
-            set rgb [sf::controller %AUTO%]
-            $rgb load {*}$params
-            ybkg set_sf_bookmark \"$rgb\" \"[ystr $flight]\"
+            set sf [sf::controller %AUTO%]
+            $sf load {*}$params
+            ybkg set_sf_bookmark \"$sf\" \"[ystr $flight]\"
         }
     }
 
-    proc load_cir {flight} {
-        set params [sf_load cir [list $flight]]
+    proc menu_load {type} {
+        set params [sf_load $type [::mission::get]]
         if {[llength $params]} {
-            set cir [sf::controller %AUTO%]
-            $cir load {*}$params
-            ybkg set_sf_bookmark \"$cir\" \"[ystr $flight]\"
+            set sf [sf::controller %AUTO%]
+            $sf load {*}$params
+            ybkg set_sf_bookmarks \"$sf\"
         }
     }
 
-    proc load_nir {flight} {
-        set params [sf_load_nir [list $flight]]
-        if {[llength $params]} {
-            set nir [sf::controller %AUTO%]
-            $nir load {*}$params
-            ybkg set_sf_bookmark \"$nir\" \"[ystr $flight]\"
-        }
-    }
-
-    proc menu_load_rgb {} {
-        set params [sf_load rgb [::mission::get]]
-        if {[llength $params]} {
-            set rgb [sf::controller %AUTO%]
-            $rgb load {*}$params
-            ybkg set_sf_bookmarks \"$rgb\"
-        }
-    }
-
-    proc menu_load_cir {} {
-        set params [sf_load cir [::mission::get]]
-        if {[llength $params]} {
-            set cir [sf::controller %AUTO%]
-            $cir load {*}$params
-            ybkg set_sf_bookmarks \"$cir\"
-        }
-    }
-
-    proc menu_load_nir {} {
-        set params [sf_load_nir [::mission::get]]
-        if {[llength $params]} {
-            set nir [sf::controller %AUTO%]
-            $nir load {*}$params
-            ybkg set_sf_bookmarks \"$nir\"
-        }
-    }
-
-    proc menu_dump_rgb {} {
+    proc menu_dump {type} {
+        set TYPE [string toupper $type]
         set outdir [tk_chooseDirectory \
-                -title "Select destination for RGB imagery" \
+                -title "Select destination for $TYPE imagery" \
                 -initialdir $::mission::path]
         if {$outdir ne ""} {
-            dump_imagery rgb $outdir
-        }
-    }
-
-    proc menu_dump_cir {} {
-        set outdir [tk_chooseDirectory \
-                -title "Select destination for CIR imagery" \
-                -initialdir $::mission::path]
-        if {$outdir ne ""} {
-            dump_imagery cir $outdir
-        }
-    }
-
-    proc menu_dump_nir {} {
-        set outdir [tk_chooseDirectory \
-                -title "Select destination for NIR imagery" \
-                -initialdir $::mission::path]
-        if {$outdir ne ""} {
-            dump_imagery nir $outdir
+            dump_imagery $type $outdir
         }
     }
 
