@@ -48,7 +48,7 @@ func hook_eaarla_mission_flights_auto_keys(env) {
   grow, keys, [
     "rgb dir",
     "rgb file",
-    "cir"
+    "cir dir"
   ];
   save, env, keys;
   return env;
