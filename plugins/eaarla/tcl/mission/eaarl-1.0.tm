@@ -74,8 +74,9 @@ namespace eval ::mission::eaarl {
         variable ::mission::imagery_types
         set f $flights
         set row 0
-        set has_rgb 0
-        set has_cir 0
+        foreach img $imagery_types {
+            set has_img($img) 0
+        }
         foreach flight [::mission::get] {
             incr row
             ttk::label $f.lbl$row -text $flight
@@ -89,26 +90,20 @@ namespace eval ::mission::eaarl {
                 ttk::button $f.$img$row -text "$IMG" -width 0 \
                         -command [list ::mission::eaarl::load_imagery $img $flight]
                 lappend img_btns $f.$img$row
+
+                if {
+                    [::mission::has $flight "$img dir"] ||
+                    [::mission::has $flight "$img file"]
+                } {
+                    set has_img($img) 1
+                } else {
+                    $f.$img$row state disabled
+                }
             }
             grid $f.lbl$row $f.load$row $f.reload$row {*}$img_btns \
                     -padx 2 -pady 2
             grid $f.lbl$row -sticky w
             grid $f.load$row $f.reload$row {*}$img_btns -sticky ew
-
-            if {
-                [::mission::has $flight "rgb dir"] ||
-                [::mission::has $flight "rgb file"]
-            } {
-                set has_rgb 1
-            } else {
-                $f.rgb$row state disabled
-            }
-
-            if {[::mission::has $flight "cir dir"]} {
-                set has_cir 1
-            } else {
-                $f.cir$row state disabled
-            }
 
             tooltip $f.load$row \
                     "Loads data for flight \"$flight\". Depending on your
@@ -126,7 +121,7 @@ namespace eval ::mission::eaarl {
             set IMG [string toupper $img]
             ttk::button $f.btn$img -text "All $IMG" -width 0 \
                     -command [list ::mission::eaarl::menu_load $img]
-            if {![set has_$img]} {
+            if {!$has_img($img)} {
                 $f.btn$img state disabled
             }
             lappend img_btns $f.btn$img
