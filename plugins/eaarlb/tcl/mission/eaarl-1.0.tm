@@ -144,19 +144,78 @@ namespace eval ::mission::eaarl {
         grid columnconfigure $extra 0 -weight 1
     }
 
-    proc load_rgb {flight} {
-        if {[::mission::has $flight "rgb dir"]} {
-            set path [::mission::get $flight "rgb dir"]
-            if {[::mission::get $flight "date"] < "2011"} {
-                set driver rgb::f2006::tarpath
-            } elseif {[file tail $path] eq "cam1"} {
-                set driver rgb::f2006::tarpath
-            } else {
-                set driver cir::f2010::tarpath
+    # Returns the parameters used to load RGB imagery for the given flights.
+    # This is a list of three elements. The first is the driver. The second is
+    # the switch indicating what kind of argument follows (-path, -paths, or
+    # -files). The third is a path or list of paths.
+    #
+    # If no suitable imagery is available, then an empty list is returned.
+    proc sf_load_rgb {flights} {
+        set paths [list]
+        set date ""
+        foreach flight $flights {
+            if {[::mission::has $flight "rgb dir"]} {
+                lappend paths [::mission::get $flight "rgb dir"]
+                set date [::mission::get $flight "date"]
             }
+        }
+        if {[llength $paths]} {
+            if {$date < "2011"} {
+                set driver rgb::f2006
+            } elseif {[file tail [lindex $paths 0]] eq "cam1"} {
+                set driver rgb::f2006
+            } else {
+                set driver cir::f2010
+            }
+            if {[llength $paths] == 1} {
+                return [list ${driver}::tarpath -path [lindex $paths 0]]
+            } else {
+                return [list ${driver}::tarpaths -paths $paths]
+            }
+        }
+    }
+
+    # Like sf_load_rgb, but for CIR imagery.
+    proc sf_load_cir {flights} {
+        set paths [list]
+        set date ""
+        foreach flight $flights {
+            if {[::mission::has $flight "cir dir"]} {
+                lappend paths [::mission::get $flight "cir dir"]
+                set date [::mission::get $flight "date"]
+            }
+        }
+        if {[llength $paths]} {
+            if {$date < "2012"} {
+                set driver cir::f2004
+            } else {
+                set driver cir::f2010
+            }
+            if {[llength $paths] == 1} {
+                return [list ${driver}::tarpath -path [lindex $paths 0]]
+            } else {
+                return [list ${driver}::tarpaths -paths $paths]
+            }
+        }
+
+        return {}
+    }
+
+    proc load_rgb {flight} {
+        set params [sf_load_rgb [list $flight]]
+        if {[llength $params]} {
             set rgb [sf::controller %AUTO%]
-            $rgb load $driver -path $path
+            $rgb load {*}$params
             ybkg set_sf_bookmark \"$rgb\" \"[ystr $flight]\"
+        }
+    }
+
+    proc load_cir {flight} {
+        set params [sf_load_cir [list $flight]]
+        if {[llength $params]} {
+            set cir [sf::controller %AUTO%]
+            $cir load {*}$params
+            ybkg set_sf_bookmark \"$cir\" \"[ystr $flight]\"
         }
     }
 
@@ -171,26 +230,20 @@ namespace eval ::mission::eaarl {
     }
 
     proc menu_load_rgb {} {
-        set paths [list]
-        set date ""
-        foreach flight [::mission::get] {
-            if {[::mission::has $flight "rgb dir"]} {
-                lappend paths [::mission::get $flight "rgb dir"]
-                set date [::mission::get $flight "date"]
-            }
-        }
-        if {[llength $paths]} {
-            if {$date < "2011"} {
-                set driver rgb::f2006::tarpaths
-            } elseif {[file tail [lindex $paths 0]] eq "cam1"} {
-                set driver rgb::f2006::tarpaths
-            } else {
-                set driver cir::f2010::tarpaths
-            }
+        set params [sf_load_rgb [::mission::get]]
+        if {[llength $params]} {
             set rgb [sf::controller %AUTO%]
-            $rgb load $driver -paths $paths
+            $rgb load {*}$params
             ybkg set_sf_bookmarks \"$rgb\"
-            return
+        }
+    }
+
+    proc menu_load_cir {} {
+        set params [sf_load_cir [::mission::get]]
+        if {[llength $params]} {
+            set cir [sf::controller %AUTO%]
+            $cir load {*}$params
+            ybkg set_sf_bookmarks \"$cir\"
         }
     }
 
@@ -213,8 +266,16 @@ namespace eval ::mission::eaarl {
                 -title "Select destination for RGB imagery" \
                 -initialdir $::mission::path]
         if {$outdir ne ""} {
-            dump_imagery "rgb dir" cir::f2010::tarpath $outdir \
-                    -subdir photos/rgb
+            dump_imagery rgb $outdir
+        }
+    }
+
+    proc menu_dump_cir {} {
+        set outdir [tk_chooseDirectory \
+                -title "Select destination for CIR imagery" \
+                -initialdir $::mission::path]
+        if {$outdir ne ""} {
+            dump_imagery cir $outdir
         }
     }
 
@@ -228,15 +289,13 @@ namespace eval ::mission::eaarl {
         }
     }
 
-    proc dump_imagery {type driver dest args} {
-        set subdir photos
-        if {[dict exists $args -subdir]} {
-            set subdir [dict get $args -subdir]
-        }
+    proc dump_imagery {type dest} {
+        set loader sf_load_$type
+        set subdir photos/$type
         foreach flight [::mission::get] {
-            if {[::mission::has $flight $type]} {
-                set path [::mission::get $flight $type]
-                set model [::sf::model::create::$driver -path $path]
+            lassign [$loader [list $flight]] driver switch paths
+            if {$driver ne ""} {
+                set model [::sf::model::create::$driver $switch $paths]
                 set rel [::fileutil::relative $::mission::path \
                         [::mission::get $flight "data_path dir"]]
                 set curdest [file join $dest $rel $subdir]
