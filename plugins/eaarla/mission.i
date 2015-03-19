@@ -566,7 +566,7 @@ func eaarl_mission_flights_auto_critical(env) {
   return env;
 }
 
-hook_add, "mission_flights_auto_keys", "eaarl_mission_flights_auto_keys";
+hook_add, "mission_flights_auto_keys", "eaarl_mission_flights_auto_keys", -10;
 func eaarl_mission_flights_auto_keys(env) {
 /* DOCUMENT eaarl_mission_flights_auto_keys(env)
   Hook function for "mission_flights_auto_keys" used by mission_flights_auto.
@@ -582,16 +582,13 @@ func eaarl_mission_flights_auto_keys(env) {
     "vegconf file",
     "sbconf file",
     "mpconf file",
-    "cfconf file",
-    "rgb dir",
-    "rgb file",
-    "cir dir"
+    "cfconf file"
   ];
   save, env, keys;
   return env;
 }
 
-hook_add, "mission_details_autolist", "eaarl_mission_details_autolist";
+hook_add, "mission_details_autolist", "eaarl_mission_details_autolist", -10;
 func eaarl_mission_details_autolist(env) {
 /* DOCUMENT eaarl_mission_details_autolist(env)
   Hook function for mission_details_autolist.
@@ -617,16 +614,10 @@ func eaarl_mission_details_autolist(env) {
     env, result=autoselect_mpconf(path, options=1);
   else if(key == "cfconf file")
     env, result=autoselect_cfconf(path, options=1);
-  else if(key == "rgb dir")
-    env, result=autoselect_rgb_dir(path, options=1);
-  else if(key == "rgb file")
-    env, result=autoselect_rgb_tar(path, options=1);
-  else if(key == "cir dir")
-    env, result=autoselect_cir_dir(path, options=1);
   return env;
 }
 
-hook_add, "mission_flights_validate_fields", "eaarl_mission_flights_validate_fields";
+hook_add, "mission_flights_validate_fields", "eaarl_mission_flights_validate_fields", -10;
 func eaarl_mission_flights_validate_fields(env) {
   save, env.fields,
     "edb file", save(
@@ -664,46 +655,7 @@ func eaarl_mission_flights_validate_fields(env) {
     "cfconf file", save(
       "help", "The cfconf file contains parameters used to process for vegetation using curve fitting. This file is only required if you will be processing using curve fitting and the defaults are not acceptable. The cfconf file will have the extension .cfconf. The file is found in the alps configuration subdirectory.",
       required=0
-    ),
-    "rgb dir", save(
-      "help", "The rgb directory contains RGB imagery acquired during the flight. This is usually a subdirectory in the flight directory named \"rgb\" or \"cam1\". This is optional and does not affect lidar processing.",
-      required=0
-    ),
-    "rgb file", save(
-      "help", "The rgb file is a tar file that contains RGB imagery acquired during the flight. It has the extension .tar and will usually have \"cam1\" in its filename. This is optional and does not affect lidar processing. This field is mutually exclusive with \"rgb dir\" and is generally found on older missions.",
-      required=0
-    ),
-    "cir dir", save(
-      "help", "The cir directory contains CIR imagery acquired during the flight. This is usually a subdirectory in the flight directory named \"cir\". This is optional and does not affect lidar processing.",
-      required=0
     );
-
-  return env;
-}
-
-hook_add, "mission_flights_validate_post", "eaarl_mission_flights_validate_post";
-func eaarl_mission_flights_validate_post(env) {
-  fields = env.fields;
-
-  rgbd = fields("rgb dir");
-  rgbf = fields("rgb file");
-  if(rgbd(*,"val") && rgbf(*,"val")) {
-    msg = "both \"rgb dir\" and \"rgb file\" are defined";
-    if(rgbd.ok) {
-      save, rgbd, ok=0, msg;
-    } else {
-      save, rgbd, msg=msg + ";" + rgbd.msg;
-    }
-    if(rgbf.ok) {
-      save, rgbf, ok=0, msg;
-    } else {
-      save, rgbf, msg=msg + ";" + rgbf.msg;
-    }
-  }
-
-  if(rgbd(*,"val") && rgbd.ok && !rgbf(*,"val")) {
-    save, env, fields=obj_delete(fields, "rgb file");
-  }
 
   return env;
 }

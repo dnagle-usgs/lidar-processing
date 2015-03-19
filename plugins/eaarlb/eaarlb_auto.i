@@ -66,3 +66,37 @@ func hook_eaarlb_eaarl_ba_rx_wf(env) {
   eaarl_ba_bback, env.wf, env.result;
   return env;
 }
+
+func hook_eaarlb_mission_flights_auto_keys(env) {
+  keys = env.keys;
+  grow, keys, [
+    "rgb dir",
+    "nir dir"
+  ];
+  save, env, keys;
+  return env;
+}
+
+func hook_eaarlb_mission_details_autolist(env) {
+  key = env.key;
+  path = env.path;
+  if(key == "rgb dir")
+    env, result=autoselect_rgb_dir(path, options=1);
+  else if(key == "nir dir")
+    env, result=autoselect_nir_dir(path, options=1);
+  return env;
+}
+
+func hook_eaarlb_mission_flights_validate_fields(env) {
+  save, env.fields,
+    "rgb dir", save(
+      "help", "The rgb directory contains RGB imagery acquired during the flight. This is usually a subdirectory in the flight directory named \"rgb\". This is optional and does not affect lidar processing.",
+      required=0
+    ),
+    "nir dir", save(
+      "help", "The nir directory contains NIR imagery acquired during the flight. This is usually a subdirectory in the flight directory named \"nir\". This is optional and does not affect lidar processing.",
+      required=0
+    );
+
+  return env;
+}
