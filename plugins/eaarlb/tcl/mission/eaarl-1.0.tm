@@ -176,6 +176,18 @@ namespace eval ::mission::eaarl {
                 return [list ${driver}::tarpaths -paths $paths]
             }
         }
+
+        set paths [list]
+        foreach flight $flights {
+            if {[::mission::has $flight "rgb file"]} {
+                lappend paths [::mission::get $flight "rgb file"]
+            }
+        }
+        if {[llength $paths]} {
+            return [list rgb::f2001::tarfiles -files $paths]
+        }
+
+        return {}
     }
 
     # Like sf_load_rgb, but for CIR imagery.
