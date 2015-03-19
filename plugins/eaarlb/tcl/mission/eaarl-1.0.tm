@@ -201,6 +201,28 @@ namespace eval ::mission::eaarl {
         return {}
     }
 
+    # Like sf_load_rgb, but for NIR imagery.
+    proc sf_load_nir {flights} {
+        set paths [list]
+        set date ""
+        foreach flight $flights {
+            if {[::mission::has $flight "nir dir"]} {
+                lappend paths [::mission::get $flight "nir dir"]
+                set date [::mission::get $flight "date"]
+            }
+        }
+        if {[llength $paths]} {
+            set driver cir::f2010
+            if {[llength $paths] == 1} {
+                return [list ${driver}::tarpath -path [lindex $paths 0]]
+            } else {
+                return [list ${driver}::tarpaths -paths $paths]
+            }
+        }
+
+        return {}
+    }
+
     proc load_rgb {flight} {
         set params [sf_load_rgb [list $flight]]
         if {[llength $params]} {
@@ -220,11 +242,10 @@ namespace eval ::mission::eaarl {
     }
 
     proc load_nir {flight} {
-        if {[::mission::has $flight "nir dir"]} {
-            set path [::mission::get $flight "nir dir"]
-            set driver cir::f2010::tarpath
+        set params [sf_load_nir [list $flight]]
+        if {[llength $params]} {
             set nir [sf::controller %AUTO%]
-            $nir load $driver -path $path
+            $nir load {*}$params
             ybkg set_sf_bookmark \"$nir\" \"[ystr $flight]\"
         }
     }
@@ -248,15 +269,10 @@ namespace eval ::mission::eaarl {
     }
 
     proc menu_load_nir {} {
-        set paths [list]
-        foreach flight [::mission::get] {
-            if {[::mission::has $flight "nir dir"]} {
-                lappend paths [::mission::get $flight "nir dir"]
-            }
-        }
-        if {[llength $paths]} {
+        set params [sf_load_nir [::mission::get]]
+        if {[llength $params]} {
             set nir [sf::controller %AUTO%]
-            $nir load cir::f2010::tarpaths -paths $paths
+            $nir load {*}$params
             ybkg set_sf_bookmarks \"$nir\"
         }
     }
@@ -284,8 +300,7 @@ namespace eval ::mission::eaarl {
                 -title "Select destination for NIR imagery" \
                 -initialdir $::mission::path]
         if {$outdir ne ""} {
-            dump_imagery "nir dir" cir::f2010::tarpath $outdir \
-                    -subdir photos/nir
+            dump_imagery nir $outdir
         }
     }
 
