@@ -216,6 +216,28 @@ namespace eval ::mission::eaarl {
         return {}
     }
 
+    # Like sf_load_rgb, but for NIR imagery.
+    proc sf_load_nir {flights} {
+        set paths [list]
+        set date ""
+        foreach flight $flights {
+            if {[::mission::has $flight "nir dir"]} {
+                lappend paths [::mission::get $flight "nir dir"]
+                set date [::mission::get $flight "date"]
+            }
+        }
+        if {[llength $paths]} {
+            set driver cir::f2010
+            if {[llength $paths] == 1} {
+                return [list ${driver}::tarpath -path [lindex $paths 0]]
+            } else {
+                return [list ${driver}::tarpaths -paths $paths]
+            }
+        }
+
+        return {}
+    }
+
     proc load_imagery {type flight} {
         set params [sf_load $type [list $flight]]
         if {[llength $params]} {
