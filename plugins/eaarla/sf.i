@@ -21,7 +21,7 @@ func set_sf_bookmark(controller, flight) {
   if(!is_void(edb)) {
     fmt = "%s bookmark add %d {%s}"
     soe = long(edb.seconds(min));
-    tkcmd, swrite(format=fmt, controller, soe, flight+" (edb start");
+    tkcmd, swrite(format=fmt, controller, soe, flight+" (edb start)");
     soe = long(edb.seconds(max));
     tkcmd, swrite(format=fmt, controller, soe, flight+" (edb end)");
   }
