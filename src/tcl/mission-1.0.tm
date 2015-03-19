@@ -44,6 +44,9 @@ if {[info vars ::mission::plugins] eq ""} {
         ybkg tksync add \"mission.data.missing_file\" \
                 \"::mission::missing_file\"
 
+        # List of the imagery types. This should get set by a plugin.
+        variable imagery_types {}
+
         # List of all known detail types; used to populate the dropdown box
         # for "Detail type:". This should get set by a plugin.
         variable detail_types {}
