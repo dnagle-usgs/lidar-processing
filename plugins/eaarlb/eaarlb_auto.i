@@ -36,6 +36,11 @@ func hook_plugins_load_post_eaarlb(env) {
   return env;
 }
 
+func hook_eaarlb_handle_process_eaarl_opts(env) {
+  if(is_void(env.channel)) error, "Must specify channel= option";
+  return env;
+}
+
 func hook_eaarlb_pcr_channel(env) {
   if(env.forcechannel == 4) save, env, forcechannel=2;
   return env;

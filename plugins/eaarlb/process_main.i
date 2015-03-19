@@ -42,6 +42,21 @@ save, eaarl_processing_modes,
     cast="be_struct_from_obj"
   );
 
+func handle_process_eaarl_opts(&mode, &channel) {
+/* DOCUMENT handle_process_eaarl_opts, &mode, &channel
+  This helper function is invoked in each of the entry points to processing
+  EAARL data. It provides a sane default to mode if it's not set, then verifies
+  that it contains a valid value. It then invokes a hook that allows EAARL
+  plugins to decide how they want to handle/react to whatever was provided for
+  the channel.
+*/
+  extern eaarl_processing_modes;
+  default, mode, "f";
+  if(!eaarl_processing_modes(*,mode))
+    error, "invalid mode";
+  restore, hook_invoke("handle_process_eaarl_opts", save(mode, channel));
+}
+
 func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, ptime=, opts=) {
 /* DOCUMENT process_eaarl(start, stop, mode=, ext_bad_att=, channel=, ptime=,
    opts=)
@@ -64,8 +79,8 @@ func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, ptime=, opts=) {
         mode="f"    Process for first surface (default)
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
-    channel= Specifies which channel or channels to process. Required. This can
-      be an integer or array of integers for the channels to process.
+    channel= Specifies which channel or channels to process. This option is
+      handled differently based on the current EAARL plugin loaded.
     ptime= Processing time identifier. By default this will be the current SOE
       value times -1.
     opts= Oxy group that provides an alternative interface for providing
@@ -77,14 +92,10 @@ func process_eaarl(start, stop, mode=, ext_bad_att=, channel=, ptime=, opts=) {
     data's type.
 */
   restore_if_exists, opts, start, stop, mode, ext_bad_att, channel, ptime;
-  if(is_void(channel)) error, "Must specify channel= option";
-
-  extern eaarl_processing_modes;
-  default, mode, "f";
+  handle_process_eaarl_opts, mode, channel;
   default, ptime, -getsoe();
 
-  if(!eaarl_processing_modes(*,mode))
-    error, "invalid mode";
+  extern eaarl_processing_modes;
   local process, cast;
   restore, eaarl_processing_modes(noop(mode)), process, cast;
   if(is_string(process)) process = symbol_def(process);
@@ -118,8 +129,8 @@ opts=) {
         mode="f"    Process for first surface (default)
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
-    channel= Specifies which channel or channels to process. Required. This can
-      be an integer or array of integers for the channels to process.
+    channel= Specifies which channel or channels to process. This option is
+      handled differently based on the current EAARL plugin loaded.
 
   Additional options:
     verbose= Specifies verbosity level.
@@ -135,14 +146,13 @@ opts=) {
   timer, t0;
 
   restore_if_exists, opts, mode, q, ply, region, ext_bad_att, channel, verbose;
+  handle_process_eaarl_opts, mode, channel;
   if(!is_void(ply)) {
     error, "ply= is no longer accepted by make_eaarl; use region= instead";
   }
-  if(is_void(channel)) error, "Must specify channel= option";
 
   extern ops_conf, tans, pnav;
 
-  default, mode, "f";
   default, verbose, 1;
 
   if(is_void(ops_conf))
@@ -222,8 +232,8 @@ ext_bad_att=, ptime=, opts=) {
         mode="f"    Process for first surface (default)
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
-    channel= Specifies which channel or channels to process. Required. This can
-      be an integer or array of integers for the channels to process.
+    channel= Specifies which channel or channels to process. This option is
+      handled differently based on the current EAARL plugin loaded.
     ptime= Processing time identifier. By default this will be the current SOE
       value times -1.
     opts= Oxy group that provides an alternative interface for providing
@@ -236,7 +246,7 @@ ext_bad_att=, ptime=, opts=) {
 */
   restore_if_exists, opts, tldfn, start, stop, rnstart, mode, channel,
     ext_bad_att, ptime;
-  if(is_void(channel)) error, "Must specify channel= option";
+  handle_process_eaarl_opts, mode, channel;
 
   default, ptime, -getsoe();
 
@@ -300,8 +310,8 @@ makeflow_fn=, norun=, retconf=, opts=) {
         mode="f"    Process for first surface (default)
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
-    channel= Specifies which channel or channels to process. Required. This can
-      be an integer or array of integers for the channels to process.
+    channel= Specifies which channel or channels to process. This option is
+      handled differently based on the current EAARL plugin loaded.
 
   Options for makeflow:
     makeflow_fn= The filename to use when writing out the makeflow. Ignored if
@@ -329,14 +339,13 @@ makeflow_fn=, norun=, retconf=, opts=) {
 
   restore_if_exists, opts, mode, q, ply, region, ext_bad_att, channel, verbose,
     makeflow_fn, retconf, norun;
+  handle_process_eaarl_opts, mode, channel;
   if(!is_void(ply)) {
     error, "ply= is no longer accepted by mf_make_eaarl; use region= instead";
   }
-  if(is_void(channel)) error, "Must specify channel= option";
 
   extern ops_conf, tans, pnav;
 
-  default, mode, "f";
   default, verbose, 1;
 
   if(is_void(ops_conf))
@@ -455,8 +464,8 @@ exactsel=, splitchan=, opts=) {
     mode= Processing mode. See eaarl_processing_modes for full list of
       available modes.
         mode="f"    Process for first surface (default)
-    channel= Specifies which channel or channels to process. Required. This can
-      be an integer or array of integers for the channels to process.
+    channel= Specifies which channel or channels to process. This option is
+      handled differently based on the current EAARL plugin loaded.
     ext_bad_att= A value in meters. Points less than this close to the mirror
       (in elevation) are discarded. By default, this is 0 and is not applied.
     force_zone= Specifies a zone to coerce output to. If not provided, then the
@@ -536,15 +545,14 @@ exactsel=, splitchan=, opts=) {
     ext_bad_att, channel, pick, plot, onlyplot, win, region, ply, q, shapefile,
     buffer, force_zone, log_fn, makeflow_fn, norun, retconf, exactsel,
     splitchan;
+  handle_process_eaarl_opts, mode, channel;
   if(!is_void(ply)) {
     error, "ply= is no longer accepted by mf_batch_eaarl; use region= instead";
   }
   if(!is_void(shapefile)) {
     error, "shapefile= is no longer accepted by mf_batch_eaarl; use region= instead";
   }
-  if(is_void(channel)) error, "Must specify channel= option";
 
-  default, mode, "f";
   default, buffer, 200.;
   default, win, 4;
   default, plot, 1;
