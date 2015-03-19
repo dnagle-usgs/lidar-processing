@@ -144,6 +144,11 @@ namespace eval ::mission::eaarl {
         grid columnconfigure $extra 0 -weight 1
     }
 
+    # Wrapper around sf_load_* to look cleaner.
+    proc sf_load {type flights} {
+        return [sf_load_$type $flights]
+    }
+
     # Returns the parameters used to load RGB imagery for the given flights.
     # This is a list of three elements. The first is the driver. The second is
     # the switch indicating what kind of argument follows (-path, -paths, or
@@ -224,7 +229,7 @@ namespace eval ::mission::eaarl {
     }
 
     proc load_rgb {flight} {
-        set params [sf_load_rgb [list $flight]]
+        set params [sf_load rgb [list $flight]]
         if {[llength $params]} {
             set rgb [sf::controller %AUTO%]
             $rgb load {*}$params
@@ -233,7 +238,7 @@ namespace eval ::mission::eaarl {
     }
 
     proc load_cir {flight} {
-        set params [sf_load_cir [list $flight]]
+        set params [sf_load cir [list $flight]]
         if {[llength $params]} {
             set cir [sf::controller %AUTO%]
             $cir load {*}$params
@@ -251,7 +256,7 @@ namespace eval ::mission::eaarl {
     }
 
     proc menu_load_rgb {} {
-        set params [sf_load_rgb [::mission::get]]
+        set params [sf_load rgb [::mission::get]]
         if {[llength $params]} {
             set rgb [sf::controller %AUTO%]
             $rgb load {*}$params
@@ -260,7 +265,7 @@ namespace eval ::mission::eaarl {
     }
 
     proc menu_load_cir {} {
-        set params [sf_load_cir [::mission::get]]
+        set params [sf_load cir [::mission::get]]
         if {[llength $params]} {
             set cir [sf::controller %AUTO%]
             $cir load {*}$params
@@ -305,10 +310,9 @@ namespace eval ::mission::eaarl {
     }
 
     proc dump_imagery {type dest} {
-        set loader sf_load_$type
         set subdir photos/$type
         foreach flight [::mission::get] {
-            lassign [$loader [list $flight]] driver switch paths
+            lassign [sf_load $type [list $flight]] driver switch paths
             if {$driver ne ""} {
                 set model [::sf::model::create::$driver $switch $paths]
                 set rel [::fileutil::relative $::mission::path \
