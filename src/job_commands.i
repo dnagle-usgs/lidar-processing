@@ -383,3 +383,41 @@ func job_depth_correct(conf) {
 
   pbd_depth_correct, opts=conf;
 }
+
+
+func job_gen_jgw(conf) {
+  require, "eaarl.i";
+  require, "../plugins/eaarlb/mosaic_biases.i";
+
+  ins = array(IEX_ATTITUDEUTM);
+  ins.somd = atod(conf.somd);
+  ins.lat = atod(conf.lat);
+  ins.lon = atod(conf.lon);
+  ins.northing = atod(conf.northing);
+  ins.easting = atod(conf.easting);
+  zone = ins.zone = atoi(conf.zone);
+  ins.alt = atod(conf.alt);
+  ins.roll = atod(conf.roll);
+  ins.pitch = atod(conf.pitch);
+  ins.heading = atod(conf.heading);
+  buffer = atoi(conf.buffer);
+  elev = atoi(conf.elev);
+  max_adjustments = atoi(conf.max_adjustments);
+  min_improvement = atod(conf.min_improvement);
+
+  result = [];
+  jgw_data = gen_jgw_with_lidar(ins, conf.pbd_dir, result, camera=camera,
+    elev=elev, buffer=buffer, mode=conf.mode, searchstr=conf.searchstr,
+    max_adjustments=max_adjustments, min_improvement=min_improvement);
+
+  // Previously the line below was used and corresponded to a change in
+  // mosaic_tools.i that made it return [] instead of jgw_data if pbd_data was
+  // void in its first check (but not the second check, in the loop). It was
+  // changed back to make batch and non-batch agree, but is commented in case
+  // there was a problem somewhere in there that we can't remember.
+  //if (!is_void(jgw_data)) { }
+  if (!h_has(result, "nolidar")) {
+    write_jgw, conf.output, jgw_data;
+    batch_gen_prj, files=conf.prj, zone=zone, datum="n88";
+  }
+}

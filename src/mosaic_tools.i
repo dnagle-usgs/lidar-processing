@@ -531,8 +531,8 @@ searchstr=) {
 
       result = [];
       jgw_data = gen_jgw_with_lidar(cirdata.tans(idx(j)), pbd_dir, result,
-        camera=camera, elev=elev, buffer=buffer, pbd_data=pbd_data,
-        mode=mode, searchstr=searchstr);
+        camera=camera, elev=elev, buffer=buffer, pbd_data=pbd_data, mode=mode,
+	searchstr=searchstr, max_adjustments=max_adjustments, min_improvement=min_improvement);
 
       if(h_has(result, "nolidar")) {
         write, format="Image %d: Skipped, no PBD data.\n", processed;
@@ -1134,7 +1134,7 @@ Number of flightlines: %d\n\
   }
 }
 
-func gen_jgw_with_lidar(ins, pbd_dir, &meta, camera=, mounting_bias=, searchstr=, elev=, pbd_data=, buffer=, mode=) {
+func gen_jgw_with_lidar(ins, pbd_dir, &meta, camera=, mounting_bias=, searchstr=, elev=, pbd_data=, buffer=, mode=, max_adjustments=, min_improvement=) {
 /* DOCUMENT jgw = gen_jgw_with_lidar(ins, pbd_dir, &meta, camera=,
   mounting_bias=, searchstr=, elev=, pbd_data=, mode=)
   Generates a JGW array for the given information.
@@ -1157,8 +1157,9 @@ func gen_jgw_with_lidar(ins, pbd_dir, &meta, camera=, mounting_bias=, searchstr=
 
   if(is_void(pbd_data)) {
     h_set, meta, nolidar=1;
-    return jgw_data;
-  }
+//    return jgw_data;
+    return;
+}
 
   while(++j < max_adjustments && comparison > min_improvement) {
     pbd_hull = convex_hull(pbd_data.east, pbd_data.north)/100.;
