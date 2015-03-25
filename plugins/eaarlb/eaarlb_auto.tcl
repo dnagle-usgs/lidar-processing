@@ -111,4 +111,32 @@ namespace eval ::plugins::eaarlb {
         }
     }
 
+    make_hook post "::eaarl::processing::process" {cmdVar} {
+        upvar $cmdVar cmd
+        if {$cmd eq ""} {return}
+
+        set channels [list]
+        foreach channel $::eaarl::channel_list {
+            if {[set ::eaarl::usechannel_$channel]} {
+                lappend channels $channel
+            }
+        }
+
+        if {![llength $channels]} {
+            tk_messageBox \
+                    -type ok \
+                    -icon error \
+                    -message "You must select channel processing options. Select\
+                            one or more specific channels."
+            set cmd ""
+            return
+        }
+
+        if {[llength $channels] > 1} {
+            set channels \[[join $channels ,]\]
+        } else {
+            set channels [lindex $channels 0]
+        }
+        append cmd ", channel=$channels"
+    }
 }

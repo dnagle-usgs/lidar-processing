@@ -282,36 +282,14 @@ proc ::eaarl::processing::process {} {
         set make_eaarl "mf_make_eaarl"
     }
 
-    set channels [list]
-    foreach channel {1 2 3 4} {
-        if {[set ::eaarl::usechannel_$channel]} {
-            lappend channels $channel
-        }
-    }
+    set cmd "$::pro_var = ${make_eaarl}(mode=\"$processing_mode\",\
+            q=q, ext_bad_att=$ext_bad_att"
 
-    if {![llength $channels]} {
-        tk_messageBox \
-                -type ok \
-                -icon error \
-                -message "You must select channel processing options. Select\
-                        one or more specific channels."
-        return
-    }
+    ::hook::invoke "::eaarl::processing::process" cmd
+    # If the hook sets cmd to "", that means a hook handled an error and
+    # notified the user and we should abort here.
+    if {$cmd eq ""} {return}
 
-    set channels \[[join $channels ,]\]
-    set cmd ""
-    switch -- $processing_mode {
-        f - v - b - sb - mp - cf {
-            set cmd "$::pro_var = ${make_eaarl}(mode=\"$processing_mode\",\
-                    q=q, ext_bad_att=$ext_bad_att, channel=$channels)"
-        }
-    }
-
-    if {$cmd ne ""} {
-        append cmd "; $::pro_var = sortdata($::pro_var, method=\"soe\")"
-        exp_send "$cmd;\r"
-        return
-    }
-
-    error "Invalid processing mode: $processing_mode"
+    append cmd ")"
+    exp_send "$cmd;\r"
 }

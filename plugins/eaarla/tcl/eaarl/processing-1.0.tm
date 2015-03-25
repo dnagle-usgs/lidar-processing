@@ -262,12 +262,19 @@ proc ::eaarl::processing::process {} {
     if {[catch {yorick::util::check_vname ::eaarl::pro_var_next}]} {return}
     variable ::eaarl::processing_mode
     variable ::eaarl::pro_var_next
-    variable ::eaarl::usecentroid
     variable ::eaarl::ext_bad_att
-    variable ::eaarl::avg_surf
     variable ::eaarl::interactive_batch
 
-    append_varlist $pro_var_next
+    array set modelist [ list \
+        {f}  {fs} \
+        {v}  {be} \
+        {b}  {ba} \
+        {sb} {ba} \
+        {mp} {fs} \
+        {cf} {be} \
+    ]
+
+    append_varlist $pro_var_next $modelist($processing_mode)
     set ::pro_var $pro_var_next
 
     set make_eaarl "make_eaarl"
@@ -275,24 +282,14 @@ proc ::eaarl::processing::process {} {
         set make_eaarl "mf_make_eaarl"
     }
 
-    set cmd ""
-    switch -- $processing_mode {
-        f - v - b - sb - mp - cf {
-            set cmd "$::pro_var = ${make_eaarl}(mode=\"$processing_mode\",\
-                    q=q, ext_bad_att=$ext_bad_att)"
-        }
-        default {
-            error "Unknown processing mode: $processing_mode"
-        }
-    }
+    set cmd "$::pro_var = ${make_eaarl}(mode=\"$processing_mode\",\
+            q=q, ext_bad_att=$ext_bad_att"
 
-    if {$cmd ne ""} {
-        if {
-            $::eaarl::autoclean_after_process
-            && $processing_mode ni {f b v}
-        } {
-            append cmd "; test_and_clean, $::pro_var"
-        }
-        exp_send "$cmd;\r"
-    }
+    ::hook::invoke "::eaarl::processing::process" cmd
+    # If the hook sets cmd to "", that means a hook handled an error and
+    # notified the user and we should abort here.
+    if {$cmd eq ""} {return}
+
+    append cmd ")"
+    exp_send "$cmd;\r"
 }
