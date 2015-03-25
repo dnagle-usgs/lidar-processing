@@ -503,56 +503,6 @@ func eaarl_mission_unwrap(env) {
   return env;
 }
 
-local hook_eaarl_mission_jobs_env_wrap, hook_eaarl_mission_jobs_env_unwrap;
-/* DOCUMENT
-  hook_add, "jobs_env_wrap", "hook_eaarl_mission_jobs_env_wrap";
-  hook_add, "jobs_env_unwrap", "hook_eaarl_mission_jobs_env_unwrap";
-  makeflow_run, conf, ... ;
-  hook_remove, "jobs_env_wrap", "hook_eaarl_mission_jobs_env_wrap";
-  hook_remove, "jobs_env_unwrap", "hook_eaarl_mission_jobs_env_unwrap";
-
-  These two hooks are used to send the loaded mission data to jobs, as
-  indicated above.
-*/
-
-func hook_eaarl_mission_jobs_env_wrap(env) {
-  wrapped = mission(wrap, cache_what="everything");
-  if(wrapped(*,"bathconf_data"))
-    save, wrapped, bathconf_data=serialize(wrapped.bathconf_data);
-  if(wrapped(*,"vegconf_data"))
-    save, wrapped, vegconf_data=serialize(wrapped.vegconf_data);
-  if(wrapped(*,"sbconf_data"))
-    save, wrapped, sbconf_data=serialize(wrapped.sbconf_data);
-  if(wrapped(*,"mpconf_data"))
-    save, wrapped, mpconf_data=serialize(wrapped.mpconf_data);
-  if(wrapped(*,"cfconf_data"))
-    save, wrapped, cfconf_data=serialize(wrapped.cfconf_data);
-  if(wrapped(*,"ops_conf"))
-    save, wrapped, ops_conf=serialize(wrapped.ops_conf);
-  mission_fn = file_rootname(env.fn) + ".flight";
-  obj2pbd, wrapped, mission_fn;
-  save, env.env, mission_fn;
-  return env;
-}
-
-func hook_eaarl_mission_jobs_env_unwrap(env) {
-  wrapped = pbd2obj(env.env.mission_fn);
-  if(wrapped(*,"bathconf_data"))
-    save, wrapped, bathconf_data=deserialize(wrapped.bathconf_data);
-  if(wrapped(*,"vegconf_data"))
-    save, wrapped, vegconf_data=deserialize(wrapped.vegconf_data);
-  if(wrapped(*,"sbconf_data"))
-    save, wrapped, sbconf_data=deserialize(wrapped.sbconf_data);
-  if(wrapped(*,"mpconf_data"))
-    save, wrapped, mpconf_data=deserialize(wrapped.mpconf_data);
-  if(wrapped(*,"cfconf_data"))
-    save, wrapped, cfconf_data=deserialize(wrapped.cfconf_data);
-  if(wrapped(*,"ops_conf"))
-    save, wrapped, ops_conf=deserialize(wrapped.ops_conf);
-  mission, unwrap, wrapped;
-  return env;
-}
-
 hook_add, "mission_flights_auto_critical",
   "eaarl_mission_flights_auto_critical";
 func eaarl_mission_flights_auto_critical(env) {
