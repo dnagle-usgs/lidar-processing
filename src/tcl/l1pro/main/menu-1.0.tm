@@ -322,12 +322,7 @@ proc menu_cmdline mb {
 }
 
 proc menu_plugins mb {
-    menu $mb
-    foreach plugin [::plugins::plugins_list] {
-        menu $mb.$plugin \
-                -postcommand [list ::plugins::menu_build $plugin $mb.$plugin]
-        $mb add cascade -label $plugin -menu $mb.$plugin
-    }
+    menu $mb -postcommand [list ::plugins::menu_build $mb]
     return $mb
 }
 

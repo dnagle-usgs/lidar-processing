@@ -18,7 +18,17 @@ proc ::plugins::plugins_list {} {
     return $result
 }
 
-proc ::plugins::menu_build {plugin mb} {
+proc ::plugins::menu_build {mb} {
+    $mb delete 0 end
+    destroy {*}[winfo children $mb]
+    foreach plugin [plugins_list] {
+        menu $mb.$plugin \
+                -postcommand [list ::plugins::menu_build_plugin $plugin $mb.$plugin]
+        $mb add cascade -label $plugin -menu $mb.$plugin
+    }
+}
+
+proc ::plugins::menu_build_plugin {plugin mb} {
     variable loaded
     $mb delete 0 end
     ::tooltip::tooltip clear $mb
