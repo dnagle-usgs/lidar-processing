@@ -1,11 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-handler_set, "mission_query_soe_rn", "eaarl_mission_query_soe_rn";
-func eaarl_mission_query_soe_rn(env) {
-/* DOCUMENT eaarl_mission_query_soe_rn(env)
-  Handler function for mission_query_soe_rn.
-  SEE ALSO: mission_query_soe_rn
-*/
+handler_set, "mission_query_soe_rn", "handler_eaarl_mission_query_soe_rn";
+func handler_eaarl_mission_query_soe_rn(env) {
   flights = env.flights;
   rn = env.rn;
 
@@ -21,9 +17,9 @@ func eaarl_mission_query_soe_rn(env) {
   return env;
 }
 
-handler_set, "mission_query_soe", "eaarl_mission_query_soe";
-func eaarl_mission_query_soe(env) {
-/* DOCUMENT eaarl_mission_query_soe(env)
+handler_set, "mission_query_soe", "handler_eaarl_mission_query_soe";
+func handler_eaarl_mission_query_soe(env) {
+/* DOCUMENT handler_eaarl_mission_query_soe(env)
   Handler function for mission_query_soe.
 
   This function determines the flight using time as follows:
@@ -95,12 +91,8 @@ func eaarl_mission_query_soe(env) {
   return env;
 }
 
-handler_set, "mission_load_soe_rn", "eaarl_mission_load_soe_rn";
-func eaarl_mission_load_soe_rn(env) {
-/* DOCUMENT eaarl_mission_load_soe_rn(env)
-  Handler for mission_load_soe_rn.
-  SEE ALSO: mission_load_soe_rn
-*/
+handler_set, "mission_load_soe_rn", "handler_eaarl_mission_load_soe_rn";
+func handler_eaarl_mission_load_soe_rn(env) {
   // Check to see if the current flight contains this soe and rn; if so, do
   // nothing. Only checks EDB.
   if(mission.data.loaded != "" && !is_void(edb) && env.rn <= numberof(edb)) {
@@ -125,12 +117,8 @@ func eaarl_mission_load_soe_rn(env) {
   return env;
 }
 
-handler_set, "mission_load_soe", "eaarl_mission_load_soe";
-func eaarl_mission_load_soe(env) {
-/* DOCUMENT eaarl_mission_load_soe(env)
-  Handler for mission_load_soe.
-  SEE ALSO: mission_load_soe
-*/
+handler_set, "mission_load_soe", "handler_eaarl_mission_load_soe";
+func handler_eaarl_mission_load_soe(env) {
   // Check to see if the current flight contains this soe using any of GPS,
   // INS, and EDB (if each is present). If so, use current flight. If multiple
   // flights contain this soe, best to keep the currently loaded rather than
@@ -197,12 +185,8 @@ func eaarl_mission_load_test_key(flight, key) {
   }
 }
 
-handler_set, "mission_load", "eaarl_mission_load";
-func eaarl_mission_load(env) {
-/* DOCUMENT eaarl_mission_load(env)
-  Handler for mission_load.
-  SEE ALSO: mission_load
-*/
+handler_set, "mission_load", "handler_eaarl_mission_load";
+func handler_eaarl_mission_load(env) {
   // Local alias for convenience
   test_key = eaarl_mission_load_test_key;
 
@@ -350,12 +334,8 @@ func eaarl_mission_load(env) {
   return env;
 }
 
-handler_set, "mission_unload", "eaarl_mission_unload";
-func eaarl_mission_unload(env) {
-/* DOCUMENT eaarl_mission_unload(env)
-  Handler for mission_unload.
-  SEE ALSO: mission_unload
-*/
+handler_set, "mission_unload", "handler_eaarl_mission_unload";
+func handler_eaarl_mission_unload(env) {
   if(mission.data.cache_mode == "onchange" && mission.data.loaded != "")
     save, mission.data.cache, mission.data.loaded, mission(wrap,);
 
@@ -397,12 +377,8 @@ func eaarl_mission_unload(env) {
   return env;
 }
 
-handler_set, "mission_wrap", "eaarl_mission_wrap";
-func eaarl_mission_wrap(env) {
-/* DOCUMENT eaarl_mission_wrap(env)
-  Handler for mission_wrap.
-  SEE ALSO: mission_wrap
-*/
+handler_set, "mission_wrap", "handler_eaarl_mission_wrap";
+func handler_eaarl_mission_wrap(env) {
   default, cache_what, env.cache_what;
   default, cache_what, mission.data.cache_what;
 
@@ -439,12 +415,8 @@ func eaarl_mission_wrap(env) {
   return env;
 }
 
-handler_set, "mission_unwrap", "eaarl_mission_unwrap";
-func eaarl_mission_unwrap(env) {
-/* DOCUMENT eaarl_mission_unwrap(env)
-  Handler for mission_unwrap.
-  SEE ALSO: mission_unwrap
-*/
+handler_set, "mission_unwrap", "handler_eaarl_mission_unwrap";
+func handler_eaarl_mission_unwrap(env) {
   extern data_path;
   extern edb, edb_filename, edb_files, total_edb_records, soe_day_start,
     eaarl_time_offset;
