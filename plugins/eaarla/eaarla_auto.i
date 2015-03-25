@@ -18,8 +18,13 @@ func hook_plugins_load_eaarla(env) {
   w = where(strpart(f, :12) == "hook_eaarla_");
   hooks = f(w);
 
-  for(i = 1; i <= numberof(hooks); i++)
-    hook_add, strpart(hooks(i), 13:), hooks(i);
+  for(i = 1; i <= numberof(hooks); i++) {
+    priority = 0;
+    if(symbol_exists(hooks(i)+"_priority")) {
+      priority = symbol_def(hooks(i)+"_priority");
+    }
+    hook_add, strpart(hooks(i), 13:), hooks(i), priority;
+  }
 
   return env;
 }
