@@ -308,6 +308,13 @@ func find(path, searchstr=) {
 
   Full path and filename will be returned for each file.
 */
+  if(!is_scalar(path)) {
+    results = array(pointer, numberof(path));
+    for(i = 1; i <= numberof(path); i++)
+      results(i) = &find(path(i), searchstr=searchstr);
+    return set_remove_duplicates(merge_pointers(results));
+  }
+
   fix_dir, path;
   default, searchstr, "*";
   if(numberof(searchstr) > 1)
