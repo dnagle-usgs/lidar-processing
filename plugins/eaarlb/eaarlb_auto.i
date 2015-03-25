@@ -13,13 +13,7 @@ func hook_plugins_load_eaarlb(env) {
   extern CHANNEL_COUNT;
   CHANNEL_COUNT = 4;
 
-  // 16 is the magic constant for interpreted functions
-  f = symbol_names(16);
-  w = where(strpart(f, :12) == "hook_eaarlb_");
-  hooks = f(w);
-
-  for(i = 1; i <= numberof(hooks); i++)
-    hook_add, strpart(hooks(i), 13:), hooks(i);
+  hooks_autoadd, "hook_eaarlb_";
 
   return env;
 }
@@ -32,6 +26,8 @@ func hook_plugins_load_post_eaarlb(env) {
   extern camera_specs, camera_mounting_bias;
   camera_specs = ge2040c_specs;
   camera_mounting_bias = ge2040c_n7793q_dummy;
+
+  hooks_autoadd, "hook_eaarl_";
 
   return env;
 }
