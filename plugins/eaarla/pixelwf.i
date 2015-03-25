@@ -14,7 +14,6 @@ if(is_void(pixelwfvars)) {
   );
 }
 
-hook_add, "expix_show", "hook_eaarl_expix_pixelwf";
 func hook_eaarl_expix_pixelwf(env) {
   nearest = env.nearest;
   point = nearest.point;

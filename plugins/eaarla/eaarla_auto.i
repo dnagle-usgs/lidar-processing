@@ -38,6 +38,19 @@ func hook_plugins_load_post_eaarla(env) {
   camera_specs = ms4000_specs;
   camera_mounting_bias = ms4000_cir_bias_n111x;
 
+  // 16 is the magic constant for interpreted functions
+  f = symbol_names(16);
+  w = where(strpart(f, :11) == "hook_eaarl_");
+  hooks = f(w);
+
+  for(i = 1; i <= numberof(hooks); i++) {
+    priority = 0;
+    if(symbol_exists(hooks(i)+"_priority")) {
+      priority = symbol_def(hooks(i)+"_priority");
+    }
+    hook_add, strpart(hooks(i), 12:), hooks(i), priority;
+  }
+
   return env;
 }
 

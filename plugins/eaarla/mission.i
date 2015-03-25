@@ -503,8 +503,6 @@ func eaarl_mission_unwrap(env) {
   return env;
 }
 
-hook_add, "mission_flights_auto_critical",
-  "hook_eaarl_mission_flights_auto_critical";
 func hook_eaarl_mission_flights_auto_critical(env) {
 /* DOCUMENT eaarl_mission_flights_auto_critical(env)
   Hook function for "mission_flights_auto_critical" used by
@@ -516,7 +514,7 @@ func hook_eaarl_mission_flights_auto_critical(env) {
   return env;
 }
 
-hook_add, "mission_flights_auto_keys", "hook_eaarl_mission_flights_auto_keys", -10;
+hook_eaarl_mission_flights_auto_keys_priority = -10;
 func hook_eaarl_mission_flights_auto_keys(env) {
 /* DOCUMENT eaarl_mission_flights_auto_keys(env)
   Hook function for "mission_flights_auto_keys" used by mission_flights_auto.
@@ -538,7 +536,7 @@ func hook_eaarl_mission_flights_auto_keys(env) {
   return env;
 }
 
-hook_add, "mission_details_autolist", "hook_eaarl_mission_details_autolist", -10;
+hook_eaarl_mission_details_autolist_priority = -10;
 func hook_eaarl_mission_details_autolist(env) {
 /* DOCUMENT eaarl_mission_details_autolist(env)
   Hook function for mission_details_autolist.
@@ -567,7 +565,7 @@ func hook_eaarl_mission_details_autolist(env) {
   return env;
 }
 
-hook_add, "mission_flights_validate_fields", "hook_eaarl_mission_flights_validate_fields", -10;
+hook_eaarl_mission_flights_validate_fields_priority = -10;
 func hook_eaarl_mission_flights_validate_fields(env) {
   save, env.fields,
     "edb file", save(
