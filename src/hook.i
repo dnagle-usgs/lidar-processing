@@ -198,3 +198,45 @@ hook_invoke = closure(hook_invoke, hooks);
 hook_serialize = closure(hook_serialize, hooks);
 hook_deserialize = closure(hook_deserialize, hooks);
 restore, scratch;
+
+func hooks_autoadd(prefix) {
+/* DOCUMENT hooks_autoadd, prefix;
+  This automatically detects and adds hooks based on functions that have the
+  given prefix.
+
+  For example, if you define a function such as:
+
+    func hook_example_plugins_load(env) {
+      return env;
+    }
+
+  You can then call:
+    hooks_autoadd, "hook_example_";
+
+  And that will detect your function and invoke:
+    hook_add, "plugins_load", "hook_example_plugins_load";
+
+  If you want to provide a priority, simply define a variable named the same as
+  the function but add "_priority" to the name:
+
+    hook_example_plugins_load_priority = -10;
+    func hook_example_plugins_load(env) {
+      return env;
+    }
+*/
+  len = strlen(prefix);
+
+  f = symbol_names(-1);
+  w = where(strpart(f, :len) == prefix);
+  hooks = f(w);
+
+  off = len+1;
+  for(i = 1; i <= numberof(hooks); i++) {
+    if(!is_func(symbol_def(hooks(i)))) continue;
+    priority = 0;
+    if(symbol_exists(hooks(i)+"_priority")) {
+      priority = symbol_def(hooks(i)+"_priority");
+    }
+    hook_add, strpart(hooks(i), off:), hooks(i), priority;
+  }
+}
