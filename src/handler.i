@@ -157,3 +157,33 @@ handler_invoke = closure(handler_invoke, handlers);
 handler_serialize = closure(handler_serialize, handlers);
 handler_deserialize = closure(handler_deserialize, handlers);
 restore, scratch;
+
+func handlers_autoset(prefix) {
+/* DOCUMENT handlers_autoset, prefix;
+  This automatically detects and sets handlers based on functions that have the
+  given prefix.
+
+  For example, if you define a function such as:
+
+    func handler_example_plugins_load(env) {
+      return env;
+    }
+
+  You can then call:
+    handlers_autoset, "handler_example_";
+
+  And that will detect your function and invoke:
+    handler_add, "plugins_load", "handler_example_plugins_load";
+*/
+  len = strlen(prefix);
+
+  f = symbol_names(-1);
+  w = where(strpart(f, :len) == prefix);
+  handlers = f(w);
+
+  off = len+1;
+  for(i = 1; i <= numberof(handlers); i++) {
+    if(!is_func(symbol_def(handlers(i)))) continue;
+    handler_set, strpart(handlers(i), off:), handlers(i);
+  }
+}
