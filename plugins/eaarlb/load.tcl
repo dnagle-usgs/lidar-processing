@@ -6,7 +6,3 @@ package require mission::eaarl
 package require eaarl
 package require sf::model::cir
 package require sf::model::rgb
-
-namespace eval ::plugins::eaarlb {}
-
-eaarl::on_load

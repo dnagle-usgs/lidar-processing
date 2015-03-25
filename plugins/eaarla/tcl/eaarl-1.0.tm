@@ -82,10 +82,4 @@ namespace eval ::eaarl {
 
    trace add variable \
          ::eaarl::processing_mode write ::eaarl::processing_mode_changed
-
-   proc on_load {} {
-      foreach script $::l1pro::on_eaarl_load {
-         catch [list uplevel #0 $script]
-      }
-   }
 }
