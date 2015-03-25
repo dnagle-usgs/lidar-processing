@@ -52,11 +52,6 @@ namespace eval ::eaarl {
    variable ext_bad_att 20
    variable interactive_batch [expr {$::alpsrc(cores_local) >= 3}]
 
-   variable usechannel_1 0
-   variable usechannel_2 0
-   variable usechannel_3 0
-   variable usechannel_4 0
-
    variable processing_mode f
    variable pro_var_next fs_all
 
@@ -97,14 +92,8 @@ namespace eval ::eaarl {
       set pro_var_next "${prefix}_${suffix}"
    }
 
-   foreach var {
-      usechannel_1 usechannel_2 usechannel_3 usechannel_4 processing_mode
-   } {
-      trace add variable \
-            ::eaarl::$var write ::eaarl::processing_mode_changed
-   }
-   unset var
-
+   trace add variable \
+         ::eaarl::processing_mode write ::eaarl::processing_mode_changed
 
    proc on_load {} {
       foreach script $::l1pro::on_eaarl_load {

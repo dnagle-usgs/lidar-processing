@@ -26,6 +26,12 @@ namespace eval ::plugins::eaarlb {
         set ::eaarl::channel_count 4
         set ::eaarl::channel_list {1 2 3 4}
 
+        foreach chan {1 2 3 4} {
+            set ::eaarl::usechannel_$chan 0
+            trace add variable ::eaarl::usechannel_$chan \
+                    write ::eaarl::processing_mode_changed
+        }
+
         set ::mission::imagery_types {rgb nir}
         set ::mission::detail_types {
             "data_path dir"
