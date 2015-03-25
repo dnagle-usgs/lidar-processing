@@ -28,6 +28,7 @@ func hook_plugins_load_post_eaarla(env) {
   camera_mounting_bias = ms4000_cir_bias_n111x;
 
   hooks_autoadd, "hook_eaarl_";
+  handlers_autoset, "handler_eaarl_";
 
   return env;
 }

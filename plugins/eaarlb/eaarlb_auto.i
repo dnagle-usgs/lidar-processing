@@ -28,6 +28,7 @@ func hook_plugins_load_post_eaarlb(env) {
   camera_mounting_bias = ge2040c_n7793q_dummy;
 
   hooks_autoadd, "hook_eaarl_";
+  handlers_autoset, "handler_eaarl_";
 
   return env;
 }

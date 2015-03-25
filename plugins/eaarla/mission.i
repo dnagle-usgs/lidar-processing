@@ -1,6 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-handler_set, "mission_query_soe_rn", "handler_eaarl_mission_query_soe_rn";
 func handler_eaarl_mission_query_soe_rn(env) {
   flights = env.flights;
   rn = env.rn;
@@ -17,7 +16,6 @@ func handler_eaarl_mission_query_soe_rn(env) {
   return env;
 }
 
-handler_set, "mission_query_soe", "handler_eaarl_mission_query_soe";
 func handler_eaarl_mission_query_soe(env) {
 /* DOCUMENT handler_eaarl_mission_query_soe(env)
   Handler function for mission_query_soe.
@@ -91,7 +89,6 @@ func handler_eaarl_mission_query_soe(env) {
   return env;
 }
 
-handler_set, "mission_load_soe_rn", "handler_eaarl_mission_load_soe_rn";
 func handler_eaarl_mission_load_soe_rn(env) {
   // Check to see if the current flight contains this soe and rn; if so, do
   // nothing. Only checks EDB.
@@ -117,7 +114,6 @@ func handler_eaarl_mission_load_soe_rn(env) {
   return env;
 }
 
-handler_set, "mission_load_soe", "handler_eaarl_mission_load_soe";
 func handler_eaarl_mission_load_soe(env) {
   // Check to see if the current flight contains this soe using any of GPS,
   // INS, and EDB (if each is present). If so, use current flight. If multiple
@@ -185,7 +181,6 @@ func eaarl_mission_load_test_key(flight, key) {
   }
 }
 
-handler_set, "mission_load", "handler_eaarl_mission_load";
 func handler_eaarl_mission_load(env) {
   // Local alias for convenience
   test_key = eaarl_mission_load_test_key;
@@ -334,7 +329,6 @@ func handler_eaarl_mission_load(env) {
   return env;
 }
 
-handler_set, "mission_unload", "handler_eaarl_mission_unload";
 func handler_eaarl_mission_unload(env) {
   if(mission.data.cache_mode == "onchange" && mission.data.loaded != "")
     save, mission.data.cache, mission.data.loaded, mission(wrap,);
@@ -377,7 +371,6 @@ func handler_eaarl_mission_unload(env) {
   return env;
 }
 
-handler_set, "mission_wrap", "handler_eaarl_mission_wrap";
 func handler_eaarl_mission_wrap(env) {
   default, cache_what, env.cache_what;
   default, cache_what, mission.data.cache_what;
@@ -415,7 +408,6 @@ func handler_eaarl_mission_wrap(env) {
   return env;
 }
 
-handler_set, "mission_unwrap", "handler_eaarl_mission_unwrap";
 func handler_eaarl_mission_unwrap(env) {
   extern data_path;
   extern edb, edb_filename, edb_files, total_edb_records, soe_day_start,
