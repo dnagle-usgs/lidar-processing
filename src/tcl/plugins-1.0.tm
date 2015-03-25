@@ -32,28 +32,18 @@ proc ::plugins::menu_build_plugin {plugin mb} {
     variable loaded
     $mb delete 0 end
     ::tooltip::tooltip clear $mb
-    if {$plugin ni $loaded} {
-        if {"" != [info procs ::plugins::${plugin}::menu_preload]} {
-            ::plugins::${plugin}::menu_preload $mb
-        } else {
-            ::plugins::menu_preload $plugin $mb
-        }
+
+    set is_loaded [expr {$plugin in $loaded}]
+
+    ::hook::invoke "::plugins::menu_build_plugin" $plugin $is_loaded $mb
+    if {[$mb index end] ne "none"} {return}
+
+    if {$is_loaded} {
+        $mb add command -label "Loaded" -state disabled
     } else {
-        if {"" != [info procs ::plugins::${plugin}::menu_postload]} {
-            ::plugins::${plugin}::menu_postload $mb
-        } else {
-            ::plugins::menu_postload $plugin $mb
-        }
+        $mb add command -label "Load" \
+                -command [list exp_send "plugins_load, \"$plugin\";\r"]
     }
-}
-
-proc ::plugins::menu_preload {plugin mb} {
-    $mb add command -label "Load" \
-            -command [list exp_send "plugins_load, \"$plugin\";\r"]
-}
-
-proc ::plugins::menu_postload {plugin mb} {
-    $mb add command -label "Loaded" -state disabled
 }
 
 # For use by plugins
