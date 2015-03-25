@@ -8,7 +8,7 @@ local plugins;
   These optional components introduce additional functionality, such as
   specialized processing routines for specific data sources.
 
-  Plugins must be kept in an plugins subdirectory. Each plugin has its own
+  Plugins must be kept in a plugins subdirectory. Each plugin has its own
   subdirectory in the plugins subdirectory. The plugin's subdirectory is given
   the name of the plugin (and thus in turn specifies the plugin's name) and
   must be an alphanumeric string beginning with an alphabetic character (that
@@ -89,6 +89,12 @@ local __plugins__;
 if(is_void(__plugins__))
   __plugins__ = save(loaded=[], conflicts=[], auto=0);
 
+local plugins_path;
+/* DOCUMENT plugins_path
+  Search path for manifest.json files.
+*/
+plugins_path = ["../plugins"];
+
 func plugins_list(void, verbose=) {
 /* DOCUMENT plugins_list, verbose=
   -or- names = plugins_list()
@@ -102,7 +108,7 @@ func plugins_list(void, verbose=) {
 */
   extern src_path;
   default, verbose, 0;
-  manifests = find(file_join(src_path, "../plugins"), searchstr="manifest.json");
+  manifests = find(file_join(src_path, plugins_path), searchstr="manifest.json");
   names = file_tail(file_dirname(manifests));
   if(!am_subroutine())
     return names;
@@ -178,7 +184,7 @@ func plugins_load(name, force=) {
   name = name(1);
   if(!force && anyof(__plugins__.loaded == name))
     return;
-  manifest = find(file_join(src_path, "../plugins", name),
+  manifest = find(file_join(src_path, plugins_path, name),
     searchstr="manifest.json");
   if(numberof(manifest) != 1)
     error, "unable to locate manifest for"+pr1(name);
@@ -225,7 +231,7 @@ func plugins_autoload(void) {
       logger, warn, "plugins_autoload: autoloads were already processed";
     return;
   }
-  manifests = find(file_join(src_path, "../plugins"), searchstr="manifest.json");
+  manifests = find(file_join(src_path, plugins_path), searchstr="manifest.json");
   for(i = 1; i <= numberof(manifests); i++) {
     data = json_decode(rdfile(manifests(i)));
     base = file_dirname(manifests(i));
