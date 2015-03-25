@@ -281,25 +281,6 @@ proc ::eaarl::processing::process {} {
             set cmd "$::pro_var = ${make_eaarl}(mode=\"$processing_mode\",\
                     q=q, ext_bad_att=$ext_bad_att)"
         }
-        old_fs {
-            set cmd "$::pro_var = make_fs(latutm=1, q=q,\
-                    ext_bad_att=$ext_bad_att,\
-                    usecentroid=$usecentroid)"
-        }
-        old_bathy {
-            set cmd "$::pro_var = make_bathy(latutm=1, q=q,\
-                    ext_bad_att=$ext_bad_att,\
-                    avg_surf=$avg_surf)"
-            }
-        old_veg {
-            set cmd "$::pro_var = make_veg(latutm=1, q=q,\
-                    ext_bad_att=$ext_bad_att,\
-                    use_centroid=$usecentroid)"
-        }
-        old_cveg {
-            set cmd "$::pro_var = make_veg(latutm=1, q=q,\
-                    use_centroid=$usecentroid, multi_peaks=1)"
-        }
         default {
             error "Unknown processing mode: $processing_mode"
         }

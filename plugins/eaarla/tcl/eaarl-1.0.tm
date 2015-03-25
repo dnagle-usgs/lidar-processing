@@ -40,10 +40,6 @@ namespace eval ::eaarl {
       "Shallow Bathy"      sb
       "DEV: Multi-Peak (Experimental)" mp
       "DEV: Curve Fitting (Experimental)" cf
-      "OLD: First Return Topo"  old_fs
-      "OLD: Submerged Topo"     old_bathy
-      "OLD: Topo Under Veg"     old_veg
-      "OLD: Multi Peak Veg"     old_cveg
    }
 
    variable autoclean_after_process 1
@@ -68,10 +64,6 @@ namespace eval ::eaarl {
          sb shallow
          mp mp
          cf cf
-         old_fs fs
-         old_bathy depth
-         old_veg veg
-         old_cveg cveg
       }
 
       set prefix [lindex $tokens 0]

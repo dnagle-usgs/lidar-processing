@@ -313,55 +313,5 @@ proc ::eaarl::processing::process {} {
         return
     }
 
-    set cmd ""
-    set forced 0
-    foreach channel {1 2 3 4} {
-        if {[set ::eaarl::usechannel_$channel]} {
-            if {$processing_mode ni {old_fs old_veg old_bathy}} {
-                error "Invalid processing mode: $processing_mode"
-            }
-            if {!$forced} {
-                set cmd "$::pro_var = \[\]"
-            }
-            set forced 1
-            append cmd "; [::eaarl::processing::process_channel $channel]"
-        }
-    }
-
-    if {$cmd ne ""} {
-        append cmd  "; $::pro_var = merge_pointers($::pro_var)"
-        if {$::eaarl::autoclean_after_process} {
-            append cmd "; test_and_clean, $::pro_var"
-        }
-        append cmd "; $::pro_var = sortdata($::pro_var, method=\"soe\")"
-        exp_send "$cmd;\r"
-    }
-}
-
-proc ::eaarl::processing::process_channel {channel} {
-    variable ::eaarl::processing_mode
-    variable ::eaarl::usecentroid
-    variable ::eaarl::ext_bad_att
-    variable ::eaarl::avg_surf
-    switch -- $processing_mode {
-        old_fs {
-            set cmd "grow, $::pro_var, &make_fs(latutm=1, q=q,\
-                    ext_bad_att=$ext_bad_att, usecentroid=$usecentroid,\
-                    forcechannel=$channel)"
-        }
-        old_bathy {
-            set cmd "grow, $::pro_var, &make_bathy(latutm=1, q=q,\
-                    ext_bad_att=$ext_bad_att, avg_surf=$avg_surf,\
-                    forcechannel=$channel)"
-            }
-        old_veg {
-            set cmd "grow, $::pro_var, &make_veg(latutm=1, q=q,\
-                    ext_bad_att=$ext_bad_att, use_centroid=$usecentroid,\
-                    forcechannel=$channel)"
-        }
-        default {
-            error "Invalid processing mode: $processing_mode"
-        }
-    }
-    return $cmd
+    error "Invalid processing mode: $processing_mode"
 }
