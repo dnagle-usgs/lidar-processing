@@ -14,8 +14,8 @@ if(is_void(pixelwfvars)) {
   );
 }
 
-hook_add, "expix_show", "expix_pixelwf_hook";
-func expix_pixelwf_hook(env) {
+hook_add, "expix_show", "hook_eaarl_expix_pixelwf";
+func hook_eaarl_expix_pixelwf(env) {
   nearest = env.nearest;
   point = nearest.point;
 

@@ -504,8 +504,8 @@ func eaarl_mission_unwrap(env) {
 }
 
 hook_add, "mission_flights_auto_critical",
-  "eaarl_mission_flights_auto_critical";
-func eaarl_mission_flights_auto_critical(env) {
+  "hook_eaarl_mission_flights_auto_critical";
+func hook_eaarl_mission_flights_auto_critical(env) {
 /* DOCUMENT eaarl_mission_flights_auto_critical(env)
   Hook function for "mission_flights_auto_critical" used by
   mission_flights_auto.
@@ -516,8 +516,8 @@ func eaarl_mission_flights_auto_critical(env) {
   return env;
 }
 
-hook_add, "mission_flights_auto_keys", "eaarl_mission_flights_auto_keys", -10;
-func eaarl_mission_flights_auto_keys(env) {
+hook_add, "mission_flights_auto_keys", "hook_eaarl_mission_flights_auto_keys", -10;
+func hook_eaarl_mission_flights_auto_keys(env) {
 /* DOCUMENT eaarl_mission_flights_auto_keys(env)
   Hook function for "mission_flights_auto_keys" used by mission_flights_auto.
   SEE ALSO: mission_flights_auto
@@ -538,8 +538,8 @@ func eaarl_mission_flights_auto_keys(env) {
   return env;
 }
 
-hook_add, "mission_details_autolist", "eaarl_mission_details_autolist", -10;
-func eaarl_mission_details_autolist(env) {
+hook_add, "mission_details_autolist", "hook_eaarl_mission_details_autolist", -10;
+func hook_eaarl_mission_details_autolist(env) {
 /* DOCUMENT eaarl_mission_details_autolist(env)
   Hook function for mission_details_autolist.
   SEE ALSO: mission_details_autolist
@@ -567,8 +567,8 @@ func eaarl_mission_details_autolist(env) {
   return env;
 }
 
-hook_add, "mission_flights_validate_fields", "eaarl_mission_flights_validate_fields", -10;
-func eaarl_mission_flights_validate_fields(env) {
+hook_add, "mission_flights_validate_fields", "hook_eaarl_mission_flights_validate_fields", -10;
+func hook_eaarl_mission_flights_validate_fields(env) {
   save, env.fields,
     "edb file", save(
       "help", "The edb file provides an index to the EAARL TLD data. It is usually found in an \"eaarl\" subdirectory and must be alongside the TLD files it indexes. The file usually ends in the extension .idx and can be generated using the command-line program mkeidx.",
