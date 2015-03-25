@@ -58,13 +58,34 @@ namespace eval ::eaarl {
    proc processing_mode_changed {a b c} {
       variable pro_var_next
       variable processing_mode
+
+      set tokens [split $pro_var_next _]
+
       set mapping {
-         f fs_all v veg_all b depth_all mp mp_all
-         old_fs fs_all old_bathy depth_all old_veg veg_all old_cveg cveg_all
+         f fs
+         v veg
+         b depth
+         sb shallow
+         mp mp
+         cf cf
+         old_fs fs
+         old_bathy depth
+         old_veg veg
+         old_cveg cveg
       }
-      if {$pro_var_next in [list fs_all depth_all veg_all cveg_all]} {
-         set pro_var_next [dict get $mapping $processing_mode]
+
+      set prefix [lindex $tokens 0]
+      if {
+         $prefix in [dict values $mapping] &&
+         $processing_mode in [dict keys $mapping]
+      } {
+         set prefix [dict get $mapping $processing_mode]
+         set tokens [lreplace $tokens 0 0 $prefix]
       }
+
+      ::hook::invoke "eaarl::processing_mode_changed" tokens
+
+      set pro_var_next [join $tokens _]
    }
 
    trace add variable \

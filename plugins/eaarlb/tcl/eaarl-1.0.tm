@@ -58,38 +58,34 @@ namespace eval ::eaarl {
    proc processing_mode_changed {a b c} {
       variable pro_var_next
       variable processing_mode
-      variable usechannel_1
-      variable usechannel_2
-      variable usechannel_3
-      variable usechannel_4
-
-      set mapping {
-         f fs v veg b depth sb shallow mp mp cf cf
-         old_fs fs old_bathy depth old_veg veg old_cveg cveg
-      }
 
       set tokens [split $pro_var_next _]
-      set prefix [join [lrange $tokens 0 end-1] _]
-      set suffix [lindex $tokens end]
 
-      # Only change if suffix matches valid pattern
-      if {![regexp {^(?:all|(ch(?:a?n)?)(?!$)1?2?3?4?)$} $suffix - chan]} return
-      if {$chan eq ""} {set chan "chn"}
-
-      # Only change prefix if prefix is in known list
-      if {$prefix in [list fs veg depth shallow cveg mp cf]} {
-         set prefix [dict get $mapping $processing_mode]
+      set mapping {
+         f fs
+         v veg
+         b depth
+         sb shallow
+         mp mp
+         cf cf
+         old_fs fs
+         old_bathy depth
+         old_veg veg
+         old_cveg cveg
       }
 
-      set oldsuffix $suffix
-      set suffix $chan
-      if {$usechannel_1} {append suffix 1}
-      if {$usechannel_2} {append suffix 2}
-      if {$usechannel_3} {append suffix 3}
-      if {$usechannel_4} {append suffix 4}
-      if {$suffix eq $chan} {set suffix all}
+      set prefix [lindex $tokens 0]
+      if {
+         $prefix in [dict values $mapping] &&
+         $processing_mode in [dict keys $mapping]
+      } {
+         set prefix [dict get $mapping $processing_mode]
+         set tokens [lreplace $tokens 0 0 $prefix]
+      }
 
-      set pro_var_next "${prefix}_${suffix}"
+      ::hook::invoke "eaarl::processing_mode_changed" tokens
+
+      set pro_var_next [join $tokens _]
    }
 
    trace add variable \

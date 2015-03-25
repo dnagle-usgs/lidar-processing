@@ -77,4 +77,38 @@ namespace eval ::plugins::eaarlb {
         $mb add checkbutton -variable ::eaarl::usechannel_4 \
                 -label "Use channel 4"
     }
+
+    make_hook post "eaarl::processing_mode_changed" {tokensVar} {
+        upvar $tokensVar tokens
+
+        variable ::eaarl::usechannel_1
+        variable ::eaarl::usechannel_2
+        variable ::eaarl::usechannel_3
+        variable ::eaarl::usechannel_4
+
+        set idx -1
+        set chan "chn"
+        for {set i 1} {$i < [llength $tokens]} {incr i} {
+            set token [lindex $tokens $i]
+            if {[regexp {^(?:all|(ch(?:a?n)?)(?!$)1?2?3?4?)$} $token - chan]} {
+                if {$chan eq ""} {
+                    set chan "chn"
+                }
+                set idx $i
+                break
+            }
+        }
+
+        if {$idx > -1} {
+            set suffix $chan
+            foreach i {1 2 3 4} {
+                if {[set usechannel_$i]} {append suffix $i}
+            }
+            if {$suffix eq $chan} {
+                set suffix all
+            }
+            set tokens [lreplace $tokens $idx $idx $suffix]
+        }
+    }
+
 }
