@@ -23,6 +23,7 @@ package require eaarl::transmit
 package require eaarl::tscheck
 package require eaarl::vegconf
 package require eaarl::cfconf
+package require plugins
 
 namespace eval ::eaarl {
    # These must be provided by a plugin.
@@ -80,6 +81,40 @@ namespace eval ::eaarl {
       set pro_var_next [join $tokens _]
    }
 
-   trace add variable \
-         ::eaarl::processing_mode write ::eaarl::processing_mode_changed
+   namespace import ::plugins::make_hook
+   namespace import ::plugins::define_hook_set
+   namespace import ::plugins::make_handler
+   namespace import ::plugins::define_handler_set
+
+   define_hook_set load
+   define_handler_set load
+   proc load_eaarl {} {
+      plugins::apply_hooks load
+      plugins::apply_handlers load
+      ::sf::mediator register [list ::eaarl::pixelwf::mediator::jump_soe]
+      ::misc::idle ::l1pro::expix::reload_gui
+      trace add variable \
+            ::eaarl::processing_mode write ::eaarl::processing_mode_changed
+      ::misc::idle [list catch ::mission::refresh_flights]
+   }
+
+   make_hook load "l1pro::expix::gui panels" {w} {
+      ::eaarl::pixelwf::gui::panels_hook $w
+   }
+
+   make_handler load "mission_initialize_path_mission" {path} {
+      ::mission::eaarl::initialize_path_mission $path
+   }
+
+   make_handler load "mission_initialize_path_flight" {flight path} {
+      ::mission::eaarl::initialize_path_flight $flight $path
+   }
+
+   make_hook load "mission_menu_actions" {mb} {
+      ::mission::eaarl::menu_actions $mb
+   }
+
+   make_handler load "mission_refresh_load" {flights extra} {
+      ::mission::eaarl::refresh_load $flights $extra
+   }
 }

@@ -8,20 +8,14 @@ namespace eval ::mission::eaarl {
     namespace import ::misc::menulabel
     namespace import ::misc::tooltip
 
-    handler::set "mission_initialize_path_mission" \
-            [namespace current]::initialize_path_mission
     proc initialize_path_mission {path} {
         exp_send "mission, auto, \"$path\";\r"
     }
 
-    handler::set "mission_initialize_path_flight" \
-            [namespace current]::initialize_path_flight
     proc initialize_path_flight {flight path} {
         exp_send "mission, flights, auto, \"[ystr $flight]\", \"$path\";\r"
     }
 
-    hook::add "mission_menu_actions" \
-            [namespace current]::menu_actions
     proc menu_actions {mb} {
         variable ::mission::imagery_types
         $mb add separator
@@ -68,8 +62,6 @@ namespace eval ::mission::eaarl {
         }
     }
 
-    handler::set "mission_refresh_load" \
-            [namespace current]::refresh_load
     proc refresh_load {flights extra} {
         variable ::mission::imagery_types
         set f $flights

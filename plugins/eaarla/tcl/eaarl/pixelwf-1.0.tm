@@ -5,7 +5,6 @@ package provide eaarl::pixelwf 1.0
 package require struct::set
 package require misc
 package require sf
-package require hook
 package require l1pro::expix
 package require eaarl::sync
 
@@ -377,7 +376,3 @@ namespace eval ::eaarl::pixelwf::mediator {
       }
    }
 }
-
-::sf::mediator register [list ::eaarl::pixelwf::mediator::jump_soe]
-hook::add "l1pro::expix::gui panels" ::eaarl::pixelwf::gui::panels_hook
-::misc::idle ::l1pro::expix::reload_gui

@@ -31,6 +31,9 @@ namespace eval ::plugins::eaarla {
     proc hook_plugins_load_post {name} {
         if {$name ne [namespace tail [namespace current]]} return
 
+        package require eaarl
+        hook_plugins_load_post_idler
+
         set ::eaarl::channel_count 3
         set ::eaarl::channel_list {1 2 3}
 
@@ -51,5 +54,17 @@ namespace eval ::plugins::eaarla {
         }
 
         plugins::apply_hooks post
+    }
+
+    # For some reason, "package require eaarl" does not immediately load
+    # ::eaarl::load_eaarl. This idler callback keeps checking until it loads,
+    # then invokes it.
+    proc hook_plugins_load_post_idler {} {
+        if {[info procs ::eaarl::load_eaarl] eq ""} {
+            after idle [list after 1 [namespace current]::hook_plugins_load_post_idler]
+        } else {
+            ::eaarl::load_eaarl
+        }
+    
     }
 }
