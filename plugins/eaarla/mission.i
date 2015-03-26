@@ -406,6 +406,8 @@ func eaarl_mission_wrap(cache_what) {
 }
 
 func eaarl_mission_unwrap(data) {
+  mission, unload;
+
   extern data_path;
   extern edb, edb_filename, edb_files, total_edb_records, soe_day_start,
     eaarl_time_offset;
