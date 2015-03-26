@@ -14,20 +14,6 @@ if(is_void(pixelwfvars)) {
   );
 }
 
-func hook_eaarl_expix_show(env) {
-  point = env.nearest.point;
-
-  // In case we are querying non-EAARL data
-  if(!has_member(point, "soe")) return env;
-  if(!has_member(point, "raster")) return env;
-  if(!has_member(point, "pulse")) return env;
-
-  eaarl_expix_show, point;
-  pixelwf_plot;
-
-  return env;
-}
-
 func eaarl_expix_show(point) {
   eaarl_expix_show_sync, point;
   eaarl_expix_show_basic, point;

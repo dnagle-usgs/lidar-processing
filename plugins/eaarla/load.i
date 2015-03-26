@@ -14,6 +14,9 @@ include, base + "class_sbconfobj.i";
 include, base + "class_vegconfobj.i";
 include, base + "class_cfconfobj.i";
 
+include, base + "eaarl_handlers.i";
+include, base + "eaarl_hooks.i";
+
 include, base + "autoselect.i";
 include, base + "batch_veg_energy.i";
 include, base + "bathy.i";
