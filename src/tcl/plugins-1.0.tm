@@ -6,6 +6,7 @@ package require tooltip
 if {![namespace exists plugins]} {
     namespace eval plugins {
         namespace export define_hook_set make_hook apply_hooks remove_hooks
+        namespace export define_handler_set make_handler apply_handlers remove_handlers
         variable loaded {}
     }
 }
@@ -93,5 +94,55 @@ proc ::plugins::remove_hooks {which} {
     variable ${ns}::${var}
     dict for {hook proc} [set $var] {
         ::hook::remove $hook [list ${ns}::$proc]
+    }
+}
+
+# Creates a new handler set in the calling namespace with the given name.
+# This is basically just a wrapper around creating a variable.
+proc ::plugins::define_handler_set {which} {
+    set ns [uplevel 1 namespace current]
+    set var handlers_${which}
+    if {[info vars ${ns}::$var] eq ""}  {
+        set ${ns}::$var {}
+    }
+}
+
+# This is a wrapper around proc for creating a handler.
+# Arguments:
+#   which: name of a defined handler set
+#   handler: the name of the handler to attach to
+#   arg: an argument list
+#   body: proc body
+proc ::plugins::make_handler {which handler arg body} {
+    set ns [uplevel 1 namespace current]
+    set var handlers_${which}
+    variable ${ns}::${var}
+    # Cannot allow :: in proc names or it becomes a namespace qualifier
+    set proc handler_[string map {: _} $handler]
+    dict set ${var} $handler $proc
+    proc ${ns}::$proc $arg $body
+}
+
+# Applies the handlers defined with make_handler
+# which: the handler set to apply
+proc ::plugins::apply_handlers {which} {
+    set ns [uplevel 1 namespace current]
+    set var handlers_${which}
+    variable ${ns}::${var}
+    dict for {handler proc} [set $var] {
+        ::handler::set $handler [list ${ns}::$proc]
+    }
+}
+
+# Removes handlers defined with make_handler and applied by apply_handlers
+# which: the handler set to remove
+proc ::plugins::remove_handlers {which} {
+    set ns [uplevel 1 namespace current]
+    set var handlers_${which}
+    variable ${ns}::${var}
+    dict for {handler proc} [set $var] {
+        if {[::handler::get $handler] eq [list ${ns}::$proc]} {
+            ::handler::clear $handler
+        }
     }
 }
