@@ -347,18 +347,23 @@ func eaarl_mission_unload {
   ops_conf = ops_conf_filename = [];
 
   extern bathconf;
+  if(is_void(bathconf)) bathconf = bathconfobj();
   bathconf, clear;
 
   extern vegconf;
+  if(is_void(vegconf)) vegconf = vegconfobj();
   vegconf, clear;
 
   extern sbconf;
+  if(is_void(sbconf)) sbconf = sbconfobj();
   sbconf, clear;
 
   extern mpconf;
+  if(is_void(mpconf)) mpconf = mpconfobj();
   mpconf, clear;
 
   extern cfconf;
+  if(is_void(cfconf)) cfconf = cfconfobj();
   cfconf, clear;
 }
 

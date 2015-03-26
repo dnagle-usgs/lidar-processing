@@ -1,7 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-if(is_void(sbconf)) sbconf = sbconfobj();
-
 func process_sb(start, stop, ext_bad_att=, channel=, opts=) {
 /* DOCUMENT result = process_sb(start, stop, ext_bad_att=, channel=, opts=)
 

@@ -1,7 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-if(is_void(bathconf)) bathconf = bathconfobj();
-
 func ba_struct_from_obj(pulses) {
 /* DOCUMENT result = ba_struct_from_obj(pulses)
   Converts the return result from process_ba (which is an oxy group) into the

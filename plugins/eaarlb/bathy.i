@@ -20,8 +20,6 @@ struct BATHPIX {
   char channel;
 };
 
-if(is_void(bathconf)) bathconf = bathconfobj();
-
 func run_bath(nil, start=, stop=, center=, delta=, last=, forcechannel=,
 graph=, pse=, msg=, verbose=) {
   log_id = logger_id();

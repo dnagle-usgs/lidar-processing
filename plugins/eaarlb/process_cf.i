@@ -1,7 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-if(is_void(cfconf)) cfconf = cfconfobj();
-
 func process_cf(start, stop, ext_bad_att=, channel=, opts=) {
 /* DOCUMENT result = process_ba(start, stop, ext_bad_att=, channel=, opts=)
 

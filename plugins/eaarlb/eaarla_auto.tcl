@@ -65,6 +65,5 @@ namespace eval ::plugins::eaarla {
         } else {
             ::eaarl::load_eaarl
         }
-    
     }
 }

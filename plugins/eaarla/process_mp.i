@@ -1,7 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
-if(is_void(mpconf)) mpconf = mpconfobj();
-
 func mp_obj2dyn(pulses) {
   data = obj_copy(pulses);
   obj_delete, data, ftx, frx, fx, fy, fz, fintensity, fbias, fchannel,
