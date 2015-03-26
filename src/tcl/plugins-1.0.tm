@@ -8,7 +8,7 @@ if {![namespace exists plugins]} {
         namespace export define_hook_set make_hook apply_hooks remove_hooks
         namespace export define_handler_set make_handler apply_handlers remove_handlers
         variable loaded {}
-        variable path [list ../plugins]
+        variable path [list plugins]
     }
 }
 

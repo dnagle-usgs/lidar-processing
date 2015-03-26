@@ -93,7 +93,7 @@ local plugins_path;
 /* DOCUMENT plugins_path
   Search path for manifest.json files.
 */
-plugins_path = ["../plugins"];
+plugins_path = ["plugins"];
 
 func plugins_list(void, verbose=) {
 /* DOCUMENT plugins_list, verbose=
