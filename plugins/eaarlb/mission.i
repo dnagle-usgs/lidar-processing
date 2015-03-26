@@ -4,21 +4,32 @@ func handler_eaarl_mission_query_soe_rn(env) {
   flights = env.flights;
   rn = env.rn;
 
+  flight = eaarl_mission_query_soe_rn(env.flights, env.soe, env.rn);
+  if(is_string(flight)) env, match=flight;
+
+  return env;
+}
+
+func eaarl_mission_query_soe_rn(flights, soe, rn) {
   count = numberof(flights);
   dist = array(10000., count);
   for(i = 1; i <= count; i++) {
     mission, load, flights(i);
     if(!is_void(edb) && rn <= numberof(edb))
-      dist(i) = abs(env.soe - edb(rn).seconds - edb(rn).fseconds*1.6e-6);
+      dist(i) = abs(soe - edb(rn).seconds - edb(rn).fseconds*1.6e-6);
   }
-  if(dist(min) < 60) env, match=flights(dist(mnx));
-
-  return env;
+  if(dist(min) < 60) return flights(dist(mnx));
+  return [];
 }
 
 func handler_eaarl_mission_query_soe(env) {
-/* DOCUMENT handler_eaarl_mission_query_soe(env)
-  Handler function for mission_query_soe.
+  match = eaarl_mission_query_soe(env.soe);
+  if(numberof(match)) env, match=match;
+  return env;
+}
+
+func eaarl_mission_query_soe(soe) {
+/* DOCUMENT eaarl_mission_query_soe(env)
 
   This function determines the flight using time as follows:
     1. Attempts to uniquely determine using EDB
@@ -26,10 +37,14 @@ func handler_eaarl_mission_query_soe(env) {
     3. Attempts to uniquely determine using INS
     4. If multiple matches were found, returns an array of matches that all of
       them agreed on. (If no matches are found for a source, it is excluded.)
-
-  SEE ALSO: mission_query_soe
 */
-  soe = env.soe;
+  local edb_match, gps_match, ins_match;
+  eaarl_mission_query_soe_scan, env.soe, edb_match, gps_match, ins_match;
+  match = eaarl_mission_query_soe_winnow(edb_match, gps_match, ins_match);
+  return match;
+}
+
+func eaarl_mission_query_soe_scan(soe, &edb_match, &gps_match, &ins_match) {
   loaded = mission.data.loaded;
 
   if(!mission.data(*,"soe_bounds"))
@@ -55,26 +70,25 @@ func handler_eaarl_mission_query_soe(env) {
   }
 
   mission, load, loaded;
+}
 
+func eaarl_mission_query_soe_winnow(edb_match, gps_match, ins_match) {
   // If exactly one edb match is found, use it.
   // If no edb match but exactly one gps, use it.
   // If no edb or gps but exactly one ins, use it.
   if(numberof(edb_match) == 1) {
-    env, match=edb_match(1);
-    return env;
+    return edb_match(1);
   } else if(!numberof(edb_match)) {
     if(numberof(gps_match) == 1) {
-      env, match=gps_match(1);
-      return env;
+      return gps_match(1);
     } else if(!numberof(gps_match) && numberof(ins_match) == 1) {
-      env, match=ins_match(1);
-      return env;
+      return ins_match(1);
     }
   }
 
   // List of all flights that matched anything
   all_match = set_remove_duplicates(grow(edb_match, gps_match, ins_match));
-  if(!numberof(all_match)) return env;
+  if(!numberof(all_match)) return [];
 
   // Winnow list down to just those that appeared on each list of results where
   // we actually had results.
@@ -85,71 +99,78 @@ func handler_eaarl_mission_query_soe(env) {
   if(numberof(ins_match))
     all_match = set_intersection(all_match, ins_match);
 
-  env, match=all_match;
-  return env;
+  return all_match;
 }
 
 func handler_eaarl_mission_load_soe_rn(env) {
+  eaarl_mission_load_soe_rn, env.soe, env.rn;
+  return env;
+}
+
+func eaarl_mission_load_soe_rn(soe, rn) {
   // Check to see if the current flight contains this soe and rn; if so, do
   // nothing. Only checks EDB.
-  if(mission.data.loaded != "" && !is_void(edb) && env.rn <= numberof(edb)) {
-    dist = abs(env.soe - edb(env.rn).seconds - edb(env.rn).fseconds*1.6e-6);
-    if(dist < 60) return env;
+  if(mission.data.loaded != "" && !is_void(edb) && rn <= numberof(edb)) {
+    dist = abs(soe - edb(rn).seconds - edb(rn).fseconds*1.6e-6);
+    if(dist < 60) return;
   }
 
-  flight = mission(query_soe_rn, env.soe, env.rn);
+  flight = mission(query_soe_rn, soe, rn);
   // Avoid unload/reload if possible
   if(numberof(flight) == 1 && mission.data.loaded == flight(1))
-    return env;
+    return;
 
   mission, unload;
   if(numberof(flight) == 0) {
     write, "WARNING: no flight found that matched the given soe+rn";
-    return env;
+    return;
   }
   if(numberof(flight) > 1) {
     error, "found multiple matches which shouldn't happen";
   }
   mission, load, flight;
-  return env;
 }
 
 func handler_eaarl_mission_load_soe(env) {
+  eaarl_mission_load_soe, env.soe;
+  return env;
+}
+
+func eaarl_mission_load_soe(soe) {
   // Check to see if the current flight contains this soe using any of GPS,
   // INS, and EDB (if each is present). If so, use current flight. If multiple
   // flights contain this soe, best to keep the currently loaded rather than
   // changing; calling code should be using soe+rn to query in that case.
   if(mission.data.loaded != "") {
-    if(!is_void(edb) && edb.seconds(1) <= env.soe & env.soe <= edb.seconds(0)+1)
-        return env;
+    if(!is_void(edb) && edb.seconds(1) <= soe & soe <= edb.seconds(0)+1)
+        return;
 
     if(is_numerical(soe_day_start)) {
-      sod = env.soe - soe_day_start;
+      sod = soe - soe_day_start;
 
       if(!is_void(pnav) && pnav.sod(1) <= sod && sod <= pnav.sod(0))
-          return env;
+        return;
 
       if(!is_void(tans) && tans.somd(1) <= sod && sod <= tans.somd(0))
-          return env;
+        return;
     }
   }
 
-  flights = mission(query_soe, env.soe);
+  flights = mission(query_soe, soe);
   // Avoid unload/reload if possible
   if(numberof(flights) == 1 && mission.data.loaded == flights(1))
-    return env;
+    return;
 
   mission, unload;
   if(numberof(flights) == 0) {
     write, "WARNING: no flight found that matched the given soe";
-    return env;
+    return;
   }
   if(numberof(flights) > 1) {
     write, "WARNING: multiple flights found that matched the given soe;";
     write, "         using first match, which may not be correct";
   }
   mission, load, flights(1);
-  return env;
 }
 
 func eaarl_mission_load_test_key(flight, key) {
@@ -182,6 +203,11 @@ func eaarl_mission_load_test_key(flight, key) {
 }
 
 func handler_eaarl_mission_load(env) {
+  eaarl_mission_load, env.flight;
+  return env;
+}
+
+func eaarl_mission_load(flight) {
   // Local alias for convenience
   test_key = eaarl_mission_load_test_key;
 
@@ -189,23 +215,23 @@ func handler_eaarl_mission_load(env) {
   // caching.)
   mission, unload;
 
-  mission, data, loaded=env.flight;
+  mission, data, loaded=flight;
 
-  if(!strlen(env.flight))
-    return env;
+  if(!strlen(flight))
+    return;
 
   // What was restored from the cache?
   cached = "none";
 
   // Load from cache, if there is cached data present and caching is enabled.
-  if(mission.data.cache_mode != "disabled" && mission.data.cache(*,env.flight)) {
-    cached = mission(unwrap, mission.data.cache(env.flight));
+  if(mission.data.cache_mode != "disabled" && mission.data.cache(*,flight)) {
+    cached = mission(unwrap, mission.data.cache(noop(flight)));
   }
 
   // If we loaded everything from cache and we wanted to load everything from
   // cache, then nothing else needs to be done.
   if(cached == "everything" && mission.data.cache_what == "everything")
-    return env;
+    return;
 
   // At this point:
   // If cached=="everything" && mission.data.cache_what=="settings" then:
@@ -228,55 +254,55 @@ func handler_eaarl_mission_load(env) {
   // settings.
   if(!mission.data(*,"soe_bounds"))
     mission, data, soe_bounds=save();
-  if(!mission.data.soe_bounds(*,env.flight))
-    save, mission.data.soe_bounds, env.flight, save();
+  if(!mission.data.soe_bounds(*,flight))
+    save, mission.data.soe_bounds, noop(flight), save();
 
   // Step through the data sources used in ALPS and load each one.
 
   extern data_path;
-  if(mission(has, env.flight, "data_path dir"))
-    data_path = mission(get, env.flight, "data_path dir");
+  if(mission(has, flight, "data_path dir"))
+    data_path = mission(get, flight, "data_path dir");
 
   // If cached is not "none", then settings were restored from the cache
   // (cached == "everything" or cached == "settings").
   if(cached == "none") {
     // ops_conf -- needs to come first since some other sources depend on it
     extern ops_conf, ops_conf_filename;
-    if(test_key(env.flight, "ops_conf file")) {
-      ops_conf_filename = mission(get, env.flight, "ops_conf file");
+    if(test_key(flight, "ops_conf file")) {
+      ops_conf_filename = mission(get, flight, "ops_conf file");
       ops_conf = load_ops_conf(ops_conf_filename);
     } else {
       write, "         (using EAARL-B defaults)";
       ops_conf = obj_copy(ops_eaarlb);
     }
 
-    if(test_key(env.flight, "bathconf file")) {
-      bathconf, read, mission(get, env.flight, "bathconf file");
+    if(test_key(flight, "bathconf file")) {
+      bathconf, read, mission(get, flight, "bathconf file");
     } else {
       write, "         (using null defaults)";
       bathconf, clear;
     }
 
-    if(test_key(env.flight, "vegconf file")) {
-      vegconf, read, mission(get, env.flight, "vegconf file");
+    if(test_key(flight, "vegconf file")) {
+      vegconf, read, mission(get, flight, "vegconf file");
     } else {
       write, "         (using defaults)";
     }
 
-    if(test_key(env.flight, "sbconf file")) {
-      sbconf, read, mission(get, env.flight, "sbconf file");
+    if(test_key(flight, "sbconf file")) {
+      sbconf, read, mission(get, flight, "sbconf file");
     } else {
       write, "         (using defaults)";
     }
 
-    if(test_key(env.flight, "mpconf file")) {
-      mpconf, read, mission(get, env.flight, "mpconf file");
+    if(test_key(flight, "mpconf file")) {
+      mpconf, read, mission(get, flight, "mpconf file");
     } else {
       write, "         (using defaults)";
     }
 
-    if(test_key(env.flight, "cfconf file")) {
-      cfconf, read, mission(get, env.flight, "cfconf file");
+    if(test_key(flight, "cfconf file")) {
+      cfconf, read, mission(get, flight, "cfconf file");
     } else {
       write, "         (using defaults)";
     }
@@ -286,38 +312,38 @@ func handler_eaarl_mission_load(env) {
   // things that follow
   extern edb;
   soes = [];
-  if(test_key(env.flight, "edb file")) {
-    load_edb, fn=mission(get, env.flight, "edb file"), verbose=0;
+  if(test_key(flight, "edb file")) {
+    load_edb, fn=mission(get, flight, "edb file"), verbose=0;
     idx = [1, numberof(edb)];
-    save, mission.data.soe_bounds(env.flight), "edb",
+    save, mission.data.soe_bounds(noop(flight)), "edb",
       edb.seconds(idx) + edb.fseconds(idx)*1.6e-6;
   }
 
   extern pnav, gga, pnav_filename, curzone;
-  if(test_key(env.flight, "pnav file")) {
-    rbpnav, mission(get, env.flight, "pnav file"), verbose=0;
+  if(test_key(flight, "pnav file")) {
+    rbpnav, mission(get, flight, "pnav file"), verbose=0;
     if(!curzone && has_member(pnav, "lat") && has_member(pnav, "lon"))
       auto_curzone, pnav.lat, pnav.lon;
-    if(has_member(pnav, "sod") && mission(has, env.flight, "date")) {
+    if(has_member(pnav, "sod") && mission(has, flight, "date")) {
       idx = [1, numberof(pnav)];
-      save, mission.data.soe_bounds(env.flight), "gps",
-        date2soe(mission(get, env.flight, "date"), pnav.sod(idx));
+      save, mission.data.soe_bounds(noop(flight)), "gps",
+        date2soe(mission(get, flight, "date"), pnav.sod(idx));
     }
   }
 
   extern ins_filename, iex_nav, iex_head, tans;
-  if(test_key(env.flight, "ins file")) {
-    ins_filename = mission(get, env.flight, "ins file");
+  if(test_key(flight, "ins file")) {
+    ins_filename = mission(get, flight, "ins file");
     if(file_extension(ins_filename) == ".pbd") {
       load_iexpbd, ins_filename, verbose=0;
     } else {
       tans = iex_nav = rbtans(fn=ins_filename);
       iex_head = [];
     }
-    if(has_member(tans, "somd") && mission(has, env.flight, "date")) {
+    if(has_member(tans, "somd") && mission(has, flight, "date")) {
       idx = [1, numberof(tans)];
-      save, mission.data.soe_bounds(env.flight), "ins",
-        date2soe(mission(get, env.flight, "date"), tans.somd(idx));
+      save, mission.data.soe_bounds(noop(flight)), "ins",
+        date2soe(mission(get, flight, "date"), tans.somd(idx));
     }
     if(!curzone && has_member(tans, "lat") && has_member(tans, "lon"))
       auto_curzone, tans.lat, tans.lon;
@@ -325,11 +351,14 @@ func handler_eaarl_mission_load(env) {
 
   if(anyof(mission.data.cache_mode == ["onload","onchange"]))
     save, mission.data.cache, mission.data.loaded, mission(wrap,);
-
-  return env;
 }
 
 func handler_eaarl_mission_unload(env) {
+  eaarl_mission_unload;
+  return env;
+}
+
+func eaarl_mission_unload {
   if(mission.data.cache_mode == "onchange" && mission.data.loaded != "")
     save, mission.data.cache, mission.data.loaded, mission(wrap,);
 
@@ -367,12 +396,15 @@ func handler_eaarl_mission_unload(env) {
 
   extern cfconf;
   cfconf, clear;
-
-  return env;
 }
 
 func handler_eaarl_mission_wrap(env) {
-  default, cache_what, env.cache_what;
+  wrapped = eaarl_mission_wrap(env.cache_what);
+  save, env, wrapped=obj_merge(env.wrapped, wrapped);
+  return env;
+}
+
+func eaarl_mission_wrap(cache_what) {
   default, cache_what, mission.data.cache_what;
 
   extern data_path;
@@ -387,7 +419,9 @@ func handler_eaarl_mission_wrap(env) {
   extern mpconf;
   extern cfconf;
 
-  save, env.wrapped,
+  wrapped = save();
+
+  save, wrapped,
     cache_what,
     ops_conf, ops_conf_filename,
     bathconf_data=bathconf.data,
@@ -397,7 +431,7 @@ func handler_eaarl_mission_wrap(env) {
     cfconf_data=cfconf.data;
 
   if(cache_what == "everything") {
-    save, env.wrapped,
+    save, wrapped,
       data_path,
       edb, edb_filename, edb_files, total_edb_records, soe_day_start,
         eaarl_time_offset,
@@ -405,10 +439,15 @@ func handler_eaarl_mission_wrap(env) {
       iex_nav, iex_head, tans, ins_filename;
   }
 
-  return env;
+  return wrapped;
 }
 
 func handler_eaarl_mission_unwrap(env) {
+  eaarl_mission_unwrap, env.data;
+  return env;
+}
+
+func eaarl_mission_unwrap(data) {
   extern data_path;
   extern edb, edb_filename, edb_files, total_edb_records, soe_day_start,
     eaarl_time_offset;
@@ -421,13 +460,13 @@ func handler_eaarl_mission_unwrap(env) {
   extern mpconf;
   extern cfconf;
 
-  cache_what = env.data.cache_what;
-  bathconf_data = env.data.bathconf_data;
-  vegconf_data = env.data.vegconf_data;
-  mpconf_data = env.data.mpconf_data;
-  cfconf_data = env.data.cfconf_data;
+  cache_what = data.cache_what;
+  bathconf_data = data.bathconf_data;
+  vegconf_data = data.vegconf_data;
+  mpconf_data = data.mpconf_data;
+  cfconf_data = data.cfconf_data;
 
-  idx = env.data(*,[
+  idx = data(*,[
     "data_path",
     "edb", "edb_filename", "edb_files", "total_edb_records", "soe_day_start",
         "eaarl_time_offset",
@@ -435,7 +474,7 @@ func handler_eaarl_mission_unwrap(env) {
     "iex_nav", "iex_head", "tans", "ins_filename",
     "ops_conf", "ops_conf_filename"
   ]);
-  restore, env.data(idx(where(idx)));
+  restore, data(idx(where(idx)));
 
   if(is_void(bathconf_data))
     bathconf, clear;
@@ -461,18 +500,9 @@ func handler_eaarl_mission_unwrap(env) {
     cfconf, clear;
   else
     cfconf, groups, cfconf_data, copy=0;
-
-  save, env, cache_what;
-
-  return env;
 }
 
 func hook_eaarl_mission_flights_auto_critical(env) {
-/* DOCUMENT eaarl_mission_flights_auto_critical(env)
-  Hook function for "mission_flights_auto_critical" used by
-  mission_flights_auto.
-  SEE ALSO: mission_flights_auto
-*/
   edbs = mission(details, autolist, env.flight, "edb file", env.path);
   env, has_critical=(numberof(edbs) > 0);
   return env;

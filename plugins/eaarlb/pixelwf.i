@@ -14,15 +14,27 @@ if(is_void(pixelwfvars)) {
   );
 }
 
-func hook_eaarl_expix_pixelwf(env) {
-  nearest = env.nearest;
-  point = nearest.point;
+func hook_eaarl_expix_show(env) {
+  point = env.nearest.point;
 
   // In case we are querying non-EAARL data
   if(!has_member(point, "soe")) return env;
   if(!has_member(point, "raster")) return env;
   if(!has_member(point, "pulse")) return env;
 
+  eaarl_expix_show, point;
+  pixelwf_plot;
+
+  return env;
+}
+
+func eaarl_expix_show(point) {
+  eaarl_expix_show_sync, point;
+  eaarl_expix_show_basic, point;
+  eaarl_expix_show_trajectory, point;
+}
+
+func eaarl_expix_show_sync(point) {
   extern rn, pixelwfvars;
   if(pixelwfvars.selection.missionload)
     mission, load_soe_rn, point.soe, point.raster;
@@ -35,45 +47,45 @@ func hook_eaarl_expix_pixelwf(env) {
   h_set, pixelwfvars.selection, missionday=mission.data.loaded;
   tksetval, "::eaarl::pixelwf::vars::selection::missionday", mission.data.loaded;
   rn = point.raster;
+}
 
+func eaarl_expix_show_basic(point) {
   write, "";
   write, format="Mission day: %s\n", mission.data.loaded;
   if(has_member(point, "channel") && point.channel) {
     write, format="channel= %d ; ", point.channel;
   }
   write, format="raster= %d ; pulse= %d\n", point.raster, point.pulse;
+}
 
-  if(is_array(tans) && is_array(pnav)) {
-    somd = point.soe - soe_day_start;
-    gns_idx = abs(pnav.sod - somd)(mnx);
-    gns = pnav(gns_idx);
-    ins = tans(abs(tans.somd - somd)(mnx));
-    write, format="GPS:  PDOP= %.2f  SVS= %d  RMS= %.3f  Flag= %d\n",
-      gns.pdop, gns.sv, gns.xrms, gns.flag;
-    write, format="INS:  Heading= %.3f  Pitch= %.3f  Roll= %.3f\n",
-      ins.heading, ins.pitch, ins.roll;
-    write, format="Altitude= %.2fm\n", gns.alt;
+func eaarl_expix_show_trajectory(point) {
+  if(!is_array(tans) || !is_array(pnav)) return;
+  somd = point.soe - soe_day_start;
+  gns_idx = abs(pnav.sod - somd)(mnx);
+  gns = pnav(gns_idx);
+  ins = tans(abs(tans.somd - somd)(mnx));
+  write, format="GPS:  PDOP= %.2f  SVS= %d  RMS= %.3f  Flag= %d\n",
+    gns.pdop, gns.sv, gns.xrms, gns.flag;
+  write, format="INS:  Heading= %.3f  Pitch= %.3f  Roll= %.3f\n",
+    ins.heading, ins.pitch, ins.roll;
+  write, format="Altitude= %.2fm\n", gns.alt;
 
-    gns_idx = [gns_idx];
-    if(gns_idx(1) > 1)
-      gns_idx = gns_idx(1) + [-1,0];
-    if(gns_idx(0) < numberof(pnav))
-      grow, gns_idx, gns_idx(0)+1;
+  gns_idx = [gns_idx];
+  if(gns_idx(1) > 1)
+    gns_idx = gns_idx(1) + [-1,0];
+  if(gns_idx(0) < numberof(pnav))
+    grow, gns_idx, gns_idx(0)+1;
 
-    x = y = [];
-    gns = pnav(gns_idx);
-    ll2utm, gns.lat, gns.lon, y, x, force_zone=curzone;
-    dist = ppdist([x(:-1), y(:-1)], [x(2:), y(2:)], tp=1);
-    mps = (dist/abs(gns.sod(dif)))(avg);
-    write, format="Speed= %.1fm/s %.1fkn\n", mps, mps*MPS2KN;
+  x = y = [];
+  gns = pnav(gns_idx);
+  ll2utm, gns.lat, gns.lon, y, x, force_zone=curzone;
+  dist = ppdist([x(:-1), y(:-1)], [x(2:), y(2:)], tp=1);
+  mps = (dist/abs(gns.sod(dif)))(avg);
+  write, format="Speed= %.1fm/s %.1fkn\n", mps, mps*MPS2KN;
 
-    write, "";
-    write, format="Trajectory files:\n  %s\n  %s\n",
-      file_tail(pnav_filename), file_tail(ins_filename);
-  }
-
-  pixelwf_plot;
-  return env;
+  write, "";
+  write, format="Trajectory files:\n  %s\n  %s\n",
+    file_tail(pnav_filename), file_tail(ins_filename);
 }
 
 func pixelwf_plot(void) {
