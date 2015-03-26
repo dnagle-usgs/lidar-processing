@@ -1,12 +1,10 @@
 {
   "description": "EAARL-A processing",
   "yorick": {
-    "auto": "eaarla_auto.i",
-    "load": "load.i"
+    "auto": "eaarla_auto.i"
   },
   "tcl": {
-    "auto": "eaarla_auto.tcl",
-    "load": "load.tcl"
+    "auto": "eaarla_auto.tcl"
   },
   "conflicts": [
     "eaarlb"

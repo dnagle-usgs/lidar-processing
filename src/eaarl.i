@@ -194,5 +194,7 @@ require, "zone.i";
 require, "alpsrc.i";
 require, "geotiff_constants.i";
 
+include, "../plugins/eaarlb/load.i";
+
 // Invoke any autoloading needed for plugins.
 plugins_autoload;
