@@ -8,13 +8,17 @@ if {![namespace exists plugins]} {
         namespace export define_hook_set make_hook apply_hooks remove_hooks
         namespace export define_handler_set make_handler apply_handlers remove_handlers
         variable loaded {}
+        variable path [list ../plugins]
     }
 }
 
 proc ::plugins::plugins_list {} {
+    variable path
     set result {}
-    foreach plugin [lsort [glob ../plugins/*/manifest.json]] {
-        lappend result [lindex [split $plugin /] 2]
+    foreach p $path {
+        foreach plugin [lsort [glob $p/*/manifest.json]] {
+            lappend result [lindex [split $plugin /] end-1]
+        }
     }
     return $result
 }
