@@ -297,7 +297,6 @@ if {![winfo exists .l1wid]} {
 package require plot
 source [file join $src_path data_stats.ytk]
 
-::tcl::tm::path add [file join [app_root_dir] .. plugins eaarlb tcl]
 package require plugins
 package require mission::eaarl
 package require eaarl
