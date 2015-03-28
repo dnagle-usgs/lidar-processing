@@ -1,0 +1,12 @@
+{
+  "description": "EAARL-B processing",
+  "yorick": {
+    "auto": "auto.i"
+  },
+  "tcl": {
+    "auto": "auto.tcl"
+  },
+  "conflicts": [
+    "eaarla"
+  ]
+}
