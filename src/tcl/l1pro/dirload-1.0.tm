@@ -18,6 +18,8 @@ if {![namespace exists ::l1pro::dirload]} {
             variable soesort 0
             variable zone Auto
             variable zonelist {}
+            variable mode "fs"
+            variable remove_buffers 1
             variable region_data {}
             variable region_desc "All data"
         }
@@ -79,6 +81,18 @@ proc ::l1pro::dirload::gui {} {
             -textvariable ${ns}::v::zone \
             -listvariable ${ns}::v::zonelist
 
+    ttk::frame $f.fraModeLine
+
+    ttk::label $f.lblMode -text "Mode:"
+    ::mixin::combobox $f.cboMode \
+            -width 4 \
+            -textvariable ${ns}::v::mode \
+            -listvariable ::alps_data_modes
+    ::misc::tooltip $f.cboMode -wrap single $::alps_data_modes_tooltip
+
+    ttk::label $f.lblBuffers -text "Remove buffers:"
+    ttk::checkbutton $f.chkBuffers -variable ${ns}::v::remove_buffers
+
     ttk::label $f.lblRegion -text "Region:"
     ttk::entry $f.entRegion -state readonly \
             -textvariable ${ns}::v::region_desc
@@ -115,10 +129,14 @@ proc ::l1pro::dirload::gui {} {
             -in $f.fraZoneLine -sticky ew
     grid columnconfigure $f.fraZoneLine {0 2} -weight 1 -uniform 1
 
+    grid $f.cboMode $f.lblBuffers $f.chkBuffers \
+            -in $f.fraModeLine -sticky ew
+
     grid $f.lblPath $f.entPath $f.btnPath -in $f.f
     grid $f.lblSearch $f.cboSearch x -in $f.f
     grid $f.lblVname $f.entVname x -in $f.f
     grid $f.lblZone $f.fraZoneLine x -in $f.f
+    grid $f.lblMode $f.fraModeLine x -in $f.f
     grid $f.lblRegion $f.entRegion $f.mnuRegion -in $f.f
     grid $f.fraButtons - - -in $f.f -pady 2
 
@@ -127,11 +145,12 @@ proc ::l1pro::dirload::gui {} {
     grid columnconfigure $f.fraButtons {0 4} -weight 1
 
     grid configure $f.lblPath $f.lblSearch $f.lblVname $f.lblUnique \
-            $f.lblSkip $f.lblZone $f.lblRegion -sticky e -padx {2 0}
+            $f.lblSkip $f.lblZone $f.lblMode $f.lblBuffers $f.lblRegion \
+            -sticky e -padx {2 0}
     grid configure $f.entPath $f.cboSearch $f.entVname $f.chkUnique \
-            $f.spnSkip $f.cboZone $f.entRegion -sticky ew -padx 2
+            $f.spnSkip $f.cboZone $f.cboMode $f.entRegion -sticky ew -padx 2
     grid configure $f.btnPath $f.mnuRegion -sticky news
-    grid configure $f.fraZoneLine $f.fraButtons -sticky ew
+    grid configure $f.fraZoneLine $f.fraModeLine $f.fraButtons -sticky ew
 
     grid rowconfigure $f.f {0 1 2 3 4 5} -uniform 1
     grid columnconfigure $f.f 1 -weight 1
@@ -206,12 +225,14 @@ proc ::l1pro::dirload::load_data termaction {
 
     set cmd "$v::vname = dirload(\"$::data_file_path\""
     ::misc::appendif cmd \
-        1                   ", searchstr=\"$v::searchstr\"" \
-        {$v::skip > 1}      ", skip=$v::skip" \
-        {$v::unique}        ", uniq=1" \
-        {$v::soesort}       ", soesort=1" \
-        {$filter ne ""}     ", filter=$filter" \
-        1                   ")"
+        1                       ", searchstr=\"$v::searchstr\"" \
+        1                       ", mode=\"$v::mode\"" \
+        {$v::skip > 1}          ", skip=$v::skip" \
+        {$v::unique}            ", uniq=1" \
+        {$v::soesort}           ", soesort=1" \
+        {$v::remove_buffers}    ", remove_buffers=1" \
+        {$filter ne ""}         ", filter=$filter" \
+        1                       ")"
 
     append_varlist $v::vname
     set ::pro_var $v::vname
