@@ -105,7 +105,6 @@
 <h1 id="toc">Table of contents</h1>
 <ul class="toc">
 <li><a href="#toc">Table of contents</a></li>
-<li><a href="#start">Where do I start?</a></li>
 <li><a href="#conventions">Conventions</a></li>
 <li><a href="#install_package">Installing ALPS</a>
   <ul>
@@ -142,117 +141,6 @@
   </ul>
 </li>
 </ul>
-
-<h1 id="start">Where do I start?</h1>
-
-<p>
-  This document contains a wide range of information. Odds are, you won't need
-  to read the whole thing to get ALPS up and running. This introductory section
-  will help you determine which sections of the document are relevant to you.
-  Review the following and select the entries that seem to best match your
-  situation.
-</p>
-
-<p>
-  In addition to the directions refered to below, all users will first want to
-  familiarize themselves with the <a href="#conventions">Conventions</a> used
-  throughout the document.
-</p>
-
-<dl>
-  <dt>
-    I have an existing installation of ALPS located at <strong
-    class="directory">/opt/eaarl</strong>.
-  </dt>
-  <dd>
-    Read <a href="#migrating_201109">Upgrading installations from prior to
-    September 2011</a> and follow the directions relevant to your preferences.
-  </dd>
-  <dt>
-    I have an existing installation of ALPS that was installed before April
-    2010.
-  </dt>
-  <dd>
-    Read <a href="#migrating_201004">Upgrading installations from prior to
-    April 2010</a> and follow the directions to remove your existing ALPS
-    installation before attempting to install a fresh copy.
-  </dd>
-  <dt>
-    I have an existing installation of ALPS that was installed between April
-    and July 2010.
-  </dt>
-  <dd>
-    Read <a href="#migrating_201007">Upgrading installations from prior to
-    July 2010</a> and, if necessary, follow the directions to remove your
-    existing CVS checkout.
-  </dd>
-  <dt>
-    I want to install a basic ALPS installation that will be shared by several
-    users.
-  </dt>
-  <dd>
-    Follow the directions under <a href="#install_package_basic">Basic
-    installation</a>.
-  </dd>
-  <dt>
-    I want to install a basic ALPS installation for myself.
-  </dt>
-  <dd>
-    Read <a href="#install_package_basic">Basic installation</a> for an
-    overview, then follow those directions with the additional settings
-    explained under <a href="#install_prefix">Installing to an alternate
-    location</a>. You will probably want to install it to your home directory.
-  </dd>
-  <dt>
-    I encountered problems while trying to install ALPS.
-  </dt>
-  <dd>
-    Consult <a href="#troubleshooting">Troubleshooting</a> to see if a
-    solution is available.
-  </dd>
-  <dt>
-    I have a basic ALPS installation. I would like to upgrade it.
-  </dt>
-  <dd>
-    Read <a href="#upgrade_package_overview">Upgrade overview</a>. Then
-    follow the same directions you followed when installing ALPS.
-  </dd>
-  <dt>
-    I have a basic ALPS installation. I would like to upgrade it. I do not need
-    to upgrade the data found under <strong class="directory">share</strong>.
-  </dt>
-  <dd>
-    If you're absolutely sure that you don't need to upgrade your <strong
-    class="directory">share</strong> directory, then refer to <a
-    href="#nodata_download">The "-nodata" download</a> in addition to <a
-    href="#upgrade_package_overview">Upgrade overview</a>. Then follow the same
-    directions you followed when installing ALPS.
-  </dd>
-  <dt>
-    I am an ALPS developer.
-  </dt>
-  <dd>
-    Read all of <a href="#install_package">Installing ALPS</a>.
-  </dd>
-  <dt>
-    I am an ALPS developer. I intend to work on C-ALPS (the C extension to
-    Yorick) or on other compiled components of the ALPS distribution.
-  </dt>
-  <dd>
-    Install as usual, but to a sandboxed location. Perform your development in
-    the repository within the installer source directory. As needed, use
-    <strong class="command">make easy-yorick</strong> (with the prefix for the
-    sandboxed location) to reinstall Yorick and all of its packages for
-    testing.
-  </dd>
-  <dt>
-    I am an ALPS developer. I would like to create an installation distribution
-    package.
-  </dt>
-  <dd>
-    Consult <a href="#prep_package">Preparing an installation package</a>.
-  </dd>
-</dl>
 
 <h1 id="conventions">Conventions</h1>
 
