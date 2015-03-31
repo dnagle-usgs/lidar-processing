@@ -127,7 +127,6 @@ proc ::l1pro::dirload::gui {} {
     grid $f.cboZone $f.lblSkip $f.spnSkip $f.lblUnique $f.chkUnique \
             $f.lblSort $f.chkSort \
             -in $f.fraZoneLine -sticky ew
-    grid columnconfigure $f.fraZoneLine {0 2} -weight 1 -uniform 1
 
     grid $f.cboMode $f.lblBuffers $f.chkBuffers \
             -in $f.fraModeLine -sticky ew
