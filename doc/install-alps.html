@@ -132,6 +132,7 @@
     <li><a href="#migrating_201004">Upgrading installations from prior to April 2010</a></li>
     <li><a href="#migrating_201007">Upgrading installations from prior to July 2010</a></li>
     <li><a href="#migrating_201109">Upgrading installations from prior to September 2011</a></li>
+    <li><a href="#migrating_201504">Upgrading installations from prior to April 2015</a></li>
   </ul>
 </li>
 <li><a href="#prep_package">Preparing an installation package</a>
@@ -935,6 +936,31 @@ make: *** [all] Error 1
 
 <pre class="code">
 <span class="command">make</span> install <span class="variable">prefix</span>=<span class="directory">/opt/eaarl</span>
+</pre>
+
+<h2 id="migrating_201504">Upgrading installations from prior to April 2015</h2>
+
+<p>
+  Prior to April 2015, the <strong class="directory">lidar-processing</strong>
+  dirctory was managed as a collection of subrepositories. Starting in April
+  2015, these were merged back to a single repository (which had been the case
+  up to 2012).
+</p>
+
+<p>
+  The new repository is incompatible with the old repository. If you do
+  nothing, then the installation rename the existing directory to <strong
+  class="directory">lidar-processing-29150923aa65</strong> (the suffix is the
+  Mercurial identifier for the old repository).
+</p>
+
+<p>
+  If you have not done any development on ALPS, then you can safely delete the
+  <strong class="directory">lidar-processing-29150923aa65</strong> directory:
+</p>
+
+<pre class="code">
+<span class="command">rm</span> -rf <span class="directory"><span class="replaceable">/opt/</span>alps/lidar-processing-29150923aa65</span>
 </pre>
 
 <h1 id="prep_package">Preparing an installation package</h1>
