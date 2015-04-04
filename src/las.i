@@ -441,8 +441,12 @@ pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
   // Intensity
   if(mode == "fs" && has_member(data, "fint")) {
     stream.points.intensity = data.fint;
+  } else if(mode == "fs" && has_member(data, "first_peak")) {
+    stream.points.intensity = data.first_peak;
   } else if(mode == "be" && has_member(data, "lint")) {
     stream.points.intensity = data.lint;
+  } else if(mode == "ba" && has_member(data, "bottom_peak")) {
+    stream.points.intensity = data.bottom_peak;
   } else if(has_member(data, "intensity")) {
     stream.points.intensity = data.intensity;
   } else {
