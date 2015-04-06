@@ -429,6 +429,8 @@ pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
     stream.header.number_of_point_records;
 
   stream.points.point_source_id = 0;
+  if(has_member(data, "channel"))
+    stream.points.point_source_id = data.channel;
   if(has_member(stream.points(1), "blue"))
     stream.points.blue = 0;
   if(has_member(stream.points(1), "gps_time"))
