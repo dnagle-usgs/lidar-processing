@@ -2,10 +2,17 @@ This file documents the changes made to the ALPS installer package. These
 installer packages are typically available on lidar.net under
 /mnt/alps/install/.
 
+2015-04-07
+    - Updated installer to tip e6ec96f35c07
+    - This installer is effectively identical to the 2015-04-01 installer. The
+      only difference is that the lidar-processing repository has now had its
+      internal revision ordering optimized so that the revision history looks
+      more sane.
+
 2015-04-01
     - Updated lidar-processing repository to use new merged repo instead of
       subrepos.
-    - Updated instlaler to tip 5b18b506a992
+    - Updated installer to tip 5b18b506a992
     - Upgraded cctools to 4.3.3
 
 2015-02-27
