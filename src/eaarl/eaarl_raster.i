@@ -39,8 +39,8 @@
   10  2   i16     Scan angle counts
   12  2   ui16    Bitfield:
                   14 bits: integer range (& 16383)
-                  1 bit: flag (& 16384)
-                  1 bit: flag (& 32768)
+                  1 bit: tx flag (& 16384) - tx waveform did not cross threshold
+                  1 bit: rx flag (& 32768) - rx waveform did not cross threshold
   14  2   ui16    Data length
 
   TX_WF
