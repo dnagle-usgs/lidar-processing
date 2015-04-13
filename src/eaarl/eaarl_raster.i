@@ -252,10 +252,13 @@ func eaarl_decode_pulse(raw, pulse, offset, header=, wfs=) {
     return result;
   save, result, channel4_offset=offset+2;
   save, result, channel4_length=i16(raw, offset);
-  if(result.channel4_length <= 0 || offset+1+result.channel4_length > numberof(raw))
+  if(result.channel4_length <= 0)
+    return result;
+  len = min(result.channel4_length, numberof(raw)-offset-1);
+  if(len < 1)
     return result;
   if(wfs)
-    save, result, channel4_wf=raw(offset+2:offset+1+result.channel4_length);
+    save, result, channel4_wf=raw(offset+2:offset+1+len);
 
   return result;
 }
