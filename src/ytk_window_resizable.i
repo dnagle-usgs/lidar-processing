@@ -111,8 +111,8 @@ func write_gs(width=, height=, xoff=, yoff=, box=, ticks=) {
   return  sfname;
 }
 
-func mkwin( win, width, height, xoff=, yoff=, dpi=, box=, tk= ) {
-/* DOCUMENT mkwin( win, width=, height=, xoff=, yoff=, dpi=, box=, tk=
+func mkwin(win, width, height, xoff=, yoff=, dpi=, box=, tk=, ticks=) {
+/* DOCUMENT mkwin, win, width=, height=, xoff=, yoff=, dpi=, box=, tk=, ticks=
 
    Make a plot window of arbitrary size.  If the window already exists,
    it will be recreated at the specified size.
@@ -175,7 +175,7 @@ func mkwin( win, width, height, xoff=, yoff=, dpi=, box=, tk= ) {
   }
   if ( debug ) write, format="Window: %d  %04x%04x\n", win, width, height;
 
-  gs = write_gs(width=width, height=height, xoff=xoff, yoff=yoff, box=box);
+  gs = write_gs(width=width, height=height, xoff=xoff, yoff=yoff, box=box, ticks=ticks);
 
   if ( debug  ) gist_gpbox(1);
   if ( killme ) winkill, win;
