@@ -1,6 +1,6 @@
 // width and height is in window pixels;
 func write_gs(width=, height=, xoff=, yoff=, box=, ticks=) {
-/* DOCUMENT write_gs, width=, height=, xoff=, yoff=, box=, ticks=
+/* DOCUMENT fn = write_gs(width=, height=, xoff=, yoff=, box=, ticks=)
    Createa a .gs file in /tmp/gist/USER with the name
    WIDTHxHEIGHT.gs.
 
@@ -21,6 +21,8 @@ func write_gs(width=, height=, xoff=, yoff=, box=, ticks=) {
 
    nMajor and nMinor can be set to control the tick spacing.
    default values are 4.0 and 40.0
+
+  Return value is the name of the file created.
 
   SEE ALSO: mkwin, reset_gist
 */
