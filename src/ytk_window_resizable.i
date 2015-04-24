@@ -1,6 +1,6 @@
 // width and height is in window pixels;
-func write_gs ( width=, height=, xoff=, yoff=, box= ) {
-/* DOCUMENT write_gs ( width=, height=, xoff=, yoff=, box= )
+func write_gs(width=, height=, xoff=, yoff=, box=, ticks=) {
+/* DOCUMENT write_gs, width=, height=, xoff=, yoff=, box=, ticks=
    Createa a .gs file in /tmp/gist/USER with the name
    WIDTHxHEIGHT.gs.
 
