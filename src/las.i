@@ -455,6 +455,13 @@ pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
     stream.points.intensity = 0;
   }
 
+  // We use a signed field, but the LAS spec uses an unsigned one. Coerce
+  // negatives to 0, if they exist.
+  w = where(stream.points.intensity < 0);
+  if(numberof(w)) {
+    stream.points.intensity(w) = 0;
+  }
+
   // Bitfield for return, scan direction, and flightline edge
   if(has_member(data, "ret_num") && has_member(data, "num_rets")) {
     ret_num = data.ret_num;
