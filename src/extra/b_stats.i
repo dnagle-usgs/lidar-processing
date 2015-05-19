@@ -43,6 +43,14 @@ func process_b_stats(start, stop, ext_bad_att=, channel=, opts=) {
     wf -= bias;
     wf = max(0, wf);
 
+    // Constrain the waveform to just the area around the detected bottom.
+    // Target range is +/- 30% of distance between surface and bottom, but
+    // limit distance to the range [1,12].
+    buf = max(1, min(12, 0.3 * (pulses.lrx(i) - pulses.frx(i))));
+    r0 = max(1, long(pulses.lrx(i) - buf + .5));
+    r1 = min(numberof(wf), long(pulses.lrx(i) + buf + .5));
+    wf = wf(r0:r1);
+
     skew(i) = wf_skew(wf);
     auc(i) = wf_auc(wf);
     stdev(i) = wf_stdev(wf);
