@@ -157,6 +157,7 @@ func eaarl_mission_load_test_key(flight, key) {
   - Returns 0 if any warning was issued.
   - Returns 1 if everything is okay.
 */
+  extern defaults_used;
   if(mission(has, flight, key)) {
     fn = mission(get, flight, key);
     if(file_exists(fn)) {
@@ -165,13 +166,14 @@ func eaarl_mission_load_test_key(flight, key) {
       msg = pr1(key)+" defined for "+pr1(flight)+" doesn't exist";
       if(mission.data.missing_file == "warn") {
         write, "WARNING: "+msg;
+        grow, defaults_used, pr1(key);
         return 0;
       } else {
         error, msg;
       }
     }
   } else {
-    write, "WARNING: no "+pr1(key)+" defined for "+pr1(flight);
+    grow, defaults_used, pr1(key);
     return 0;
   }
 }
@@ -237,45 +239,43 @@ func eaarl_mission_load(flight) {
   // If cached is not "none", then settings were restored from the cache
   // (cached == "everything" or cached == "settings").
   if(cached == "none") {
+    // test_key references extern defaults_used, adding missing keys to it
+    defaults_used = [];
+
     // ops_conf -- needs to come first since some other sources depend on it
     extern ops_conf, ops_conf_filename;
     if(test_key(flight, "ops_conf file")) {
       ops_conf_filename = mission(get, flight, "ops_conf file");
       ops_conf = load_ops_conf(ops_conf_filename);
     } else {
-      write, "         (using EAARL-B defaults)";
       ops_conf = obj_copy(ops_eaarlb);
     }
 
     if(test_key(flight, "bathconf file")) {
       bathconf, read, mission(get, flight, "bathconf file");
     } else {
-      write, "         (using null defaults)";
       bathconf, clear;
     }
 
     if(test_key(flight, "vegconf file")) {
       vegconf, read, mission(get, flight, "vegconf file");
-    } else {
-      write, "         (using defaults)";
     }
 
     if(test_key(flight, "sbconf file")) {
       sbconf, read, mission(get, flight, "sbconf file");
-    } else {
-      write, "         (using defaults)";
     }
 
     if(test_key(flight, "mpconf file")) {
       mpconf, read, mission(get, flight, "mpconf file");
-    } else {
-      write, "         (using defaults)";
     }
 
     if(test_key(flight, "cfconf file")) {
       cfconf, read, mission(get, flight, "cfconf file");
-    } else {
-      write, "         (using defaults)";
+    }
+
+    if(numberof(defaults_used)) {
+      write, format=" WARNING: flight %s using defaults for these confs:\n", pr1(flight);
+      write, format="          %s\n", strjoin(defaults_used, ", ");
     }
   }
 
