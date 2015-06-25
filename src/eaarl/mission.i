@@ -180,12 +180,6 @@ func eaarl_mission_load(flight) {
   // Local alias for convenience
   test_key = eaarl_mission_load_test_key;
 
-  // Start by clearing any currently loaded data. (This also triggers onchange
-  // caching.)
-  mission, unload;
-
-  mission, data, loaded=flight;
-
   if(!strlen(flight))
     return;
 
@@ -193,9 +187,17 @@ func eaarl_mission_load(flight) {
   cached = "none";
 
   // Load from cache, if there is cached data present and caching is enabled.
+  // This will unload any loaded data and restore what is in the cached.
+  // Otherwise, start by clearing any currently loaded data. (Unloading also
+  // triggers onchange caching.)
   if(mission.data.cache_mode != "disabled" && mission.data.cache(*,flight)) {
     cached = mission(unwrap, mission.data.cache(noop(flight)));
+  } else {
+    mission, unload;
   }
+
+  // Note what flight we're loading, now that unloading is done
+  mission, data, loaded=flight;
 
   // If we loaded everything from cache and we wanted to load everything from
   // cache, then nothing else needs to be done.
