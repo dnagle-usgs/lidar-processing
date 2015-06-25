@@ -28,6 +28,22 @@ proc ::yorick::window::mapped {{type num}} {
     return $result
 }
 
+# Input is the window you'd like to use. This proc checks to see if it's
+# unused, and if so, returns the same window number back to you. Otherwise, it
+# searches for the next unused window number and returns that. It will search
+# in ascending order above first, then descending order below. If all windows
+# are in use, -1 will be returned and you should commend the user for hitting
+# the Yorick windows cap.
+proc ::yorick::window::next_unmapped {win} {
+    set mapped [mapped num]
+    set want $win
+    while {$win in $mapped && $win < 64} {incr win}
+    if {$win < 64} {return $win}
+    set win $want
+    while {$win in $mapped && $win > -1} {incr win -1}
+    return $win
+}
+
 # This should be called exactly once at startup. It creates a Tcl GUI for each
 # Yorick window and tells Yorick what Tcl window ID to use for each window.
 proc ::yorick::window::initialize {} {
