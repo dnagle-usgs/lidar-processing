@@ -44,7 +44,6 @@ include, base + "process_sb.i";
 include, base + "process_cf.i";
 include, base + "process_main.i";
 include, base + "sasr.i";
-include, base + "sf.i";
 include, base + "surface_topo.i";
 include, base + "util_ba.i";
 include, base + "util_mp.i";
