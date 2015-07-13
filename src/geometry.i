@@ -886,14 +886,14 @@ func angle_of_incidence(x1, y1, z1, x2, y2, z2, rad=) {
 /* DOCUMENT angle_of_incidence(x1, y1, z1, x2, y2, z2, rad=)
 
   Given a line passing through points (x1,y1,z1) and (x2,y2,z2), returns the
-  angle of incidence between that line and the horizontal plane.
+  angle of incidence between that line and the normal to the horizontal plane.
 
   By default, returns angle in degrees. Use rad=1 for radians.
 */
   default, rad, 0;
   dist = sqrt((x1-x2)^2 + (y1-y2)^2);
   ht = abs(z1-z2);
-  aoi = array(pi, dimsof(x1));
+  aoi = array(pi/2, dimsof(x1));
   w = where(ht);
   if(numberof(w))
     aoi(w) = atan(dist(w), ht(w));
