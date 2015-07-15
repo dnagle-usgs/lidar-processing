@@ -176,10 +176,117 @@ func filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=) {
   return idx ? keep : eaarl(keep,..);
 }
 
-func batch_extract_corresponding_data(src_searchstr, ref_searchstr, maindir,
-srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=, soefudge=,
-fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=, file_append=,
-uniq=) {
+func batch_extract_corr_or_uniq_data(which, src_searchstr, ref_searchstr,
+maindir, srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=,
+soefudge=, fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=,
+file_append=, uniq=) {
+  local ref, data;
+  default, srcdir, maindir;
+  default, refdir, maindir;
+  default, outdir, maindir;
+  default, fn_append, "extracted";
+  default, vname_append, "ext";
+  default, method, "data";
+  default, verbose, 1;
+  default, remove_buffers, 0;
+  default, file_append, 0;
+  default, uniq, 0;
+  if(strpart(fn_append, 1:1) != "_")
+    fn_append = "_" + fn_append;
+  if(strlen(vname_append) && strpart(vname_append, 1:1) != "_")
+    vname_append = "_" + vname_append;
+
+  if(method == "xyz" && which == 0) {
+    error, "cannot use method=xyz with unique extraction";
+  }
+
+  files = find(srcdir, searchstr=src_searchstr);
+
+  if(numberof(files) > 1)
+    sizes = file_size(files)(cum)(2:);
+  else if(numberof(files))
+    sizes = file_size(files);
+  else
+    error, "No files found.";
+
+  local t0, data, vname, x, y;
+  timer_init, t0;
+  tp = t0;
+  for(i = 1; i <= numberof(files); i++) {
+    if(verbose >= 2)
+      write, format="%d: %s\n", i, file_tail(files(i));
+    data = pbd_load(files(i), , vname);
+
+    if(!numberof(data)) {
+      if(verbose >= 2)
+        write, " No data found.";
+      continue;
+    }
+
+    data2xyz, data, x, y;
+    // Include a 10m buffer, in case the points are located slightly
+    // differently
+    bbox = [x(min), y(min), x(max), y(max)] + [-10, -10, 10, 10];
+    x = y = [];
+    ref = dirload(refdir, searchstr=ref_searchstr, verbose=0,
+      filter=dlfilter_bbox(bbox, mode=mode), remove_buffers=remove_buffers);
+
+    if(!numberof(ref)) {
+      if(verbose >= 2)
+        write, " No reference data found.";
+      continue;
+    }
+
+    if(method == "xyz")
+      data = extract_corresponding_xyz(data, ref, fudge=fudge, mode=mode,
+        native=native);
+    else
+      data = extract_corr_or_uniq_data(which, data, ref, soefudge=soefudge,
+        enableptime=enableptime);
+    ref = [];
+
+    if(!numberof(data)) {
+      if(verbose >= 2)
+        write, " Extraction eliminated all points.";
+      continue;
+    }
+
+    if(uniq)
+      data = uniq_data(data, mode=mode, optstr=uniq);
+
+    outfile = file_join(outdir, file_relative(srcdir, files(i)));
+    outfile = file_rootname(outfile) + fn_append + ".pbd";
+    vname += vname_append;
+    mkdirp, file_dirname(outfile);
+    if(file_append)
+      pbd_append, outfile, vname, data, uniq=uniq, mode=mode;
+    else
+      pbd_save, outfile, vname, data;
+    if(verbose >= 2)
+      write, format="  -> %s\n", file_tail(outfile);
+    data = [];
+
+    if(verbose)
+      timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
+  }
+  if(verbose)
+    timer_finished, t0;
+}
+
+local batch_extract_unique_data;
+batch_extract_unique_data = closure(batch_extract_corr_or_uniq_data, 0);
+/* DOCUMENT batch_extract_unique_data, src_searchstr, ref_searchstr,
+  maindir, srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=,
+  soefudge=, fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=,
+  file_append=, uniq=
+
+  See batch_extract_corresponding_data for documentation.
+
+  One caveat: unique extraction does not work with method="xyz".
+*/
+
+local batch_extract_corresponding_data;
+batch_extract_corresponding_data = closure(batch_extract_corr_or_uniq_data, 1);
 /* DOCUMENT batch_extract_corresponding_data, src_searchstr, ref_searchstr,
   maindir, srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=,
   soefudge=, fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=,
@@ -292,96 +399,7 @@ uniq=) {
 
   SEE ALSO: extract_corresponding_data
 */
-  local ref, data;
-  default, srcdir, maindir;
-  default, refdir, maindir;
-  default, outdir, maindir;
-  default, fn_append, "extracted";
-  default, vname_append, "ext";
-  default, method, "data";
-  default, verbose, 1;
-  default, remove_buffers, 0;
-  default, file_append, 0;
-  default, uniq, 0;
-  if(strpart(fn_append, 1:1) != "_")
-    fn_append = "_" + fn_append;
-  if(strlen(vname_append) && strpart(vname_append, 1:1) != "_")
-    vname_append = "_" + vname_append;
 
-  files = find(srcdir, searchstr=src_searchstr);
-
-  if(numberof(files) > 1)
-    sizes = file_size(files)(cum)(2:);
-  else if(numberof(files))
-    sizes = file_size(files);
-  else
-    error, "No files found.";
-
-  local t0, data, vname, x, y;
-  timer_init, t0;
-  tp = t0;
-  for(i = 1; i <= numberof(files); i++) {
-    if(verbose >= 2)
-      write, format="%d: %s\n", i, file_tail(files(i));
-    data = pbd_load(files(i), , vname);
-
-    if(!numberof(data)) {
-      if(verbose >= 2)
-        write, " No data found.";
-      continue;
-    }
-
-    data2xyz, data, x, y;
-    // Include a 10m buffer, in case the points are located slightly
-    // differently
-    bbox = [x(min), y(min), x(max), y(max)] + [-10, -10, 10, 10];
-    x = y = [];
-    ref = dirload(refdir, searchstr=ref_searchstr, verbose=0,
-      filter=dlfilter_bbox(bbox, mode=mode), remove_buffers=remove_buffers);
-
-    if(!numberof(ref)) {
-      if(verbose >= 2)
-        write, " No reference data found.";
-      continue;
-    }
-
-    if(method == "xyz")
-      data = extract_corresponding_xyz(data, ref, fudge=fudge, mode=mode,
-        native=native);
-    else
-      data = extract_corresponding_data(data, ref, soefudge=soefudge,
-        enableptime=enableptime);
-    ref = [];
-
-    if(!numberof(data)) {
-      if(verbose >= 2)
-        write, " Extraction eliminated all points.";
-      continue;
-    }
-
-    if(uniq)
-      data = uniq_data(data, mode=mode, optstr=uniq);
-
-    outfile = file_join(outdir, file_relative(srcdir, files(i)));
-    outfile = file_rootname(outfile) + fn_append + ".pbd";
-    vname += vname_append;
-    mkdirp, file_dirname(outfile);
-    if(file_append)
-      pbd_append, outfile, vname, data, uniq=uniq, mode=mode;
-    else
-      pbd_save, outfile, vname, data;
-    if(verbose >= 2)
-      write, format="  -> %s\n", file_tail(outfile);
-    data = [];
-
-    if(verbose)
-      timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
-  }
-  if(verbose)
-    timer_finished, t0;
-}
-
-scratch = save(scratch, extract_corr_or_uniq_data);
 func extract_corr_or_uniq_data(which, data, ref, soefudge=, mode=, enablez=, idx=,
 keep=, enableptime=) {
   default, soefudge, 0.001;
@@ -557,8 +575,6 @@ extract_unique_data = closure(extract_corr_or_uniq_data, 0);
 
   SEE ALSO: extract_corresponding_data
 */
-
-restore, scratch;
 
 func extract_corresponding_xyz(data, ref, fudge=, mode=, native=) {
 /* DOCUMENT extracted = extract_corresponding_xyz(data, ref, fudge=, mode=,
