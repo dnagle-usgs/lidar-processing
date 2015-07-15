@@ -423,6 +423,129 @@ batch_extract_corresponding_data = closure(batch_extract_corr_or_uniq_data, 1);
   SEE ALSO: extract_corresponding_data
 */
 
+func align_corresponding_data(data, ref, soefudge=, mode=, enablez=, idx=,
+keep=, enableptime=) {
+/* DOCUMENT align_corresponding_data(data, ref, soefudge=, mode=, enablez=,
+   idx=, keep=, enableptime=)
+
+  This is similar to extract_corresponding_data in concept but provides a very
+  different result. This returns an array of the elemeents in REF that
+  correspond to DATA, such that they are in the same order. In other words, the
+  return result will have the same dimensions as DATA but will contain data
+  from REF. If idx=1, then an index list into ref is returned instead.
+
+  If there is not a corresponding value in REF, then that value or index is
+  left at 0.
+
+  So for example, suppose you have two variables, "fs" and "be". Assuming that
+  all points in be are present in fs, then you can do stuff like:
+
+    be_ref = align_corresponding_data(fs, be);
+    // See that the times match
+    allof(be_ref.soe == fs.soe);
+    // Compare the .elevation value
+    (be_ref.elevation - fs.elevation)(avg);
+
+  These examples are simplified. In practice, you'll want to account for the
+  possibility of missing correspondences. For example:
+
+    w = where(be_ref.raster);
+    // Compare the .elevation value for corresponding points
+    (be_ref.elevation(w) - fs.elevation(w))(avg);
+
+  See extract_corresponding_data for details on what the other options mean.
+*/
+  default, soefudge, 0.001;
+  match = array(0, numberof(data));
+
+  i = j = 1;
+  ndata = numberof(data);
+  nref = numberof(ref);
+
+  fields = [];
+
+  if(
+    has_member(data, "raster") && has_member(data, "pulse") &&
+    has_member(ref, "raster") && has_member(ref, "pulse")
+  ) {
+    grow, fields, ["raster", "pulse"];
+  } else {
+    grow, fields, "rn";
+  }
+
+  if(has_member(data, "channel") && has_member(ref, "channel")) {
+    grow, fields, "channel";
+  }
+
+  if((enableptime) && (has_member(data, "ptime") && has_member(ref, "ptime"))) {
+    grow, fields, "ptime";
+  }
+
+  grow, fields, "soe";
+
+  dataz = refz = [];
+  if(enablez) {
+    dataz = data2xyz(data, mode=mode, native=1)(..,3);
+    refz = data2xyz(ref, mode=mode, native=1)(..,3);
+  }
+
+  dsrt = msort_struct(data, fields, tiebreak=dataz);
+  rsrt = msort_struct(ref, fields, tiebreak=refz);
+
+  nfields = numberof(fields);
+  fudge = array(0., nfields);
+  fudge(0) = soefudge;
+
+  while(i <= ndata && j <= nref) {
+    A = data(dsrt(i));
+    B = ref(rsrt(j));
+    for(k = 1; k <= nfields; k++) {
+      a = get_member(A, fields(k));
+      b = get_member(B, fields(k));
+      if(fudge(k)) {
+        if(a < b - fudge(k)) {
+          i++;
+          goto next;
+        } else if(a > b + fudge(k)) {
+          j++;
+          goto next;
+        }
+      } else {
+        if(a < b) {
+          i++;
+          goto next;
+        } else if(a > b) {
+          j++;
+          goto next;
+        }
+      }
+    }
+
+    if(enablez) {
+      a = dataz(dsrt(i));
+      b = refz(rsrt(j));
+      if(a < b) {
+        i++;
+        goto next;
+      } else if(a > b) {
+        j++;
+        goto next;
+      }
+    }
+
+    match(dsrt(i)) = rsrt(j);
+    i++;
+
+    next:
+  }
+
+  if(idx) return match;
+  ret = array(structof(ref), numberof(data));
+  w = where(match);
+  ret(w) = ref(match(w));
+  return ret;
+}
+
 func extract_corr_or_uniq_data(which, data, ref, soefudge=, mode=, enablez=, idx=,
 keep=, enableptime=) {
   default, soefudge, 0.001;
