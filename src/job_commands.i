@@ -384,7 +384,6 @@ func job_depth_correct(conf) {
   pbd_depth_correct, opts=conf;
 }
 
-
 func job_gen_jgw(conf) {
   require, "eaarl.i";
   require, "../plugins/eaarlb/mosaic_biases.i";
@@ -420,4 +419,28 @@ func job_gen_jgw(conf) {
     write_jgw, conf.output, jgw_data;
     batch_gen_prj, files=conf.prj, zone=zone, datum="n88";
   }
+}
+
+func job_extract_corr_or_uniq_data(conf) {
+  require, "eaarl.i";
+  keyrequire, conf, which, srcfn, reffn, outfn;
+
+  which = atoi(conf.which);
+  soefudge = pass_void(atod, conf.soefudge);
+  fudge = pass_void(atod, conf.fudge);
+  native = pass_void(atoi, conf.native);
+  verbose = pass_void(atoi, conf.verbose);
+  enableptime = pass_void(atoi, conf.enableptime);
+  remove_buffers = pass_void(atoi, conf.remove_buffers);
+  file_append = pass_void(atoi, conf.file_append);
+
+  uniq = [];
+  if(conf(*,"uniq") && strlen(conf.uniq) <= 1)
+    uniq = atoi(conf.uniq);
+
+  pbd_extract_corr_or_uniq_data, which, conf.srcfn, conf.reffn, conf.outfn,
+    vname_append=conf.vname_append, method=conf.method, soefudge=soefudge,
+    fudge=fudge, mode=conf.mode, native=native, verbose=verbose,
+    enableptime=enableptime, remove_buffers=remove_buffers,
+    file_append=file_append, uniq=uniq;
 }

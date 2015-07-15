@@ -176,6 +176,70 @@ func filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=) {
   return idx ? keep : eaarl(keep,..);
 }
 
+func pbd_extract_corr_or_uniq_data(which, srcfn, reffn, outfn, vname_append=,
+method=, soefudge=, fudge=, mode=, native=, verbose=, enableptime=,
+remove_buffers=, file_append=, uniq=) {
+  local ref, data;
+
+  default, vname_append, "ext";
+  default, method, "data";
+  default, verbose, 1;
+  default, remove_buffers, 0;
+  default, file_append, 0;
+  default, uniq, 0;
+  if(strlen(vname_append) && strpart(vname_append, 1:1) != "_")
+    vname_append = "_" + vname_append;
+
+  data = pbd_load(srcfn, , vname);
+
+  if(!numberof(data)) {
+    if(!file_exists(outfn)) {
+      pbd_save, outfn, vname, data, empty=1;
+    }
+    return;
+  }
+
+  data2xyz, data, x, y;
+  // Include a 10m buffer, in case the points are located slightly
+  // differently
+  bbox = [x(min), y(min), x(max), y(max)] + [-10, -10, 10, 10];
+  x = y = [];
+  ref = dirload(refdir, files=reffn, verbose=0,
+    filter=dlfilter_bbox(bbox, mode=mode), remove_buffers=remove_buffers);
+
+  if(!numberof(ref)) {
+    if(!file_exists(outfn)) {
+      pbd_save, outfn, vname, data, empty=1;
+    }
+    return;
+  }
+
+  if(method == "xyz")
+    data = extract_corresponding_xyz(data, ref, fudge=fudge, mode=mode,
+      native=native);
+  else
+    data = extract_corr_or_uniq_data(which, data, ref, soefudge=soefudge,
+      enableptime=enableptime);
+  ref = [];
+
+  if(!numberof(data)) {
+    if(!file_exists(outfn)) {
+      pbd_save, outfn, vname, data, empty=1;
+    }
+    return;
+  }
+
+  if(uniq)
+    data = uniq_data(data, mode=mode, optstr=uniq);
+
+  vname += vname_append;
+  mkdirp, file_dirname(outfn);
+  if(file_append)
+    pbd_append, outfn, vname, data, uniq=uniq, mode=mode;
+  else
+    pbd_save, outfn, vname, data;
+}
+
 func batch_extract_corr_or_uniq_data(which, src_searchstr, ref_searchstr,
 maindir, srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=,
 soefudge=, fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=,
@@ -185,92 +249,51 @@ file_append=, uniq=) {
   default, refdir, maindir;
   default, outdir, maindir;
   default, fn_append, "extracted";
-  default, vname_append, "ext";
-  default, method, "data";
-  default, verbose, 1;
-  default, remove_buffers, 0;
-  default, file_append, 0;
-  default, uniq, 0;
   if(strpart(fn_append, 1:1) != "_")
     fn_append = "_" + fn_append;
-  if(strlen(vname_append) && strpart(vname_append, 1:1) != "_")
-    vname_append = "_" + vname_append;
-
   if(method == "xyz" && which == 0) {
     error, "cannot use method=xyz with unique extraction";
   }
 
   files = find(srcdir, searchstr=src_searchstr);
-
-  if(numberof(files) > 1)
-    sizes = file_size(files)(cum)(2:);
-  else if(numberof(files))
-    sizes = file_size(files);
-  else
+  if(!numberof(files)) {
     error, "No files found.";
-
-  local t0, data, vname, x, y;
-  timer_init, t0;
-  tp = t0;
-  for(i = 1; i <= numberof(files); i++) {
-    if(verbose >= 2)
-      write, format="%d: %s\n", i, file_tail(files(i));
-    data = pbd_load(files(i), , vname);
-
-    if(!numberof(data)) {
-      if(verbose >= 2)
-        write, " No data found.";
-      continue;
-    }
-
-    data2xyz, data, x, y;
-    // Include a 10m buffer, in case the points are located slightly
-    // differently
-    bbox = [x(min), y(min), x(max), y(max)] + [-10, -10, 10, 10];
-    x = y = [];
-    ref = dirload(refdir, searchstr=ref_searchstr, verbose=0,
-      filter=dlfilter_bbox(bbox, mode=mode), remove_buffers=remove_buffers);
-
-    if(!numberof(ref)) {
-      if(verbose >= 2)
-        write, " No reference data found.";
-      continue;
-    }
-
-    if(method == "xyz")
-      data = extract_corresponding_xyz(data, ref, fudge=fudge, mode=mode,
-        native=native);
-    else
-      data = extract_corr_or_uniq_data(which, data, ref, soefudge=soefudge,
-        enableptime=enableptime);
-    ref = [];
-
-    if(!numberof(data)) {
-      if(verbose >= 2)
-        write, " Extraction eliminated all points.";
-      continue;
-    }
-
-    if(uniq)
-      data = uniq_data(data, mode=mode, optstr=uniq);
-
-    outfile = file_join(outdir, file_relative(srcdir, files(i)));
-    outfile = file_rootname(outfile) + fn_append + ".pbd";
-    vname += vname_append;
-    mkdirp, file_dirname(outfile);
-    if(file_append)
-      pbd_append, outfile, vname, data, uniq=uniq, mode=mode;
-    else
-      pbd_save, outfile, vname, data;
-    if(verbose >= 2)
-      write, format="  -> %s\n", file_tail(outfile);
-    data = [];
-
-    if(verbose)
-      timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
   }
-  if(verbose)
-    timer_finished, t0;
+
+  allref = find(refdir, searchstr=ref_searchstr);
+
+  options = save(string(0), [], which, vname_append, method,
+    soefudge, fudge, mode, native, verbose, enableptime, remove_buffers,
+    file_append, uniq);
+
+  conf = save();
+  for(i = 1; i <= numberof(files); i++) {
+    srcfn = files(i);
+    outfn = file_join(outdir, file_relative(srcdir, files(i)));
+    outfn = file_rootname(outfn) + fn_append + ".pbd";
+
+    tile = extract_tile(file_tail(srcfn));
+    if(tile) {
+      bbox = tile2bbox(file_tail(srcfn))([2,1,4,3]) + [-10, -10, 10, 10];
+      reffn = dirload(files=allref, wantfiles=1, verbose=0,
+        filter=dlfilter_bbox(bbox, mode=mode), remove_buffers=remove_buffers);
+    } else {
+      reffn = allref;
+    }
+
+    save, conf, string(0), save(
+      input=grow(srcfn, reffn),
+      output=outfn,
+      command="job_extract_corr_or_uniq_data",
+      options=obj_merge(options, save(
+        srcfn,
+        reffn,
+        outfn
+      ))
+    );
+  }
+
+  makeflow_run, conf, interval=15;
 }
 
 local batch_extract_unique_data;
