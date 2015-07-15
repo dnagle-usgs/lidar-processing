@@ -4,10 +4,10 @@ require, "dir.i";
 
 func dirload(dir, searchstr=, files=, outfile=, outvname=, mode=,
 remove_buffers=, bbox=, ply=, tile=, buffer=, force_zone=, uniq=, soesort=,
-skip=, filter=, verbose=) {
+skip=, filter=, verbose=, wantfiles=) {
 /* DOCUMENT data = dirload(dir, searchstr=, files=, outfile=, outvname=, mode=,
    remove_buffers=, bbox=, ply=, tile=, buffer=, force_zone=, uniq=, soesort=,
-   skip=, filter=, verbose=)
+   skip=, filter=, verbose=, wantfiles=)
 
   Loads and merges the data found in the specified directory.
 
@@ -83,6 +83,11 @@ skip=, filter=, verbose=) {
     verbose= Specifies how chatty the function should be. Possible options:
         verbose=0   Complete silence, unless errors encountered
         verbose=1   Provide basic progress information (default)
+
+    wantfiles= Instead of loading data, return the list of files that would
+      have been referenced when trying to load data.
+        wantfiles=0   Act normally (return data, default)
+        wantflies=1   Return list of file names
 */
   // no defaults for: outfile, files; default for outvname established later
   default, searchstr, "*.pbd";
@@ -94,6 +99,7 @@ skip=, filter=, verbose=) {
   default, skip, 1;
   default, verbose, 1;
   default, filter, save();
+  default, wantfiles, 0;
 
   // Set up filter
   if(remove_buffers)
@@ -118,6 +124,8 @@ skip=, filter=, verbose=) {
 
   // filter file list ...
   filters_apply, files, save(), filter, "files";
+
+  if(wantfiles) return files;
 
   if(is_void(files)) {
     if(verbose)
