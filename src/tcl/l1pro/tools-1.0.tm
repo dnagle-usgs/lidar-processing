@@ -869,7 +869,8 @@ proc ::l1pro::tools::datum::gui {} {
                 -textvariable ${ns}::v::${kind}geoid \
                 -listvariable ${ns}::v::geoidlist
         ::mixin::statevar $f.${kind}geoid \
-                -statemap {w84 disabled n83 disabled n88 readonly} \
+                -statedefault {disabled} \
+                -statemap {n88 {!disabled readonly}} \
                 -statevariable ${ns}::v::${kind}datum
         grid $f.${kind}lbl $f.${kind}var $f.${kind}datum $f.${kind}geoid \
                 -sticky ew -padx 2 -pady 2
