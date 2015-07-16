@@ -89,6 +89,9 @@ local alps_data_modes;
   The following mode uses "meast" for x and "mnorth" for y, if possible:
     "mir" (mirror)
 
+  The following mode uses "feast" for x and "fnorth" for y, if possible:
+    "fs" (first surface)
+
   The following modes use the values specified for z, if possible:
     "fs" (first surface) uses "elevation"
     "be" (bare earth) uses "lelv"
@@ -472,6 +475,13 @@ func xyz2data_dynamic(x, y, z, &data, mode=) {
 func data2xyz_legacy_xy_fields(data, &xfield, &yfield, mode=) {
   xfield = yfield = [];
 
+  if(mode == "fs") {
+    if(has_member(data, "feast") && has_member(data, "fnorth")) {
+      xfield = "feast";
+      yfield = "fnorth";
+      return;
+    }
+  }
   // ba and depth are for support of bathy in VEG__
   if(anyof(["lint","be","ba","de","depth"] == mode)) {
     if(has_member(data, "least") && has_member(data, "lnorth")) {

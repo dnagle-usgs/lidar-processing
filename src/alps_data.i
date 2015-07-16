@@ -324,11 +324,16 @@ func struct_cast(&data, dest, verbose=, special=) {
   if(verbose)
     write, format=" Converting %s to %s\n", nameof(structof(data)), nameof(dest);
 
+  // Special cases that do not make use of the field-to-field copy at all and
+  // require fully-specialized conversion instead. These conversions all return
+  // early.
   if(special) {
     src = structof(data);
     dst = dest;
 
     // LFP_VEG requires special treatment since once of its members is a pointer
+
+    // LFP_VEG -> (normal point struct)
     if(structeq(src, LFP_VEG) && structeqany(dst, FS, VEG__, VEG_, VEG, GEO)) {
       data = data(where(data.elevation));
       result = array(dst, dimsof(data));
@@ -357,6 +362,7 @@ func struct_cast(&data, dest, verbose=, special=) {
       return result;
     }
 
+    // (normal point struct) -> LFP_VEG
     if(structeqany(src, FS, VEG__, VEG_, VEG, GEO) && structeq(dst, LFP_VEG)) {
       result = array(dst, dimsof(data));
       result.north = data.north;
@@ -401,12 +407,16 @@ func struct_cast(&data, dest, verbose=, special=) {
       get_member(result, fields(i)) = reform(get_member(data, fields(i)), dims);
   }
 
-  // Special cases
+  // Special cases. Unlike the earlier special case block, this special case
+  // block builds on the field-to-field copies and does not return early.
   if(special) {
     src = structof(data);
     dst = structof(result);
 
+    // GEO <- VEG
     if(structeq(dst, GEO) && structeqany(src, VEG__, VEG_, VEG)) {
+      result.fnorth = data.north;
+      result.feast = data.east;
       result.north = data.lnorth;
       result.east = data.least;
       result.depth = data.lelv - data.elevation;
@@ -414,7 +424,12 @@ func struct_cast(&data, dest, verbose=, special=) {
       result.bottom_peak = data.lint;
     }
 
+    // VEG <- GEO
     if(structeqany(dst, VEG__, VEG_, VEG) && structeq(src, GEO)) {
+      if(anyof(data.fnorth)) {
+        result.north = data.fnorth;
+        result.east = data.feast;
+      }
       result.lnorth = data.north;
       result.least = data.east;
       result.lelv = data.elevation + data.depth;
@@ -422,15 +437,27 @@ func struct_cast(&data, dest, verbose=, special=) {
       result.lint = data.bottom_peak;
     }
 
+    // GEO <- FS
     if(structeq(dst, GEO) && structeq(src, FS)) {
+      result.fnorth = data.north;
+      result.feast = data.east;
       result.bottom_peak = data.intensity;
     }
 
+    // FS <- GEO
     if(structeq(dst, FS) && structeq(src, GEO)) {
       result.elevation = data.elevation - data.depth;
       result.intensity = data.bottom_peak;
     }
 
+    // GEO <- *
+    // Old data does not have feast/fnorth, so copy east/north to it.
+    if(structeq(dst, GEO) && noneof(result.fnorth) && noneof(result.feast)) {
+      result.feast = result.east;
+      result.fnorth = result.north;
+    }
+
+    // (point) <- ZGRID
     if(structeqany(dst, FS, VEG__, VEG_, VEG, GEO) && structeq(src, ZGRID)) {
       data2xyz, data, x, y, z;
       result = array(dst, numberof(x));
@@ -457,9 +484,12 @@ func struct_cast(&data, dest, verbose=, special=) {
     result.pulse = pulse;
   }
 
+  // Handle seconds-of-day inconsistent naming
+  // src.sod -> result.somd
   if(has_member(data, "sod") && has_member(result, "somd")) {
     result.somd = data.sod;
   }
+  // src.somd -> result.sod
   if(has_member(data, "somd") && has_member(result, "sod")) {
     result.sod = data.somd;
   }

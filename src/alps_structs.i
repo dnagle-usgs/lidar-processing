@@ -146,8 +146,8 @@ local GEO;
     long rn;            raster + pulse << 24
     long raster;        raster
     short pulse;        pulse
-    long north;         surface northing in cm
-    long east;          surface easting in cm
+    long north;         bottom northing in cm
+    long east;          bottom easting in cm
     float sr2;          slant range first to last return in ns
     long elevation;     first surface elevation in cm
     long mnorth;        mirror northing
@@ -161,6 +161,8 @@ local GEO;
     long ptime;         processing time identifier
     float bback1;       backscatter value 1
     float bback2;       backscatter value 2
+    long fnorth;        surface northing in cm
+    long feast;         surface easting in cm
   }
 
   SEE ALSO: GEOALL, R, VEG__
@@ -178,6 +180,7 @@ struct GEO {
   char channel;
   long ptime;
   float bback1, bback2;
+  long fnorth, feast;
 }
 
 local R;

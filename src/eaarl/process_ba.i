@@ -11,6 +11,8 @@ func ba_struct_from_obj(pulses) {
   result.rn = (long(pulses.raster) & 0xffffff) | (long(pulses.pulse) << 24);
   result.raster = pulses.raster;
   result.pulse = pulses.pulse;
+  result.fnorth = long(pulses.fy * 100);
+  result.feast = long(pulses.fx * 100);
   result.north = long(pulses.ly * 100);
   result.east = long(pulses.lx * 100);
   result.sr2 = (pulses.lrx + pulses.lbias) - (pulses.frx + pulses.fbias);
