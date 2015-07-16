@@ -864,6 +864,9 @@ func msort_struct(x, fields, tiebreak=, rank=) {
 */
   local list;
 
+  if(numberof(x) == 0) return [];
+  if(numberof(x) == 1) return rank ? [0] : [1];
+
   if(is_void(fields)) fields = get_members(x);
   count = numberof(fields);
 
