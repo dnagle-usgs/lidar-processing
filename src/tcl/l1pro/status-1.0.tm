@@ -2,15 +2,33 @@
 
 package provide l1pro::status 1.0
 
+# Progress in range 0 to 1, for display in GUI
 set ::status(progress) 0
+
+# Formatted time remaining, for display in GUI
 set ::status(time) ""
+
+# Formatted status message, for display in GUI
 set ::status(message) "Ready."
 
+# current is the current progress to the total
+# count is the total
+# so, progress is always current/count
 set ::status(current) 0
 set ::status(count) 0
+
+# Template used for constructing message.
+# "CURRENT" and "COUNT" will be updated with the current values.
 set ::status(template) "Ready."
+
+# Time in milliseconds when process started
 set ::status(start) 0
+
+# Time in milliseconds at last update
 set ::status(last) 0
+
+# 1 if an on-going process is active and progress should be shown
+# 0 if finished and no more progress needed
 set ::status(active) 0
 
 namespace eval ::l1pro::status {
@@ -26,9 +44,14 @@ namespace eval ::l1pro::status {
     }
 
     proc progress {current count} {
-        set ::status(current) [expr {$current}]
-        set ::status(count) [expr {$count}]
-        set ::status(last) [clock milliseconds]
+        set current [expr {$current}]
+        set count [expr {$count}]
+        # Only update last if the progress has actually changed
+        if {$current != $::status(current) || $count != $::status(count)} {
+            set ::status(last) [clock milliseconds]
+        }
+        set ::status(current) $current
+        set ::status(count) $count
 
         after idle ::l1pro::status::update_message
     }
@@ -82,7 +105,7 @@ namespace eval ::l1pro::status {
         set elapsed [expr {$now - $::status(last)}]
 
         if {$elapsed > $predicted} {
-            set ::status(time) "00:00:00"
+            set ::status(time) "--:--:--"
             return
         }
 
