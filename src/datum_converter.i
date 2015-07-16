@@ -1,5 +1,23 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+func datum_convert_file(infile, outfile, outvname, zone=, src_datum=,
+src_geoid=, dst_datum=, dst_geoid=) {
+/* DOCUMENT datum_convert_file, infile, outfile, outvname, zone=, src_datum=,
+   src_geoid=, dst_datum=, dst_geoid=
+
+  Simple wrapper around datum_convert_data. This loads the data, calls
+  datum_convert_data, then saves the data. It does NOT reference the filename
+  for anything, so be sure to provide the values that are appropriate for all
+  parameters.
+
+  This is primarily intended for the job function used by batch_datum_convert.
+*/
+  data = pbd_load(infile);
+  datum_convert_data, data, zone=zone, src_datum=src_datum,
+    src_geoid=src_geoid, dst_datum=dst_datum, dst_geoid=dst_geoid, verbose=0;
+  pbd_save, outfile, outvname, data;
+}
+
 func datum_convert_data(&data_in, zone=, src_datum=, src_geoid=, dst_datum=,
 dst_geoid=, verbose=) {
 /* DOCUMENT converted = datum_convert_data(data, zone=, src_datum=, src_geoid=,
@@ -510,15 +528,19 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
     The default value for dst_geoid is likely to change if new geoids are
     released for NAVD-88 in the future.
 */
+  t0 = array(double, 3);
+  timer, t0;
+
   default, searchstr, "*w84*.pbd";
   default, update, 0;
   default, dst_datum, "n88";
-  default, dst_geoid, "12A";
+  if(dst_datum == "n88") default, dst_geoid, "12A";
   default, force, 0;
 
   if(!is_void(src_geoid))
     src_geoid = regsub("^g", src_geoid, "");
-  dst_geoid = regsub("^g", dst_geoid, "");
+  if(!is_void(dst_geoid))
+    dst_geoid = regsub("^g", dst_geoid, "");
 
   if(is_void(files)) {
     files = find(indir, searchstr=searchstr);
@@ -572,18 +594,7 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
   else
     exists = array(0, dimsof(fn_outs));
 
-  // Calculate the size of the input files so we can more accurately predict
-  // the time remaining
-  sizes = file_size(files);
-  if(anyof(exists))
-    sizes(where(exists)) = 0;
-  sizes = sizes(cum)(2:);
-  // Make sure we won't hit a divide-by-zero scenario (unlikely, but...)
-  if(!sizes(0))
-    sizes(0) = 1;
-
-  t0 = array(double, 3);
-  timer, t0;
+  conf = save();
   for(i = 1; i <= numberof(files); i++) {
     tail = tails(i);
     write, format="\n%d/%d %s\n", i, numberof(files), tail;
@@ -638,19 +649,26 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
       grow, fatal, "Unable to detect file zone.";
     }
 
-    // If we aren't yet dead, then try to load the data to check for more
-    // errors.
-    vname = data = err = [];
+    // If we aren't yet dead, then check the file for more errors.
+    vname = err = [];
     if(!numberof(fatal) && (force || !numberof(messages))) {
-      data = pbd_load(files(i), err, vname);
-      if(is_void(data)) {
+      valid = pbd_check(files(i), err, vname);
+      if(valid != 1) {
         grow, fatal, "Unable to load file: " + err;
+        vname = [];
+      } else {
+        f = openb(files(i));
+        if(is_void(get_member(f, vname))) {
+          grow, fatal, "Unable to load file: contains no data";
+          vname = [];
+        }
+        close, f;
       }
     }
 
     // If we received a vname, datum-check it
     if(!is_void(vname)) {
-    // Check variable name for datum
+      // Check variable name for datum
       var_datum = var_geoid = part1 = part2 = [];
       assign, parse_datum(vname), var_datum, var_geoid, part1, part2;
       if(strlen(var_datum)) {
@@ -697,26 +715,30 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
 
     // Now... we can actually convert the data!
 
-    if(strlen(err)) {
-      write, format=" Error encountered loading file: %s\n", err;
-      continue;
-    } else if(!numberof(data)) {
-      write, " Skipping, no data in file.";
-      continue;
-    }
+    write, " Adding file to queue for conversion.";
 
-    datum_convert_data, data, zone=cur_zone, src_datum=cur_src_datum,
-      src_geoid=cur_src_geoid, dst_datum=dst_datum, dst_geoid=dst_geoid;
-
-    if(is_void(data)) {
-      write, " WARNING!!! Datum conversion eliminated the data!!!";
-      write, " This isn't supposed to happen!!! Skipping...";
-      continue;
-    }
-
-    pbd_save, fn_out, vname, data;
-    timer_remaining, t0, sizes(i), sizes(0);
+    infile = files(i);
+    outfile = fn_out;
+    outvname = vname;
+    save, conf, string(0), save(
+      input=infile,
+      output=outfile,
+      command="job_datum_convert",
+      options=save(string(0), [],
+        infile, outfile, outvname,
+        zone=cur_zone, src_datum=cur_src_datum, src_geoid=cur_src_geoid,
+        dst_datum, dst_geoid
+      )
+    );
   }
+
+  write, "";
+  if(!conf(*)) {
+    write, format="%s\n", "No work to do!";
+  }
+
+  write, format="Now running queue to convert %d files...\n", conf(*);
+  makeflow_run, conf, interval=20;
   timer_finished, t0;
 }
 

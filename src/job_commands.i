@@ -444,3 +444,14 @@ func job_extract_corr_or_uniq_data(conf) {
     enableptime=enableptime, remove_buffers=remove_buffers,
     file_append=file_append, uniq=uniq;
 }
+
+func job_datum_convert(conf) {
+  require, "eaarl.i";
+  keyrequire, conf, infile, outfile, outvname;
+
+  zone = pass_void(atoi, conf.zone);
+
+  datum_convert_file, conf.infile, conf.outfile, conf.outvname, zone=zone,
+    src_datum=conf.src_datum, src_geoid=conf.src_geoid,
+    dst_datum=conf.dst_datum, dst_geoid=conf.dst_geoid;
+}
