@@ -129,14 +129,9 @@ func makeflow_run(conf, fn, norun=, interval=) {
     return;
   }
 
-  opts = swrite(format="%s -T %s -N %s",
-    alpsrc.makeflow_opts, alpsrc.makeflow_type, alpsrc.makeflow_project);
-  if(alpsrc.makeflow_type == "local") {
-    opts += swrite(format=" -J %d", alpsrc.cores_local);
-  } else {
-    opts += swrite(format=" -j %d -J %d", alpsrc.cores_local,
-      alpsrc.cores_remote);
-  }
+  opts = swrite(format="%s -T %s -N %s -j %d -J %d",
+    alpsrc.makeflow_opts, alpsrc.makeflow_type, alpsrc.makeflow_project,
+    alpsrc.cores_local, alpsrc.cores_remote);
 
   cmd_makeflow = swrite(format="%s %s %s > /dev/null",
     makeflow_exe, opts, fn);
