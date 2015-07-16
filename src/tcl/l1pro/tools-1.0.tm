@@ -1035,6 +1035,7 @@ namespace eval ::l1pro::tools::varmanage {
         button $f.btnCopy -text "Copy" -command ${ns}::cmd_copy
         button $f.btnDelete -text "Delete" -command ${ns}::cmd_delete
         button $f.btnRename -text "Rename" -command ${ns}::cmd_rename
+        button $f.btnSort -text "Sort" -command ${ns}::cmd_sort
         button $f.btnDismiss -text "Dismiss" -command [list destroy $v::win]
 
         grid $v::lb -sticky news
@@ -1043,6 +1044,7 @@ namespace eval ::l1pro::tools::varmanage {
         grid $f.btnCopy -sticky news
         grid $f.btnDelete -sticky news
         grid $f.btnRename -sticky news
+        grid $f.btnSort -sticky news
         grid $f.btnDismiss -sticky news
 
         grid columnconfigure $f 0 -weight 1 -minsize 110
@@ -1128,6 +1130,10 @@ namespace eval ::l1pro::tools::varmanage {
                         only one."
             }
         }
+    }
+
+    proc cmd_sort {} {
+        set ::varlist [list {*}[lrange $::varlist 0 4] {*}[lsort [lrange $::varlist 5 end]]]
     }
 
     proc cmd_copy {} {
