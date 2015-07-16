@@ -323,6 +323,86 @@ func pbd_save(file, vname, data, empty=, extra=) {
   close, f;
 }
 
+func pbd_check(file, &err, &vname) {
+/* DOCUMENT valid = pbd_check(filename);
+  valid = pbd_check(filename, err);
+  valid = pbd_check(filename, , vname);
+  valid = pbd_check(filename, err, vname);
+
+  Checks a PBD file. Returns 0 if it is not valid, 1 if it is a normal point
+  cloud file (contains a vname + associated variable), or 2 if it is a
+  blessable object (contains __bless).
+
+  The PBD file should have (at least) two variables defined. The first should
+  be "vname", which specifies the name of the other variable. That variable
+  should contain the data.
+
+  Alternately, the PBD should have a variable named "__bless", which specifies
+  a blessing function.
+
+  Output parameter "err" will contain a string indicating what error was
+  encountered while loading the data. A nil string indicates no error was
+  encountered.
+
+  Output parameter "vname" will contain the value of vname (or if __bless is
+  present, an appropriate vname will be generated).
+
+  SEE ALSO: pbd_load
+*/
+  err = string(0);
+  vname = string(0);
+
+  if(!file_exists(file)) {
+    err = "file does not exist";
+    return 0;
+  }
+
+  if(!file_readable(file)) {
+    err = "file not readable";
+    return 0;
+  }
+
+  if(!is_pbd(file)) {
+    err = "not a PBD file";
+    return 0;
+  }
+
+  f = openb(file);
+  vars = get_vars(f);
+
+  if(is_present(vars, "__bless")) {
+    bless = f.__bless;
+
+    if(!symbol_exists(bless)) {
+      err = "__bless references non-existent function";
+      return 0;
+    }
+
+    bless = symbol_def(bless);
+    if(!is_func(bless)) {
+      err = "__bless references non-function";
+      return 0;
+    }
+
+    vname = file_tail(file_rootname(file));
+    sanitize_vname, vname;
+    return 2;
+  }
+
+  if(!is_present(vars, "vname")) {
+    err = "no vname or __bless";
+    return 0;
+  }
+
+  vname = f.vname;
+  if(!is_present(vars, vname)) {
+    err = "invalid vname";
+    return 0;
+  }
+
+  return 1;
+}
+
 func pbd_load(file, &err, &vname) {
 /* DOCUMENT data = pbd_load(filename);
   data = pbd_load(filename, err);
@@ -331,7 +411,9 @@ func pbd_load(file, &err, &vname) {
 
   Loads data from a PBD file. The PBD file should have (at least) two
   variables defined. The first should be "vname", which specifies the name of
-  the other variable. That variable should contain the data.
+  the other variable. That variable should contain the data. Alternately, the
+  variable should contain a __bless member specifying how to bless the contents
+  to derive an object.
 
   If everything is in order then the data is returned; otherwise [] is
   returned.
@@ -346,78 +428,25 @@ func pbd_load(file, &err, &vname) {
   indicates that no vname was found (which only happens when there's an
   error).
 
-  Possible errors:
-    "file does not exist"
-    "file not readable"
-    "not a PBD file"
-    "no vname"
-    "invalid vname"
-
-  SEE ALSO: pbd_append pbd_save
+  SEE ALSO: pbd_append pbd_save pbd_check
 */
   err = string(0);
   vname = string(0);
 
-  if(!file_exists(file)) {
-    err = "file does not exist";
-    return [];
-  }
-
-  if(!file_readable(file)) {
-    err = "file not readable";
-    return [];
-  }
-
-  if(!is_pbd(file)) {
-    err = "not a PBD file";
-    return [];
-  }
-
+  type = pbd_check(file, err, vname);
+  if(!type) return [];
   f = openb(file);
-  vars = get_vars(f);
 
-  if(is_present(vars, "__bless")) {
-    bless = f.__bless;
-
-    if(!symbol_exists(bless)) {
-      err = "__bless references non-existent function";
-      return [];
-    }
-
-    bless = symbol_def(bless);
-    if(!is_func(bless)) {
-      err = "__bless references non-function";
-      return [];
-    }
-
+  if(type == 2) {
+    bless = symbol_def(f.__bless);
     data = pbd2obj(f);
     close, f;
-
-    if(catch(-1)) {
-      err = "__bless function failed";
-      return [];
-    }
-
     bless, data;
-
-    vname = file_tail(file_rootname(file));
-    sanitize_vname, vname;
-
     return data;
   }
 
-  if(!is_present(vars, "vname")) {
-    err = "no vname or __bless";
-    return [];
-  }
-
-  vname = f.vname;
-  if(!is_present(vars, vname)) {
-    err = "invalid vname";
-    return [];
-  }
-
   data = get_member(f, vname);
+  close, f;
 
   // Compatibility -- re-cast the data against its own struct. If the struct
   // has had new fields added, this will make sure they get included.
