@@ -415,7 +415,7 @@ snit::type ::eaarl::sbconf::embed {
         $self plot
     }
 
-    method IdlePlot {old new} {
+    method IdlePlot {args} {
         ::misc::idle [mymethod plot]
     }
 

@@ -833,7 +833,7 @@ snit::type ::eaarl::bathconf::embed {
         $self plot
     }
 
-    method IdlePlot {old new} {
+    method IdlePlot {args} {
         ::misc::idle [mymethod plot]
     }
 

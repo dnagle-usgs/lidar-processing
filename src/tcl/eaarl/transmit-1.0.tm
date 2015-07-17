@@ -144,7 +144,7 @@ snit::type ::eaarl::transmit::embed {
         $self plot
     }
 
-    method IdlePlot {old new} {
+    method IdlePlot {args} {
         ::misc::idle [mymethod plot]
     }
 

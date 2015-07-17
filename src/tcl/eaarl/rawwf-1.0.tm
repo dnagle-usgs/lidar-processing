@@ -189,7 +189,7 @@ snit::type ::eaarl::rawwf::embed {
         $self plot
     }
 
-    method IdlePlot {old new} {
+    method IdlePlot {args} {
         ::misc::idle [mymethod plot]
     }
 
