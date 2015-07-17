@@ -263,6 +263,9 @@ file_append=, uniq=) {
   }
 
   allref = find(refdir, searchstr=ref_searchstr);
+  if(!numberof(allref)) {
+    error, "No reference files found.";
+  }
 
   options = save(string(0), [], which, vname_append, method,
     soefudge, fudge, mode, native, verbose, enableptime, remove_buffers,
@@ -276,11 +279,28 @@ file_append=, uniq=) {
 
     tile = extract_tile(file_tail(srcfn));
     if(tile) {
+      // Expand tile by 10 meters to include neighboring tiles
       bbox = tile2bbox(file_tail(srcfn))([2,1,4,3]) + [-10, -10, 10, 10];
       reffn = dirload(files=allref, wantfiles=1, verbose=0,
         filter=dlfilter_bbox(bbox, mode=mode), remove_buffers=remove_buffers);
     } else {
       reffn = allref;
+    }
+
+    // Edge case: no reference files for source files
+    // For extract corresponding, skip (there are no corresponding)
+    // For extract unique, copy (all points are unique)
+    if(!numberof(reffn)) {
+      if(which) continue;
+      save, conf, string(0), save(
+        input=srcfn,
+        output=outfn,
+        command="job_file_copy",
+        options=save(
+          string(0), [srcfn, outfn]
+        )
+      );
+      continue;
     }
 
     save, conf, string(0), save(
@@ -293,6 +313,10 @@ file_append=, uniq=) {
         outfn
       ))
     );
+  }
+
+  if(!conf(*)) {
+    error, "No jobs to run; reference area does not match data area";
   }
 
   makeflow_run, conf, interval=15;
