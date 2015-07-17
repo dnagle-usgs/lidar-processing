@@ -78,6 +78,7 @@ proc ::mission::browse::gui::launch {} {
 
     refresh_conflist
     bind $tree <<TreeviewSelect>> ::mission::browse::gui::refresh_confinfo
+    bind $tree <Double-Button-1> [list ::mission::browse::gui::load_conf 1]
 }
 
 proc ::mission::browse::gui::refresh_conflist {} {
@@ -143,13 +144,14 @@ proc ::mission::browse::gui::refresh_confinfo {} {
     }
 }
 
-proc ::mission::browse::gui::load_conf {} {
+proc ::mission::browse::gui::load_conf {{silent 0}} {
     variable top
     variable tree
 
     set sel [lindex [$tree selection] 0]
     set kind [lindex $sel 0]
     if {$kind ne "conf"} {
+        if {$silent} return
         tk_messageBox \
                 -parent $top \
                 -icon error \
@@ -160,6 +162,9 @@ proc ::mission::browse::gui::load_conf {} {
 
     exp_send "mission, read, \"[lindex $sel 1]\";\r"
     ::misc::idle ::mission::launch
+    if {$silent} {
+        ::misc::idle [list destroy $top]
+    }
 }
 
 proc ::mission::browse::gui::cb_abort {} {
