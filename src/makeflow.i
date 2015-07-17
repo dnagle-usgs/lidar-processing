@@ -357,7 +357,8 @@ func makeflow_conf_to_script(conf, fn) {
 
     args = [];
     if(!is_void(item.options)) {
-      args = makeflow_obj_to_switches(item.options(2:));
+      if(item.options(*) > 1)
+        args = makeflow_obj_to_switches(item.options(2:));
       if(numberof(item.options(1)))
         grow, args, item.options(1);
       args = strjoin(args, " ");
@@ -456,7 +457,9 @@ func sans_makeflow(conf, interval=, current=, count=) {
     // Both yield equivalent switches, but the job functions expect the first
     // format.
     if(is_obj(opt)) {
-      args = makeflow_obj_to_switches(opt(2:));
+      args = [];
+      if(opt(*) > 1)
+        args = makeflow_obj_to_switches(opt(2:));
       if(numberof(opt(1)))
         grow, args, opt(1);
       opt = args;
