@@ -135,6 +135,8 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
 
     component parent
 
+    option -chanshow -readonly 1 -default combobox
+
     constructor {_parent args} {
         if {[winfo exists $win]} {
             installhull $win
@@ -151,17 +153,28 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
         set optvar [$parent info vars options]
         set win_width [set [$parent info vars win_width]]
 
-        ttk::label $f.lblChan -text "Channel:"
-        mixin::combobox $f.cboChan \
-                -textvariable ${optvar}(-channel) \
-                -state readonly \
-                -width 2 \
-                -values $::eaarl::channel_list
-        ::mixin::revertable $f.cboChan \
-                -applycommand [list $parent IdlePlot]
-        bind $f.cboChan <<ComboboxSelected>> +[list $f.cboChan apply]
-        ttk::separator $f.sepChan \
-                -orient vertical
+        switch -- $options(-chanshow) {
+            none {}
+            combobox {
+                ttk::label $f.lblChan -text "Channel:"
+                mixin::combobox $f.cboChan \
+                        -textvariable ${optvar}(-channel) \
+                        -state readonly \
+                        -width 2 \
+                        -values $::eaarl::channel_list
+                ::mixin::revertable $f.cboChan \
+                        -applycommand [list $parent IdlePlot]
+                bind $f.cboChan <<ComboboxSelected>> +[list $f.cboChan apply]
+                ttk::separator $f.sepChan \
+                        -orient vertical
+
+                lappend controls $f.cboChan
+            }
+            default {
+                error "unknown -chanshow"
+            }
+        }
+
         ttk::label $f.lblRast -text "Raster:"
         ttk::spinbox $f.spnRast \
                 -textvariable ${optvar}(-raster) \
@@ -222,12 +235,17 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
             pack $f.spnRast -fill x -expand 1
 
             lower [ttk::frame $f.fra2]
-            pack $f.lblChan $f.cboChan \
-                    $f.sepChan \
-                    $f.lblPulse $f.spnPulse \
+            switch -- $options(-chanshow) {
+                none {}
+                combobox {
+                    pack $f.lblChan $f.cboChan $f.sepChan \
+                            -in $f.fra2 -side left -fill x
+                    pack $f.sepChan -fill y -padx 2
+                }
+            }
+            pack $f.lblPulse $f.spnPulse \
                     -in $f.fra2 -side left -fill x
             pack $f.spnPulse -fill x -expand 1
-            pack $f.sepChan -fill y -padx 2
 
             lower [ttk::frame $f.fra3]
             pack $f.fra1 $f.sepRast $f.fra2 \
@@ -243,8 +261,14 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
             pack $f.sepPulse -padx 2
             pack $f.fra3 -fill both -expand 1
         } else {
-            pack $f.lblChan $f.cboChan \
-                    $f.sepChan \
+            switch -- $options(-chanshow) {
+                none {}
+                combobox {
+                    pack $f.lblChan $f.cboChan $f.sepChan -side left
+                    pack $f.sepChan -fill y -padx 2
+                }
+            }
+            pack \
                     $f.lblRast $f.spnRast $f.spnStep $f.btnRastPrev \
                         $f.btnRastNext \
                     $f.sepRast \
@@ -253,10 +277,10 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
                     $f.btnLims $f.btnReplot \
                     -side left
             pack $f.spnRast -fill x -expand 1
-            pack $f.sepChan $f.sepRast $f.sepPulse -fill y -padx 2
+            pack $f.sepRast $f.sepPulse -fill y -padx 2
         }
 
-        lappend controls $f.cboChan $f.spnRast $f.spnStep $f.btnRastPrev \
+        lappend controls $f.spnRast $f.spnStep $f.btnRastPrev \
                 $f.btnRastNext $f.spnPulse $f.btnLims $f.btnReplot
 
         tooltip $f.lblRast $f.spnRast \
