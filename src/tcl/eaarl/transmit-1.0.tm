@@ -148,10 +148,6 @@ snit::type ::eaarl::transmit::embed {
         ::misc::idle [mymethod plot]
     }
 
-    method limits {} {
-        exp_send "window, $options(-window); limits;\r"
-    }
-
     # Returns the command that can be used to (re)plot this window
     method plotcmd {} {
         return "show_wf_transmit,\

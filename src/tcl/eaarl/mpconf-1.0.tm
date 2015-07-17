@@ -460,10 +460,6 @@ snit::type ::eaarl::mpconf::embed {
         return -code error
     }
 
-    method limits {} {
-        exp_send "window, $options(-window); limits;\r"
-    }
-
     # Returns the command that can be used to (re)plot this window
     method plotcmd {} {
         set cmd "eaarl_mp_plot, $options(-raster), $options(-pulse)"

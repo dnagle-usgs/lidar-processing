@@ -861,10 +861,6 @@ snit::type ::eaarl::bathconf::embed {
         }
     }
 
-    method limits {} {
-        exp_send "window, $options(-window); limits;\r"
-    }
-
     # Returns the command that can be used to (re)plot this window
     method plotcmd {} {
         set cmd ""

@@ -270,11 +270,6 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
                 -applycommand [list $parent IdlePlot]
         ttk::separator $f.sepPulse \
                 -orient vertical
-        ttk::button $f.btnLims \
-                -image ::imglib::misc::limits \
-                -style Toolbutton \
-                -width 0 \
-                -command [list $parent limits]
         ttk::button $f.btnReplot \
                 -image ::imglib::misc::refresh \
                 -style Toolbutton \
@@ -319,7 +314,7 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
             pack $f.sepRast -pady 2
 
             lower [ttk::frame $f.fra4]
-            pack $f.btnLims $f.btnReplot \
+            pack $f.btnReplot \
                     -in $f.fra4 -side top
 
             pack $f.fra3 $f.sepPulse $f.fra4 \
@@ -348,14 +343,14 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
                     $f.sepRast \
                     $f.lblPulse $f.spnPulse \
                     $f.sepPulse \
-                    $f.btnLims $f.btnReplot \
+                    $f.btnReplot \
                     -side left
             pack $f.spnRast -fill x -expand 1
             pack $f.sepRast $f.sepPulse -fill y -padx 2
         }
 
         lappend controls $f.spnRast $f.spnStep $f.btnRastPrev \
-                $f.btnRastNext $f.spnPulse $f.btnLims $f.btnReplot
+                $f.btnRastNext $f.spnPulse $f.btnReplot
 
         tooltip $f.lblRast $f.spnRast \
                 "Raster number"
@@ -363,8 +358,6 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
                 "Amount to step by"
         tooltip $f.btnRastPrev $f.btnRastNext \
                 "Step through rasters by step increment"
-        tooltip $f.btnLims \
-                "Reset the limits on the plot so everything is visible."
         tooltip $f.btnReplot \
                 "Replots the current plot. Also plots linked plots if any are
                 selected."

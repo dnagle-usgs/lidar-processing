@@ -352,10 +352,6 @@ snit::type ::eaarl::raster::embed {
         set geo_opt_state [expr {$options(-channel) != 0 && $options(-geo)}]
     }
 
-    method limits {} {
-        exp_send "window, $options(-window); limits;\r"
-    }
-
     # Returns the command that can be used to (re)plot this window
     method plotcmd {args} {
         array set opts [list -highlight 0]
