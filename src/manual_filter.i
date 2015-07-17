@@ -244,6 +244,8 @@ func batch_extract_corr_or_uniq_data(which, src_searchstr, ref_searchstr,
 maindir, srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=,
 soefudge=, fudge=, mode=, native=, verbose=, enableptime=, remove_buffers=,
 file_append=, uniq=) {
+  t0 = array(double, 3);
+  timer, t0;
   local ref, data;
   default, srcdir, maindir;
   default, refdir, maindir;
@@ -294,6 +296,8 @@ file_append=, uniq=) {
   }
 
   makeflow_run, conf, interval=15;
+  makeflow_remove_empties, conf;
+  timer_finished, t0;
 }
 
 local batch_extract_unique_data;
