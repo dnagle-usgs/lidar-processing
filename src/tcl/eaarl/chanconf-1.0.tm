@@ -153,18 +153,23 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
         set f $win
         set optvar [$parent info vars options]
 
+        if {$options(-chanshow) ne "none"} {
+            set chanmap [list]
+            foreach channel $::eaarl::channel_list {
+                lappend chanmap $channel $channel
+            }
+        }
+
         switch -- $options(-chanshow) {
             none {}
             combobox {
                 ttk::label $f.lblChan -text "Channel:"
-                mixin::combobox $f.cboChan \
-                        -textvariable ${optvar}(-channel) \
+                mixin::combobox::mapping $f.cboChan \
+                        -mapping $chanmap \
+                        -altvariable ${optvar}(-channel) \
                         -state readonly \
                         -width 2 \
-                        -values $::eaarl::channel_list
-                ::mixin::revertable $f.cboChan \
-                        -applycommand [list $parent IdlePlot]
-                bind $f.cboChan <<ComboboxSelected>> +[list $f.cboChan apply]
+                        -modifycmd [list $parent IdlePlot]
                 ttk::separator $f.sepChan \
                         -orient vertical
 
@@ -172,19 +177,24 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
             }
             buttons {
                 ttk::frame $f.fraChannels
-                foreach channel $::eaarl::channel_list {
+                set chks [list]
+                set idxs [list]
+                set i 0
+                dict for {lbl chan} $chanmap {
                     # \u2009 is the unicode "thin space" character
-                    ttk::checkbutton $f.chkChan$channel \
-                            -variable ${optvar}(-chan$channel) \
+                    ttk::checkbutton $f.chkChan$chan \
+                            -variable ${optvar}(-chan$chan) \
                             -style Toolbutton \
-                            -text "\u2009$channel\u2009" \
-                            -command [list $parent IdlePlot - -]
-                    tooltip $f.chkChan$channel \
+                            -text "\u2009${lbl}\u2009" \
+                            -command [list $parent IdlePlot]
+                    tooltip $f.chkChan$chan \
                             "Enable or disable plotting channel $channel"
+                    lappend chks $f.chkChan$chan
+                    lappend idxs $i
+                    incr i
                 }
-                grid $f.chkChan1 $f.chkChan2 $f.chkChan3 $f.chkChan4 \
-                        -in $f.fraChannels -sticky news
-                grid columnconfigure $f.fraChannels {0 1 2 3} \
+                grid {*}$chks -in $f.fraChannels -sticky news
+                grid columnconfigure $f.fraChannels $idxs \
                         -weight 1 -uniform 1
                 ttk::separator $f.sepChan \
                         -orient vertical
