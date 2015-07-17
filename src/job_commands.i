@@ -72,6 +72,19 @@ func job_debug_dump_file(conf) {
   write, open(fn, "w"), format="%s\n", obj_show(conf);
 }
 
+func job_file_copy(conf) {
+/* DOCUMENT job_file_copy(conf)
+  Wrapper around file_copy. Expects two positional parameters (src dst) and
+  accepts one option (--force).
+*/
+  require, "eaarl.i";
+  files = conf(1);
+  if(numberof(files) != 2)
+    error, "requires two parameters: src dst";
+  force = pass_void(atoi, conf.force);
+  file_copy, files(1), files(2), force=force;
+}
+
 func job_dirload(conf) {
 /* DOCUMENT job_dirload, conf
   This is a wrapper around dirload. Each accepted command-line option
