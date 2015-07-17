@@ -170,6 +170,25 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
 
                 lappend controls $f.cboChan
             }
+            buttons {
+                ttk::frame $f.fraChannels
+                foreach channel $::eaarl::channel_list {
+                    # \u2009 is the unicode "thin space" character
+                    ttk::checkbutton $f.chkChan$channel \
+                            -variable ${optvar}(-chan$channel) \
+                            -style Toolbutton \
+                            -text "\u2009$channel\u2009" \
+                            -command [list $parent IdlePlot - -]
+                    tooltip $f.chkChan$channel \
+                            "Enable or disable plotting channel $channel"
+                }
+                grid $f.chkChan1 $f.chkChan2 $f.chkChan3 $f.chkChan4 \
+                        -in $f.fraChannels -sticky news
+                grid columnconfigure $f.fraChannels {0 1 2 3} \
+                        -weight 1 -uniform 1
+                ttk::separator $f.sepChan \
+                        -orient vertical
+            }
             default {
                 error "unknown -chanshow"
             }
@@ -242,6 +261,11 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
                             -in $f.fra2 -side left -fill x
                     pack $f.sepChan -fill y -padx 2
                 }
+                buttons {
+                    pack $f.fraChannels \
+                            -in $f.fra2 -side left -fill x
+                    pack $f.sepChan -fill y -padx 2
+                }
             }
             pack $f.lblPulse $f.spnPulse \
                     -in $f.fra2 -side left -fill x
@@ -265,6 +289,10 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
                 none {}
                 combobox {
                     pack $f.lblChan $f.cboChan $f.sepChan -side left
+                    pack $f.sepChan -fill y -padx 2
+                }
+                buttons {
+                    pack $f.fraChannels $f.sepChan -side left
                     pack $f.sepChan -fill y -padx 2
                 }
             }
