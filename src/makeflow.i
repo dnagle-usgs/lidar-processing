@@ -493,3 +493,35 @@ func sans_makeflow(conf, interval=, current=, count=) {
 
   status, finished;
 }
+
+func makeflow_remove_empties(conf, verbose=, indent=) {
+/* DOCUMENT makeflow_remove_empties, conf, verbose=, indent=
+  Scans the given makeflow conf object to check all output files. Any output
+  files that exist and are empty are deleted.
+
+  Options:
+    verbose= By default, a short message is displayed afterwards. Use verbose=0
+      to silence it.
+    indent= By default, the message has no indentation. Provide whitespace to
+      indent it.
+        indent=""     Default, no indentation
+        indent="  "   Indent two spaces
+*/
+  default, verbose, 1;
+  default, indent, "";
+  total = removed = 0;
+  for(i = 1; i <= conf(*); i++) {
+    output = conf(noop(i)).output;
+    for(j = 1; j <= numberof(output); j++) {
+      total++;
+      if(file_readable(output(j)) && !file_size(output(j))) {
+        removed++;
+        remove, output(j);
+      }
+    }
+  }
+  if(removed && verbose) {
+    write, format="%s%d of %d output files were empty and were removed\n",
+      indent, removed, total;
+  }
+}
