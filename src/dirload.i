@@ -446,7 +446,7 @@ func __dlfilter_files_poly(&files, filter, state) {
   }
   w = where(keep);
   if(numberof(w))
-    files = files(w);
+    files = files(*)(w);
   else
     files = [];
 }
