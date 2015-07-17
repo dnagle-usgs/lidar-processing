@@ -137,6 +137,7 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
 
     option -chanshow -readonly 1 -default combobox
     option -docked -readonly 1 -default bottom
+    option -txchannel -readonly 1 -default 0
 
     constructor {_parent args} {
         if {[winfo exists $win]} {
@@ -158,6 +159,9 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
             foreach channel $::eaarl::channel_list {
                 lappend chanmap $channel $channel
             }
+            if {$options(-txchannel)} {
+                lappend chanmap tx 0
+            }
         }
 
         switch -- $options(-chanshow) {
@@ -172,6 +176,29 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
                         -modifycmd [list $parent IdlePlot]
                 ttk::separator $f.sepChan \
                         -orient vertical
+
+                lappend controls $f.cboChan
+            }
+            padlock {
+                ::mixin::padlock $f.chkChan \
+                        -variable [$parent info vars lock_channel] \
+                        -text "Chan:" \
+                        -compound left
+                mixin::combobox::mapping $f.cboChan \
+                        -mapping $chanmap \
+                        -altvariable ${optvar}(-channel) \
+                        -state readonly \
+                        -width 2 \
+                        -modifycmd [list $parent IdlePlot]
+                ttk::separator $f.sepChan \
+                        -orient vertical
+
+                tooltip $f.chkChan $f.cboChan \
+                        "Channel in use.
+
+                        Locking the padlock will cause the channel to remain
+                        fixed. Leaving it unlocked allows the channel to update
+                        as needed."
 
                 lappend controls $f.cboChan
             }
@@ -271,6 +298,11 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
                             -in $f.fra2 -side left -fill x
                     pack $f.sepChan -fill y -padx 2
                 }
+                padlock {
+                    pack $f.chkChan $f.cboChan $f.sepChan \
+                            -in $f.fra2 -side left -fill x
+                    pack $f.sepChan -fill y -padx 2
+                }
                 buttons {
                     pack $f.fraChannels \
                             -in $f.fra2 -side left -fill x
@@ -299,6 +331,10 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
                 none {}
                 combobox {
                     pack $f.lblChan $f.cboChan $f.sepChan -side left
+                    pack $f.sepChan -fill y -padx 2
+                }
+                padlock {
+                    pack $f.chkChan $f.cboChan $f.sepChan -side left
                     pack $f.sepChan -fill y -padx 2
                 }
                 buttons {

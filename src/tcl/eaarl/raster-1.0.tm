@@ -162,81 +162,8 @@ snit::type ::eaarl::raster::embed {
     }
 
     method Gui_browse {f} {
-        ::mixin::padlock $f.chkChan \
-                -variable [myvar lock_channel] \
-                -text "Chan:" \
-                -compound left
-
-        mixin::combobox::mapping $f.cboChan \
-                -mapping {1 1 2 2 3 3 4 4 tx 0} \
-                -altvariable [myvar options](-channel) \
-                -state readonly \
-                -width 2 \
-                -modifycmd [mymethod IdlePlot]
-
-        ttk::separator $f.sepChan \
-                -orient vertical
-
-        ttk::label $f.lblRast -text "Raster:"
-        ttk::spinbox $f.spnRast \
-                -textvariable [myvar options](-raster) \
-                -from 1 -to 100000000 -increment 1 \
-                -width 5
-        ::mixin::revertable $f.spnRast \
-                -command [list $f.spnRast apply] \
-                -valuetype number \
-                -applycommand [mymethod ApplyIdlePlot]
-        ttk::spinbox $f.spnStep \
-                -textvariable [myvar raststep] \
-                -from 1 -to 100000 -increment 1 \
-                -width 3
-        ::mixin::revertable $f.spnStep \
-                -command [list $f.spnStep apply] \
-                -valuetype number
-        ttk::button $f.btnRastPrev \
-                -image ::imglib::vcr::stepbwd \
-                -style Toolbutton \
-                -command [mymethod IncrRast -1] \
-                -width 0
-        ttk::button $f.btnRastNext \
-                -image ::imglib::vcr::stepfwd \
-                -style Toolbutton \
-                -command [mymethod IncrRast 1] \
-                -width 0
-        ttk::separator $f.sepRast \
-                -orient vertical
-        ttk::label $f.lblPulse -text "Pulse:"
-        ttk::spinbox $f.spnPulse \
-                -textvariable [myvar options](-pulse) \
-                -from 1 -to 120 -increment 1 \
-                -width 3
-        ::mixin::revertable $f.spnPulse \
-                -command [list $f.spnPulse apply] \
-                -valuetype number \
-                -applycommand [mymethod ApplyIdlePlot]
-        ttk::separator $f.sepPulse \
-                -orient vertical
-        ttk::button $f.btnLims \
-                -image ::imglib::misc::limits \
-                -style Toolbutton \
-                -width 0 \
-                -command [mymethod limits]
-        ttk::button $f.btnReplot \
-                -image ::imglib::misc::refresh \
-                -style Toolbutton \
-                -width 0 \
-                -command [mymethod plot]
-
-        pack $f.chkChan $f.cboChan \
-                $f.sepChan \
-                $f.lblRast $f.spnRast $f.spnStep $f.btnRastPrev $f.btnRastNext \
-                $f.sepRast \
-                $f.lblPulse $f.spnPulse \
-                $f.sepPulse \
-                $f.btnLims $f.btnReplot \
-                -side left
-        pack $f.spnRast -fill x -expand 1
-        pack $f.sepChan $f.sepRast $f.sepPulse -fill y -padx 2
+        ::eaarl::chanconf::raster_browser $f $self \
+                -chanshow padlock -txchannel 1
 
         tooltip $f.chkChan $f.cboChan \
                 "Channel for this raster.
@@ -244,17 +171,6 @@ snit::type ::eaarl::raster::embed {
                 Locking the padlock will cause the channel to remain fixed
                 while using tools such as \"Examine Pixels\". Otherwise it will
                 change to reflect the channel of the selected point."
-        tooltip $f.lblRast $f.spnRast \
-                "Raster number"
-        tooltip $f.spnStep \
-                "Amount to step by"
-        tooltip $f.btnRastPrev $f.btnRastNext \
-                "Step through rasters by step increment"
-        tooltip $f.btnLims \
-                "Reset the limits on the plot so everything is visible."
-        tooltip $f.btnReplot \
-                "Replots the current plot. Also plots linked plots (such as
-                bathy or raw waveform) if any are selected."
     }
 
     method Gui_sync {f} {
