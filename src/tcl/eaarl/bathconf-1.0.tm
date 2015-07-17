@@ -176,7 +176,8 @@ snit::type ::eaarl::bathconf::embed {
     }
 
     method Gui_browse {f} {
-        ::eaarl::chanconf::raster_browser $f $self
+        ::eaarl::chanconf::raster_browser $f $self \
+                -docked [expr {$win_width > 600 ? "right" : "bottom"}]
     }
 
     method Gui_sync {f} {

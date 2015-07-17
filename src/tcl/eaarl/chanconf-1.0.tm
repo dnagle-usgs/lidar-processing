@@ -136,6 +136,7 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
     component parent
 
     option -chanshow -readonly 1 -default combobox
+    option -docked -readonly 1 -default bottom
 
     constructor {_parent args} {
         if {[winfo exists $win]} {
@@ -151,7 +152,6 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
     method Gui {} {
         set f $win
         set optvar [$parent info vars options]
-        set win_width [set [$parent info vars win_width]]
 
         switch -- $options(-chanshow) {
             none {}
@@ -225,7 +225,7 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
                 -width 0 \
                 -command [list $parent plot]
 
-        if {$win_width > 600} {
+        if {$options(-docked) eq "right"} {
             $f.sepRast configure -orient horizontal
 
             lower [ttk::frame $f.fra1]
