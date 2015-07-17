@@ -154,6 +154,12 @@ snit::widgetadaptor ::eaarl::chanconf::raster_browser {
         set f $win
         set optvar [$parent info vars options]
 
+        if {[$parent info vars controls] ne ""} {
+            upvar [$parent info vars controls] controls
+        } else {
+            set controls [list]
+        }
+
         if {$options(-chanshow) ne "none"} {
             set chanmap [list]
             foreach channel $::eaarl::channel_list {
