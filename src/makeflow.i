@@ -524,7 +524,8 @@ func makeflow_remove_empties(conf, verbose=, indent=) {
     }
   }
   if(removed && verbose) {
-    write, format="%s%d of %d output files were empty and were removed\n",
-      indent, removed, total;
+    were = (removed > 1) ? "were" : "was";
+    write, format="%s%d of %d output files %s empty and %s removed\n",
+      indent, removed, total, were, were;
   }
 }
