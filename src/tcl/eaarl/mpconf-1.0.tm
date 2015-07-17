@@ -454,7 +454,7 @@ snit::type ::eaarl::mpconf::embed {
                 -title "Select file to load" \
                 -initialdir [::mission::conf_dir] \
                 -filetypes {
-                    {{Veg configuration files} {.mpconf}}
+                    {{Multipeak configuration files} {.mpconf}}
                     {{All files} {*}}
                 }]
         if {$fn ne ""} {
@@ -469,7 +469,7 @@ snit::type ::eaarl::mpconf::embed {
                 -title "Select destination" \
                 -initialdir [::mission::conf_dir] \
                 -filetypes {
-                    {{Veg configuration files} {.mpconf}}
+                    {{Multipeak configuration files} {.mpconf}}
                     {{All files} {*}}
                 }]
         if {$fn ne ""} {
@@ -490,7 +490,7 @@ snit::type ::eaarl::mpconf::embed {
     }
 
     method UpdateTitle {} {
-        wm title $window "Window $options(-window) - Veg -\
+        wm title $window "Window $options(-window) - Multipeak -\
                 Raster $options(-raster) Pulse $options(-pulse)\
                 Channel $options(-channel)"
     }
