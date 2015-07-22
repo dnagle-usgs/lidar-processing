@@ -103,6 +103,9 @@ snit::type ::eaarl::bathconf::embed {
     # Step amount for raster stepping
     variable raststep 2
 
+    # Whether channel is locked
+    variable lock_channel 0
+
     # The current window width
     variable win_width 450
 
@@ -177,6 +180,7 @@ snit::type ::eaarl::bathconf::embed {
 
     method Gui_browse {f} {
         ::eaarl::chanconf::raster_browser $f $self \
+                -chanshow padlock \
                 -docked [expr {$win_width > 600 ? "right" : "bottom"}]
     }
 
@@ -765,6 +769,7 @@ snit::type ::eaarl::bathconf::embed {
     }
 
     method SetOpt {option value} {
+        if {$option eq "-channel" && $lock_channel} return
         set options($option) $value
         $self UpdateTitle
     }
@@ -863,11 +868,15 @@ snit::type ::eaarl::bathconf::embed {
 
     # Returns the command that can be used to (re)plot this window
     method plotcmd {} {
+        set channel $options(-channel)
+        ::hook::invoke "conf plotcmd channels" channel \
+                [dict create lock_channel $lock_channel]
+
         set cmd ""
         append cmd "eaarl_ba_plot, $options(-raster), $options(-pulse),\
                 win=$options(-window), xfma=1"
-        if {$options(-channel)} {
-            append cmd ", channel=$options(-channel)"
+        if {$channel} {
+            append cmd ", channel=$channel"
         }
         append cmd "; "
         return $cmd

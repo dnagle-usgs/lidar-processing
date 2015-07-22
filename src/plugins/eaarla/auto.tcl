@@ -66,4 +66,17 @@ namespace eval ::plugins::eaarla {
             ::eaarl::load_eaarl
         }
     }
+
+    # Called in various configuration GUIs when plotting. This allows EAARL-A
+    # to hook in and clear the channel so that it can be auto-set, if the
+    # channel isn't locked.
+    make_hook post "conf plotcmd channels" {chanVar opts} {
+        upvar $chanVar channel
+
+        array set settings {lock_channel 0}
+        array set settings $opts
+
+        if {$settings(lock_channel)} return
+        set channel 0
+    }
 }
