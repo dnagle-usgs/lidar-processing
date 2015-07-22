@@ -101,6 +101,9 @@ snit::type ::eaarl::vegconf::embed {
     # Step amount for raster stepping
     variable raststep 2
 
+    # Whether channel is locked
+    variable lock_channel 0
+
     # The current window width
     variable win_width 450
 
@@ -170,6 +173,7 @@ snit::type ::eaarl::vegconf::embed {
 
     method Gui_browse {f} {
         ::eaarl::chanconf::raster_browser $f $self \
+                -chanshow padlock \
                 -docked [expr {$win_width > 600 ? "right" : "bottom"}]
     }
 
@@ -366,6 +370,7 @@ snit::type ::eaarl::vegconf::embed {
     }
 
     method SetOpt {option value} {
+        if {$option eq "-channel" && $lock_channel} return
         set options($option) $value
         $self UpdateTitle
     }
@@ -467,9 +472,13 @@ snit::type ::eaarl::vegconf::embed {
 
     # Returns the command that can be used to (re)plot this window
     method plotcmd {} {
+        set channel $options(-channel)
+        ::hook::invoke "conf plotcmd channels" channel \
+            [dict create lock_channel $lock_channel]
+
         set cmd "eaarl_be_plot, $options(-raster), $options(-pulse)"
-        if {$options(-channel)} {
-            append cmd ", channel=$options(-channel)"
+        if {$channel} {
+            append cmd ", channel=$channel"
         }
         append cmd ", win=$options(-window), xfma=1"
         append cmd "; "
