@@ -129,6 +129,97 @@ snit::widgetadaptor ::eaarl::chanconf::prompt_groups {
     }
 }
 
+##
+# Lots of GUIs have a component for browsing through rasters. This widget
+# exists to give them a common look and feel. It's intended to be used within a
+# specific context so it has a bunch of specific requirements.
+#
+# The basic context is expected to be a Snit type. The basic approach to use is
+# to add a method that simply invokes this:
+#
+#       method Gui_browse {f} {
+#           ::eaarl::chanconf::raster_browser $f $self
+#       }
+#
+# Parameter $f should be a container matching the API of ttk::frame; if it
+# doesn't exist, it will be initialized as a ttk::frame. Parameter $self should
+# be the widget that owns the raster_browser component.
+#
+# The command additional accepts several options to configure how it functions.
+#
+#       -chanshow <name>
+#           Specifies how to render the channel selection part of the GUI.
+#           Default value is combobox. Permitted values:
+#               -chanshow none
+#                   No channel selection option will be provided.
+#               -chanshow combobox
+#                   Provides a combobox that allows the user to select a
+#                   channel.
+#               -chanshow padlock
+#                   Like combobox, but adds a padlock option for locking the
+#                   channel.
+#               -chanshow buttons
+#                   Shows a numerical button for each channel that can be
+#                   toggled on/off independently.
+#
+#       -docked <where>
+#           This component is typically used alongside an embedded yorick
+#           window. This option specifies where the components are being
+#           placed. This may alter the layout of the GUI some. Default is
+#           bottom. Permitted values:
+#               -docked bottom
+#                   Renders in a horizontal layout suitable for bottom docking.
+#               -docked right
+#                   May render in a more vertical layout suitable for right
+#                   docking.
+#
+#       -txchannel <0|1>
+#           Specifies whether the transmit should be included as a
+#           psuedochannel. If included, it will have the numeric value of 0 but
+#           will be displayed as tx. Default is 0. Permitted values:
+#               -txchannel 0
+#                   Transmit not included.
+#               -txchannel 1
+#                   Transmit included.
+#
+# Numerous assumptions are made about the calling context and the widget passed
+# as the parent. The parent (passed as the second parameter, $self) must be an
+# instance of a snit type. It should support the following:
+#
+#       $parent info vars <varname>
+#           This is included by snit automatically. It allows lookup of
+#           instance variables.
+#       $parent IdlePlot
+#           Should invoke [$parent plot] in an idle callback.
+#       $parent IncrRast <1|-1>
+#           Should advance the raster number forward or backward based on the
+#           current raststep.
+#       $parent plot
+#           Should send the plotting command to Yorick.
+#
+# The $parent should also have the following variables:
+#
+#       options(-channel)
+#           Required when chanshow is combobox or padlock. Used to specify what
+#           the active channel is.
+#       options(-chan1), options(-chan2), etc.
+#           Required when chanshow is buttons. Each one is set to 0 or 1 based
+#           on whether the channel is toggled on or off.
+#       options(-raster)
+#           Always required. Specifies the current raster.
+#       options(-pulse)
+#           Always required. Specifies the current pulse.
+#       controls
+#           Optional. If it exists, it should be a list. The non-label controls
+#           will be appended to it. This is intended to help aid a caller who
+#           wishes to enforce a particular width on the elements in a
+#           right-docked layout.
+#       lock_channel
+#           Required when chanshow is packlock. This is set to 1 when locked
+#           and 0 when unlocked.
+#       raststep
+#           Required. Used to store the raster step value.
+##
 snit::widgetadaptor ::eaarl::chanconf::raster_browser {
     delegate option * to hull
     delegate method * to hull
