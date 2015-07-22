@@ -29,11 +29,15 @@ func process_sb(start, stop, ext_bad_att=, channel=, opts=) {
 */
   restore_if_exists, opts, start, stop, ext_bad_att, channel;
 
-  default, channel, 1;
+  default, channel, 0;
 
   sample_interval = 1.0;
   sb_tx = eaarl_sb_tx_copy;
-  sb_rx = eaarl_sb_rx_channel;
+  if(channel(1)) {
+    sb_rx = eaarl_sb_rx_channel;
+  } else {
+    sb_rx = eaarl_sb_rx_eaarla;
+  }
 
   // Allow core functions to be overridden via hook
   restore, hook_invoke("process_sb_funcs", save(sb_tx, sb_rx));
@@ -155,6 +159,71 @@ func eaarl_sb_rx_channel(pulses) {
   save, pulses, lrx, lintensity, lbias, lchannel, rets;
 }
 
+func eaarl_sb_rx_eaarla(pulses) {
+/* DOCUMENT eaarl_sb_rx_eaarla, pulses
+  Updates the given pulses oxy group object with veg last return info. The
+  most sensitive channel that is not saturated will be used. The following
+  fields are added to pulses:
+    lrx - Location in waveform of bottom
+    lintensity - Intensity at bottom
+    lbias - The channel range bias (ops_conf.chn%d_range_bias)
+    lchannel - Channel used for bottom
+  Additionally, this field is overwritten:
+    fintensity - Intensity at location deemed as surface by bathy algorithm
+*/
+  local conf;
+  extern ops_conf;
+
+  sb_rx_channel = eaarl_sb_rx_eaarla_channel;
+  sb_rx_wf = eaarl_sb_rx_wf;
+
+  // Allow functions to be overridden via hook
+  restore, hook_invoke("eaarl_sb_rx_funcs", save(sb_rx_channel, sb_rx_wf));
+
+  biases = get_range_biases(ops_conf);
+
+  npulses = numberof(pulses.tx);
+
+  lrx = lintensity = lbias = array(float, npulses);
+  lchannel = rets = array(char, npulses);
+
+  for(i = 1; i <= npulses; i++) {
+    lchannel(i) = sb_rx_channel(pulses.rx(,i), conf);
+    if(!lchannel(i)) continue;
+    lbias(i) = biases(lchannel(i));
+
+    tmp = sb_rx_wf(*pulses.rx(lchannel(i),i), conf);
+    lintensity(i) = tmp.lintensity;
+    lrx(i) = tmp.lrx;
+    rets(i) = tmp.rets;
+  }
+
+  save, pulses, lrx, lintensity, lbias, lchannel, rets;
+}
+
+func eaarl_sb_rx_eaarla_channel(rx, &conf) {
+/* DOCUMENT channel = eaarl_sb_rx_eaarla_channel(rx, &conf)
+  Determines which channel to use for veg. The channel number is returned,
+  and &conf is updated to the veg conf for that channel.
+*/
+  extern ops_conf;
+
+  for(i = 1; i <= 3; i++) {
+    conf = sbconf(settings, i);
+    wf = *rx(i);
+    if(!numberof(wf)) return 0;
+    // Channels 1 and 2 define saturation as < 5, whereas channel 3 defines
+    // saturation as == 0.
+    sat_thresh=(i == 3 ? 0 : 4)
+
+    np = min(numberof(wf), 12);
+    saturated = where(wf(1:np) <= sat_thresh);
+    numsat = numberof(saturated);
+    if(numsat <= ops_conf.max_sfc_sat) return i;
+  }
+  return 0;
+}
+
 func eaarl_sb_plot(raster, pulse, channel=, win=, xfma=) {
 /* DOCUMENT eaarl_sb_plot, raster, pulse, channel=, win=, xfma=
   Executes the shallow bathy algorithm for a single pulse and plots the result.
@@ -185,23 +254,24 @@ func eaarl_sb_plot(raster, pulse, channel=, win=, xfma=) {
     win= Window to plot in. Defaults to 26.
     xfma= Whether to clear plot first. Defaults to 1.
 */
-  default, channel, 1;
+  default, channel, 0;
   default, win, 26;
   default, xfma, 1;
 
   local conf;
 
+  sb_rx_channel = eaarl_sb_rx_eaarla_channel;
   sb_rx_wf = eaarl_sb_rx_wf;
 
   // Allow functions to be overridden via hook
-  restore, hook_invoke("eaarl_sb_rx_funcs", save(sb_rx_wf));
+  restore, hook_invoke("eaarl_sb_rx_funcs", save(sb_rx_channel, sb_rx_wf));
 
   wbkp = current_window();
   window, win;
 
   tkcmd, swrite(format=
     "::eaarl::sbconf::config %d -raster %d -pulse %d -channel %d -group {%s}",
-    win, raster, pulse, channel, sbconf(settings_group, channel));
+    win, raster, pulse, channel, sbconf(settings_group, max(channel, 1)));
 
   pulses = decode_rasters(raster, raster);
   w = where(pulses.pulse == pulse);
@@ -212,7 +282,15 @@ func eaarl_sb_plot(raster, pulse, channel=, win=, xfma=) {
     return;
   }
   pulses = obj_index(pulses, w(1));
-  conf = sbconf(settings, channel);
+  if(channel) {
+    conf = sbconf(settings, channel);
+  } else {
+    channel = sb_rx_channel(pulses.rx, conf);
+
+    tkcmd, swrite(format=
+      "::eaarl::sbconf::config %d -channel %d -group {%s}",
+      win, channel, sbconf(settings_group, channel));
+  }
 
   write, format=" shallow bathy analysis for raster %d, pulse %d, channel %d\n",
     long(raster), long(pulse), long(channel);
