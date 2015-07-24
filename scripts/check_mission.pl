@@ -93,31 +93,23 @@ sub find_precision {
   my ( $entry, $type ) = @_;
   $entry =~ s/[ \",\\]+//g;   # remove spaces, quotes commas, and backslashes
 
+# printf("Checking: %s\n", basename($entry) );
+
   my ( $label, $bdir ) = split(/:/, $entry );
   $bdir = basedir( $bdir );
 
-  my $srch_pnav = $bdir . "-p-*-pnav.ybin" if ( $type eq "pnav" );
-  my $srch_ins  = $bdir . "-p-*-ins.pbd"   if ( $type eq "ins"  );
+  my $srch_traj = $bdir . "-p-*-" . $type;
 
-# printf("==> (%s)\n", $srch_pnav );
+# printf("Searching: (%s)\n", $srch_traj );
 
-  my @pnav_files = File::Finder->type('f')->name($srch_pnav)->in('..');
-  my  @ins_files = File::Finder->type('f')->name($srch_ins)->in('..');
+  my @traj_files = File::Finder->type('f')->name($srch_traj)->in('..');
 
-  @pnav_files = reverse sort @pnav_files;
-   @ins_files = reverse sort  @ins_files;
-# printf("%s :: %s\n", $bdir, ($_)) foreach( @pnav_files );
+  @traj_files = reverse sort @traj_files;
 
+# printf("FOUND: %d %s\n", scalar @traj_files, basename($_) ) foreach ( @traj_files );
 
-# printf("%s <-* %s\n%s *-> %s\n", $bdir, basename($entry), $bdir, basename($_)) foreach( @pnav_files );
-# printf("%s <-* %s\n%s *-> %s\n", $bdir, basename($entry), $bdir, basename($_)) foreach(  @ins_files );
-
-  printf("%s <-* %s\n%s *-> %s\n", $bdir, basename($entry), $bdir, basename($pnav_files[0]))
-    if ( scalar @pnav_files > 0 );
-  printf("%s <-* %s\n%s *-> %s\n", $bdir, basename($entry), $bdir, basename( $ins_files[0]))
-    if ( scalar  @ins_files > 0 );
-
-  printf("\n") if ( ( scalar @pnav_files + scalar @ins_files) > 0 );
+  return( basename($entry), basename($traj_files[0]) ) if ( scalar @traj_files );
+  return("", "");
 }
 
 sub main();
@@ -136,7 +128,7 @@ if ( $#ARGV >= 0 ) {
   $LS_CMD = "ls *.mission*";
 }
 
-printf("%s\n", $LS_CMD);
+# printf("%s\n", $LS_CMD);
 
 open my $IN, '-|', $LS_CMD || die("$LS_CMD: $!\n");
 my @files = <$IN>;
@@ -156,16 +148,24 @@ foreach my $mission_file ( @files ) {
 
   my @pnav = grep(/pnav file/, @mission);
   my @ins  = grep( /ins file/, @mission);
+  chomp @pnav;
+  chomp @ins ;
 
   my @nop_pnav = grep( !/-p-/, @pnav );
   my @nop_ins  = grep( !/-p-/, @ins  );
-  chomp @nop_pnav;
-  chomp @nop_ins ;
 # printf("-> %s\n", $_) foreach( @nop_pnav );
 # printf("-> %s\n", $_) foreach( @nop_ins  );
 
-  find_precision( $_, "pnav" ) foreach( @nop_pnav );
-  find_precision( $_, "ins"  ) foreach( @nop_ins  );
+  my ( $old, $new );
+  foreach my $file ( @pnav ) {
+    ( $old, $new ) = find_precision( $file, "pnav.ybin" );
+    printf("OLD: %s\nNew: %s\n\n", $old, $new ) if ( $old ne $new );
+  }
+
+  foreach my $file ( @ins  ) {
+    ( $old, $new ) = find_precision( $file, "ins.pbd"   );
+    printf("OLD: %s\nNew: %s\n\n", $old, $new ) if ( $old ne $new );
+  }
 
   chdir $path;
 
