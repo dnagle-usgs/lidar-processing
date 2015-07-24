@@ -25,6 +25,7 @@ my $opts = {
   mystr   =>  "",
   help    => -1,
   quiet   =>  0,
+  verbose =>  0,
 };
 
 sub showusage {
@@ -32,10 +33,13 @@ sub showusage {
 $Id
 $Source
 
-$0 [-[no]help]
+$0 [-[no]help] [-verbose] FILE.mission ... FILEn.mission
 
-Check back again later
-[-nohelp]: better than nothing
+Check each mission file to see if newer trajectory files have been installed.
+
+[-verbose]: show Mission filename
+[-verbose]: show OLD and NEW trajectory names
+[-nohelp]:  better than nothing
 
 EOF
 
@@ -57,7 +61,7 @@ $options = <<"END";
   'myint=i'    => \\( \$opts->{myint}    = -1   ),  # example optional int
   'myfloat=f'  => \\( \$opts->{myfloat}  = 1.5  ),  # example floaat
   'mystr=s'    => \\( \$opts->{mystr}    = "foo"),  # example string
-  'verbose!'   => \\( \$opts->{verbose}  = -1   ),  # example bool with negate option
+  'verbose|v+' => \\(  \$opts->{verbose} =  0   ),  # use more -v for more verbose output
 );
 &showusage() if (\$opts->{help} >= 0);
 END
@@ -93,20 +97,14 @@ sub find_precision {
   my ( $entry, $type ) = @_;
   $entry =~ s/[ \",\\]+//g;   # remove spaces, quotes commas, and backslashes
 
-# printf("Checking: %s\n", basename($entry) );
-
   my ( $label, $bdir ) = split(/:/, $entry );
   $bdir = basedir( $bdir );
 
   my $srch_traj = $bdir . "-p-*-" . $type;
 
-# printf("Searching: (%s)\n", $srch_traj );
-
   my @traj_files = File::Finder->type('f')->name($srch_traj)->in('..');
 
-  @traj_files = reverse sort @traj_files;
-
-# printf("FOUND: %d %s\n", scalar @traj_files, basename($_) ) foreach ( @traj_files );
+  @traj_files = reverse sort @traj_files;   # this puts newest file on top
 
   return( basename($entry), basename($traj_files[0]) ) if ( scalar @traj_files );
   return("", "");
@@ -128,14 +126,10 @@ if ( $#ARGV >= 0 ) {
   $LS_CMD = "ls *.mission*";
 }
 
-# printf("%s\n", $LS_CMD);
-
 open my $IN, '-|', $LS_CMD || die("$LS_CMD: $!\n");
 my @files = <$IN>;
 close($IN);
 chomp @files;
-
-# printf("-> %s\n", $_) foreach( @files );
 
 foreach my $mission_file ( @files ) {
   printf("Checking %s\n", $mission_file ) if ( $opts->{verbose} );
@@ -146,31 +140,27 @@ foreach my $mission_file ( @files ) {
   my $path = cwd();
   chdir dirname($mission_file);
 
-  my @pnav = grep(/pnav file/, @mission);
-  my @ins  = grep( /ins file/, @mission);
+  my @pnav = grep(/pnav file/, @mission);  # extrac pnav and ins entries
+  my @ins  = grep( /ins file/, @mission);  # from .mission file
   chomp @pnav;
   chomp @ins ;
 
-  my @nop_pnav = grep( !/-p-/, @pnav );
-  my @nop_ins  = grep( !/-p-/, @ins  );
-# printf("-> %s\n", $_) foreach( @nop_pnav );
-# printf("-> %s\n", $_) foreach( @nop_ins  );
-
   my ( $old, $new );
-  foreach my $file ( @pnav ) {
+  foreach my $file ( @pnav ) {             # foreach file, look for a newer version
     ( $old, $new ) = find_precision( $file, "pnav.ybin" );
-    printf("OLD: %s\nNew: %s\n\n", $old, $new ) if ( $old ne $new );
+    printf("%s\n", $new )                       if ( $old ne $new && $opts->{verbose} <= 1);
+    printf("OLD: %s\nNew: %s\n\n", $old, $new ) if ( $old ne $new && $opts->{verbose}  > 1);
   }
 
   foreach my $file ( @ins  ) {
     ( $old, $new ) = find_precision( $file, "ins.pbd"   );
-    printf("OLD: %s\nNew: %s\n\n", $old, $new ) if ( $old ne $new );
+    printf("%s\n", $new )                       if ( $old ne $new && $opts->{verbose} <= 1);
+    printf("OLD: %s\nNew: %s\n\n", $old, $new ) if ( $old ne $new && $opts->{verbose}  > 1);
   }
 
   chdir $path;
 
 }
-
 
 exit(0)
 
