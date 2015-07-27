@@ -26,6 +26,7 @@ my $opts = {
   help    => -1,
   quiet   =>  0,
   verbose =>  0,
+  update  =>  0,
 };
 
 sub showusage {
@@ -61,7 +62,8 @@ $options = <<"END";
   'myint=i'    => \\( \$opts->{myint}    = -1   ),  # example optional int
   'myfloat=f'  => \\( \$opts->{myfloat}  = 1.5  ),  # example floaat
   'mystr=s'    => \\( \$opts->{mystr}    = "foo"),  # example string
-  'verbose|v+' => \\(  \$opts->{verbose} =  0   ),  # use more -v for more verbose output
+  'verbose|v+' => \\( \$opts->{verbose}  =  0   ),  # use more -v for more verbose output
+  'update'     => \\( \$opts->{update}   =  0   ),  # update mission file
 );
 &showusage() if (\$opts->{help} >= 0);
 END
@@ -98,6 +100,7 @@ sub find_precision {
   $entry =~ s/[ \",\\]+//g;   # remove spaces, quotes commas, and backslashes
 
   my ( $label, $bdir ) = split(/:/, $entry );
+  my $tdir = $bdir;
   $bdir = basedir( $bdir );
 
   my $srch_traj = $bdir . "-p-*-" . $type;
@@ -106,7 +109,17 @@ sub find_precision {
 
   @traj_files = reverse sort @traj_files;   # this puts newest file on top
 
-  return( basename($entry), basename($traj_files[0]) ) if ( scalar @traj_files );
+  if ( scalar @traj_files && $opts->{update} ) {
+    if ( basename($entry) ne basename($traj_files[0] ) ) {
+      $traj_files[0] =~ s|../||;
+
+#     printf("< %s\n", $tdir );
+#     printf("> %s\n", $traj_files[0] );
+      return( $tdir, $traj_files[0] );
+    }
+  }
+
+  return( basename($entry),  basename($traj_files[0]) ) if ( scalar @traj_files );
   return("", "");
 }
 
@@ -131,11 +144,15 @@ my @files = <$IN>;
 close($IN);
 chomp @files;
 
+my @new_mission;
+
 foreach my $mission_file ( @files ) {
   printf("Checking %s\n", $mission_file ) if ( $opts->{verbose} );
   open my $IN, '<', $mission_file || die("$mission_file: $!\n");
   my @mission = <$IN>;
   close($IN);
+
+  @new_mission = @mission;
 
   my $path = cwd();
   chdir dirname($mission_file);
@@ -148,14 +165,37 @@ foreach my $mission_file ( @files ) {
   my ( $old, $new );
   foreach my $file ( @pnav ) {             # foreach file, look for a newer version
     ( $old, $new ) = find_precision( $file, "pnav.ybin" );
-    printf("%s\n", $new )                       if ( $old ne $new && $opts->{verbose} <= 1);
-    printf("OLD: %s\nNew: %s\n\n", $old, $new ) if ( $old ne $new && $opts->{verbose}  > 1);
+    if ( $old ne $new ) {
+      printf("%s\n", $new )                       if ( $opts->{verbose} <= 1);
+      printf("OLD: %s\nNew: %s\n\n", $old, $new ) if ( $opts->{verbose}  > 1);
+      if ( $opts->{update} ) {
+        printf("Updating %s\n", $mission_file."-update");
+        $old =~ s|/|\\\\/|g;   # looks wrong,
+        $new =~ s|/|\\/|g;     # but it works
+#       printf("#%s#\n#%s#", $old, $new);
+        $_ =~ s/$old/$new/ foreach ( @new_mission );
+      }
+    }
+
   }
 
   foreach my $file ( @ins  ) {
     ( $old, $new ) = find_precision( $file, "ins.pbd"   );
-    printf("%s\n", $new )                       if ( $old ne $new && $opts->{verbose} <= 1);
-    printf("OLD: %s\nNew: %s\n\n", $old, $new ) if ( $old ne $new && $opts->{verbose}  > 1);
+    if ( $old ne $new ) {
+      printf("%s\n", $new )                       if ( $opts->{verbose} <= 1);
+      printf("OLD: %s\nNew: %s\n\n", $old, $new ) if ( $opts->{verbose}  > 1);
+      if ( $opts->{update} ) {
+        $old =~ s|/|\\\\/|g;   # looks wrong,
+        $new =~ s|/|\\/|g;     # but it works
+        $_ =~ s/$old/$new/ foreach ( @new_mission );
+      }
+    }
+  }
+
+  if ( $opts->{update} ) {
+    open my $OUT, '>', "NEWMISSION" || die("Updating output: $!\n");
+    print $OUT @new_mission;
+    close ($OUT);
   }
 
   chdir $path;
