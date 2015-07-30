@@ -6,6 +6,8 @@ use Getopt::Long;
 
 use File::Finder;
 use Cwd;
+use JSON::PP;
+use POSIX qw/strftime/;
 
 my $Id     = '&Id&';
 my $Source = '&Source&';
@@ -29,6 +31,11 @@ my $opts = {
   update  =>  0,
 };
 
+my $OLSYMB = '{';      # object left symbol
+my $ORSYMB = '}';
+my $ALSYMB = '\[';      # array  left symbol
+my $ARSYMB = '\]';
+
 sub showusage {
   print <<"EOF";
 $Id
@@ -40,7 +47,8 @@ Check each mission file to see if newer trajectory files have been installed.
 
 [-verbose]: show Mission filename
 [-verbose]: show OLD and NEW trajectory names
-[-nohelp]:  better than nothing
+[-update] : Create a new MISSION-update file with the new trajectories
+[-nohelp] : better than nothing
 
 EOF
 
@@ -95,6 +103,18 @@ sub dirname {
   return(substr($long, 0, rindex($long, "/")+0));
 }
 
+sub create_change_header {
+  my $hdr;
+
+  my $user = $ENV{USER};
+  my $hms = strftime("%Y%m%d-%H%M%S", gmtime( time() ) );
+
+  $hdr->{time} = $hms;
+  $hdr->{user} = $user;
+
+  bless $hdr;
+}
+
 sub find_precision {
   my ( $entry, $type ) = @_;
   $entry =~ s/[ \",\\]+//g;   # remove spaces, quotes commas, and backslashes
@@ -115,12 +135,168 @@ sub find_precision {
 
 #     printf("< %s\n", $tdir );
 #     printf("> %s\n", $traj_files[0] );
-      return( $tdir, $traj_files[0] );
+      return( $bdir, $tdir, $traj_files[0] );
     }
   }
 
-  return( basename($entry),  basename($traj_files[0]) ) if ( scalar @traj_files );
-  return("", "");
+  return( $bdir, basename($entry),  basename($traj_files[0]) ) if ( scalar @traj_files );
+  return("", "", "");
+}
+
+sub update_trajectories {
+  my ( @mission ) = @_;
+  my $changes;
+
+  my @pnav = grep(/pnav file/, @mission);  # extrac pnav and ins entries
+  my @ins  = grep( /ins file/, @mission);  # from .mission file
+  chomp @pnav;
+  chomp @ins ;
+
+  my ( $date, $old, $new );
+  foreach my $file ( @pnav ) {             # foreach file, look for a newer version
+    ( $date, $old, $new ) = find_precision( $file, "pnav.ybin" );
+    if ( $old ne $new ) {
+
+      $changes->{$date}->{pnav}->{old} = $old;
+      $changes->{$date}->{pnav}->{new} = $new;
+
+      printf("%s\n", $new )                       if ( $opts->{verbose} <= 1);
+      printf("OLD: %s\nNew: %s\n\n", $old, $new ) if ( $opts->{verbose}  > 1);
+      if ( $opts->{update} ) {
+        $old =~ s|/|\\\\/|g;   # looks wrong,
+        $new =~ s|/|\\/|g;     # but it works
+#       printf("#%s#\n#%s#", $old, $new);
+        $_ =~ s/$old/$new/ foreach ( @mission );
+      }
+    }
+
+  }
+
+  foreach my $file ( @ins  ) {
+    ( $date, $old, $new ) = find_precision( $file, "ins.pbd"   );
+    if ( $old ne $new ) {
+
+      $changes->{$date}->{ins}->{old} = $old;
+      $changes->{$date}->{ins}->{new} = $new;
+
+      printf("%s\n", $new )                       if ( $opts->{verbose} <= 1);
+      printf("OLD: %s\nNew: %s\n\n", $old, $new ) if ( $opts->{verbose}  > 1);
+      if ( $opts->{update} ) {
+        $old =~ s|/|\\\\/|g;   # looks wrong,
+        $new =~ s|/|\\/|g;     # but it works
+        $_ =~ s/$old/$new/ foreach ( @mission );
+      }
+    }
+  }
+
+  return( $changes, @mission );
+}
+
+sub get_notes {
+  my ( $key, @mission ) = @_;
+
+  my $json_str = join('', @mission );       # turn array into a single string
+  my $perl_obj = decode_json( $json_str );  # load string into perl objects
+
+  return ( $perl_obj->{$key} );
+}
+
+sub obj2str {
+  my ( $key, $obj ) = @_;
+
+  my $json   = JSON::PP->new->pretty;         # create json parser
+  my $pretty = $json->encode( $obj );         # get obj as a json string
+
+  $pretty = "\"$key\": " . $pretty;
+  printf("%s\n", $pretty ) if ( $opts->{verbose} > 2 );
+
+  return( $pretty );
+}
+
+sub add_change_notes {
+  my ( $lvl, $swap_key, $swap_str, @arr ) = @_;
+
+  my $lvl_cnt = 0;
+
+  my $lcnt_obj = 0;
+  my $lcnt_arr = 0;
+  my $rcnt_obj = 0;
+  my $rcnt_arr = 0;
+
+  my $outline  = "";
+  my $lvl_key  = "";
+
+  my $d_obj;
+  my $d_arr;
+
+  my $entry_updated = 0;
+  my @new_mission;
+
+  foreach my $line ( @arr ) {
+    chomp $line;
+
+    $lcnt_obj += $line =~ /$OLSYMB/g;   # these will be right/closing symbols
+    $rcnt_obj += $line =~ /$ORSYMB/g;   # or array elements
+
+    $lcnt_arr += $line =~ /$ALSYMB/g;
+    $rcnt_arr += $line =~ /$ARSYMB/g;
+
+    $d_obj = $lcnt_obj - $rcnt_obj;
+    $d_arr = $lcnt_arr - $rcnt_arr;
+
+    $lvl_cnt = $d_obj + $d_arr;
+
+    my ( $key, $value ) = split /\s*:\s*/, $line;
+      $key   =~ s/[ ]+//;
+
+    $outline .= $line . '#';
+
+    if ( ! $value ) {
+      if ( $key !~ /[$OLSYMB|$ORSYMB|$ALSYMB|$ARSYMB]/ ) {    # we have a array value
+      } else {
+        if ( $lvl == $lvl_cnt ) {
+
+          if ( $lvl_key eq "\"$swap_key\"" ) {
+#           printf("Inseting new key: %s\n", $lvl_key );
+            $outline = $swap_str;
+            $entry_updated = 1;
+          }
+
+          $outline =~ s/#/\n/g;
+          push @new_mission, "$outline" if ( $outline gt "" );
+          $outline = "";
+          $lvl_key = "";
+        }
+        if ( $lvl > $lvl_cnt ) {       # last line
+          if ( ! $entry_updated && $lvl_cnt == 0 ) {
+#           printf("%d : %d - Appending new key: %s\n", $lvl, $lvl_cnt, $swap_key );
+            $outline = $swap_str;
+            $outline =~ s/#/\n/g;
+            chomp $outline;
+
+            if ( $outline gt "" ) {
+              chomp $new_mission[-1];
+              push @new_mission, ",\n";
+              push @new_mission, "$outline\n";
+            }
+          }
+          push @new_mission, "$line\n";
+        }
+      }
+    } else {
+      if ( $lvl == $lvl_cnt
+        || $lvl+1 == $lvl_cnt ) {
+        $lvl_key = $key if ( ! $lvl_key );
+      }
+
+        if ( $lvl == $lvl_cnt ) {
+          $outline =~ s/#/\n/g;
+          push @new_mission, $outline if ( $outline gt "" );
+          $outline = "";
+        }
+    }
+  }
+  return( @new_mission );
 }
 
 sub main();
@@ -144,7 +320,11 @@ my @files = <$IN>;
 close($IN);
 chomp @files;
 
-my @new_mission;
+my $lvl = 1;
+my $notes_key = "check_mission";
+my $notes_obj;
+
+my $header = create_change_header();
 
 foreach my $mission_file ( @files ) {
   printf("Checking %s\n", $mission_file ) if ( $opts->{verbose} );
@@ -152,50 +332,34 @@ foreach my $mission_file ( @files ) {
   my @mission = <$IN>;
   close($IN);
 
-  @new_mission = @mission;
-
   my $path = cwd();
   chdir dirname($mission_file);
 
-  my @pnav = grep(/pnav file/, @mission);  # extrac pnav and ins entries
-  my @ins  = grep( /ins file/, @mission);  # from .mission file
-  chomp @pnav;
-  chomp @ins ;
+  my $hits = grep( /$notes_key/, @mission );
 
-  my ( $old, $new );
-  foreach my $file ( @pnav ) {             # foreach file, look for a newer version
-    ( $old, $new ) = find_precision( $file, "pnav.ybin" );
-    if ( $old ne $new ) {
-      printf("%s\n", $new )                       if ( $opts->{verbose} <= 1);
-      printf("OLD: %s\nNew: %s\n\n", $old, $new ) if ( $opts->{verbose}  > 1);
-      if ( $opts->{update} ) {
-        printf("Updating %s\n", $mission_file."-update");
-        $old =~ s|/|\\\\/|g;   # looks wrong,
-        $new =~ s|/|\\/|g;     # but it works
-#       printf("#%s#\n#%s#", $old, $new);
-        $_ =~ s/$old/$new/ foreach ( @new_mission );
-      }
+  $notes_obj = get_notes( $notes_key, @mission ) if ( $hits );
+
+  my ( $changes, @new_mission ) = update_trajectories( @mission );
+
+  if ( $changes ) {
+    @{$changes}{keys %$header} = values %$header;       # merge header with changes
+
+    $notes_obj->{updates} = [] if ( !$notes_obj->{updates} ); # create updates array
+
+    push $notes_obj->{updates}, $changes;               # push changes onto updates
+
+    my $notes_str = obj2str( $notes_key, $notes_obj );
+
+    printf("%s\n", $notes_str ) if ( $opts->{verbose} );
+    @new_mission = add_change_notes( $lvl, $notes_key, $notes_str, @new_mission );
+
+    if ( $opts->{update} ) {
+      my $new = $mission_file."-update";
+      printf("Updating %s\n", $new);
+      open my $OUT, '>', $new || die("creating $new $!\n");
+      print $OUT @new_mission;
+      close ($OUT);
     }
-
-  }
-
-  foreach my $file ( @ins  ) {
-    ( $old, $new ) = find_precision( $file, "ins.pbd"   );
-    if ( $old ne $new ) {
-      printf("%s\n", $new )                       if ( $opts->{verbose} <= 1);
-      printf("OLD: %s\nNew: %s\n\n", $old, $new ) if ( $opts->{verbose}  > 1);
-      if ( $opts->{update} ) {
-        $old =~ s|/|\\\\/|g;   # looks wrong,
-        $new =~ s|/|\\/|g;     # but it works
-        $_ =~ s/$old/$new/ foreach ( @new_mission );
-      }
-    }
-  }
-
-  if ( $opts->{update} ) {
-    open my $OUT, '>', "NEWMISSION" || die("Updating output: $!\n");
-    print $OUT @new_mission;
-    close ($OUT);
   }
 
   chdir $path;
