@@ -35,6 +35,7 @@ my $opts = {
   nsp     => ".",
   norun   =>  0,
   verbose =>  0,
+  force   =>  0,
 };
 
 sub showusage {
@@ -81,6 +82,7 @@ $options = <<END;
   'nsp=s'      => \\( \$opts->{nsp}      =  ""  ),  # new extension seperator
   'verbose+'   => \\( \$opts->{verbose}  =  0   ),  # display additional info
   'norun|n'    => \\( \$opts->{norun}    =  0   ),  # do not rename files
+  'force!'     => \\( \$opts->{force}    =  0   ),  # force overwrite existing files
 );
 &showusage() if (\$opts->{help} >= 0);
 END
@@ -170,9 +172,15 @@ sub stub_main();
 
       my $extlen = length($newname) - length($oldname);
 
-      printf("%s: %*s -> %*s\n", $gv->NAME, $maxlen, $oldname, $maxlen+$extlen, $newname );
-      $cpmv->($oldname, $newname) if ( ! $opts->{norun} );
-      `touch -mar $oldname $newname` if ( $gv->NAME eq "copy" );
+      my $msg = "";
+      $msg = "  !Already exists, no changes" if ( -e $newname && ! $opts->{force} );
+
+      printf("%s: %*s -> %*s%s\n", $gv->NAME, $maxlen, $oldname, $maxlen+$extlen, $newname, $msg );
+
+      if ( ! -e $newname || $opts->{force} ) {
+        $cpmv->($oldname, $newname) if ( ! $opts->{norun} );
+        utime $fs->{atime}, $fs->{mtime}, $newname;
+      }
     }
   }
 
