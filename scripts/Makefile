@@ -1,4 +1,5 @@
 SHELL = /bin/sh
+INSTALL = /usr/bin/install
 
 prefix = ../..
 bindir = $(prefix)/bin
@@ -7,40 +8,76 @@ ROOTPATH = $(shell pwd)
 
 message:
 	@echo "make install           to install copies of all scripts"
-	@echo "make install-linked    to install links to scripts here"
 
-SCRIPTS = ascii_rename.pl check_to_archive clean.awk \
-	comment eaarl_md5sum geotiffer.pl get_location.pl htdp.awk \
-	idx_tiles_summarize iex_ascii2pbd initialize_cir.py \
-	make_html_tiles.pl make_xml_metadata.pl mkeidx mk_opsconf \
-	mktrajfiles pnav2gm.pl pnav2kml.pl shapefile_filter.pl \
-	showdays show_doc.pl test_checksum vncpl wrsync xyz2track.pl \
-	check_mission.pl
+DST_BARE = \
+	check_to_archive \
+	comment \
+	eaarl_md5sum \
+	hgr \
+	idx_tiles_summarize \
+	iex_ascii2pbd \
+	mk_opsconf \
+	mkcamlist \
+	mkeidx \
+	mktrajfiles \
+	showdays \
+	test_checksum \
+	vncpl \
+	wrsync \
+
+DST_AWK = \
+	clean \
+	htdp \
+
+DST_PL = \
+	ascii_rename \
+	check_for_tlds \
+	check_mission \
+	geotiffer \
+	get_location \
+	make_html_tiles \
+	make_xml_metadata \
+	pnav2gm \
+	pnav2kml \
+	shapefile_filter \
+	show_doc \
+	xyz2track \
+
+DST_PY = \
+	initialize_cir \
+
+DST_ALL = $(DST_BARE) $(DST_AWK) $(DST_PL) $(DST_PY)
+
+SRC_BARE = $(DST_BARE)
+SRC_AWK = $(addsuffix .awk,$(DST_AWK))
+SRC_PL = $(addsuffix .pl,$(DST_PL))
+SRC_PY = $(addsuffix .py,$(DST_PY))
+
+SRC_ALL = $(SRC_BARE) $(SRC_AWK) $(SRC_PL) $(SRC_PY)
+
+SYMLINKS = \\\#
 
 $(bindir):
 	mkdir $(bindir)
 
-install: $(bindir) $(bindir)/\#
-	@for script in $(SCRIPTS); do \
-		echo install -c $(ROOTPATH)/$$script $(bindir)/$$script; \
-		install -c $(ROOTPATH)/$$script $(bindir)/$$script; \
-	done
+install: $(bindir) $(bindir)/\# $(addprefix $(bindir)/,$(DST_ALL))
 
+$(addprefix $(bindir)/,$(DST_BARE)): $(bindir)/%: %
+	$(INSTALL) $< $@
 
-install-linked: $(bindir)
-	@for script in $(SCRIPTS); do \
-		echo ln -s $(ROOTPATH)/$$script $(bindir)/$$script; \
-		ln -s $(ROOTPATH)/$$script $(bindir)/$$script; \
-	done
-	ln -s comment "$(bindir)/#"
+$(addprefix $(bindir)/,$(DST_AWK)): $(bindir)/%: %.awk
+	$(INSTALL) $< $@
 
-# always doing "ln -s" causes make to error if the destination
-# file exists and using -sf seemed potentially scary.
-$(bindir)/\#: comment
-	ln -s comment $@
+$(addprefix $(bindir)/,$(DST_PL)): $(bindir)/%: %.pl
+	$(INSTALL) $< $@
+
+$(addprefix $(bindir)/,$(DST_PY)): $(bindir)/%: %.py
+	$(INSTALL) $< $@
+
+$(bindir)/\#: $(bindir)/comment
+	ln -sf comment $@
 
 clean:
 
 uninstall:
-	-cd $(bindir) && $(RM) $(SCRIPTS)
-	-cd $(bindir) && $(RM) '#'
+	-cd $(bindir) && $(RM) $(DST_ALL) $(SRC_ALL) $(SYMLINKS)
