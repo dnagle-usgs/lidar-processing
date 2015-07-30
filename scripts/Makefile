@@ -37,6 +37,7 @@ DST_PL = \
 	get_location \
 	make_html_tiles \
 	make_xml_metadata \
+	mvbu \
 	pnav2gm \
 	pnav2kml \
 	shapefile_filter \
@@ -55,12 +56,14 @@ SRC_PY = $(addsuffix .py,$(DST_PY))
 
 SRC_ALL = $(SRC_BARE) $(SRC_AWK) $(SRC_PL) $(SRC_PY)
 
-SYMLINKS = \\\#
+# This should contain #, but it seems impossible to add it to the list without
+# causing escaping issues.
+SYMLINKS = cpbu
 
 $(bindir):
 	mkdir $(bindir)
 
-install: $(bindir) $(bindir)/\# $(addprefix $(bindir)/,$(DST_ALL))
+install: $(bindir) $(addprefix $(bindir)/,$(DST_ALL) $(SYMLINKS) \#)
 
 $(addprefix $(bindir)/,$(DST_BARE)): $(bindir)/%: %
 	$(INSTALL) $< $@
@@ -74,10 +77,13 @@ $(addprefix $(bindir)/,$(DST_PL)): $(bindir)/%: %.pl
 $(addprefix $(bindir)/,$(DST_PY)): $(bindir)/%: %.py
 	$(INSTALL) $< $@
 
-$(bindir)/\#: $(bindir)/comment
-	ln -sf comment $@
+$(bindir)/\\\#: $(bindir)/comment
+	ln -sf comment '$(bindir)/#'
+
+$(bindir)/cpbu: $(bindir)/mvbu
+	ln -sf mvbu $(bindir)/cpbu
 
 clean:
 
 uninstall:
-	-cd $(bindir) && $(RM) $(DST_ALL) $(SRC_ALL) $(SYMLINKS)
+	-cd $(bindir) && $(RM) $(DST_ALL) $(SRC_ALL) '#' $(SYMLINKS)
