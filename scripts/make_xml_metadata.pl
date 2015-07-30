@@ -11,9 +11,11 @@ use List::Util qw/min max/;
 use List::MoreUtils qw/uniq/;
 use File::Spec;
 use File::Finder;
+use File::Basename qw/basename/;
 
+my $prog = basename($0);
 my $help = <<END;
-Usage: make_xml_metadata.pl ellipsoid template pattern path
+Usage: $prog ellipsoid template pattern path
 
 This script will generate XML metadata files for data files. The arguments
 required are:

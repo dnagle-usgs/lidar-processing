@@ -9,9 +9,11 @@ use File::Finder;
 use File::Spec;
 use File::Util;
 use List::MoreUtils qw/uniq/;
+use File::Basename qw/basename/;
 
+my $prog = basename($0);
 my $help = <<END;
-Usage: make_html_tiles.pl template token source destination
+Usage: $prog template token source destination
 
 This script will generate HTML files for overview image files. The arguments
 required are:
