@@ -318,6 +318,7 @@ func eaarl_be_plot(raster, pulse, channel=, win=, xfma=) {
   if(xfma) fma;
 
   result = be_rx_wf(*pulses.rx(channel), conf, plot=1);
+  plhline, conf.thresh, color="red", type="dot";
 
   pltitle, swrite(format="veg - rn:%d pulse:%d chan:%d",
     raster, pulse, channel);
