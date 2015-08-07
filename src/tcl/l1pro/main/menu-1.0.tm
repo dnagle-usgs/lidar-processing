@@ -311,7 +311,7 @@ proc menu_window_raise {mb which} {
 proc menu_cmdline mb {
     menu $mb
     foreach ycmd {
-        mtransect batch_process mbatch_process batch_merge_tiles new_batch_rcf
+        batch_merge_tiles
         batch_rcf batch_datum_convert batch_veg_lfpw batch_pbd2edf
         batch_pbd2las batch_las2pbd batch_qi2pbd batch_write_xyz
         batch_convert_ascii2pbd batch_tile idl_batch_grid

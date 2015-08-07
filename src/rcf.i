@@ -148,7 +148,7 @@ func moving_rcf(yy, fw, n) {
   (fw) and a jury of +/-(n). It returns an index list to yy of the points
   within the filter. This is used in transect.i.
 
-  SEE ALSO: rcf, transect, mtransect
+  SEE ALSO: rcf, transect
 */
   np = numberof(yy);
   edt = array(0, np);

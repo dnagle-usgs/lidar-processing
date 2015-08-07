@@ -892,8 +892,7 @@ forcechannel=, header=) {
     mv1 = wf(mx1);
   }
 
-  // This is enabled when processing with batch_process or when make_veg is
-  // called with use_centroid=1
+  // This is enabled when make_veg is called with use_centroid=1
   if (hard_surface) {
     // check to see if there is only 1 inflection
     if (numberof(xr) == 1) {
@@ -912,8 +911,8 @@ forcechannel=, header=) {
   if (!is_void(alg_mode)) {
     ex_veg_alg, mx0, mv0, wf, xr, irange, channel, wflen, retdist, alg_mode;
   } else if (!use_be_centroid && use_be_peak) {
-    // This is used when make_veg is called with use_centroid=1 (which is what
-    // batch_process calls)
+    // This is used when make_veg is called with use_centroid=1 (which used
+    // to be used by batch_process)
     ex_veg_noalg_peak, mx0, mv0, wf, xr, irange, channel, wflen, retdist;
   } else if(use_be_centroid && !use_be_peak) {
     ex_veg_noalg_cent, mx0, mv0, wf, xr, irange, channel, wflen, retdist;
@@ -969,7 +968,7 @@ func ex_veg_alg(&mx0, &mv0, wf, xr, irange, channel, wflen, retdist, alg_mode) {
   }
 }
 
-// make_veg with use_centroid=1 (batch_process uses this)
+// make_veg with use_centroid=1 (batch_process used this - is it still needed?)
 func ex_veg_noalg_peak(&mx0, &mv0, wf, xr, irange, channel, wflen, retdist) {
   // this is the algorithm used most commonly in ALPS v1.
   // if within 3 ns from xr(0) we find a peak, we can assume this to be noise
