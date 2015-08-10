@@ -315,6 +315,8 @@ proc menu_cmdline mb {
         batch_rcf batch_datum_convert batch_veg_lfpw batch_pbd2edf
         batch_pbd2las batch_las2pbd batch_qi2pbd batch_write_xyz
         batch_convert_ascii2pbd batch_tile idl_batch_grid
+        json_log_load moving_rcf
+        pnav_diff_latlon pnav_diff_base_latlon pnav_diff_alt
     } {
         $mb add command -label $ycmd -command [list exp_send "help, $ycmd;\r"]
     }
