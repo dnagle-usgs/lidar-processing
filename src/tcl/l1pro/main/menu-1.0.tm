@@ -317,6 +317,7 @@ proc menu_cmdline mb {
         batch_convert_ascii2pbd batch_tile idl_batch_grid
         json_log_load moving_rcf
         pnav_diff_latlon pnav_diff_base_latlon pnav_diff_alt
+        show_mission_pnav_tracks
     } {
         $mb add command -label $ycmd -command [list exp_send "help, $ycmd;\r"]
     }
