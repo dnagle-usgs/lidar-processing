@@ -74,8 +74,8 @@ func shrink( void ) {
 // Both getll() and getPolyll() should probably be in a different file
 
 func getll( void, win= ) {
-/* DOCUMENT getPolyll( win= )
-  Displays the point selected using as lat/lon.
+/* DOCUMENT getll( win= )
+  Displays the point selected as lat/lon.
   This assumes the window is in UTM.
   The returned value can be pasted into Google Earth
 
@@ -94,11 +94,16 @@ func getll( void, win= ) {
     window,owin;
 }
 
-func getPolyll( void ) {
-/* DOCUMENT getPolyll()
-  Displays points selected using getPoly as lat/lon.
+func getPolyll( void, win ) {
+/* DOCUMENT getPolyll( win=)
+  Displays points selected as lat/lon.
   This assumes the window is in UTM.
 */
+  owin = window();
+
+  if ( !is_void(win) )
+    window,win;
+
   ply=get_poly();
   str="";
   for(i=1; i<=numberof(ply); i+=2) {
@@ -106,5 +111,9 @@ func getPolyll( void ) {
     str=swrite(format="%s%f, %f\n", str, ll(2), ll(1));
   }
   write, format="%s", str;
+
+  if ( !is_void(win) )
+    window,owin;
+
   return(str);
 }
