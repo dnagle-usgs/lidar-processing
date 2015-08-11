@@ -220,6 +220,8 @@ func mdist(&click, units=, win=, plot=, verbose=, nox=, noy=) {
       error, "Unknown units= value";
 
     km = m / 1000.;
+    cm = m *  100.;
+    mm = m * 1000.;
     nm = km / 1.852;
     sm = nm * 1.150779;
   }
@@ -230,8 +232,12 @@ func mdist(&click, units=, win=, plot=, verbose=, nox=, noy=) {
     write, format="   %.3f statute miles\n", sm;
     if(km > 1)
       write, format="   %.3f kilometers\n", km;
-    else
+    else if ( m > 1.)
       write, format="   %.3f meters\n", m;
+    else if ( cm > 1.)
+      write, format="   %.3f centimeters\n", cm;
+    else
+      write, format="   %.3f millimeters\n", mm;
   }
 
   if(plot) {
