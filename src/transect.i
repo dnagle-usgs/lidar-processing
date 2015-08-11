@@ -152,6 +152,11 @@ marker=, connect=, scolor=) {
       magenta, etc. If there are more than 7 colors, then colors will be reused
       in a cyclic manner.
         scolor="black"            Start with black (default)
+
+  GLOBAL variable
+    trans_ave :  Sets the size of a moving_average used to plot the line when
+    connect=1.  If this value is zero or not set, the normal line connect will
+    be used. If set, this value must be odd and positive.
 */
   // Break the data up into segments
   segs = split_data(data, how);
@@ -209,13 +214,22 @@ marker=, connect=, scolor=) {
     if(numberof(how))
       write, format="%s", "\n";
 
+    default, trans_ave, 0;
+
     if(connect) {
       // Not all segmenting methods will put the points in a line graph
       // friendly order. Ordering by rx makes sure the line graph looks nice.
       srt = sort(rx);
       rx = rx(srt);
       z = z(srt);
-      plg, z, rx, color=color;
+      if ( ! trans_ave) {
+        plg, z, rx, color=color;
+      } else {
+        if ( trans_ave < 0 ) trans_ave *= -1;
+        trans_ave += ( trans_ave%2) ? 0 : 1;  // must be odd
+        z_ave = moving_average( z, bin=trans_ave, taper=1 );
+        plg, z_ave, rx, color=color, width=5;
+      }
     }
     plmk, z, rx, color=color, msize=msize, width=10, marker=marker;
   }
