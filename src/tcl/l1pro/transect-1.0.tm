@@ -502,6 +502,8 @@ namespace eval l1pro::transect {
         tooltip ${p}showpoints \
                 "If enabled, the points selected in the source point cloud\
                 \nwill be highlighted by drawing little X's on them."
+            tooltip ${p}cbar \
+                "If enabled, limit the transect to the point cloud color bar."
         tooltip ${p}flight \
                 "If enabled, the points will be broken into sub-groups based
                 on which flight they appear to have come from. Each
