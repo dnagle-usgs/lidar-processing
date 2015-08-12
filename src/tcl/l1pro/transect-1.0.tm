@@ -209,6 +209,7 @@ namespace eval l1pro::transect {
         set settings($row,xfma) 1
         set settings($row,showline) 0
         set settings($row,showpts) 0
+        set settings($row,cbar) 0
         set settings($row,flight) 0
         set settings($row,line) 1
         set settings($row,channel) 0
@@ -243,7 +244,7 @@ namespace eval l1pro::transect {
         set result [list]
         foreach key {
             var userecall recall width iwin owin marker msize scolor connect
-            xfma showline showpts flight line channel digitizer mode
+            xfma showline showpts cbar flight line channel digitizer mode
             usercf rcfbuf rcffw piplock pipvar
         } {
             dict set result $key $v::settings($row,$key)
@@ -303,6 +304,9 @@ namespace eval l1pro::transect {
         ttk::checkbutton ${p}showpoints -text "Show Points" \
                 -variable ${var}($row,showpts) \
                 -style Small.TCheckbutton
+        ttk::checkbutton ${p}cbar -text "CBar" \
+                -variable ${var}($row,cbar) \
+                -style Small.TCheckbutton
         ttk::label ${p}segment -text "Segment by:" \
                 -style Small.TLabel
         ttk::checkbutton ${p}flight -text "flight" \
@@ -359,7 +363,7 @@ namespace eval l1pro::transect {
         ttk::separator ${p}seph -orient horizontal
 
         lower [ttk::frame ${p}optionshi]
-        pack ${p}connect ${p}fma ${p}showline ${p}showpoints \
+        pack ${p}connect ${p}fma ${p}showline ${p}showpoints ${p}cbar \
                 -in ${p}optionshi -side left -padx 2
         lower [ttk::frame ${p}optionslo]
         pack ${p}segment ${p}flight ${p}line ${p}channel ${p}digitizer \
@@ -746,6 +750,7 @@ namespace eval l1pro::transect {
                     $connect                ", connect=1" \
                     $showline               ", showline=2" \
                     $showpts                ", showpts=1" \
+                    $cbar                   ", cmin=$::plot_settings(cmin), cmax=$::plot_settings(cmax)" \
                     $usercf                 ", rcf_buf=$rcfbuf" \
                     $usercf                 ", rcf_fw=$rcffw" \
                     1                       ")"
