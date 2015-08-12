@@ -122,7 +122,7 @@ func transect_plot_line(line, win=, recall=) {
 }
 
 func transect_plot_points(line, data, mode=, how=, win=, xfma=, msize=,
-marker=, connect=, scolor=) {
+marker=, connect=, scolor=, cmin=, cmax=) {
 /* DOCUMENT transect_plot_points, line, data, mode=, how=, win=, xfma=, msize=,
    marker=, connect=
 
@@ -154,9 +154,14 @@ marker=, connect=, scolor=) {
         scolor="black"            Start with black (default)
 
   GLOBAL variable
-    trans_ave :  Sets the size of a moving_average used to plot the line when
+    trans_ave : Sets the size of a moving_average used to plot the line when
     connect=1.  If this value is zero or not set, the normal line connect will
     be used. If set, this value must be odd and positive.
+
+    trans_min : Sets the minimum value to plot on the transect if cmin is not used.
+    trans_max : Sets the maximum value to plot on the transect if cmax is not used.
+    The two above values can be used where values other than the colorbar are
+    desired when using the CBar toggle in the Transect Tool.
 */
   // Break the data up into segments
   segs = split_data(data, how);
@@ -182,6 +187,16 @@ marker=, connect=, scolor=) {
     color = colors(i % ncolors);
     seg = segs(noop(i));
     data2xyz, seg, x, y, z, mode=mode;
+    // Setting cmin/cmax on the cmdline or using the CBar toggle in
+    // the Transect Tool overrides trans_min/trans_max
+    default, trans_min, -9999.;
+    default, trans_max, 99999.;
+    default, cmin, trans_min;
+    default, cmax, trans_max;
+    cbar=where (z<=cmax & z>=cmin );
+    x=x(cbar);
+    y=y(cbar);
+    z=z(cbar);
     project_points_to_line, line, x, y, rx, ry;
 
     if(numberof(how))
@@ -239,7 +254,7 @@ marker=, connect=, scolor=) {
 
 func transect(data, line=, recall=, segment=, rcf_buf=, rcf_fw=, iwin=, owin=,
 width=, connect=, xfma=, mode=, msize=, marker=, scolor=, plot=, showline=,
-showpts=) {
+showpts=, cmin=, cmax=) {
 /* DOCUMENT transect(data, line=, recall=, segment=, rcf_buf=, rcf_fw=, iwin=,
    owin=, width=, connect=, xfma=, mode=, msize=, marker=, scolor=, plot=,
    showline=, showpts=)
@@ -371,7 +386,8 @@ showpts=) {
 
   if(plot)
     transect_plot_points, line, data, mode=mode, how=segment, win=owin,
-      xfma=xfma, msize=msize, marker=marker, scolor=scolor, connect=connect;
+      xfma=xfma, msize=msize, marker=marker, scolor=scolor, connect=connect,
+      cmin=cmin, cmax=cmax;
 
   // plot the actual points selected onto the input window
   if(showpts) {
