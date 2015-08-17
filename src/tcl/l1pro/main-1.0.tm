@@ -128,8 +128,9 @@ proc ::l1pro::main::panel_plot w {
             -textvariable ::win_no
     ::mixin::padlock $f.winlock \
             -variable ::constant_win_no
+
     ttk::label $f.modelbl -text "Mode:"
-    ::mixin::combobox $f.mode -width 4 \
+    ::mixin::combobox $f.mode -width 4 -state readonly \
             -listvariable ::alps_data_modes \
             -textvariable ::plot_settings(display_mode)
     ::misc::tooltip $f.modelbl $f.mode -wrap single $::alps_data_modes_tooltip
