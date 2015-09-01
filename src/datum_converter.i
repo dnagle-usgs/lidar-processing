@@ -94,32 +94,37 @@ dst_geoid=, verbose=) {
     }
   }
 
-  local data_out;
-  if(am_subroutine()) {
-    eq_nocopy, data_out, data_in;
-    data_in = [];
-  } else {
-    data_out = data_in;
-  }
+  data_out = data_in;
 
-  defns = h_new(
-    "First Return", h_new(e="east", n="north", z="elevation"),
-    "Mirror", h_new(e="meast", n="mnorth", z="melevation"),
-    "Last Return", h_new(e="least", n="lnorth", z="lelv")
+  defns = save(
+    "meast/mnorth/melevation", save(e="meast", n="mnorth", z="melevation"),
+    "least/lnorth/lelev", save(e="least", n="lnorth", z="lelv"),
+    "east/north/elevation", save(e="east", n="north", z="elevation"),
+    "feast/fnorth/elevation", save(e="feast", n="fnorth", z="elevation")
   );
-  order = ["Mirror", "First Return", "Last Return"];
 
-  for(i = 1; i <= numberof(order); i++) {
-    cur = defns(order(i));
+  for(i = 1; i <= defns(*); i++) {
+    cur = defns(noop(i));
     if(
       has_member(data_out, cur.e) && has_member(data_out, cur.n) &&
       has_member(data_out, cur.z)
     ) {
       if(verbose)
-        write, format="Converting %s:\n  ", order(i);
-      north = get_member(data_out, cur.n)/100.;
-      east = get_member(data_out, cur.e)/100.;
-      height = get_member(data_out, cur.z);
+        write, format="Converting %s:\n  ", defns(*,i);
+
+      north = get_member(data_in, cur.n);
+      east = get_member(data_in, cur.e);
+      height = get_member(data_in, cur.z);
+
+      if(noneof(north)) continue;
+      if(noneof(east)) continue;
+
+      n_int = is_integer(north);
+      e_int = is_integer(east);
+      h_int = is_integer(height);
+
+      if(n_int) north /= 100.;
+      if(e_int) east /= 100.;
 
       if(is_pointer(height)) {
         for(j = 1; j <= numberof(height); j++) {
@@ -139,7 +144,8 @@ dst_geoid=, verbose=) {
           height(i) = &(long(cheight * 100 + 0.5));
         }
       } else {
-        height /= 100.;
+        if(h_int) height /= 100.;
+
         w = where(north == 0);
         datum_convert_utm, north, east, height, zone=zone,
           src_datum=src_datum, src_geoid=src_geoid, dst_datum=dst_datum,
@@ -148,11 +154,15 @@ dst_geoid=, verbose=) {
           north(w) = east(w) = height(w) = 0;
         if(verbose)
           write, format="%s", "\n";
-        height = long(height * 100 + 0.5);
+
+        if(h_int) height = long(height * 100 + 0.5);
       }
 
-      get_member(data_out, cur.n) = long(north * 100 + 0.5);
-      get_member(data_out, cur.e) = long(east * 100 + 0.5);
+      if(n_int) north = long(north * 100 + .5);
+      if(e_int) east = long(east * 100 + .5);
+
+      get_member(data_out, cur.n) = north;
+      get_member(data_out, cur.e) = east;
       get_member(data_out, cur.z) = height;
     }
   }
