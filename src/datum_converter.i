@@ -100,7 +100,11 @@ dst_geoid=, verbose=) {
     "meast/mnorth/melevation", save(e="meast", n="mnorth", z="melevation"),
     "least/lnorth/lelev", save(e="least", n="lnorth", z="lelv"),
     "east/north/elevation", save(e="east", n="north", z="elevation"),
-    "feast/fnorth/elevation", save(e="feast", n="fnorth", z="elevation")
+    "feast/fnorth/elevation", save(e="feast", n="fnorth", z="elevation"),
+    "mx/my/mz", save(e="mx", n="my", z="mz"),
+    "fx/fy/fz", save(e="fx", n="fy", z="fz"),
+    "lx/ly/lz", save(e="lx", n="ly", z="lz"),
+    "x/y/z", save(e="x", n="y", z="z")
   );
 
   for(i = 1; i <= defns(*); i++) {
