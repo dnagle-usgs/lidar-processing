@@ -64,7 +64,7 @@ func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, plot=, _batch=) {
   shp = region_to_shp(shp, ll=1);
   q = points_in_shp(shp, pnav.lon, pnav.lat);
 
-  if(is_void(q)) {
+  if(!numberof(q)) {
     if(verbose) write, "No GGA records found, aborting";
     window_select, wbkp;
     return [];
