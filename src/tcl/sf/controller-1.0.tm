@@ -187,7 +187,7 @@ snit::type ::sf::controller {
     method {jump sod} sod {
         set soe [$gui cget -soe]
         set old_sod [::misc::soe to sod $soe]
-        incr soe [expr {$sod - $old_sod}]
+        set soe [expr {$soe + $sod - $old_sod}]
         $self jump soe $soe
     }
 
