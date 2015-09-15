@@ -28,7 +28,10 @@ if {![info exists l1pro_data]} {
       - de (Water Depth)
       - ch (Canopy Height)
       - fint (Intensity for first return)
-      - lint (Intensity for last return/bottom)"
+      - lint (Intensity for last return/bottom)
+
+      Other modes are valid as well. Any field of a struct may be specified to
+      use it for the z value."
 
   set l1pro_data(mode_mapping) [lrange {
     "First Return Topography"  fs
