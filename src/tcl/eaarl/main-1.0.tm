@@ -85,12 +85,6 @@ proc ::eaarl::main::gui {} {
     ttk::checkbutton $f.interactive_batch \
             -text "Batch mode" \
             -variable ::eaarl::interactive_batch
-    ::mixin::statevar $f.interactive_batch \
-            -statedefault disabled \
-            -statemap {f normal b normal v normal sb normal mp normal cf normal } \
-            -statevariable ::eaarl::processing_mode
-    ::misc::tooltip $f.interactive_batch \
-            "Batch mode is only available for new test processing modes."
 
     ttk::label $f.winlbl -text "Win:"
     ttk::spinbox $f.win -from 0 -to 63 -increment 1 \
