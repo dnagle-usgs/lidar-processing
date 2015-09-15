@@ -297,4 +297,8 @@ proc ::eaarl::processing::process {} {
 
     append cmd ")"
     exp_send "$cmd;\r"
+
+    if {$processing_mode ni $::eaarl::alps_processing_modes} {
+        lappend ::eaarl::alps_processing_modes $processing_mode
+    }
 }

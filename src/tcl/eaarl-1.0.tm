@@ -34,6 +34,17 @@ namespace eval ::eaarl {
       variable channel_list {}
    }
 
+   variable alps_processing_modes {f b v sb}
+   variable alps_processing_modes_tooltip \
+      "The core ALPS processing modes are:
+      - f (First Return Topo)
+      - b (Submerged Topo)
+      - v (Topo Under Veg)
+      - sb (Shallow Bathy)
+
+      Other modes (such as experimental or custom ones) can be manually
+      specified as well."
+
    variable process_mapping {
       "First Return Topo"  f
       "Submerged Topo"     b

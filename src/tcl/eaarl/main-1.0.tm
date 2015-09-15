@@ -75,12 +75,13 @@ proc ::eaarl::main::gui {} {
             Points less than this distance from the mirror will be discarded as
             invalid points."
 
-    ttk::label $f.modelbl -text "Process for:"
+    ttk::label $f.modelbl -text "Process mode:"
     ::mixin::combobox::mapping $f.mode \
-            -state readonly \
             -width 16 \
-            -altvariable ::eaarl::processing_mode \
-            -mapping $::eaarl::process_mapping
+            -listvariable ::eaarl::alps_processing_modes \
+            -textvariable ::eaarl::processing_mode
+    ::misc::tooltip $f.modelbl $f.mode -wrap single \
+            $::eaarl::alps_processing_modes_tooltip
 
     ttk::checkbutton $f.interactive_batch \
             -text "Batch mode" \
