@@ -265,16 +265,21 @@ proc ::eaarl::processing::process {} {
     variable ::eaarl::ext_bad_att
     variable ::eaarl::interactive_batch
 
-    array set modelist [ list \
-        {f}  {fs} \
-        {v}  {be} \
-        {b}  {ba} \
+    array set modelist [list \
+        {f} {fs} \
+        {v} {be} \
+        {b} {ba} \
         {sb} {ba} \
         {mp} {fs} \
         {cf} {be} \
     ]
 
-    append_varlist $pro_var_next $modelist($processing_mode)
+    set datamode {}
+    if {[info exists $modelist($processing_mode)]} {
+        set datamode $modelist($processing_mode)
+    }
+
+    append_varlist $pro_var_next $datamode
     set ::pro_var $pro_var_next
 
     set make_eaarl "make_eaarl"
