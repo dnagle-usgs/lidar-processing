@@ -351,3 +351,88 @@ func eaarl_fs_spacing(channel, &scan_angles, &lasang) {
     }
   }
 }
+
+func eaarl_fs_plot(raster, pulse, channel=, win=, xfma=) {
+/* DOCUMENT eaarl_fs_plot, raster, pulse, channel=, win=, xfma=
+  Executes the fs algorithm for a single pulse and plots the result.
+
+  The plot will consist of the following elements:
+    - The waveform will be plotted in black
+    - Each sample will be marked by a small black square
+    - The location of the first surface will be marked by a vertical dotted
+      blue line from 0 to the waveform's height as well as by a blue triangle
+      above the waveform at the appropriate location
+
+  The found surface, frx, will also be displayed on the console.
+
+  Parameters:
+    raster - Raster number to use.
+    pulse - Pulse number to use.
+  Options:
+    channel= Channel to use. Default of 0 means to auto-select, appropriate for
+      EAARL-A. For EAARL-B, channel must be specified.
+    win= Window to plot in. Defaults to 23.
+    xfma= Whether to clear plot first. Defaults to 1.
+*/
+  default, channel, 0;
+  default, win, 23;
+  default, xfma, 1;
+
+  // Set up default functions
+  fs_tx = eaarl_fs_tx_cent;
+  fs_traj = eaarl_fs_trajectory;
+  if(channel(1)) {
+    fs_rx = eaarl_fs_rx_cent_eaarlb;
+    fs_spacing = eaarl_fs_spacing;
+  } else {
+    fs_rx = eaarl_fs_rx_cent_eaarla;
+    fs_spacing = noop;
+  }
+
+  // Allow core functions to be overridden via hook
+  restore, hook_invoke("process_fs_funcs",
+    save(fs_tx, fs_rx, fs_traj, fs_spacing));
+
+  wbkp = current_window();
+  window, win;
+
+  pulses = decode_rasters(raster, raster);
+  w = where(pulses.pulse == pulse);
+  if(!numberof(w)) {
+    write, format=" raster %d does not contain pulse %d\n",
+      raster, pulse;
+    window_select, wbkp;
+  }
+  pulses = obj_index(pulses, w(1));
+  save, pulses, channel=channel;
+
+  if(xfma) fma;
+
+  fs_rx, pulses;
+  // fs_rx may created added fields as arrays of one
+  save, pulses, frx=pulses.frx(1), fchannel=pulses.fchannel(1);
+
+  wf = ~(*pulses.rx(pulses.fchannel));
+  wf -= wf(1);
+
+  xaxis = indgen(numberof(wf));
+  plmk, wf, xaxis, color="black", msize=.2, marker=1;
+  plg, wf, xaxis, color="black";
+  marker = [[0,-.5,.5],[0,.866,.866]+.25];
+
+  // frx is floating point, need to interpolate values
+  wfi = interp(wf, xaxis, pulses.frx);
+  plmk, wfi, pulses.frx, marker=marker, msize=.01,
+    color="blue", width=1;
+  plvline, pulses.frx, 0, wfi, color="blue", type="dot";
+
+  write, format=" first surface analysis for raster %d, pulse %d, channel %d\n",
+    long(raster), long(pulse), long(pulses.fchannel);
+  write, format="   frx=%.2f\n", double(pulses.frx);
+
+  pltitle, swrite(format="fs - rn:%d pulse:%d chan:%d",
+    long(raster), long(pulse), long(pulses.fchannel));
+  xytitles, "Sample Number", "Sample Counts (Relative Intensity)";
+
+  window_select, wbkp;
+}
