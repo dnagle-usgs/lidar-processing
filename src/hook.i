@@ -82,6 +82,7 @@ func hook_remove(hooks, hook_name, func_name) {
   // If the func name is not among the hooks for this hook name, then there's
   // nothing to remove.
   tmp = hooks(noop(hook_name));
+  if(is_void(tmp)) return;
   if(noneof(tmp.func_name == func_name)) return;
 
   // If the func name is among the hooks but there's only one hook, then the
