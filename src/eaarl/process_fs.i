@@ -357,7 +357,9 @@ func eaarl_fs_plot(raster, pulse, channel=, win=, xfma=, color=) {
   Executes the fs algorithm for a single pulse and plots the result.
 
   The plot will consist of the following elements:
-    - The waveform will be plotted in black
+    - The waveform will be plotted in black. The first 12 samples will have a
+      solid line, the remaining samples will be dotted. (Only the first 12 are
+      used in analysis.)
     - Each sample will be marked by a small black square
     - The location of the first surface will be marked by a vertical dotted
       blue line from 0 to the waveform's height as well as by a blue triangle
@@ -419,11 +421,15 @@ func eaarl_fs_plot(raster, pulse, channel=, win=, xfma=, color=) {
 
   xaxis = indgen(numberof(wf));
   plmk, wf, xaxis, color="black", msize=.2, marker=1;
-  plg, wf, xaxis, color="black";
-  marker = [[0,-.5,.5],[0,.866,.866]+.25];
+  if(numberof(wf) > 12)
+    plg, wf(12:), xaxis(12:), color="black", type="dot"
+  lim = min(12, numberof(wf));
+  plg, wf(:lim), xaxis(:lim), color="black";
+  lim = [];
 
   // frx is floating point, need to interpolate values
   wfi = interp(wf, xaxis, pulses.frx);
+  marker = [[0,-.5,.5],[0,.866,.866]+.25];
   plmk, wfi, pulses.frx, marker=marker, msize=.01,
     color=color, width=1;
   plvline, pulses.frx, 0, wfi, color=color, type="dot";
