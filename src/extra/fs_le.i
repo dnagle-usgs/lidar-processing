@@ -11,11 +11,11 @@
 // waveform is 450 samples. If a waveform is saturated, then 20 * number of
 // saturated pixels is added to intensity. Max intensity is normally 255. 255 +
 // 450 * 20 = 9255. This makes 10000 a safe sentinel value.)
-fs_le_thresh_cent = 15;
+default, fs_le_thresh_cent, 15;
 
 // For leading edge, the first derivative has to exceed this threshold to be
 // detected as a leading edge. This should always be >= 1.
-fs_le_thresh_deriv = 1;
+default, fs_le_thresh_deriv, 1;
 
 hook_add, "jobs_env_wrap", "hook_jobs_fs_le";
 
