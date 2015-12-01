@@ -412,7 +412,7 @@ func eaarl_fs_plot(raster, pulse, channel=, win=, xfma=) {
   // fs_rx may created added fields as arrays of one
   save, pulses, frx=pulses.frx(1), fchannel=pulses.fchannel(1);
 
-  wf = ~(*pulses.rx(pulses.fchannel));
+  wf = long(~(*pulses.rx(pulses.fchannel)));
   wf -= wf(1);
 
   xaxis = indgen(numberof(wf));
