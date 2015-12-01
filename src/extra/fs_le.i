@@ -97,8 +97,10 @@ func eaarl_fs_le(action) {
   } else if(action == "status") {
     hooks = hook_query("process_fs_funcs");
     if(anyof(hooks == "hook_eaarl_fs_le")) {
+      if(!am_subroutine()) return 1;
       write, "fs processing currently IS using leading edge hacks";
     } else {
+      if(!am_subroutine()) return 0;
       write, "fs processing currently IS NOT using leading edge hacks";
     }
   } else {
