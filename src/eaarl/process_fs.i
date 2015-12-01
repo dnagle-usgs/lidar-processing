@@ -352,7 +352,7 @@ func eaarl_fs_spacing(channel, &scan_angles, &lasang) {
   }
 }
 
-func eaarl_fs_plot(raster, pulse, channel=, win=, xfma=) {
+func eaarl_fs_plot(raster, pulse, channel=, win=, xfma=, color=) {
 /* DOCUMENT eaarl_fs_plot, raster, pulse, channel=, win=, xfma=
   Executes the fs algorithm for a single pulse and plots the result.
 
@@ -373,10 +373,12 @@ func eaarl_fs_plot(raster, pulse, channel=, win=, xfma=) {
       EAARL-A. For EAARL-B, channel must be specified.
     win= Window to plot in. Defaults to 23.
     xfma= Whether to clear plot first. Defaults to 1.
+    color= Color to use to mark the peak found. Defaults to "blue".
 */
   default, channel, 0;
   default, win, 23;
   default, xfma, 1;
+  default, color, "blue";
 
   // Set up default functions
   fs_tx = eaarl_fs_tx_cent;
@@ -423,8 +425,8 @@ func eaarl_fs_plot(raster, pulse, channel=, win=, xfma=) {
   // frx is floating point, need to interpolate values
   wfi = interp(wf, xaxis, pulses.frx);
   plmk, wfi, pulses.frx, marker=marker, msize=.01,
-    color="blue", width=1;
-  plvline, pulses.frx, 0, wfi, color="blue", type="dot";
+    color=color, width=1;
+  plvline, pulses.frx, 0, wfi, color=color, type="dot";
 
   write, format=" first surface analysis for raster %d, pulse %d, channel %d\n",
     long(raster), long(pulse), long(pulses.fchannel);
