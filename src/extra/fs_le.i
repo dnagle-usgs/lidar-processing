@@ -107,3 +107,21 @@ func eaarl_fs_le(action) {
     write, "Invalid parameter given. Can be invoked only in these ways:\n   eaarl_fs_le, \"enable\";\n   eaarl_fs_le, \"disable\";\n   eaarl_fs_le, \"status\";";
   }
 }
+
+func eaarl_fs_plot_le(raster, pulse, channel=, win=) {
+/* DOCUMENT eaarl_fs_plot_le, raster, pulse, channel=, win=
+  Plots the FS result both with and without the fs_le hacks. Without is in
+  blue, with is in red. (If only red is visible, that means they agreed.)
+
+  Wraps around eaarl_fs_plot; see that for parameter details.
+*/
+  enabled = eaarl_fs_le("status");
+
+  eaarl_fs_le, "disable";
+  eaarl_fs_plot, raster, pulse, channel=channel, win=win, xfma=1, color="blue";
+
+  eaarl_fs_le, "enable";
+  eaarl_fs_plot, raster, pulse, channel=channel, win=win, xfma=0, color="red";
+
+  if(!enabled) eaarl_fs_le, "disable";
+}
