@@ -1,8 +1,8 @@
-// This set of hacks is intended to support exploration of whether the leading
+// This set of hacks is intended to support exploration of whether a leading
 // edge tracker can usefully supplement the centroid algorithm for first
 // returns.
 
-// This uses two global constants, because it's a hack
+// This uses a bunch of global constants, because it's a hack...
 
 // If the maximum intensity value of the first 12 samples is greater than this
 // threshold, centroid is used. If it's less than or equal to this threshold,
@@ -17,6 +17,17 @@ default, fs_le_thresh_cent, 15;
 // detected as a leading edge. This should always be >= 1.
 default, fs_le_thresh_deriv, 1;
 
+// How many samples afer the leading edge should be summed? This should always
+// be >= 1.
+default, fs_le_samples_sum, 3;
+
+// What threshold should be used for the intensity sum? The sample sum must
+// exceed this value to be considered valid.
+default, fs_le_intensity_sum_thresh, 8;
+
+// Enable debugging output
+default, fs_le_debug, 0;
+
 hook_add, "jobs_env_wrap", "hook_jobs_fs_le";
 
 func hook_jobs_fs_le(thisfile, env) {
@@ -24,7 +35,8 @@ func hook_jobs_fs_le(thisfile, env) {
   includes = env.env.includes;
   grow, includes, thisfile;
   save, env.env, includes;
-  save, env.env.vars, fs_le_thresh_cent, fs_le_thresh_deriv;
+  save, env.env.vars, fs_le_thresh_cent, fs_le_thresh_deriv,
+    fs_le_samples_sum, fs_le_intensity_sum_thresh;
   return env;
 }
 hook_jobs_fs_le = closure(hook_jobs_fs_le, current_include());
@@ -45,34 +57,58 @@ func eaarl_fs_rx_channel_le(pulses) {
   fintensity = pulses(*,"fintensity") ? pulses.fintensity : pulses.fint;
   w = where(fintensity <= fs_le_thresh_cent & fintensity > 0);
   nw = numberof(w);
+  if(fs_le_debug) {
+    write, format="FS_LE: %d of %d points fail centroid\n",
+      numberof(w), numberof(frx);
+  }
   if(!nw) return;
 
   for(i = 1; i <= nw; i++) {
     j = w(i);
+    if(fs_le_debug) {
+      write, format="FS_LE: raster %d pulse %d channel %d\n",
+        pulses.raster(j), pulses.pulse(j), pulses.fchannel(j);
+    }
 
     // Retrieve wf, flip and remove bias
     rx = *pulses.rx(pulses.fchannel(j),j);
     wf = short(~rx);
     wf -= wf(1);
 
-    // Truncate to 12
-    np = min(numberof(wf),12);
-    wf = wf(:np);
-
     // First derivative
     wfd1 = wf(dif);
 
-    // Starts of leading edges where first derivative exceeds the threshold
-    edges = where((wfd1 >= fs_le_thresh_deriv)(dif) == 1);
+    // Truncate first deriviative to first 12 samples
+    if(numberof(wfd1) > 11) wfd1 = wfd1(:11);
 
+    // Starts of leading edges where first derivative exceeds the threshold
+    exceeds = (wfd1 >= fs_le_thresh_deriv);
+    edges = where(exceeds(dif) == 1);
+    if(numberof(edges))
+      edges++;
+    else
+      edges = [];
+    if(exceeds(1)) edges = grow([1], edges);
+
+    if(fs_le_debug)
+      write, format="FS_LE:   found %d leading edges\n", numberof(edges);
     if(!numberof(edges)) continue;
 
-    // Pick first leading edge and find its peak
-    start = edges(1)+1;
-    stop = numberof(edges) > 1 ? edges(2) : np-1;
-    wneg = where(wfd1(start:stop) < 0);
-    if(numberof(wneg)) {
-      frx(j) = edges(1) + wneg(1);
+    // Iterate over the leading edges and find the first that has a sufficient
+    // level of energy following it
+    for(j = 1; j <= numberof(edges); j++) {
+      le = edges(j);
+      lesum = wf(le+1:le+fs_le_samples_sum)(sum);
+      if(fs_le_debug) {
+        write, format="FS_LE:   edge %d at sample %d; sum %d\n",
+          j, le, lesum;
+      }
+      if(lesum > fs_le_intensity_sum_thresh) {
+        frx(j) = le;
+        if(fs_le_debug)
+          write, format="FS_LE:     ^^ passed threshold, updated surface%s", "\n";
+        break;
+      }
     }
   }
 
