@@ -98,7 +98,16 @@ func eaarl_fs_rx_channel_le(pulses) {
     // level of energy following it
     for(k = 1; k <= numberof(edges); k++) {
       le = edges(k);
-      lesum = wf(le+1:le+fs_le_samples_sum)(sum);
+      start = le+1;
+      stop = le+fs_le_samples_sum;
+      if(stop > numberof(wf)) {
+        if(fs_le_debug) {
+          write, format="FS_LE:   edge %d at sample %d: aborting, wf too short\n",
+            k, le;
+        }
+        break;
+      }
+      lesum = wf(start:stop)(sum);
       if(fs_le_debug) {
         write, format="FS_LE:   edge %d at sample %d; sum %d\n",
           k, le, lesum;
