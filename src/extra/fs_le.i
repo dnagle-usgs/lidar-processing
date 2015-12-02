@@ -96,12 +96,12 @@ func eaarl_fs_rx_channel_le(pulses) {
 
     // Iterate over the leading edges and find the first that has a sufficient
     // level of energy following it
-    for(j = 1; j <= numberof(edges); j++) {
-      le = edges(j);
+    for(k = 1; k <= numberof(edges); k++) {
+      le = edges(k);
       lesum = wf(le+1:le+fs_le_samples_sum)(sum);
       if(fs_le_debug) {
         write, format="FS_LE:   edge %d at sample %d; sum %d\n",
-          j, le, lesum;
+          k, le, lesum;
       }
       if(lesum > fs_le_intensity_sum_thresh) {
         frx(j) = le;
