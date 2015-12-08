@@ -56,6 +56,10 @@ func eaarl_fs_rx_channel_le(pulses) {
   frx = pulses.frx;
   fintensity = pulses(*,"fintensity") ? pulses.fintensity : pulses.fint;
   w = where(fintensity <= fs_le_thresh_cent & fintensity > 0);
+
+  // Hack: Flip the intensity to negative to designated it as a centroid return
+  fintensity = min(0, -fintensity);
+
   nw = numberof(w);
   if(fs_le_debug >= 2) {
     write, format="FS_LE: %d of %d points fail centroid\n",
@@ -116,6 +120,7 @@ func eaarl_fs_rx_channel_le(pulses) {
       if(lesum > fs_le_intensity_sum_thresh) {
         updated++;
         frx(j) = le;
+        fintensity(j) = lesum;
         if(fs_le_debug >= 2)
           write, format="FS_LE:     ^^ passed threshold, updated surface%s", "\n";
         break;
@@ -129,6 +134,11 @@ func eaarl_fs_rx_channel_le(pulses) {
   }
 
   save, pulses, frx;
+  if(pulses(*,"fintensity")) {
+    save, pulses, fintensity;
+  } else {
+    save, pulses, fint=fintensity;
+  }
 }
 
 func eaarl_fs_le(action) {
