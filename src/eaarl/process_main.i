@@ -15,23 +15,43 @@ local eaarl_processing_modes;
     "mp" - multipeak processing
     "cf" - curve fitting processing
 */
+/* In addition to the above, there are some "secret" debug processing modes.
+   Using f_dyn, b_dyn, v_dyn, or sb_dyn will provide a dynamic struct output
+   with all fields, but is otherwise the same as f, b, v, and sb.
+*/
 if(is_void(eaarl_processing_modes)) eaarl_processing_modes = save();
 save, eaarl_processing_modes,
   f=save(
     process="process_fs",
     cast="fs_struct_from_obj"
   ),
+  f_dyn=save(
+    process="process_fs",
+    cast="processed_obj2dyn_dual"
+  ),
   b=save(
     process="process_ba",
     cast="ba_struct_from_obj"
+  ),
+  b_dyn=save(
+    process="process_ba",
+    cast="processed_obj2dyn_dual"
   ),
   v=save(
     process="process_be",
     cast="be_struct_from_obj"
   ),
+  v_dyn=save(
+    process="process_be",
+    cast="processed_obj2dyn_dual"
+  ),
   sb=save(
     process="process_sb",
     cast="ba_struct_from_obj"
+  ),
+  sb_dyn=save(
+    process="process_sb",
+    cast="processed_obj2dyn_dual"
   ),
   mp=save(
     process="process_mp",
