@@ -57,15 +57,16 @@ func eaarl_fs_rx_channel_le(pulses) {
   fintensity = pulses(*,"fintensity") ? pulses.fintensity : pulses.fint;
   w = where(fintensity <= fs_le_thresh_cent & fintensity > 0);
   nw = numberof(w);
-  if(fs_le_debug) {
+  if(fs_le_debug >= 2) {
     write, format="FS_LE: %d of %d points fail centroid\n",
       numberof(w), numberof(frx);
   }
   if(!nw) return;
 
+  updated = 0;
   for(i = 1; i <= nw; i++) {
     j = w(i);
-    if(fs_le_debug) {
+    if(fs_le_debug >= 2) {
       write, format="FS_LE: raster %d pulse %d channel %d\n",
         pulses.raster(j), pulses.pulse(j), pulses.fchannel(j);
     }
@@ -90,7 +91,7 @@ func eaarl_fs_rx_channel_le(pulses) {
       edges = [];
     if(exceeds(1)) edges = grow([1], edges);
 
-    if(fs_le_debug)
+    if(fs_le_debug >= 2)
       write, format="FS_LE:   found %d leading edges\n", numberof(edges);
     if(!numberof(edges)) continue;
 
@@ -101,24 +102,30 @@ func eaarl_fs_rx_channel_le(pulses) {
       start = le+1;
       stop = le+fs_le_samples_sum;
       if(stop > numberof(wf)) {
-        if(fs_le_debug) {
+        if(fs_le_debug >= 2) {
           write, format="FS_LE:   edge %d at sample %d: aborting, wf too short\n",
             k, le;
         }
         break;
       }
       lesum = wf(start:stop)(sum);
-      if(fs_le_debug) {
+      if(fs_le_debug >= 2) {
         write, format="FS_LE:   edge %d at sample %d; sum %d\n",
           k, le, lesum;
       }
       if(lesum > fs_le_intensity_sum_thresh) {
+        updated++;
         frx(j) = le;
-        if(fs_le_debug)
+        if(fs_le_debug >= 2)
           write, format="FS_LE:     ^^ passed threshold, updated surface%s", "\n";
         break;
       }
     }
+  }
+  if(fs_le_debug) {
+    write, format="FS_LE: Summary: Looked at %d points\n", numberof(frx);
+    write, format="FS_LE: Summary:   %d failed cent thresh\n", nw;
+    write, format="FS_LE: Summary:   %d updated using le\n", updated;
   }
 
   save, pulses, frx;
