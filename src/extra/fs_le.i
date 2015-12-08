@@ -67,7 +67,7 @@ func eaarl_fs_rx_channel_le(pulses) {
   }
   if(!nw) return;
 
-  updated = 0;
+  applied_fs_le = array(char(0), numberof(frx));
   for(i = 1; i <= nw; i++) {
     j = w(i);
     if(fs_le_debug >= 2) {
@@ -118,7 +118,7 @@ func eaarl_fs_rx_channel_le(pulses) {
           k, le, lesum;
       }
       if(lesum > fs_le_intensity_sum_thresh) {
-        updated++;
+        applied_fs_le(j) = 1;
         frx(j) = le;
         fintensity(j) = lesum;
         if(fs_le_debug >= 2)
@@ -130,10 +130,11 @@ func eaarl_fs_rx_channel_le(pulses) {
   if(fs_le_debug) {
     write, format="FS_LE: Summary: Looked at %d points\n", numberof(frx);
     write, format="FS_LE: Summary:   %d failed cent thresh\n", nw;
-    write, format="FS_LE: Summary:   %d updated using le\n", updated;
+    write, format="FS_LE: Summary:   %d updated using le\n",
+      numberof(where(applied_fs_le));
   }
 
-  save, pulses, frx;
+  save, pulses, frx, applied_fs_le;
   if(pulses(*,"fintensity")) {
     save, pulses, fintensity;
   } else {
