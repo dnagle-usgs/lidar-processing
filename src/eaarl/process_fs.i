@@ -54,8 +54,6 @@ func process_fs(start, stop, ext_bad_att=, channel=, opts=) {
         fx, fy, fz
 */
   restore_if_exists, opts, start, stop, ext_bad_att, channel, opts;
-
-  local mx, my, mz, fx, fy, fz;
   default, channel, 0;
 
   if(is_void(ops_conf))
@@ -71,41 +69,14 @@ func process_fs(start, stop, ext_bad_att=, channel=, opts=) {
     error, "don't know how to handle input given for start";
   }
 
-  // Set up default functions. fs_rx is dependent on EAARL version, so it has
-  // to get set via hook.
-  fs_tx = eaarl_fs_tx_cent;
-  fs_rx = noop;
-
-  // Allow core functions to be overridden via hook
-  restore, hook_invoke("process_fs_funcs", save(fs_tx, fs_rx));
-
   // Throw away dropouts
   w = where(!pulses.dropout);
   if(!numberof(w)) return;
   if(numberof(w) < numberof(pulses.dropout))
     pulses = obj_index(pulses, w);
 
-  // Determine tx offsets; adds ftx
-  fs_tx, pulses;
-
-  result = [];
-  numchans = numberof(channel);
-  for(i = 1; i <= numchans; i++) {
-    curpulses = (i == numchans) ? pulses : obj_copy(pulses);
-    save, curpulses, channel=array(char(channel(i)), numberof(pulses.tx));
-    result = is_void(result) ? curpulses : obj_grow(result, curpulses);
-  }
-  pulses = result;
-  result = curpulses = [];
-
-  // Determine rx offsets; adds frx, fintensity, fchannel
-  fs_rx, pulses;
-  if(!pulses(*,"frx")) error, "fs_rx failed";
-
-  // 2014-08-29 Compatibility: calps versions still uses fint instead of
-  // fintensity
-  if(pulses(*,"fint") && !pulses(*,"fintensity"))
-    save, pulses, fintensity=obj_pop(pulses, "fint");
+  // Adds ftx, frx, fintensity, fchannel, fbias
+  eaarl_fs_ftx_frx, pulses, channel;
 
   // Throw away bogus returns
   // 10000 is the bogus return value
@@ -130,6 +101,43 @@ func process_fs(start, stop, ext_bad_att=, channel=, opts=) {
   }
 
   return pulses;
+}
+
+func eaarl_fs_ftx_frx(&pulses, channel) {
+/* DOCUMENT eaarl_fs_ftx_frx, pulses, channel
+  Given a pulses object as returned by eaarl_decode_fast, this adds fields via
+  fs_tx and fs_rx. This may increase the size of the arrays in pulses if
+  multiple channels are desired.
+*/
+  // Set up default functions. fs_rx is dependent on EAARL version, so it has
+  // to get set via hook.
+  fs_tx = eaarl_fs_tx_cent;
+  fs_rx = noop;
+
+  // Allow core functions to be overridden via hook
+  restore, hook_invoke("process_fs_funcs", save(fs_tx, fs_rx));
+
+  // Determine tx offsets; adds ftx
+  fs_tx, pulses;
+
+  result = [];
+  numchans = numberof(channel);
+  for(i = 1; i <= numchans; i++) {
+    curpulses = (i == numchans) ? pulses : obj_copy(pulses);
+    save, curpulses, channel=array(char(channel(i)), numberof(pulses.tx));
+    result = is_void(result) ? curpulses : obj_grow(result, curpulses);
+  }
+  pulses = result;
+  result = curpulses = [];
+
+  // Determine rx offsets; adds frx, fintensity, fchannel
+  fs_rx, pulses;
+  if(!pulses(*,"frx")) error, "fs_rx failed";
+
+  // 2014-08-29 Compatibility: calps versions still uses fint instead of
+  // fintensity
+  if(pulses(*,"fint") && !pulses(*,"fintensity"))
+    save, pulses, fintensity=obj_pop(pulses, "fint");
 }
 
 func eaarl_fs_vector(pulses) {
