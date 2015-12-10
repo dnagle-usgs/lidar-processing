@@ -68,11 +68,15 @@ func process_be(start, stop, ext_bad_att=, channel=, opts=) {
     be_rx = eaarl_be_rx_eaarla;
   }
 
+  pro_f = eaarl_processing_modes.f.process;
+
   // Allow core functions to be overridden via hook
-  restore, hook_invoke("process_be_funcs", save(be_tx, be_rx));
+  restore, hook_invoke("process_be_funcs", save(pro_f, be_tx, be_rx));
+
+  if(is_string(pro_f)) pro_f = symbol_def(pro_f);
 
   // Start out by processing for first surface
-  pulses = process_fs(start, stop, ext_bad_att=ext_bad_att, channel=channel);
+  pulses = pro_f(start, stop, ext_bad_att=ext_bad_att, channel=channel);
   if(is_void(pulses)) return;
 
   // Throw away any pulses that are equal to or above the mirror
