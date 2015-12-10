@@ -275,7 +275,7 @@ proc ::eaarl::processing::process {} {
     ]
 
     set datamode {}
-    if {[info exists $modelist($processing_mode)]} {
+    if {[info exists modelist($processing_mode)]} {
         set datamode $modelist($processing_mode)
     }
 
