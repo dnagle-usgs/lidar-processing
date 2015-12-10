@@ -27,12 +27,44 @@ func hook_jobs_f_flat(thisfile, env) {
 hook_jobs_f_flat = closure(hook_jobs_f_flat, current_include());
 
 func process_f_flat(start, stop, ext_bad_att=, channel=, opts=) {
-  sample_interval = 1.0;
+  restore_if_exists, opts, start, stop, ext_bad_att, channel, opts;
+  default, channel, 0;
 
-  pulses = process_fs(start, stop, ext_bad_att=ext_bad_att, channel=channel,
-    opts=opts);
+  if(is_void(ops_conf))
+    error, "ops_conf is not set";
 
-  if(!is_obj(pulses) || !numberof(pulses.fx)) return [];
+  // Retrieve rasters
+  if(is_integer(start)) {
+    default, stop, start;
+    pulses = decode_rasters(start, stop);
+  } else if(is_obj(start)) {
+    pulses = start;
+  } else {
+    error, "don't know how to handle input given for start";
+  }
+
+  // Throw away dropouts
+  w = where(!pulses.dropout);
+  if(!numberof(w)) return;
+  if(numberof(w) < numberof(pulses.dropout))
+    pulses = obj_index(pulses, w);
+
+  // Adds ftx, frx, fintensity, fchannel, fbias
+  eaarl_fs_ftx_frx, pulses, channel;
+
+  // process_fs throws away bogus returns (frx=10000) at this point. They are
+  // left in here so that they can be updated later with a synthetic surface.
+
+  // Add fs_slant_range, fx, fy, fz, mx, my, mz
+  eaarl_fs_vector, pulses;
+
+  // Get rid of points with no slant range (that indicates no trajectory was
+  // available)
+  w = where(pulses.fs_slant_range);
+  if(!numberof(w)) return;
+  pulses = obj_index(pulses, w);
+
+  // Now replace surfaces with synthetic ones...
 
   // Calculate angle of incidence
   aoi = angle_of_incidence(pulses.fx, pulses.fy, pulses.fz,
@@ -60,6 +92,11 @@ func process_f_flat(start, stop, ext_bad_att=, channel=, opts=) {
       wr = wu;
     }
 
+    // Reduce wr to those points with valid frx...
+    w = where(pulses.frx(wr) != 10000);
+    if(!numberof(w)) continue;
+    wr = wr(w);
+
     // Reduce wr to those points with aoi <= aoi_max
     w = where(aoi(wr) <= f_flat_aoi_max);
     // Make sure we have enough sample points
@@ -72,29 +109,22 @@ func process_f_flat(start, stop, ext_bad_att=, channel=, opts=) {
     else
       fz = pulses.fz(wr)(avg);
 
-    // For each point, calculate a new value for frx, fx, fy, and fs_slant_range
-    // z-distance between mirror and new surface, and ratio of new/old
-    dz = pulses.mz(wu) - fz;
-    ratio = dz / (pulses.mz(wu) - pulses.fz(wu));
-    // Corresponding x- and y-distances
-    dx = (pulses.mx(wu) - pulses.fx(wu)) * ratio;
-    dy = (pulses.my(wu) - pulses.fy(wu)) * ratio;
-    // Corresponding points
-    fx = pulses.mx(wu) - dx;
-    fy = pulses.my(wu) - dy;
-    // Calculate new slant range
-    fs_slant_range = (dx*dx + dy*dy + dz*dz)^0.5;
-    // Change in slant range
-    dslant = pulses.fs_slant_range(wu) - fs_slant_range;
-    // Update frx
-    frx = pulses.frx(wu) - (dslant/NS2MAIR/sample_interval);
+    // Calculate how much the elevation changed
+    dz = pulses.fz(wu) - fz;
+    // Now use that to calculate the change in slant range
+    dsr = pulses.fs_slant_range(wu) * dz / (pulses.mz(wu) - pulses.fz(wu));
+    // Now convert that to ns and update frx
+    pulses.frx(wu) = pulses.frx(wu) + dsr/NS2MAIR;
+  }
 
-    // Store changed values
-    pulses.fx(wu) = fx;
-    pulses.fy(wu) = fy;
-    pulses.fz(wu) = fz;
-    pulses.frx(wu) = frx;
-    pulses.fs_slant_range(wu) = fs_slant_range;
+  // Now call eaarl_fs_vector again to update values based on the new frx
+  eaarl_fs_vector, pulses;
+
+  // Get rid of points where mirror and surface are within ext_bad_att meters
+  if(ext_bad_att) {
+    w = where(pulses.mz - pulses.fz >= ext_bad_att);
+    if(!numberof(w)) return;
+    pulses = obj_index(pulses, w);
   }
 
   return pulses;
