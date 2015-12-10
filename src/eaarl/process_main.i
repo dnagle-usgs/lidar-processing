@@ -845,6 +845,10 @@ func hook_prep_job_eaarl_process(env) {
       // Saved separately
       obj_delete, wrapped, "tans", "iex_nav";
 
+      // Include processing modes
+      save, wrapped, eaarl_processing_modes_data=
+        serialize(eaarl_processing_modes);
+
       mkdirp, path;
       corefn = file_join(path, "core.flight");
       obj2pbd, wrapped, corefn;
@@ -884,12 +888,17 @@ func hook_run_job_eaarl_process(env) {
   This is intended to be used as a hook on "job_run" for the job
   "job_eaarl_process". It restores the mission configuration for the job.
 */
+  extern eaarl_processing_modes;
   if(env.job_func != "job_eaarl_process" || !env.conf(*,"flightfn"))
     return env;
 
   wrapped = save();
   for(i = 1; i <= numberof(env.conf.flightfn); i++)
     obj_merge, wrapped, pbd2obj(env.conf.flightfn(i));
+
+  // Restore processing modes
+  if(wrapped(*,"eaarl_processing_modes_data"))
+    eaarl_processing_modes = deserialize(wrapped.eaarl_processing_modes_data);
 
   // Temporary hack for old-style veg
   extern veg_conf;
