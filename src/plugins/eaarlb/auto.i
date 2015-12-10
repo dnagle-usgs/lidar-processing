@@ -38,6 +38,16 @@ func hook_eaarlb_handle_process_eaarl_opts(env) {
   return env;
 }
 
+func hook_eaarlb_process_fs_funcs(env) {
+  save, env, fs_rx=eaarl_fs_rx_cent_eaarlb;
+  return env;
+}
+
+func hook_eaarlb_eaarl_fs_vector(env) {
+  save, env, fs_spacing=eaarl_fs_spacing;
+  return env;
+}
+
 func hook_eaarlb_pcr_channel(env) {
   if(env.forcechannel == 4) save, env, forcechannel=2;
   return env;

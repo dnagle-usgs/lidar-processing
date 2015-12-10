@@ -33,6 +33,11 @@ func hook_plugins_load_post_eaarla(env) {
   return env;
 }
 
+func hook_eaarla_process_fs_funcs(env) {
+  save, env, fs_rx=eaarl_fs_rx_cent_eaarla;
+  return env;
+}
+
 func hook_eaarla_chanconfobj_clear(env) {
   save, env, working=save(
     channels123=save(channels=[1,2,3])

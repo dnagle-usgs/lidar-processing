@@ -49,15 +49,14 @@ func process_fs(start, stop, ext_bad_att=, channel=, opts=) {
   Returns:
     An oxy group object containing these fields:
       from eaarl_decode_fast: digitizer, dropout, pulse, irange, scan_angle,
-        raster, soe, tx, rx
-      added by process_fs: ftx, frx, fintensity, fchannel, mx, my, mz, fx, fy,
-        fz
+        raster, soe, tx, rx, channel
+      added by process_fs: ftx, frx, fintensity, fchannel, fbias, mx, my, mz,
+        fx, fy, fz
 */
   restore_if_exists, opts, start, stop, ext_bad_att, channel, opts;
 
   local mx, my, mz, fx, fy, fz;
   default, channel, 0;
-  sample_interval = 1.0;
 
   if(is_void(ops_conf))
     error, "ops_conf is not set";
@@ -72,20 +71,13 @@ func process_fs(start, stop, ext_bad_att=, channel=, opts=) {
     error, "don't know how to handle input given for start";
   }
 
-  // Set up default functions
+  // Set up default functions. fs_rx is dependent on EAARL version, so it has
+  // to get set via hook.
   fs_tx = eaarl_fs_tx_cent;
-  fs_traj = eaarl_fs_trajectory;
-  if(channel(1)) {
-    fs_rx = eaarl_fs_rx_cent_eaarlb;
-    fs_spacing = eaarl_fs_spacing;
-  } else {
-    fs_rx = eaarl_fs_rx_cent_eaarla;
-    fs_spacing = noop;
-  }
+  fs_rx = noop;
 
   // Allow core functions to be overridden via hook
-  restore, hook_invoke("process_fs_funcs",
-    save(fs_tx, fs_rx, fs_traj, fs_spacing));
+  restore, hook_invoke("process_fs_funcs", save(fs_tx, fs_rx));
 
   // Throw away dropouts
   w = where(!pulses.dropout);
@@ -106,27 +98,9 @@ func process_fs(start, stop, ext_bad_att=, channel=, opts=) {
   pulses = result;
   result = curpulses = [];
 
-  // Interpolate trajectory
-  traj = fs_traj(pulses.soe);
-
-  // Get rid of anything with bogus trajectory (out of bounds)
-  w = where(traj.easting);
-  if(!numberof(w)) return;
-  pulses = obj_index(pulses, w);
-  traj = obj_index(traj, w);
-
-  // mirror offsets
-  dx = ops_conf.x_offset; // perpendicular to fuselage
-  dy = ops_conf.y_offset; // along fuselage
-  dz = ops_conf.z_offset; // vertical
-
-  // Constants for mirror angle and laser angle
-  mirang = -22.5;
-  lasang = 45.0 - .4;
-  cyaw = 0.;
-
   // Determine rx offsets; adds frx, fintensity, fchannel
   fs_rx, pulses;
+  if(!pulses(*,"frx")) error, "fs_rx failed";
 
   // 2014-08-29 Compatibility: calps versions still uses fint instead of
   // fintensity
@@ -137,11 +111,69 @@ func process_fs(start, stop, ext_bad_att=, channel=, opts=) {
   // 10000 is the bogus return value
   w = where(pulses.frx != 10000);
   if(!numberof(w)) return;
+  if(numberof(w) < numberof(pulses.frx)) pulses = obj_index(pulses, w);
 
-  if(numberof(w) < numberof(pulses.frx)) {
+  // Add fs_slant_range, fx, fy, fz, mx, my, mz
+  eaarl_fs_vector, pulses;
+
+  // Get rid of points with no slant range (that indicates no trajectory was
+  // available)
+  w = where(pulses.fs_slant_range);
+  if(!numberof(w)) return;
+  pulses = obj_index(pulses, w);
+
+  // Get rid of points where mirror and surface are within ext_bad_att meters
+  if(ext_bad_att) {
+    w = where(pulses.mz - pulses.fz >= ext_bad_att);
+    if(!numberof(w)) return;
     pulses = obj_index(pulses, w);
-    traj = obj_index(traj, w);
   }
+
+  return pulses;
+}
+
+func eaarl_fs_vector(pulses) {
+/* DOCUMENT eaarl_fs_vector, pulses;
+  Calculates mirror and surface points for a pulses object. This adds the
+  following fields:
+    - fs_slant_range
+    - fx, fy, fz
+    - mx, my, mz
+
+  The following fields are required to already be in the pulses object.
+  From eaarl_decode_fast:
+    - scan_angle
+    - channel
+    - irange
+  From process_fs:
+    - frx
+    - ftx
+    - fbias
+*/
+  sample_interval = 1.0;
+
+  if(is_void(ops_conf))
+    error, "ops_conf is not set";
+
+  // Set up default functions
+  fs_traj = eaarl_fs_trajectory;
+  fs_spacing = noop;
+
+  // Allow core functions to be overridden via hook
+  restore, hook_invoke("eaarl_fs_vector", save(fs_traj, fs_spacing));
+
+  // Interpolate trajectory
+  traj = fs_traj(pulses.soe);
+
+  // mirror offsets
+  dx = ops_conf.x_offset; // perpendicular to fuselage
+  dy = ops_conf.y_offset; // along fuselage
+  dz = ops_conf.z_offset; // vertical
+
+  // Constants for mirror angle and laser angle
+  mirang = -22.5;
+  lasang = 45.0 - .4;
+  cyaw = 0.;
 
   // Calculate scan angles
   scan_angles = SAD * (pulses.scan_angle + ops_conf.scan_bias);
@@ -155,6 +187,10 @@ func process_fs(start, stop, ext_bad_att=, channel=, opts=) {
       pulses.irange + pulses.frx - pulses.ftx + pulses.fbias
     ) - ops_conf.range_biasM;
 
+  // Zero out anything with a bogus trajectory
+  w = where(!traj.easting);
+  if(numberof(w)) fs_slant_range(w) = 0;
+
   eaarl_direct_vector,
     traj.yaw, traj.pitch, traj.roll,
     traj.easting, traj.northing, traj.alt,
@@ -166,15 +202,6 @@ func process_fs(start, stop, ext_bad_att=, channel=, opts=) {
 
   // Add mirror and first return coordinates to pulses object
   save, pulses, fs_slant_range, mx, my, mz, fx, fy, fz;
-
-  if(is_void(pulses)) return;
-
-  // Get rid of points where mirror and surface are within ext_bad_att meters
-  if(ext_bad_att) {
-    w = where(pulses.mz - pulses.fz >= ext_bad_att);
-    if(!numberof(w)) return;
-    pulses = obj_index(pulses, w);
-  }
 
   return pulses;
 }
