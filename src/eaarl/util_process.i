@@ -8,7 +8,7 @@ func processed_obj2dyn_dual(pulses) {
   Some additional behavioral notes:
     - a ptime field (type: long) will be added if not present
     - these fields will be removed if present:
-      tx, rx, fs_slant_range, irange, scan_angle
+      tx, rx, fs_slant_range
     - many fields will be re-ordered; unrecognized fields will be kept in their
       existing order, but moved to the end
     - the output array will use a struct named "DYN_PC_DUAL"; this struct is
@@ -19,7 +19,7 @@ func processed_obj2dyn_dual(pulses) {
   data = obj_copy(pulses);
 
   // Remove fields that should not go into a final result
-  obj_delete, data, tx, rx, fs_slant_range, irange, scan_angle;
+  obj_delete, data, tx, rx, fs_slant_range;
 
   // Make sure ptime field is present
   if(!data(*,"ptime")) save, data, ptime=array(0, dimsof(data.fx));
