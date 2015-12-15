@@ -1,10 +1,14 @@
 // This adds a new processing mode: f_flat
 //
-// This code is considered temporary and experimental.
+// This code is considered experimental. The algorithm is intended for use in
+// conjunction with bathy processing. It runs the normal FS algorithm, then
+// performs a raster-oriented median filter over the results to flatten the
+// elevation values. This also will increase the density of the FS result as it
+// allows for the synthetic provision of a surface even on waveforms where the
+// centroid algorithm failed.
 
-default, f_flat_debug, 0;
-default, f_flat_cluster_size, 10;
-default, f_flat_cluster_adjacent, 1;
+default, f_flat_cluster_size, 1;
+default, f_flat_cluster_adjacent, 20;
 default, f_flat_aoi_max, 8;
 default, f_flat_samples_min, 10;
 default, f_flat_use_median, 1;
