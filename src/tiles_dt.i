@@ -221,36 +221,20 @@ local utm2dtcell_names, utm2dtquad_names, utm2dt_names, utm2it_names;
   but works much more efficiently and faster.
 */
 
-func __utm2dt_corners(&east, &north, &zone, factor) {
-  e = long(floor(east/factor));
-  n = long(ceil(north/factor));
-  east = north = [];
-  zmin = zone(*)(min);
-  zone -= zmin;
-  code = long(zone) * 40000 * 4000 + e * 40000 + n;
-  e = n = [];
-  code = set_remove_duplicates(code);
-  north = (code % 40000) * factor - (factor/2);
-  code /= 40000;
-  east = (code % 4000) * factor + (factor/2);
-  zone = (code / 4000) + zmin;
+func __utm2_names(helper, east, north, zone, dtlength=, dtprefix=) {
+  utm2dt_corners, east, north, helper.size;
+  idx = munique(east, north, zone);
+  east = east(idx);
+  north = north(idx);
+  zone = zone(idx);
+  return helper.tile(east, north, zone, dtlength=dtlength, dtprefix=dtprefix);
 }
-func utm2dtcell_names(east, north, zone, dtlength=, dtprefix=) {
-  __utm2dt_corners, east, north, zone, 250.;
-  return utm2dtcell(east, north, zone, dtlength=dtlength, dtprefix=dtprefix);
-}
-func utm2dtquad_names(east, north, zone, dtlength=, dtprefix=) {
-  __utm2dt_corners, east, north, zone, 1000.;
-  return utm2dtquad(east, north, zone, dtlength=dtlength, dtprefix=dtprefix);
-}
-func utm2dt_names(east, north, zone, dtlength=, dtprefix=) {
-  __utm2dt_corners, east, north, zone, 2000.;
-  return utm2dt(east, north, zone, dtlength=dtlength, dtprefix=dtprefix);
-}
-func utm2it_names(east, north, zone, dtlength=, dtprefix=) {
-  __utm2dt_corners, east, north, zone, 10000.;
-  return utm2it(east, north, zone, dtlength=dtlength, dtprefix=dtprefix);
-}
+
+utm2dtcell_names = closure(__utm2_names, save(size=250, tile=utm2dtcell));
+utm2dtquad_names = closure(__utm2_names, save(size=1000, tile=utm2dtquad));
+utm2dt_names = closure(__utm2_names, save(size=2000, tile=utm2dt));
+utm2it_names = closure(__utm2_names, save(size=10000, tile=utm2it));
+__utm2_names = [];
 
 func dt2uz(dtcodes) {
 /* DOCUMENT dt2uz(dtcodes)
