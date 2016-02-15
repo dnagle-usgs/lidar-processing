@@ -142,6 +142,18 @@ func tile_type(text) {
   return result;
 }
 
+func tile_size(text) {
+/* DOCUMENT tile_size(text)
+  Returns the size (width or height) in meters of the tile. This only works for
+  the square UTM-based tiling schemes (data tiles, index tiles, etc.). Anything
+  else will return 0.
+*/
+  sizes = save(it=10000, dt=2000, dtquad=1000, dtcell=250);
+  type = tile_type(text);
+  if(sizes(*,type)) return sizes(noop(type));
+  return 0;
+}
+
 func utm2tile(east, north, zone, type, dtlength=, dtprefix=, qqprefix=) {
 /* DOCUMENT utm2tile(east, north, zone, type, dtlength=, dtprefix=, qqprefix=)
   Returns the tile name for each set of east/north/zone. Wrapper around
