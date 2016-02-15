@@ -197,6 +197,16 @@ func utm2it(east, north, zone, dtlength=, dtprefix=) {
     dtlength=dtlength, dtprefix=dtprefix);
 }
 
+func utm2dt_corners(&east, &north, size) {
+/* DOCUMENT utm2dt_corners, &east, &north, size
+  Finds the northwest corner of the tile (with the given size) each coordinate
+  is located in. Coordinates are updated in place.
+*/
+  size = double(size);
+  east = long(floor(east/size) * size);
+  north = long(ceil(north/size) * size);
+}
+
 local utm2dtcell_names, utm2dtquad_names, utm2dt_names, utm2it_names;
 /* DOCUMENT
   tiles = utm2it_names(east, north, zone, dtlength=, dtprefix=)
