@@ -51,6 +51,11 @@ func has_member(val, member, deref=) {
   if(is_hash(val)) return h_has(val, member);
   if(is_stream(val)) return anyof(*(get_vars(val)(1)) == member);
   if(is_obj(val)) return val(*,member) > 0;
+  // If val is referencing a large array in an open binary file, then the
+  // get_member call further below would load it all into memory which is slow.
+  // However, structof() is still fast, so we use that to create a dummy value
+  // that has the same fields.
+  if(is_array(val)) val = structof(val)();
   if(catch(0x08)) {
     return 0;
   }
