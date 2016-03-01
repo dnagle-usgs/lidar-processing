@@ -197,6 +197,21 @@ func utm2it(east, north, zone, dtlength=, dtprefix=) {
     dtlength=dtlength, dtprefix=dtprefix);
 }
 
+func dt2utm_corner(tile, &east, &north, &zone) {
+/* DOCUMENT dt2utm_corners(tile)
+  -or- dt2utm_corners, tile, &east, &north, &zone
+  Wrapper around dt2utm, it2utm, etc. that autodetects the tile type and
+  returns the northwest corner of the tile.
+*/
+  if(!is_scalar(tile)) error, "only works for scalar input";
+  east = north = zone = [];
+  type = tile_type(tile);
+  funcs = save(dtcell=dtcell2utm, dtquad=dtquad2utm, dt=dt2utm, it=it2utm);
+  if(!funcs(*,type)) return;
+  if(!am_subroutine()) return funcs(noop(type))(tile);
+  splitary, funcs(noop(type))(tile), east, north, zone;
+}
+
 func utm2dt_corners(&east, &north, size) {
 /* DOCUMENT utm2dt_corners, &east, &north, size
   Finds the northwest corner of the tile (with the given size) each coordinate
