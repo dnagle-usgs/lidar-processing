@@ -883,6 +883,61 @@ func las_to_xyz(las, &x, &y, &z, geo=, zone=) {
   if(!am_subroutine()) return [x,y,z];
 }
 
+func las_to_soe(las, &soe, date=) {
+/* DOCUMENT las_to_soe, &soe, date=
+  -or- soe = las_to_soe(las, date=)
+
+  Extracts seconds-of-the-epoch times from LAS-format data as an array of
+  doubles.
+
+  Required parameter:
+
+    las: This can be a filename, or it can be a filehandle as returned by
+      las_open.
+
+  Options:
+
+    date= The date the data was acquired, in "YYYY-MM-DD" format. Only used
+      if the LAS timestamp is in GPS seconds-of-the-week format.
+
+  Note: If the LAS timestamp is GPS seconds-of-the-week and the flight date is
+  not available, then the timestamps returned will be seconds-of-the-week
+  instead of seconds-of-the-epoch. Flight date is available in LAS 1.0 as part
+  of the file. In other LAS versions, you must provide date= manually.
+
+  SEE ALSO: las_to_alps batch_las2pbd
+*/
+  if(is_string(las))
+    las = las_open(las);
+
+  v_maj = las.header.version_major;
+  v_min = las.header.version_minor;
+
+  if(anyof(las.header.point_data_format_id == [1,3,4,5])) {
+    if(v_maj == 1 && v_min > 0 && las_global_encoding(las.header).gps_soe) {
+      soe = gps_epoch_to_utc_epoch(las.points.gps_time + 1e9);
+    } else if(
+      !is_void(date) || (
+        v_maj == 1 && v_min == 0 && las.header.flight_year &&
+        las.header.flight_day_of_year
+      )
+    ) {
+      if(is_void(date))
+        date_soe = time2soe([las.header.flight_year,
+          las.header.flight_day_of_year, 0, 0, 0, 0]);
+      else
+        date_soe = date2soe(date);
+      soe = gpssow2soe(las.points.gps_time, date_soe);
+    } else {
+      // This is wrong... needs to be adjusted for GPS week, but we don't
+      // know which week the GPS week is!
+      soe = las.points.gps_time;
+    }
+  }
+
+  return soe;
+}
+
 func las_to_alps(las, fakemirror=, rgbrn=, date=, zone=) {
 /* DOCUMENT fs = las_to_alps(las, fakemirror=, rgbrn=, date=, zone=)
 
@@ -905,15 +960,14 @@ func las_to_alps(las, fakemirror=, rgbrn=, date=, zone=) {
   if(is_string(las))
     las = las_open(las);
 
-  v_maj = las.header.version_major;
-  v_min = las.header.version_minor;
-
   data = array(LAS_ALPS, numberof(las.points));
 
   las_to_xyz, las, x, y, z, geo=0, zone=zone;
   data.east = 100 * x;
   data.north = 100 * y;
   data.elevation = 100 * z;
+
+  data.soe = las_to_soe(las, date=date);
 
   data.fint = las.points.intensity;
 
@@ -922,28 +976,6 @@ func las_to_alps(las, fakemirror=, rgbrn=, date=, zone=) {
   data.lelv = data.elevation;
   data.lint = data.fint;
   data.nx = 1;
-
-  if(anyof(las.header.point_data_format_id == [1,3,4,5])) {
-    if(v_maj == 1 && v_min > 0 && las_global_encoding(las.header).gps_soe) {
-      data.soe = gps_epoch_to_utc_epoch(las.points.gps_time + 1e9);
-    } else if(
-      !is_void(date) || (
-        v_maj == 1 && v_min == 0 && las.header.flight_year &&
-        las.header.flight_day_of_year
-      )
-    ) {
-      if(is_void(date))
-        date_soe = time2soe([las.header.flight_year,
-          las.header.flight_day_of_year, 0, 0, 0, 0]);
-      else
-        date_soe = date2soe(date);
-      data.soe = gpssow2soe(las.points.gps_time, date_soe);
-    } else {
-      // This is wrong... needs to be adjusted for GPS week, but we don't
-      // know which week the GPS week is!
-      data.soe = las.points.gps_time;
-    }
-  }
 
   if(fakemirror) {
     data.meast = data.east;
