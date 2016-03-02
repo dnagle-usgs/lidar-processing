@@ -330,3 +330,101 @@ func utm2ll(north, east, zone, &lon, &lat, ellipsoid=) {
   if(!am_subroutine())
     return [lon, lat];
 }
+
+func ensure_utm(&x, &y, zone=) {
+/* DOCUMENT ensure_utm, &x, &y, zone=
+  -or- xy = ensure_utm(x, y, zone=)
+
+  Makes sure the given x, y coordinates are UTM coordinates. If they are
+  geographic coordinates, they are converted to UTM. If they are already UTM,
+  they are left as is.
+
+  If called as a subroutine, x and y are updated in place. If called as a
+  function, they will be left unmodified and the modified results are returned
+  as [x,y].
+
+  Option zone= specifies the zone that the UTM coordinates are expected to be
+  in. Geographic coordinates will be forced to this zone, even if they are
+  localed in another zone's borders. If omitted, this defaults to curzone.
+
+  SEE ALSO: ensure_geo, ensure_utm_or_geo, ll2utm
+*/
+  if((max(x) > 360) || (max(y) > 360)) {
+    if(am_subroutine()) return;
+    return [x,y];
+  }
+  default, zone, curzone;
+  if(!zone) error, "need to provide zone or define curzone";
+  ll2utm, y, x, _y, _x, force_zone=zone;
+  if(!am_subroutine()) return [_x, _y];
+  x = _x;
+  y = _y;
+}
+
+func ensure_geo(&x, &y, zone=) {
+/* DOCUMENT ensure_geo, &x, &y, zone=
+  -or- xy = ensure_geo(x, y, zone=)
+
+  Makes sure the given x, y coordinates are geographic coordinates. If they are
+  UTM coordinates, they are converted to geographic. If they are already
+  geographic, they are left as is.
+
+  If called as a subroutine, x and y are updated in place. If called as a
+  function, they will be left unmodified and the modified results are returned
+  as [x,y].
+
+  Option zone= specifies what zone the coordinates are from if they are in UTM.
+  If omitted, this defaults to curzone.
+
+  SEE ALSO: ensure_utm, ensure_utm_or_geo, utm2ll
+*/
+  if((max(x) <= 360) && (max(y) <= 360)) {
+    if(am_subroutine()) return;
+    return [x,y];
+  }
+  default, zone, curzone;
+  if(!zone) error, "need to provide zone or define curzone";
+  utm2ll, y, x, zone, _x, _y;
+  if(!am_subroutine()) return [_x, _y];
+  x = _x;
+  y = _y;
+}
+
+func ensure_utm_or_geo(&x, &y, zone=, geo=) {
+/* DOCUMENT ensure_utm_or_geo, &x, &y, zone=, geo=
+  -or- xy = ensure_utm_or_geo(x, y, zone=)
+
+  Makes sure the given x, y coordinates are in UTM coordinates (if geo=0,
+  default) or geographic coordinates (geo=1). If they are already in the right
+  coordinate systme, they are left as is.
+
+  If called as a subroutine, x and y are updated in place. If called as a
+  function, they will be left unmodified and the modified results are returned
+  as [x,y].
+
+  Option zone= specifies what zone you are working in. When geo=0, geographic
+  coordinates will be forced into this zone when cast to UTM. When geo=1, UTM
+  coordinates are treated as being in this zone when cast to geographic. If
+  omitted, zone defaults to curzone.
+
+  Internally, this function is a wrapper around ensure_geo and ensure_geo based
+  on option geo, which is by default geo=0:
+    If geo=0, then it passes through to ensure_utm.
+    If geo=1, then it passes through to ensure_geo.
+
+  SEE ALSO: ensure_utm, ensure_geo, ll2utm, utm2ll
+*/
+  if(am_subroutine()) {
+    if(geo) {
+      ensure_geo, x, y, zone=zone;
+    } else {
+      ensure_utm, x, y, zone=zone;
+    }
+  } else {
+    if(geo) {
+      return ensure_geo(x, y, zone=zone);
+    } else {
+      return ensure_utm(x, y, zone=zone);
+    }
+  }
+}
