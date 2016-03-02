@@ -551,10 +551,10 @@ pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
 
 func batch_las2pbd(dir_las, outdir=, searchstr=, format=, fakemirror=, rgbrn=,
 verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=, post_fn=,
-shorten_fn=, update=, files=, date=, geo=, zone=) {
+shorten_fn=, update=, files=, date=, zone=) {
 /* DOCUMENT batch_las2pbd, dir_las, outdir=, searchstr=, format=, fakemirror=,
   rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=,
-  post_fn=, shorten_fn=, update, files=, date=, geo=, zone=
+  post_fn=, shorten_fn=, update, files=, date=, zone=
 
   Batch converts LAS files to PBD files.
 
@@ -629,13 +629,8 @@ shorten_fn=, update=, files=, date=, geo=, zone=) {
     date= The date the data was acquired, in "YYYY-MM-DD" format. Only used
       if the timestamp in the data is in GPS seconds-of-the-week format.
 
-    geo= If the data is in geographic coordinates, set geo=1 to convert to UTM.
-        geo=0    Data assumed to be UTM, default
-        geo=1    Data assumed to be geographic, convert to UTM
-
-    zone= If provided and if geo=1, then the data will be forced into this
-      zone when converting to UTM. Default is to auto-determine zone; this
-      may cause issues near zone boundaries.
+    zone= Specifies what zone to convert points to if they are in geographic
+      coordinates. If omitted, curzone is used.
 
   About variable names:
 
@@ -784,7 +779,7 @@ shorten_fn=, update=, files=, date=, geo=, zone=) {
     }
     las2pbd, files_las(i), fn_pbd=files_pbd(i), vname=vnames(i),
       format=format, fakemirror=fakemirror, rgbrn=rgbrn,
-      verbose=pass_verbose, date=date, geo=geo, zone=zone;
+      verbose=pass_verbose, date=date, zone=zone;
 
     if(pass_verbose)
       write, "";
@@ -794,7 +789,7 @@ shorten_fn=, update=, files=, date=, geo=, zone=) {
 }
 
 func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=, verbose=,
-date=, geo=, zone=) {
+date=, zone=) {
 /* DOCUMENT las2pbd, fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=,
   verbose=, date=
 
@@ -840,16 +835,56 @@ date=, geo=, zone=) {
   }
 
   las = las_open(fn_las);
-  data = fnc(las, fakemirror=fakemirror, rgbrn=rgbrn, date=date, geo=geo,
-    zone=zone);
+  data = fnc(las, fakemirror=fakemirror, rgbrn=rgbrn, date=date, zone=zone);
   close, las;
   fnc = [];
 
   pbd_save, fn_pbd, vname, data;
 }
 
-func las_to_alps(las, fakemirror=, rgbrn=, date=, geo=, zone=) {
-/* DOCUMENT fs = las_to_alps(las, fakemirror=, rgbrn=, date=, geo=, zone=)
+func las_to_xyz(las, &x, &y, &z, geo=, zone=) {
+/* DOCUMENT las_to_xyz, las, &x, &y, &z, geo=, zone=
+  -or- xyz = las_to_xyz(las, geo=, zone=)
+
+  Extracts xyz coordinates from LAS-format data as arrays of doubles.
+
+  Required parameter:
+
+    las: This can be a filename, or it can be a filehandle as returned by
+      las_open.
+
+  Options:
+
+    geo= Determines what coordinate system to use.
+        geo=0   Data is coerced into UTM coordinates. Default.
+        geo=1   Data is coerced into geographic coordinates.
+
+    zone= Specifies the zone the data is expected to be in. This is only used
+      if the data is coerced from UTM to geographic or from geographic to UTM.
+      Defaults to curzone.
+
+  Output:
+
+    If called as a subroutine, then x, y, and z are set to one-dimensional
+    arrays of doubles. If called as a function, then the return result is
+    [x,y,z].
+
+  SEE ALSO: las_to_alps, batch_las2pbd
+*/
+  default, geo, 0;
+  if(is_string(las))
+    las = las_open(las);
+
+  x = las.points.x * las.header.x_scale + las.header.x_offset;
+  y = las.points.y * las.header.y_scale + las.header.y_offset;
+  z = las.points.z * las.header.z_scale + las.header.z_offset;
+  ensure_utm_or_geo, x, y, zone=zone, geo=geo;
+
+  if(!am_subroutine()) return [x,y,z];
+}
+
+func las_to_alps(las, fakemirror=, rgbrn=, date=, zone=) {
+/* DOCUMENT fs = las_to_alps(las, fakemirror=, rgbrn=, date=, zone=)
 
   Converts LAS-format data to an array of LAS_ALPS.
 
@@ -864,10 +899,9 @@ func las_to_alps(las, fakemirror=, rgbrn=, date=, geo=, zone=) {
 
   SEE ALSO: las_to_fs las_to_veg las2pbd las_export_data las_open
 */
-  local north, east;
+  local x, y, z;
   default, fakemirror, 1;
   default, rgbrn, 1;
-  default, geo, 0;
   if(is_string(las))
     las = las_open(las);
 
@@ -875,18 +909,12 @@ func las_to_alps(las, fakemirror=, rgbrn=, date=, geo=, zone=) {
   v_min = las.header.version_minor;
 
   data = array(LAS_ALPS, numberof(las.points));
-  if(geo) {
-    lon = las.points.x * las.header.x_scale + las.header.x_offset;
-    lat = las.points.y * las.header.y_scale + las.header.y_offset;
-    ll2utm, lat, lon, north, east, force_zone=zone;
-    data.east = east * 100;
-    data.north = north * 100;
-    lat = lon = [];
-  } else {
-    data.east = 100 * (las.points.x * las.header.x_scale + las.header.x_offset);
-    data.north = 100 * (las.points.y * las.header.y_scale + las.header.y_offset);
-  }
-  data.elevation = 100 * (las.points.z * las.header.z_scale + las.header.z_offset);
+
+  las_to_xyz, las, x, y, z, geo=0, zone=zone;
+  data.east = 100 * x;
+  data.north = 100 * y;
+  data.elevation = 100 * z;
+
   data.fint = las.points.intensity;
 
   data.least = data.east;
@@ -961,8 +989,8 @@ func las_to_alps(las, fakemirror=, rgbrn=, date=, geo=, zone=) {
   return data;
 }
 
-func las_to_fs(las, fakemirror=, rgbrn=, date=, geo=, zone=) {
-/* DOCUMENT fs = las_to_fs(las, fakemirror=, rgbrn=, date=, geo=, zone=)
+func las_to_fs(las, fakemirror=, rgbrn=, date=, zone=) {
+/* DOCUMENT fs = las_to_fs(las, fakemirror=, rgbrn=, date=, zone=)
 
   Converts LAS-format data to an array of FS.
 
@@ -978,14 +1006,14 @@ func las_to_fs(las, fakemirror=, rgbrn=, date=, geo=, zone=) {
   SEE ALSO: las_to_alps las_to_veg las2pbd las_export_data las_open
 */
   alps = las_to_alps(las, fakemirror=fakemirror, rgbrn=rgbrn, date=date,
-    geo=geo, zone=zone);
+    zone=zone);
   fs = struct_cast(alps, FS);
   fs.intensity = alps.fint;
   return fs;
 }
 
-func las_to_veg(las, fakemirror=, rgbrn=, date=, geo=, zone=) {
-/* DOCUMENT veg = las_to_veg(las, fakemirror=, rgbrn=, date=, geo=, zone=)
+func las_to_veg(las, fakemirror=, rgbrn=, date=, zone=) {
+/* DOCUMENT veg = las_to_veg(las, fakemirror=, rgbrn=, date=, zone=)
 
   Converts LAS-format data to an array of VEG__. The first and last return
   information will be identical.
@@ -1002,7 +1030,7 @@ func las_to_veg(las, fakemirror=, rgbrn=, date=, geo=, zone=) {
   SEE ALSO: las_to_alps las_to_fs las2pbd las_export_data las_open
 */
   alps = las_to_alps(las, fakemirror=fakemirror, rgbrn=rgbrn, date=date,
-    geo=geo, zone=zone);
+    zone=zone);
   return struct_cast(alps, VEG__);
 }
 

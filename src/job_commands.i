@@ -251,7 +251,6 @@ func job_las2pbd(conf) {
     --fakemirror  corresponds to  fakemirror=
     --rgbrn       corresponds to  rgbrn=
     --date        corresponds to  date=
-    --geo         corresponds to  geo=
     --zone        corresponds to  zone=
 */
   require, "general.i";
@@ -268,7 +267,7 @@ func job_las2pbd(conf) {
   require, "las.i";
   las2pbd, conf.file.in, fn_pbd=conf.file.out, format=conf.format,
     vname=conf.vname, fakemirror=fakemirror, rgbrn=rgbrn, verbose=0,
-    date=conf.date, geo=geo, zone=zone;
+    date=conf.date, zone=zone;
 }
 
 func job_pbd_grid(conf) {

@@ -200,11 +200,11 @@ norun=) {
 
 func mf_las2pbd(dir_las, outdir=, searchstr=, format=, fakemirror=, rgbrn=,
 verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=, post_fn=,
-shorten_fn=, update=, files=, date=, geo=, zone=, makeflow_fn=,
+shorten_fn=, update=, files=, date=, zone=, makeflow_fn=,
 norun=) {
 /* DOCUMENT mf_las2pbd, dir_las, outdir=, searchstr=, format=, fakemirror=,
    rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=,
-   post_fn=, shorten_fn=, update, files=, date=, geo=, zone=, makeflow_fn=,
+   post_fn=, shorten_fn=, update, files=, date=, zone=, makeflow_fn=,
    norun=
 
   Batch converts LAS files to PBD files.
@@ -280,13 +280,8 @@ norun=) {
     date= The date the data was acquired, in "YYYY-MM-DD" format. Only used
       if the timestamp in the data is in GPS seconds-of-the-week format.
 
-    geo= If the data is in geographic coordinates, set geo=1 to convert to UTM.
-        geo=0    Data assumed to be UTM, default
-        geo=1    Data assumed to be geographic, convert to UTM
-
-    zone= If provided and if geo=1, then the data will be forced into this
-      zone when converting to UTM. Default is to auto-determine zone; this
-      may cause issues near zone boundaries.
+    zone= Specifies what zone to convert points to if they are in geographic
+      coordinates. If omitted, curzone is used.
 
     makeflow_fn= The filename to use when writing out the makeflow. Ignored if
       called as a function. If not provided, a temporary file will be used then
@@ -394,6 +389,7 @@ norun=) {
   default, post_fn, ".pbd";
   default, shorten_fn, 0;
   default, update, 0;
+  default, zone, curzone;
 
   t0 = array(double, 3);
   timer, t0;
@@ -454,10 +450,7 @@ norun=) {
     fakemirror = swrite(format="%d", fakemirror);
   if(!is_void(rgbrn))
     rgbrn = swrite(format="%d", rgbrn);
-  if(!is_void(geo))
-    geo = swrite(format="%d", geo);
-  if(!is_void(zone))
-    zone = swrite(format="%d", zone);
+  zone = swrite(format="%d", zone);
 
   conf = save();
   for(i = 1; i <= numberof(files_pbd); i++) {
@@ -469,7 +462,7 @@ norun=) {
         string(0), [],
         "file-in", files_las(i),
         "file-out", files_pbd(i),
-        vname=vnames(i), format, fakemirror, rgbrn, verbose="0", date, geo, zone
+        vname=vnames(i), format, fakemirror, rgbrn, verbose="0", date, zone
       )
     );
   }
