@@ -253,9 +253,7 @@ func job_las2pbd(conf) {
     --date        corresponds to  date=
     --zone        corresponds to  zone=
 */
-  require, "general.i";
-  require, "util_obj.i";
-  require, "util_str.i";
+  require, "eaarl.i";
   keyrequire, conf, file=;
   keyrequire, conf.file, in=, out=;
 
