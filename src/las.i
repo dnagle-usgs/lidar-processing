@@ -1037,10 +1037,33 @@ func las_to_fs(las, fakemirror=, rgbrn=, date=, zone=) {
 
   SEE ALSO: las_to_alps las_to_veg las2pbd las_export_data las_open
 */
-  alps = las_to_alps(las, fakemirror=fakemirror, rgbrn=rgbrn, date=date,
-    zone=zone);
-  fs = struct_cast(alps, FS);
-  fs.intensity = alps.fint;
+  local x, y, z, raster, pulse;
+
+  if(is_string(las))
+    las = las_open(las);
+
+  las_to_xyz, las, x, y, z, geo=0, zone=zone;
+
+  fs = array(FS, numberof(x));
+  fs.east = x * 100;
+  fs.north = y * 100;
+  fs.elevation = z * 100;
+  fs.intensity = las.points.intensity;
+  fs.soe = las_to_soe(las, date=date);
+
+  if(rgbrn && has_member(las.points, "eaarl_rn")) {
+    fs.rn = las.points.eaarl_rn;
+    parse_rn, fs.rn, raster, pulse;
+    fs.raster = raster;
+    fs.pulse = pulse;
+  }
+
+  if(fakemirror) {
+    fs.meast = fs.east;
+    fs.mnorth = fs.north;
+    fs.melevation = fs.elevation + 10000;
+  }
+
   return fs;
 }
 
@@ -1061,9 +1084,40 @@ func las_to_veg(las, fakemirror=, rgbrn=, date=, zone=) {
 
   SEE ALSO: las_to_alps las_to_fs las2pbd las_export_data las_open
 */
-  alps = las_to_alps(las, fakemirror=fakemirror, rgbrn=rgbrn, date=date,
-    zone=zone);
-  return struct_cast(alps, VEG__);
+  local x, y, z, raster, pulse;
+
+  if(is_string(las))
+    las = las_open(las);
+
+  las_to_xyz, las, x, y, z, geo=0, zone=zone;
+
+  veg = array(VEG__, numberof(x));
+  veg.east = x * 100;
+  veg.north = y * 100;
+  veg.elevation = z * 100;
+  veg.fint = las.points.intensity;
+  veg.soe = las_to_soe(las, date=date);
+  veg.nx = 1;
+
+  veg.lnorth = veg.north;
+  veg.least = veg.east;
+  veg.lelv = veg.elevation;
+  veg.lint = veg.fint;
+
+  if(rgbrn && has_member(las.points, "eaarl_rn")) {
+    veg.rn = las.points.eaarl_rn;
+    parse_rn, veg.rn, raster, pulse;
+    veg.raster = raster;
+    veg.pulse = pulse;
+  }
+
+  if(fakemirror) {
+    veg.meast = veg.east;
+    veg.mnorth = veg.north;
+    veg.melevation = veg.elevation + 10000;
+  }
+
+  return veg;
 }
 
 /********************************* BITFIELDS **********************************/
