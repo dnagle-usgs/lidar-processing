@@ -226,6 +226,7 @@ shorten_fn=, update=, files=, date=, zone=, makeflow_fn=, norun=) {
         format="las"  - Use the LAS_ALPS structure (default)
         format="fs"   - Use the FS structure
         format="veg"  - Use the VEG__ structure
+        format="dyn"  - Use a dynamically-created DYN_PC structure
 
     fakemirror= By default, the mirror coordinates will be faked by using the
       point coordinates and adding 100m to the elevation. This allows ALPS

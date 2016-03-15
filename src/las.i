@@ -577,6 +577,7 @@ post_fn=, shorten_fn=, update=, files=, date=, zone=) {
         format="las"  - Use the LAS_ALPS structure (default)
         format="fs"   - Use the FS structure
         format="veg"  - Use the VEG__ structure
+        format="dyn"  - Use a dynamically-created DYN_PC structure
 
     fakemirror= By default, the mirror coordinates will be faked by using the
       point coordinates and adding 100m to the elevation. This allows ALPS
@@ -832,6 +833,8 @@ verbose=, date=, zone=) {
     fnc = las_to_veg;
   else if(format == "las")
     fnc = las_to_alps;
+  else if(format == "dyn")
+    fnc = las_to_dyn;
 
   if(is_void(fnc))
     error, "Invalid format specified. Must be \"las\", \"fs\", or \"veg\".";
@@ -960,7 +963,7 @@ func las_to_alps(las, fakemirror=, fakechan=, rgbrn=, date=, zone=) {
 
     See batch_las2pbd for documentation.
 
-  SEE ALSO: las_to_fs las_to_veg las2pbd las_export_data las_open
+  SEE ALSO: las_to_dyn las_to_fs las_to_veg las2pbd las_export_data las_open
 */
   local x, y, z;
   default, fakemirror, 1;
@@ -1033,6 +1036,74 @@ func las_to_alps(las, fakemirror=, fakechan=, rgbrn=, date=, zone=) {
   return data;
 }
 
+func las_to_dyn(las, fakemirror=, fakechan=, rgbrn=, date=, zone=) {
+/* DOCUMENT fs = las_to_dyn(las, fakemirror=, fakechan=, rgbrn=, date=, zone=)
+
+  Converts LAS-format data to an array using a dynamically-created structure
+  (DYN_PC).
+
+  Guaranteed fields:
+    soe, x, y, z, int
+
+  Possible additional fields:
+    raster, pulse, channel, mx, my, mz, ret_num, num_rets, class, withheld,
+    user_data
+
+  Required parameter:
+
+    las: This can be a filename, or it can be a filehandle as returned by
+      las_open.
+
+  Options:
+
+    See batch_las2pbd for documentation.
+
+  SEE ALSO: las_to_alps las_to_fs las_to_veg las2pbd las_export_data las_open
+*/
+  if(is_string(las))
+    las = las_open(las);
+
+  dyn = save();
+
+  local raster, pulse;
+  if(rgbrn && has_member(las.points, "eaarl_rn")) {
+    parse_rn, las.points.rn, raster, pulse;
+    save, dyn, raster, pulse;
+  }
+  if(!is_void(fakechan)) {
+    save, dyn, channel=array(char(fakechan), numberof(las.points.intensity));
+  }
+  save, dyn, soe=las_to_soe(las, date=date);
+
+  local x, y, z;
+  las_to_xyz, las, x, y, z, geo=0, zone=zone;
+  if(fakemirror) {
+    save, dyn, mx=x, my=y, mz=z+10000;
+  }
+  save, dyn, x, y, z;
+
+  save, dyn, "int", las.points.intensity;
+
+  local ret_num, num_rets;
+  if(anyof(las.points.bitfield)) {
+    las_decode_return, las.points.bitfield, ret_num, num_rets;
+    save, dyn, ret_num, num_rets;
+  }
+
+  local class, withheld;
+  if(anyof(las.points.classification)) {
+    las_decode_classification, las.points.classification, class, , , withheld;
+    save, dyn, class;
+    if(anyof(withheld)) save, dyn, withheld;
+  }
+
+  if(has_member(las.points, "user_data") && anyof(las.points.user_data)) {
+    save, dyn, user_data=las.points.user_data;
+  }
+
+  return obj2struct(dyn, name="DYN_PC", ary=1);
+}
+
 func las_to_fs(las, fakemirror=, fakechan=, rgbrn=, date=, zone=) {
 /* DOCUMENT fs = las_to_fs(las, fakemirror=, fakechan=, rgbrn=, date=, zone=)
 
@@ -1047,7 +1118,7 @@ func las_to_fs(las, fakemirror=, fakechan=, rgbrn=, date=, zone=) {
 
     See batch_las2pbd for documentation.
 
-  SEE ALSO: las_to_alps las_to_veg las2pbd las_export_data las_open
+  SEE ALSO: las_to_alps las_to_dyn las_to_veg las2pbd las_export_data las_open
 */
   local x, y, z, raster, pulse;
 
@@ -1098,7 +1169,7 @@ func las_to_veg(las, fakemirror=, fakechan=, rgbrn=, date=, zone=) {
 
     See batch_las2pbd for documentation.
 
-  SEE ALSO: las_to_alps las_to_fs las2pbd las_export_data las_open
+  SEE ALSO: las_to_alps las_to_dyn las_to_fs las2pbd las_export_data las_open
 */
   local x, y, z, raster, pulse;
 
