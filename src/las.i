@@ -103,10 +103,12 @@ local las;
 
 func batch_pbd2las(dir_pbd, outdir=, searchstr=, v_maj=, v_min=, cs=, cs_out=,
 mode=, pdrf=, encode_rn=, include_scan_angle_rank=, buffer=, classification=,
-header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
+header=, verbose=, pre_fn=, post_fn=, shorten_fn=, makeflow_fn=,
+norun=) {
 /* DOCUMENT batch_pbd2las, dir_pbd, outdir=, searchstr=, v_maj=, v_min=,
-  cs=, cs_out=, mode=, pdrf=, encode_rn=, include_scan_angle_rank=, buffer=,
-  classification=, header=, verbose=, pre_fn=, post_fn=, shorten_fn=
+   cs=, cs_out=, mode=, pdrf=, encode_rn=, include_scan_angle_rank=, buffer=,
+   classification=, header=, verbose=, pre_fn=, post_fn=, shorten_fn=,
+   makeflow_fn=, norun=
 
   Runs pbd2las in a batch mode. This converts individual PBD files into LAS
   files.
@@ -197,6 +199,14 @@ header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
         shorten_fn=0  - Disabled shortening (default)
         shorten_fn=1  - Enables shortening
 
+    makeflow_fn= The filename to use when writing out the makeflow. Ignored if
+      called as a function. If not provided, a temporary file will be used then
+      discarded.
+
+    norun= Don't actually run makeflow; just create the makeflow file.
+        norun=0   Runs makeflow, default
+        norun=1   Doesn't run makeflow
+
   About file names:
 
     By default, the output filename is the same as the input filename but
@@ -258,21 +268,48 @@ header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
     files_las = file_join(outdir, tails);
   tails = [];
 
-  pass_verbose = verbose > 0 ? verbose-1 : 0;
+  if(!is_void(v_maj))
+    v_maj = swrite(format="%d", v_maj);
+  if(!is_void(v_min))
+    v_min = swrite(format="%d", v_min);
+  if(!is_void(pdrf))
+    pdrf = swrite(format="%d", pdrf);
+  if(!is_void(encode_rn))
+    encode_rn = swrite(format="%d", encode_rn);
+  if(!is_void(include_scan_angle))
+    include_scan_angle = swrite(format="%d", include_scan_angle);
+  if(!is_void(buffer))
+    buffer = swrite(format="%.3f", buffer);
+  if(!is_void(classification))
+    classification = swrite(format="%d", classification);
+  if(!is_void(cs))
+    cs = base64_encode(strchar(cs),maxlen=-1);
+  if(!is_void(cs_out))
+    cs_out = base64_encode(strchar(cs_out),maxlen=-1);
+  if(!is_void(header))
+    header = base64_encode(z_compress(strchar(json_encode(header)),9),maxlen=-1);
+
+  conf = save();
   for(i = 1; i <= numberof(files_pbd); i++) {
-    if(verbose)
-      write, format="Converting pbd file %d of %d to LAS...\n",
-        i, numberof(files_pbd);
-
-    pbd2las, files_pbd(i), fn_las=files_las(i), v_maj=v_maj, v_min=v_min,
-      cs=cs, cs_out=cs_out, mode=mode, pdrf=pdrf, encode_rn=encode_rn,
-      include_scan_angle_rank=include_scan_angle_rank, buffer=buffer,
-      classification=classification, header=header, verbose=pass_verbose;
-
-    if(pass_verbose)
-      write, "";
+    remove, files_las(i);
+    save, conf, string(0), save(
+      input=files_pbd(i),
+      output=files_las(i),
+      command="job_pbd2las",
+      options=save(
+        string(0), [],
+        "file-in", files_pbd(i),
+        "file-out", files_las(i),
+        v_maj, v_min, cs, cs_out, mode, pdrf, encode_rn,
+        include_scan_angle_rank, buffer, classification, header
+      )
+    );
   }
 
+  if(!am_subroutine())
+    return conf;
+
+  makeflow_run, conf, makeflow_fn, interval=15, norun=norun;
   timer_finished, t0;
 }
 
@@ -550,12 +587,13 @@ pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
 // These functions facilitate the conversion of LAS data into ALPS data
 // formats.
 
-func batch_las2pbd(dir_las, outdir=, searchstr=, format=, fakemirror=,
-fakechan=, rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=,
-post_fn=, shorten_fn=, update=, files=, date=, zone=) {
+func batch_las2pbd(dir_las, outdir=, searchstr=, format=, fakemirror=, fakechan=,
+rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=, post_fn=,
+shorten_fn=, update=, files=, date=, zone=, makeflow_fn=, norun=) {
 /* DOCUMENT batch_las2pbd, dir_las, outdir=, searchstr=, format=, fakemirror=,
-  fakechan=, rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=,
-  pre_fn=, post_fn=, shorten_fn=, update, files=, date=, zone=
+   fakechan=, rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=,
+   pre_fn=, post_fn=, shorten_fn=, update=, files=, date=, zone=, makeflow_fn=,
+   norun=
 
   Batch converts LAS files to PBD files.
 
@@ -639,6 +677,14 @@ post_fn=, shorten_fn=, update=, files=, date=, zone=) {
 
     zone= Specifies what zone to convert points to if they are in geographic
       coordinates. If omitted, curzone is used.
+
+    makeflow_fn= The filename to use when writing out the makeflow. Ignored if
+      called as a function. If not provided, a temporary file will be used then
+      discarded.
+
+    norun= Don't actually run makeflow; just create the makeflow file.
+        norun=0   Runs makeflow, default
+        norun=1   Doesn't run makeflow
 
   About variable names:
 
@@ -738,6 +784,7 @@ post_fn=, shorten_fn=, update=, files=, date=, zone=) {
   default, post_fn, ".pbd";
   default, shorten_fn, 0;
   default, update, 0;
+  default, zone, curzone;
 
   t0 = array(double, 3);
   timer, t0;
@@ -764,6 +811,25 @@ post_fn=, shorten_fn=, update=, files=, date=, zone=) {
   files_pbd = file_join(file_dirname(files_pbd),
     pre_fn + file_tail(files_pbd) + post_fn);
 
+  // Handle existing files
+  exists = file_exists(files_pbd);
+  if(update) {
+    if(allof(exists)) {
+      write, "All files exists, aborting.";
+      return save();
+    }
+    if(anyof(exists)) {
+      w = where(!exists);
+      files_las = files_las(w);
+      files_pbd = files_pbd(w);
+    }
+  } else {
+    w = where(exists);
+    for(i = 1; i <= numberof(w); i++) {
+      remove, files_pbd(w(i));
+    }
+  }
+
   // Calculate vnames
   vnames = file_rootname(file_tail(files_pbd));
   if(shorten_vname) {
@@ -775,24 +841,34 @@ post_fn=, shorten_fn=, update=, files=, date=, zone=) {
   }
   vnames = pre_vname + vnames + post_vname;
 
-  pass_verbose = verbose > 0 ? verbose-1 : 0;
-  for(i = 1; i <= numberof(files_las); i++) {
-    if(verbose)
-      write, format="Converting LAS file %d of %d to PBD...\n",
-        i, numberof(files_las);
+  if(!is_void(fakemirror))
+    fakemirror = swrite(format="%d", fakemirror);
+  if(!is_void(fakechan))
+    fakechan = swrite(format="%d", fakechan);
+  if(!is_void(rgbrn))
+    rgbrn = swrite(format="%d", rgbrn);
+  zone = swrite(format="%d", zone);
 
-    if(update && file_exists(files_pbd(i))) {
-      write, " File already exists, skipping.";
-      continue;
-    }
-    las2pbd, files_las(i), fn_pbd=files_pbd(i), vname=vnames(i),
-      format=format, fakemirror=fakemirror, fakechan=fakechan, rgbrn=rgbrn,
-      verbose=pass_verbose, date=date, zone=zone;
-
-    if(pass_verbose)
-      write, "";
+  conf = save();
+  for(i = 1; i <= numberof(files_pbd); i++) {
+    save, conf, string(0), save(
+      input=files_las(i),
+      output=files_pbd(i),
+      command="job_las2pbd",
+      options=save(
+        string(0), [],
+        "file-in", files_las(i),
+        "file-out", files_pbd(i),
+        vname=vnames(i), format, fakemirror, fakechan, rgbrn, verbose="0",
+        date, zone
+      )
+    );
   }
 
+  if(!am_subroutine())
+    return conf;
+
+  makeflow_run, conf, makeflow_fn, interval=15, norun=norun;
   timer_finished, t0;
 }
 
