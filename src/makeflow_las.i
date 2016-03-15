@@ -198,13 +198,12 @@ norun=) {
   timer_finished, t0;
 }
 
-func mf_las2pbd(dir_las, outdir=, searchstr=, format=, fakemirror=, rgbrn=,
-verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=, post_fn=,
-shorten_fn=, update=, files=, date=, zone=, makeflow_fn=,
-norun=) {
+func mf_las2pbd(dir_las, outdir=, searchstr=, format=, fakemirror=, fakechan=,
+rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=, post_fn=,
+shorten_fn=, update=, files=, date=, zone=, makeflow_fn=, norun=) {
 /* DOCUMENT mf_las2pbd, dir_las, outdir=, searchstr=, format=, fakemirror=,
-   rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=,
-   post_fn=, shorten_fn=, update, files=, date=, zone=, makeflow_fn=,
+   fakechan=, rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=,
+   pre_fn=, post_fn=, shorten_fn=, update=, files=, date=, zone=, makeflow_fn=,
    norun=
 
   Batch converts LAS files to PBD files.
@@ -233,6 +232,12 @@ norun=) {
       to better work with the data in some cases. Valid settings:
         fakemirror=1  - Enables faking of mirror coordinates (default)
         fakemirror=0  - Disables the faking; the mirror will have zero values
+
+    fakechan= By default, the channel is left as zero. You can force it to a
+      given value by using forcechan. Any value from 0 to 255 is valid.
+      Examples:
+        fakechan=0    - Channel is left as zero (default)
+        fakechan=2    - Channel is set to 2
 
     rgbrn= If RGB data is present, it's assumed by default that the rn number
       is encoded in them (to allow re-importing data previously exported
@@ -448,6 +453,8 @@ norun=) {
 
   if(!is_void(fakemirror))
     fakemirror = swrite(format="%d", fakemirror);
+  if(!is_void(fakechan))
+    fakechan = swrite(format="%d", fakechan);
   if(!is_void(rgbrn))
     rgbrn = swrite(format="%d", rgbrn);
   zone = swrite(format="%d", zone);
@@ -462,7 +469,8 @@ norun=) {
         string(0), [],
         "file-in", files_las(i),
         "file-out", files_pbd(i),
-        vname=vnames(i), format, fakemirror, rgbrn, verbose="0", date, zone
+        vname=vnames(i), format, fakemirror, fakechan, rgbrn, verbose="0",
+        date, zone
       )
     );
   }

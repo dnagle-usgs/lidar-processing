@@ -20,6 +20,7 @@ local LAS_ALPS;
     short fint;       intensity
     short lint;       compatibility; same as fint
     char nx;          compatibility; one
+    char channel;     compatibility; 0 or supplied by fakechan=
     double soe;       seconds of the epoch
 
   Supplemental LAS-specific:
@@ -50,7 +51,7 @@ struct LAS_ALPS {
   long mnorth, meast, melevation;
   long lnorth, least, lelv;
   short fint, lint;
-  char nx;
+  char nx, channel;
   double soe;
   char ret_num, num_ret, f_edge, scan_dir;
   char class, synthetic, keypoint, withheld;
@@ -549,12 +550,12 @@ pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
 // These functions facilitate the conversion of LAS data into ALPS data
 // formats.
 
-func batch_las2pbd(dir_las, outdir=, searchstr=, format=, fakemirror=, rgbrn=,
-verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=, post_fn=,
-shorten_fn=, update=, files=, date=, zone=) {
+func batch_las2pbd(dir_las, outdir=, searchstr=, format=, fakemirror=,
+fakechan=, rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=,
+post_fn=, shorten_fn=, update=, files=, date=, zone=) {
 /* DOCUMENT batch_las2pbd, dir_las, outdir=, searchstr=, format=, fakemirror=,
-  rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=,
-  post_fn=, shorten_fn=, update, files=, date=, zone=
+  fakechan=, rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=,
+  pre_fn=, post_fn=, shorten_fn=, update, files=, date=, zone=
 
   Batch converts LAS files to PBD files.
 
@@ -582,6 +583,12 @@ shorten_fn=, update=, files=, date=, zone=) {
       to better work with the data in some cases. Valid settings:
         fakemirror=1  - Enables faking of mirror coordinates (default)
         fakemirror=0  - Disables the faking; the mirror will have zero values
+
+    fakechan= By default, the channel is left as zero. You can force it to a
+      given value by using forcechan. Any value from 0 to 255 is valid.
+      Examples:
+        fakechan=0    - Channel is left as zero (default)
+        fakechan=2    - Channel is set to 2
 
     rgbrn= If RGB data is present, it's assumed by default that the rn number
       is encoded in them (to allow re-importing data previously exported
@@ -778,7 +785,7 @@ shorten_fn=, update=, files=, date=, zone=) {
       continue;
     }
     las2pbd, files_las(i), fn_pbd=files_pbd(i), vname=vnames(i),
-      format=format, fakemirror=fakemirror, rgbrn=rgbrn,
+      format=format, fakemirror=fakemirror, fakechan=fakechan, rgbrn=rgbrn,
       verbose=pass_verbose, date=date, zone=zone;
 
     if(pass_verbose)
@@ -788,10 +795,10 @@ shorten_fn=, update=, files=, date=, zone=) {
   timer_finished, t0;
 }
 
-func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=, verbose=,
-date=, zone=) {
-/* DOCUMENT las2pbd, fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=,
-  verbose=, date=
+func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, fakechan=, rgbrn=,
+verbose=, date=, zone=) {
+/* DOCUMENT las2pbd, fn_las, fn_pbd=, format=, vname=, fakemirror=, fakechan=,
+  rgbrn=, verbose=, date=
 
   Converts a LAS file or stream to a PBD file.
 
@@ -835,7 +842,8 @@ date=, zone=) {
   }
 
   las = las_open(fn_las);
-  data = fnc(las, fakemirror=fakemirror, rgbrn=rgbrn, date=date, zone=zone);
+  data = fnc(las, fakemirror=fakemirror, fakechan=fakechan, rgbrn=rgbrn,
+    date=date, zone=zone);
   close, las;
   fnc = [];
 
@@ -938,8 +946,8 @@ func las_to_soe(las, &soe, date=) {
   return soe;
 }
 
-func las_to_alps(las, fakemirror=, rgbrn=, date=, zone=) {
-/* DOCUMENT fs = las_to_alps(las, fakemirror=, rgbrn=, date=, zone=)
+func las_to_alps(las, fakemirror=, fakechan=, rgbrn=, date=, zone=) {
+/* DOCUMENT fs = las_to_alps(las, fakemirror=, fakechan=, rgbrn=, date=, zone=)
 
   Converts LAS-format data to an array of LAS_ALPS.
 
@@ -976,6 +984,10 @@ func las_to_alps(las, fakemirror=, rgbrn=, date=, zone=) {
   data.lelv = data.elevation;
   data.lint = data.fint;
   data.nx = 1;
+
+  if(!is_void(fakechan)) {
+    data.channel = fakechan;
+  }
 
   if(fakemirror) {
     data.meast = data.east;
@@ -1021,8 +1033,8 @@ func las_to_alps(las, fakemirror=, rgbrn=, date=, zone=) {
   return data;
 }
 
-func las_to_fs(las, fakemirror=, rgbrn=, date=, zone=) {
-/* DOCUMENT fs = las_to_fs(las, fakemirror=, rgbrn=, date=, zone=)
+func las_to_fs(las, fakemirror=, fakechan=, rgbrn=, date=, zone=) {
+/* DOCUMENT fs = las_to_fs(las, fakemirror=, fakechan=, rgbrn=, date=, zone=)
 
   Converts LAS-format data to an array of FS.
 
@@ -1051,6 +1063,10 @@ func las_to_fs(las, fakemirror=, rgbrn=, date=, zone=) {
   fs.intensity = las.points.intensity;
   fs.soe = las_to_soe(las, date=date);
 
+  if(!is_void(fakechan)) {
+    fs.channel = fakechan;
+  }
+
   if(rgbrn && has_member(las.points, "eaarl_rn")) {
     fs.rn = las.points.eaarl_rn;
     parse_rn, fs.rn, raster, pulse;
@@ -1067,8 +1083,8 @@ func las_to_fs(las, fakemirror=, rgbrn=, date=, zone=) {
   return fs;
 }
 
-func las_to_veg(las, fakemirror=, rgbrn=, date=, zone=) {
-/* DOCUMENT veg = las_to_veg(las, fakemirror=, rgbrn=, date=, zone=)
+func las_to_veg(las, fakemirror=, fakechan=, rgbrn=, date=, zone=) {
+/* DOCUMENT veg = las_to_veg(las, fakemirror=, fakechan=, rgbrn=, date=, zone=)
 
   Converts LAS-format data to an array of VEG__. The first and last return
   information will be identical.
@@ -1103,6 +1119,10 @@ func las_to_veg(las, fakemirror=, rgbrn=, date=, zone=) {
   veg.least = veg.east;
   veg.lelv = veg.elevation;
   veg.lint = veg.fint;
+
+  if(!is_void(fakechan)) {
+    veg.channel = fakechan;
+  }
 
   if(rgbrn && has_member(las.points, "eaarl_rn")) {
     veg.rn = las.points.eaarl_rn;

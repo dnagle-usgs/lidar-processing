@@ -249,6 +249,7 @@ func job_las2pbd(conf) {
     --format      corresponds to  format=
     --vname       corresponds to  vname=
     --fakemirror  corresponds to  fakemirror=
+    --fakechan    corresponds to  fakechan=
     --rgbrn       corresponds to  rgbrn=
     --date        corresponds to  date=
     --zone        corresponds to  zone=
@@ -258,14 +259,15 @@ func job_las2pbd(conf) {
   keyrequire, conf.file, in=, out=;
 
   fakemirror = pass_void(atoi, conf.fakemirror);
+  fakechan = pass_void(atoi, conf.fakechan);
   rgbrn = pass_void(atoi, conf.rgbrn);
   geo = pass_void(atoi, conf.geo);
   zone = pass_void(atoi, conf.zone);
 
   require, "las.i";
   las2pbd, conf.file.in, fn_pbd=conf.file.out, format=conf.format,
-    vname=conf.vname, fakemirror=fakemirror, rgbrn=rgbrn, verbose=0,
-    date=conf.date, zone=zone;
+    vname=conf.vname, fakemirror=fakemirror, fakechan=fakechan, rgbrn=rgbrn,
+    verbose=0, date=conf.date, zone=zone;
 }
 
 func job_pbd_grid(conf) {
