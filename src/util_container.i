@@ -1045,3 +1045,61 @@ func wrap_args_passed(&args) {
     args = tmp;
   }
 }
+
+func dyn_grow(&data, ..) {
+/* DOCUMENT dyn_grow, x, xnext1, xnext2, ...
+  -or- grow(x, xnext1, xnext2, ...)
+
+  For most inputs, this is just a wrapper around grow.
+
+  If the inputs are non-equivalent struct instances, then they will be grown
+  together using a next dynamically created structure that contains all fields.
+  Values default to 0, "", or null for fields that are not present in an input.
+*/
+  if(am_subroutine()) {
+    eq_nocopy, work, data;
+  } else {
+    work = data;
+  }
+
+  // Void arguments are skipped
+  while(is_void(work) && more_args()) work = next_arg();
+  if(!more_args()) goto end;
+
+  // Non-struct data just passes through to grow
+  if(typeof(work) != "struct_instance") {
+    while(more_args()) grow, work, next_arg();
+    goto end;
+  }
+
+  name = [];
+  while(more_args()) {
+    next = next_arg();
+    if(is_void(next)) continue;
+    if(typeof(next) != "struct_instance")
+      error, "mixture of struct instances with non-struct instances";
+
+    // If possible, avoid converting work to an object. It's faster to use grow
+    // to combine equivalent structures.
+    if(!is_obj(work)) {
+      if(structeq(structof(work), structof(next))) {
+        grow, work, next;
+        continue;
+      }
+      name = nameof(structof(work));
+      work = struct2obj(work);
+    }
+
+    // If all entries have the same name, re-use it. Otherwise use default name.
+    if(name && nameof(structof(next)) != name) name = [];
+
+    obj_grow, work, struct2obj(next);
+  }
+
+  // Convert back to struct, if necessary
+  if(is_obj(work)) work = obj2struct(work, ary=1, name=name);
+
+end:
+  if(!am_subroutine()) return work;
+  eq_nocopy, data, work;
+}
