@@ -70,6 +70,36 @@ func extract_tile(text, dtlength=, dtprefix=, qqprefix=) {
   return result;
 }
 
+func tile_tiered_path(tile, scheme, dtlength=, dtprefix=, qqprefix=) {
+/* DOCUMENT tile_to_tiers(tile, scheme, dtlength=, dtprefix=, qqprefix=)
+
+  This constructs the tiered path for a given tile. The most common example
+  would be for the usual 10km/2km tile scheme: with scheme="it/dt", tile
+  "t_e232_n4058_16" would yield "i_e230_n4060_16/e232_n4058_16".
+
+  The scheme should be a forward-slash ("/") delimited series of tile types.
+  The following are valid options for tile types: qq, it, dt, dtquad, dtcell.
+  Some examples of valid schemes are "it/dt", "dt/dquad", and
+  "it/dt/dtquad/dtcell". You can also mix quarter quads with the UTM tiles
+  (such as "qq/dt"), though the utility of that is questionable at best.
+
+  The centroid of the pecified tile is used when calculating new tile names. So
+  if you pass in an index tile and use a scheme of "it/dt" it will work, but
+  the result may not be what you were hoping for.
+
+  Options dtlength, dtprefix, and qqprefix are as for other tiling functions.
+*/
+  local north, east, zone;
+  types = strsplit(scheme, "/");
+  splitary, tile2centroid(tile), north, east, zone;
+  result = [];
+  for(i = 1; i <= numberof(types); i++) {
+    grow, result, utm2tile(east, north, zone, types(i), dtlength=dtlength,
+      dtprefix=dtprefix, qqprefix=qqprefix);
+  }
+  return strjoin(result, "/");
+}
+
 func guess_tile(text, dtlength=, qqprefix=) {
 /* DOCUMENT guess_tile(text, dtlength=, qqprefix=)
   Calls extract_tile and returns its result if it finds a valid tile name.
