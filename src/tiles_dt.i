@@ -238,6 +238,7 @@ local utm2dtcell_names, utm2dtquad_names, utm2dt_names, utm2it_names;
 
 func __utm2_names(helper, east, north, zone, dtlength=, dtprefix=) {
   utm2dt_corners, east, north, helper.size;
+  if(is_scalar(zone)) zone = array(zone, dimsof(east));
   idx = munique(east, north, zone);
   east = east(idx);
   north = north(idx);
