@@ -198,7 +198,7 @@ func xyz2data(_1, &_2, _3, &_4, mode=, native=) {
     data = noop(_4);
   }
 
-  // Safegurading so that structs are not accidentally clobbered
+  // Safeguarding so that structs are not accidentally clobbered
   if(am_subroutine() && is_struct(data))
     error, "when using xyz2data as a subroutine, data cannot be a struct reference";
 
