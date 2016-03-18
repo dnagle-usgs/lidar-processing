@@ -83,6 +83,30 @@ func grid_cell_counts(data, mode=, cell=) {
   return grid;
 }
 
+func file_grid_cell_counts(infile, outfile=, mode=, cell=, empty=) {
+/* DOCUMENT file_grid_cell_counts, infile, outfile=, mode=, cell=, empty=
+  Applies grid_cell_counts to the data in INFILE and saves it to OUTFILE.
+
+  If not specified, OUTFILE defaults INFILE with "_counts.pbd" at the end. The
+  variable name will have "_counts" appended.
+
+  Set empty=1 if you want an empty file created even if no data was loaded.
+*/
+  default, outfile, file_rootname(infile) + "_counts.pbd";
+
+  data = pbd_load(infile, , vname);
+
+  if(!numberof(data)) {
+    if(empty) open, outfile, "w";
+    return;
+  }
+
+  counts = grid_cell_counts(data, mode=mode, cell=cell);
+  vname += "_counts";
+
+  pbd_save, outfile, vname, counts, empty=1;
+}
+
 func grid_density(data, mode=, cell=) {
 /* DOCUMENT grid_density(data, mode=, cell=)
 
