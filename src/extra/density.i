@@ -96,6 +96,7 @@ func file_grid_cell_counts(infile, outfile=, mode=, cell=, empty=) {
 
   data = pbd_load(infile, , vname);
 
+  mkdirp, file_dirname(outfile);
   if(!numberof(data)) {
     if(empty) open, outfile, "w";
     return;
@@ -105,6 +106,86 @@ func file_grid_cell_counts(infile, outfile=, mode=, cell=, empty=) {
   vname += "_counts";
 
   pbd_save, outfile, vname, counts, empty=1;
+}
+
+func job_grid_cell_counts(conf) {
+/* DOCUMENT job_grid_cell_counts, conf;
+  Job function used by batch_grid_cell_counts.
+*/
+  require, "eaarl.i";
+  cell = pass_void(atoi, conf.cell);
+  file_grid_cell_counts, conf.infile, outfile=conf.outfile, mode=conf.mode,
+    cell=cell, empty=1;
+}
+
+func hook_jobs_grid_cell_counts(thisfile, env) {
+/* DOCUMENT hook_jobs_grid_cell_counts, env;
+  Hook function attached to jobs_env_wrap to ensure this file gets loaded.
+*/
+  includes = env.env.includes;
+  grow, includes, thisfile;
+  save, env.env, includes;
+  return env;
+}
+hook_jobs_grid_cell_counts = closure(hook_jobs_grid_cell_counts, current_include());
+
+// This makes sure that the job gets this include file loaded.
+makeflow_requires_jobenv, "job_grid_cell_counts";
+hook_add, "jobs_env_wrap", "hook_jobs_grid_cell_counts";
+
+func batch_grid_cell_counts(indir, outdir=, searchstr=, mode=, cell=, file_suffix=) {
+/* DOCUMENT batch_grid_cell_counts, indir, outdir=, searchstr=, mode=, cell=,
+    file_suffix=
+
+  Runs grid_cell_counts over a directory.
+
+  Parameter:
+
+    indir: The source directory for the data to use.
+
+  Options:
+
+    outdir= The output directory to use for the generated cell count grids. By
+      default, files are created alongside the input files.
+
+    searchstr= Search string for locating the appropriate data. The default is
+      to use all pbd files: searchstr="*.pbd".
+
+    mode= Data mode to use when performing cell counts. Defaults to mode="fs".
+
+    cell= Cell size for the grids, in meters. Defaults to cell=250.
+
+    file_suffix= The suffix to append to output file names. By default, files
+      will have "_counts.pbd" appended.
+*/
+  t0 = array(double, 3);
+  timer, t0;
+
+  default, searchstr, "*.pbd";
+  default, file_suffix, "_counts.pbd";
+  if(strpart(file_suffix, -3:) != ".pbd") file_suffix += ".pbd";
+
+  infiles = find(indir, searchstr=searchstr);
+  outfiles = file_rootname(infiles) + file_suffix;
+  if(outdir) outfiles = file_join(outdir, file_tail(outfiles));
+
+  conf = save();
+  count = numberof(infiles);
+  for(i = 1; i <= count; i++) {
+    save, conf, string(0), save(
+      input=infiles(i),
+      output=outfiles(i),
+      command="job_grid_cell_counts",
+      options=save(
+        mode, cell,
+        infile=infiles(i),
+        outfile=outfiles(i)
+      )
+    );
+  }
+
+  makeflow_run, conf;
+  timer_finished, t0;
 }
 
 func grid_density(data, mode=, cell=) {
