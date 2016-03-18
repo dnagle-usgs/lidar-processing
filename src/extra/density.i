@@ -237,13 +237,60 @@ func density_stats(data, mode=, cell=, tile=) {
 */
   t0 = array(double, 3);
   timer, t0;
-  write, format="Calculating densities...%s", "\n";
+  write, format="Calculating counts...%s", "\n";
   counts = grid_cell_counts(data, mode=mode, cell=cell);
-  density = grid_density(counts);
-  timer_finished, t0, fmt="Densities calculated in ELAPSED\n";
+  timer_finished, t0, fmt="Counts calculated in ELAPSED\n";
 
+  parts = density_stats_partition(counts, tile=tile);
+  cell_area = parts.cell ^ 2;
+
+  write, "";
+  write, format="Overall density statistics%s", "\n";
+  density_stats_print, grow(parts.border, parts.interior), cell_area;
+
+  write, format="Border cell density statistics%s", "\n";
+  density_stats_print, parts.border, cell_area;
+
+  write, format="Interior cell density statistics%s", "\n";
+  density_stats_print, parts.interior, cell_area;
+
+  write, format="Cell size is %g by %g meters.\n", counts.cell, counts.cell;
+  write, format="Densities are points per square meter.%s", "\n";
+}
+
+func density_stats_print(counts, cell_area) {
+/* DOCUMENT density_stats_print, counts, cell_area
+  Helper function for density_stats. Not intended for direct use.
+*/
+  if(!numberof(counts)) {
+    write, " No applicable cells";
+    write, "";
+    return;
+  }
+  density = counts / cell_area;
+  cells = numberof(density);
+  sq_m = cell_area * cells;
+  sq_km = sq_m / (1000 * 1000);
+  write, format="  %d cells covering %.3f sq km\n", cells, sq_km;
+  write, format="  Minimum density: %.2f\n", density(min);
+  write, format="  Maximum density: %.2f\n", density(max);
+  write, format="  Average density: %.2f\n", density(avg);
+  write, format="  Median density:  %.2f\n", median(density);
+  write, "";
+}
+
+func density_stats_partition(counts, tile=) {
+/* DOCUMENT density_stats_partition(counts, tile=)
+  Analyzes the counts grid to determine which cells are interior and which
+  cells are border. It then returns the counts from those cells. If tile= is
+  specified, counts are restricted to the specified tile.
+
+  The output is an oxy group with three members:
+      interior - An array of counts for interior cells.
+      border - An array of counts for border cells.
+      cell - The cell size.
+*/
   zcounts = *counts.zgrid;
-  zdensity = *density.zgrid;
 
   xcount = ycount = 0;
   splitary, dimsof(zcounts), , xcount, ycount;
@@ -281,38 +328,9 @@ func density_stats(data, mode=, cell=, tile=) {
   // Border cells are populated cells with fewer than eight populated adjacent cells
   zborder = zpop & (zadj < 8);
 
-  cell_area = counts.cell ^ 2;
-
-  write, "";
-  write, format="Overall density statistics%s", "\n";
-  density_stats_helper, zdensity(where(zpop & ztile)), cell_area;
-
-  write, format="Border cell density statistics%s", "\n";
-  density_stats_helper, zdensity(where(zborder & ztile)), cell_area;
-
-  write, format="Interior cell density statistics%s", "\n";
-  density_stats_helper, zdensity(where(zinterior & ztile)), cell_area;
-
-  write, format="Cell size is %g by %g meters.\n", counts.cell, counts.cell;
-  write, format="Densities are points per square meter.%s", "\n";
-}
-
-func density_stats_helper(density, cell_area) {
-/* DOCUMENT density_stats_helper, density, cell_area
-  Helper function for density_stats. Not intended for direct use.
-*/
-  if(!numberof(density)) {
-    write, " No applicable cells";
-    write, "";
-    return;
-  }
-  cells = numberof(density);
-  sq_m = cell_area * cells;
-  sq_km = sq_m / (1000 * 1000);
-  write, format="  %d cells covering %.3f sq km\n", cells, sq_km;
-  write, format="  Minimum density: %.2f\n", density(min);
-  write, format="  Maximum density: %.2f\n", density(max);
-  write, format="  Average density: %.2f\n", density(avg);
-  write, format="  Median density:  %.2f\n", median(density);
-  write, "";
+  return save(
+    interior=zcounts(where(zinterior & ztile)),
+    border=zcounts(where(zborder & ztile)),
+    cell=counts.cell
+  );
 }
