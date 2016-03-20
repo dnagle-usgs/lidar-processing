@@ -48,7 +48,9 @@ func grid_cell_counts(data, mode=, cell=) {
       data, use a value that divides evenly into 2000 for best results.
 */
   default, mode, "fs";
-  default, cell, 250.;
+  default, cell, 250;
+
+  cell = double(cell);
 
   grid = ZGRID();
   grid.nodata = 0;
@@ -93,12 +95,15 @@ func file_grid_cell_counts(infile, outfile=, mode=, cell=, empty=) {
 /* DOCUMENT file_grid_cell_counts, infile, outfile=, mode=, cell=, empty=
   Applies grid_cell_counts to the data in INFILE and saves it to OUTFILE.
 
-  If not specified, OUTFILE defaults INFILE with "_counts.pbd" at the end. The
-  variable name will have "_counts" appended.
+  If not specified, OUTFILE defaults INFILE with "_counts_c<cell>.pbd" at the
+  end. The variable name will have "_counts" appended.
 
   Set empty=1 if you want an empty file created even if no data was loaded.
 */
-  default, outfile, file_rootname(infile) + "_counts.pbd";
+  default, cell, 250;
+
+  cell = long(cell);
+  default, outfile, file_rootname(infile) + swrite(format="_counts_c%d.pbd", cell);
 
   data = pbd_load(infile, , vname);
 
@@ -162,13 +167,16 @@ func batch_grid_cell_counts(indir, outdir=, searchstr=, mode=, cell=, file_suffi
     cell= Cell size for the grids, in meters. Defaults to cell=250.
 
     file_suffix= The suffix to append to output file names. By default, files
-      will have "_counts.pbd" appended.
+      will have "_counts_c<cell>.pbd" appended.
 */
   t0 = array(double, 3);
   timer, t0;
 
   default, searchstr, "*.pbd";
-  default, file_suffix, "_counts.pbd";
+  default, cell, 250;
+
+  cell = long(cell);
+  default, file_suffix, swrite(format="_counts_c%d.pbd", cell);
   if(strpart(file_suffix, -3:) != ".pbd") file_suffix += ".pbd";
 
   infiles = find(indir, searchstr=searchstr);
@@ -212,11 +220,11 @@ func grid_density(data, mode=, cell=) {
     counts = data;
     cell = data.cell;
   } else {
-    default, cell, 250.;
+    default, cell, 250;
     counts = grid_cell_counts(data, mode=mode, cell=cell);
   }
 
-  cell_area = cell * cell;
+  cell_area = double(cell * cell);
   zgrid = double(*counts.zgrid) / cell_area;
 
   density = counts;
@@ -363,10 +371,10 @@ func density_stats_dir(dir, searchstr=) {
   Option:
 
     searchstr= The search string to use for finding the correct files.
-        searchstr="*_counts.pbd"   Default
+        searchstr="*_counts*.pbd"   Default
 */
   local vname;
-  default, searchstr, "*_counts.pbd";
+  default, searchstr, "*_counts*.pbd";
 
   files = find(dir, searchstr=searchstr);
   nfiles = numberof(files);
