@@ -12,43 +12,6 @@ func dt2utm_km(dtcodes, &east, &north, &zone, &quad, &cell) {
   cell = atoi(cell);
 }
 
-func extract_dtcell(text, dtlength=, dtprefix=) {
-/* DOCUMENT extract_dtcell(text, dtlength=, dtprefix=)
-  Attempts to extract a data tile cell name from each string in TEXT.
-  See extract_dt for info on options.
-*/
-  local e, n, z, q, c;
-  default, dtlength, "short";
-  default, dtprefix, 1;
-  dt2utm_km, text, e, n, z, q, c;
-  w = where(bool(e) & bool(n) & bool(z) & bool(q) & bool(c));
-  result = array(string(0), dimsof(text));
-  fmt = (dtlength == "short") ? "e%d_n%d_%d" : "e%d000_n%d000_%d";
-  fmt += "_%s%02d";
-  if(dtprefix) fmt = "c_" + fmt;
-  if(numberof(w))
-    result(w) = swrite(format=fmt, e(w), n(w), z(w), q(w), c(w));
-  return result;
-}
-
-func extract_dtquad(text, dtlength=, dtprefix=) {
-/* DOCUMENT extract_dtquad(text, dtlength=, dtprefix=)
-  Attempts to extract a data tile quad name from each string in TEXT.
-  See extract_dt for info on options.
-*/
-  local e, n, z, q;
-  default, dtlength, "short";
-  default, dtprefix, 1;
-  dt2utm_km, text, e, n, z, q;
-  w = where(bool(e) & bool(n) & bool(z) & bool(q));
-  result = array(string(0), dimsof(text));
-  fmt = (dtlength == "short") ? "e%d_n%d_%d_%s" : "e%d000_n%d000_%d_%s";
-  if(dtprefix) fmt = "q_" + fmt;
-  if(numberof(w))
-    result(w) = swrite(format=fmt, e(w), n(w), z(w), q(w));
-  return result;
-}
-
 func extract_dt(text, dtlength=, dtprefix=) {
 /* DOCUMENT extract_dt(text, dtlength=, dtprefix=)
   Attempts to extract a data tile name from each string in TEXT.
@@ -108,76 +71,6 @@ func utm2dt(east, north, zone, dtlength=, dtprefix=) {
     dtlength=dtlength, dtprefix=dtprefix);
 }
 
-func utm2dtquad(east, north, zone, &quad, dtlength=, dtprefix=) {
-/* DOCUMENT utm2dtquad, east, north, &quad
-  -or-  tile = utm2dtquad(north, east, zone)
-  Like utm2dtcell, but only provides quad information. Data tile e123_n4567_15
-  quad B has the quad name:
-    t_e123000_n4567000_15_B
-  SEE ALSO: utm2dtcell
-*/
-  utm2dtcell, east, north, zone, q;
-  if(am_subroutine()) {
-    quad = q;
-  } else {
-    tile = utm2dt(east, north, zone) + "_" + q;
-    return extract_dtquad(tile, dtlength=dtlength, dtprefix=dtprefix);
-  }
-}
-
-func utm2dtcell(east, north, zone, &quad, &cell, dtlength=, dtprefix=) {
-/* DOCUMENT utm2dtcell, north, east, &quad, &cell
-  -or-  tile = utm2dtcell(north, east, zone)
-
-  Provides the quad and cell for the given northing/easting values within
-  their data tile. -OR- Returns a tile name that incorporates the quad and
-  cell. For data tile e123_n4567_15 quad B cell 9, the cell tile name is:
-    t_e123000_n4567000_15_B09
-
-  A 2km-square data tile has four quads, each 1km-square. They are laid out
-  as:
-    +---+---+
-    | A | B |
-    +---+---+
-    | C | D |
-    +---+---+
-
-  A 1km-square quad has sixteen cells, each 250m-square. They are laid out
-  as:
-    +----+----+----+----+
-    |  1 |  2 |  3 |  4 |
-    +----+----+----+----+
-    |  5 |  6 |  7 |  8 |
-    +----+----+----+----+
-    |  9 | 10 | 11 | 12 |
-    +----+----+----+----+
-    | 13 | 14 | 15 | 16 |
-    +----+----+----+----+
-
-*/
-  quad_map = [["C","D"],["A","B"]];
-  cell_map = [indgen(13:16),indgen(9:12),indgen(5:8),indgen(1:4)];
-
-  tn = floor(north/2000.)*2000;
-  qn = long(north - tn)/1000 + 1;
-  cn = long(north - tn - (qn*1000 - 1000)) / 250 + 1;
-
-  te = floor(east/2000.)*2000;
-  qe = long(east - te)/1000 + 1;
-  ce = long(east - te - (qe*1000 - 1000)) / 250 + 1;
-
-  q = quad_map(qe + (qn-1)*2);
-  c = cell_map(ce + (cn-1)*4);
-
-  if(am_subroutine()) {
-    quad = q;
-    cell = c;
-  } else {
-    tile = utm2dt(east, north, zone) + swrite(format="_%s%02d", q, c);
-    return extract_dtcell(tile, dtlength=dtlength, dtprefix=dtprefix);
-  }
-}
-
 func dt2it(dt, dtlength=, dtprefix=) {
 /* DOCUMENT dt2it(dt, dtlength=)
   Returns the index tile that corresponds to a given data tile.
@@ -206,7 +99,7 @@ func dt2utm_corner(tile, &east, &north, &zone) {
   if(!is_scalar(tile)) error, "only works for scalar input";
   east = north = zone = [];
   type = tile_type(tile);
-  funcs = save(dtcell=dtcell2utm, dtquad=dtquad2utm, dt=dt2utm, it=it2utm);
+  funcs = save(dt=dt2utm, it=it2utm);
   if(!funcs(*,type)) return;
   if(!am_subroutine()) return funcs(noop(type))(tile);
   splitary, funcs(noop(type))(tile), east, north, zone;
@@ -222,12 +115,10 @@ func utm2dt_corners(&east, &north, size) {
   north = long(ceil(north/size) * size);
 }
 
-local utm2dtcell_names, utm2dtquad_names, utm2dt_names, utm2it_names;
+local utm2dt_names, utm2it_names;
 /* DOCUMENT
   tiles = utm2it_names(east, north, zone, dtlength=, dtprefix=)
   tiles = utm2dt_names(east, north, zone, dtlength=, dtprefix=)
-  tiles = utm2dtquad_names(east, north, zone, dtlength=, dtprefix=)
-  tiles = utm2dtcell_names(east, north, zone, dtlength=, dtprefix=)
 
   For a set of UTM eastings, northings, and zones, each of these calculate the
   set of tiles that encompass the given points. This is equivalent to, for
@@ -246,8 +137,6 @@ func __utm2_names(helper, east, north, zone, dtlength=, dtprefix=) {
   return helper.tile(east, north, zone, dtlength=dtlength, dtprefix=dtprefix);
 }
 
-utm2dtcell_names = closure(__utm2_names, save(size=250, tile=utm2dtcell));
-utm2dtquad_names = closure(__utm2_names, save(size=1000, tile=utm2dtquad));
 utm2dt_names = closure(__utm2_names, save(size=2000, tile=utm2dt));
 utm2it_names = closure(__utm2_names, save(size=10000, tile=utm2it));
 __utm2_names = [];
@@ -259,75 +148,6 @@ func dt2uz(dtcodes) {
   local zone;
   dt2utm_km, dtcodes, , , zone;
   return zone;
-}
-
-func dtcell2utm(dtcodes, &east, &north, &zone, bbox=, centroid=) {
-/* DOCUMENT dtcell2utm(dtcodes, &east, &north, &zone, bbox=, centroid=)
-  Like dt2utm, but for cells.
-*/
-  local e, n, z, q, c;
-  dt2utm_km, dtcodes, e, n, z, q, c;
-  e *= 1000;
-  n *= 1000;
-  q = where(["A","B","C","D"] == q)(1) - 1;
-  c--;
-
-  qnoff = q / 2;
-  qeoff = q % 2;
-  cnoff = c / 4;
-  ceoff = c % 4;
-
-  e += (qeoff * 1000 + ceoff * 250);
-  n -= (qnoff * 1000 + cnoff * 250);
-
-  if(am_subroutine()) {
-    north = n;
-    east = e;
-    zone = z;
-    return;
-  }
-
-  if(is_void(z))
-    return [];
-  else if(bbox)
-    return [n - 250, e + 250, n, e, z];
-  else if(centroid)
-    return [n - 125, e + 125, z];
-  else
-    return [n, e, z];
-}
-
-func dtquad2utm(dtcodes, &east, &north, &zone, bbox=, centroid=) {
-/* DOCUMENT dtquad2utm(dtcodes, &east, &north, &zone, bbox=, centroid=)
-  Like dt2utm, but for quads.
-*/
-  local e, n, z, q;
-  dt2utm_km, dtcodes, e, n, z, q;
-  e *= 1000;
-  n *= 1000;
-  q = where(["A","B","C","D"] == q)(1) - 1;
-
-  qnoff = q / 2;
-  qeoff = q % 2;
-
-  e += qeoff * 1000;
-  n -= qnoff * 1000;
-
-  if(am_subroutine()) {
-    north = n;
-    east = e;
-    zone = z;
-    return;
-  }
-
-  if(is_void(z))
-    return [];
-  else if(bbox)
-    return [n - 1000, e + 1000, n, e, z];
-  else if(centroid)
-    return [n - 500, e + 500, z];
-  else
-    return [n, e, z];
 }
 
 func dt2utm(dtcodes, &east, &north, &zone, bbox=, centroid=) {

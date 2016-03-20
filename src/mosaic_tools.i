@@ -928,9 +928,9 @@ subdir=, jgw=) {
 
   Arguments:
     cirdata: A Yeti hash, as returned by gather_cir_data.
-    scheme: One of "it", "qq", "dt", "dtquad", "dtcell", or "itdt". See
-      partition_by_tile for the first five. "itdt" will divide into 2k
-      tiles, but organize them into 10k directories.
+    scheme: One of "it", "qq", "dt", or "itdt". See partition_by_tile for the
+      first three. "itdt" will divide into 2k tiles, but organize them into 10k
+      directories.
     dest_dir: The directory that will contain the partition directories and
       images.
 

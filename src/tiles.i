@@ -37,27 +37,15 @@ func extract_tile(text, dtlength=, dtprefix=, qqprefix=) {
   default, qqprefix, 0;
   qq = extract_qq(text, qqprefix=qqprefix);
   dt = extract_dt(text, dtlength=dtlength, dtprefix=dtprefix);
-  dtq = extract_dtquad(text, dtlength=dtlength, dtprefix=dtprefix);
-  dtc = extract_dtcell(text, dtlength=dtlength, dtprefix=dtprefix);
 
   prefix = strpart(text, 1:2);
   is_it = "i_" == prefix;
-  is_dtq = "q_" == prefix;
-  is_dtc = "c_" == prefix;
 
   result = array(string, dimsof(text));
 
   w = where(strlen(dt) > 0 & is_it);
   if(numberof(w))
     result(w) = dt2it(dt(w), dtlength=dtlength, dtprefix=dtprefix);
-
-  w = where(strlen(dtc) > 0 & is_dtc & !strlen(result));
-  if(numberof(w))
-    result(w) = dtc(w);
-
-  w = where(strlen(dtq) > 0 & is_dtq & !strlen(result));
-  if(numberof(w))
-    result(w) = dtq(w);
 
   w = where(strlen(dt) > 0 & !strlen(result));
   if(numberof(w))
@@ -78,10 +66,10 @@ func tile_tiered_path(tile, scheme, dtlength=, dtprefix=, qqprefix=) {
   "t_e232_n4058_16" would yield "i_e230_n4060_16/e232_n4058_16".
 
   The scheme should be a forward-slash ("/") delimited series of tile types.
-  The following are valid options for tile types: qq, it, dt, dtquad, dtcell.
-  Some examples of valid schemes are "it/dt", "dt/dquad", and
-  "it/dt/dtquad/dtcell". You can also mix quarter quads with the UTM tiles
-  (such as "qq/dt"), though the utility of that is questionable at best.
+  The following are valid options for tile types: qq, it, dt.
+  An examples of a valid schemes is "it/dt". You can also mix quarter quads
+  with the UTM tiles (such as "qq/dt"), though the utility of that is
+  questionable at best.
 
   The centroid of the pecified tile is used when calculating new tile names. So
   if you pass in an index tile and use a scheme of "it/dt" it will work, but
@@ -129,8 +117,6 @@ func tile_type(text) {
 /* DOCUMENT tile_type(text)
   Returns string indicating the type of tile used.  The return result (scalar
   or array, depending on the input) will have strings that mean the following:
-    "dtcell" - 250-meter cell tile
-    "dtquad" - One-kilometer quad tile
     "dt" - Two-kilometer data tile
     "it" - Ten-kilometer index tile
     "qq" - Quarter quad tile
@@ -139,27 +125,15 @@ func tile_type(text) {
 */
   qq = extract_qq(text);
   dt = extract_dt(text);
-  dtq = extract_dtquad(text);
-  dtc = extract_dtcell(text);
 
   prefix = strpart(text, 1:2);
   is_it = "i_" == prefix;
-  is_dtq = "q_" == prefix;
-  is_dtc = "c_" == prefix;
 
   result = array(string, dimsof(text));
 
   w = where(strlen(dt) > 0 & is_it);
   if(numberof(w))
     result(w) = "it";
-
-  w = where(strlen(dtc) > 0 & is_dtc & !strlen(result));
-  if(numberof(w))
-    result(w) = "dtcell";
-
-  w = where(strlen(dtq) > 0 & is_dtq & !strlen(result));
-  if(numberof(w))
-    result(w) = "dtquad";
 
   w = where(strlen(dt) > 0 & !strlen(result));
   if(numberof(w))
@@ -178,7 +152,7 @@ func tile_size(text) {
   the square UTM-based tiling schemes (data tiles, index tiles, etc.). Anything
   else will return 0.
 */
-  sizes = save(it=10000, dt=2000, dtquad=1000, dtcell=250);
+  sizes = save(it=10000, dt=2000);
   type = tile_type(text);
   if(sizes(*,type)) return sizes(noop(type));
   return 0;
@@ -187,9 +161,9 @@ func tile_size(text) {
 func utm2tile(east, north, zone, type, dtlength=, dtprefix=, qqprefix=) {
 /* DOCUMENT utm2tile(east, north, zone, type, dtlength=, dtprefix=, qqprefix=)
   Returns the tile name for each set of east/north/zone. Wrapper around
-  utm2dt, utm2it, utm2qq, utm2dtcell, and utm2dtquad.
+  utm2dt, utm2it, and utm2qq.
 */
-  dtfuncs = h_new(dtcell=utm2dtcell, dtquad=utm2dtquad, dt=utm2dt, it=utm2it);
+  dtfuncs = h_new(dt=utm2dt, it=utm2it);
   if(h_has(dtfuncs, type))
     return dtfuncs(type)(east, north, zone, dtlength=dtlength,
       dtprefix=dtprefix);
@@ -202,11 +176,9 @@ func utm2tile_names(east, north, zone, type, dtlength=, dtprefix=, qqprefix=) {
 /* DOCUMENT utm2tile_names(east, north, zone, type, dtlength=, dtprefix=,
   qqprefix=)
   Returns the unique tile names for the eastings/northings/zone. Wrapper
-  around utm2dt_names, utm2it_names, utm2qq_names, utm2dtcell_names, and
-  utm2dtquad_names.
+  around utm2dt_names, utm2it_names, and utm2qq_names.
 */
-  dtfuncs = h_new(dtcell=utm2dtcell_names, dtquad=utm2dtquad_names,
-    dt=utm2dt_names, it=utm2it_names);
+  dtfuncs = h_new(dt=utm2dt_names, it=utm2it_names);
   if(h_has(dtfuncs, type))
     return dtfuncs(type)(east, north, zone, dtlength=dtlength,
       dtprefix=dtprefix);
@@ -243,8 +215,7 @@ func tile2bbox(tile) {
   Returns the bounding box for a tile: [south,east,north,west].
 */
   type = tile_type(tile);
-  funcs = h_new(dtcell=dtcell2utm, dtquad=dtquad2utm, dt=dt2utm, it=it2utm,
-    qq=qq2utm);
+  funcs = h_new(dt=dt2utm, it=it2utm, qq=qq2utm);
 
   if(h_has(funcs, type))
     return funcs(type)(tile, bbox=1);
@@ -256,8 +227,7 @@ func tile2centroid(tile) {
   Returns the centroid for a tile: [north,east,zone].
 */
   type = tile_type(tile);
-  funcs = h_new(dtcell=dtcell2utm, dtquad=dtquad2utm, dt=dt2utm, it=it2utm,
-    qq=qq2utm);
+  funcs = h_new(dt=dt2utm, it=it2utm, qq=qq2utm);
 
   if(h_has(funcs, type))
     return funcs(type)(tile, centroid=1);
@@ -308,9 +278,6 @@ func show_grid_location(m) {
   write, format=fmt, "2km Data Tile",
     utm2dt(m(1), m(2), curzone, dtlength="long"),
     utm2dt(m(1), m(2), curzone, dtlength="short");
-  write, format=fmt, "250m Cell",
-    utm2dtcell(m(1), m(2), curzone, dtlength="long"),
-    utm2dtcell(m(1), m(2), curzone, dtlength="short");
 }
 
 func extract_for_tile(east, north, zone, tile, buffer=) {
@@ -423,8 +390,6 @@ qqprefix=) {
     "qq" --> quarter quads
     "it" --> index tiles
     "dt" --> data tiles
-    "dtquad" --> quad tiles
-    "dtcell" --> cell tiles
 */
   default, buffer, 100;
   names = [];
@@ -500,8 +465,6 @@ dtlength=, dtprefix=, qqprefix=, restrict_tiles=) {
       "dt" - 2km data tiles
       "it" - 10km index tiles
       "itdt" - Two-tiered index tile/data tile
-      "dtquad" - 1km quad tiles
-      "dtcell" - 250m cell tiles
     mode= Specifies the data mode to use. Can be any value valid for
       data2xyz.
         mode="fs"   First surface
