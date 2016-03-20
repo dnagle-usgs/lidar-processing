@@ -209,51 +209,68 @@ func it2utm(itcodes, bbox=, centroid=) {
     return u;
 }
 
-func draw_grid(w) {
-/* DOCUMENT draw_grid, w
-  Draws a 10k/2k grid in window W using the window's current limits. The grid
-  will contain one or more of the following kinds of grid lines:
-    10km tile: violet
-    2km tile: red
-    1km quad: dark grey (dashed)
-    250m cell: light grey (dashed)
+func draw_grid(win, show_it=, show_dt=, show_kt=, show_ht=) {
+/* DOCUMENT draw_grid, win
+  Draws UTM tile grid lines in window WIN. Up to four kinds of lines may be
+  drawn. By default, lines are shown based on the window's limits, but each
+  kind may be forced on or off with the option indicated.
+
+    show_it=    10km index tile     thick violet line
+    show_dt=    2km data tile       thick red line
+    show_kt=    1km tile            dashed grey line
+    show_ht=    500m tile           dotted grey line
   SEE ALSO: show_grid_location draw_qq_grid
 */
   local x0, x1, y0, y1;
-  default, w, 5;
-  old_w = current_window();
-  window, w;
-  ll = long(limits()/2000) * 2000;
+  default, win, 5;
+  winbkp = current_window();
+  window, win;
 
-  // Only show 10km tiles if range is >= 8km; otherwise, 2km
-  if(ll(4) - ll(3) >= 8000) {
-    ll = long(ll/10000)*10000;
-    ll([2,4]) += 10000;
+  lims = limits();
+  assign, lims, x0, x1, y0, y1;
+  dist = max(x1-x0, y1-y0);
+
+  // Plot moves around if limits aren't fixed, which makes things very slow on
+  // big plots. Fix the limits for now, but they'll be restored later.
+  limits, x0, x1, y0, y1;
+
+  default, show_it, dist >= 8000;
+  default, show_dt, 1;
+  default, show_kt, dist <= 5000;
+  default, show_ht, dist <= 3000;
+
+  // Snap bounds to largest tile size
+  if(show_it) {
+    snap = 10000;
+  } else if(show_dt) {
+    snap = 2000;
+  } else if(show_kt) {
+    snap = 1000;
   } else {
-    ll([2,4]) += 2000;
+    snap = 500;
   }
-  assign, ll, x0, x1, y0, y1;
+  x0 = long(floor(x0/snap)) * snap;
+  x1 = long(ceil(x1/snap)) * snap;
+  y0 = long(floor(y0/snap)) * snap;
+  y1 = long(ceil(y1/snap)) * snap;
 
-  // Only show quads and cells when within 4km
-  if (y1 - y0 <= 4000) {
-    plgrid, indgen(y0:y1:250), indgen(x0:x1:250), color=[200,200,200],
-      width=0.1, type="dash";
-    plgrid, indgen(y0:y1:1000), indgen(x0:x1:1000), color=[120,120,120],
+  if(show_ht) {
+    plgrid, indgen(y0:y1:500), indgen(x0:x1:500), color=[208,208,208],
+      width=0.1, type="dot";
+  }
+  if(show_kt) {
+    plgrid, indgen(y0:y1:1000), indgen(x0:x1:1000), color=[208,208,208],
       width=0.1, type="dash";
   }
-
-  // Always show 2km tile, though with a smaller width when zoomed out
-  width = (y1 - y0 >= 8000) ? 3 : 5;
-  plgrid, indgen(y0:y1:2000), indgen(x0:x1:2000), color=[250,140,140],
-    width=width;
-
-  // Only show 10km tiles if range is >= 8km
-  if(y1 - y0 >= 8000) {
-    // Adding 9999 combined with the :10000 step makes sure we round up to the
-    // next full 10km grid cell when we are in 2km mode.
-    plgrid, indgen(y0:y1+9999:10000), indgen(x0:x1+9999:10000),
+  if(show_dt) {
+    plgrid, indgen(y0:y1:2000), indgen(x0:x1:2000), color=[250,140,140],
+      width=5;
+  }
+  if(show_it) {
+    plgrid, indgen(y0:y1:10000), indgen(x0:x1:10000),
       color=[170,120,170], width=7;
   }
 
-  window_select, old_w;
+  limits, lims;
+  window_select, winbkp;
 }
