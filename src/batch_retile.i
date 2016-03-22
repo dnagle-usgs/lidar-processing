@@ -459,7 +459,7 @@ dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
       }
     }
   }
-  if(!scankeep) remove_recursive, tempdir;
+  if(!scankeep) remove_recursive, scandir;
 
   command = "job_retile_assemble";
   if(split_days) command += "_dates";
