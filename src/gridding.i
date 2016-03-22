@@ -323,10 +323,10 @@ func grid_fix_params(x, y, cell, &xmin, &xmax, &ymin, &ymax, &xcount, &ycount) {
   are determined (where necessary) and fixed to make sense with respect to one
   another (where necessary).
 */
-  default, xmin, floor(x(min));
-  default, ymin, floor(y(min));
-  default, xmax, ceil(x(max));
-  default, ymax, ceil(y(max));
+  default, xmin, floor(x(min)/cell)*cell;
+  default, ymin, floor(y(min)/cell)*cell;
+  default, xmax, ceil(x(max)/cell)*cell;
+  default, ymax, ceil(y(max)/cell)*cell;
 
   xcount = long(ceil((xmax-xmin)/cell));
   ycount = long(ceil((ymax-ymin)/cell));
