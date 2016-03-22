@@ -27,6 +27,7 @@ powerwt=, update=) {
         method="cell_median"      Use median of values in cell
         method="cell_counts"      Use count of points in cell
         method="cell_density"     Use density of points in cell
+        method="cell_coverage"    Use 1 when data is present in cell
     mode= The data mode to use for the input data. By default, this is
       determined from the file name if possible; if not possible, the file
       is skipped.
@@ -710,6 +711,7 @@ func cell_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
       "median"    Use median of values in cell. (default)
       "counts"    Use the number of points in cell.
       "density"   Use density of points in cell.
+      "coverage"  Cells with data get 1, otherwise 0.
     xmin= Minimum x value for grid.
     xmax= Maximum x value for grid. (May be adjusted based on xmin and cell.)
     ymin= Minimum y value for grid
@@ -718,7 +720,7 @@ func cell_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
     nodata= Nodata value to use.
 */
   default, method, "median";
-  if(method == "counts") {
+  if(method == "counts" || method == "coverage") {
     default, nodata, 0;
     nodata = long(nodata);
   } else {
@@ -749,6 +751,12 @@ func cell_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
 
   // Index into zgrid for z points
   zi = (long(yc) - 1) * xcount + long(xc);
+
+  // coverage method is simplest: just put a 1 wherever there's data
+  if(method == "coverage") {
+    zgrid(zi) = 1;
+    goto FINISH;
+  }
 
   // counts method is simple: histogram it
   if(method == "counts") {
