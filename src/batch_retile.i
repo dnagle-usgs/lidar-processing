@@ -199,11 +199,11 @@ tile=, mode=, remove_buffers=, buffer=, zone=, force_zone=, uniq=, dayshift=) {
 func batch_retile(srcdir, outdir=, scheme=, mode=, searchstr=, update=,
 file_suffix=, vname_suffix=, suffix=, remove_buffers=, buffer=, uniq=,
 verbose=, zone=, shorten=, flat=, split_zones=, split_days=, day_shift=,
-dtlength=, dtprefix=, qqprefix=) {
+dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
 /* DOCUMENT batch_retile, srcdir, outdir=, scheme=, mode=, searchstr=, update=,
   file_suffix=, vname_suffix=, suffix=, remove_buffers=, buffer=, uniq=,
   verbose=, zone=, shorten=, flat=, split_zones=, split_days=, day_shift=,
-  dtlength=, dtprefix=, qqprefix=
+  dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=
 
   Loads the data in srcdir and (re)partitions it into tiles, which are created
   in outdir.
@@ -301,7 +301,21 @@ dtlength=, dtprefix=, qqprefix=) {
       related) schemes. By default, this is set based on scheme+dtlength.
     qqprefix= Specifies whether to prepend "qq" to quarter quad names. This is
       disabled by default.
-
+    scandir= This function uses a two-step process: first it scans the data to
+      determine what tiles need to be created; then it actually goes through
+      and creates those tiles (loading the relevant data for each tile).
+      Normally, the files generated for the scan are removed after their data
+      has been read. However, if you specify a path for scandir=, these files
+      will be kept and the other scan options (scanonly= and scanresume=) can
+      be used.
+    scanonly= If scanonly=1, then ONLY the first step (scanning) is performed.
+      No tiles are created. This is incompatible with scanresume=1.
+    scanresume= If scanresume=1, then the scanning step is skipped and the scan
+      data is read from scandir. This is incompatible with scanonly=1. Also,
+      you must be sure to use the same values for the following options as you
+      did when you generated the scan data: scheme=, mode=, searchstr=,
+      remove_buffers=, buffer=, zone=, shorten=, split_days=, day_shift=,
+      dtlength=, dtprefix=, qqprefix=.
 */
   t0 = t1 = array(double, 3);
   timer, t0;
@@ -322,6 +336,17 @@ dtlength=, dtprefix=, qqprefix=) {
   default, split_days, 0;
   default, dayshift, 0;
   default, dtlength, (shorten ? "short" : "long");
+  default, scanresume, 0;
+  default, scanonly, 0;
+
+  scankeep = !is_void(scandir);
+  if(scanonly && scanresume) {
+    error, "can't use scanonly= and scanresume= together";
+  }
+  if(!scandir) {
+    if(scanonly) error, "need to provide scandir= with scanonly=";
+    if(scanresume) error, "need to provide scandir= with scanresume=";
+  }
 
   aliases = save("10k2k", "itdt", "2k", "dt", "10k", "it");
   if(aliases(*,scheme)) scheme = aliases(noop(scheme));
@@ -374,27 +399,38 @@ dtlength=, dtprefix=, qqprefix=) {
   if(force_zone) save, options, force_zone;
   if(split_days) save, options, split_days, dayshift;
 
-  tempdir = mktempdir("batch_retile_scan");
-  scans = file_join(tempdir, swrite(format="%04d.pbd", indgen(count)));
-  makeflow_fn = file_join(tempdir, "retile_scan.makeflow");
-
-  conf = save();
-  for(i = 1; i <= count; i++) {
-    save, conf, string(0), save(
-      input=files(i),
-      output=scans(i),
-      command="job_retile_scan",
-      options=obj_merge(options, save(
-        "infile", files(i),
-        "outfile", scans(i)
-      ))
-    );
+  if(scandir) {
+    if(!scanresume) mkdirp, scandir;
+  } else {
+    scandir = mktempdir("batch_retile_scan");
   }
 
-  write, "Scanning input to determine output...";
-  timer, t1;
-  makeflow_run, conf, makeflow_fn, interval=15;
-  timer_finished, t1, fmt=" Total time: SECONDS seconds.\n";
+  scans = file_join(scandir, swrite(format="%04d.pbd", indgen(count)));
+  makeflow_fn = file_join(scandir, "retile_scan.makeflow");
+
+  if(!scanresume) {
+
+    conf = save();
+    for(i = 1; i <= count; i++) {
+      save, conf, string(0), save(
+        input=files(i),
+        output=scans(i),
+        command="job_retile_scan",
+        options=obj_merge(options, save(
+          "infile", files(i),
+          "outfile", scans(i)
+        ))
+      );
+    }
+
+    write, "Scanning input to determine output...";
+    timer, t1;
+    makeflow_run, conf, makeflow_fn, interval=15;
+    timer_finished, t1, fmt=" Total time: SECONDS seconds.\n";
+
+  }
+
+  if(scanonly) return;
 
   wanted = save();
   coverage = save();
@@ -422,10 +458,8 @@ dtlength=, dtprefix=, qqprefix=) {
         save, coverage(scan.coverage(j)), files(i), 1;
       }
     }
-
-    remove, scans(i);
   }
-  remove_recursive, tempdir;
+  if(!scankeep) remove_recursive, tempdir;
 
   command = "job_retile_assemble";
   if(split_days) command += "_dates";
