@@ -25,6 +25,8 @@ powerwt=, update=) {
         method="cell_last"        Use last value in cell (per current ordering)
         method="cell_average"     Use average of values in cell
         method="cell_median"      Use median of values in cell
+        method="cell_counts"      Use count of points in cell
+        method="cell_density"     Use density of points in cell
     mode= The data mode to use for the input data. By default, this is
       determined from the file name if possible; if not possible, the file
       is skipped.
@@ -701,10 +703,12 @@ func cell_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
     y: Array of known y values
     z: Array of known z values
   Options:
-    method= Method of interpolation to use. Three possible values:
+    method= Method of gridding to use. Possible values:
       "last"      Use last value found in cell (per ordering of x,y,z).
       "average"   Use average of values in cell.
       "median"    Use median of values in cell. (default)
+      "counts"    Use the number of points in cell.
+      "density"   Use density of points in cell.
     xmin= Minimum x value for grid.
     xmax= Maximum x value for grid. (May be adjusted based on xmin and cell.)
     ymin= Minimum y value for grid
@@ -712,10 +716,20 @@ func cell_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
     cell= Cell size for grid.
     nodata= Nodata value to use.
 */
-  default, nodata, -32767.;
+  default, method, "median";
+  if(method == "counts") {
+    default, nodata, 0;
+    nodata = long(nodata);
+  } else {
+    if(method == "density") {
+      default, nodata, 0.;
+    } else {
+      default, nodata, -32767.;
+    }
+    nodata = double(nodata);
+  }
   default, cell, 1.;
   cell = double(cell);
-  default, method, "median";
 
   grid_fix_params, x, y, cell, xmin, xmax, ymin, ymax, xcount, ycount;
 
@@ -726,7 +740,7 @@ func cell_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
   z = z(w);
 
   // Grid storage
-  zgrid = array(double(nodata), xcount, ycount);
+  zgrid = array(nodata, xcount, ycount);
 
   // Grid position for each point
   xc = min(xcount, (x-xmin)/cell + 1);
@@ -734,6 +748,20 @@ func cell_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
 
   // Index into zgrid for z points
   zi = (long(yc) - 1) * xcount + long(xc);
+
+  // counts method is simple: histogram it
+  if(method == "counts") {
+    hist = histogram(zi);
+    zgrid(1:numberof(hist)) = hist;
+    goto FINISH;
+  }
+
+  // density method is also simple: it's counts divided by cell area
+  if(method == "density") {
+    hist = histogram(zi);
+    zgrid(1:numberof(hist)) = hist/(cell*cell);
+    goto FINISH;
+  }
 
   // last method is simple: just assign them all in, and the last one wins per
   // how Yorick interprets the syntax
@@ -770,9 +798,22 @@ func cell_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
 FINISH:
   // Check to see if we can safely convert to floats. If the float version
   // agrees with the double version to within 0.5mm, then switch to floats.
-  fzgrid = float(zgrid);
-  if(abs(fzgrid-zgrid)(*)(max) < 0.0005)
-    eq_nocopy, zgrid, fzgrid;
+  if(is_real(zgrid)) {
+    fzgrid = float(zgrid);
+    if(abs(fzgrid-zgrid)(*)(max) < 0.0005) {
+      eq_nocopy, zgrid, fzgrid;
+      if(abs(nodata-float(nodata)) < 0.0005) {
+        nodata = float(nodata);
+      }
+    }
+  }
+  // Downgrade the size of integers. Make sure nodata isn't downsized smaller
+  // than zgrid.
+  if(is_integer(zgrid)) {
+    zgrid = int_downsize(zgrid);
+    nodata = int_downsize(nodata);
+    if(sizeof(nodata) < sizeof(zgrid)) nodata = structof(zgrid)(nodata);
+  }
 
   return ZGRID(xmin=xmin, ymin=ymin, cell=cell, nodata=nodata, zgrid=&zgrid);
 }
