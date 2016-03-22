@@ -210,6 +210,7 @@ powerwt=) {
     minpoints=minpoints, powerwt=powerwt);
   data = [];
 
+  mkdirp, file_dirname(outfile);
   pbd_save, outfile, vname, grid;
 
   if(toarc)
