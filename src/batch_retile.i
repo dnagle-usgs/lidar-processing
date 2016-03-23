@@ -1,3 +1,10 @@
+/* batch_retile has three phases:
+      1. Scan the source data to derive tile/coverage information
+      2. Collate the tile/coverage information
+      3. Generate tiled output files
+*/
+
+/* STEP ONE: Scan the source data *********************************************/
 
 func _batch_retile_scan(opts=, infile=, outfile=, remove_buffers=, zone=,
 mode=, force_zone=, scheme=, dtlength=, dtprefix=, qqprefix=, buffer=,
@@ -143,6 +150,39 @@ END:
   if(outfile) obj2pbd, result, outfile;
   return result;
 }
+
+/* STEP TWO: Collate scan data ************************************************/
+
+func _batch_retile_collate(&wanted, &coverage, scans, files, split_days) {
+  wanted = save();
+  coverage = save();
+
+  for(i = 1; i <= numberof(files); i++) {
+    scan = pbd2obj(scans(i));
+
+    for(j = 1; j <= numberof(scan.wanted); j++) {
+      if(split_days) {
+        if(!wanted(*,scan.wanted(j))) {
+          save, wanted, scan.wanted(j), save(scan.dates(j), 1);
+        } else {
+          save, wanted(scan.wanted(j)), scan.dates(j), 1;
+        }
+      } else {
+        save, wanted, scan.wanted(j), 1;
+      }
+    }
+
+    for(j = 1; j <= numberof(scan.coverage); j++) {
+      if(!coverage(*,scan.coverage(j))) {
+        save, coverage, scan.coverage(j), save(files(i), 1);
+      } else {
+        save, coverage(scan.coverage(j)), files(i), 1;
+      }
+    }
+  }
+}
+
+/* STEP THREE: Generate tiled output ******************************************/
 
 func _batch_retile_assemble(opts=, infiles=, outfile=, vname=, tile=, mode=,
 remove_buffers=, buffer=, zone=, force_zone=, uniq=) {
@@ -432,33 +472,9 @@ dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
 
   if(scanonly) return;
 
-  wanted = save();
-  coverage = save();
+  wanted = coverage = [];
+  _batch_retile_collate, wanted, coverage, scans, files, split_days;
 
-  // Collate
-  for(i = 1; i <= count; i++) {
-    scan = pbd2obj(scans(i));
-
-    for(j = 1; j <= numberof(scan.wanted); j++) {
-      if(split_days) {
-        if(!wanted(*,scan.wanted(j))) {
-          save, wanted, scan.wanted(j), save(scan.dates(j), 1);
-        } else {
-          save, wanted(scan.wanted(j)), scan.dates(j), 1;
-        }
-      } else {
-        save, wanted, scan.wanted(j), 1;
-      }
-    }
-
-    for(j = 1; j <= numberof(scan.coverage); j++) {
-      if(!coverage(*,scan.coverage(j))) {
-        save, coverage, scan.coverage(j), save(files(i), 1);
-      } else {
-        save, coverage(scan.coverage(j)), files(i), 1;
-      }
-    }
-  }
   if(!scankeep) remove_recursive, scandir;
 
   command = "job_retile_assemble";
