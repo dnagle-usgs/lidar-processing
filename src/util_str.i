@@ -251,3 +251,41 @@ func longest_common_prefix(S) {
   }
   return strchar(s1);
 }
+
+func prepend_if_needed(&str, prefix) {
+/* DOCUMENT prepend_if_needed, &str, prefix
+
+  Checks to see if the given string STR starts with PREFIX. If not, it's
+  updated to start with PREFIX. If it already starts with PREFIX, it remains
+  unchanged. STR is updated in place.
+
+  SEE ALSO: append_if_needed
+*/
+  if(is_void(str)) return;
+  if(is_scalar(str)) {
+    if(strpart(str, :strlen(prefix)) == prefix) return;
+    str = prefix + str;
+  } else {
+    w = where(strpart(str, :strlen(prefix)) != prefix);
+    if(numberof(w)) str(w) = prefix + str(w);
+  }
+}
+
+func append_if_needed(&str, suffix) {
+/* DOCUMENT append_if_needed, &str, suffix
+
+  Checks to see if the given string STR ends with SUFFIX. If not, it's updated
+  to end with SUFFIX. If it already ends with SUFFIX, it remains unchanged. STR
+  is updated in place.
+
+  SEE ALSO: prepend_if_needed
+*/
+  if(is_void(str)) return;
+  if(is_scalar(str)) {
+    if(strpart(str, 1-strlen(suffix):) == suffix) return;
+    str = str + suffix;
+  } else {
+    w = where(strpart(str, 1-strlen(suffix):) != suffix);
+    if(numberof(w)) str(w) = str(w) + suffix;
+  }
+}
