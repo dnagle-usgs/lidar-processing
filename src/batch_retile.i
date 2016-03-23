@@ -146,13 +146,44 @@ split_days=, dayshift=) {
   coverage = set_remove_duplicates(merge_pointers(coverage(*)));
 
 END:
-  result = save(wanted, dates, coverage);
+  result = save(wanted, dates, coverage, fn=infile);
   if(outfile) obj2pbd, result, outfile;
   return result;
 }
 
-func _batch_retile_scanner(scandir, scans, files, remove_buffers, mode, scheme, dtlength,
-dtprefix, qqprefix, buffer, zone, force_zone, split_days, dayshift) {
+func _batch_retile_scanner(srcdir, scandir, searchstr, remove_buffers, mode,
+scheme, dtlength, dtprefix, qqprefix, buffer, zone, force_zone, split_days,
+dayshift) {
+  files = find(srcdir, searchstr=searchstr);
+  nfiles = numberof(files);
+  if(!nfiles) error, "no files found";
+
+  if(is_void(zone)) {
+    zones = tile2uz(file_tail(files));
+    if(noneof(zones)) {
+      write, "None of the file names contained a parseable zone. Please use the zone= option.";
+      return;
+    } else if(nallof(zones)) {
+      w = where(zones == 0)
+      write, "The following file names did not contain a parseable zone and will be skipped.\n (Consider using zone= to avoid this.)";
+      write, format=" - %s\n", file_tail(files(w));
+      write, "";
+      files = files(w);
+    }
+    zones = [];
+  }
+
+  if(remove_buffers) {
+    file_tiles = extract_tile(file_tail(files));
+    w = where(!file_tiles);
+    if(numberof(w)) {
+      write, "The following file names did not contain a parseable tile name. They will be\n retiled, but they cannot have any buffers removed; remove_buffers=1 will be\n ignored for these files.";
+      write, format=" - %s\n", file_tail(files(w));
+      write, "";
+    }
+    file_tiles = [];
+  }
+
   makeflow_fn = file_join(scandir, "retile_scan.makeflow");
 
   options = save(string(0), [], remove_buffers, mode, scheme, dtlength,
@@ -161,8 +192,10 @@ dtprefix, qqprefix, buffer, zone, force_zone, split_days, dayshift) {
   if(force_zone) save, options, force_zone;
   if(split_days) save, options, split_days, dayshift;
 
+  scans = file_join(scandir, swrite(format="scan_%04d.pbd", indgen(nfiles)));
+
   conf = save();
-  for(i = 1; i <= count; i++) {
+  for(i = 1; i <= nfiles; i++) {
     save, conf, string(0), save(
       input=files(i),
       output=scans(i),
@@ -180,11 +213,13 @@ dtprefix, qqprefix, buffer, zone, force_zone, split_days, dayshift) {
 
 /* STEP TWO: Collate scan data ************************************************/
 
-func _batch_retile_collate(&wanted, &coverage, scans, files, split_days) {
+func _batch_retile_collate(&wanted, &coverage, scandir, split_days) {
   wanted = save();
   coverage = save();
 
-  for(i = 1; i <= numberof(files); i++) {
+  scans = find(scandir, searchstr="scan_*.pbd");
+
+  for(i = 1; i <= numberof(scans); i++) {
     scan = pbd2obj(scans(i));
 
     for(j = 1; j <= numberof(scan.wanted); j++) {
@@ -201,9 +236,9 @@ func _batch_retile_collate(&wanted, &coverage, scans, files, split_days) {
 
     for(j = 1; j <= numberof(scan.coverage); j++) {
       if(!coverage(*,scan.coverage(j))) {
-        save, coverage, scan.coverage(j), save(files(i), 1);
+        save, coverage, scan.coverage(j), save(scan.fn, 1);
       } else {
-        save, coverage(scan.coverage(j)), files(i), 1;
+        save, coverage(scan.coverage(j)), scan.fn, 1;
       }
     }
   }
@@ -521,54 +556,21 @@ dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
   prepend_if_needed, file_suffix, "_";
   prepend_if_needed, vname_suffix, "_";
 
-  files = find(srcdir, searchstr=searchstr);
-  if(!numberof(files)) error, "no files found";
-
-  if(is_void(zone)) {
-    zones = tile2uz(file_tail(files));
-    if(noneof(zones)) {
-      write, "None of the file names contained a parseable zone. Please use the zone= option.";
-      return;
-    } else if(nallof(zones)) {
-      w = where(zones == 0)
-      write, "The following file names did not contain a parseable zone and will be skipped.\n (Consider using zone= to avoid this.)";
-      write, format=" - %s\n", file_tail(files(w));
-      write, "";
-      files = files(w);
-    }
-    zones = [];
-  }
-
-  if(remove_buffers) {
-    file_tiles = extract_tile(file_tail(files));
-    w = where(!file_tiles);
-    if(numberof(w)) {
-      write, "The following file names did not contain a parseable tile name. They will be\n retiled, but they cannot have any buffers removed; remove_buffers=1 will be\n ignored for these files.";
-      write, format=" - %s\n", file_tail(files(w));
-      write, "";
-    }
-    file_tiles = [];
-  }
-
-  count = numberof(files);
-
   if(scandir) {
     if(!scanresume) mkdirp, scandir;
   } else {
     scandir = mktempdir("batch_retile_scan");
   }
 
-  scans = file_join(scandir, swrite(format="%04d.pbd", indgen(count)));
-
   if(!scanresume) {
-    _batch_retile_scanner, scandir, scans, files, remove_buffers, mode, scheme,
-      dtlength, dtprefix, qqprefix, buffer, zone, force_zone, split_days,
-      dayshift;
+    _batch_retile_scanner, srcdir, scandir, searchstr, remove_buffers, mode,
+      scheme, dtlength, dtprefix, qqprefix, buffer, zone, force_zone,
+      split_days, dayshift;
   }
   if(scanonly) return;
 
   wanted = coverage = [];
-  _batch_retile_collate, wanted, coverage, scans, files, split_days;
+  _batch_retile_collate, wanted, coverage, scandir, split_days;
 
   if(!scankeep) remove_recursive, scandir;
 
