@@ -396,13 +396,13 @@ split_days, dayshift, dtlength, dtprefix, file_suffix, vname_suffix, update) {
 /* Public entry point: batch_retile *******************************************/
 
 func batch_retile(srcdir, outdir=, scheme=, mode=, searchstr=, update=,
-file_suffix=, vname_suffix=, suffix=, remove_buffers=, buffer=, uniq=,
-verbose=, zone=, shorten=, flat=, split_zones=, split_days=, day_shift=,
-dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
+file_suffix=, vname_suffix=, suffix=, remove_buffers=, buffer=, uniq=, zone=,
+shorten=, flat=, split_zones=, split_days=, day_shift=, dtlength=, dtprefix=,
+qqprefix=, scandir=, scanonly=, scanresume=) {
 /* DOCUMENT batch_retile, srcdir, outdir=, scheme=, mode=, searchstr=, update=,
-  file_suffix=, vname_suffix=, suffix=, remove_buffers=, buffer=, uniq=,
-  verbose=, zone=, shorten=, flat=, split_zones=, split_days=, day_shift=,
-  dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=
+  file_suffix=, vname_suffix=, suffix=, remove_buffers=, buffer=, uniq=, zone=,
+  shorten=, flat=, split_zones=, split_days=, day_shift=, dtlength=, dtprefix=,
+  qqprefix=, scandir=, scanonly=, scanresume=
 
   Loads the data in srcdir and (re)partitions it into tiles, which are created
   in outdir.
@@ -457,8 +457,6 @@ dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
         uniq=1              Discard points with matching soe values (default)
         uniq=0              Keep all points, even duplicates
         uniq="forcexy=1"    Use uniq_data with forcexy=1.
-    verbose= Specifies verbosity.
-        verbose=1           Default
     zone= By default, the zone will be determined from the file's name. If no
       parseable tile can be determined, the file will be ignored. You can
       specify a zone to use for all files with this option.
@@ -526,7 +524,6 @@ dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
   default, remove_buffers, 0;
   default, buffer, 100;
   default, uniq, 1;
-  default, verbose, 1;
   default, flat, 0;
   default, split_zones, (scheme == "qq");
   default, split_days, 0;
