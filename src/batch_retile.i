@@ -328,8 +328,7 @@ split_days, dayshift, dtlength, dtprefix, file_suffix, vname_suffix, update) {
 
   write, "";
   write, "Generating output...";
-  timer, t1;
-  makeflow_run, conf, interval=15;
+  makeflow_run, conf;
 }
 
 /* Public entry point: batch_retile *******************************************/
@@ -455,9 +454,6 @@ dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
       remove_buffers=, buffer=, zone=, shorten=, split_days=, day_shift=,
       dtlength=, dtprefix=, qqprefix=.
 */
-  t0 = t1 = array(double, 3);
-  timer, t0;
-
   default, outdir, srcdir;
   default, scheme, "10k2k";
   default, mode, "fs";
@@ -560,9 +556,7 @@ dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
     }
 
     write, "Scanning input to determine output...";
-    timer, t1;
-    makeflow_run, conf, makeflow_fn, interval=15;
-    timer_finished, t1, fmt=" Total time: SECONDS seconds.\n";
+    makeflow_run, conf, makeflow_fn;
 
   }
 
@@ -577,8 +571,4 @@ dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
     bilevel, remove_buffers, mode, buffer, uniq, zone, force_zone, split_zones,
     split_days, dayshift, dtlength, dtprefix, file_suffix, vname_suffix,
     update;
-
-  timer_finished, t1, fmt=" Finished output in SECONDS seconds.\n";
-
-  timer_finished, t0, fmt="\n Finished retiling in SECONDS seconds.\n";
 }
