@@ -232,9 +232,12 @@ tile=, mode=, remove_buffers=, buffer=, zone=, force_zone=, uniq=, dayshift=) {
   dcount = numberof(dates);
   for(i = 1; i <= dcount; i++) {
     w = where(datadate == dates(i));
+    mkdirp, file_dirname(outfiles(i));
     pbd_save, outfiles(i), vnames(i), data(w), empty=1;
   }
 }
+
+/* Public entry point: batch_retile *******************************************/
 
 func batch_retile(srcdir, outdir=, scheme=, mode=, searchstr=, update=,
 file_suffix=, vname_suffix=, suffix=, remove_buffers=, buffer=, uniq=,
@@ -397,10 +400,8 @@ dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
     bilevel = 1;
   }
 
-  if(file_suffix && strpart(file_suffix, 1:1) != "_")
-    file_suffix = "_" + file_suffix;
-  if(vname_suffix && strpart(vname_suffix, 1:1) != "_")
-    vname_suffix = "_" + vname_suffix;
+  prepend_if_needed, file_suffix, "_";
+  prepend_if_needed, vname_suffix, "_";
 
   files = find(srcdir, searchstr=searchstr);
   if(!numberof(files)) error, "no files found";
@@ -511,8 +512,7 @@ dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
 
       outfiles = file_join(outpath, tile) + "_" + cleandates;
       if(file_suffix) outfiles += file_suffix;
-      if(strpart(outfiles(1), -3:) != ".pbd")
-        outfiles += ".pbd";
+      append_if_needed, outfiles, ".pbd";
 
       vnames = vname + "_" + cleandates;
       if(vname_suffix) vnames += vname_suffix;
@@ -544,8 +544,7 @@ dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
     } else {
       outfile = file_join(outpath, tile);
       if(file_suffix) outfile += file_suffix;
-      if(strpart(outfile, -3:) != ".pbd")
-        outfile += ".pbd";
+      append_if_needed, outfile, ".pbd";
       if(vname_suffix) vname += vname_suffix;
 
       if(update) {
