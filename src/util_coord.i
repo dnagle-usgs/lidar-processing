@@ -352,3 +352,42 @@ func lldist(lat0, lon0, lat1, lon1) {
   // number of arcminutes in a degree).
   return dist * RAD2DEG * 60;
 }
+
+func buffer_scatter_xy(buffer, &x, &y) {
+/* DOCUMENT buffer_scatter_xy, buffer, x, y
+  Updates X and Y in place to "scatter" each point based on the given buffer
+  size. Each x,y point will be broadcast into 9 points, in a 3x3 grid pattern
+  centered on the original point. X and Y are updated in place.
+
+  In other words, for each x,y, the following nine pointes are generated:
+    x - buffer, y - buffer
+    x - buffer, y
+    x - buffer, y + buffer
+    x         , y - buffer
+    x         , y
+    x         , y + buffer
+    x + buffer, y - buffer
+    x + buffer, y
+    x + buffer, y + buffer
+
+  Example:
+
+    > x = 100; y = 50
+    > buffer_scatter_xy, 5, x, y
+    > x
+    [95,95,95,100,100,100,105,105,105]
+    > y
+    [45,50,55,45,50,55,45,50,55]
+    > x = [10,20,30]; y = [60,50,40]
+    > buffer_scatter_xy, 2, x, y
+    > x
+    [[8,8,8,10,10,10,12,12,12],[18,18,18,20,20,20,22,22,22],[28,28,28,30,30,30,
+    32,32,32]]
+    > y
+    [[58,60,62,58,60,62,58,60,62],[48,50,52,48,50,52,48,50,52],[38,40,42,38,40,
+    42,38,40,42]]
+
+*/
+  x = x(-,) + buffer * [-1,-1,-1, 0,0,0, 1,1,1];
+  y = y(-,) + buffer * [-1, 0, 1,-1,0,1,-1,0,1];
+}

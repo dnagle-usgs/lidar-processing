@@ -177,8 +177,9 @@ split_days=, day_shift=) {
   // fully populated.
   if(!force_zone) {
     // Use 10k meters, which is big enough to accommodate any tiling scheme
-    testn = ([n(min),n(max)]([1,2,2,1])(-,)+10000*[-1,-1,-1, 0,0,0, 1,1,1])(*);
-    teste = ([e(min),e(max)]([1,1,2,2])(-,)+10000*[-1, 0, 1,-1,0,1,-1,0,1])(*);
+    testn = [n(min),n(max)]([1,2,2,1]);
+    teste = [e(min),e(max)]([1,1,2,2]);
+    buffer_scatter_xy, 10000, teste, testn;
     utm2ll, testn, teste, datazone, testlon, testlat;
     ll2utm, testlat, testlon, testn, teste, testz;
 
@@ -188,8 +189,8 @@ split_days=, day_shift=) {
   }
 
   if(buffer) {
-    buffe = buffer * [-1,-1,-1, 0,0,0, 1,1,1];
-    buffn = buffer * [-1, 0, 1,-1,0,1,-1,0,1];
+    buffe = buffn = 0;
+    buffer_scatter_xy, buffer, buffe, buffn;
     bcount = 9;
   } else {
     buffe = buffn = [0];
