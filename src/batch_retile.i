@@ -4,6 +4,78 @@
       3. Generate tiled output files
 */
 
+/* Shared helper functions ****************************************************/
+
+func _batch_retile_defaults(args) {
+  // Scan to retrieve fields that are refered to in calculating values.
+  ref = save();
+  wanted = ["srcdir", "suffix", "zone", "shorten", "scheme", "dtprefix",
+    "qqprefix", "scandir"];
+  optsidx = 0;
+  for(i = 1; i <= args(0); i++) {
+    if(anyof(args(-,i) == wanted)) save, ref, args(-,i), args(i);
+    if(args(-,i) == "opts") optsidx = i;
+  }
+
+  opts = [];
+  if(optsidx) opts = args(optsidx);
+  if(is_void(opts)) opts = save();
+
+  // Derive defaults
+  defaults = save(
+    // srcdir
+    outdir=ref.srcdir,
+    scheme="itdt",
+    mode="fs",
+    searchstr="*.pbd",
+    update=0,
+    file_suffix=ref.suffix,
+    vname_suffix=ref.suffix,
+    // suffix
+    remove_buffers=0,
+    buffer=100,
+    uniq=1,
+    // zone
+    // shorten
+    flat=0,
+    split_zones=(ref.scheme == "qq"),
+    split_days=0,
+    day_shift=0,
+    dtlength=(ref.shorten ? "short" : "long"),
+    // dtprefix
+    // qqprefix
+    // scandir
+    scanresume=0,
+    scanonly=0);
+
+  // Populate opts with defaults for whatever is missing or void
+  for(i = 1; i <= defaults(*); i++) {
+    key = defaults(*,i);
+    if(opts(*,key) && !is_void(opts(noop(key)))) continue;
+    save, opts, noop(key), defaults(noop(key));
+  }
+
+  // Update opts to reflect values passed directly
+  for(i = 1; i <= args(0); i++) {
+    if(is_void(args(i)) || args(-,i) == "opts") continue;
+    save, opts, args(-,i), args(i);
+  }
+
+  // Special case: update scheme.
+  aliases = save("10k2k", "itdt", "2k", "dt", "10k", "it");
+  if(aliases(*,opts.scheme)) save, opts, scheme=aliases(opts.scheme);
+
+  // Apply values from opts back to parameters
+  for(i = 1; i <= args(0); i++) {
+    key = args(-,i);
+    if(opts(*,key)) args, i, opts(noop(key));
+  }
+
+  // If opts was in the parameter list, apply that as well
+  if(optsidx) args, optsidx, opts;
+}
+wrap_args, _batch_retile_defaults;
+
 /* STEP ONE: Scan the source data *********************************************/
 
 func _batch_retile_scan(opts=, infile=, outfile=, remove_buffers=, zone=,
@@ -43,6 +115,8 @@ split_days=, dayshift=) {
   restore_if_exists, opts, infile, outfile, remove_buffers, zone, mode,
     force_zone, scheme, dtlength, dtprefix, qqprefix, buffer, split_days,
     dayshift;
+
+  if(scheme == "itdt") scheme = "dt";
 
   // Load data
   data = pbd_load(infile);
@@ -151,9 +225,13 @@ END:
   return result;
 }
 
-func _batch_retile_scanner(srcdir, scandir, searchstr, remove_buffers, mode,
-scheme, dtlength, dtprefix, qqprefix, buffer, zone, force_zone, split_days,
-dayshift) {
+func batch_retile_scan(srcdir, scandir, searchstr=, remove_buffers=, mode=,
+scheme=, dtlength=, dtprefix=, qqprefix=, buffer=, zone=, force_zone=,
+split_days=, dayshift=, opts=) {
+  _batch_retile_defaults, srcdir, scandir, searchstr, remove_buffers, mode,
+    scheme, dtlength, dtprefix, qqprefix, buffer, zone, force_zone, split_days,
+    dayshift, opts;
+
   files = find(srcdir, searchstr=searchstr);
   nfiles = numberof(files);
   if(!nfiles) error, "no files found";
@@ -213,7 +291,9 @@ dayshift) {
 
 /* STEP TWO: Collate scan data ************************************************/
 
-func _batch_retile_collate(&wanted, &coverage, scandir, split_days) {
+func batch_retile_collate(&wanted, &coverage, scandir=, split_days=, opts=) {
+  _batch_retile_defaults, scandir, split_days, opts;
+
   wanted = save();
   coverage = save();
 
@@ -299,13 +379,27 @@ tile=, mode=, remove_buffers=, buffer=, zone=, force_zone=, uniq=, dayshift=) {
   }
 }
 
-func _batch_retile_assemble_makeflow(wanted, coverage, outpath, scheme, flat,
-bilevel, remove_buffers, mode, buffer, uniq, zone, force_zone, split_zones,
-split_days, dayshift, dtlength, dtprefix, file_suffix, vname_suffix, update) {
+func batch_retile_assemble(wanted, coverage, outpath=, scheme=, flat=,
+remove_buffers=, mode=, buffer=, uniq=, zone=, force_zone=, split_zones=,
+split_days=, dayshift=, dtlength=, dtprefix=, file_suffix=, vname_suffix=,
+update=, opts=) {
+  _batch_retile_defaults, outpath, scheme, flat, remove_buffers, mode, buffer,
+    uniq, zone, force_zone, split_zones, split_days, dayshift, dtlength,
+    dtprefix, file_suffix, vname_suffix, update, opts;
+
   options = save(string(0), [], remove_buffers, mode, buffer, uniq);
   if(!is_void(zone)) save, options, zone;
   if(force_zone) save, options, force_zone;
   if(split_days) save, options, dayshift;
+
+  bilevel = 0;
+  if(scheme == "itdt") {
+    scheme = "dt";
+    bilevel = 1;
+  }
+
+  prepend_if_needed, file_suffix, "_";
+  prepend_if_needed, vname_suffix, "_";
 
   conf = save();
   count = wanted(*);
@@ -514,23 +608,11 @@ qqprefix=, scandir=, scanonly=, scanresume=) {
       remove_buffers=, buffer=, zone=, shorten=, split_days=, day_shift=,
       dtlength=, dtprefix=, qqprefix=.
 */
-  default, outdir, srcdir;
-  default, scheme, "10k2k";
-  default, mode, "fs";
-  default, searchstr, "*.pbd";
-  default, update, 0;
-  default, file_suffix, suffix;
-  default, vname_suffix, suffix;
-  default, remove_buffers, 0;
-  default, buffer, 100;
-  default, uniq, 1;
-  default, flat, 0;
-  default, split_zones, (scheme == "qq");
-  default, split_days, 0;
-  default, dayshift, 0;
-  default, dtlength, (shorten ? "short" : "long");
-  default, scanresume, 0;
-  default, scanonly, 0;
+  local opts;
+  _batch_retile_defaults, opts, srcdir, outdir, scheme, mode, searchstr,
+    update, file_suffix, vname_suffix, suffix, remove_buffers, buffer, uniq,
+    zone, shorten, flat, split_zones, split_days, day_shift, dtlength,
+    dtprefix, qqprefix, scandir, scanonly, scanresume;
 
   scankeep = !is_void(scandir);
   if(scanonly && scanresume) {
@@ -541,38 +623,21 @@ qqprefix=, scandir=, scanonly=, scanresume=) {
     if(scanresume) error, "need to provide scandir= with scanresume=";
   }
 
-  aliases = save("10k2k", "itdt", "2k", "dt", "10k", "it");
-  if(aliases(*,scheme)) scheme = aliases(noop(scheme));
-
-  bilevel = 0;
-  if(scheme == "itdt") {
-    scheme = "dt";
-    bilevel = 1;
-  }
-
-  prepend_if_needed, file_suffix, "_";
-  prepend_if_needed, vname_suffix, "_";
-
   if(scandir) {
     if(!scanresume) mkdirp, scandir;
   } else {
     scandir = mktempdir("batch_retile_scan");
   }
+  save, opts, scandir;
 
   if(!scanresume) {
-    _batch_retile_scanner, srcdir, scandir, searchstr, remove_buffers, mode,
-      scheme, dtlength, dtprefix, qqprefix, buffer, zone, force_zone,
-      split_days, dayshift;
+    batch_retile_scan, opts=opts;
+    if(scanonly) return;
   }
-  if(scanonly) return;
 
   wanted = coverage = [];
-  _batch_retile_collate, wanted, coverage, scandir, split_days;
-
+  batch_retile_collate, wanted, coverage, opts=opts;
   if(!scankeep) remove_recursive, scandir;
 
-  _batch_retile_assemble_makeflow, wanted, coverage, outpath, scheme, flat,
-    bilevel, remove_buffers, mode, buffer, uniq, zone, force_zone, split_zones,
-    split_days, dayshift, dtlength, dtprefix, file_suffix, vname_suffix,
-    update;
+  batch_retile_assemble, wanted, coverage, opts=opts;
 }
