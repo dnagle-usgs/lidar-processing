@@ -104,15 +104,7 @@ split_days=, day_shift=) {
 
   local e, n, testlat, testlon, testz, wanted, dates, coverage;
 
-  default, remove_buffers, 1;
-  default, zone, 0;
-  default, mode, "fs";
-  default, scheme, "dt";
-  default, buffer, 0;
-  default, split_days, 0;
-  default, day_shift, 0;
-
-  restore_if_exists, opts, infile, outfile, remove_buffers, zone, mode,
+  _batch_retile_defaults, opts, infile, outfile, remove_buffers, zone, mode,
     force_zone, scheme, dtlength, dtprefix, qqprefix, buffer, split_days,
     day_shift;
 
