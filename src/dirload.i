@@ -581,6 +581,42 @@ func dlfilter_tile(tile, prev=, next=, mode=, buffer=, zone=, dataonly=) {
   return filters_merge(filter, prev=prev, next=next);
 }
 
+func __dlfilter_data_date(&data, filter, state) {
+/* DOCUMENT __dlfilter_data_date, data, filter, state;
+  Support function for dlfilter_date.
+*/
+  if(!numberof(data)) return;
+
+  daystart = date2soe(filter.date) - filter.dayshift;
+  soediff = data.soe - daystart;
+  w = where(soediff >= 0 & soediff < 86400);
+
+  if(numberof(w))
+    data = data(w);
+  else
+    data = [];
+}
+
+func dlfilter_date(date, dayshift=, prev=, next=) {
+/* DOCUMENT filter = dlfilter_date(date, prev=, next=, dayshift=)
+  Creates a filter for dirload that will filter using the given date.
+
+  Parameter:
+    date: The date to retrieve data for, in YYYY-MM-DD format.
+
+  Options:
+    dayshift= A value in seconds that will be added to the data's soe values
+      prior to converting them to dates. This is useful if you need to shift
+      the data for a different timezone than UTC (as might happen if a survey
+      goes through GPS midnight).
+*/
+  default, dayshift, 0;
+  filter = save(
+    data = save(function=__dlfilter_data_date, date, dayshift)
+  );
+  return filters_merge(filter, prev=prev, next=next);
+}
+
 func __dlfilter_data_remove_buffers(&data, filter, state) {
 /* DOCUMENT __dlfilter_data_remove_buffers, data, filter, state;
   Support function for dlfilter_remove_buffers.
