@@ -237,6 +237,101 @@ tile=, mode=, remove_buffers=, buffer=, zone=, force_zone=, uniq=, dayshift=) {
   }
 }
 
+func _batch_retile_assemble_makeflow(wanted, coverage, outpath, scheme, flat,
+bilevel, remove_buffers, mode, buffer, uniq, zone, force_zone, split_zones,
+split_days, dayshift, dtlength, dtprefix, file_suffix, vname_suffix, update) {
+  options = save(string(0), [], remove_buffers, mode, buffer, uniq);
+  if(!is_void(zone)) save, options, zone;
+  if(force_zone) save, options, force_zone;
+  if(split_days) save, options, dayshift;
+
+  conf = save();
+  count = wanted(*);
+  for(i = 1; i <= count; i++) {
+    tile = wanted(*,i);
+    tile_zone = long(tile2uz(tile));
+
+    vname = (scheme == "qq") ? tile : extract_dt(tile);
+
+    outpath = outdir;
+    if(split_zones)
+      outpath = file_join(outpath, swrite(format="zone_%d", tile_zone));
+    if(!flat) {
+      if(bilevel)
+        outpath = file_join(outpath, dt2it(tile, dtlength=dtlength,
+          dtprefix=dtprefix));
+      outpath = file_join(outpath, tile);
+    }
+
+    infiles = coverage(noop(tile), *, );
+
+    if(split_days) {
+      dates = wanted(noop(i), *,);
+      cleandates = regsub("-", dates, "", all=1);
+
+      outfiles = file_join(outpath, tile) + "_" + cleandates;
+      if(file_suffix) outfiles += file_suffix;
+      append_if_needed, outfiles, ".pbd";
+
+      vnames = vname + "_" + cleandates;
+      if(vname_suffix) vnames += vname_suffix;
+
+      if(update) {
+        w = where(!file_exists(outfiles));
+        if(!numberof(w)) continue;
+        outfiles = outfiles(w);
+        vnames = vnames(w);
+        dates = dates(w);
+      } else {
+        for(j = 1; j <= numberof(outfiles); j++)
+          remove, outfiles(j);
+      }
+
+      save, conf, string(0), save(
+        input=infiles,
+        output=outfiles,
+        command="job_retile_assemble_dates",
+        options=obj_merge(options, save(
+          tile,
+          infiles,
+          outfiles,
+          vnames,
+          dates
+        ))
+      );
+
+    } else {
+      outfile = file_join(outpath, tile);
+      if(file_suffix) outfile += file_suffix;
+      append_if_needed, outfile, ".pbd";
+      if(vname_suffix) vname += vname_suffix;
+
+      if(update) {
+        if(file_exists(outfile)) continue;
+      } else {
+        remove, outfile;
+      }
+
+      save, conf, string(0), save(
+        input=infiles,
+        output=outfile,
+        command="job_retile_assemble",
+        options=obj_merge(options, save(
+          tile,
+          infiles,
+          outfile,
+          vname
+        ))
+      );
+    }
+  }
+
+  write, "";
+  write, "Generating output...";
+  timer, t1;
+  makeflow_run, conf, interval=15;
+}
+
 /* Public entry point: batch_retile *******************************************/
 
 func batch_retile(srcdir, outdir=, scheme=, mode=, searchstr=, update=,
@@ -478,99 +573,11 @@ dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
 
   if(!scankeep) remove_recursive, scandir;
 
-  command = "job_retile_assemble";
-  if(split_days) command += "_dates";
+  _batch_retile_assemble_makeflow, wanted, coverage, outpath, scheme, flat,
+    bilevel, remove_buffers, mode, buffer, uniq, zone, force_zone, split_zones,
+    split_days, dayshift, dtlength, dtprefix, file_suffix, vname_suffix,
+    update;
 
-  options = save(string(0), [], remove_buffers, mode, buffer, uniq);
-  if(!is_void(zone)) save, options, zone;
-  if(force_zone) save, options, force_zone;
-  if(split_days) save, options, dayshift;
-
-  conf = save();
-  count = wanted(*);
-  for(i = 1; i <= count; i++) {
-    tile = wanted(*,i);
-    tile_zone = long(tile2uz(tile));
-
-    vname = (scheme == "qq") ? tile : extract_dt(tile);
-
-    outpath = outdir;
-    if(split_zones)
-      outpath = file_join(outpath, swrite(format="zone_%d", tile_zone));
-    if(!flat) {
-      if(bilevel)
-        outpath = file_join(outpath, dt2it(tile, dtlength=dtlength,
-          dtprefix=dtprefix));
-      outpath = file_join(outpath, tile);
-    }
-
-    infiles = coverage(noop(tile), *, );
-
-    if(split_days) {
-      dates = wanted(noop(i), *,);
-      cleandates = regsub("-", dates, "", all=1);
-
-      outfiles = file_join(outpath, tile) + "_" + cleandates;
-      if(file_suffix) outfiles += file_suffix;
-      append_if_needed, outfiles, ".pbd";
-
-      vnames = vname + "_" + cleandates;
-      if(vname_suffix) vnames += vname_suffix;
-
-      if(update) {
-        w = where(!file_exists(outfiles));
-        if(!numberof(w)) continue;
-        outfiles = outfiles(w);
-        vnames = vnames(w);
-        dates = dates(w);
-      } else {
-        for(j = 1; j <= numberof(outfiles); j++)
-          remove, outfiles(j);
-      }
-
-      save, conf, string(0), save(
-        input=infiles,
-        output=outfiles,
-        command="job_retile_assemble_dates",
-        options=obj_merge(options, save(
-          tile,
-          infiles,
-          outfiles,
-          vnames,
-          dates
-        ))
-      );
-
-    } else {
-      outfile = file_join(outpath, tile);
-      if(file_suffix) outfile += file_suffix;
-      append_if_needed, outfile, ".pbd";
-      if(vname_suffix) vname += vname_suffix;
-
-      if(update) {
-        if(file_exists(outfile)) continue;
-      } else {
-        remove, outfile;
-      }
-
-      save, conf, string(0), save(
-        input=infiles,
-        output=outfile,
-        command="job_retile_assemble",
-        options=obj_merge(options, save(
-          tile,
-          infiles,
-          outfile,
-          vname
-        ))
-      );
-    }
-  }
-
-  write, "";
-  write, "Generating output...";
-  timer, t1;
-  makeflow_run, conf, interval=15;
   timer_finished, t1, fmt=" Finished output in SECONDS seconds.\n";
 
   timer_finished, t0, fmt="\n Finished retiling in SECONDS seconds.\n";
