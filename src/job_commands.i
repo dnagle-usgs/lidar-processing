@@ -309,8 +309,8 @@ func job_retile_scan(conf) {
     save, conf, buffer=atod(conf.buffer);
   if(conf(*,"split_days"))
     save, conf, split_days=atoi(conf.split_days);
-  if(conf(*,"dayshift"))
-    save, conf, dayshift=atod(conf.dayshift);
+  if(conf(*,"day_shift"))
+    save, conf, day_shift=atod(conf.day_shift);
 
   _batch_retile_scan, opts=conf;
 }
@@ -356,8 +356,8 @@ func job_retile_assemble_dates(conf) {
     save, conf, force_zone=atoi(conf.force_zone);
   if(conf(*,"uniq") && strlen(conf.uniq) <= 1)
     save, conf, uniq=atoi(conf.uniq);
-  if(conf(*,"dayshift"))
-    save, conf, dayshift=atod(conf.dayshift);
+  if(conf(*,"day_shift"))
+    save, conf, day_shift=atod(conf.day_shift);
 
   _batch_retile_assemble_dates, opts=conf;
 }

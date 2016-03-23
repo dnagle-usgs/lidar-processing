@@ -80,7 +80,7 @@ wrap_args, _batch_retile_defaults;
 
 func _batch_retile_scan(opts=, infile=, outfile=, remove_buffers=, zone=,
 mode=, force_zone=, scheme=, dtlength=, dtprefix=, qqprefix=, buffer=,
-split_days=, dayshift=) {
+split_days=, day_shift=) {
 /* DOCUMENT _batch_retile_scan
   Worker function for batch_retile. This scans a single PBD file and determines
   what output it contributes to. This information is summarized by three
@@ -110,11 +110,11 @@ split_days=, dayshift=) {
   default, scheme, "dt";
   default, buffer, 0;
   default, split_days, 0;
-  default, dayshift, 0;
+  default, day_shift, 0;
 
   restore_if_exists, opts, infile, outfile, remove_buffers, zone, mode,
     force_zone, scheme, dtlength, dtprefix, qqprefix, buffer, split_days,
-    dayshift;
+    day_shift;
 
   if(scheme == "itdt") scheme = "dt";
 
@@ -162,7 +162,7 @@ split_days=, dayshift=) {
     wcount = numberof(wanted);
     wanted_expand = array(pointer, wcount);
     dates = array(pointer, wcount);
-    dates_full = soe2date(data.soe + dayshift);
+    dates_full = soe2date(data.soe + day_shift);
     for(i = 1; i <= wcount; i++) {
       w = extract_for_tile(e, n, datazone, wanted(i), buffer=buffer);
       dates(i) = &set_remove_duplicates(dates_full(w));
@@ -227,10 +227,10 @@ END:
 
 func batch_retile_scan(srcdir, scandir, searchstr=, remove_buffers=, mode=,
 scheme=, dtlength=, dtprefix=, qqprefix=, buffer=, zone=, force_zone=,
-split_days=, dayshift=, opts=) {
+split_days=, day_shift=, opts=) {
   _batch_retile_defaults, srcdir, scandir, searchstr, remove_buffers, mode,
     scheme, dtlength, dtprefix, qqprefix, buffer, zone, force_zone, split_days,
-    dayshift, opts;
+    day_shift, opts;
 
   files = find(srcdir, searchstr=searchstr);
   nfiles = numberof(files);
@@ -268,7 +268,7 @@ split_days=, dayshift=, opts=) {
     dtprefix, qqprefix, buffer);
   if(zone) save, options, zone;
   if(force_zone) save, options, force_zone;
-  if(split_days) save, options, split_days, dayshift;
+  if(split_days) save, options, split_days, day_shift;
 
   scans = file_join(scandir, swrite(format="scan_%04d.pbd", indgen(nfiles)));
 
@@ -347,7 +347,7 @@ remove_buffers=, buffer=, zone=, force_zone=, uniq=) {
 }
 
 func _batch_retile_assemble_dates(opts=, infiles=, outfiles=, vnames=, dates=,
-tile=, mode=, remove_buffers=, buffer=, zone=, force_zone=, uniq=, dayshift=) {
+tile=, mode=, remove_buffers=, buffer=, zone=, force_zone=, uniq=, day_shift=) {
 /* DOCUMENT _batch_retile_assemble_dates
   Worker function for batch_retile. This generates output files for a single
   tile. This is a more complex alternative to _batch_retile_assemble that splits
@@ -364,12 +364,12 @@ tile=, mode=, remove_buffers=, buffer=, zone=, force_zone=, uniq=, dayshift=) {
   Other parameters are as defined for batch_retile.
 */
   restore_if_exists, opts, infiles, outfiles, vnames, dates, tile, mode,
-    remove_buffers, buffer, zone, force_zone, uniq, dayshift;
+    remove_buffers, buffer, zone, force_zone, uniq, day_shift;
 
   data = dirload(files=infiles, uniq=uniq, soesort=1, skip=1,
     force_zone=force_zone, remove_buffers=remove_buffers,
     filter=dlfilter_tile(tile, mode=mode, buffer=buffer, zone=zone));
-  datadate = soe2date(data.soe + dayshift);
+  datadate = soe2date(data.soe + day_shift);
 
   dcount = numberof(dates);
   for(i = 1; i <= dcount; i++) {
@@ -381,16 +381,16 @@ tile=, mode=, remove_buffers=, buffer=, zone=, force_zone=, uniq=, dayshift=) {
 
 func batch_retile_assemble(wanted, coverage, outpath=, scheme=, flat=,
 remove_buffers=, mode=, buffer=, uniq=, zone=, force_zone=, split_zones=,
-split_days=, dayshift=, dtlength=, dtprefix=, file_suffix=, vname_suffix=,
+split_days=, day_shift=, dtlength=, dtprefix=, file_suffix=, vname_suffix=,
 update=, opts=) {
   _batch_retile_defaults, outpath, scheme, flat, remove_buffers, mode, buffer,
-    uniq, zone, force_zone, split_zones, split_days, dayshift, dtlength,
+    uniq, zone, force_zone, split_zones, split_days, day_shift, dtlength,
     dtprefix, file_suffix, vname_suffix, update, opts;
 
   options = save(string(0), [], remove_buffers, mode, buffer, uniq);
   if(!is_void(zone)) save, options, zone;
   if(force_zone) save, options, force_zone;
-  if(split_days) save, options, dayshift;
+  if(split_days) save, options, day_shift;
 
   bilevel = 0;
   if(scheme == "itdt") {
