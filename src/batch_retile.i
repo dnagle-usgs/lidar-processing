@@ -304,22 +304,14 @@ func batch_retile_collate(&wanted, &coverage, scandir=, split_days=, opts=) {
 
     for(j = 1; j <= numberof(scan.wanted); j++) {
       if(split_days) {
-        if(!wanted(*,scan.wanted(j))) {
-          save, wanted, scan.wanted(j), save(scan.dates(j), 1);
-        } else {
-          save, wanted(scan.wanted(j)), scan.dates(j), 1;
-        }
+        obj_hier_save, wanted, scan.wanted(j), scan.dates(j), 1;
       } else {
         save, wanted, scan.wanted(j), 1;
       }
     }
 
     for(j = 1; j <= numberof(scan.coverage); j++) {
-      if(!coverage(*,scan.coverage(j))) {
-        save, coverage, scan.coverage(j), save(scan.fn, 1);
-      } else {
-        save, coverage(scan.coverage(j)), scan.fn, 1;
-      }
+      obj_hier_save, coverage, scan.coverage(j), scan.fn, 1;
     }
   }
 }
