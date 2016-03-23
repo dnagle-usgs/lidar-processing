@@ -151,6 +151,33 @@ END:
   return result;
 }
 
+func _batch_retile_scanner(scandir, scans, files, remove_buffers, mode, scheme, dtlength,
+dtprefix, qqprefix, buffer, zone, force_zone, split_days, dayshift) {
+  makeflow_fn = file_join(scandir, "retile_scan.makeflow");
+
+  options = save(string(0), [], remove_buffers, mode, scheme, dtlength,
+    dtprefix, qqprefix, buffer);
+  if(zone) save, options, zone;
+  if(force_zone) save, options, force_zone;
+  if(split_days) save, options, split_days, dayshift;
+
+  conf = save();
+  for(i = 1; i <= count; i++) {
+    save, conf, string(0), save(
+      input=files(i),
+      output=scans(i),
+      command="job_retile_scan",
+      options=obj_merge(options, save(
+        "infile", files(i),
+        "outfile", scans(i)
+      ))
+    );
+  }
+
+  write, "Scanning input to determine output...";
+  makeflow_run, conf, makeflow_fn;
+}
+
 /* STEP TWO: Collate scan data ************************************************/
 
 func _batch_retile_collate(&wanted, &coverage, scans, files, split_days) {
@@ -525,12 +552,6 @@ dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
 
   count = numberof(files);
 
-  options = save(string(0), [], remove_buffers, mode, scheme, dtlength,
-    dtprefix, qqprefix, buffer);
-  if(zone) save, options, zone;
-  if(force_zone) save, options, force_zone;
-  if(split_days) save, options, split_days, dayshift;
-
   if(scandir) {
     if(!scanresume) mkdirp, scandir;
   } else {
@@ -538,28 +559,12 @@ dtlength=, dtprefix=, qqprefix=, scandir=, scanonly=, scanresume=) {
   }
 
   scans = file_join(scandir, swrite(format="%04d.pbd", indgen(count)));
-  makeflow_fn = file_join(scandir, "retile_scan.makeflow");
 
   if(!scanresume) {
-
-    conf = save();
-    for(i = 1; i <= count; i++) {
-      save, conf, string(0), save(
-        input=files(i),
-        output=scans(i),
-        command="job_retile_scan",
-        options=obj_merge(options, save(
-          "infile", files(i),
-          "outfile", scans(i)
-        ))
-      );
-    }
-
-    write, "Scanning input to determine output...";
-    makeflow_run, conf, makeflow_fn;
-
+    _batch_retile_scanner, scandir, scans, files, remove_buffers, mode, scheme,
+      dtlength, dtprefix, qqprefix, buffer, zone, force_zone, split_days,
+      dayshift;
   }
-
   if(scanonly) return;
 
   wanted = coverage = [];
