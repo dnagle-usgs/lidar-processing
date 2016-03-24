@@ -205,9 +205,7 @@ func job_pbd2las(conf) {
   This ensures that the resulting argument is a simple string, without
   quotation marks.
 */
-  require, "general.i";
-  require, "util_obj.i";
-  require, "util_str.i";
+  require, "eaarl.i";
   keyrequire, conf, file=;
   keyrequire, conf.file, in=, out=;
 
@@ -232,7 +230,6 @@ func job_pbd2las(conf) {
       header = json_decode(strchar(z_decompress(base64_decode(conf.header))));
   }
 
-  require, "las.i";
   pbd2las, conf.file.in, fn_las=conf.file.out, mode=conf.mode, v_maj=v_maj,
     v_min=v_min, cs=cs, cs_out=cs_out, pdrf=pdrf, encode_rn=encode_rn,
     include_scan_angle_rank=include_scan_angle_rank, buffer=buffer,
