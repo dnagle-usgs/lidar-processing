@@ -268,20 +268,6 @@ norun=) {
     files_las = file_join(outdir, tails);
   tails = [];
 
-  if(!is_void(v_maj))
-    v_maj = swrite(format="%d", v_maj);
-  if(!is_void(v_min))
-    v_min = swrite(format="%d", v_min);
-  if(!is_void(pdrf))
-    pdrf = swrite(format="%d", pdrf);
-  if(!is_void(encode_rn))
-    encode_rn = swrite(format="%d", encode_rn);
-  if(!is_void(include_scan_angle))
-    include_scan_angle = swrite(format="%d", include_scan_angle);
-  if(!is_void(buffer))
-    buffer = swrite(format="%.3f", buffer);
-  if(!is_void(classification))
-    classification = swrite(format="%d", classification);
   if(!is_void(cs))
     cs = base64_encode(strchar(cs),maxlen=-1);
   if(!is_void(cs_out))
