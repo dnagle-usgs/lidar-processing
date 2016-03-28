@@ -333,33 +333,10 @@ func job_retile_assemble(conf) {
     save, conf, force_zone=atoi(conf.force_zone);
   if(conf(*,"uniq") && strlen(conf.uniq) <= 1)
     save, conf, uniq=atoi(conf.uniq);
-
-  _batch_retile_assemble, opts=conf;
-}
-
-func job_retile_assemble_dates(conf) {
-/* DOUMENT job_retile_assemble_dates, conf
-  This is a wrapper around _batch_retile_assemble_dates. Each accepted
-  command-line option corresponds to an option of _batch_retile_assemble_dates
-  with the same name.
-*/
-  require, "eaarl.i";
-  keyrequire, conf, infiles=, outfiles=, vnames=, dates=, tile=;
-
-  if(conf(*,"zone"))
-    save, conf, zone=atoi(conf.zone);
-  if(conf(*,"buffer"))
-    save, conf, buffer=atod(conf.buffer);
-  if(conf(*,"remove_buffers"))
-    save, conf, remove_buffers=atoi(conf.remove_buffers);
-  if(conf(*,"force_zone"))
-    save, conf, force_zone=atoi(conf.force_zone);
-  if(conf(*,"uniq") && strlen(conf.uniq) <= 1)
-    save, conf, uniq=atoi(conf.uniq);
   if(conf(*,"day_shift"))
     save, conf, day_shift=atod(conf.day_shift);
 
-  _batch_retile_assemble_dates, opts=conf;
+  _batch_retile_assemble, opts=conf;
 }
 
 func job_shapefile_extract(conf) {

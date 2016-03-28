@@ -312,7 +312,7 @@ func batch_retile_collate(&wanted, &coverage, scandir=, split_days=, opts=) {
 /* STEP THREE: Generate tiled output ******************************************/
 
 func _batch_retile_assemble(opts=, infiles=, outfile=, vname=, tile=, mode=,
-remove_buffers=, buffer=, zone=, force_zone=, uniq=) {
+remove_buffers=, buffer=, zone=, force_zone=, uniq=, date=, day_shift=) {
 /* DOCUMENT _batch_retile_assemble
   Worker function for batch_retile. This generates the output file for a single
   tile.
@@ -325,43 +325,17 @@ remove_buffers=, buffer=, zone=, force_zone=, uniq=) {
   Other parameters are as defined for batch_retile.
 */
   restore_if_exists, opts, infiles, outfile, vname, tile, mode, remove_buffers,
-    buffer, zone, force_zone, uniq;
+    buffer, zone, force_zone, uniq, date, day_shift;
+
+  filter = dlfilter_tile(tile, mode=mode, buffer=buffer, zone=zone, dataonly=1);
+
+  if(date) {
+    filter = dlfilter_date(date, day_shift=day_shift, prev=filter);
+  }
+
   dirload, files=infiles, outfile=outfile, outvname=vname, skip=1, soesort=1,
     remove_buffers=remove_buffers, force_zone=force_zone, uniq=uniq, verbose=0,
-    filter=dlfilter_tile(tile, mode=mode, buffer=buffer, zone=zone, dataonly=1);
-}
-
-func _batch_retile_assemble_dates(opts=, infiles=, outfiles=, vnames=, dates=,
-tile=, mode=, remove_buffers=, buffer=, zone=, force_zone=, uniq=, day_shift=) {
-/* DOCUMENT _batch_retile_assemble_dates
-  Worker function for batch_retile. This generates output files for a single
-  tile. This is a more complex alternative to _batch_retile_assemble that splits
-  tile data for multiple dates.
-
-  Parameters:
-    infiles= The PBD files to load for input.
-    outfiles= The PBD files to create with output.
-    vnames= The variable names to use for output.
-    dates= The dates expected to be found within the input. This is an array
-      whose size matches the size of outfiles and vnames. Entries in each
-      correspond to the others.
-    tile= The tile name for these outputs.
-  Other parameters are as defined for batch_retile.
-*/
-  restore_if_exists, opts, infiles, outfiles, vnames, dates, tile, mode,
-    remove_buffers, buffer, zone, force_zone, uniq, day_shift;
-
-  data = dirload(files=infiles, uniq=uniq, soesort=1, skip=1,
-    force_zone=force_zone, remove_buffers=remove_buffers,
-    filter=dlfilter_tile(tile, mode=mode, buffer=buffer, zone=zone));
-  datadate = soe2date(data.soe + day_shift);
-
-  dcount = numberof(dates);
-  for(i = 1; i <= dcount; i++) {
-    w = where(datadate == dates(i));
-    mkdirp, file_dirname(outfiles(i));
-    pbd_save, outfiles(i), vnames(i), data(w), empty=1;
-  }
+    filter=filter;
 }
 
 func batch_retile_assemble(wanted, coverage, outpath=, scheme=, flat=,
@@ -428,19 +402,20 @@ update=, opts=) {
           remove, outfiles(j);
       }
 
-      save, conf, string(0), save(
-        input=infiles,
-        output=outfiles,
-        command="job_retile_assemble_dates",
-        options=obj_merge(options, save(
-          tile,
-          infiles,
-          outfiles,
-          vnames,
-          dates
-        ))
-      );
-
+      for(j = 1; j <= numberof(dates); j++) {
+        save, conf, string(0), save(
+            input=infiles,
+            output=outfiles(j),
+            command="job_retile_assemble",
+            options=obj_merge(options, save(
+                tile,
+                infiles,
+                outfile=outfiles(j),
+                vname=vnames(j),
+                date=dates(j)
+                ))
+            );
+      }
     } else {
       outfile = file_join(outpath, tile);
       if(file_suffix) outfile += file_suffix;
