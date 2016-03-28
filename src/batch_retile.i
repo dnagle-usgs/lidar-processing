@@ -110,6 +110,8 @@ split_days=, day_shift=) {
 
   if(scheme == "itdt") scheme = "dt";
 
+  result = save(fn=infile);
+
   // Load data
   data = pbd_load(infile);
   if(!numberof(data)) goto END;
@@ -143,77 +145,25 @@ split_days=, day_shift=) {
     rezone_utm, n, e, datazone, force_zone;
     datazone = force_zone;
   }
+  save, result, zone=datazone;
 
-  // Determine the "wanted" tiles for this data: tiles where these points would
-  // fall within the tile extent.
-  wanted = utm2tile_names(e, n, datazone, scheme, dtlength=dtlength,
-    dtprefix=dtprefix, qqprefix=qqprefix);
+  // Store coverage information. Dummy the z value with n, since coverage does
+  // not pay any attention to it.
+  save, result, coverage=cell_grid(e, n, n, method="coverage", cell=25);
 
-  // If split_days is enabled, figure out per-tile dates.
   if(split_days) {
-    wcount = numberof(wanted);
-    wanted_expand = array(pointer, wcount);
-    dates = array(pointer, wcount);
-    dates_full = soe2date(data.soe + day_shift);
-    for(i = 1; i <= wcount; i++) {
-      w = extract_for_tile(e, n, datazone, wanted(i), buffer=buffer);
-      dates(i) = &set_remove_duplicates(dates_full(w));
-      wanted_expand(i) = &array(wanted(i), numberof(*dates(i)));
-    }
-    wanted = merge_pointers(wanted_expand);
-    wanted_expand = [];
-    dates = merge_pointers(dates);
-  }
-  data = [];
-
-  // Next, determine "coverage" tiles for this data: tiles where this points
-  // would fall within the tile+buffer extent.
-
-  // Zones with data
-  zones = set_remove_duplicates(datazone);
-
-  // Check to see if we're near a zone boundary. If so, figure out the adjacent
-  // zones. This is needed to ensure that tiles at the zone boundary end up
-  // fully populated.
-  if(!force_zone) {
-    // Use 10k meters, which is big enough to accommodate any tiling scheme
-    testn = [n(min),n(max)]([1,2,2,1]);
-    teste = [e(min),e(max)]([1,1,2,2]);
-    buffer_scatter_xy, 10000, teste, testn;
-    utm2ll, testn, teste, datazone, testlon, testlat;
-    ll2utm, testlat, testlon, testn, teste, testz;
-
-    grow, zones, set_difference(testz, zones);
-
-    testn = teste = testlat = testlon = testz = [];
-  }
-
-  if(buffer) {
-    buffe = buffn = 0;
-    buffer_scatter_xy, buffer, buffe, buffn;
-    bcount = 9;
-  } else {
-    buffe = buffn = [0];
-    bcount = 1;
-  }
-
-  zcount = numberof(zones);
-
-  coverage = array(pointer, zcount, bcount);
-
-  for(zi = 1; zi <= zcount; zi++) {
-    rezone_utm, n, e, datazone, zones(zi);
-    datazone = zones(zi);
-
-    for(bi = 1; bi <= bcount; bi++) {
-      coverage(zi,bi) = &utm2tile_names(e+buffe(bi), n+buffn(bi), datazone,
-        scheme, dtlength=dtlength, dtprefix=dtprefix, qqprefix=qqprefix);
+    point_dates = soe2date(data.soe + day_shift);
+    dates = set_remove_duplicates(point_dates);
+    save, result, dates;
+    for(i = 1; i <= numberof(dates); i++) {
+      key = swrite(format="date_coverage_%d", i);
+      w = where(point_dates == dates(i));
+      save, result, noop(key),
+        cell_grid(e(w), n(w), n(w), method="coverage", cell=25);
     }
   }
-  coverage = set_remove_duplicates(merge_pointers(coverage(*)));
 
 END:
-  result = save(wanted, dates, coverage, fn=infile);
   if(outfile) obj2pbd, result, outfile;
   return result;
 }
@@ -284,27 +234,66 @@ split_days=, day_shift=, opts=) {
 
 /* STEP TWO: Collate scan data ************************************************/
 
-func batch_retile_collate(&wanted, &coverage, scandir=, split_days=, opts=) {
+func _batch_retile_collate_wanted(wanted, x, y, zone, scheme) {
+  tiles = utm2tile_names(x, y, zone, scheme.scheme, dtlength=scheme.dtlength,
+    dtprefix=scheme.dtprefix, qqprefix=scheme.qqprefix);
+  ntiles = numberof(tiles);
+  for(i = 1; i <= ntiles; i++) save, wanted, tiles(i), 1;
+}
+
+func _batch_retile_collate_coverage_helper(coverage, fn, x, y, zone, scheme) {
+  tiles = utm2tile_names(x, y, zone, scheme.scheme, dtlength=scheme.dtlength,
+    dtprefix=scheme.dtprefix, qqprefix=scheme.qqprefix);
+  ntiles = numberof(tiles);
+  for(i = 1; i <= ntiles; i++) obj_hier_save, coverage, tiles(i), fn, 1;
+}
+
+func _batch_retile_collate_coverage(coverage, fn, x, y, zone, scheme, buffer) {
+  if(!buffer) {
+    _batch_retile_collate_coverage_helper, coverage, fn, x, y, zone, scheme;
+    return;
+  }
+
+  for(dx = -1; dx <= 1; dx++) {
+    for(dy = -1; dy <= 1; dy++) {
+      _batch_retile_collate_coverage_helper, coverage, fn,
+        x + dx * buffer, y + dy * buffer, zone, scheme;
+    }
+  }
+}
+
+func batch_retile_collate(&wanted, &coverage, scandir=, split_days=, scheme=, opts=) {
   _batch_retile_defaults, scandir, split_days, opts;
+  local x, y;
 
   wanted = save();
   coverage = save();
 
   scans = find(scandir, searchstr="scan_*.pbd");
+  nscans = numberof(scans);
 
-  for(i = 1; i <= numberof(scans); i++) {
+  for(i = 1; i <= nscans; i++) {
     scan = pbd2obj(scans(i));
 
-    for(j = 1; j <= numberof(scan.wanted); j++) {
-      if(split_days) {
-        obj_hier_save, wanted, scan.dates(j), scan.wanted(j), 1;
-      } else {
-        save, wanted, scan.wanted(j), 1;
-      }
-    }
+    if(split_days) {
+      for(j = 1; j <= numberof(scan.dates); j++) {
+        date = scan.dates(j);
+        key = swrite(format="date_coverage_%d", j);
+        data2xyz, scan(noop(key)), x, y;
 
-    for(j = 1; j <= numberof(scan.coverage); j++) {
-      obj_hier_save, coverage, scan.coverage(j), scan.fn, 1;
+        if(!wanted(*,date)) save, wanted, noop(date), save();
+        _batch_retile_collate_wanted, wanted(noop(date)), x, y, scan.zone,
+          scheme;
+
+        if(!coverage(*,date)) save, coverage, noop(date), save();
+        _batch_retile_collate_coverage, coverage(noop(date)), scan.fn, x, y,
+          scan.zone, scheme, opts.buffer;
+      }
+    } else {
+      data2xyz, scan.coverage, x, y;
+      _batch_retile_collate_wanted, wanted, x, y, scan.zone, scheme;
+      _batch_retile_collate_coverage, coverage, scan.fn, x, y, scan.zone,
+        scheme, opts.buffer;
     }
   }
 }
@@ -410,11 +399,11 @@ func _batch_retile_assemble_build_jobs(conf, wanted, coverage, options, opts, da
   }
 }
 
-func batch_retile_assemble(wanted, coverage, outpath=, scheme=, flat=,
+func batch_retile_assemble(wanted, coverage, outdir=, scheme=, flat=,
 remove_buffers=, mode=, buffer=, uniq=, zone=, force_zone=, split_zones=,
 split_days=, day_shift=, dtlength=, dtprefix=, file_suffix=, vname_suffix=,
 update=, opts=) {
-  _batch_retile_defaults, outpath, scheme, flat, remove_buffers, mode, buffer,
+  _batch_retile_defaults, outdir, scheme, flat, remove_buffers, mode, buffer,
     uniq, zone, force_zone, split_zones, split_days, day_shift, dtlength,
     dtprefix, file_suffix, vname_suffix, update, opts;
 
@@ -430,8 +419,9 @@ update=, opts=) {
 
   if(split_days) {
     for(i = 1; i <= wanted(*); i++) {
-      _batch_retile_assemble_build_jobs, conf, wanted(noop(i), *,), coverage,
-        options, opts, wanted(*,i);
+      date = wanted(*,i);
+      _batch_retile_assemble_build_jobs, conf, wanted(noop(i), *,),
+        coverage(noop(date)), options, opts, wanted(*,i);
     }
   } else {
     _batch_retile_assemble_build_jobs, conf, wanted(*,), coverage, options, opts;
@@ -589,8 +579,11 @@ qqprefix=, scandir=, scanonly=, scanresume=) {
     if(scanonly) return;
   }
 
+  schemeopts = save(scheme, dtlength, dtprefix, qqprefix);
+  if(scheme == "itdt") save, schemeopts, scheme="dt";
+
   wanted = coverage = [];
-  batch_retile_collate, wanted, coverage, opts=opts;
+  batch_retile_collate, wanted, coverage, opts=opts, scheme=schemeopts;
   if(!scankeep) remove_recursive, scandir;
 
   batch_retile_assemble, wanted, coverage, opts=opts;
