@@ -268,11 +268,22 @@ func data2xyz_zgrid(data, &x, &y, &z) {
 
   z = *(data.zgrid);
   x = y = array(double, dimsof(z));
-  xmax = data.xmin + dimsof(x)(2) * data.cell;
-  ymax = data.ymin + dimsof(y)(3) * data.cell;
   hc = 0.5 * data.cell;
-  x(,) = span(data.xmin+hc, xmax-hc, dimsof(x)(2))(,-);
-  y(,) = span(data.ymin+hc, ymax-hc, dimsof(y)(3))(-,);
+
+  if(dimsof(x)(2) == 1) {
+    x(,) = data.xmin + hc;
+  } else {
+    xmax = data.xmin + dimsof(x)(2) * data.cell;
+    x(,) = span(data.xmin+hc, xmax-hc, dimsof(x)(2))(,-);
+  }
+
+  if(dimsof(y)(3) == 1) {
+    y(,) = data.ymin + hc;
+  } else {
+    ymax = data.ymin + dimsof(y)(3) * data.cell;
+    y(,) = span(data.ymin+hc, ymax-hc, dimsof(y)(3))(-,);
+  }
+
   w = where(z != data.nodata);
 
   if(!numberof(w)) {
