@@ -793,6 +793,22 @@ func obj_delete(args) {
 errs2caller, obj_delete;
 wrap_args, obj_delete;
 
+func obj_delete_voids(&obj) {
+/* DOCUMENT obj_delete_voids, obj
+  -or- result = obj_delete_voids(obj)
+  Deletes all members of OBJ that have void values.
+*/
+  if(!obj(*)) return save();
+  keep = array(long, obj(*));
+  for(i = 1; i <= obj(*); i++) {
+    keep(i) = !is_void(obj(noop(i)));
+  }
+  w = where(keep);
+  result = numberof(w) ? obj(noop(w)) : save();
+  if(am_subroutine()) obj = result;
+  return result;
+}
+
 func obj_transpose(obj, ary=, fill_void=) {
 /* DOCUMENT obj_transpose(obj, ary=, fill_void=)
   Transposes a group of groups. For example:
