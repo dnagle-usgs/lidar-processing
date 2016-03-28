@@ -297,7 +297,7 @@ func batch_retile_collate(&wanted, &coverage, scandir=, split_days=, opts=) {
 
     for(j = 1; j <= numberof(scan.wanted); j++) {
       if(split_days) {
-        obj_hier_save, wanted, scan.wanted(j), scan.dates(j), 1;
+        obj_hier_save, wanted, scan.dates(j), scan.wanted(j), 1;
       } else {
         save, wanted, scan.wanted(j), 1;
       }
@@ -315,7 +315,7 @@ func _batch_retile_assemble(opts=, infiles=, outfile=, vname=, tile=, mode=,
 remove_buffers=, buffer=, zone=, force_zone=, uniq=, date=, day_shift=) {
 /* DOCUMENT _batch_retile_assemble
   Worker function for batch_retile. This generates the output file for a single
-  tile.
+  tile and is called by the job command.
 
   Parameters:
     infiles= The PBD files to load for input.
@@ -338,6 +338,78 @@ remove_buffers=, buffer=, zone=, force_zone=, uniq=, date=, day_shift=) {
     filter=filter;
 }
 
+func _batch_retile_assemble_build_jobs(conf, wanted, coverage, options, opts, date) {
+/* DOCUMENT _batch_retile_assemble_build_jobs
+  Helper function for batch_retile_assemble. This adds jobs to conf for the
+  given data.
+
+  Parameters:
+    conf: The conf object to store jobs to.
+    wanted: Array of tiles to create files for.
+    coverage: Coverage data.
+    options: A core set of options to use for each job.
+    opts: The options passed to the parent function.
+    date: The date to generate files for; optional.
+*/
+  bilevel = 0;
+  scheme = opts.scheme;
+  if(scheme == "itdt") {
+    scheme = "dt";
+    bilevel = 1;
+  }
+
+  if(date) {
+    options = obj_merge(options, save(date));
+    date = regsub("-", date, "", all=1);
+  }
+
+  nwanted = numberof(wanted);
+  for(i = 1; i <= nwanted; i++) {
+    tile = wanted(i);
+    tile_zone = long(tile2uz(tile));
+
+    vname = (scheme == "qq") ? tile : extract_dt(tile);
+
+    outpath = opts.outdir;
+    if(opts.split_zones)
+      outpath = file_join(outpath, swrite(format="zone_%d", tile_zone));
+    if(!opts.flat) {
+      if(bilevel)
+        outpath = file_join(outpath, dt2it(tile, dtlength=opts.dtlength,
+          dtprefix=opts.dtprefix));
+      outpath = file_join(outpath, tile);
+    }
+
+    infiles = coverage(noop(tile), *, );
+
+    outfile = file_join(outpath, tile);
+    if(date) outfile += "_" + date;
+    if(opts.file_suffix) outfile += opts.file_suffix;
+    append_if_needed, outfile, ".pbd";
+
+    if(date) vname += "_" + date;
+    if(opts.vname_suffix) vname += opts.vname_suffix;
+
+    if(opts.update) {
+      if(file_exists(outfile)) continue;
+    } else {
+      remove, outfile;
+    }
+
+    save, conf, string(0), save(
+      input=infiles,
+      output=outfile,
+      command="job_retile_assemble",
+      options=obj_merge(options, save(
+        tile,
+        infiles,
+        outfile,
+        vname
+      ))
+    );
+  }
+}
+
 func batch_retile_assemble(wanted, coverage, outpath=, scheme=, flat=,
 remove_buffers=, mode=, buffer=, uniq=, zone=, force_zone=, split_zones=,
 split_days=, day_shift=, dtlength=, dtprefix=, file_suffix=, vname_suffix=,
@@ -351,98 +423,20 @@ update=, opts=) {
   if(force_zone) save, options, force_zone;
   if(split_days) save, options, day_shift;
 
-  bilevel = 0;
-  if(scheme == "itdt") {
-    scheme = "dt";
-    bilevel = 1;
-  }
-
   prepend_if_needed, file_suffix, "_";
   prepend_if_needed, vname_suffix, "_";
 
   conf = save();
-  count = wanted(*);
-  for(i = 1; i <= count; i++) {
-    tile = wanted(*,i);
-    tile_zone = long(tile2uz(tile));
 
-    vname = (scheme == "qq") ? tile : extract_dt(tile);
-
-    outpath = outdir;
-    if(split_zones)
-      outpath = file_join(outpath, swrite(format="zone_%d", tile_zone));
-    if(!flat) {
-      if(bilevel)
-        outpath = file_join(outpath, dt2it(tile, dtlength=dtlength,
-          dtprefix=dtprefix));
-      outpath = file_join(outpath, tile);
+  if(split_days) {
+    for(i = 1; i <= wanted(*); i++) {
+      _batch_retile_assemble_build_jobs, conf, wanted(noop(i), *,), coverage,
+        options, opts, wanted(*,i);
     }
-
-    infiles = coverage(noop(tile), *, );
-
-    if(split_days) {
-      dates = wanted(noop(i), *,);
-      cleandates = regsub("-", dates, "", all=1);
-
-      outfiles = file_join(outpath, tile) + "_" + cleandates;
-      if(file_suffix) outfiles += file_suffix;
-      append_if_needed, outfiles, ".pbd";
-
-      vnames = vname + "_" + cleandates;
-      if(vname_suffix) vnames += vname_suffix;
-
-      if(update) {
-        w = where(!file_exists(outfiles));
-        if(!numberof(w)) continue;
-        outfiles = outfiles(w);
-        vnames = vnames(w);
-        dates = dates(w);
-      } else {
-        for(j = 1; j <= numberof(outfiles); j++)
-          remove, outfiles(j);
-      }
-
-      for(j = 1; j <= numberof(dates); j++) {
-        save, conf, string(0), save(
-            input=infiles,
-            output=outfiles(j),
-            command="job_retile_assemble",
-            options=obj_merge(options, save(
-                tile,
-                infiles,
-                outfile=outfiles(j),
-                vname=vnames(j),
-                date=dates(j)
-                ))
-            );
-      }
-    } else {
-      outfile = file_join(outpath, tile);
-      if(file_suffix) outfile += file_suffix;
-      append_if_needed, outfile, ".pbd";
-      if(vname_suffix) vname += vname_suffix;
-
-      if(update) {
-        if(file_exists(outfile)) continue;
-      } else {
-        remove, outfile;
-      }
-
-      save, conf, string(0), save(
-        input=infiles,
-        output=outfile,
-        command="job_retile_assemble",
-        options=obj_merge(options, save(
-          tile,
-          infiles,
-          outfile,
-          vname
-        ))
-      );
-    }
+  } else {
+    _batch_retile_assemble_build_jobs, conf, wanted(*,), coverage, options, opts;
   }
 
-  write, "";
   write, "Generating output...";
   makeflow_run, conf;
 }
