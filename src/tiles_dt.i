@@ -1,5 +1,35 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+func dt_tile_type(regex, tile) {
+  // Anything that has match is a ut tile. The prefix determines the type,
+  // unless there is no prefix, in which case it's dt.
+
+  local match;
+  regmatch, regex, tile, match;
+
+  // This supports both scalar and array input, so some hoops are jumped
+  // through to avoid having to index into arrays (which fails on scalars).
+
+  is_match = bool(match);
+  has_prefix = strpart(tile, 2:2) == "_";
+  prefix = strpart(tile, 1:1);
+
+  is_dt = (is_match & !has_prefix) | (is_match & has_prefix & prefix == "t");
+  dt_type = [string(0),"dt"](1 + is_dt);
+
+  is_ot = is_match & !is_dt;
+  // zero and the weird math, once transposed, gives a pair of [0,2] for valid
+  // tiles and [0,-1] for invalid tiles. That results in returning the prefix
+  // string for valid tiles and string(0) for invalid.
+  zero = is_match * 0;
+  ot_type = strpart(prefix+"t", transpose([zero, is_ot * 3 - 1]));
+
+  // At most only one of them is non-nil, so concatenating them is safe
+  return dt_type + ot_type;
+}
+dt_tile_type = closure(dt_tile_type, regcomp(
+  "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_|\\.|$)"));
+
 func dt2utm_km(dtcodes, &east, &north, &zone, &quad, &cell) {
 /* DOCUMENT dt2utm_km, dtcodes, &east, &north, &zone, &quad, &cell
   Parses the given data or index tile codes and sets the key easting,
@@ -98,7 +128,7 @@ func dt2utm_corner(tile, &east, &north, &zone) {
 */
   if(!is_scalar(tile)) error, "only works for scalar input";
   east = north = zone = [];
-  type = tile_type(tile);
+  type = dt_tile_type(tile);
   funcs = save(dt=dt2utm, it=it2utm);
   if(!funcs(*,type)) return;
   if(!am_subroutine()) return funcs(noop(type))(tile);

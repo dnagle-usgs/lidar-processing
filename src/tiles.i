@@ -510,27 +510,9 @@ func tile_type(text) {
     (nil) - Unparseable
   See extract_tile for information about how ambiguity is handled.
 */
-  qq = extract_qq(text);
-  dt = extract_dt(text);
-
-  prefix = strpart(text, 1:2);
-  is_it = "i_" == prefix;
-
-  result = array(string, dimsof(text));
-
-  w = where(strlen(dt) > 0 & is_it);
-  if(numberof(w))
-    result(w) = "it";
-
-  w = where(strlen(dt) > 0 & !strlen(result));
-  if(numberof(w))
-    result(w) = "dt";
-
-  w = where(strlen(qq) > 0 & !strlen(result));
-  if(numberof(w))
-    result(w) = "qq";
-
-  return result;
+  dt = dt_tile_type(text);
+  qq = qq_tile_type(text);
+  return dt + qq;
 }
 
 func tile_size(text) {

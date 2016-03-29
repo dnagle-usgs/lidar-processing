@@ -1,5 +1,17 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+func qq_tile_type(regex, tile) {
+/* DOCUMENT qqtile_type(tile)
+  Detects if the tile is a qq tile. Tiles that are quarter quad tiles return as
+  "qq", anything else returns as string(0).
+*/
+  local match;
+  regmatch, regex, tile, match;
+  return [string(0),"qq"](1+bool(match));
+}
+qq_tile_type = closure(qq_tile_type, regcomp(
+  "(^|_|qq)([0-9][0-9][0-1][0-9][0-9][a-h][1-8][a-d])(\.|_|$)"));
+
 func extract_qq(text, qqprefix=) {
 /* DOCUMENT extract_qq(text, qqprefix=)
 
