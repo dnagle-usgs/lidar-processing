@@ -9,23 +9,32 @@
 func _batch_retile_defaults(args) {
   // Scan to retrieve fields that are refered to in calculating values.
   ref = save();
-  wanted = ["srcdir", "suffix", "zone", "shorten", "scheme", "dtprefix",
-    "qqprefix", "scandir"];
-  optsidx = 0;
+  wanted = ["srcdir", "suffix", "zone", "scandir"];
+  optsidx = schemeidx = 0;
   for(i = 1; i <= args(0); i++) {
     if(anyof(args(-,i) == wanted)) save, ref, args(-,i), args(i);
     if(args(-,i) == "opts") optsidx = i;
+    if(args(-,i) == "scheme") schemeidx = i;
   }
 
   opts = [];
   if(optsidx) opts = args(optsidx);
   if(is_void(opts)) opts = save();
+  obj_delete_voids, opts;
+
+  // Scheme gets special handling since it's an object. Pull it out, give it a
+  // default, then update it to reflect anything provided in opts.
+  scheme = [];
+  if(schemeidx) scheme = args(schemeidx);
+  if(is_void(scheme)) scheme = "it/dt long prefix";
+  tile_scheme, scheme, opts=opts.scheme;
+  save, opts, scheme;
 
   // Derive defaults
   defaults = save(
     // srcdir
     outdir=ref.srcdir,
-    scheme="itdt",
+    // scheme
     mode="fs",
     searchstr="*.pbd",
     update=0,
@@ -36,14 +45,10 @@ func _batch_retile_defaults(args) {
     buffer=100,
     uniq=1,
     // zone
-    // shorten
     flat=0,
     split_zones=(ref.scheme == "qq"),
     split_days=0,
     day_shift=0,
-    dtlength=(ref.shorten ? "short" : "long"),
-    // dtprefix
-    // qqprefix
     // scandir
     scanresume=0,
     scanonly=0);
@@ -51,19 +56,18 @@ func _batch_retile_defaults(args) {
   // Populate opts with defaults for whatever is missing or void
   for(i = 1; i <= defaults(*); i++) {
     key = defaults(*,i);
-    if(opts(*,key) && !is_void(opts(noop(key)))) continue;
+    if(opts(*,key)) continue;
     save, opts, noop(key), defaults(noop(key));
   }
 
   // Update opts to reflect values passed directly
   for(i = 1; i <= args(0); i++) {
-    if(is_void(args(i)) || args(-,i) == "opts") continue;
+    if(is_void(args(i)) || anyof(args(-,i) == ["opts","scheme"])) continue;
     save, opts, args(-,i), args(i);
   }
 
-  // Special case: update scheme.
-  aliases = save("10k2k", "itdt", "2k", "dt", "10k", "it");
-  if(aliases(*,opts.scheme)) save, opts, scheme=aliases(opts.scheme);
+  // Special case: apply flat to scheme.path
+  if(flat) save, opts.scheme, path="-";
 
   // Apply values from opts back to parameters
   for(i = 1; i <= args(0); i++) {
@@ -235,14 +239,14 @@ split_days=, day_shift=, opts=) {
 /* STEP TWO: Collate scan data ************************************************/
 
 func _batch_retile_collate_wanted(wanted, x, y, zone, scheme) {
-  tiles = utm2tile_names(x, y, zone, scheme.scheme, dtlength=scheme.dtlength,
+  tiles = utm2tile_names(x, y, zone, scheme.type, dtlength=scheme.dtlength,
     dtprefix=scheme.dtprefix, qqprefix=scheme.qqprefix);
   ntiles = numberof(tiles);
   for(i = 1; i <= ntiles; i++) save, wanted, tiles(i), 1;
 }
 
 func _batch_retile_collate_coverage_helper(coverage, fn, x, y, zone, scheme) {
-  tiles = utm2tile_names(x, y, zone, scheme.scheme, dtlength=scheme.dtlength,
+  tiles = utm2tile_names(x, y, zone, scheme.type, dtlength=scheme.dtlength,
     dtprefix=scheme.dtprefix, qqprefix=scheme.qqprefix);
   ntiles = numberof(tiles);
   for(i = 1; i <= ntiles; i++) obj_hier_save, coverage, tiles(i), fn, 1;
@@ -263,7 +267,7 @@ func _batch_retile_collate_coverage(coverage, fn, x, y, zone, scheme, buffer) {
 }
 
 func batch_retile_collate(&wanted, &coverage, scandir=, split_days=, scheme=, opts=) {
-  _batch_retile_defaults, scandir, split_days, opts;
+  _batch_retile_defaults, scandir, split_days, scheme, opts;
   local x, y;
 
   wanted = save();
@@ -340,12 +344,7 @@ func _batch_retile_assemble_build_jobs(conf, wanted, coverage, options, opts, da
     opts: The options passed to the parent function.
     date: The date to generate files for; optional.
 */
-  bilevel = 0;
   scheme = opts.scheme;
-  if(scheme == "itdt") {
-    scheme = "dt";
-    bilevel = 1;
-  }
 
   if(date) {
     options = obj_merge(options, save(date));
@@ -357,17 +356,13 @@ func _batch_retile_assemble_build_jobs(conf, wanted, coverage, options, opts, da
     tile = wanted(i);
     tile_zone = long(tile2uz(tile));
 
-    vname = (scheme == "qq") ? tile : extract_dt(tile);
+    vname = (scheme.type == "qq") ? tile : extract_dt(tile);
 
     outpath = opts.outdir;
     if(opts.split_zones)
       outpath = file_join(outpath, swrite(format="zone_%d", tile_zone));
-    if(!opts.flat) {
-      if(bilevel)
-        outpath = file_join(outpath, dt2it(tile, dtlength=opts.dtlength,
-          dtprefix=opts.dtprefix));
-      outpath = file_join(outpath, tile);
-    }
+    if(scheme.path != "-")
+      outpath = file_join(outpath, tile_tiered_path(tile, scheme));
 
     infiles = coverage(noop(tile), *, );
 
@@ -435,12 +430,12 @@ update=, opts=) {
 
 func batch_retile(srcdir, outdir=, scheme=, mode=, searchstr=, update=,
 file_suffix=, vname_suffix=, suffix=, remove_buffers=, buffer=, uniq=, zone=,
-shorten=, flat=, split_zones=, split_days=, day_shift=, dtlength=, dtprefix=,
-qqprefix=, scandir=, scanonly=, scanresume=) {
+flat=, split_zones=, split_days=, day_shift=, scandir=, scanonly=, scanresume=)
+{
 /* DOCUMENT batch_retile, srcdir, outdir=, scheme=, mode=, searchstr=, update=,
   file_suffix=, vname_suffix=, suffix=, remove_buffers=, buffer=, uniq=, zone=,
-  shorten=, flat=, split_zones=, split_days=, day_shift=, dtlength=, dtprefix=,
-  qqprefix=, scandir=, scanonly=, scanresume=
+   flat=, split_zones=, split_days=, day_shift=, scandir=, scanonly=,
+  scanresume=
 
   Loads the data in srcdir and (re)partitions it into tiles, which are created
   in outdir.
@@ -450,11 +445,8 @@ qqprefix=, scandir=, scanonly=, scanresume=) {
 
   Options:
     outdir= Output directory. If omitted, output will go in srcdir.
-    scheme= Partioning scheme to use. Valid values:
-        scheme="itdt"     Tiered 10km/2km structure (default)
-        scheme="dt"       2km structure
-        scheme="it"       10km structure
-        scheme="qq"       Quarter quad structure
+    scheme= Tiling scheme. See tile_scheme for details.
+        scheme="it/dt long prefix"    Tiered 10km/2km structure (default)
     mode= Mode of data. Valid values include:
         mode="fs"         First surface (default)
         mode="be"         Bare earth
@@ -501,9 +493,6 @@ qqprefix=, scandir=, scanonly=, scanresume=) {
         zone=[]             Auto-detect, default
         zone=17             All data assumed to be in zone 17
         zone=-1             After loading, use data.zone (for ATM data)
-    shorten= Shorthand for dtlength option.
-        shorten=0   ->  dtlength="long"   (default)
-        shorten=1   ->  dtlength="short"
     flat= By default, files will be created in a directory structure. This
       allows you to collapse them into a single directory.
         flat=0      Create files in per-tile directories. (default)
@@ -530,12 +519,6 @@ qqprefix=, scandir=, scanonly=, scanresume=) {
         day_shift=-25200    -7 hours; MST and PDT time
         day_shift=-28800    -8 hours; PST and AKDT time
         day_shift=-32400    -9 hours; AKST time
-    dtlength= Specifies whether to use short or long form for data tile (and
-      related) schemes. By default, this is set based on shorten=.
-    dtprefix= Specifies whether to include the type prefix for data tile (and
-      related) schemes. By default, this is set based on scheme+dtlength.
-    qqprefix= Specifies whether to prepend "qq" to quarter quad names. This is
-      disabled by default.
     scandir= This function uses a two-step process: first it scans the data to
       determine what tiles need to be created; then it actually goes through
       and creates those tiles (loading the relevant data for each tile).
@@ -549,14 +532,14 @@ qqprefix=, scandir=, scanonly=, scanresume=) {
       data is read from scandir. This is incompatible with scanonly=1. Also,
       you must be sure to use the same values for the following options as you
       did when you generated the scan data: scheme=, mode=, searchstr=,
-      remove_buffers=, buffer=, zone=, shorten=, split_days=, day_shift=,
+      remove_buffers=, buffer=, zone=, split_days=, day_shift=,
       dtlength=, dtprefix=, qqprefix=.
 */
   local opts;
   _batch_retile_defaults, opts, srcdir, outdir, scheme, mode, searchstr,
     update, file_suffix, vname_suffix, suffix, remove_buffers, buffer, uniq,
-    zone, shorten, flat, split_zones, split_days, day_shift, dtlength,
-    dtprefix, qqprefix, scandir, scanonly, scanresume;
+    zone, flat, split_zones, split_days, day_shift, scandir, scanonly,
+    scanresume;
 
   scankeep = !is_void(scandir);
   if(scanonly && scanresume) {
@@ -579,11 +562,8 @@ qqprefix=, scandir=, scanonly=, scanresume=) {
     if(scanonly) return;
   }
 
-  schemeopts = save(scheme, dtlength, dtprefix, qqprefix);
-  if(scheme == "itdt") save, schemeopts, scheme="dt";
-
   wanted = coverage = [];
-  batch_retile_collate, wanted, coverage, opts=opts, scheme=schemeopts;
+  batch_retile_collate, wanted, coverage, opts=opts, scheme=scheme;
   if(!scankeep) remove_recursive, scandir;
 
   batch_retile_assemble, wanted, coverage, opts=opts;
