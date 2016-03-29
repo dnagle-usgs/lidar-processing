@@ -2,6 +2,386 @@
 require, "tiles_dt.i";
 require, "tiles_qq.i";
 
+func tile_scheme(&scheme, opts=, defaults=, init=) {
+/* DOCUMENT tile_scheme, scheme, opts=, defaults=, init=
+  -or- scheme = tile_scheme(scheme, opts=, defaults=, init=)
+
+  Consolidates all input given and converts it into an object-based scheme
+  value. This is usually used at the top of tile-oriented functions to resolve
+  their input in a consistent way.
+
+  Function documentation will often point to this function for an explanation
+  of what can be passed for scheme. See the next three sections (Tiling Tuypes,
+  Object Schemes, and String Schemes) for that information.
+
+  === Tiling Types ===
+
+  ALPS currently has support for two types of tiles: UTM-based tiles and
+  lat/lon-based quarter quad tiles.
+
+  --- UTM-based Tiles ---
+
+  UTM-based tiles come in a variety of sizes, from 2km to 10km. Tiles are
+  always square (same east-to-west extent and south-to-north extent). The tiles
+  are named for their northwest corner's coordinates.
+
+  Configuration options:
+
+    dtprefix: Specifies whether the size prefix should be included. 1 includes
+      the prefix, 0 omits it.
+    dtlength: Specifies whether to use the short form ("short") or long form
+      ("long") tile names.
+
+  The size of the tile is determined by its prefix, which corresponds to the
+  type's tile mode name.
+
+    Type  Prefix  Size
+    ----  ------  ----
+    "it"  i_      10km (index tile)
+    "dt"  t_      2km (data tile)
+
+  If the prefix is missing, then the tile is assumed to be 2km.
+
+  UTM-based tile names come in two lengths, long and short, and can optionally
+  be prefixed by the tile type (noted above).
+
+  The short form encodes the northwest corner's coordinates in kilometers as
+
+    eXXX_nYYYY_ZZ
+
+  where XXX is the corner's easting, YYYY is the northing, and ZZ is the UTM
+  zone.
+
+  The long form encodes the northwest corner's coordinates in meters as
+
+    eXXXXXX_nYYYYYYY_ZZ
+
+  where XXXXXX is the corner's easting, and YYYYYYY is the northing, and ZZ is
+  the UTM zone.
+
+  Some examples:
+
+    i_e248000_n1376000_15   10km index tile with northwest corner 248000 east,
+                            1376000 west, zone 15.
+    i_e248_n1376_15         Same as i_e248000_n1376000_15
+    t_e248000_n1376000_15   2km data tile with northwest corner 248000 east,
+                            1376000 west, zone 15.
+    t_e248_n1376_15         Same as t_e248000_n1376000_15
+    e248000_n1376000_15     Same as t_e248000_n1376000_15
+    e248_n1376_15           Same as t_e248000_n1376000_15
+
+  --- Quarter Quad Tiles ---
+
+  Quarter quads tile data based on geographic coordinates, referenced to the
+  NAD83 datum. Note that the code does not make any adjustments to ensure that
+  you are in the NAD83 datum; it is assumed the input is in the correct datum.
+  Each quarter quad tile is 1/16 degree east-to-west and 1/16 degree
+  south-to-north. The scheme is only valid for locations with positive latitude
+  and negative longitude.
+
+  Configuration options:
+
+    qqprefix: Tile names are of the form AAOOOaoq, as described below. When
+      qqprefix=1, the tile names are prefixed by the string "qq". This enables
+      the tile name to be used as a variable in Yorick (since variables cannot
+      start with numerals).
+
+  Tile names have the form AAOOOaoq, where
+
+    AA is the absolute value whole number component of the latitude
+
+    OOO is the absolute value whole number component of the longitude,
+      zero-padded to a width of 3
+
+    a is an alpha character a-h designating which quad in the degree of
+      latitude, where a is closest to 0 minutes and hs is closest to the next
+      full degree. Each letter represents 1/8 degree.
+
+    o is a numeral 1-8 designating which quad in the degree of longitude, where
+      1 is closest to 0 minutes and 8 is closest to the next full degree. Each
+      number represents 1/8 degere.
+
+    q is an alpha character a-d designating which quarter in the quad, where a
+      is SE, b is NE, c is NW, and d is SW. Each quarter-quad is 1/16 of a
+      degree in latitude and 1/16 of a degree in longitude.
+
+  For example, 47104h2c means:
+
+    47 degrees latitude and 104 degrees longitude: 47N 104W
+    h is the 8th in sequence, so the section starts at 7/8 degree and ends at
+      8/8 degree: 0.875 to 1.000, which means 47.875N to 48.000N
+    2 is the second in sequence, so the section starts at 1/8 degree and ends
+      at 2/8 degree: 0.125 to 0.250, which means 104.125W to 104.250W
+    c represents the NW corner, which means the bounds are (47.9375N 104.1875W)
+      to (48.000N 104.2500W)
+
+  So 47104h2c is bounded by (47.9375N 104.1875W) and (48.000N 104.2500W).
+
+  === Object Schemes ===
+
+  An object-based scheme is simply an oxy group object that contains the
+  parameters for the desired scheme. The object can have the following members:
+
+    type - The type of tiling scheme, such as "dt" or "qq".
+    path - The tile types to use when constructing a directory name. This can
+      be string(0), which means don't add any tile-named subdirectories. It can
+      be a single tile type, such as "dt". Or it can be a slash-delimited
+      series of tile types, such as "it/dt" (which has index tiles which
+      contain data tiles which contain the files).
+    length - Whether short tile names (length="short") or long tile names
+      (length="long") should be generated.
+    prefix - Whether tiles should receive an applicable prefix. 1 adds the
+      prefix, 0 omits it.
+    dtlength - Same as length, but specific to the utm-based tile types.
+    dtprefix - Same as prefix, but specific to the utm-based tile types.
+    qqprefix - Same as prefix, but specific to the quarter-quad tile type.
+
+  The type and path can be combined to proivde them as a single value. There
+  are two syntaxes for this: TYPE:PATH and PATH.
+
+  An example of TYPE:PATH would be "dt:it", which generates 2km data tile files
+  and stores them in 10km index tiles (type="dt", path="it"). Another example
+  is "dt:it/dt", which generates the customary 10km index tile folders with 2km
+  data tile folders which contain 2km data tile files (type="dt", path="it/dt").
+
+  For PATH, the final component is used for the type. So "it/dt" is equivalent
+  to "dt:it/dt" (type="dt", path="it/dt") and "dt" is equivalent to "dt:dt".
+
+  === String Schemes ===
+
+  String values are interpreted as a series of space-delimited tokens and/or
+  key-value pairs. A key-value pair is a pair of values separated by an equal
+  sign. Anything without an equal sign is interpreted as a token.
+
+  Key-value pairs accept the same range of input as object-based scheme values.
+  As an example, this scheme:
+    "tile=dt prefix=0"
+  Is interpreted as:
+    save(tile="dt", prefix=)
+
+  However, tokens are generally more succinct than explicit key-value pairs. If
+  the first element in the string is a token, then it is interpreted as the
+  tiling scheme. Remaining tokens must be from the following list:
+
+    prefix - Equivalent to prefix=1
+    noprefix - Equivalent to prefix=0
+    short - Equivalent to length="short"
+    long - Equivalent to length="long"
+
+  If a token or key-value pair is not recognized, it is ignored.
+
+  === Parameter and Options ===
+
+  Parameter:
+    scheme: This should be the desired scheme, as provided by the calling
+      context. It can be either in the string form or the object form, as
+      described below. If it's in string form, it will be converted to object
+      form.
+
+  Options:
+    opts= Explicitly provided options that should be merged into scheme. This
+      is primarily to support legacy functions that allow the caller to specify
+      options like dtlength=. This must be an oxy group object.
+    defaults= Desired default values to use for settings not found in scheme or
+      opts. This must be an oxy group object.
+    init= Specifies whether internal initialization should occur; in other
+      words, whether values should receive the internally-defined defaults. By
+      default, init=1. To disable, use init=1. Not that init=0 may result in
+      missing fields.
+
+  === Internal Defaults ===
+
+  The internal defaults (used by init=1) are:
+
+    type="dt"
+    dtlength="long"
+    dtprefix=1
+    qqprefix=0
+
+  There are no defaults for length and prefix, as they are merely shortcuts for
+  specifying the corresponding tile-specific settings. (Note that length and
+  prefix are also removed from the final result as well, since they are not
+  used outside of this function.)
+
+  === Usage ===
+
+  Functions that use tiling schemes will generally want to include this near
+  the top to convert user input into a consistent form.
+
+  Functions should use the name "scheme" for the scheme variable where
+  plausible for consistency's sake. When not plausible, "tile_scheme" is a good
+  alternative.
+
+  Follows are examples of how to use it given different needs.
+
+  In this example, the function only accepts a scheme; it does not accept any
+  of the related options explicitly. It also does not need to specify any
+  defaults. So the usage is very simple.
+
+    func example(scheme) {
+      tile_scheme, scheme;
+      // do stuff
+    }
+
+  In this example, the function accepts the legacy explicit keyword options
+  dtlength, dtprefix, and qqprefix. These are passed to opts= as a group to
+  allow them to merge into the scheme.
+
+    func example(scheme, dtlength=, dtprefix=, qqprefix=) {
+      tile_scheme, scheme, opts=save(dtlength, dtprefix, qqprefix);
+      // do stuff
+    }
+
+  In this example, the function wants to have specific default values in place
+  for length and prefix. These are provided in a group as defaults=.
+
+    func example(scheme) {
+      tile_scheme, scheme, defaults=save(length="long", prefix=1);
+      // do stuff
+    }
+
+  In this example, both legacy explicit keyword options and defaults are used.
+
+    func example(scheme, dtlength=, dtprefix=, qqprefix=) {
+      tile_scheme, scheme, opts=save(dtlength, dtprefix, qqprefix),
+        defaults=save(length="long", prefix=1);
+      // do stuff
+    }
+
+  === Precedences ===
+
+  Values in opts have highest precedence, followed by values in scheme,
+  followed by values in defaults, followed by internal defaults.
+
+  Explicitly provided values for dtlength, dtprefix, or qqprefix are used in
+  preference over values provided for length and prefix, provided they are on
+  the same precedence level (opts, scheme, defaults, internal). However, length
+  and prefix when provided at a higher level will take precedence over the
+  others provided at lower levels.
+
+  For example, the following results in dtprefix=0.
+
+     scheme = tile_scheme("dt dtprefix=1", save(prefix=0))
+
+  If the scheme type provided contains ":" or "/", then its path information
+  has highest precedence for path. Otherwise, the type is used for the internal
+  default value for path (lowest precedence).
+*/
+  default, opts, save();
+  default, defaults, save();
+  default, init, 1;
+
+  // Initialize result as whatever is provided in scheme.
+  if(is_string(scheme)) {
+    result = tile_scheme_parse(scheme);
+  } else if(is_obj(scheme)) {
+    result = obj_copy(scheme);
+  } else {
+    result = save();
+  }
+
+  // Resolve shortcuts length and prefix and remove any void elements.
+  tile_scheme_resolve_shortcuts, result;
+  tile_scheme_resolve_shortcuts, opts;
+  tile_scheme_resolve_shortcuts, defaults;
+
+  // Override defaults with values in scheme; override those with values in
+  // opts.
+  result = obj_merge(defaults, result, opts);
+
+  // Provide internal defaults, unless requested not to.
+  if(init) {
+    keydefault, result, type="dt", dtlength="long", dtprefix=1, qqprefix=0;
+  }
+
+  // Check for path information; if found, apply then fix type
+  if(strmatch(result.type, ":")) {
+    parts = strsplit(result.type, ":");
+    save, result, type=parts(1), path=parts(2);
+  } else if(strmatch(result.type, "/")) {
+    save, result, path=result.type;
+    parts = strsplit(result.type, "/");
+    save, result, type=parts(0);
+  } else if(init) {
+    keydefault, result, path=result.type;
+  }
+
+  if(am_subroutine()) scheme = result;
+  return result;
+}
+
+func tile_scheme_resolve_shortcuts(&scheme) {
+/* DOCUMENT tile_scheme_resolve_shortcuts, scheme
+  Helper function for tile_scheme that converts shortcut values (length,
+  prefix) to type-specific values (dtlength, dtprefix, qqprefix). This also
+  removes any void elements that are present.
+*/
+  obj_delete_voids, scheme;
+  if(scheme(*,"length")) {
+    keydefault, scheme, dtlength=scheme.length;
+  }
+  if(scheme(*,"prefix")) {
+    keydefault, scheme, dtprefix=scheme.prefix, qqprefix=scheme.prefix;
+  }
+  obj_delete, result, length, prefix;
+}
+
+func tile_scheme_parse(&scheme) {
+/* DOCUMENT tile_scheme_parse, scheme
+  -or- tile_scheme_parse(scheme)
+  SCHEME should be a scalar string; it is parsed to derive a tile scheme group
+  object.
+*/
+  opts = parse_keyval(scheme);
+
+  if(!opts(*,"type") && opts(*) > 0 && !strlen(opts(1))) {
+    save, opts, type=opts(*,1);
+    opts = opts(2:);
+  }
+
+  drop = [];
+  new = save();
+  for(i = 1; i <= opts(*); i++) {
+    if(strlen(opts(noop(i)))) continue;
+    key = opts(*,i);
+    if(anyof(key == ["short","long"])) {
+      save, new, length=key;
+      grow, drop, key;
+    }
+    if(key == "prefix") {
+      save, new, prefix="1";
+      grow, drop, key;
+    }
+    if(key == "noprefix") {
+      save, new, prefix="0";
+      grow, drop, key;
+    }
+  }
+  if(new(*)) {
+    obj_delete, opts, noop(drop);
+    opts = obj_merge(opts, new);
+  }
+
+  if(opts(*,"prefix")) save, opts, prefix=atoi(opts.prefix);
+  if(opts(*,"dtprefix")) save, opts, dtprefix=atoi(opts.dtprefix);
+  if(opts(*,"qqprefix")) save, opts, qqprefix=atoi(opts.qqprefix);
+
+  if(am_subroutine()) scheme = opts;
+  return opts;
+}
+
+func tile_scheme_stringify(scheme) {
+/* DOCUMENT str = tile_scheme_stringify(scheme)
+  Serializes the given scheme data as a string. The string can then be passed
+  to tile_scheme to restore the scheme information.
+
+  SEE ALSO: tile_scheme
+*/
+  tile_scheme, scheme;
+  return swrite(format="type=%s path=%s dtlength=%s dtprefix=%d qqprefix=%d",
+    scheme.type, scheme.path, scheme.dtlength, scheme.dtprefix, scheme.qqprefix);
+}
+
 func extract_tile(text, dtlength=, dtprefix=, qqprefix=) {
 /* DOCUMENT extract_tile(text, dtlength=, qqprefix=)
   Attempts to extract a tile name from each string in the given array of text.
@@ -59,7 +439,7 @@ func extract_tile(text, dtlength=, dtprefix=, qqprefix=) {
 }
 
 func tile_tiered_path(tile, scheme, dtlength=, dtprefix=, qqprefix=) {
-/* DOCUMENT tile_to_tiers(tile, scheme, dtlength=, dtprefix=, qqprefix=)
+/* DOCUMENT tile_tiered_path(tile, scheme, dtlength=, dtprefix=, qqprefix=)
 
   This constructs the tiered path for a given tile. The most common example
   would be for the usual 10km/2km tile scheme: with scheme="it/dt", tile
