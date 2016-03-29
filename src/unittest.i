@@ -168,6 +168,58 @@ func ut_section(desc) {
   ut_current_section = desc;
 }
 
+func ut_eq(args) {
+/* DOCUMENT ut_eq, varA, varB
+  -or- ut_eq, valA, valB
+  -or- ut_eq, "valA", "valB", "ee";
+  -or- ut_eq, "valA", "valB", "ev";
+  -or- ut_eq, "valA", "valB", "ve";
+
+  Checks equality between the two given values.
+
+  If variable names are used, they are included in the status message.
+
+  The third parameter controls whether the arguments are evaluated; "e" is for
+  evaluation and "v" is for variable/value. If the first character is "e", then
+  the first parameter is evaluated as an expression. If the second character is
+  "e", then the second parameter is evaluated as an expression. If omitted,
+  this defaults to "vv".
+*/
+  if(args(0) != 2 && args(0) != 3) error, "ut_eq called incorrectly";
+
+  v1 = args(1);
+  v2 = args(2);
+
+  ev = (args(0) == 3) ? args(3) : "vv";
+
+  if(strpart(ev, 1:1) == "e") {
+    k1 = v1;
+    include, ["v1 = ("+v1+");"], 1;
+    k1 = swrite(format="%s (%s)", k1, pr1(v1));
+  } else {
+    k1 = pr1(v1);
+    if(args(0,1) == 0) k1 = swrite(format="%s (%s)", args(-,1), k1);
+  }
+
+  if(strpart(ev, 2:2) == "e") {
+    k2 = v2;
+    include, ["v2 = ("+v2+");"], 1;
+    k2 = swrite(format="%s (%s)", k2, pr1(v2));
+  } else {
+    k2 = pr1(v2);
+    if(args(0,2) == 0) k2 = swrite(format="%s (%s)", args(-,2), k2);
+  }
+
+  msg = k1 + " == " + k2;
+
+  if(is_scalar(v1) && is_scalar(v2)) {
+    ut_item, v1 == v2, msg;
+  } else {
+    ut_item, 0, "array values always fail with ut_eq: " + msg;
+  }
+}
+wrap_args, ut_eq;
+
 func ut_ok(expr, msg) {
 /* DOCUMENT ut_ok, expr, "<msg>"
   -or- ut_ok, "<expr>"
