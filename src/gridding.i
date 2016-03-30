@@ -694,9 +694,10 @@ nodata=) {
     ymax=ymax, nodata=nodata, cell=cell);
 }
 
-func cell_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
+func cell_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=, cell=, nodata=,
+xsnap=, ysnap=) {
 /* DOCUMENT grid = radius_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=,
-  cell=, nodata=)
+  cell=, nodata=, xsnap=, ysnap=)
 
   Creates a grid for the data x,y,z using a cell-based algorithm.
 
@@ -718,8 +719,20 @@ func cell_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
     ymax= Maximum y value for grid. (May be adjusted based on ymin and cell.)
     cell= Cell size for grid.
     nodata= Nodata value to use.
+    xsnap= Controls which east/west side of the grid cells snap to.
+      xsnap="w"   Snaps to the cell's west gridline (in other words, cells
+        include the points on their west side but not their east). (Default)
+      xsnap="e"   Snaps to the cell's east gridline (in other words, cells
+        include the points on their east side but not their west).
+    ysnap= Controls which north/south side of the grid cells snap to.
+      xsnap="s"   Snaps to the cell's south gridline (in other words, cells
+        include the points on their south side but not their north). (Default)
+      xsnap="n"   Snaps to the cell's north gridline (in other words, cells
+        include the points on their north side but not their south).
 */
   default, method, "median";
+  default, xsnap, "w";
+  default, ysnap, "e";
   if(method == "counts" || method == "coverage") {
     default, nodata, 0;
     nodata = long(nodata);
@@ -737,7 +750,10 @@ func cell_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
   grid_fix_params, x, y, cell, xmin, xmax, ymin, ymax, xcount, ycount;
 
   // Restrict data to bounds (cell-based algorithm only uses data in each cell)
-  w = data_box(x, y, xmin, xmax, ymin, ymax);
+  w = data_box(x, y, xmin, xmax, ymin, ymax,
+    keepxmin=xsnap=="w", keepxmax=xsnap=="e",
+    keepymin=ysnap=="s", keepymax=ysnap=="n");
+
   x = x(w);
   y = y(w);
   z = z(w);
@@ -746,11 +762,20 @@ func cell_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
   zgrid = array(nodata, xcount, ycount);
 
   // Grid position for each point
-  xc = min(xcount, (x-xmin)/cell + 1);
-  yc = min(ycount, (y-ymin)/cell + 1);
+  if(xsnap == "w")
+    xc = long((x-xmin)/cell + 1);
+  else
+    xc = long(ceil((x-xmin)/cell));
+  if(ysnap == "s")
+    yc = long((y-ymin)/cell + 1);
+  else
+    yc = long(ceil((y-ymin)/cell));
+
+  xc = min(xc, xcount);
+  yc = min(yc, ycount);
 
   // Index into zgrid for z points
-  zi = (long(yc) - 1) * xcount + long(xc);
+  zi = (yc - 1) * xcount + xc;
 
   // coverage method is simplest: just put a 1 wherever there's data
   if(method == "coverage") {
@@ -781,11 +806,7 @@ func cell_grid(x, y, z, method=, xmin=, xmax=, ymin=, ymax=, cell=, nodata=) {
 
   // Sort by grid cell so that things are clustered together.
   srt = sort(zi);
-  x = x(srt);
-  y = y(srt);
   z = z(srt);
-  xc = xc(srt);
-  yc = yc(srt);
   zi = zi(srt);
 
   // Start/stop indexes for each run of ZI
