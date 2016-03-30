@@ -958,8 +958,8 @@ func obj_keys(obj) {
 }
 
 func obj_hier_save(args) {
-/* DOCUMENT obj_heir_save, obj, "name1", "name2", .., val
-  Saves values to a heirarchical object. Intermediate levels are created as
+/* DOCUMENT obj_hier_save, obj, "name1", "name2", .., val
+  Saves values to a hierarchical object. Intermediate levels are created as
   needed. For example:
 
     > obj = save()
