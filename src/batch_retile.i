@@ -112,8 +112,6 @@ split_days=, day_shift=) {
     force_zone, scheme, dtlength, dtprefix, qqprefix, buffer, split_days,
     day_shift;
 
-  if(scheme == "itdt") scheme = "dt";
-
   result = save(fn=infile);
 
   // Load data
@@ -123,9 +121,11 @@ split_days=, day_shift=) {
   filetile = extract_tile(file_tail(infile));
 
   // Determine zone of data
+  array_zone = 0;
   if(!zone) {
     datazone = long(tile2uz(filetile));
   } else if(zone < 0) {
+    array_zone = 1;
     datazone = data.zone;
   } else {
     datazone = zone;
@@ -138,7 +138,7 @@ split_days=, day_shift=) {
     w = extract_match_tile(e, n, datazone, filetile);
     if(!numberof(w)) goto END;
     data = data(w);
-    if(zone < 0) datazone = data.zone;
+    if(array_zone) datazone = data.zone;
   }
 
   // Extract coordinates
