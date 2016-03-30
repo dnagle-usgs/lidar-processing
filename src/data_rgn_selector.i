@@ -372,7 +372,7 @@ keepymax=) {
     if(!keepymin && numberof(w)) w = w(where(y(w) != ymin));
     if(!keepymax && numberof(w)) w = w(where(y(w) != ymax));
 
-    return w;
+    return numberof(w) ? w : [];
   }
   if(keepxmin)
     w = where(x >= xmin);
@@ -396,7 +396,7 @@ keepymax=) {
     else
       w = w(where(y(w) < ymax));
   }
-  return w;
+  return numberof(w) ? w : [];
 }
 
 func in_box(x, y, xmin, xmax, ymin, ymax) {
