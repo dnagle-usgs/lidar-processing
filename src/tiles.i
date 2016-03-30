@@ -663,19 +663,11 @@ func extract_for_tile(east, north, zone, tile, buffer=) {
     zone = array(zone, dimsof(north));
 
   if(type == "qq") {
-    return extract_for_qq(east, north, zone, tile, buffer=buffer);
+    return extract_for_qq_tile(east, north, zone, tile, buffer=buffer);
   } else if(!type) {
     error, "Unknown tiling type.";
   } else {
-    bbox = tile2bbox(tile);
-    okzone = where(bbox(5) == zone);
-    if(!numberof(okzone))
-      return [];
-    assign, bbox(:4) + [-1,1,1,-1]*buffer, ymin, xmax, ymax, xmin;
-    idx = data_box(east(okzone), north(okzone), xmin, xmax, ymin, ymax);
-    if(!numberof(idx))
-      return [];
-    return okzone(idx);
+    return extract_for_dt_tile(east, north, zone, tile, buffer=buffer);
   }
 }
 

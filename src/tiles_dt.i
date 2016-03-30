@@ -171,6 +171,29 @@ utm2dt_names = closure(__utm2_names, save(size=2000, tile=utm2dt));
 utm2it_names = closure(__utm2_names, save(size=10000, tile=utm2it));
 __utm2_names = [];
 
+func extract_for_dt_tile(x, y, zone, tile, buffer=) {
+/* DOCUMENT extract_for_dt_tile(x, y, zone, tile, buffer=)
+  This will return an index into x/y of all coordinates that fall within the
+  bounds of the given tile.
+  
+  The buffer= option specifies a buffer in meters to include about the tile. By
+  default, buffer=100.
+*/
+  local xmin, xmax, ymin, ymax;
+  default, buffer, 100;
+  bbox = tile2bbox(tile);
+  assign, bbox(:4) + [-1,1,1,-1] * buffer, ymin, xmax, ymax, xmin;
+  // Intentionally avoiding data_box here to allow >= on mins and < on maxes
+  // (data_box uses >= and <=).
+  w1 = w2 = w3 = w4 = w5 = [];
+  w1 = where(tile2uz(tile) == zone);
+  if(numberof(w1)) w2 = w1(where(xmin <= x(w1)));
+  if(numberof(w2)) w3 = w2(where(ymin <= y(w2)));
+  if(numberof(w3)) w4 = w3(where(x(w3) < xmax));
+  if(numberof(w4)) w5 = w4(where(y(w4) < ymax));
+  return numberof(w5) ? w5 : [];
+}
+
 func dt2uz(dtcodes) {
 /* DOCUMENT dt2uz(dtcodes)
   Returns the UTM zone(s) for the given dtcode(s).
