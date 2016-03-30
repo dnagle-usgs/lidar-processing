@@ -153,3 +153,12 @@ func fastmin(ary) {
     return min(ary);
   return minmax(ary)(1);
 }
+
+func terminal_cols(void) {
+/* DOCUMENT terminal_cols()
+  Returns the number of columns in the current terminal window.
+*/
+  cols = rows = long(0);
+  sread, popen_rdfile("stty size")(1), format="%d %d", rows, cols;
+  return cols;
+}
