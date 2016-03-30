@@ -50,6 +50,16 @@ local unittest;
   SEE ALSO: ut_run, ut_run_dir, ut_section, ut_ok, ut_error
 */
 
+func ut_init {
+/* DOCUMENT ut_init
+  Internal helper function for test suite. Makes sure extern ut is an object
+  and sets/updates its cols value.
+*/
+  extern ut;
+  if(!is_obj(ut)) ut = save();
+  save, ut, cols=terminal_cols()-1;
+}
+
 func ut_run_dir(dir, searchstr=) {
 /* DOCUMENT ut_run_dir, dir, searchstr=
   Runs a directory of unit tests. If searchstr is omitted, it defaults to
@@ -57,21 +67,21 @@ func ut_run_dir(dir, searchstr=) {
 
   SEE ALSO: unittest
 */
-  extern ut_cols;
+  extern ut;
   default, dir, "test";
   default, searchstr, "*.i";
+  ut_init;
   files = find(dir, searchstr=searchstr);
   files = files(sort(files));
   n = numberof(files);
-  ut_cols = terminal_cols() - 1;
   success = array(0, n);
   for(i = 1; i <= n; i++) {
     relpath = file_relative(dir, files(i));
-    write, format="%s\n", array("_", ut_cols)(sum);
+    write, format="%s\n", array("_", ut.cols)(sum);
     write, format="%s\n", relpath;
     success(i) = ut_run(files(i))
   }
-  write, format="%s\n", array("_", ut_cols)(sum);
+  write, format="%s\n", array("_", ut.cols)(sum);
   if(allof(success)) {
     write, format="%s\n", "All suites succeeded.";
   } else {
@@ -90,51 +100,48 @@ func ut_run(fn) {
 
   SEE ALSO: unittest
 */
-  extern ut_res, ut_msg, ut_sec, ut_current_section, ut_dots;
+  extern ut;
+  ut_init;
+  save, ut, res=[], msg=[], sec=[], seq=[];
+  save, ut, current_section=string(0);
+  save, ut, dots=0;
 
-  ut_res = [];
-  ut_msg = [];
-  ut_sec = [];
-  ut_current_section = string(0);
-  ut_dots = 0;
-
-  ut_cols = terminal_cols() - 1;
   res = ut_run_helper(fn);
   write, format="%s", "\n";
 
   if(!res) {
-    write, format="%s\n\n", "Encountered unexpected error!";
+    write, format="%s\n", "Encountered unexpected error!";
   }
 
-  if(!numberof(ut_res)) {
+  if(!numberof(ut.res)) {
     write, format="%s", "No tests run.\n";
     return 0;
   }
 
   if(am_subroutine())
-    write, format="Passed %d of %d tests.\n", ut_res(sum), numberof(ut_res);
-  if(nallof(ut_res)) {
+    write, format="Passed %d of %d tests.\n", ut.res(sum), numberof(ut.res);
+  if(nallof(ut.res)) {
     if(am_subroutine()) write, "";
-    fails = (!ut_res)(sum)
+    fails = (!ut.res)(sum)
     write, format="Failed %d test%s:\n", fails, ((fails > 1) ? "s" : "");
     sec = string(0);
-    w = where(!ut_res);
+    w = where(!ut.res);
     for(i = 1; i <= numberof(w); i++) {
-      if(ut_sec(w(i)) != sec) {
-        sec = ut_sec(w(i));
+      if(ut.sec(w(i)) != sec) {
+        sec = ut.sec(w(i));
         write, format="  %s:\n", sec;
       }
-      write, format="    %d: %s\n", w(i), ut_msg(w(i));
+      write, format="    %d: %s\n", ut.seq(w(i)), ut.msg(w(i));
     }
   }
 
   if(!res) {
     write, format="Last test before error:\n  %s\n    %d: %s\n",
-      ut_sec(0), numberof(ut_res), ut_msg(0);
+      ut.sec(0), ut.seq(0), ut.msg(0);
     return 0;
   }
 
-  return allof(ut_res);
+  return allof(ut.res);
 }
 
 /* ut_run_helper has to be a bit convoluted to work around yorick deficiencies.
@@ -170,20 +177,26 @@ func ut_item(res, msg) {
 
   SEE ALSO: unittest
 */
-  extern ut_res, ut_msg, ut_sec, ut_current_section, ut_dots;
+  extern ut;
   default, msg, "unspecified";
   write, format="%s", ["!","."](res+1);
-  grow, ut_res, res;
-  grow, ut_msg, msg;
-  grow, ut_sec, ut_current_section;
-  ut_dots++;
-  if(ut_dots % ut_cols == 0) {
+  save, ut,
+    res=grow(ut.res, res),
+    msg=grow(ut.msg, msg),
+    sec=grow(ut.sec, ut.current_section),
+    dots=ut.dots+1;
+  if(numberof(ut.sec) == 1 || ut.sec(-1) != ut.sec(0)) {
+    save, ut, seq=grow(ut.seq, 1);
+  } else {
+    save, ut, seq=grow(ut.seq, ut.seq(0)+1);
+  }
+  if(ut.dots % ut.cols == 0) {
     write, format="%s", "\n";
-    ut_dots = 0;
+    save, ut, dots = 0;
   }
 }
 
-func ut_section(desc) {
+func ut_section(current_section) {
 /* DOCUMENT ut_section, "<desc>";
   Provides a section name for the following test cases. If there are any test
   failures, this will be provided as a section label in the failure output to
@@ -191,8 +204,8 @@ func ut_section(desc) {
 
   SEE ALSO: unittest
 */
-  extern ut_current_section;
-  ut_current_section = desc;
+  extern ut;
+  save, ut, current_section;
 }
 
 func ut_eq(args) {
