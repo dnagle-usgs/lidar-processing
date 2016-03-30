@@ -4,10 +4,10 @@ require, "dir.i";
 
 func dirload(dir, searchstr=, files=, outfile=, outvname=, mode=,
 remove_buffers=, bbox=, ply=, tile=, buffer=, force_zone=, uniq=, soesort=,
-skip=, filter=, verbose=, wantfiles=) {
+skip=, filter=, verbose=, wantfiles=, prealloc=) {
 /* DOCUMENT data = dirload(dir, searchstr=, files=, outfile=, outvname=, mode=,
    remove_buffers=, bbox=, ply=, tile=, buffer=, force_zone=, uniq=, soesort=,
-   skip=, filter=, verbose=, wantfiles=)
+   skip=, filter=, verbose=, wantfiles=, prealloc=)
 
   Loads and merges the data found in the specified directory.
 
@@ -88,6 +88,12 @@ skip=, filter=, verbose=, wantfiles=) {
       have been referenced when trying to load data.
         wantfiles=0   Act normally (return data, default)
         wantflies=1   Return list of file names
+
+    prealloc= If you know in advance how many points will be loaded, you can
+      specify the number with prealloc. This will improve performance because
+      dirload won't have to keep increasing the array size. If you only have an
+      estimate for the number, go on the high side. By default, about 10MB
+      worth of space is allocated.
 */
   // no defaults for: outfile, files; default for outvname established later
   default, searchstr, "*.pbd";
@@ -179,7 +185,8 @@ skip=, filter=, verbose=, wantfiles=) {
     new_end = end + numberof(temp);
 
     if(is_void(data)) {
-      data = array(structof(temp), long(10485760 / sizeof(temp(1))) + 1);
+      default, prealloc, long(10485760 / sizeof(temp(1))) + 1;
+      data = array(structof(temp), prealloc);
     }
 
     // Make sure the data variable has enough space allocated
