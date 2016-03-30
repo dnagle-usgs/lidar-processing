@@ -1,5 +1,6 @@
 save, ut, eq_ev="ev";
 
+// =============================================================================
 ut_section, "cell_grid, method=counts, xsnap=w, ysnap=s";
 
 // 0, .25, .5, ..., 1.75, 2
@@ -162,3 +163,20 @@ ut_eq, "g.nodata", 0;
 ut_eq, "pr1(dimsof(*g.zgrid))", "[2,3,3]";
 ut_eq, "pr1(short(*g.zgrid))", "[[2,1,0],[0,3,1],[0,0,2]]";
 
+// =============================================================================
+ut_section, "cell_grid, method=counts, xsnap=n, ysnap=w, cell=25; 2 points";
+
+// want northwest corner
+// 124000 to 124975
+// 1269025 to 1370000
+
+x = [124000,125000];
+y = [1369000,1370000];
+g = cell_grid(x, y, y, method="counts", cell=25, xsnap="w", ysnap="n");
+ut_eq, "g.xmin", 124000;
+ut_eq, "g.ymin", 1368975;
+ut_eq, "g.cell", 25;
+ut_eq, "pr1(dimsof(*g.zgrid))", "[2,41,41]";
+ut_eq, "(*g.zgrid)(*)(sum)", 2;
+ut_eq, "(*g.zgrid)(1,1)", 1;
+ut_eq, "(*g.zgrid)(41,41)", 1;

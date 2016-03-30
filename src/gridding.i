@@ -758,9 +758,6 @@ xsnap=, ysnap=) {
   y = y(w);
   z = z(w);
 
-  // Grid storage
-  zgrid = array(nodata, xcount, ycount);
-
   // Grid position for each point
   if(xsnap == "w")
     xc = long((x-xmin)/cell + 1);
@@ -771,8 +768,30 @@ xsnap=, ysnap=) {
   else
     yc = long(ceil((y-ymin)/cell));
 
-  xc = min(xc, xcount);
-  yc = min(yc, ycount);
+  if(anyof(xc == 0)) {
+    xc++;
+    xcount++;
+    xmin -= cell;
+  }
+
+  if(anyof(yc == 0)) {
+    yc++;
+    ycount++;
+    ymin -= cell;
+  }
+
+  if(anyof(xc > xcount)) {
+    xcount++;
+    xmax += cell;
+  }
+
+  if(anyof(yc > ycount)) {
+    ycount++;
+    ymay += cell;
+  }
+
+  // Grid storage
+  zgrid = array(nodata, xcount, ycount);
 
   // Index into zgrid for z points
   zi = (yc - 1) * xcount + xc;
