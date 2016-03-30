@@ -57,19 +57,21 @@ func ut_run_dir(dir, searchstr=) {
 
   SEE ALSO: unittest
 */
+  extern ut_cols;
   default, dir, "test";
   default, searchstr, "*.i";
   files = find(dir, searchstr=searchstr);
   files = files(sort(files));
   n = numberof(files);
+  ut_cols = terminal_cols() - 1;
   success = array(0, n);
   for(i = 1; i <= n; i++) {
     relpath = file_relative(dir, files(i));
-    write, format="%s\n", array("_", 72)(sum);
+    write, format="%s\n", array("_", ut_cols)(sum);
     write, format="%s\n", relpath;
     success(i) = ut_run(files(i))
   }
-  write, format="%s\n", array("_", 72)(sum);
+  write, format="%s\n", array("_", ut_cols)(sum);
   if(allof(success)) {
     write, format="%s\n", "All suites succeeded.";
   } else {
@@ -88,13 +90,15 @@ func ut_run(fn) {
 
   SEE ALSO: unittest
 */
-  extern ut_res, ut_msg, ut_sec, ut_current_section;
+  extern ut_res, ut_msg, ut_sec, ut_current_section, ut_dots;
 
   ut_res = [];
   ut_msg = [];
   ut_sec = [];
   ut_current_section = string(0);
+  ut_dots = 0;
 
+  ut_cols = terminal_cols() - 1;
   res = ut_run_helper(fn);
   write, format="%s", "\n";
 
@@ -166,13 +170,17 @@ func ut_item(res, msg) {
 
   SEE ALSO: unittest
 */
-  extern ut_res, ut_msg, ut_sec, ut_current_section;
+  extern ut_res, ut_msg, ut_sec, ut_current_section, ut_dots;
   default, msg, "unspecified";
   write, format="%s", ["!","."](res+1);
   grow, ut_res, res;
   grow, ut_msg, msg;
   grow, ut_sec, ut_current_section;
-  if(numberof(ut_res) % 72 == 0) write, format="%s", "\n";
+  ut_dots++;
+  if(ut_dots % ut_cols == 0) {
+    write, format="%s", "\n";
+    ut_dots = 0;
+  }
 }
 
 func ut_section(desc) {
