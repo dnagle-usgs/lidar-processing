@@ -293,8 +293,9 @@ func job_pbd_grid(conf) {
 
 func job_retile_scan(conf) {
 /* DOUMENT job_retile_scan, conf
-  This is a wrapper around _batch_retile_scan. Each accepted command-line
-  option corresponds to an option of _batch_retile_scan with the same name.
+  This is a wrapper around _batch_retile_scan_file. Each accepted command-line
+  option corresponds to an option of _batch_retile_scan_file with the same
+  name.
 */
   require, "eaarl.i";
   keyrequire, conf, infile=, outfile=;
@@ -312,7 +313,7 @@ func job_retile_scan(conf) {
   if(conf(*,"day_shift"))
     save, conf, day_shift=atod(conf.day_shift);
 
-  _batch_retile_scan, opts=conf;
+  _batch_retile_scan_file, conf.infile, conf.outfile, opts=conf;
 }
 
 func job_retile_assemble(conf) {

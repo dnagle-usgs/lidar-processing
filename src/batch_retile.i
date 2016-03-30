@@ -82,48 +82,41 @@ wrap_args, _batch_retile_defaults;
 
 /* STEP ONE: Scan the source data *********************************************/
 
-func _batch_retile_scan(opts=, infile=, outfile=, remove_buffers=, zone=,
-mode=, force_zone=, scheme=, dtlength=, dtprefix=, qqprefix=, buffer=,
-split_days=, day_shift=) {
-/* DOCUMENT _batch_retile_scan
-  Worker function for batch_retile. This scans a single PBD file and determines
-  what output it contributes to. This information is summarized by three
-  variables:
-    - wanted, the tiles that would have data within their tile bounds from this
-      file
-    - coverage, the tiles that would have data within their tile+buffer bounds
-      from this file
-    - dates, the dates for each of the tiles found in wanted (optional)
+func _batch_retile_scan_file(infile, outfile, opts=, remove_buffers=, zone=,
+mode=, force_zone=, split_days=, day_shift=) {
+  _batch_retile_defaults, opts, remove_buffers, zone, mode, force_zone,
+    split_days, day_shift;
 
-  In order to assist with debugging, this function can return the result as an
-  oxy group. In normal use though it saves its output to a PBD file.
+  if(!infile || !outfile) error, "Must provide infile and outfile";
 
-  Parameters:
-    infile= PBD file to scan.
-    outfile= PBD file to create with output.
-  Other parameters are as defined for batch_retile.
-*/
-// This function uses "goto END" to avoid having the same cleanup & return code
-// redundantly placed multiple times in the function.
-
-  local e, n, testlat, testlon, testz, wanted, dates, coverage;
-
-  _batch_retile_defaults, opts, infile, outfile, remove_buffers, zone, mode,
-    force_zone, scheme, dtlength, dtprefix, qqprefix, buffer, split_days,
-    day_shift;
-
-  result = save(fn=infile);
-
-  // Load data
   data = pbd_load(infile);
-  if(!numberof(data)) goto END;
+  tile = extract_tile(file_tail(infile));
 
-  filetile = extract_tile(file_tail(infile));
+  scan = _batch_retile_scan(data, tile=tile, opts=opts);
+  save, scan, fn=infile;
+
+  obj2pbd, scan, outfile;
+}
+
+func _batch_retile_scan(data, tile=, opts=, remove_buffers=, zone=, mode=,
+force_zone=, split_days=, day_shift=) {
+/* DOCUMENT _batch_retile_scan
+  Worker function for batch_retile. This scans a single PBD file and creates a
+  counts grid for its coverage. If split_days is enabled, then additional
+  counts grids are generated for each flight.
+*/
+  local e, n;
+
+  _batch_retile_defaults, opts, remove_buffers, zone, mode, force_zone,
+    split_days, day_shift;
+
+  result = save();
+  if(!numberof(data)) return result;
 
   // Determine zone of data
   array_zone = 0;
   if(!zone) {
-    datazone = long(tile2uz(filetile));
+    datazone = long(tile2uz(tile));
   } else if(zone < 0) {
     array_zone = 1;
     datazone = data.zone;
@@ -133,11 +126,9 @@ split_days=, day_shift=) {
 
   // If we could parse a tile name and remove_buffers is enabled, throw away
   // buffer points
-  if(remove_buffers && filetile) {
-    data2xyz, data, e, n, mode=mode;
-    w = extract_match_tile(e, n, datazone, filetile);
-    if(!numberof(w)) goto END;
-    data = data(w);
+  if(remove_buffers && tile) {
+    data = data_extract_match_tile(data, tile, zone=zone, mode=mode);
+    if(!numberof(data)) return result;
     if(array_zone) datazone = data.zone;
   }
 
@@ -169,8 +160,6 @@ split_days=, day_shift=) {
     }
   }
 
-END:
-  if(outfile) obj2pbd, result, outfile;
   return result;
 }
 
