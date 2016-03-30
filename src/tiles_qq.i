@@ -220,12 +220,12 @@ func calc24qq(lat, lon, qqprefix=) {
     2 - 2 is the 2nd in sequence, so it's the 2nd section and would start at
       1/8 of a degree, or 0.125
 
-    The quad's SE corner is 47.875N, 104.125W.
+    The quad's SW corner is 47.875N, 104.125W.
 
     c - c is the NW corner, which means we must add 1/16 degree to both N and
       W, or 0.0625 to each.
 
-    The quarter-quad's SE corner is 47.9375N, 104.1875W.
+    The quarter-quad's SW corner is 47.9375N, 104.1875W.
 
   Correspondingly, calc24qq(47.9375, -104.1875) results in "47104h2c".
 
@@ -308,11 +308,11 @@ func extract_for_qq_tile(east, north, zone, qq, buffer=) {
   default, buffer, 100;
   bbox = qq2ll(qq, bbox=1);
 
-  // ll(,1) is lon, ll(,2) is lat
+  // ll(1) is lon, ll(2) is lat
   ll = utm2ll(north, east, zone);
 
-  comp_lon = bound(ll(,1), bbox(4), bbox(2));
-  comp_lat = bound(ll(,2), bbox(1), bbox(3));
+  comp_lon = bound(ll(1), bbox(4), bbox(2));
+  comp_lat = bound(ll(2), bbox(1), bbox(3));
 
   // comp_utm(1,) is north, (2,) is east
   comp_utm = fll2utm(comp_lat, comp_lon, force_zone=zone);
@@ -320,7 +320,8 @@ func extract_for_qq_tile(east, north, zone, qq, buffer=) {
 
   dist = ppdist([east, north], [comp_utm(2,), comp_utm(1,)], tp=1);
   // Adding 1mm to buffer to accommodate floating point error
-  return where(dist <= buffer + 0.001);
+  w = where(dist <= buffer + 0.001);
+  return numberof(w) ? w : [];
 }
 
 func calculate_qq_extents(qqdir, mode=, searchstr=, remove_buffers=) {
