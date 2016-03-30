@@ -335,6 +335,8 @@ func job_retile_assemble(conf) {
     save, conf, uniq=atoi(conf.uniq);
   if(conf(*,"day_shift"))
     save, conf, day_shift=atod(conf.day_shift);
+  if(conf(*,"prealloc"))
+    save, conf, prealloc=atoi(conf.prealloc);
 
   _batch_retile_assemble, opts=conf;
 }

@@ -153,7 +153,8 @@ split_days=, day_shift=) {
 
   // Store coverage information. Dummy the z value with n, since coverage does
   // not pay any attention to it.
-  save, result, coverage=cell_grid(e, n, n, method="coverage", cell=25);
+  save, result, coverage=cell_grid(e, n, n, method="counts", cell=25,
+    xsnap="n", ysnap="w");
 
   if(split_days) {
     point_dates = soe2date(data.soe + day_shift);
@@ -163,7 +164,8 @@ split_days=, day_shift=) {
       key = swrite(format="date_coverage_%d", i);
       w = where(point_dates == dates(i));
       save, result, noop(key),
-        cell_grid(e(w), n(w), n(w), method="coverage", cell=25);
+        cell_grid(e(w), n(w), n(w), method="counts", cell=25, xsnap="n",
+          ysnap="w");
     }
   }
 
@@ -239,6 +241,10 @@ split_days=, day_shift=, opts=) {
 /* STEP TWO: Collate scan data ************************************************/
 
 func _batch_retile_collate_wanted(wanted, x, y, zone, scheme) {
+/* DOCUMENT _batch_retile_collate_wanted
+  Helper function. For each tile, sets:
+    wanted(tile) = 1
+*/
   tiles = utm2tile_names(x, y, zone, scheme.type, dtlength=scheme.dtlength,
     dtprefix=scheme.dtprefix, qqprefix=scheme.qqprefix);
   ntiles = numberof(tiles);
@@ -246,29 +252,47 @@ func _batch_retile_collate_wanted(wanted, x, y, zone, scheme) {
 }
 
 func _batch_retile_collate_coverage_helper(coverage, fn, x, y, zone, scheme) {
+/* DOCUMENT _batch_retile_collate_coverage_helper
+  Helper function. For each file+tile for a given buffer shift, sets:
+    coverage(tile, fn) = 1
+*/
   tiles = utm2tile_names(x, y, zone, scheme.type, dtlength=scheme.dtlength,
     dtprefix=scheme.dtprefix, qqprefix=scheme.qqprefix);
   ntiles = numberof(tiles);
   for(i = 1; i <= ntiles; i++) obj_hier_save, coverage, tiles(i), fn, 1;
 }
 
-func _batch_retile_collate_coverage(coverage, fn, x, y, zone, scheme, buffer) {
-  if(!buffer) {
-    _batch_retile_collate_coverage_helper, coverage, fn, x, y, zone, scheme;
-    return;
-  }
-
-  for(dx = -1; dx <= 1; dx++) {
-    for(dy = -1; dy <= 1; dy++) {
-      _batch_retile_collate_coverage_helper, coverage, fn,
-        x + dx * buffer, y + dy * buffer, zone, scheme;
+func _batch_retile_collate_coverage(coverage, fn, x, y, counts, zone, scheme, buffer) {
+/* DOCUMENT _batch_retile_collate_coverage
+  Helper function. For each file+tile, sets:
+    coverage(tile, fn) = counts
+*/
+  if(buffer) {
+    tiles = array(pointer, 3, 3);
+    for(dx = -1; dx <= 1; dx++) {
+      for(dy = -1; dy <= 1; dy++) {
+        tiles(dx+2,dy+2) = &utm2tile_names(x + dx * buffer, y + dy * buffer,
+          zone, scheme.type, dtlength=scheme.dtlength,
+          dtprefix=scheme.dtprefix, qqprefix=scheme.qqprefix);
+      }
     }
+    tiles = merge_pointers(tiles(*));
+  } else {
+    tiles = utm2tile_names(x, y, zone, scheme.type, dtlength=scheme.dtlength,
+      dtprefix=scheme.dtprefix, qqprefix=scheme.qqprefix);
+  }
+  tiles = set_remove_duplicates(tiles);
+
+  ntiles = numberof(tiles);
+  for(i = 1; i <= ntiles; i++) {
+    idx = extract_for_tile(x, y, zone, tiles(i), buffer=buffer)
+    obj_hier_save, coverage, tiles(i), fn, counts(idx)(sum);
   }
 }
 
 func batch_retile_collate(&wanted, &coverage, scandir=, split_days=, scheme=, opts=) {
   _batch_retile_defaults, scandir, split_days, scheme, opts;
-  local x, y;
+  local x, y, counts;
 
   wanted = save();
   coverage = save();
@@ -283,7 +307,7 @@ func batch_retile_collate(&wanted, &coverage, scandir=, split_days=, scheme=, op
       for(j = 1; j <= numberof(scan.dates); j++) {
         date = scan.dates(j);
         key = swrite(format="date_coverage_%d", j);
-        data2xyz, scan(noop(key)), x, y;
+        data2xyz, scan(noop(key)), x, y, counts;
 
         if(!wanted(*,date)) save, wanted, noop(date), save();
         _batch_retile_collate_wanted, wanted(noop(date)), x, y, scan.zone,
@@ -291,13 +315,13 @@ func batch_retile_collate(&wanted, &coverage, scandir=, split_days=, scheme=, op
 
         if(!coverage(*,date)) save, coverage, noop(date), save();
         _batch_retile_collate_coverage, coverage(noop(date)), scan.fn, x, y,
-          scan.zone, scheme, opts.buffer;
+          counts, scan.zone, scheme, opts.buffer;
       }
     } else {
-      data2xyz, scan.coverage, x, y;
+      data2xyz, scan.coverage, x, y, counts;
       _batch_retile_collate_wanted, wanted, x, y, scan.zone, scheme;
-      _batch_retile_collate_coverage, coverage, scan.fn, x, y, scan.zone,
-        scheme, opts.buffer;
+      _batch_retile_collate_coverage, coverage, scan.fn, x, y, counts,
+        scan.zone, scheme, opts.buffer;
     }
   }
 }
@@ -305,7 +329,8 @@ func batch_retile_collate(&wanted, &coverage, scandir=, split_days=, scheme=, op
 /* STEP THREE: Generate tiled output ******************************************/
 
 func _batch_retile_assemble(opts=, infiles=, outfile=, vname=, tile=, mode=,
-remove_buffers=, buffer=, zone=, force_zone=, uniq=, date=, day_shift=) {
+remove_buffers=, buffer=, zone=, force_zone=, uniq=, date=, day_shift=,
+prealloc=) {
 /* DOCUMENT _batch_retile_assemble
   Worker function for batch_retile. This generates the output file for a single
   tile and is called by the job command.
@@ -318,7 +343,7 @@ remove_buffers=, buffer=, zone=, force_zone=, uniq=, date=, day_shift=) {
   Other parameters are as defined for batch_retile.
 */
   restore_if_exists, opts, infiles, outfile, vname, tile, mode, remove_buffers,
-    buffer, zone, force_zone, uniq, date, day_shift;
+    buffer, zone, force_zone, uniq, date, day_shift, prealloc;
 
   filter = dlfilter_tile(tile, mode=mode, buffer=buffer, zone=zone, dataonly=1);
 
@@ -328,7 +353,7 @@ remove_buffers=, buffer=, zone=, force_zone=, uniq=, date=, day_shift=) {
 
   dirload, files=infiles, outfile=outfile, outvname=vname, skip=1, soesort=1,
     remove_buffers=remove_buffers, force_zone=force_zone, uniq=uniq, verbose=0,
-    filter=filter;
+    filter=filter, prealloc=prealloc;
 }
 
 func _batch_retile_assemble_build_jobs(conf, wanted, coverage, options, opts, date) {
@@ -365,6 +390,10 @@ func _batch_retile_assemble_build_jobs(conf, wanted, coverage, options, opts, da
       outpath = file_join(outpath, tile_tiered_path(tile, scheme));
 
     infiles = coverage(noop(tile), *, );
+    prealloc = 0;
+    for(j = 1; j <= numberof(infiles); j++) {
+      prealloc += coverage(noop(tile), infiles(j));
+    }
 
     outfile = file_join(outpath, tile);
     if(date) outfile += "_" + date;
@@ -388,7 +417,8 @@ func _batch_retile_assemble_build_jobs(conf, wanted, coverage, options, opts, da
         tile,
         infiles,
         outfile,
-        vname
+        vname,
+        prealloc
       ))
     );
   }
