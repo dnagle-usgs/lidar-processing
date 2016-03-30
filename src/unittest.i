@@ -211,12 +211,7 @@ func ut_eq(args) {
   }
 
   msg = k1 + " == " + k2;
-
-  if(is_scalar(v1) && is_scalar(v2)) {
-    ut_item, v1 == v2, msg;
-  } else {
-    ut_item, 0, "array values always fail with ut_eq: " + msg;
-  }
+  ut_item, v1 == v2, msg;
 }
 wrap_args, ut_eq;
 
