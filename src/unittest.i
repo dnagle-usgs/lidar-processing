@@ -129,8 +129,8 @@ func ut_run(fn) {
   }
 
   if(!res) {
-    write, format="\nLast test before error:\n  %d: %s\n",
-      numberof(ut_res), ut_msg(0);
+    write, format="Last test before error:\n  %s\n    %d: %s\n",
+      ut_sec(0), numberof(ut_res), ut_msg(0);
     return 0;
   }
 
