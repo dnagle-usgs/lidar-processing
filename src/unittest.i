@@ -105,6 +105,7 @@ func ut_run(fn) {
   save, ut, res=[], msg=[], sec=[], seq=[];
   save, ut, current_section=string(0);
   save, ut, dots=0;
+  save, ut, eq_ev="vv";
 
   res = ut_run_helper(fn);
   write, format="%s", "\n";
@@ -223,14 +224,22 @@ func ut_eq(args) {
   evaluation and "v" is for variable/value. If the first character is "e", then
   the first parameter is evaluated as an expression. If the second character is
   "e", then the second parameter is evaluated as an expression. If omitted,
-  this defaults to "vv".
+  this defaults to "vv". You can change the default value by assigning it to
+  ut.eq_ev like so:
+
+    save, ut, eq_ev="ev";
+
+  The change of default will persist through the end of the current file. It
+  will be reset to "vv" on the next invocation of ut_run (i.e., for the next
+  file).
 */
+  extern ut;
   if(args(0) != 2 && args(0) != 3) error, "ut_eq called incorrectly";
 
   v1 = args(1);
   v2 = args(2);
 
-  ev = (args(0) == 3) ? args(3) : "vv";
+  ev = (args(0) == 3) ? args(3) : ut.eq_ev;
 
   if(strpart(ev, 1:1) == "e") {
     k1 = v1;
