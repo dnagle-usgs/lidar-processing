@@ -339,12 +339,18 @@ OUTPUT:
   }
 }
 
-func data_box(x, y, xmin, xmax, ymin, ymax) {
+func data_box(x, y, xmin, xmax, ymin, ymax, keepxmin=, keepxmax=, keepymin=,
+keepymax=) {
 /* DOCUMENT data_box(x, y, xmin, xmax, ymin, ymax)
   data_box(x, y, bbox)
   Function takes the arrays (of equal dimension) x and y, returns the indicies
   of the arrays that fit inside the box defined by xmin, xmax, ymin, ymax.
 */
+  default, keepxmin, 1;
+  default, keepxmax, 1;
+  default, keepymin, 1;
+  default, keepymax, 1;
+
   if(is_void(xmax) && numberof(xmin) == 4) {
     ymax = xmin(4);
     ymin = xmin(3);
@@ -359,22 +365,38 @@ func data_box(x, y, xmin, xmax, ymin, ymax) {
   ) {
     in = array(short, dimsof(x));
     _yin_box, x, y, xmin, xmax, ymin, ymax, in, numberof(x);
-    return where(in);
-  }
+    w = where(in);
 
-  indx1 = where(x >= xmin);
-  if (is_array(indx1)) {
-    indx2 = where(x(indx1) <= xmax);
-    if (is_array(indx2)) {
-      indx3 = where(y(indx1(indx2)) >= ymin);
-      if (is_array(indx3)) {
-        indx4 = where(y(indx1(indx2(indx3))) <= ymax);
-        if (is_array(indx4))
-          return indx1(indx2(indx3(indx4)));
-      }
-    }
+    if(!keepxmin && numberof(w)) w = w(where(x(w) != xmin));
+    if(!keepxmax && numberof(w)) w = w(where(x(w) != xmax));
+    if(!keepymin && numberof(w)) w = w(where(y(w) != ymin));
+    if(!keepymax && numberof(w)) w = w(where(y(w) != ymax));
+
+    return w;
   }
-  return [];
+  if(keepxmin)
+    w = where(x >= xmin);
+  else
+    w = where(x > xmin);
+  if(numberof(w)) {
+    if(keepxmax)
+      w = w(where(x(w) <= xmax));
+    else
+      w = w(where(x(w) < xmax));
+  }
+  if(numberof(w)) {
+    if(keepymin)
+      w = w(where(y(w) >= ymin));
+    else
+      w = w(where(y(w) > ymin));
+  }
+  if(numberof(w)) {
+    if(keepymax)
+      w = w(where(y(w) <= ymax));
+    else
+      w = w(where(y(w) < ymax));
+  }
+  return w;
 }
 
 func in_box(x, y, xmin, xmax, ymin, ymax) {
