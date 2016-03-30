@@ -62,10 +62,23 @@ func ut_run_dir(dir, searchstr=) {
   files = find(dir, searchstr=searchstr);
   files = files(sort(files));
   n = numberof(files);
+  success = array(0, n);
   for(i = 1; i <= n; i++) {
-    write, format="\n%s\n", array("_", 72)(sum);
-    write, format="\n%s\n", file_relative(dir, files(i));
-    ut_run, files(i);
+    relpath = file_relative(dir, files(i));
+    write, format="%s\n", array("_", 72)(sum);
+    write, format="%s\n", relpath;
+    success(i) = ut_run(files(i))
+  }
+  write, format="%s\n", array("_", 72)(sum);
+  if(allof(success)) {
+    write, format="%s\n", "All suites succeeded.";
+  } else {
+    w = where(!success);
+    nw = numberof(w);
+    write, format="Encountered issues in %d suite%s:\n", nw, ((nw > 1) ? "s" : "");
+    for(i = 1; i <= nw; i++) {
+      write, format="  %s\n", file_relative(dir, files(w(i)));
+    }
   }
 }
 
@@ -82,9 +95,8 @@ func ut_run(fn) {
   ut_sec = [];
   ut_current_section = string(0);
 
-  write, "";
   res = ut_run_helper(fn);
-  write, format="%s", "\n\n";
+  write, format="%s", "\n";
 
   if(!res) {
     write, format="%s\n\n", "Encountered unexpected error!";
@@ -92,12 +104,15 @@ func ut_run(fn) {
 
   if(!numberof(ut_res)) {
     write, format="%s", "No tests run.\n";
-    return;
+    return 0;
   }
 
-  write, format="Passed %d of %d tests.\n", ut_res(sum), numberof(ut_res);
+  if(am_subroutine())
+    write, format="Passed %d of %d tests.\n", ut_res(sum), numberof(ut_res);
   if(nallof(ut_res)) {
-    write, format="\nFailures:%s", "\n";
+    if(am_subroutine()) write, "";
+    fails = (!ut_res)(sum)
+    write, format="Failed %d test%s:\n", fails, ((fails > 1) ? "s" : "");
     sec = string(0);
     w = where(!ut_res);
     for(i = 1; i <= numberof(w); i++) {
@@ -112,7 +127,10 @@ func ut_run(fn) {
   if(!res) {
     write, format="\nLast test before error:\n  %d: %s\n",
       numberof(ut_res), ut_msg(0);
+    return 0;
   }
+
+  return allof(ut_res);
 }
 
 /* ut_run_helper has to be a bit convoluted to work around yorick deficiencies.
@@ -154,6 +172,7 @@ func ut_item(res, msg) {
   grow, ut_res, res;
   grow, ut_msg, msg;
   grow, ut_sec, ut_current_section;
+  if(numberof(ut_res) % 72 == 0) write, format="%s", "\n";
 }
 
 func ut_section(desc) {
