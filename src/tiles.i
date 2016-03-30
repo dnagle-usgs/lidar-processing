@@ -654,6 +654,9 @@ func extract_for_tile(east, north, zone, tile, buffer=) {
   Returns an index into north/east of all coordinates that fall within the
   bounds of the given tile. The buffer= option specifies a value to extend
   around the tile and defaults to 100. Set buffer=0 to disable buffer.
+
+  When buffer=0, points that fall on tile boundaries are only included in one
+  tile (each tiling scheme defines where such points go).
 */
   local xmin, xmax, ymin, ymax;
   default, buffer, 100;
@@ -673,7 +676,7 @@ func extract_for_tile(east, north, zone, tile, buffer=) {
 
 func data_extract_for_tile(data, tile, zone=, mode=, buffer=, idx=) {
 /* DOCUMENT data_extract_for_tile(data, tile, zone=, mode=, buffer=, idx=)
-  Wrapper around extract_for_tile for ALPS point cloud arrays.
+  Wrapper around extract_for_tile for point cloud data.
 
   Options:
     zone= Zone of data. If omitted, then it is assumed that the data is in the
@@ -694,16 +697,16 @@ func data_extract_for_tile(data, tile, zone=, mode=, buffer=, idx=) {
 
 func extract_match_tile(east, north, zone, tile) {
 /* DOCUMENT idx = extract_match_tile(east, north, zone, tile)
-  Returns an index into north/east of all coordinates that exactly match the
-  given tile. This is similar to using extract_for_tile with buffer=0, except
-  for the edge case of points that fall exactly on a border. Such points will
-  show up in both adjacent tiles for extract_for_tile but will only show up in
-  exactly one tile for extract_match_tile.
+  Wrapper around extract_for_tile with buffer=0.
 */
-  tile = extract_tile(tile);
-  type = tile_type(tile);
-  tiles = utm2tile(east, north, zone, type);
-  return where(tile == tiles);
+  return extract_for_tile(east, north, zone, tile, buffer=0);
+}
+
+func data_extract_match_tile(data, tile, zone=, mode=, idx=) {
+/* DOCUMENT data_extract_match_tile(data, tile, zone=, mode=, idx=)
+  Wrapper around data_extract_for_tile with buffer=0.
+*/
+  return data_extract_for_tile(data, tile, zone=zone, mode=mode, idx=idx, buffer=0);
 }
 
 func restrict_data_extent(data, tile, buffer=, exact=, mode=) {
