@@ -240,17 +240,6 @@ func _batch_retile_collate_wanted(wanted, x, y, zone, scheme) {
   for(i = 1; i <= ntiles; i++) save, wanted, tiles(i), 1;
 }
 
-func _batch_retile_collate_coverage_helper(coverage, fn, x, y, zone, scheme) {
-/* DOCUMENT _batch_retile_collate_coverage_helper
-  Helper function. For each file+tile for a given buffer shift, sets:
-    coverage(tile, fn) = 1
-*/
-  tiles = utm2tile_names(x, y, zone, scheme.type, dtlength=scheme.dtlength,
-    dtprefix=scheme.dtprefix, qqprefix=scheme.qqprefix);
-  ntiles = numberof(tiles);
-  for(i = 1; i <= ntiles; i++) obj_hier_save, coverage, tiles(i), fn, 1;
-}
-
 func _batch_retile_collate_coverage(coverage, fn, x, y, counts, zone, scheme, buffer) {
 /* DOCUMENT _batch_retile_collate_coverage
   Helper function. For each file+tile, sets:
