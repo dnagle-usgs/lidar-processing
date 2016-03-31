@@ -184,7 +184,7 @@ func extract_for_dt_tile(x, y, zone, tile, buffer=) {
   bbox = tile2bbox(tile);
   assign, bbox(:4) + [-1,1,1,-1] * buffer, ymin, xmax, ymax, xmin;
   w = data_box(x, y, xmin, xmax, ymin, ymax, keepxmax=0, keepymin=0);
-  if(numberof(w)) w = where(zone(w) == tile2uz(tile));
+  if(numberof(w)) w = w(where(zone(w) == tile2uz(tile)));
   return numberof(w) ? w : [];
 }
 
