@@ -145,7 +145,7 @@ force_zone=, split_days=, day_shift=) {
   // Store coverage information. Dummy the z value with n, since coverage does
   // not pay any attention to it.
   save, result, coverage=cell_grid(e, n, n, method="counts", cell=25,
-    xsnap="n", ysnap="w");
+    xsnap="w", ysnap="n");
 
   if(split_days) {
     point_dates = soe2date(data.soe + day_shift);
@@ -155,8 +155,8 @@ force_zone=, split_days=, day_shift=) {
       key = swrite(format="date_coverage_%d", i);
       w = where(point_dates == dates(i));
       save, result, noop(key),
-        cell_grid(e(w), n(w), n(w), method="counts", cell=25, xsnap="n",
-          ysnap="w");
+        cell_grid(e(w), n(w), n(w), method="counts", cell=25, xsnap="w",
+          ysnap="n");
     }
   }
 
