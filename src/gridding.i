@@ -320,17 +320,36 @@ nodata=, maxside=, maxarea=, minangle=, tile=, buffer=) {
     nodata=nodata, cell=cell);
 }
 
-func grid_fix_params(x, y, cell, &xmin, &xmax, &ymin, &ymax, &xcount, &ycount) {
-/* DOCUMENT grid_fix_params, x, y, cell, xmin, xmax, ymin, ymax, xcount, ycount;
+func grid_fix_params(x, y, cell, &xmin, &xmax, &ymin, &ymax, &xcount, &ycount,
+xsnap=, ysnap=) {
+/* DOCUMENT grid_fix_params, x, y, cell, xmin, xmax, ymin, ymax, xcount,
+   ycount, xsnap=, ysnap=;
   This is used by the gridding algorithms to determine the appropriate
   parameters to use. The values for xmin, xmax, ymin, ymax, xcount, and ycount
   are determined (where necessary) and fixed to make sense with respect to one
-  another (where necessary).
+  another (where necessary). Options xsnap and ysnap specify how points on grid
+  cell boundaries are handled. With the defaults of xsnap="w" and ysnap="s",
+  the points on a grid's west and south boundaries are included in it and the
+  north and east are not. To invert, use xsnap="e" and/or ysnap="n".
 */
-  default, xmin, floor(x(min)/cell)*cell;
-  default, ymin, floor(y(min)/cell)*cell;
-  default, xmax, ceil(x(max)/cell)*cell;
-  default, ymax, ceil(y(max)/cell)*cell;
+  default, xsnap, "w";
+  default, ysnap, "s";
+  if(is_void(xmin)) {
+    xmin = floor(x(min)/cell)*cell;
+    if(xsnap == "e" && anyof(xmin == x(min))) xmin -= cell;
+  }
+  if(is_void(ymin)) {
+    ymin = floor(y(min)/cell)*cell;
+    if(ysnap == "n" && anyof(ymin == y(min))) ymin -= cell;
+  }
+  if(is_void(xmax)) {
+    xmax = ceil(x(max)/cell)*cell;
+    if(xsnap == "w" && anyof(xmax == x(max))) xmax += cell;
+  }
+  if(is_void(ymax)) {
+    ymax = ceil(y(max)/cell)*cell;
+    if(ysnap == "s" && anyof(ymax == y(max))) ymax += cell;
+  }
 
   xcount = long(ceil((xmax-xmin)/cell));
   ycount = long(ceil((ymax-ymin)/cell));
