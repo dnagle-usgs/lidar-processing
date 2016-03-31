@@ -11,11 +11,12 @@ ut_eq, "g.xmin", 0;
 ut_eq, "g.ymin", 0;
 ut_eq, "g.cell", 1;
 ut_eq, "g.nodata", 0;
-ut_eq, "pr1(dimsof(*g.zgrid))", "[2,2,2]";
-//[[4,0], 4
-// [0,4]  4
-//  4 4
-ut_eq, "pr1(short(*g.zgrid))", "[[4,0],[0,4]]";
+ut_eq, "pr1(dimsof(*g.zgrid))", "[2,3,3]";
+//[[4,0,0], 4
+// [0,4,0], 4
+// [0,0,1]] 1
+//  4 4 1
+ut_eq, "pr1(short(*g.zgrid))", "[[4,0,0],[0,4,0],[0,0,1]]";
 
 // .5, .75, 1, ..., 2.25, 2.5
 x = indgen(0:8)/4.+.5;
@@ -73,11 +74,8 @@ ut_eq, "g.xmin", 0;
 ut_eq, "g.ymin", 0;
 ut_eq, "g.cell", 1;
 ut_eq, "g.nodata", 0;
-ut_eq, "pr1(dimsof(*g.zgrid))", "[2,2,2]";
-//[[4,0], 4
-// [0,4]  4
-//  4 4
-ut_eq, "pr1(short(*g.zgrid))", "[[4,0],[0,4]]";
+ut_eq, "pr1(dimsof(*g.zgrid))", "[2,3,3]";
+ut_eq, "pr1(short(*g.zgrid))", "[[4,0,0],[0,4,0],[0,0,1]]";
 
 // .5, .75, 1, ..., 2.25, 2.5
 x = indgen(0:8)/4.+.5;
@@ -102,16 +100,17 @@ ut_section, "cell_grid, method=counts, xsnap=e, ysnap=s";
 x = indgen(0:8)/4.;
 
 g = cell_grid(x, x, x, cell=1, method="counts", xsnap="e", ysnap="s");
-ut_eq, "g.xmin", 0;
+ut_eq, "g.xmin", -1;
 ut_eq, "g.ymin", 0;
 ut_eq, "g.cell", 1;
 ut_eq, "g.nodata", 0;
-ut_eq, "pr1(dimsof(*g.zgrid))", "[2,2,2]";
-// 3x 0,0; 1x 0,1; 3x 1,1
-//[[3,0]  3
-// [1,3]] 4
-//  4 3
-ut_eq, "pr1(short(*g.zgrid))", "[[3,0],[1,3]]";
+// 1x 1,1; 3x 2,1; 1x 2,2; 3x 3,2; 1x 3,3
+//[[1,3,0], 4
+// [0,1,3], 4
+// [0,0,1]] 1
+//  1 4 4
+ut_eq, "pr1(dimsof(*g.zgrid))", "[2,3,3]";
+ut_eq, "pr1(short(*g.zgrid))", "[[1,3,0],[0,1,3],[0,0,1]]";
 
 // .5, .75, 1, ..., 2.25, 2.5
 x = indgen(0:8)/4.+.5;
@@ -137,15 +136,15 @@ x = indgen(0:8)/4.;
 
 g = cell_grid(x, x, x, cell=1, method="counts", xsnap="w", ysnap="n");
 ut_eq, "g.xmin", 0;
-ut_eq, "g.ymin", 0;
+ut_eq, "g.ymin", -1;
 ut_eq, "g.cell", 1;
 ut_eq, "g.nodata", 0;
-ut_eq, "pr1(dimsof(*g.zgrid))", "[2,2,2]";
-// 3x 0,0; 1x 1,0; 3x 1,1
-//[[3,1]  4
-// [0,3]] 3
-/// 3 4
-ut_eq, "pr1(short(*g.zgrid))", "[[3,1],[0,3]]";
+// 1x 1,1; 3x 1,2; 1x 2,2; 3x 2,3; 1x 3,3
+//[[1,0,0],
+// [3,1,0],
+// [0,3,1]]
+ut_eq, "pr1(dimsof(*g.zgrid))", "[2,3,3]";
+ut_eq, "pr1(short(*g.zgrid))", "[[1,0,0],[3,1,0],[0,3,1]]";
 
 // .5, .75, 1, ..., 2.25, 2.5
 x = indgen(0:8)/4.+.5;
@@ -164,11 +163,7 @@ ut_eq, "pr1(dimsof(*g.zgrid))", "[2,3,3]";
 ut_eq, "pr1(short(*g.zgrid))", "[[2,1,0],[0,3,1],[0,0,2]]";
 
 // =============================================================================
-ut_section, "cell_grid, method=counts, xsnap=n, ysnap=w, cell=25; 2 points";
-
-// want northwest corner
-// 124000 to 124975
-// 1269025 to 1370000
+ut_section, "cell_grid, method=counts, xsnap=n, ysnap=w, cell=25; 2 points: SW+NE";
 
 x = [124000,125000];
 y = [1369000,1370000];
@@ -180,3 +175,17 @@ ut_eq, "pr1(dimsof(*g.zgrid))", "[2,41,41]";
 ut_eq, "(*g.zgrid)(*)(sum)", 2;
 ut_eq, "(*g.zgrid)(1,1)", 1;
 ut_eq, "(*g.zgrid)(41,41)", 1;
+
+// =============================================================================
+ut_section, "cell_grid, method=counts, xsnap=n, ysnap=w, cell=25; 2 points: NW+SE";
+
+x = [125000, 126000];
+y = [1370000, 1369000];
+g = cell_grid(x, y, y, method="counts", cell=25, xsnap="w", ysnap="n");
+ut_eq, "g.xmin", 125000;
+ut_eq, "g.ymin", 1368975;
+ut_eq, "g.cell", 25;
+ut_eq, "pr1(dimsof(*g.zgrid))", "[2,41,41]";
+ut_eq, "(*g.zgrid)(*)(sum)", 2;
+ut_eq, "(*g.zgrid)(41,1)", 1;
+ut_eq, "(*g.zgrid)(1,41)", 1;

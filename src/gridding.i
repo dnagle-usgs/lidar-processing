@@ -766,7 +766,8 @@ xsnap=, ysnap=) {
   default, cell, 1.;
   cell = double(cell);
 
-  grid_fix_params, x, y, cell, xmin, xmax, ymin, ymax, xcount, ycount;
+  grid_fix_params, x, y, cell, xmin, xmax, ymin, ymax, xcount, ycount,
+    xsnap=xsnap, ysnap=ysnap;
 
   // Restrict data to bounds (cell-based algorithm only uses data in each cell)
   w = data_box(x, y, xmin, xmax, ymin, ymax,
@@ -786,28 +787,6 @@ xsnap=, ysnap=) {
     yc = long((y-ymin)/cell + 1);
   else
     yc = long(ceil((y-ymin)/cell));
-
-  if(anyof(xc == 0)) {
-    xc++;
-    xcount++;
-    xmin -= cell;
-  }
-
-  if(anyof(yc == 0)) {
-    yc++;
-    ycount++;
-    ymin -= cell;
-  }
-
-  if(anyof(xc > xcount)) {
-    xcount++;
-    xmax += cell;
-  }
-
-  if(anyof(yc > ycount)) {
-    ycount++;
-    ymay += cell;
-  }
 
   // Grid storage
   zgrid = array(nodata, xcount, ycount);
