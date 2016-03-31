@@ -590,7 +590,7 @@ keep=, enableptime=) {
     has_member(ref, "raster") && has_member(ref, "pulse")
   ) {
     grow, fields, ["raster", "pulse"];
-  } else {
+  } else if(has_member(data, "rn") && has_member(ref, "rn")) {
     grow, fields, "rn";
   }
 
@@ -602,12 +602,22 @@ keep=, enableptime=) {
     grow, fields, "ptime";
   }
 
-  grow, fields, "soe";
+  if(has_member(data, "soe") && has_member(ref, "soe")) {
+    grow, fields, "soe";
+  }
+
+  if(has_member(data, "ret_num") && has_member(ref, "ret_num")) {
+    grow, fields, "ret_num";
+  }
 
   dataz = refz = [];
   if(enablez) {
     dataz = data2xyz(data, mode=mode, native=1)(..,3);
     refz = data2xyz(ref, mode=mode, native=1)(..,3);
+  }
+
+  if(!numberof(fields)) {
+    error, "unable to find corresponding fields to use";
   }
 
   // Can't apply sort directly to data in case they use keep=1 or idx=1.
@@ -704,13 +714,13 @@ extract_corresponding_data = closure(extract_corr_or_uniq_data, 1);
 
   Fields used in comparison:
 
-    Correspondence is determined by looking at a subset of the struct's fields
-    as follows:
-      - if both data and ref have .raster and .pulse, they are used; otherwise,
-        .rn is used
-      - if both data and ref have .channel, it is used
-      - .soe is always used
-      - if enablez=1, then the elevation (per mode=) is used
+    Correspondence is determined by looking at a subset of the struct's fields.
+    Any fields that are present in both data and ref is used:
+      - .raster and .pulse (if not present, then .rn)
+      - .channel
+      - .soe
+      - .ret_num
+    Additionally, if enablez=1 then the elevation (per mode=) is used.
 
   Parameters:
     data: The source data. The return result will contain points from this
