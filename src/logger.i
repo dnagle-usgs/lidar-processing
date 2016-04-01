@@ -20,7 +20,12 @@ func logger_logdir(dir, void) {
   // If not running in a normal ALPS session, attempt to retrieve the log_dir
   // from the current environment. Otherwise, use the default "/tmp/alps.log/".
   if(is_obj(alpsrc) && is_string(alpsrc.log_dir)) {
-    dir = alpsrc.log_dir;
+    if(!is_string(alpsrc.temp_dir) || strpart(alpsrc.log_dir, 1:1) == "/")
+      dir = alpsrc.log_dir;
+    else if(is_func(file_join))
+      dir = file_join(alpsrc.temp_dir, alpsrc.log_dir)
+    else
+      dir = alpsrc.temp_dir + "/" + alpsrc.log_dir;
   } else {
     dir = get_env("ALPS_LOG_DIR");
     if(!strlen(dir))

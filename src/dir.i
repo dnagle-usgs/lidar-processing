@@ -499,6 +499,9 @@ func mktempdir(name) {
 
   The directory will be created, and its name will be returned. The
   directory must be manually removed by the user later.
+
+  This uses alpsrc.temp_dir, so you can change where the temporary directories
+  are created.
 */
   default, name, "yorick";
   ts1 = (parsedate(timestamp())*[1,10^2,10^4,0,0,0])(sum);
@@ -506,7 +509,8 @@ func mktempdir(name) {
   pid = 0;
   read, popen("echo $$", 0), pid;
   rd = int(random()*1000);
-  dir = swrite(format="/tmp/%s.%06d%06d.%d.%d", name, ts1, ts2, pid, rd);
+  dir = file_join(alpsrc.temp_dir,
+    swrite(format="%s.%06d%06d.%d.%d", name, ts1, ts2, pid, rd));
   mkdir, dir;
   return dir;
 }

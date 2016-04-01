@@ -50,9 +50,8 @@ func write_gs(width=, height=, xoff=, yoff=, box=, ticks=) {
 
   gist_gpbox, xmx, ymx;
 
-  user = get_user();
-  path=swrite(format="/tmp/gist/%s", user);
-  if ( ! file_isdir(path) ) mkdirp, path;
+  path = file_join(alpsrc.temp_dir, "gist", get_user());
+  mkdirp, path;
 
   sfname=swrite(format="%s/%04dx%04d.gs", path, width, height);
 

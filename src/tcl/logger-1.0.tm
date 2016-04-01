@@ -88,7 +88,11 @@ namespace eval ::logger {
         }
 
         if {[info exists ::alpsrc(log_dir)]} {
-            set dir $::alpsrc(log_dir)
+            if {[info exists ::alpsrc(temp_dir)]} {
+                set dir [file join $::alpsrc(temp_dir) $::alpsrc(log_dir)]
+            } else {
+                set dir [file join /tmp $::alpsrc(log_dir)]
+            }
         } elseif {[info exists ::env(ALPS_LOG_DIR)]} {
             set dir $::env(ALPS_LOG_DIR)
         } else {

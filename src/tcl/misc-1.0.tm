@@ -701,7 +701,8 @@ proc ::misc::xwd {} {
     tk_messageBox -type ok -message "Raise the window you want to capture,\
             click OK, and then click on the desired window."
     update idletasks
-    exec xwd -out /tmp/junk.xwd
+    set out [file join $::alpsrc(temp_dir) junk.xwd]
+    exec xwd -out $out
     set fn [tk_getSaveFile -initialdir $capture_path \
             -defaultextension .png \
             -initialfile $capture_name]
@@ -713,8 +714,8 @@ proc ::misc::xwd {} {
         set capture_name [file tail $fn]
         set capture_path [file dirname $fn]
         # Require the user to get their unix path right.
-        exec convert /tmp/junk.xwd $fn
-        file delete -force /tmp/junk.xwd
+        exec convert $out $fn
+        file delete -force $out
     }
 }
 

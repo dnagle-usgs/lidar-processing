@@ -20,6 +20,10 @@ local alpsrc;
       will use this to find fla-reefs.dat, and the plotting tool will use it as
       a default directory for the maps.
 
+    temp_dir = /tmp
+      Directory to use for temporary files. Defaults to the system /tmp
+      directory.
+
     batcher_dir = ../batcher
       Defines the directory where the batcher scripts can be found.
 
@@ -52,8 +56,10 @@ local alpsrc;
     makeflow_project = alps
       Specifies the project name to use for makeflow (makeflow's -N option).
 
-    log_dir = /tmp/alps.log/
-      Specifies the default directory where to write out ALPS logs.
+    log_dir = alps.log/
+      Specifies the default directory where to write out ALPS logs. This can be
+      a relative path, in which case it is relative to the temp_dir. It can
+      also be an absolute path.
 
     log_level = debug
       Specifies the default level at which to log.
@@ -139,12 +145,13 @@ func __alpsrc_set_defaults(&obj) {
   save, obj, maps_dir=file_join(sharedir, "maps");
   save, obj, gdal_bin=file_join(get_cwd(), "..", "..", "gdal", "bin");
   save, obj, cctools_bin=file_join(get_cwd(), "..", "..", "cctools", "bin");
+  save, obj, temp_dir="/tmp";
   save, obj, makeflow_opts="";
   save, obj, makeflow_enable=1;
   save, obj, makeflow_type="local";
   save, obj, makeflow_project="alps";
   save, obj, memory_autorefresh=5;
-  save, obj, log_dir="/tmp/alps.log/";
+  save, obj, log_dir="alps.log";
   save, obj, log_level="debug";
   save, obj, log_keep=30;
   save, obj, cores_local=-1;

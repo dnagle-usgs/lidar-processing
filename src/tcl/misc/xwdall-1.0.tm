@@ -181,7 +181,7 @@ proc ::misc::xwdall::capture {args} {
         -raise normal
         -exclude {}
         -token "ALPS - CAPTURE THIS"
-        -tmp /tmp/junk.xwd
+        -tmp [file join $::alpsrc(temp_dir) junk.xwd]
         -root ROOT
     }
     array set opts $args
