@@ -664,17 +664,17 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
     }
 
     // If we aren't yet dead, then check the file for more errors.
-    vname = err = [];
+    vname = inf = [];
     if(!numberof(fatal) && (force || !numberof(messages))) {
-      valid = pbd_check(files(i), err, vname);
+      valid = pbd_check(files(i), inf);
       if(valid != 1) {
-        grow, fatal, "Unable to load file: " + err;
-        vname = [];
+        grow, fatal, "Unable to load file: " + inf.err;
       } else {
         f = openb(files(i));
-        if(is_void(get_member(f, vname))) {
+        if(is_void(get_member(f, f.vname))) {
           grow, fatal, "Unable to load file: contains no data";
-          vname = [];
+        } else {
+          vname = f.vname;
         }
         close, f;
       }

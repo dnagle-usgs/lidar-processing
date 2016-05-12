@@ -328,11 +328,9 @@ func pbd_save(file, vname, data, empty=, extra=) {
   close, f;
 }
 
-func pbd_check(file, &err, &vname) {
+func pbd_check(file, &inf) {
 /* DOCUMENT valid = pbd_check(filename);
-  valid = pbd_check(filename, err);
-  valid = pbd_check(filename, , vname);
-  valid = pbd_check(filename, err, vname);
+  valid = pbd_check(filename, inf);
 
   Checks a PBD file. Returns 0 if it is not valid, 1 if it is a normal point
   cloud file (contains a vname + associated variable), or 2 if it is a
@@ -345,30 +343,38 @@ func pbd_check(file, &err, &vname) {
   Alternately, the PBD should have a variable named "__bless", which specifies
   a blessing function.
 
-  Output parameter "err" will contain a string indicating what error was
-  encountered while loading the data. A nil string indicates no error was
-  encountered.
+  Optional output parameter "inf" will contain an oxy group with additional
+  informatino about the file. Possible keys:
 
-  Output parameter "vname" will contain the value of vname (or if __bless is
-  present, an appropriate vname will be generated).
+    check: The return value of this function: 0 if not valid, 1 for normal
+      point cloud data, and 2 for blessable data.
+
+    err: A string describing what error was found. Omitted if there were no
+      errors.
+
+    vname: The variable name that would be used for this data (typically
+      "vname" from the file).
+
+    type: This is the struct definition of the point cloud data, if applicable.
+
+    bless: This is the value of __bless, if applicable.
 
   SEE ALSO: pbd_load
 */
-  err = string(0);
-  vname = string(0);
+  inf = save(check=0);
 
   if(!file_exists(file)) {
-    err = "file does not exist";
+    save, inf, err="file does not exist";
     return 0;
   }
 
   if(!file_readable(file)) {
-    err = "file not readable";
+    save, inf, err="file not readable";
     return 0;
   }
 
   if(!is_pbd(file)) {
-    err = "not a PBD file";
+    save, inf, err="not a PBD file";
     return 0;
   }
 
@@ -376,33 +382,48 @@ func pbd_check(file, &err, &vname) {
   vars = get_vars(f);
 
   if(is_present(vars, "__bless")) {
+    save, inf, bless=f.__bless;
     bless = f.__bless;
 
     if(!symbol_exists(bless)) {
-      err = "__bless references non-existent function";
+      save, inf, err="__bless references non-existent function";
       return 0;
     }
 
     bless = symbol_def(bless);
     if(!is_func(bless)) {
-      err = "__bless references non-function";
+      save, inf, err="__bless references non-function";
       return 0;
     }
 
     vname = file_tail(file_rootname(file));
     sanitize_vname, vname;
+    save, inf, vname=vname, check=2;
     return 2;
   }
 
   if(!is_present(vars, "vname")) {
-    err = "no vname or __bless";
+    save, inf, err="no vname or __bless";
     return 0;
   }
 
   vname = f.vname;
+  save, inf, vname=vname;
   if(!is_present(vars, vname)) {
-    err = "invalid vname";
+    save, inf, err="invalid vname";
     return 0;
+  }
+
+  save, inf, check=1;
+
+  if(is_void(get_member(f, vname))) {
+    save, inf, type=[];
+  } else {
+    // This has to be a two-step process, otherwise the struct reference will
+    // be attached to the file and will cause a seg fault when trying to look
+    // at it.
+    tmp = get_member(f, vname)(1);
+    save, inf, type=structof(tmp);
   }
 
   return 1;
@@ -435,10 +456,12 @@ func pbd_load(file, &err, &vname) {
 
   SEE ALSO: pbd_append pbd_save pbd_check
 */
-  err = string(0);
-  vname = string(0);
+  inf = [];
 
-  type = pbd_check(file, err, vname);
+  type = pbd_check(file, inf);
+  err = is_void(inf.err) ? string(0) : inf.err;
+  vname = is_void(inf.vname) ? string(0) : inf.vname;
+
   if(!type) return [];
   f = openb(file);
 
