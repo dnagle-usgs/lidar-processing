@@ -98,9 +98,9 @@ func pbd_depth_correct(ifn, c, ofn=, vname_suffix=, conf=, opts=) {
 }
 
 func batch_depth_correct(dir, c, outdir=, searchstr=, vname_suffix=,
-file_suffix=, conf=) {
+file_suffix=, conf=, force=) {
 /* DOCUMENT batch_depth_correct, dir, c, outdir=, searchstr=, vname_suffix=,
-   file_suffix=, conf=
+   file_suffix=, conf=, force=
 
   Batch command for applying depth_correct.
 
@@ -126,10 +126,12 @@ file_suffix=, conf=) {
         file_suffix="cal"         Same outcome as default
     conf= Path to a conf file containing the parameters m and b in JSON format.
       See depth_correct for details.
+    force= Set to 1 to force correction despite warnings.
 */
   default, searchstr, "*.pbd";
   default, vname_suffix, "_cal"
   default, file_suffix, "_cal.pbd";
+  default, force, 0;
 
   depth_correct_load_params, conf, c;
 
@@ -139,6 +141,39 @@ file_suffix=, conf=) {
   if(!count) {
     write, "No files found.";
     return;
+  }
+
+  // Attempt to avoid doing invalid corrections.
+  inf = [];
+  fail = 0;
+  for(i = 1; i <= count; i++) {
+    check = pbd_check(files(i), inf);
+    msg = [];
+    if(check == 2) {
+      msg = "file contains blessable data";
+    } else if(check == 0) {
+      msg = inf.err;
+    } else if(nameof(inf.type) != "GEO") {
+      msg = "data is not in GEO struct (struct is "+nameof(inf.type)+")";
+    } else if(strglob("*_cal.pbd", files(i))) {
+      msg = "file ends in _cal.pbd which suggests it was already corrected";
+    } else if(strglob("*"+file_suffix, files(i))) {
+      msg = "file ends in " + file_suffix +
+        " which suggests it was already corrected";
+    }
+    if(!is_void(msg)) {
+      write, format="\n%s\n  %s\n", file_relative(dir, files(i)), msg;
+      fail = 1;
+    }
+  }
+  if(fail) {
+    if(force) {
+      write, format="\n%s\n", "Continuing depsite errors due to force=1";
+    } else {
+      write, format="\n%s\n",
+        "Aborting due to errors. Use force=1 to force correction.";
+      return;
+    }
   }
 
   // Specify output
