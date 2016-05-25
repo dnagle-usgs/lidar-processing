@@ -160,10 +160,12 @@ local utm2dt_names, utm2it_names;
 func __utm2_names(helper, east, north, zone, dtlength=, dtprefix=) {
   utm2dt_corners, east, north, helper.size;
   if(is_scalar(zone)) zone = array(zone, dimsof(east));
-  idx = munique(east, north, zone);
-  east = east(idx);
-  north = north(idx);
-  zone = zone(idx);
+  if(numberof(east) > 1) {
+    idx = munique(east, north, zone);
+    east = east(idx);
+    north = north(idx);
+    zone = zone(idx);
+  }
   return helper.tile(east, north, zone, dtlength=dtlength, dtprefix=dtprefix);
 }
 
