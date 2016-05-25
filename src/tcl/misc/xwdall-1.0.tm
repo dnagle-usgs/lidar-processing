@@ -125,7 +125,7 @@ proc ::misc::xwdall::gui_capture {} {
     variable delay
     variable raise
 
-    capture -outdir $outdir -time $time -delay $delay -raise $raise \
+    capture_all -outdir $outdir -time $time -delay $delay -raise $raise \
         -exclude .xwdall
 
     raise .xwdall
@@ -133,32 +133,32 @@ proc ::misc::xwdall::gui_capture {} {
 
 proc ::misc::xwdall::capture {args} {
 # ::misc::xwdall::capture ?options...?
-# Uses xwd to take a screenshot of all visible windows. (Excludes the console.)
+# Uses xwd to take a screenshot of a window.
+#
 # Options:
+#   -win <path>
+#       Window to capture. If omitted, the user will be prompted to click to
+#       select the window.
 #   -outdir <path>
-#       Place to store images captured. If omitted, defaults to current
-#       directory.
-#   -time <0|1>
-#    default: 1
-#       If set to 1, then a timestamp subdirectory will be created for the
-#       captures. This is enabled by default so that subsequent captures will
-#       not clobber previous ones.
+#       Place to store image captured. If omitted, defaults to current
+#       directory. If -outfile is specified, -outdir is ignored.
+#   -outfile <path>
+#       Output file to use for image captures. If omitted, the user will be
+#       prompted.
 #   -delay <int>
-#   default: 5
-#       A time delay between screenshots, to give time for GUIs to refresh.
+#    default: 5
+#       A time delay before taking the screenshot, to give time for GUIs to
+#       refresh.
 #   -raise <none|normal|force>
 #    default: normal
-#       Specifies how windows should be raised. for "none", windows are not
-#       raised; if a window is obscured, that section of the window will not
-#       capture properly. For "normal", the built-in "raise" command will be
-#       used; however, this may not be honored properly by all window managers.
-#       For "force", the window will be minimized and then restored which
-#       forces it to the top; however, this will cause a redraw on Yorick
+#       Specifies how the window should be raised. fFr "none", the window is
+#       not raised; if the window is obscured, that section of the window will
+#       not capture properly. For "normal", the built-in "raise" command will
+#       be used; however, this may not be honored properly by all window
+#       managers. For "force", the window will be minimized and then restored
+#       which forces it to the top; however, this will cause a redraw on Yorick
 #       windows which will cause improper captures on slow-redrawing complex
 #       plots.
-#   -exclude <list>
-#    default: {}
-#       A list of paths to skip. This paths will not have screenshots made.
 #   -token <string>
 #    default: "ALPS - CAPTURE THIS"
 #       An arbitrary but unique string that is used to temporarily denote which
@@ -167,28 +167,18 @@ proc ::misc::xwdall::capture {args} {
 #    default: /tmp/junk.xwd
 #       A temporary file to use as a destination of the xwd command. This
 #       should not need to be changed.
-#   -root <string>
-#    default: "ROOT"
-#       Output image names are based on the Tk window paths, minus their
-#       leading period. The root window is just a period, which would make its
-#       name just ".png". This option specifies what name to give the root
-#       window, if it's one of the windows being captured. The default results
-#       in "ROOT.png".
     array set opts {
+        -win {}
         -outdir {}
-        -time 1
+        -outfile {}
         -delay 5
         -raise normal
-        -exclude {}
         -token "ALPS - CAPTURE THIS"
-        -tmp [file join $::alpsrc(temp_dir) junk.xwd]
-        -root ROOT
     }
+    set opts(-tmp) [file join $::alpsrc(temp_dir) junk.xwd]
     array set opts $args
 
     set dir $opts(-outdir)
-    set token $opts(-token)
-    set tmp $opts(-tmp)
 
     set lower {{w} {}}
     switch -- $opts(-raise) {
@@ -210,6 +200,84 @@ proc ::misc::xwdall::capture {args} {
         }
     }
 
+    file mkdir [file dirname $opts(-tmp)]
+
+    set cmd [list xwd -out $opts(-tmp)]
+
+    if {$opts(-win) eq {}} {
+        tk_messageBox -type ok -message \
+            "After clicking OK, click on the window to capture"
+    } else {
+        lappend cmd -name $opts(-token)
+        set title [wm title $opts(-win)]
+        wm title $opts(-win) $opts(-token)
+    }
+
+    update
+    after $opts(-delay)
+
+    if {$opts(-win) ne ""} {
+        apply $raise $opts(-win)
+    }
+
+    exec {*}$cmd
+
+    if {$opts(-win) ne ""} {
+        wm title $opts(-win) $title
+        apply $lower $opts(-win)
+    }
+
+    set fn $opts(-outfile)
+    if {$fn eq ""} {
+        set fn [tk_getSaveFile \
+            -initialdir $opts(-outdir) \
+            -defaultextension .png]
+    }
+
+    if {$fn ne ""} {
+        exec convert $opts(-tmp) $fn
+    }
+
+    file delete -force $opts(-tmp)
+}
+
+proc ::misc::xwdall::capture_all {args} {
+# ::misc::xwdall::capture ?options...?
+# Uses xwd via capture to take a screenshot of all visible windows. (Excludes
+# the console.)
+# Options passed through to capture:
+#   -delay
+#   -raise
+#   -token
+#   -tmp
+# Options for capture_all:
+#   -outdir <path>
+#       Place to store images captured. If omitted, defaults to current
+#       directory.
+#   -time <0|1>
+#    default: 1
+#       If set to 1, then a timestamp subdirectory will be created for the
+#       captures. This is enabled by default so that subsequent captures will
+#       not clobber previous ones.
+#   -exclude <list>
+#    default: {}
+#       A list of paths to skip. This paths will not have screenshots made.
+#   -root <string>
+#    default: "ROOT"
+#       Output image names are based on the Tk window paths, minus their
+#       leading period. The root window is just a period, which would make its
+#       name just ".png". This option specifies what name to give the root
+#       window, if it's one of the windows being captured. The default results
+#       in "ROOT.png".
+    array set opts {
+        -outdir {}
+        -time 1
+        -exclude {}
+        -root ROOT
+    }
+    array set opts $args
+
+    set dir $opts(-outdir)
     if {$dir eq ""} {
         set dir [file join [pwd] captures]
     }
@@ -222,20 +290,11 @@ proc ::misc::xwdall::capture {args} {
     foreach w [wm stackorder .] {
         if {$w in $opts(-exclude)} {continue}
 
-        set title [wm title $w]
-        wm title $w $token
-        apply $raise $w
-        update
-        after $opts(-delay)
-        exec xwd -name $token -out $tmp
-        wm title $w $title
-        apply $lower $w
-
         set fn [string range $w 1 end]
         if {$fn eq ""} {set fn $opts(-root)}
         set fn [file join $dir ${fn}.png]
-        exec convert $tmp $fn
-        file delete -force $tmp
+
+        capture {*}[array get opts] -win $w -outfile $fn
     }
 }
 
