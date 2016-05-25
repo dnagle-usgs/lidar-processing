@@ -1,16 +1,16 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
-package provide misc::xwdall 1.0
+package provide misc::xwd 1.0
 package require misc
 
-namespace eval ::misc::xwdall {
+namespace eval ::misc::xwd {
     variable outdir [file join $::env(HOME) alps-captures]
     variable time 1
     variable raise normal
     variable delay 5
 }
 
-proc ::misc::xwdall::gui {} {
+proc ::misc::xwd::gui {} {
     if {[winfo exists .xwdall]} {
         ::misc::raise_win .xwdall
         return
@@ -106,7 +106,7 @@ proc ::misc::xwdall::gui {} {
         screen captures."
 }
 
-proc ::misc::xwdall::gui_browse {} {
+proc ::misc::xwd::gui_browse {} {
     variable outdir
 
     set tmp [tk_chooseDirectory \
@@ -119,7 +119,7 @@ proc ::misc::xwdall::gui_browse {} {
     }
 }
 
-proc ::misc::xwdall::gui_capture {} {
+proc ::misc::xwd::gui_capture {} {
     variable outdir
     variable time
     variable delay
@@ -131,8 +131,8 @@ proc ::misc::xwdall::gui_capture {} {
     raise .xwdall
 }
 
-proc ::misc::xwdall::capture {args} {
-# ::misc::xwdall::capture ?options...?
+proc ::misc::xwd::capture {args} {
+# ::misc::xwd::capture ?options...?
 # Uses xwd to take a screenshot of a window.
 #
 # Options:
@@ -241,8 +241,8 @@ proc ::misc::xwdall::capture {args} {
     file delete -force $opts(-tmp)
 }
 
-proc ::misc::xwdall::capture_all {args} {
-# ::misc::xwdall::capture ?options...?
+proc ::misc::xwd::capture_all {args} {
+# ::misc::xwd::capture ?options...?
 # Uses xwd via capture to take a screenshot of all visible windows. (Excludes
 # the console.)
 # Options passed through to capture:

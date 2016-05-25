@@ -3,7 +3,7 @@
 package provide misc 1.0
 package require misc::fsdialog
 package require misc::getstring
-package require misc::xwdall
+package require misc::xwd
 
 package require imglib
 package require snit
