@@ -305,14 +305,25 @@ snit::widget ::yorick::window::embedded {
             ttk::button $f.snapshot \
                     -image ::imglib::camera \
                     -style Toolbutton \
-                    -command [mymethod snapshot] \
+                    -command [mymethod snapshot $win] \
                     -width 0
+            bind $f.snapshot <ButtonPress-3> \
+                [bind TButton <ButtonPress-1>]
+            bind $f.snapshot <ButtonRelease-3> \
+                [string map \
+                    [list {%W invoke} [mymethod snapshot $plot]] \
+                    [bind TButton <ButtonRelease-1>]]
+            bind $f.snapshot <Button3-Leave> \
+                [bind TButton <Button1-Leave>]
+            bind $f.snapshot <Button3-Enter> \
+                [bind TButton <Button1-Enter>]
             ::misc::tooltip $f.snapshot \
-                    "Takes a screenshot of this window's plot. The screenshot
-                    will exclude the GUI.
+                    "Takes a screenshot of this window's plot. Left click to
+                    capture the entire window including the GUI. Right click to
+                    capture only the plot (excluding the GUI).
 
                     IMPORTANT: Make sure the entire window is visible and
-                    unobstructed first. If part of the plot is covered by
+                    unobstructed first. If part of the window is covered by
                     another window, that part will show as pure black in the
                     image."
 
@@ -365,8 +376,8 @@ snit::widget ::yorick::window::embedded {
         $self UpdateToolbar
     }
 
-    method snapshot {} {
-        set img [image create photo -format window -data $plot]
+    method snapshot {path} {
+        set img [image create photo -format window -data $path]
 
         set fn [tk_getSaveFile \
                 -filetypes {
