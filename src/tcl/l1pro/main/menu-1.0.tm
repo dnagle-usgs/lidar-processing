@@ -207,7 +207,7 @@ proc menu_window mb {
                     dpi=100;\r"}
     $mb add separator
     $mb add command {*}[menulabel "&Capture a display..."] \
-            -command ::misc::xwd
+            -command ::misc::xwd::capture
     $mb add command {*}[menulabel "Capture all displays..."] \
             -command ::misc::xwd::gui
     $mb add separator
