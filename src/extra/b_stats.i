@@ -51,6 +51,8 @@ func process_b_stats(start, stop, ext_bad_att=, channel=, opts=) {
     r1 = min(numberof(wf), long(pulses.lrx(i) + buf + .5));
     wf = wf(r0:r1);
 
+    if(wf(sum) <= 0) continue;
+
     skew(i) = wf_skew(wf);
     auc(i) = wf_auc(wf);
     stdev(i) = wf_stdev(wf);
