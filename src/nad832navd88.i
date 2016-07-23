@@ -46,7 +46,7 @@ func geoid_load(fn) {
 
   glomn = f.glomn < 0 ? 360 + f.glomn : f.glomn;
 
-  return h_new(
+  return save(
     glamn=f.glamn,
     glomn=glomn,
     dla=dls(1),
