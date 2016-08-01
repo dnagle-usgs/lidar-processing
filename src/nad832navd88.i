@@ -388,7 +388,7 @@ func nad832navd88offset(lon, lat, gdata_dir=, geoid=, verbose=, interpolator=) {
 
   for(i = 1; i <= numberof(needed); i++) {
     if(verbose)
-      write, format="grid file = %s\n", files(needed(i));
+      write, format="grid file = %s\n", needed(i);
 
     w = where(which == needed(i));
     g = geoid_load(needed(i));
