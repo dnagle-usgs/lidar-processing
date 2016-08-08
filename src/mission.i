@@ -154,13 +154,13 @@ tmp = save(__help, load);
 
 __help = "Contains subcommands for working with plugins.";
 
-func mission_plugins_load {
+func mission_plugins_load(force=) {
 /* DOCUMENT missions, plugins, load
   Loads the plugins currently defined in mission.data.plugins.
 
   SEE ALSO: plugins_load
 */
-  plugins_load, mission.data.plugins;
+  plugins_load, mission.data.plugins, force=force;
 }
 load = mission_plugins_load;
 
@@ -1363,7 +1363,7 @@ save = mission_save;
   mission, read, "<filename>"
 */
 
-func mission_read(fn) {
+func mission_read(fn, force=) {
   mission, data, path=file_dirname(fn);
   if(file_tail(mission.data.path) == "alps")
     mission, data, path=file_dirname(mission.data.path);
@@ -1371,7 +1371,7 @@ func mission_read(fn) {
   mission, json, rdfile(f);
   close, f;
   if(logger(info)) logger, info, "Loaded mission configuration from "+fn;
-  mission, plugins, load;
+  mission, plugins, load, force=force;
   // Need to invoke this after loading since loading clears
   mission, data, conf_file=file_relative(mission.data.path, fn);
   // Even though tksync is invoked by "mission, json", need to invoke again to

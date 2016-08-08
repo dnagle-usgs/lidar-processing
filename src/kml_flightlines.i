@@ -57,6 +57,7 @@ func batch_kml_mission(datadir, outdir, searchstr=, outfile=, webdest=) {
   for(i = 1; i < numberof(jidx); i++) {
     json = strchar(jsons(jidx(i)+1:jidx(i+1)));
     path = strchar(paths(pidx(i)+1:pidx(i+1)));
+    write, format="%d/%d: %s\n", i, numberof(jidx), path;
 
     passdest = [];
     if(!is_void(webdest))
@@ -182,7 +183,7 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
   extern pnav, edb, edb_filename;
 
   if(!is_void(conf_file))
-    mission, read, conf_file;
+    mission, read, conf_file, force=1;
 
   default, outdir, file_join(mission.data.path, "kml");
   default, name, file_tail(mission.data.path);
