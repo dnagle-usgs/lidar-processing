@@ -41,6 +41,7 @@ func nocalps_eaarl_decode_fast(fn, start, stop, rnstart=, raw=, wfs=) {
 */
   extern eaarl_time_offset;
   default, wfs, 1;
+  default, raw, 0;
 
   if(!rnstart && !is_scalar(eaarl_time_offset)) {
     error, "if eaarl_time_offset is array, must provide rnstart";
@@ -116,7 +117,9 @@ func nocalps_eaarl_decode_fast(fn, start, stop, rnstart=, raw=, wfs=) {
 
       offset_time=fi24(f, offset);
       soe(pidx) = seconds + (fseconds + offset_time) * 1.6e-6 +
-        (is_scalar(eaarl_time_offset) ? eaarl_time_offset : eaarl_time_offset(rn));
+        (raw ? 0 : (
+          (is_scalar(eaarl_time_offset) ? eaarl_time_offset : eaarl_time_offset(rn))
+        ));
 
       scan_angle(pidx) = fi16(f, offset+9);
 
