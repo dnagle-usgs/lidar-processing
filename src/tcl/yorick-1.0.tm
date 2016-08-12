@@ -109,7 +109,8 @@ proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
         } else {
             set python $::_ytk(python_path)
         }
-        set cmd [list ::spawn -noecho $python pyo.py $yorick $yor_tcl_fn $tcl_yor_fn]
+        set pyo [file join .. python pyo.py]
+        set cmd [list ::spawn -noecho $python $pyo $yorick $yor_tcl_fn $tcl_yor_fn]
         set result [catch $cmd]
         if {!$result} {
             expect "Python 3" {
