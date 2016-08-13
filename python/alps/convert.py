@@ -41,10 +41,38 @@ def _to_desc_array(data, desc):
                 raise
     return array
 
+def _ops_conf():
+    ops = yo('=ops_conf')
+
+    for key, val in ops.items():
+        if hasattr(val, 'size') and val.size == 1:
+            ops[key] = val[()]
+
+    if ops['name'] in ['(nil)', '']:
+        del ops['name']
+    if ops['comment'] in ['(nil)', '']:
+        del ops['comment']
+
+    return ops
+
 def h5_mission(filename):
     gps = _to_desc_array(yo('=struct2obj(pnav)'), EaarlGps)
     ins = _to_desc_array(yo('=struct2obj(iex_nav)'), EaarlIns)
 
+    gps_file = yo('=file_relative(mission.data.path, pnav_filename)')
+    ins_file = yo('=file_relative(mission.data.path, ins_filename)')
+    ins_head = "\n".join(yo('=iex_head')) + "\n"
+
+    ops = _ops_conf()
+
     with tables.open_file(filename, mode='w') as fh:
-        fh.create_table('/', 'gps', obj=gps, filters=FILTER)
-        fh.create_table('/', 'ins', obj=ins, filters=FILTER)
+        table = fh.create_table('/', 'gps', obj=gps, filters=FILTER)
+        table.attrs.filename = gps_file
+
+        table = fh.create_table('/', 'ins', obj=ins, filters=FILTER)
+        table.attrs.filename = ins_file
+        table.attrs.headers = ins_head
+
+        fh.create_group('/', 'conf', filters=FILTER)
+        for key, val in ops.items():
+            fh.set_node_attr('/conf', key, val)
