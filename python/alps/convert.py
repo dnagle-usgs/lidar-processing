@@ -19,7 +19,7 @@ class EaarlGps(tables.IsDescription):
     flag = tables.Int16Col(pos=10)
 
 class EaarlIns(tables.IsDescription):
-    lon = tables.Float32Col(pos=9)
+    lon = tables.Float32Col(pos=0)
     lat = tables.Float32Col(pos=1)
     alt = tables.Float32Col(pos=2)
     sod = tables.Float32Col(pos=3)
@@ -27,18 +27,15 @@ class EaarlIns(tables.IsDescription):
     pitch = tables.Float32Col(pos=5)
     heading = tables.Float32Col(pos=6)
 
-def _to_desc_array(data, desc):
+def _to_desc_array(data, desc, map={}):
     fields = list(desc.columns.keys())
     count = len(data[fields[0]])
     array = np.zeros(count, dtype=tables.description.dtype_from_descr(desc))
     for field in fields:
-        try:
+        if field in map:
+            array[field] = data[map[field]]
+        else:
             array[field] = data[field]
-        except KeyError:
-            if field == 'sod':
-                array[field] = data['somd']
-            else:
-                raise
     return array
 
 def _ops_conf():
@@ -57,7 +54,8 @@ def _ops_conf():
 
 def h5_mission(filename):
     gps = _to_desc_array(yo('=struct2obj(pnav)'), EaarlGps)
-    ins = _to_desc_array(yo('=struct2obj(iex_nav)'), EaarlIns)
+    ins = _to_desc_array(yo('=struct2obj(iex_nav)'), EaarlIns,
+                         map={'sod': 'somd'})
 
     gps_file = yo('=file_relative(mission.data.path, pnav_filename)')
     ins_file = yo('=file_relative(mission.data.path, ins_filename)')
@@ -65,14 +63,53 @@ def h5_mission(filename):
 
     ops = _ops_conf()
 
-    with tables.open_file(filename, mode='w') as fh:
-        table = fh.create_table('/', 'gps', obj=gps, filters=FILTER)
+    with tables.open_file(filename, mode='w', filters=FILTER) as fh:
+        table = fh.create_table('/', 'gps', obj=gps)
         table.attrs.filename = gps_file
 
-        table = fh.create_table('/', 'ins', obj=ins, filters=FILTER)
+        table = fh.create_table('/', 'ins', obj=ins)
         table.attrs.filename = ins_file
         table.attrs.headers = ins_head
 
-        fh.create_group('/', 'conf', filters=FILTER)
+        fh.create_group('/', 'conf')
         for key, val in ops.items():
             fh.set_node_attr('/conf', key, val)
+
+def _edb_class(filename_length):
+    class EaarlEdb(tables.IsDescription):
+        soe = tables.Float32Col(pos=0)
+        raster_offset = tables.UInt32Col(pos=1)
+        raster_length = tables.UInt32Col(pos=2)
+        pulse_count = tables.UInt8Col(pos=3)
+        digitizer = tables.UInt8Col(pos=4)
+        file = tables.StringCol(pos=5, itemsize=filename_length)
+    return EaarlEdb
+
+def h5_edb(filename):
+    edb_file = yo('=file_relative(mission.data.path, edb_filename)')
+
+    edb_files = np.array(yo('=edb_files'))
+    edb = yo('=struct2obj(edb)')
+    edb['file'] = edb_files[edb['file_number'] - 1]
+    del edb['file_number']
+    del edb_files
+
+    time_offset = yo('=eaarl_time_offset')
+
+    edb['soe'] = edb['seconds'] + edb['fseconds'] * 1.6e-6 - time_offset
+    del edb['seconds']
+    del edb['fseconds']
+
+    filename_length = len(max(edb['file'], key=len))
+
+    edb = _to_desc_array(edb, _edb_class(filename_length),
+                        map = {
+                            'pulse_count': 'pixels',
+                            'raster_offset': 'offset'
+                        })
+
+    with tables.open_file(filename, mode='w', filters=FILTER) as fh:
+        table = fh.create_table('/', 'eaarl', obj=edb)
+        table.attrs.filename = edb_file
+
+        table = fh.create_array('/', 'time_offset', obj=time_offset)
