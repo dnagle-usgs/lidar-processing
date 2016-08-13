@@ -1,8 +1,11 @@
-import pyorick
 import code
+import os.path
 import sys
 
-yo = pyorick.Yorick(ypath=sys.argv[1])
-yo.c.require('ytk.i')
-yo.c.initialize_ytk(sys.argv[2], sys.argv[3])
+sys.path.append(os.path.dirname(__file__))
+
+import alps.site
+
+yo = alps.site.yo
+
 code.interact(local=locals())
