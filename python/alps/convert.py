@@ -38,6 +38,15 @@ def _to_desc_array(data, desc, map={}):
             array[field] = data[field]
     return array
 
+def _adder_store(filename, adder_funcs):
+    adders = []
+    for adder_func in adder_funcs:
+        adders.append(adder_func())
+
+    with tables.open_file(filename, mode='w', filters=FILTER) as fh:
+        for adder in adders:
+            adder(fh)
+
 def _ops_conf():
     ops = yo('=ops_conf')
 
@@ -88,14 +97,7 @@ def _prep_ins():
     return add
 
 def h5_mission(filename):
-    adders = []
-    adders.append(_prep_ops_conf())
-    adders.append(_prep_gps())
-    adders.append(_prep_ins())
-
-    with tables.open_file(filename, mode='w', filters=FILTER) as fh:
-        for adder in adders:
-            adder(fh)
+    _adder_store(filename, [_prep_ops_conf, _prep_gps, _prep_ins])
 
 def _edb_class(filename_length):
     class EaarlEdb(tables.IsDescription):
@@ -139,9 +141,4 @@ def _prep_edb():
     return add
 
 def h5_edb(filename):
-    adders = []
-    adders.append(_prep_edb())
-
-    with tables.open_file(filename, mode='w', filters=FILTER) as fh:
-        for adder in adders:
-            adder(fh)
+    _adder_store(filename, [_prep_edb])
