@@ -52,28 +52,50 @@ def _ops_conf():
 
     return ops
 
-def h5_mission(filename):
-    gps = _to_desc_array(yo('=struct2obj(pnav)'), EaarlGps)
-    ins = _to_desc_array(yo('=struct2obj(iex_nav)'), EaarlIns,
-                         map={'sod': 'somd'})
-
-    gps_file = yo('=file_relative(mission.data.path, pnav_filename)')
-    ins_file = yo('=file_relative(mission.data.path, ins_filename)')
-    ins_head = "\n".join(yo('=iex_head')) + "\n"
-
+def _prep_ops_conf():
     ops = _ops_conf()
+    ops_filename = yo("=ops_conf_filename")
 
-    with tables.open_file(filename, mode='w', filters=FILTER) as fh:
+    def add(fh):
+        fh.create_group('/', 'conf')
+        fh.set_node_attr('/conf', 'filename', ops_filename)
+        for key, val in ops.items():
+            fh.set_node_attr('/conf', key, val)
+
+    return add
+
+def _prep_gps():
+    gps = _to_desc_array(yo('=struct2obj(pnav)'), EaarlGps)
+    gps_file = yo('=file_relative(mission.data.path, pnav_filename)')
+
+    def add(fh):
         table = fh.create_table('/', 'gps', obj=gps)
         table.attrs.filename = gps_file
 
+    return add
+
+def _prep_ins():
+    ins = _to_desc_array(yo('=struct2obj(iex_nav)'), EaarlIns,
+                         map={'sod': 'somd'})
+    ins_file = yo('=file_relative(mission.data.path, ins_filename)')
+    ins_head = "\n".join(yo('=iex_head')) + "\n"
+
+    def add(fh):
         table = fh.create_table('/', 'ins', obj=ins)
         table.attrs.filename = ins_file
         table.attrs.headers = ins_head
 
-        fh.create_group('/', 'conf')
-        for key, val in ops.items():
-            fh.set_node_attr('/conf', key, val)
+    return add
+
+def h5_mission(filename):
+    adders = []
+    adders.append(_prep_ops_conf())
+    adders.append(_prep_gps())
+    adders.append(_prep_ins())
+
+    with tables.open_file(filename, mode='w', filters=FILTER) as fh:
+        for adder in adders:
+            adder(fh)
 
 def _edb_class(filename_length):
     class EaarlEdb(tables.IsDescription):
