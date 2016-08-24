@@ -107,7 +107,7 @@ def _edb_class(filename_length):
         file = tables.StringCol(pos=5, itemsize=filename_length)
     return EaarlEdb
 
-def h5_edb(filename):
+def _prep_edb():
     edb_file = yo('=file_relative(mission.data.path, edb_filename)')
 
     edb_files = np.array(yo('=edb_files'))
@@ -130,8 +130,18 @@ def h5_edb(filename):
                             'raster_offset': 'offset'
                         })
 
-    with tables.open_file(filename, mode='w', filters=FILTER) as fh:
+    def add(fh):
         table = fh.create_table('/', 'eaarl', obj=edb)
         table.attrs.filename = edb_file
 
         table = fh.create_array('/', 'time_offset', obj=time_offset)
+
+    return add
+
+def h5_edb(filename):
+    adders = []
+    adders.append(_prep_edb())
+
+    with tables.open_file(filename, mode='w', filters=FILTER) as fh:
+        for adder in adders:
+            adder(fh)
