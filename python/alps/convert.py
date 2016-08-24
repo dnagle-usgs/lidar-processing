@@ -47,7 +47,7 @@ def _adder_store(filename, adder_funcs):
         for adder in adders:
             adder(fh)
 
-def _ops_conf():
+def _prep_ops_conf():
     ops = yo('=ops_conf')
 
     for key, val in ops.items():
@@ -59,10 +59,6 @@ def _ops_conf():
     if ops['comment'] in ['(nil)', '']:
         del ops['comment']
 
-    return ops
-
-def _prep_ops_conf():
-    ops = _ops_conf()
     ops_filename = yo("=ops_conf_filename")
 
     def add(fh):
@@ -95,9 +91,6 @@ def _prep_ins():
         table.attrs.headers = ins_head
 
     return add
-
-def h5_mission(filename):
-    _adder_store(filename, [_prep_ops_conf, _prep_gps, _prep_ins])
 
 def _edb_class(filename_length):
     class EaarlEdb(tables.IsDescription):
@@ -139,6 +132,9 @@ def _prep_edb():
         table = fh.create_array('/', 'time_offset', obj=time_offset)
 
     return add
+
+def h5_mission(filename):
+    _adder_store(filename, [_prep_ops_conf, _prep_gps, _prep_ins])
 
 def h5_edb(filename):
     _adder_store(filename, [_prep_edb])
