@@ -1,6 +1,7 @@
 import json
 
 import numpy as np
+import pandas as pd
 import tables
 
 from .site import yo
@@ -113,9 +114,6 @@ def _prep_edb():
 
     return add
 
-def h5_mission(filename):
-    _adder_store(filename, [_prep_gps, _prep_ins])
-
 def h5_gps(filename):
     _adder_store(filename, [_prep_gps])
 
@@ -143,3 +141,30 @@ def json_ops_conf(filename):
     with open(filename, 'w') as fh:
         json.dump(ops, fh, indent=2)
 
+def csv_edb(filename):
+    edb_files = np.array(yo('=edb_files'))
+    edb = yo('=struct2obj(edb)')
+    edb['file'] = edb_files[edb['file_number'] - 1]
+    del edb['file_number']
+    del edb_files
+
+    edb['pulse_count'] = edb['pixels']
+    del edb['pixels']
+
+    time_offset = yo('=eaarl_time_offset')
+
+    edb['soe'] = edb['seconds'] + edb['fseconds'] * 1.6e-6 - time_offset
+    del edb['seconds']
+    del edb['fseconds']
+
+    filename_length = len(max(edb['file'], key=len))
+
+    columns = ['soe', 'digitizer', 'pulse_count', 'offset', 'raster_length',
+               'file']
+
+    raster_number = pd.Index(np.arange(1, len(edb['file'])+1),
+                             name="raster_number")
+    edb = pd.DataFrame(edb, index=raster_number, columns=columns)
+    del raster_number
+
+    edb.to_csv(filename, float_format='%.7f')
