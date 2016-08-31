@@ -184,6 +184,7 @@ func mission_constants_sanitize(&conf) {
     obj_delete, conf, "name";
   if(conf(*,"comment") && (!strlen(conf.comment) || conf.comment == "(nil)"))
     obj_delete, conf, "comment";
+  obj_delete, conf, "_timestamp";
 
   return conf;
 }
@@ -342,10 +343,24 @@ func load_ops_conf(fn) {
   function, the settings will be returned and no externs will be altered. If
   called as a subroutine, then the extern ops_conf will be overwritten.
 */
+  extern ops_conf;
+  local conf;
+  ext = file_extension(fn);
+  if(ext == ".i") {
+    conf = _load_ops_conf_i(fn);
+  } else if(ext == ".json") {
+    conf = json_decode(rdfile(open(fn, "r")), objects="");
+    mission_constants_sanitize, conf;
+  } else {
+    error, "unknown file extension: " + ext;
+  }
+  if(am_subroutine()) ops_conf = conf;
+  return conf;
+}
+
+func _load_ops_conf_i(fn) {
   local ops_conf;
-  // include, fn, 0 --> goes to global scope
-  // include, fn, 1 --> goes to local scope
-  include, fn, !am_subroutine();
+  include, fn, 1;
   return ops_conf;
 }
 
@@ -363,22 +378,16 @@ func write_ops_conf(fn, conf=) {
   extern ops_conf;
   default, conf, ops_conf;
 
-  ops = array(string, conf(*));
-  for(i = 1; i <= conf(*); i++) {
-    ops(i) = "  "+conf(*,i)+"="+print(conf(noop(i)))(sum);
-  }
-  ops = "mission_constants(\n"+strjoin(ops, ",\n")+"\n)";
+  conf = obj_copy(conf);
 
   f = [];
   if(is_string(fn))
     f = open(fn, "w");
   else if(typeof(fn) == "text_stream")
     f = fn;
-  if(f) {
-    write, f, format="// Exported from ALPS on %s\n", soe2date(getsoe());
-    write, f, format="%s", "ops_conf = ";
-  }
-  write, f, format="%s\n", ops;
+  if(f)
+    save, conf, "_timestamp", soe2iso8601(getsoe());
+  write, f, format="%s\n", json_encode(conf, indent=2);
   if(is_string(fn)) close, f;
 }
 
