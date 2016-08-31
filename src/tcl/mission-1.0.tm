@@ -68,6 +68,8 @@ if {[info vars ::mission::plugins] eq ""} {
                 {{All files} *}
             }
             "ops_conf file" {
+                {{Mission constants files} {.ops.json}}
+                {{JSON files} {.json}}
                 {{Yorick files} {.i}}
                 {{All files} *}
             }

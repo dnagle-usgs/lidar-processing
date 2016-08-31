@@ -139,7 +139,10 @@ proc ::eaarl::settings::ops_conf::save {} {
     set fn [tk_getSaveFile -parent .l1wid \
             -title "Select destination to save current ops_conf settings" \
             -initialdir [::mission::conf_dir] \
+            -defaultextension .ops.json \
             -filetypes {
+                {"Mission constants files" .ops.json}
+                {"JSON files" .json}
                 {"Yorick files" .i}
                 {"All files" *}
             }]

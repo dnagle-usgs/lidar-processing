@@ -28,10 +28,10 @@ func autoselect_globs(dir, globs, options=) {
 func autoselect_ops_conf(dir, options=) {
 /* DOCUMENT ops_conf_file = autoselect_ops_conf(dir, options=)
 
-  This function attempts to determine the ops_conf.i file to load for a
+  This function attempts to determine the ops_conf file to load for a
   dataset. The dir parameter should be the path to the mission day directory.
 
-  The function attempts to find an appropriate ops_conf.i file by looking in
+  The function attempts to find an appropriate ops_conf file by looking in
   the following locations:
 
     1. dir/alps
@@ -39,10 +39,11 @@ func autoselect_ops_conf(dir, options=) {
     3. dir/../alps
     4. dir/..
 
-  It attempts to locate the ops_conf.i by looking for files matching these rules:
+  It attempts to locate the ops_conf by looking for files matching these rules:
 
-    1. ops_conf.i
-    2. *ops_conf*.i
+    1. *.ops.json
+    2. ops_conf.i
+    3. *ops_conf*.i
 
   If no file can be found, then the nil string is returned (string(0)).
 
@@ -58,6 +59,12 @@ func autoselect_ops_conf(dir, options=) {
   results = [];
   for(i = 1; i <= numberof(dirs); i++) {
     dir = dirs(i);
+
+    files = lsfiles(dir, glob="*.ops.json");
+    if(numberof(files)) {
+      files = files(sort(files));
+      grow, results, file_join(dir, files);
+    }
 
     if(file_isfile(file_join(dir, "ops_conf.i")))
       grow, results, file_join(dir, "ops_conf.i");
