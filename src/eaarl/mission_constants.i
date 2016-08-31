@@ -180,8 +180,10 @@ func mission_constants_sanitize(&conf) {
     conf = obj_merge(conf, temp);
   }
 
-  if(conf(*,"name") && !strlen(conf.name)) obj_delete, conf, "name";
-  if(conf(*,"comment") && !strlen(conf.comment)) obj_delete, conf, "comment";
+  if(conf(*,"name") && (!strlen(conf.name) || conf.name == "(nil)"))
+    obj_delete, conf, "name";
+  if(conf(*,"comment") && (!strlen(conf.comment) || conf.comment == "(nil)"))
+    obj_delete, conf, "comment";
 
   return conf;
 }
