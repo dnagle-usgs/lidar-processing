@@ -117,6 +117,12 @@ func mission_constants(args) {
     the GPS antenna.)
 */
   conf = args2obj(args);
+  mission_constants_sanitize, conf;
+  return conf;
+}
+wrap_args, mission_constants;
+
+func mission_constants_sanitize(&conf) {
   defaults = save(
     type="EAARL-A",
     x_offset=0.,
@@ -179,7 +185,6 @@ func mission_constants(args) {
 
   return conf;
 }
-wrap_args, mission_constants;
 
   /*****************************************************************************
   The range bias was computed from the 2002-07-29 ground test. The EAARL data
