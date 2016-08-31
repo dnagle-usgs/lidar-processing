@@ -18,7 +18,6 @@ func mission_constants(args) {
   conf.type="EAARL-A", the group is initialized with the following fields.
 
     string type;            // Type of mission settings
-    string name;            // The name of the settings
     double y_offset;        // Aircraft relative + fwd along fuselage
     double x_offset;        // Aircraft relative + out the right wing
     double z_offset;        // Aircraft relative + up
@@ -120,8 +119,6 @@ func mission_constants(args) {
   conf = args2obj(args);
   defaults = save(
     type="EAARL-A",
-    name="",
-    comment="",
     x_offset=0.,
     y_offset=0.,
     z_offset=0.,
@@ -176,6 +173,9 @@ func mission_constants(args) {
     keycast, temp, defaults;
     conf = obj_merge(conf, temp);
   }
+
+  if(conf(*,"name") && !strlen(conf.name)) obj_delete, conf, "name";
+  if(conf(*,"comment") && !strlen(conf.comment)) obj_delete, conf, "comment";
 
   return conf;
 }
@@ -232,7 +232,6 @@ wrap_args, mission_constants;
   );
 
   ops_tans = ops_default;
-  ops_tans, name       = "Tans Default Values"
   ops_tans, roll_bias  = -1.40;    // carefully tweaked on 2003-02-18 data
   ops_tans, pitch_bias = +0.5;
   ops_tans, yaw_bias   =  0.0;
@@ -255,7 +254,6 @@ wrap_args, mission_constants;
   ksby to kmyr using pospac on 2003-10-02.
   *****************************************************************************/
   ops_IMU1 = ops_default;
-  ops_IMU1, name       = "Applanix 510 Defaults"
   ops_IMU1, x_offset   =  0.470;   // This is Applanix Y Axis +Rt Wing
   ops_IMU1, y_offset   =  1.403;   // This is Applanix X Axis +nose
   ops_IMU1, z_offset   = -0.833;   // This is Applanix Z Axis +Down
@@ -263,7 +261,6 @@ wrap_args, mission_constants;
   ops_IMU1, pitch_bias =  0.1;     // DMARS pitch bias from 2-13-04
 
   ops_IMU2 = ops_default;
-  ops_IMU2, name       = "DMARS Defaults"
   ops_IMU2, roll_bias  = -0.8;     // with 03/12 Albert Whitted runway
   ops_IMU2, pitch_bias =  0.1;     // with 03/12 Albert Whitted runway
   ops_IMU2, yaw_bias   =  0.;
