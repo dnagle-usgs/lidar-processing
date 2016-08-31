@@ -123,24 +123,6 @@ def h5_ins(filename):
 def h5_edb(filename):
     _adder_store(filename, [_prep_edb])
 
-def json_ops_conf(filename):
-    ops = yo('=ops_conf')
-
-    for key, val in ops.items():
-        try:
-            val = val.tolist()
-        except AttributeError:
-            pass
-        ops[key] = val
-
-    if ops['name'] in ['(nil)', '']:
-        del ops['name']
-    if ops['comment'] in ['(nil)', '']:
-        del ops['comment']
-
-    with open(filename, 'w') as fh:
-        json.dump(ops, fh, indent=2)
-
 def csv_edb(filename):
     edb_files = np.array(yo('=edb_files'))
     edb = yo('=struct2obj(edb)')
