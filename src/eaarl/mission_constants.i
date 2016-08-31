@@ -251,7 +251,7 @@ func mission_constants_sanitize(&conf) {
   ops_tans, range_biasM = 0.7962;  // Laser range measurement bias
 
   // By default, we use ops_tans for our constants
-  ops_conf = ops_tans;
+  default, ops_conf, ops_tans;
 
   /*****************************************************************************
   Defaults for the EAARL #1 IMU which is the location directly above the
