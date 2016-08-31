@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import tables
 
@@ -46,28 +48,6 @@ def _adder_store(filename, adder_funcs):
     with tables.open_file(filename, mode='w', filters=FILTER) as fh:
         for adder in adders:
             adder(fh)
-
-def _prep_ops_conf():
-    ops = yo('=ops_conf')
-
-    for key, val in ops.items():
-        if hasattr(val, 'size') and val.size == 1:
-            ops[key] = val[()]
-
-    if ops['name'] in ['(nil)', '']:
-        del ops['name']
-    if ops['comment'] in ['(nil)', '']:
-        del ops['comment']
-
-    ops_filename = yo("=ops_conf_filename")
-
-    def add(fh):
-        fh.create_group('/', 'conf')
-        fh.set_node_attr('/conf', 'filename', ops_filename)
-        for key, val in ops.items():
-            fh.set_node_attr('/conf', key, val)
-
-    return add
 
 def _prep_gps():
     gps = _to_desc_array(yo('=struct2obj(pnav)'), EaarlGps)
@@ -134,7 +114,32 @@ def _prep_edb():
     return add
 
 def h5_mission(filename):
-    _adder_store(filename, [_prep_ops_conf, _prep_gps, _prep_ins])
+    _adder_store(filename, [_prep_gps, _prep_ins])
+
+def h5_gps(filename):
+    _adder_store(filename, [_prep_gps])
+
+def h5_ins(filename):
+    _adder_store(filename, [_prep_ins])
 
 def h5_edb(filename):
     _adder_store(filename, [_prep_edb])
+
+def json_ops_conf(filename):
+    ops = yo('=ops_conf')
+
+    for key, val in ops.items():
+        try:
+            val = val.tolist()
+        except AttributeError:
+            pass
+        ops[key] = val
+
+    if ops['name'] in ['(nil)', '']:
+        del ops['name']
+    if ops['comment'] in ['(nil)', '']:
+        del ops['comment']
+
+    with open(filename, 'w') as fh:
+        json.dump(ops, fh, indent=2)
+
