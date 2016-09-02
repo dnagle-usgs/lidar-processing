@@ -305,8 +305,8 @@ func eaarl_mission_load(flight) {
   extern ins_filename, iex_nav, iex_head, tans;
   if(test_key(flight, "ins file")) {
     ins_filename = mission(get, flight, "ins file");
-    if(file_extension(ins_filename) == ".pbd") {
-      load_iexpbd, ins_filename, verbose=0;
+    if(anyof(file_extension(ins_filename) == [".pbd",".h5"])) {
+      load_iex, ins_filename, verbose=0;
     } else {
       tans = iex_nav = rbtans(fn=ins_filename);
       iex_head = [];

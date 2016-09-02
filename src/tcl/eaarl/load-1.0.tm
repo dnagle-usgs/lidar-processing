@@ -53,7 +53,7 @@ namespace eval eaarl::load {
         if {$fn eq ""} return
         exp_send "ins_filename = \"$fn\"; "
         if {[file extension $fn] in {.pbd .pdb}} {
-            exp_send "load_iexpbd, ins_filename;\r"
+            exp_send "load_iex, ins_filename;\r"
         } else {
             exp_send "iex_head = []; tans = iex_nav = rbtans(fn=ins_filename);\r"
         }
