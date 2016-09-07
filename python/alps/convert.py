@@ -50,28 +50,26 @@ def _adder_store(filename, adder_funcs):
         for adder in adders:
             adder(fh)
 
-def _prep_gps():
-    gps = _to_desc_array(yo('=struct2obj(pnav)'), EaarlGps)
-    gps_file = yo('=file_relative(mission.data.path, pnav_filename)')
+def get_gps(gps=None):
+    if gps is None:
+        gps = yo('=struct2obj(pnav)')
+    return _to_desc_array(gps, EaarlGps)
 
-    def add(fh):
-        table = fh.create_table('/', 'gps', obj=gps)
-        table.attrs.filename = gps_file
+def add_gps(fh, gps):
+    fh.create_table('/', 'gps', obj=gps)
 
-    return add
+def get_ins(ins=None, headers=None):
+    if ins is None:
+        ins = _to_desc_array(yo('=struct2obj(iex_nav)'), EaarlIns,
+                            map={'sod': 'somd'})
+        headers = "\n".join(yo('=iex_head')) + "\n"
+    ins = _to_desc_array(ins, EaarlIns, map={'sod': 'somd'})
+    return (ins, headers)
 
-def _prep_ins():
-    ins = _to_desc_array(yo('=struct2obj(iex_nav)'), EaarlIns,
-                         map={'sod': 'somd'})
-    ins_file = yo('=file_relative(mission.data.path, ins_filename)')
-    ins_head = "\n".join(yo('=iex_head')) + "\n"
-
-    def add(fh):
-        table = fh.create_table('/', 'ins', obj=ins)
-        table.attrs.filename = ins_file
-        table.attrs.headers = ins_head
-
-    return add
+def add_ins(fh, ins, headers=None):
+    table = fh.create_table('/', 'ins', obj=ins)
+    if headers is not None:
+        table.attrs.headers = headers
 
 def _edb_class(filename_length):
     class EaarlEdb(tables.IsDescription):
@@ -83,45 +81,15 @@ def _edb_class(filename_length):
         file = tables.StringCol(pos=5, itemsize=filename_length)
     return EaarlEdb
 
-def _prep_edb():
-    edb_file = yo('=file_relative(mission.data.path, edb_filename)')
+def h5_gps(filename, gps=None):
+    gps = get_gps(gps)
+    with tables.open_file(filename, mode='w', filters=FILTER) as fh:
+        add_gps(fh, gps)
 
-    edb_files = np.array(yo('=edb_files'))
-    edb = yo('=struct2obj(edb)')
-    edb['file'] = edb_files[edb['file_number'] - 1]
-    del edb['file_number']
-    del edb_files
-
-    time_offset = yo('=eaarl_time_offset')
-
-    edb['soe'] = edb['seconds'] + edb['fseconds'] * 1.6e-6 - time_offset
-    del edb['seconds']
-    del edb['fseconds']
-
-    filename_length = len(max(edb['file'], key=len))
-
-    edb = _to_desc_array(edb, _edb_class(filename_length),
-                        map = {
-                            'pulse_count': 'pixels',
-                            'raster_offset': 'offset'
-                        })
-
-    def add(fh):
-        table = fh.create_table('/', 'eaarl', obj=edb)
-        table.attrs.filename = edb_file
-
-        table = fh.create_array('/', 'time_offset', obj=time_offset)
-
-    return add
-
-def h5_gps(filename):
-    _adder_store(filename, [_prep_gps])
-
-def h5_ins(filename):
-    _adder_store(filename, [_prep_ins])
-
-def h5_edb(filename):
-    _adder_store(filename, [_prep_edb])
+def h5_ins(filename, ins=None, headers=None):
+    ins, headers = get_ins(ins, headers)
+    with tables.open_file(filename, mode='w', filters=FILTER) as fh:
+        add_ins(fh, ins, headers)
 
 def csv_edb(filename):
     edb_files = np.array(yo('=edb_files'))

@@ -667,3 +667,13 @@ func parse_iex_basestations(header) {
 
   return result;
 }
+
+func h5_ins(fn) {
+/* DOCUMENT h5_ins, fh
+  Writes out the current ins data to an HDF5 file. Requires Python.
+*/
+  if(is_void(py)) error, "python not available";
+  data = struct2obj(iex_nav);
+  py, "import alps.convert";
+  py, "alps.convert.h5_ins", fn, data, iex_head;
+}

@@ -684,3 +684,13 @@ func pnav_diff_base_latlon(pn1, pn2, lat, lon, xfma=, swin=, woff=, title=, kill
 
   return lbr;
 }
+
+func h5_gps(fn) {
+/* DOCUMENT h5_gps, fn
+  Writes out the current GPS data as HDF5. Requires Python.
+*/
+  if(is_void(py)) error, "python not available";
+  data = struct2obj(pnav);
+  py, "import alps.convert";
+  py, "alps.convert.h5_gps", fn, data;
+}
