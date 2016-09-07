@@ -33,6 +33,7 @@ include, base + "job_commands.i";
 include, base + "manual_filter.i";
 include, base + "mission.i";
 include, base + "mission_constants.i";
+include, base + "mission_py.i";
 include, base + "mosaic_biases.i";
 include, base + "parse.i";
 include, base + "pixelwf.i";
