@@ -38,7 +38,7 @@ func triangulate_data(data, mode=, verbose=, maxside=, maxarea=, minangle=) {
   local x, y, z;
   default, verbose, 1;
 
-  data2xyz, data, x, y, z;
+  data2xyz, data, x, y, z, mode=mode;
   uniq = uniq_data(data, mode=mode, idx=1, forcexy=1);
 
   v = uniq(triangulate(x(uniq), y(uniq), verbose=verbose));
