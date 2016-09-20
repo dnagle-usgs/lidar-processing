@@ -241,11 +241,14 @@ xy=) {
   result = merge_pointers(result);
   status, finished;
 
-  // Fake out mirror coordinates (assume AGL to be 300m)
+  // Fake out coordinates as needed
   if(numberof(result)) {
-    result.meast = result.east;
-    result.mnorth = result.north;
-    result.melevation = result.elevation + 30000;
+    data2xyz, result, mode=mode, x, y, z;
+    if(datahasmode(result, mode="mir"))
+      xyz2data, x, y, z + 300, result, mode="mir";
+    if(datahasmode(result, mode="fs"))
+      xyz2data, x, y, z, result, mode="fs";
+    xyz2data, x, y, z, result, mode=mode;
   }
 
   timer_finished, t0;
