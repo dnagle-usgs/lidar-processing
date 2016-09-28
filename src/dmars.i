@@ -248,23 +248,10 @@ func load_iex(fn, verbose=) {
 }
 
 func load_ins_pbd(fn, &head) {
-  extern gps_time_correction, ops_conf;
-
   f = openb(fn);
   head = f.iex_head;
   nav = f.iex_nav;
   close, f;
-
-  // See mission_constants documentation for explanation of following
-  if(has_member(ops_conf, "dmars_invert") && ops_conf.dmars_invert) {
-    nav.roll *= -1;
-    nav.pitch *= -1;
-    nav.heading = (nav.heading + 180) % 360.;
-  }
-
-  if(is_void(gps_time_correction))
-    determine_gps_time_correction, fn;
-  nav.somd += gps_time_correction;
 
   return nav;
 }
@@ -273,24 +260,38 @@ func load_ins_h5(fn, &head) {
   if(is_void(py)) error, "python support not available";
   py, "import alps.load";
   data = py("alps.load.h5_ins_yo", fn);
-  ins = array(IEX_ATTITUDE, numberof(data.lat));
+  nav = array(IEX_ATTITUDE, numberof(data.lat));
   head = data.iex_head;
   save, data, somd=data.sod;
   obj_delete, data, "iex_head", "sod";
   for(i = 1; i <= data(*); i++) {
-    set_member, ins, data(*,i), data(noop(i));
+    set_member, nav, data(*,i), data(noop(i));
   }
-  return ins;
+  return nav;
 }
 
-func load_ins(fn, &head) {
+func load_ins_correct(&nav) {
+  extern gps_time_correction, ops_conf;
+
+  // See mission_constants documentation for explanation of following
+  if(has_member(ops_conf, "dmars_invert") && ops_conf.dmars_invert) {
+    nav.roll *= -1;
+    nav.pitch *= -1;
+    nav.heading = (nav.heading + 180) % 360.;
+  }
+
+  nav.somd += gps_time_correction;
+}
+
+func load_ins(fn, &head, correct=) {
 /* DOCUMENT nav = load_ins(fn, &head)
   Loads INS (IMU/IEX/DMARS) data. Returns the array of IEX_ATTITUDE data stored
   in iex_nav; head is set to the iex_head array.
 
   SEE ALSO: load_iex
 */
-  extern gps_time_correction, ins_filename;
+  extern gps_time_correction;
+  default, correct, 1;
 
   if(is_void(fn)) error, "Must provide filename";
 
@@ -302,6 +303,8 @@ func load_ins(fn, &head) {
 
   if(is_void(gps_time_correction))
     determine_gps_time_correction, fn;
+
+  if(correct) load_ins_correct, nav;
 
   return nav;
 }
@@ -668,12 +671,14 @@ func parse_iex_basestations(header) {
   return result;
 }
 
-func h5_ins(fn) {
-/* DOCUMENT h5_ins, fh
-  Writes out the current ins data to an HDF5 file. Requires Python.
+func h5_ins(ifn, ofn) {
+/* DOCUMENT h5_ins, ifn, ofn
+  Converts the INS data from IFN to HDF5 format and writes to OFN. Requires
+  Python.
 */
   if(is_void(py)) error, "python not available";
-  data = struct2obj(iex_nav);
+  nav = load_ins(ifn, head, correct=0);
+  data = struct2obj(nav);
   py, "import alps.convert";
-  py, "alps.convert.h5_ins", fn, data, iex_head;
+  py, "alps.convert.h5_ins", ofn, data, head;
 }

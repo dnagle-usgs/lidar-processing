@@ -30,11 +30,11 @@ func py_convert_mission(void, force=) {
     }
 
     if(mission(has, flights(i), "ins file")) {
-      fn = mission(get, flights(i), "ins file");
-      if(anyof(file_extension(fn) == [".pbd",".pdb"])) {
-        fn = file_rootname(fn) + ".ins.h5";
-        h5_ins, fn;
-        mission, details, set, flights(i), "ins file", fn;
+      ifn = mission(get, flights(i), "ins file");
+      if(anyof(file_extension(ifn) == [".pbd",".pdb"])) {
+        ofn = file_rootname(ifn) + ".ins.h5";
+        h5_ins, ifn, ofn;
+        mission, details, set, flights(i), "ins file", ofn;
       }
     }
   }
