@@ -206,6 +206,11 @@ func eaarl_mission_load(flight) {
   if(cached == "everything" && mission.data.cache_what == "everything")
     return;
 
+  if(mission(has, flight, "date")) {
+    extern gps_time_correction;
+    gps_time_correction = gps_utc_offset(mission(get, flight, "date")) * -1.0;
+  }
+
   // At this point:
   // If cached=="everything" && mission.data.cache_what=="settings" then:
   //    - all data items should be reloaded (don't want what was cached)
