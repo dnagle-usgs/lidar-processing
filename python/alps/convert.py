@@ -9,10 +9,10 @@ from .site import yo
 FILTER = tables.Filters(complevel=9, complib='blosc:blosclz')
 
 class EaarlGps(tables.IsDescription):
-    lon = tables.Float32Col(pos=0)
-    lat = tables.Float32Col(pos=1)
-    alt = tables.Float32Col(pos=2)
     sod = tables.Float32Col(pos=3)
+    lon = tables.Float64Col(pos=0)
+    lat = tables.Float64Col(pos=1)
+    alt = tables.Float32Col(pos=2)
     pdop = tables.Float32Col(pos=4)
     xrms = tables.Float32Col(pos=5)
     veast = tables.Float32Col(pos=6)
@@ -22,10 +22,10 @@ class EaarlGps(tables.IsDescription):
     flag = tables.Int16Col(pos=10)
 
 class EaarlIns(tables.IsDescription):
-    lon = tables.Float32Col(pos=0)
-    lat = tables.Float32Col(pos=1)
+    sod = tables.Float64Col(pos=3)
+    lon = tables.Float64Col(pos=0)
+    lat = tables.Float64Col(pos=1)
     alt = tables.Float32Col(pos=2)
-    sod = tables.Float32Col(pos=3)
     roll = tables.Float32Col(pos=4)
     pitch = tables.Float32Col(pos=5)
     heading = tables.Float32Col(pos=6)
