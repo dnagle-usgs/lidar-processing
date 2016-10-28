@@ -28,19 +28,21 @@ func dt_tile_type(regex, tile) {
   return dt_type + ot_type;
 }
 dt_tile_type = closure(dt_tile_type, regcomp(
-  "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_|\\.|$)"));
+  "(^|_)e([1-9][0-9]{2})(000|)_n([1-9][0-9]{0,3}|1[0-9]{4}|0)(\\3)_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_|\\.|$)"));
 
-func dt2utm_km(dtcodes, &east, &north, &zone, &quad, &cell) {
+func dt2utm_km(regex, dtcodes, &east, &north, &zone, &quad, &cell) {
 /* DOCUMENT dt2utm_km, dtcodes, &east, &north, &zone, &quad, &cell
   Parses the given data or index tile codes and sets the key easting,
   northing, zone, quad, and cell values. Values are in kilometers.
 */
-  regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_([A-D])(0[1-9]|1[0-6])?)?(_|\\.|$)", dtcodes, , , east, , north, , zone, , quad, cell;
+  regmatch, regex, dtcodes, , , east, , north, , zone, , quad, cell;
   east = atoi(east);
   north = atoi(north);
   zone = atoi(zone);
   cell = atoi(cell);
 }
+dt2utm_km = closure(dt2utm_km, regcomp(
+  "(^|_)e([1-9][0-9]{2})(000|)_n([1-9][0-9]{0,3}|1[0-9]{4}|0)(\\3)_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_([A-D])(0[1-9]|1[0-6])?)?(_|\\.|$)"));
 
 func extract_dt(text, dtlength=, dtprefix=) {
 /* DOCUMENT extract_dt(text, dtlength=, dtprefix=)
@@ -60,7 +62,7 @@ func extract_dt(text, dtlength=, dtprefix=) {
   default, dtlength, "short";
   default, dtprefix, (dtlength == "long");
   dt2utm_km, text, e, n, z;
-  w = where(bool(e) & bool(n) & bool(z));
+  w = where(bool(e) & bool(z));
   result = array(string(0), dimsof(text));
   fmt = (dtlength == "short") ? "e%d_n%d_%d" : "e%d000_n%d000_%d";
   if(dtprefix) fmt = "t_" + fmt;
