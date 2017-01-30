@@ -13,14 +13,14 @@ func batch_kml_mission(datadir, outdir, searchstr=, outfile=, webdest=) {
 
   Options:
     searchstr= The search string to use for finding mission json files.
-      Default: searchstr="flightlines.json"
+      Default: searchstr="flightlines.*"
     outfile= The name of the overall kml file to create, for the entire
       collection. Default: outfile="eaarl.kml"
     webdest= The destination directory on the web. If this is used, then all
       of the KML files will be updated to use full URL references, prefixing
       this to what they'd normally have used.
 */
-  default, searchstr, "flightlines.json";
+  default, searchstr, "flightlines.*";
   default, outfile, "eaarl.kml";
 
   if(!is_void(webdest))
