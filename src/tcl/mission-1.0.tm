@@ -189,7 +189,7 @@ namespace eval ::mission {
         if {!$raw && [string length $val] && [lindex $key end] in "file dir"} {
             return [file join $path $val]
         }
-        return $key
+        return $val
     }
 
     # This updates the internal variables used by the mission namespace and
