@@ -174,6 +174,8 @@ skip=, filter=, verbose=, wantfiles=, prealloc=) {
       continue;
     }
 
+    if(structeq(structof(temp), ZGRID)) temp = struct_cast(temp, FS);
+
     // filter data ...
     state = save(fn=files(i), cur=i, cnt=numberof(files));
     filters_apply, temp, state, filter, "data";
