@@ -570,9 +570,9 @@ suffix_remove=, suffix=) {
 }
 
 func uniq_data(data, idx=,  mode=, forcesoe=, forcexy=, enableptime=, enablez=,
-optstr=) {
+tie=, optstr=) {
 /* DOCUMENT uniq_data(data, idx=, mode=, forcesoe=, forcexy=, enablez=,
-   enableptime=, optstr=)
+   enableptime=, tie=, optstr=)
   Returns the unique data in the given array.
 
   By default, uniqueness is determined based on the .soe field. When using the
@@ -619,6 +619,15 @@ optstr=) {
     mode= Specifies which data mode to use to extract x/y/z points when using
       them to determine uniqueness.
         mode="fs"   Default
+
+  Options that change how duplicates are resolved:
+    tie= If provided, this will be used as a tie-breaker to decide which point
+      among a set of apparent duplicates should be kept. Duplicate points will
+      be sorted based on this and the first result kept. You should pass either
+      an array or an object containing a series of arrays. The arrays should
+      have the same size as your data.
+        tie=data.elevation    Return the point with the lowest elevation
+        tie=-data.elevation   Return the point with the highest elevation
 
   Option for calling functions to pass through:
     optstr= Provides an option string. This can contain any of the key/value
@@ -684,7 +693,12 @@ optstr=) {
   if(enableptime && has_member(data, "ptime"))
     save, obj, string(0), data.ptime;
 
-  w = munique_obj(obj);
+  if(!is_void(tie) && !is_obj(tie)) {
+    tmp = save();
+    save, tmp, string(0), tie;
+    tie = tmp;
+  }
+  w = munique_obj(obj, tie);
   if(idx) return w;
   if(is_numerical(data)) return [x(w), y(w), z(w)];
   return data(w);

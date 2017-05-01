@@ -218,16 +218,21 @@ func set_remove_duplicates(A, idx=) {
 local munique, munique_obj;
 /* DOCUMENT idx = munique(x1, x2, x3, ...)
   idx = munique_obj(obj)
+  idx = munique_obj(obj, tie)
 
   Given one or more arrays to be considered in parallel (or an object with
   members to be considered in parallel), returns an index list that specifies
   the unique items, in sorted order.
 
+  If tie is provided to munique_obj, it is used to determine which among a set
+  of duplicates should be kept. The duplicates will be sorted by it (via
+  msort_obj(tie)) and the first kept.
+
   SEE ALSO: unique munique_array msort
 */
 
-func munique_obj(obj) {
-  srt = msort_obj(obj);
+func munique_obj(obj, tie) {
+  srt = tie ? msort_obj(obj_merge(obj, tie)) : msort_obj(obj);
   if(numberof(srt) < 2) return srt;
   idx = indgen(2:numberof(srt));
   for(i = 1; i <= obj(*); i++) {
