@@ -1351,6 +1351,58 @@ func png_make_zips(src_dir, dst_dir, searchstr=) {
   write, "Files queues for zipping... may take a few minutes to complete.";
 }
 
+func jgw_scan(path, searchstr=) {
+/* DOCUMENT jgw_scan(path, searchstr=)
+  Scans a directory with JGW files and returns an oxy group containing:
+    files, the relative paths to each jgw file found
+    dimsx and dimsy, the pixel dimensions of the associated JPG
+    width height, rotation, centerx, centery, xmin, xmax, ymin, ymax, as returned by jgw_decompose
+*/
+  default, searchstr, "*.jgw";
+  files = find(path, searchstr=searchstr);
+
+  nfiles = numberof(files);
+
+  pfields = [
+    "width",
+    "height",
+    "rotation",
+    "centerx",
+    "centery",
+    "xmin",
+    "xmax",
+    "ymin",
+    "ymax"
+  ];
+  npf = numberof(pfields);
+  result = save(
+    jgws=file_relative(path, files),
+    dimsx=array(long, nfiles),
+    dimsy=array(long, nfiles)
+  );
+  for(i = 1; i <= npf; i++) {
+    save, result, pfields(i), array(double, nfiles);
+  }
+
+  status, start, count=nfiles, msg="Scanning JGWs...";
+  for(i = 1; i <= nfiles; i++) {
+    dims = image_size(file_rootname(files(i))+".jpg");
+    result.dimsx(i) = dims(1);
+    result.dimsy(i) = dims(2);
+
+    jgw = read_ascii(files(i))(*);
+    params = jgw_decompose(jgw, dims);
+    for(j = 1; j <= npf; j++) {
+      result(pfields(j))(i) = params(pfields(j));
+    }
+
+    status, progress, i, nfiles;
+  }
+  status, finished;
+
+  return result;
+}
+
 func jgw_decompose(jgw, pixels) {
 /* DOCUMENT result = jgw_decompose(jgw, pixels)
   Given a jgw affine matrix and the pixel dimensions of its associated image,
