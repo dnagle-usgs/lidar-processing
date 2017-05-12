@@ -555,28 +555,33 @@ func kml_jgw_image(jgw, zone, &params, levels=, root=, footprint=) {
   default, footprint, 1;
   fix_dir, root;
 
-  // If levels is not provided, then determine based on available images
-  if(is_void(levels)) {
-    ljpgs = find(file_dirname(jgw), searchstr=file_rootname(file_tail(jgw))+"_d*.jpg");
-    valid = regmatch("_d([0-9]+)\\.jpg$", ljpgs, , tmp);
-    if(nallof(valid)) error, "invalid downsampled image detected";
-    levels = atoi(tmp);
-    levels = levels(sort(levels));
-    ljpgs = [];
-  // If scalar, turn into array
-  } else if(is_scalar(levels)) {
-    levels = indgen(1:levels);
-  // If array, ensure it is sorted
-  } else {
-    levels = levels(sort(levels));
-  }
-
-  jpg = file_rootname(jgw)+".jpg";
-
   // Read JGW parameters
-  jgw = read_ascii(jgw)(*);
-  dims = image_size(jpg);
-  params = jgw_decompose(jgw, dims);
+  dims = image_size(file_rootname(jgw)+".jpg");
+  params = jgw_decompose(read_ascii(jgw)(*), dims);
+  h_set, params, dimsx=dims(1), dimsy=dims(2);
+
+  return kml_jgw_image_params(jgw, zone, params, levels=levels, root=root, footprint=footprint);
+}
+
+func kml_jgw_detect_levels(levels, jgw) {
+  if(is_array(levels)) return levels(sort(levels));
+  if(is_scalar(levels)) return indgen(1:levels);
+
+  jpgs = find(file_dirname(jgw), searchstr=file_rootname(file_tail(jgw))+"_d*.jpg");
+  valid = regmatch("_d([0-9]+)\\.jpg$", jpgs, , tmp);
+  if(nallof(valid)) error, "invalid downsampled image detected";
+  levels = atoi(tmp);
+  return levels(sort(levels));
+}
+
+func kml_jgw_image_params(jgw, zone, params, levels=, root=, footprint=) {
+  local lat, lon, tmp;
+  default, footprint, 1;
+  default, root, string(0);
+  fix_dir, root;
+
+  levels = kml_jgw_detect_levels(levels, jgw);
+  jpg = file_rootname(jgw)+".jpg";
 
   // Calculate where the overlay should be displayed. This uses the overlay's
   // actual size plus a rotation factor.
@@ -614,7 +619,7 @@ func kml_jgw_image(jgw, zone, &params, levels=, root=, footprint=) {
   // the "lod" value is based on the square root of the area of pixels
   // viewable on screen. The lodbasis allows us to calculate values with
   // respect to that.
-  lodbasis = sqrt(dims(1)*dims(2));
+  lodbasis = sqrt(params.dimsx * params.dimsy);
 
   // The full resolution image gets 64 pixel lod if there are no subsequent
   // layers and we are using a footprint
