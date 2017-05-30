@@ -1354,7 +1354,7 @@ func png_make_zips(src_dir, dst_dir, searchstr=) {
 func jgw_scan(path, searchstr=) {
 /* DOCUMENT jgw_scan(path, searchstr=)
   Scans a directory with JGW files and returns an oxy group containing:
-    files, the relative paths to each jgw file found
+    jgws, the relative paths to each jgw file found
     dimsx and dimsy, the pixel dimensions of the associated JPG
     width height, rotation, centerx, centery, xmin, xmax, ymin, ymax, as returned by jgw_decompose
 */
