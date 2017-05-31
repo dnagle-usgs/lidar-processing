@@ -564,14 +564,48 @@ func kml_jgw_image(jgw, zone, &params, levels=, root=, footprint=) {
 }
 
 func kml_jgw_detect_levels(levels, jgw) {
-  if(is_array(levels)) return levels(sort(levels));
   if(is_scalar(levels)) return indgen(1:levels);
+  if(is_array(levels)) return levels(sort(levels));
 
   jpgs = find(file_dirname(jgw), searchstr=file_rootname(file_tail(jgw))+"_d*.jpg");
   valid = regmatch("_d([0-9]+)\\.jpg$", jpgs, , tmp);
   if(nallof(valid)) error, "invalid downsampled image detected";
   levels = atoi(tmp);
   return levels(sort(levels));
+}
+
+func kml_jgw_scan_overlays(dir, scan, zone, levels=, root=, footprint=) {
+/* DOCUMENT kml_jgw_scan_overlays(dir, scan, zone, levels=, root=, footprint=)
+  Creates overlays for the output of jgw_scan. Returns an array of pointers,
+  where each pointer is the overlays for the corresponding jgw.
+*/
+  default, root, string(0);
+  fix_dir, root;
+
+  nscan = numberof(scan.width);
+  overlays = array(pointer, nscan);
+  for(i = 1; i <= nscan; i++) {
+    curfile = file_join(dir, scan.jgws(i));
+    curroot = root ? (root + file_dirname(scan.jgws(i))) : string(0);
+    curscan = obj_index(scan, i);
+    curname = file_rootname(file_tail(scan.jgws(i))) + ".jpg";
+
+    raw_overlays = kml_jgw_image_params(curfile, zone, curscan, root=curroot,
+      levels=levels, footprint=footprint);
+
+    nraw = numberof(raw_overlays);
+    order = indgen(nraw:1:-1);
+    cur_overlays = array(pointer, nraw);
+    for(j = 1; j <= nraw; j++) {
+      cur_overlays(j) = &strchar(kml_GroundOverlay(strchar(*raw_overlays(j)),
+        drawOrder=order(j)));
+    }
+    overlays(i) = &kml_Folder(
+      kml_Style(kml_ListStyle(listItemType="checkHideChildren")),
+      strchar(merge_pointers(cur_overlays)), name=curname, visibility=1);
+  }
+
+  return overlays;
 }
 
 func kml_jgw_image_params(jgw, zone, params, levels=, root=, footprint=) {
