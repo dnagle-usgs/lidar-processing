@@ -23,6 +23,7 @@ name=, cir_soe_offset=, scan=, update=) {
   nsegs = numberof(kml_segs);
   for(i = 1; i <= nsegs; i++) {
     w = where(kml_seg == kml_segs(i));
+    w = w(sort(soes(w)));
     seg_start(w) = soe2iso8601(soes(w)(1));
 
     if(update && file_exists(kml_segs(i))) continue;
