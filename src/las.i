@@ -859,9 +859,9 @@ shorten_fn=, update=, files=, date=, zone=, makeflow_fn=, norun=) {
 }
 
 func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, fakechan=, rgbrn=,
-verbose=, date=, zone=) {
+verbose=, date=, zone=, empty=) {
 /* DOCUMENT las2pbd, fn_las, fn_pbd=, format=, vname=, fakemirror=, fakechan=,
-  rgbrn=, verbose=, date=
+  rgbrn=, verbose=, date=, zone=, empty=
 
   Converts a LAS file or stream to a PBD file.
 
@@ -882,6 +882,9 @@ verbose=, date=, zone=) {
 
     verbose= Specifies whether information should get output to the console.
       Default: verbose=0
+
+    empty= If set to 1, then empty LAS files will result in empty PBD files.
+      Otherwise, the default is an eror is thrown.
 */
   default, fn_pbd, file_rootname(fn_las) + ".pbd";
   default, format, "las";
@@ -907,6 +910,17 @@ verbose=, date=, zone=) {
   }
 
   las = las_open(fn_las);
+  if(!has_member(las, "points")) {
+    if(empty) {
+      write, "WARNING: LAS file contains no points, creating empty file: " + file_tail(fn_pbd);
+      close, las;
+      pbd_save, fn_pbd, vname, [], empty=1;
+      return;
+    } else {
+      error, "LAS file contains no points";
+    }
+  }
+
   data = fnc(las, fakemirror=fakemirror, fakechan=fakechan, rgbrn=rgbrn,
     date=date, zone=zone);
   close, las;
@@ -1402,6 +1416,7 @@ func las_open(filename) {
   las_setup_pdss, stream;
 
   //--- Point Data
+  if(!stream.header.number_of_point_records) return stream;
   s_name = las_install_pdrf(stream);
   add_variable, stream, stream.header.offset_to_data, "points", s_name,
     stream.header.number_of_point_records;

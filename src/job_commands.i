@@ -264,7 +264,7 @@ func job_las2pbd(conf) {
   require, "las.i";
   las2pbd, conf.file.in, fn_pbd=conf.file.out, format=conf.format,
     vname=conf.vname, fakemirror=fakemirror, fakechan=fakechan, rgbrn=rgbrn,
-    verbose=0, date=conf.date, zone=zone;
+    verbose=0, date=conf.date, zone=zone, empty=1;
 }
 
 func job_pbd_grid(conf) {
