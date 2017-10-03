@@ -856,6 +856,16 @@ shorten_fn=, update=, files=, date=, zone=, makeflow_fn=, norun=) {
 
   makeflow_run, conf, makeflow_fn, interval=15, norun=norun;
   timer_finished, t0;
+
+  sizes = file_size(files_pbd);
+  w = where(!sizes);
+  if(numberof(w)) {
+    write, "No output created for the following empty files:";
+    write, format="   %s\n", file_tail(files_las(w));
+    for(i = 1; i <= numberof(w); i++) {
+      remove, files_pbd(w(1));
+    }
+  }
 }
 
 func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, fakechan=, rgbrn=,
