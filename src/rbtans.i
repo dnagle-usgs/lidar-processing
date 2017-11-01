@@ -61,6 +61,7 @@ if ( _ytk ) {
 
 n = int(0)
 idf = open( ifn, "rb");
+i86_primitives, idf;
  tans_filename = ifn;
 
 // get the integer number of records
