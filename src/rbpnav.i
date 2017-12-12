@@ -128,9 +128,7 @@ func precision_warning(verbose) {
   }
 }
 
-func load_pnav_ybin(fn, verbose=) {
-  extern gps_time_correction;
-
+func load_pnav_ybin(fn) {
   n = int(0);
   idf = open(fn, "rb");
   i86_primitives, idf;
@@ -148,10 +146,10 @@ func load_pnav_ybin(fn, verbose=) {
   install_struct, idf, "PNAV";
 
   // get the integer number of records
-  _read, idf,  0, n;
+  _read, idf, 0, n;
 
   ///  pnav = array( double, 12, n);
-  pn   = array( PNAV, n);
+  pn = array(PNAV, n);
   _read, idf, 4, pn;
 
   // check for time roll-over, and correct it
@@ -161,13 +159,6 @@ func load_pnav_ybin(fn, verbose=) {
     pn.sod(rng) += 86400;
   }
 
-  if(is_void(gps_time_correction))
-    determine_gps_time_correction, fn;
-  pn.sod += gps_time_correction;
-
-  if(verbose) {
-    write,format="Applied GPS time correction of %f\n", gps_time_correction;
-  }
   return pn;
 }
 
@@ -205,7 +196,11 @@ func load_pnav(fn, verbose=) {
   if(file_extension(fn) == ".h5") {
     pn = load_pnav_h5(fn);
   } else {
-    pn = load_pnav_ybin(fn, verbose=verbose);
+    pn = load_pnav_ybin(fn);
+  }
+  pn.sod += gps_time_correction;
+  if(gps_time_correct && verbose) {
+    write,format="Applied GPS time correction of %f\n", gps_time_correction;
   }
 
   if(verbose) {
