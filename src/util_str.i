@@ -289,3 +289,13 @@ func append_if_needed(&str, suffix) {
     if(numberof(w)) str(w) = str(w) + suffix;
   }
 }
+
+func ends_with(str, ref) {
+  if(is_void(str)) return;
+  return strpart(str, 1-strlen(ref):) == ref;
+}
+
+func starts_with(str, ref) {
+  if(is_void(str)) return;
+  return strpart(str, :strlen(ref)) == ref;
+}
