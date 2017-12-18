@@ -689,3 +689,60 @@ func h5_gps(fn) {
   py, "import alps.convert";
   py, "alps.convert.h5_gps", fn, data;
 }
+
+func h5_convert_gps(infile, outfile) {
+/* DOCUMENT h5_convert_gps, infile, outfile
+  Converts a GPS trajectory from Yorick ybin format (INFILE) to HDF5 format
+  (OUTFILE). Requires Python.
+*/
+  data = load_pnav_ybin(infile);
+  data = struct2obj(data);
+  py, "import alps.convert";
+  py, "alps.convert.h5_gps", outfile, data;
+}
+
+func batch_h5_convert_gps(flightdir, verbose=) {
+  default, verbose, 1;
+
+  searchstr = "*pnav.ybin*";
+
+  end_norm = ".ybin";
+  end_gzip = ".ybin.gz";
+  end_bzip = ".ybin.bz2";
+
+  mkdirp, file_join(flightdir, "py/gps");
+  tempdir = mktempdir("batch_h5_convert_gps");
+
+  files = find(flightdir, searchstr=searchstr);
+  nfiles = numberof(files);
+  for(i = 1; i <= nfiles; i++) {
+    base = file_tail(files(i));
+
+    if(ends_with(base, end_norm)) {
+      base = strpart(base, :-strlen(end_norm));
+      pnav = files(i);
+      cmd = [];
+    } else if(ends_with(base, end_gzip)) {
+      base = strpart(base, :-strlen(end_gzip));
+      pnav = file_join(tempdir, base + ".ybin");
+      cmd = swrite(format="zcat '%s' > '%s'", files(i), pnav);
+    } else if(ends_with(base, end_bzip)) {
+      base = strpart(base, :-strlen(end_bzip));
+      pnav = file_join(tempdir, base + ".ybin");
+      cmd = swrite(format="bzcat '%s' > '%s'", files(i), pnav);
+    }
+
+    outfile = file_join(flightdir, "py/gps", base + ".gps.h5");
+
+    if(file_exists(outfile)) {
+      if(verbose) write, format="   [%d/%d] Exists, skipping %s\n", i, nfiles, base;
+    } else {
+      if(verbose) write, format="   [%d/%d] Converting %s\n", i, nfiles, base;
+      if(cmd) system, cmd;
+      h5_convert_gps, pnav, outfile;
+      if(cmd) remove, pnav;
+    }
+  }
+
+  rmdir, tempdir;
+}
