@@ -677,8 +677,54 @@ func h5_ins(ifn, ofn) {
   Python.
 */
   if(is_void(py)) error, "python not available";
-  nav = load_ins(ifn, head, correct=0);
+  nav = load_ins_pbd(ifn, head);
   data = struct2obj(nav);
   py, "import alps.convert";
   py, "alps.convert.h5_ins", ofn, data, head;
+}
+
+func batch_h5_convert_ins(flightdir, verbose=) {
+  default, verbose, 1;
+
+  searchstr = "*ins.pbd*";
+
+  end_norm = ".pbd";
+  end_gzip = ".pbd.gz";
+  end_bzip = ".pbd.bz2";
+
+  mkdirp, file_join(flightdir, "py/ins");
+  tempdir = mktempdir("batch_h5_convert_ins");
+
+  files = find(flightdir, searchstr=searchstr);
+  nfiles = numberof(files);
+  for(i = 1; i <= nfiles; i++) {
+    base = file_tail(files(i));
+
+    if(ends_with(base, end_norm)) {
+      base = strpart(base, :-strlen(end_norm));
+      pbd = files(i);
+      cmd = [];
+    } else if(ends_with(base, end_gzip)) {
+      base = strpart(base, :-strlen(end_gzip));
+      pbd = file_join(tempdir, base + ".ybin");
+      cmd = swrite(format="zcat '%s' > '%s'", files(i), pbd);
+    } else if(ends_with(base, end_bzip)) {
+      base = strpart(base, :-strlen(end_bzip));
+      pbd = file_join(tempdir, base + ".ybin");
+      cmd = swrite(format="bzcat '%s' > '%s'", files(i), pbd);
+    }
+
+    outfile = file_join(flightdir, "py/ins", base + ".ins.h5");
+
+    if(file_exists(outfile)) {
+      if(verbose) write, format="   [%d/%d] Exists, skipping %s\n", i, nfiles, base;
+    } else {
+      if(verbose) write, format="   [%d/%d] Converting %s\n", i, nfiles, base;
+      if(cmd) system, cmd;
+      h5_ins, pbd, outfile;
+      if(cmd) remove, pbd;
+    }
+  }
+
+  rmdir, tempdir;
 }
