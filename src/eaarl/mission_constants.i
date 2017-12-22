@@ -437,32 +437,32 @@ func get_range_biases(conf) {
   return biases;
 }
 
-func ops_conf_i_to_json(fn, fn_out=) {
-/* DOCUMENT ops_conf_i_to_json, fn, fn_out=
+func ops_conf_i_to_json(fn, fn_out, outdir=) {
+/* DOCUMENT ops_conf_i_to_json, fn, fn_out, outdir=
   -or- ops_conf_i_to_json(fn)
     Converts an ops_conf file from the Yorick format to the JSON format. By
     default, an input file as "filename.i" will be saved using the filename
     returned by ops_conf_i_to_json_filename; specify fn_out to customize the
     output file. If called as a function, the output filename is returned.
 */
-  default, fn_out, ops_conf_i_to_json_filename(fn)
+  default, fn_out, ops_conf_i_to_json_filename(fn, outdir=outdir)
   conf = load_ops_conf(fn);
   write_ops_conf, fn_out, conf=conf;
   return fn_out;
 }
 
-func ops_conf_i_to_json_filename(fn) {
-/* DOCUMENT ops_conf_i_to_json_filename(fn)
+func ops_conf_i_to_json_filename(fn, outdir=) {
+/* DOCUMENT ops_conf_i_to_json_filename(fn, outdir=)
   Given an input Yorick .i filename, returns a suitable .ops.json filename.
 
   In addition to converting the extension from .i to .ops.json, this also
   strips ops_conf from the filename if present.
 */
-  dir = file_dirname(fn);
+  default, outdir, file_dirname(fn);
   root = file_rootname(file_tail(fn));
   parts = strsplit(root, "ops_conf");
 
-  fallback = file_join(dir, root + ".ops.json");
+  fallback = file_join(outdir, root + ".ops.json");
 
   if(numberof(parts) < 1) return fallback;
 
@@ -490,7 +490,7 @@ func ops_conf_i_to_json_filename(fn) {
   }
 
   parts = parts(w);
-  return file_join(dir, strjoin(parts, delim) + ".ops.json");
+  return file_join(outdir, strjoin(parts, delim) + ".ops.json");
 }
 
 func batch_ops_conf_i_to_json(dir, searchstr=) {
@@ -498,11 +498,13 @@ func batch_ops_conf_i_to_json(dir, searchstr=) {
   Runs ops_conf_i_to_json against every file found in dir that matches
   searchstr (default is "*.i").
 */
-  default, searchstr="*.i";
+  default, searchstr, "*ops*.i";
+  outdir = file_join(dir, "py/ops");
+  mkdirp, outdir;
   files = find(dir, searchstr="*.i");
   for(i = 1; i <= numberof(files); i++) {
     write, format="%s ->", file_relative(dir, files(i));
-    fn = ops_conf_i_to_json(files(i));
+    fn = ops_conf_i_to_json(files(i), outdir=outdir);
     write, format=" %s\n", file_relative(dir, fn);
   }
 }
