@@ -501,7 +501,7 @@ func batch_ops_conf_i_to_json(dir, searchstr=) {
   default, searchstr, "*ops*.i";
   outdir = file_join(dir, "py/ops");
   mkdirp, outdir;
-  files = find(dir, searchstr="*.i");
+  files = find(dir, searchstr=searchstr);
   for(i = 1; i <= numberof(files); i++) {
     write, format="%s ->", file_relative(dir, files(i));
     fn = ops_conf_i_to_json(files(i), outdir=outdir);
