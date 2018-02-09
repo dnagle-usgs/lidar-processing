@@ -17,7 +17,6 @@ tmp = save(
 
 escape_find = swrite(format="%c", [
     0x5c,   // \\ backslash
-    0x2f,   // \/ forward slash
     0x08,   // \b backspace
     0x0c,   // \f form feed
     0x0a,   // \n newline
@@ -28,7 +27,6 @@ escape_find = swrite(format="%c", [
 
 escape_replace = swrite(format="%c%c", 0x05c, [
     0x5c,   // \\ backslash
-    0x2f,   // \/ forward slash
     0x62,   // \b backspace
     0x66,   // \f form feed
     0x6e,   // \n newline
