@@ -614,3 +614,11 @@ func file_sanitize(&fn) {
     fn = ofn;
   return ofn;
 }
+
+func file_mtime(fn) {
+/* DOCUMENT file_mtime(fn)
+  Returns the file modification unix timestamp of a file as an integer.
+*/
+  cmd = swrite(format="stat -c '%Y' '%s'", fn);
+  return atoi(popen_rdfile(cmd)(1));
+}
