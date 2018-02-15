@@ -59,14 +59,16 @@ func split_data(data, how, varname=, timediff=, daythresh=, pulsecount=) {
   return result;
 }
 
-func split_sequence_by_gaps(seq, gap=) {
-/* DOCUMENT ptr = split_sequence_by_gaps(seq, gap=)
+func split_sequence_by_gaps(seq, gap=, bounds=) {
+/* DOCUMENT ptr = split_sequence_by_gaps(seq, gap=, bounds=)
   Splits a sequence of values into segments, breaking wherever the gap is
   greater than then given gap. (If not provided, gap is twice the RMS of the
   gaps found in the data between consecutive points.)
 
   Return result is an array of pointers. Each pointer points to an index list
   for a segment.
+
+  If bounds=1, then an array of start,stop indices is returned instead.
 
   The given sequence seq should be monotonically increasing.
 */
@@ -78,6 +80,14 @@ func split_sequence_by_gaps(seq, gap=) {
 
   // Find indexes where the time exceeds the threshold
   time_idx = where(seq(dif) > gap);
+
+  if(bounds) {
+    if(numberof(time_idx))
+      return transpose([grow(1, time_idx+1), grow(time_idx, numberof(seq))]);
+    else
+      return [[1, numberof(seq)]];
+  }
+
   if(numberof(time_idx)) {
     num_lines = numberof(time_idx) + 1;
     segs_idx = grow(1, time_idx+1, numberof(seq)+1);
