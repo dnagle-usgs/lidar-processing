@@ -306,8 +306,8 @@ func autoselect_rgb_dir(dir, options=) {
   return options ? results : results(1);
 }
 
-func autoselect_rgb_tar(dir, options=) {
-/* DOCUMENT rgb_tar = autoselect_rgb_tar(dir, options=)
+func autoselect_rgb_tar(dir, options=, compressed=) {
+/* DOCUMENT rgb_tar = autoselect_rgb_tar(dir, options=, compressed=)
   This function attempts to determine the EAARL rgb tar file to load for a
   dataset. The dir parameter should be the path to the mission day directory.
 
@@ -319,8 +319,12 @@ func autoselect_rgb_tar(dir, options=) {
   If options=1, then an array of all possibilities that meet the criteria above
   is returned instead. If no possiblities are found, then [string(0)] is
   returned.
+
+  If compressed=1, then the patterns have * appended to also match compressed
+  files.
 */
   globs = ["*-cam1.tar", "cam1-*.tar", "cam1.tar"];
+  if(compressed) globs += "*";
   results = [];
   for(i = 1; i <= numberof(globs); i++) {
     files = lsfiles(dir, glob=globs(i));
