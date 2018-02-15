@@ -183,15 +183,18 @@ func restore_if_exists(args) {
 errs2caller, restore_if_exists;
 wrap_args, restore_if_exists;
 
-func obj_merge(obj, ..) {
-/* DOCUMENT obj = obj_merge(objA, objB, objC, ...)
-  -or-  obj_merge, objA, objB, objC, ...
+func obj_merge(obj, .., deep=) {
+/* DOCUMENT obj = obj_merge(objA, objB, objC, ..., deep=)
+  -or-  obj_merge, objA, objB, objC, ..., deep=
 
   Merges all of its arguments together into a single object. All objects must
   be oxy group objects. In the functional form, the new merged object is
   returned. In the subroutine form, the first object is updated to contain the
   result of the merge. If two objects use the same key name, the last object's
   value is used.
+
+  With objects contain objects, the default behavior is for later objects to
+  replace earlier objects. With deep=1, they are instead merged recursively.
 
   This function can be used as an object method by using a closure whose
   data item is 0:
@@ -200,14 +203,20 @@ func obj_merge(obj, ..) {
     obj(merge, ...)
     obj, merge, ...
 */
+  default, deep, 0;
   if(!obj)
     obj = use();
   if(!am_subroutine())
     obj = obj_copy(obj);
   while(more_args()) {
     src = next_arg();
-    for(i = 1; i <= src(*); i++)
-      save, obj, src(*,i), src(noop(i));
+    for(i = 1; i <= src(*); i++) {
+      if(deep && is_obj(src(noop(i))) && obj(*,src(*,i)) && is_obj(obj(src(*,i)))) {
+        save, obj, src(*,i), obj_merge(obj(src(*,i)), src(noop(i)), deep=1);
+      } else {
+        save, obj, src(*,i), src(noop(i));
+      }
+    }
   }
   return obj;
 }
