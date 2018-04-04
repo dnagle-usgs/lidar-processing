@@ -12,7 +12,7 @@ message:
 SCRIPTS = ascii_rename.pl check_for_tlds.pl checksys check_to_archive \
 	clean.awk comment eaarl_md5sum geotiffer.pl get_location.pl htdp.awk \
 	idx_tiles_summarize iex_ascii2pbd initialize_cir.py \
-	make_html_tiles.pl makeweb make_xml_metadata.pl mkcamlist mkeidx \
+	make_html_tiles.pl makeweb make_xml_metadata.pl mkeidx \
 	mk_opsconf mktrajfiles pnav2gm.pl pnav2kml.pl pto_cir.pl \
 	shapefile_filter.pl showdays show_doc.pl test_checksum vncpl \
 	whatsnew.pl wrsync xyz2track.pl
