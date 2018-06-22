@@ -12,7 +12,6 @@ message:
 # A list of all scripts to install. Leave the file extension off.
 SCRIPTS = \
 	ascii_rename \
-	check_for_tlds \
 	check_mission \
 	check_to_archive \
 	clean \
@@ -28,7 +27,6 @@ SCRIPTS = \
 	make_html_tiles \
 	make_xml_metadata \
 	mk_opsconf \
-	mkcamlist \
 	mkeidx \
 	mktrajfiles \
 	mvbu \

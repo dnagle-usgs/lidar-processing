@@ -1,7 +1,3 @@
-# You must download the triangle library from:
-# https://www.cs.cmu.edu/~quake/triangle.com
-# Then put triangle.c and triangle.h in this directory.
-
 # these values filled in by    yorick -batch make.i
 Y_MAKEDIR=/opt/alps/yorick
 Y_EXE=/opt/alps/yorick/bin/yorick
